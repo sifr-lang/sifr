@@ -1,0 +1,12 @@
+# expect-stdout: 12
+def main():
+    total: int = 0
+    i: int = 0
+    while i < 100:
+        i = i + 1
+        if i > 5:
+            break
+        if i == 3:
+            continue
+        total = total + i
+    print(total)

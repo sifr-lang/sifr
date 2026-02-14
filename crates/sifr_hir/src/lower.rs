@@ -36,6 +36,8 @@ struct LowerCtx {
     scope: Scope,
     /// Collected errors
     errors: Vec<LoweringError>,
+    /// Loop nesting depth (for break/continue validation)
+    loop_depth: usize,
 }
 
 impl LowerCtx {
@@ -44,6 +46,7 @@ impl LowerCtx {
             functions: HashMap::new(),
             scope: Scope::new(),
             errors: Vec::new(),
+            loop_depth: 0,
         }
     }
 
@@ -53,6 +56,10 @@ impl LowerCtx {
             line: None,
             col: None,
         });
+    }
+
+    fn in_loop(&self) -> bool {
+        self.loop_depth > 0
     }
 }
 
@@ -193,9 +200,25 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             Some(HirStmt::Expr { expr })
         }
         Stmt::If(if_stmt) => lower_if(if_stmt, func_type, ctx),
+        Stmt::While(while_stmt) => lower_while(while_stmt, func_type, ctx),
+        Stmt::For(for_stmt) => lower_for(for_stmt, func_type, ctx),
+        Stmt::Break(_) => {
+            if !ctx.in_loop() {
+                ctx.error("'break' outside of loop".to_string());
+                return None;
+            }
+            Some(HirStmt::Break)
+        }
+        Stmt::Continue(_) => {
+            if !ctx.in_loop() {
+                ctx.error("'continue' outside of loop".to_string());
+                return None;
+            }
+            Some(HirStmt::Continue)
+        }
         Stmt::Pass(_) => Some(HirStmt::Pass),
         _ => {
-            ctx.error(format!("unsupported statement type"));
+            ctx.error("unsupported statement type".to_string());
             None
         }
     }
@@ -337,6 +360,57 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
         then_body,
         elif_clauses,
         else_body,
+    })
+}
+
+fn lower_while(while_stmt: &StmtWhile, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
+    let condition = lower_expr(&while_stmt.test, ctx)?;
+
+    ctx.scope.push();
+    ctx.loop_depth += 1;
+    let body = lower_stmts(&while_stmt.body, func_type, ctx);
+    ctx.loop_depth -= 1;
+    ctx.scope.pop();
+
+    Some(HirStmt::While { condition, body })
+}
+
+fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
+    // Lower the iterable expression
+    let iter_expr = lower_expr(&for_stmt.iter, ctx)?;
+    let iter_ty = iter_expr.ty().clone();
+
+    // Determine the element type from the iterable
+    let elem_ty = iter_ty.iterable_element_type().unwrap_or_else(|| {
+        ctx.error(format!(
+            "cannot iterate over type '{}'",
+            iter_ty.display_name()
+        ));
+        Type::Any
+    });
+
+    // Extract the target variable name
+    let target_name = match for_stmt.target.as_ref() {
+        Expr::Name(n) => n.id.to_string(),
+        _ => {
+            ctx.error("for loop target must be a simple name".to_string());
+            return None;
+        }
+    };
+
+    // Create a new scope for the loop body, define the loop variable
+    ctx.scope.push();
+    ctx.scope.define(target_name.clone(), elem_ty.clone());
+    ctx.loop_depth += 1;
+    let body = lower_stmts(&for_stmt.body, func_type, ctx);
+    ctx.loop_depth -= 1;
+    ctx.scope.pop();
+
+    Some(HirStmt::For {
+        target: target_name,
+        target_ty: elem_ty,
+        iter: iter_expr,
+        body,
     })
 }
 
@@ -546,6 +620,11 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     };
 
+    // Special handling for range() built-in
+    if func_name == "range" {
+        return lower_range_call(call, ctx);
+    }
+
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
         ctx.error(format!("undefined function: '{}'", func_name));
         None
@@ -599,6 +678,60 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         args,
         ty: *ft.return_type,
     })
+}
+
+fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let args: Vec<_> = call.arguments.args.iter().collect();
+
+    match args.len() {
+        1 => {
+            // range(end) -> 0..end
+            let end = lower_expr(args[0], ctx)?;
+            if end.ty() != &Type::Int {
+                ctx.error(format!(
+                    "range() argument must be 'int', got '{}'",
+                    end.ty().display_name()
+                ));
+                return None;
+            }
+            Some(HirExpr::RangeLiteral {
+                start: Box::new(HirExpr::IntLiteral(0)),
+                end: Box::new(end),
+                ty: Type::Range,
+            })
+        }
+        2 => {
+            // range(start, end) -> start..end
+            let start = lower_expr(args[0], ctx)?;
+            let end = lower_expr(args[1], ctx)?;
+            if start.ty() != &Type::Int {
+                ctx.error(format!(
+                    "range() start argument must be 'int', got '{}'",
+                    start.ty().display_name()
+                ));
+                return None;
+            }
+            if end.ty() != &Type::Int {
+                ctx.error(format!(
+                    "range() end argument must be 'int', got '{}'",
+                    end.ty().display_name()
+                ));
+                return None;
+            }
+            Some(HirExpr::RangeLiteral {
+                start: Box::new(start),
+                end: Box::new(end),
+                ty: Type::Range,
+            })
+        }
+        _ => {
+            ctx.error(format!(
+                "range() takes 1 or 2 arguments, got {}",
+                args.len()
+            ));
+            None
+        }
+    }
 }
 
 fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -680,6 +813,71 @@ mod tests {
     fn test_copy_type_no_move() {
         let module = lower_source(
             "def main():\n    x: int = 42\n    print(x)\n    print(x)\n"
+        ).unwrap();
+        assert_eq!(module.functions.len(), 1);
+    }
+
+    #[test]
+    fn test_while_loop() {
+        let module = lower_source(
+            "def main():\n    i: int = 0\n    while i < 10:\n        i = i + 1\n"
+        ).unwrap();
+        assert_eq!(module.functions.len(), 1);
+        // Body should contain a Let and a While
+        assert!(module.functions[0].body.len() >= 2);
+        assert!(matches!(module.functions[0].body[1], HirStmt::While { .. }));
+    }
+
+    #[test]
+    fn test_for_range() {
+        let module = lower_source(
+            "def main():\n    for i in range(10):\n        print(i)\n"
+        ).unwrap();
+        assert_eq!(module.functions.len(), 1);
+        assert!(matches!(module.functions[0].body[0], HirStmt::For { .. }));
+    }
+
+    #[test]
+    fn test_for_range_start_end() {
+        let module = lower_source(
+            "def main():\n    for i in range(1, 5):\n        print(i)\n"
+        ).unwrap();
+        assert_eq!(module.functions.len(), 1);
+        assert!(matches!(module.functions[0].body[0], HirStmt::For { .. }));
+    }
+
+    #[test]
+    fn test_break_outside_loop() {
+        let result = lower_source(
+            "def main():\n    break\n"
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|e| e.message.contains("'break' outside of loop")));
+    }
+
+    #[test]
+    fn test_continue_outside_loop() {
+        let result = lower_source(
+            "def main():\n    continue\n"
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|e| e.message.contains("'continue' outside of loop")));
+    }
+
+    #[test]
+    fn test_break_inside_loop() {
+        let module = lower_source(
+            "def main():\n    while True:\n        break\n"
+        ).unwrap();
+        assert_eq!(module.functions.len(), 1);
+    }
+
+    #[test]
+    fn test_nested_loops() {
+        let module = lower_source(
+            "def main():\n    for i in range(3):\n        for j in range(2):\n            print(i)\n"
         ).unwrap();
         assert_eq!(module.functions.len(), 1);
     }

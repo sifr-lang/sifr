@@ -104,9 +104,13 @@ impl RustEmitter {
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         match stmt {
-            HirStmt::Let { name, ty, value, .. } => {
+            HirStmt::Let { name, ty, value, is_mutable } => {
                 self.write_indent();
-                self.write("let ");
+                if *is_mutable {
+                    self.write("let mut ");
+                } else {
+                    self.write("let ");
+                }
                 self.write(name);
                 self.write(": ");
                 self.write(&ty.rust_type());
@@ -175,6 +179,38 @@ impl RustEmitter {
                 }
 
                 self.writeln("}");
+            }
+            HirStmt::While { condition, body } => {
+                self.write_indent();
+                self.write("while ");
+                self.emit_expr(condition);
+                self.write(" {\n");
+                self.indent += 1;
+                for s in body {
+                    self.emit_stmt(s);
+                }
+                self.indent -= 1;
+                self.writeln("}");
+            }
+            HirStmt::For { target, iter, body, .. } => {
+                self.write_indent();
+                self.write("for ");
+                self.write(target);
+                self.write(" in ");
+                self.emit_expr(iter);
+                self.write(" {\n");
+                self.indent += 1;
+                for s in body {
+                    self.emit_stmt(s);
+                }
+                self.indent -= 1;
+                self.writeln("}");
+            }
+            HirStmt::Break => {
+                self.writeln("break;");
+            }
+            HirStmt::Continue => {
+                self.writeln("continue;");
             }
             HirStmt::Pass => {
                 // No-op in Rust
@@ -307,6 +343,11 @@ impl RustEmitter {
                 self.write(" } else { ");
                 self.emit_expr(else_expr);
                 self.write(" }");
+            }
+            HirExpr::RangeLiteral { start, end, .. } => {
+                self.emit_expr(start);
+                self.write("..");
+                self.emit_expr(end);
             }
         }
     }
