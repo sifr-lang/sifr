@@ -60,6 +60,22 @@ pub enum Type {
         fields: Vec<(String, Type)>,
         methods: Vec<(String, FunctionType)>,
     },
+
+    // --- milestone_protocols: Protocols, Operators, Discriminated Unions ---
+
+    /// Protocol type: structural interface that maps to Rust `trait`.
+    /// Any class with the required methods satisfies the protocol.
+    Protocol {
+        name: String,
+        methods: Vec<(String, FunctionType)>,
+    },
+
+    /// Newtype wrapper around a primitive type.
+    /// `class Port(int)` -> `struct Port(i64)`
+    Newtype {
+        name: String,
+        inner: Box<Type>,
+    },
 }
 
 /// Represents a function's type signature.
@@ -99,6 +115,8 @@ impl Type {
             Self::Unknown => OwnershipKind::Move,
             Self::Class { .. } => OwnershipKind::Move,
             Self::Result(_, _) => OwnershipKind::Move,
+            Self::Protocol { .. } => OwnershipKind::Move,
+            Self::Newtype { inner, .. } => inner.ownership(),
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -147,6 +165,8 @@ impl Type {
             Self::Unknown => "Unknown".to_string(),
             Self::Class { name, .. } => name.clone(),
             Self::Result(ok, err) => format!("Result[{}, {}]", ok.display_name(), err.display_name()),
+            Self::Protocol { name, .. } => name.clone(),
+            Self::Newtype { name, .. } => name.clone(),
         }
     }
 
@@ -196,6 +216,8 @@ impl Type {
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
             Self::Class { name, .. } => name.clone(),
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
+            Self::Protocol { name, .. } => format!("Box<dyn {}>", name),
+            Self::Newtype { name, .. } => name.clone(),
         }
     }
 
@@ -244,6 +266,8 @@ impl Type {
             Type::Alias(name, _) => capitalize(name),
             Type::Class { name, .. } => name.clone(),
             Type::Result(_, _) => "Result".to_string(),
+            Type::Protocol { name, .. } => name.clone(),
+            Type::Newtype { name, .. } => name.clone(),
         }
     }
 
@@ -400,6 +424,21 @@ impl Type {
             (Self::Result(ok_a, err_a), Self::Result(ok_b, err_b)) => {
                 ok_a.is_assignable_to(ok_b) && err_a.is_assignable_to(err_b)
             }
+            // Protocol: a class satisfies a protocol if it has all required methods
+            (Self::Class { methods: class_methods, .. }, Self::Protocol { methods: proto_methods, .. }) => {
+                proto_methods.iter().all(|(pname, pft)| {
+                    class_methods.iter().any(|(cname, cft)| {
+                        cname == pname
+                            && cft.params.len() == pft.params.len()
+                            && cft.params.iter().zip(pft.params.iter()).all(|((_, ct), (_, pt))| ct.is_assignable_to(pt))
+                            && cft.return_type.is_assignable_to(&pft.return_type)
+                    })
+                })
+            }
+            // Protocol types: same name means same protocol
+            (Self::Protocol { name: a, .. }, Self::Protocol { name: b, .. }) => a == b,
+            // Newtype: same name means same newtype (nominal)
+            (Self::Newtype { name: a, .. }, Self::Newtype { name: b, .. }) => a == b,
             _ => false,
         }
     }

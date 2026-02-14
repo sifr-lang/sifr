@@ -1,0 +1,30 @@
+# expect-stdout: 78.5
+# expect-stdout: 100
+
+class Drawable(Protocol):
+    def area(self) -> float:
+        pass
+
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+    def area(self) -> float:
+        return 3.14 * self.radius * self.radius
+
+class Square:
+    side: float
+
+    def __init__(self, side: float):
+        self.side = side
+
+    def area(self) -> float:
+        return self.side * self.side
+
+def main():
+    c: Circle = Circle(5.0)
+    s: Square = Square(10.0)
+    print(c.area())
+    print(s.area())

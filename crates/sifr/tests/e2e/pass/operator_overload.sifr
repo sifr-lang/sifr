@@ -1,0 +1,28 @@
+# expect-stdout: Vec2(4, 6)
+# expect-stdout: true
+# expect-stdout: false
+
+class Vec2:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def __add__(self, other: Vec2) -> Vec2:
+        return Vec2(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other: Vec2) -> bool:
+        return self.x == other.x and self.y == other.y
+
+    def __str__(self) -> str:
+        return f"Vec2({self.x}, {self.y})"
+
+def main():
+    a: Vec2 = Vec2(1.0, 2.0)
+    b: Vec2 = Vec2(3.0, 4.0)
+    c: Vec2 = a + b
+    print(c)
+    print(a == Vec2(1.0, 2.0))
+    print(a == b)

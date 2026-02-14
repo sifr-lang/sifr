@@ -1,0 +1,102 @@
+# Milestone: Protocols, Operators, and Discriminated Unions
+# Demonstrates: Protocol (trait), operator overloading, discriminated unions,
+#               newtype pattern, and class Display via __str__
+
+# ============================================================
+# 1. Protocol (Trait) Definition
+# ============================================================
+
+class Printable(Protocol):
+    def describe(self) -> str:
+        pass
+
+# ============================================================
+# 2. Operator Overloading (__add__, __eq__, __str__)
+# ============================================================
+
+class Vec2:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def __add__(self, other: Vec2) -> Vec2:
+        return Vec2(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other: Vec2) -> bool:
+        return self.x == other.x and self.y == other.y
+
+    def __str__(self) -> str:
+        return f"Vec2({self.x}, {self.y})"
+
+    def describe(self) -> str:
+        return f"A 2D vector at ({self.x}, {self.y})"
+
+# ============================================================
+# 3. Discriminated Union (isinstance narrowing)
+# ============================================================
+
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+    def describe(self) -> str:
+        return f"Circle with radius {self.radius}"
+
+class Square:
+    side: float
+
+    def __init__(self, side: float):
+        self.side = side
+
+    def describe(self) -> str:
+        return f"Square with side {self.side}"
+
+type Shape = Circle | Square
+
+def area(shape: Shape) -> float:
+    if isinstance(shape, Circle):
+        return 3.14 * shape.radius * shape.radius
+    else:
+        return shape.side * shape.side
+
+# ============================================================
+# 4. Newtype Pattern
+# ============================================================
+
+class Port(int):
+    pass
+
+class Email(str):
+    pass
+
+# ============================================================
+# Main: demonstrate all features
+# ============================================================
+
+def main():
+    # --- Operator overloading ---
+    a: Vec2 = Vec2(1.0, 2.0)
+    b: Vec2 = Vec2(3.0, 4.0)
+    c: Vec2 = a + b
+    print(c)
+    print(a == Vec2(1.0, 2.0))
+    print(a == b)
+
+    # --- Discriminated union ---
+    circle: Circle = Circle(5.0)
+    square: Square = Square(4.0)
+    print(area(circle))
+    print(area(square))
+
+    # --- Newtype pattern ---
+    port: Port = Port(8080)
+    print(port)
+    print(port.value())
+
+    email: Email = Email("user@example.com")
+    print(email)

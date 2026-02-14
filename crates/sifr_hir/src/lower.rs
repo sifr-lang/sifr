@@ -249,12 +249,110 @@ fn is_error_class(class_def: &StmtClassDef) -> bool {
     false
 }
 
+/// Check if a class definition has `(Protocol)` as its base class.
+fn is_protocol_class(class_def: &StmtClassDef) -> bool {
+    for base in class_def.bases() {
+        if let Expr::Name(n) = base {
+            if n.id.as_str() == "Protocol" {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Check if a class definition is a newtype wrapper around a primitive.
+/// Returns the wrapped primitive type if so.
+fn get_newtype_inner(class_def: &StmtClassDef) -> Option<Type> {
+    for base in class_def.bases() {
+        if let Expr::Name(n) = base {
+            match n.id.as_str() {
+                "int" => return Some(Type::Int),
+                "float" => return Some(Type::Float),
+                "str" => return Some(Type::Str),
+                "bool" => return Some(Type::Bool),
+                _ => {}
+            }
+        }
+    }
+    None
+}
+
+/// Dunder method names that map to Rust operator trait impls.
+const OPERATOR_DUNDERS: &[&str] = &[
+    "__add__", "__sub__", "__mul__", "__truediv__", "__floordiv__", "__mod__",
+    "__eq__", "__ne__", "__lt__", "__le__", "__gt__", "__ge__",
+    "__str__", "__repr__",
+    "__neg__", "__pos__",
+    "__contains__",
+];
+
+/// Check if a method name is an operator dunder.
+fn is_operator_dunder(name: &str) -> bool {
+    OPERATOR_DUNDERS.contains(&name)
+}
+
 /// First pass: collect class fields and method signatures, register the class type.
 fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     let class_name = class_def.name.to_string();
     let mut fields: Vec<(String, Type)> = Vec::new();
     let mut methods: Vec<(String, FunctionType)> = Vec::new();
     let is_error = is_error_class(class_def);
+    let is_protocol = is_protocol_class(class_def);
+    let newtype_inner = get_newtype_inner(class_def);
+
+    // For newtype declarations, register as a Newtype type
+    if let Some(ref inner) = newtype_inner {
+        let newtype_ty = Type::Newtype {
+            name: class_name.clone(),
+            inner: Box::new(inner.clone()),
+        };
+        ctx.class_types.insert(class_name.clone(), newtype_ty.clone());
+
+        // Register constructor: ClassName(value) -> ClassName
+        let ft = FunctionType {
+            params: vec![("value".to_string(), inner.clone())],
+            return_type: Box::new(newtype_ty),
+        };
+        ctx.functions.insert(class_name.clone(), ft);
+        return;
+    }
+
+    // For protocol definitions, register as a Protocol type
+    if is_protocol {
+        // Collect method signatures for the protocol
+        for stmt in &class_def.body {
+            if let Stmt::FunctionDef(func) = stmt {
+                let method_name = func.name.to_string();
+                if method_name == "__init__" { continue; }
+                let mut params = Vec::new();
+                for param in func.parameters.args.iter().skip(1) {
+                    let param_name = param.parameter.name.to_string();
+                    let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                        resolve_annotation_expr(ann, ctx)
+                    } else {
+                        Type::Any
+                    };
+                    params.push((param_name, param_ty));
+                }
+                let return_ty = if let Some(ref ret_ann) = func.returns {
+                    resolve_annotation_expr(ret_ann, ctx)
+                } else {
+                    Type::None
+                };
+                methods.push((method_name, FunctionType {
+                    params,
+                    return_type: Box::new(return_ty),
+                }));
+            }
+        }
+        let proto_ty = Type::Protocol {
+            name: class_name.clone(),
+            methods: methods.clone(),
+        };
+        ctx.class_types.insert(class_name, proto_ty);
+        return;
+    }
 
     // For error types, ensure a 'message' field exists (add if not explicitly declared)
     // This will be checked after collecting all fields
@@ -379,6 +477,89 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
 fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass> {
     let class_name = class_def.name.to_string();
     let class_ty = ctx.class_types.get(&class_name)?.clone();
+    let is_protocol = is_protocol_class(class_def);
+    let newtype_inner = get_newtype_inner(class_def);
+
+    // For protocol definitions, emit a HirClass with is_protocol=true
+    if is_protocol {
+        let methods_sigs = match &class_ty {
+            Type::Protocol { methods, .. } => methods.clone(),
+            _ => return None,
+        };
+        // Protocols have no fields, no body to lower -- just method signatures
+        let hir_methods: Vec<HirFunction> = methods_sigs.iter().map(|(name, ft)| {
+            HirFunction {
+                name: name.clone(),
+                params: ft.params.iter().map(|(pn, pt)| HirParam {
+                    name: pn.clone(),
+                    ty: pt.clone(),
+                    default: None,
+                    keyword_only: false,
+                }).collect(),
+                return_type: *ft.return_type.clone(),
+                body: vec![], // Protocol methods have no body
+            }
+        }).collect();
+
+        return Some(HirClass {
+            name: class_name,
+            fields: vec![],
+            methods: hir_methods,
+            is_hashable: false,
+            is_error_type: false,
+            is_protocol: true,
+            operator_impls: Vec::new(),
+            newtype_inner: None,
+            implements_protocols: Vec::new(),
+        });
+    }
+
+    // For newtype declarations, emit a minimal HirClass
+    if let Some(ref inner) = newtype_inner {
+        // Lower any methods defined in the newtype body
+        let mut hir_methods = Vec::new();
+        for stmt in &class_def.body {
+            if let Stmt::FunctionDef(func) = stmt {
+                let method_name = func.name.to_string();
+                if method_name == "__init__" { continue; } // Skip __init__ for newtypes
+                ctx.current_class = Some(class_name.clone());
+                ctx.scope.push();
+                ctx.scope.define("self".to_string(), class_ty.clone());
+                let mut params = Vec::new();
+                for param in func.parameters.args.iter().skip(1) {
+                    let param_name = param.parameter.name.to_string();
+                    let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                        resolve_annotation_expr(ann, ctx)
+                    } else { Type::Any };
+                    ctx.scope.define(param_name.clone(), param_ty.clone());
+                    params.push(HirParam { name: param_name, ty: param_ty, default: None, keyword_only: false });
+                }
+                let return_ty = if let Some(ref ret_ann) = func.returns {
+                    resolve_annotation_expr(ret_ann, ctx)
+                } else { Type::None };
+                let method_ft = FunctionType {
+                    params: params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
+                    return_type: Box::new(return_ty.clone()),
+                };
+                let body = lower_stmts(&func.body, &method_ft, ctx);
+                ctx.scope.pop();
+                ctx.current_class = None;
+                hir_methods.push(HirFunction { name: method_name, params, return_type: return_ty, body });
+            }
+        }
+
+        return Some(HirClass {
+            name: class_name,
+            fields: vec![("0".to_string(), inner.clone())], // Single wrapped field
+            methods: hir_methods,
+            is_hashable: is_hashable_type(inner),
+            is_error_type: false,
+            is_protocol: false,
+            operator_impls: Vec::new(),
+            newtype_inner: Some(inner.clone()),
+            implements_protocols: Vec::new(),
+        });
+    }
 
     let (fields, _method_types) = match &class_ty {
         Type::Class { fields, methods, .. } => (fields.clone(), methods.clone()),
@@ -389,6 +570,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
     let is_hashable = fields.iter().all(|(_, ty)| is_hashable_type(ty));
 
     let mut hir_methods = Vec::new();
+    let mut operator_impls = Vec::new();
 
     for stmt in &class_def.body {
         if let Stmt::FunctionDef(func) = stmt {
@@ -444,16 +626,37 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             ctx.scope.pop();
             ctx.current_class = None;
 
-            hir_methods.push(HirFunction {
-                name: if method_name == "__init__" { "new".to_string() } else { method_name },
+            let hir_func = HirFunction {
+                name: if method_name == "__init__" { "new".to_string() } else { method_name.clone() },
                 params,
                 return_type: return_ty,
                 body,
-            });
+            };
+
+            // Separate operator dunders from regular methods
+            if is_operator_dunder(&method_name) {
+                operator_impls.push((method_name, hir_func));
+            } else {
+                hir_methods.push(hir_func);
+            }
         }
     }
 
     let is_error = ctx.error_types.contains(&class_name);
+
+    // Check which protocols this class satisfies
+    let mut implements_protocols = Vec::new();
+    for (proto_name, proto_ty) in &ctx.class_types.clone() {
+        if let Type::Protocol { methods: proto_methods, .. } = proto_ty {
+            // Check if class has all required methods
+            let satisfies = proto_methods.iter().all(|(pname, _pft)| {
+                _method_types.iter().any(|(mname, _)| mname == pname)
+            });
+            if satisfies {
+                implements_protocols.push(proto_name.clone());
+            }
+        }
+    }
 
     Some(HirClass {
         name: class_name,
@@ -461,6 +664,10 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         methods: hir_methods,
         is_hashable,
         is_error_type: is_error,
+        is_protocol: false,
+        operator_impls,
+        newtype_inner: None,
+        implements_protocols,
     })
 }
 
@@ -1468,6 +1675,20 @@ fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
     None
 }
 
+/// Map a binary operator to its corresponding dunder method name.
+fn op_to_dunder(op: &str) -> Option<&'static str> {
+    match op {
+        "+" => Some("__add__"),
+        "-" => Some("__sub__"),
+        "*" => Some("__mul__"),
+        "/" => Some("__truediv__"),
+        "//" => Some("__floordiv__"),
+        "%" => Some("__mod__"),
+        "**" => Some("__pow__"),
+        _ => None,
+    }
+}
+
 fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let left = lower_expr(&binop.left, ctx)?;
     let right = lower_expr(&binop.right, ctx)?;
@@ -1494,6 +1715,20 @@ fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
             ty: result_ty,
         }),
         Err(e) => {
+            // Check for operator overloading on class types
+            if let Type::Class { methods, .. } = left.ty() {
+                if let Some(dunder) = op_to_dunder(op_str) {
+                    if let Some((_, ft)) = methods.iter().find(|(n, _)| n == dunder) {
+                        let result_ty = *ft.return_type.clone();
+                        return Some(HirExpr::BinOp {
+                            left: Box::new(left),
+                            op: op_str.to_string(),
+                            right: Box::new(right),
+                            ty: result_ty,
+                        });
+                    }
+                }
+            }
             ctx.error(e.message);
             None
         }
@@ -1613,8 +1848,22 @@ fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<HirExpr> {
         // They don't need type_check_comparison
         if op_str != "is" && op_str != "is not" {
             if let Err(e) = type_check_comparison(left.ty(), op_str, right.ty()) {
-                ctx.error(e.message);
-                return None;
+                // Check for operator overloading on class types
+                let has_overload = match left.ty() {
+                    Type::Class { methods, .. } => {
+                        let dunder = match op_str {
+                            "==" | "!=" => "__eq__",
+                            "<" | ">" | "<=" | ">=" => "__lt__",
+                            _ => "",
+                        };
+                        !dunder.is_empty() && methods.iter().any(|(n, _)| n == dunder)
+                    }
+                    _ => false,
+                };
+                if !has_overload {
+                    ctx.error(e.message);
+                    return None;
+                }
             }
         }
 
@@ -2664,6 +2913,19 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             } else {
                 ctx.error(format!("class '{}' has no method '{}'", name, method));
                 None
+            }
+        }
+        Type::Newtype { name, inner } => {
+            // Newtype has a built-in `value()` method that returns the inner type
+            if method == "value" {
+                if !args.is_empty() {
+                    ctx.error(format!("{}.value() takes no arguments", name));
+                    return None;
+                }
+                Some(*inner.clone())
+            } else {
+                // Delegate to the inner type's methods
+                resolve_method_type(inner, method, args, ctx)
             }
         }
         _ => {

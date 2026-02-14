@@ -29,6 +29,16 @@ pub struct HirClass {
     pub is_hashable: bool,
     /// Whether this class is an error type (class Foo(Error))
     pub is_error_type: bool,
+    /// Whether this class is a Protocol (maps to Rust trait)
+    pub is_protocol: bool,
+    /// Operator overloading methods: maps dunder name to method
+    /// e.g., "__add__" -> HirFunction, "__eq__" -> HirFunction
+    pub operator_impls: Vec<(String, HirFunction)>,
+    /// For newtype declarations: the wrapped primitive type
+    /// e.g., `class Port(int)` -> Some(Type::Int)
+    pub newtype_inner: Option<Type>,
+    /// List of protocols this class implements (protocol names)
+    pub implements_protocols: Vec<String>,
 }
 
 /// A function definition with resolved types.

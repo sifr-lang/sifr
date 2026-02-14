@@ -108,6 +108,8 @@ struct RustEmitter {
     pub_mode: bool,
     /// Set of variable names that are mutated in the current function body
     mutated_vars: HashSet<String>,
+    /// Set of class names that have Display impl (via __str__ or error type)
+    display_classes: HashSet<String>,
 }
 
 impl RustEmitter {
@@ -124,6 +126,7 @@ impl RustEmitter {
             in_loop_with_else: false,
             pub_mode: false,
             mutated_vars: HashSet::new(),
+            display_classes: HashSet::new(),
         }
     }
 
@@ -253,9 +256,19 @@ impl RustEmitter {
     }
 
     fn emit_module(&mut self, module: &HirModule) {
+        // Pre-scan: collect classes that have Display impls
+        for class in &module.classes {
+            if class.is_error_type
+                || class.newtype_inner.is_some()
+                || class.operator_impls.iter().any(|(n, _)| n == "__str__" || n == "__repr__")
+            {
+                self.display_classes.insert(class.name.clone());
+            }
+        }
+
         // Emit class definitions first (structs + impls)
         for class in &module.classes {
-            self.emit_class(class);
+            self.emit_class(class, module);
             self.output.push('\n');
         }
 
@@ -267,10 +280,29 @@ impl RustEmitter {
         }
     }
 
-    fn emit_class(&mut self, class: &HirClass) {
+    fn emit_class(&mut self, class: &HirClass, module: &HirModule) {
+        // --- Protocol: emit trait definition ---
+        if class.is_protocol {
+            self.emit_protocol_trait(class);
+            return;
+        }
+
+        // --- Newtype: emit tuple struct ---
+        if let Some(ref inner) = class.newtype_inner {
+            self.emit_newtype(class, inner);
+            return;
+        }
+
+        // Check if class defines __eq__ (don't auto-derive PartialEq)
+        let has_custom_eq = class.operator_impls.iter().any(|(n, _)| n == "__eq__");
+        let has_custom_str = class.operator_impls.iter().any(|(n, _)| n == "__str__");
+
         // Derive attributes
         self.write_indent();
-        if class.is_hashable {
+        if has_custom_eq {
+            // Don't derive PartialEq if custom __eq__ is defined
+            self.write("#[derive(Debug, Clone)]\n");
+        } else if class.is_hashable {
             self.write("#[derive(Debug, Clone, PartialEq, Eq, Hash)]\n");
         } else {
             self.write("#[derive(Debug, Clone, PartialEq)]\n");
@@ -351,6 +383,9 @@ impl RustEmitter {
         self.write_indent();
         self.write("}\n");
 
+        // --- Emit operator trait impls ---
+        self.emit_operator_impls(class);
+
         // For error types, implement Display and Error traits
         if class.is_error_type {
             self.output.push('\n');
@@ -382,6 +417,367 @@ impl RustEmitter {
             self.write("impl std::error::Error for ");
             self.write(&class.name);
             self.write(" {}\n");
+        } else if has_custom_str && !class.is_error_type {
+            // __str__ maps to Display (only if not error type, which already has Display)
+            // The __str__ body is emitted inside the Display impl
+            if let Some((_, str_func)) = class.operator_impls.iter().find(|(n, _)| n == "__str__") {
+                self.output.push('\n');
+                self.write_indent();
+                self.write("impl std::fmt::Display for ");
+                self.write(&class.name);
+                self.write(" {\n");
+                self.indent += 1;
+                self.write_indent();
+                self.write("fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+                self.indent += 1;
+                // Emit the body of __str__ but wrap the return value in write!(f, "{}", ...)
+                // For simplicity, if the body is a single Return, emit write!(f, "{}", return_expr)
+                if let Some(HirStmt::Return { value: Some(ref ret_expr) }) = str_func.body.first() {
+                    self.write_indent();
+                    self.write("write!(f, \"{}\", ");
+                    self.emit_expr(ret_expr);
+                    self.write(")\n");
+                } else {
+                    // Fallback: emit body statements
+                    for stmt in &str_func.body {
+                        self.emit_stmt(stmt);
+                    }
+                }
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
+            }
+        }
+
+        // Emit protocol trait impls
+        self.emit_protocol_impls(class, module);
+    }
+
+    /// Emit a Rust `trait` definition for a Protocol class.
+    fn emit_protocol_trait(&mut self, class: &HirClass) {
+        self.write_indent();
+        if self.pub_mode {
+            self.write("pub trait ");
+        } else {
+            self.write("trait ");
+        }
+        self.write(&class.name);
+        self.write(" {\n");
+        self.indent += 1;
+
+        for method in &class.methods {
+            self.write_indent();
+            self.write("fn ");
+            self.write(&method.name);
+            self.write("(&self");
+            for param in &method.params {
+                self.write(", ");
+                self.write(&param.name);
+                self.write(": ");
+                self.write(&param.ty.rust_type());
+            }
+            self.write(")");
+            if method.return_type != Type::None {
+                self.write(" -> ");
+                self.write(&method.return_type.rust_type());
+            }
+            self.write(";\n");
+        }
+
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+    }
+
+    /// Emit a newtype tuple struct.
+    fn emit_newtype(&mut self, class: &HirClass, inner: &Type) {
+        // Derive attributes
+        self.write_indent();
+        if is_hashable_type_codegen(inner) {
+            self.write("#[derive(Debug, Clone, PartialEq, Eq, Hash)]\n");
+        } else {
+            self.write("#[derive(Debug, Clone, PartialEq)]\n");
+        }
+
+        self.write_indent();
+        if self.pub_mode {
+            self.write(&format!("pub struct {}({});\n\n", class.name, inner.rust_type()));
+        } else {
+            self.write(&format!("struct {}({});\n\n", class.name, inner.rust_type()));
+        }
+
+        // Impl block with constructor and value() accessor
+        self.write_indent();
+        self.write("impl ");
+        self.write(&class.name);
+        self.write(" {\n");
+        self.indent += 1;
+
+        // Constructor: fn new(value: InnerType) -> Self
+        self.write_indent();
+        let pub_prefix = if self.pub_mode { "pub " } else { "" };
+        self.write(&format!("{}fn new(value: {}) -> Self {{\n", pub_prefix, inner.rust_type()));
+        self.indent += 1;
+        self.write_indent();
+        self.write("Self(value)\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n\n");
+
+        // Accessor: fn value(&self) -> InnerType
+        self.write_indent();
+        self.write(&format!("{}fn value(&self) -> {} {{\n", pub_prefix, inner.rust_type()));
+        self.indent += 1;
+        self.write_indent();
+        if inner.ownership() == sifr_type_system::OwnershipKind::Copy {
+            self.write("self.0\n");
+        } else {
+            self.write("self.0.clone()\n");
+        }
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+
+        // Emit any custom methods
+        for method in &class.methods {
+            self.output.push('\n');
+            self.emit_class_method(method, class);
+        }
+
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+
+        // Display impl for newtypes
+        self.output.push('\n');
+        self.write_indent();
+        self.write("impl std::fmt::Display for ");
+        self.write(&class.name);
+        self.write(" {\n");
+        self.indent += 1;
+        self.write_indent();
+        self.write("fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+        self.indent += 1;
+        self.write_indent();
+        self.write("write!(f, \"{}\", self.0)\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+    }
+
+    /// Emit Rust operator trait impls for operator overloading dunders.
+    fn emit_operator_impls(&mut self, class: &HirClass) {
+        for (dunder, func) in &class.operator_impls {
+            match dunder.as_str() {
+                "__add__" => self.emit_binop_trait_impl(class, func, "Add", "add", "+"),
+                "__sub__" => self.emit_binop_trait_impl(class, func, "Sub", "sub", "-"),
+                "__mul__" => self.emit_binop_trait_impl(class, func, "Mul", "mul", "*"),
+                "__truediv__" => self.emit_binop_trait_impl(class, func, "Div", "div", "/"),
+                "__mod__" => self.emit_binop_trait_impl(class, func, "Rem", "rem", "%"),
+                "__neg__" => self.emit_unaryop_trait_impl(class, func, "Neg", "neg"),
+                "__eq__" => self.emit_eq_trait_impl(class, func),
+                "__lt__" => self.emit_ord_trait_impl(class, func),
+                "__str__" | "__repr__" => {} // Handled separately in emit_class via Display
+                _ => {} // Other dunders not yet supported
+            }
+        }
+    }
+
+    /// Emit `impl std::ops::Trait for ClassName` for binary operators.
+    /// Uses reference-based impl to avoid consuming the operands.
+    fn emit_binop_trait_impl(&mut self, class: &HirClass, func: &HirFunction, trait_name: &str, method_name: &str, _op: &str) {
+        let rhs_ty = if let Some(param) = func.params.first() {
+            // If the param type is the same class, use &ClassName
+            if param.ty.rust_type() == class.name {
+                format!("&{}", class.name)
+            } else {
+                param.ty.rust_type()
+            }
+        } else {
+            format!("&{}", class.name)
+        };
+        let output_ty = func.return_type.rust_type();
+
+        self.output.push('\n');
+        self.write_indent();
+        self.write(&format!("impl std::ops::{}<{}> for &{} {{\n", trait_name, rhs_ty, class.name));
+        self.indent += 1;
+        self.write_indent();
+        self.write(&format!("type Output = {};\n\n", output_ty));
+        self.write_indent();
+        self.write(&format!("fn {}(self, ", method_name));
+        if let Some(param) = func.params.first() {
+            self.write(&param.name);
+        } else {
+            self.write("rhs");
+        }
+        self.write(": ");
+        self.write(&rhs_ty);
+        self.write(") -> Self::Output {\n");
+        self.indent += 1;
+
+        // Emit the body
+        for stmt in &func.body {
+            self.emit_stmt(stmt);
+        }
+
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+    }
+
+    /// Emit `impl std::ops::Neg for ClassName` for unary negation.
+    fn emit_unaryop_trait_impl(&mut self, class: &HirClass, func: &HirFunction, trait_name: &str, method_name: &str) {
+        let output_ty = func.return_type.rust_type();
+
+        self.output.push('\n');
+        self.write_indent();
+        self.write(&format!("impl std::ops::{} for {} {{\n", trait_name, class.name));
+        self.indent += 1;
+        self.write_indent();
+        self.write(&format!("type Output = {};\n\n", output_ty));
+        self.write_indent();
+        self.write(&format!("fn {}(self) -> Self::Output {{\n", method_name));
+        self.indent += 1;
+
+        for stmt in &func.body {
+            self.emit_stmt(stmt);
+        }
+
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+    }
+
+    /// Emit `impl PartialEq for ClassName` for __eq__.
+    fn emit_eq_trait_impl(&mut self, class: &HirClass, func: &HirFunction) {
+        self.output.push('\n');
+        self.write_indent();
+        self.write(&format!("impl PartialEq for {} {{\n", class.name));
+        self.indent += 1;
+        self.write_indent();
+        self.write("fn eq(&self, ");
+        if let Some(param) = func.params.first() {
+            self.write(&param.name);
+        } else {
+            self.write("other");
+        }
+        self.write(&format!(": &{}) -> bool {{\n", class.name));
+        self.indent += 1;
+
+        for stmt in &func.body {
+            self.emit_stmt(stmt);
+        }
+
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+    }
+
+    /// Emit `impl PartialOrd for ClassName` for __lt__.
+    fn emit_ord_trait_impl(&mut self, class: &HirClass, func: &HirFunction) {
+        self.output.push('\n');
+        self.write_indent();
+        self.write(&format!("impl PartialOrd for {} {{\n", class.name));
+        self.indent += 1;
+        self.write_indent();
+        self.write("fn partial_cmp(&self, ");
+        if let Some(param) = func.params.first() {
+            self.write(&param.name);
+        } else {
+            self.write("other");
+        }
+        self.write(&format!(": &{}) -> Option<std::cmp::Ordering> {{\n", class.name));
+        self.indent += 1;
+
+        // For __lt__, we generate a comparison that returns Ordering
+        // The user's __lt__ body returns bool, so we need to adapt
+        // Simple approach: compare using the body logic
+        // We'll emit: if self < other { Some(Less) } else if self == other { Some(Equal) } else { Some(Greater) }
+        // But for simplicity, just use the fields for comparison
+        self.write_indent();
+        self.write("Some(");
+        // Use the first field for comparison as a simple heuristic
+        if let Some((field_name, _)) = class.fields.first() {
+            self.write(&format!("self.{}.partial_cmp(&{}.{})?", field_name,
+                if let Some(param) = func.params.first() { &param.name } else { "other" },
+                field_name));
+        } else {
+            self.write("std::cmp::Ordering::Equal");
+        }
+        self.write(")\n");
+
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+    }
+
+    /// Emit `impl Protocol for ClassName` blocks for satisfied protocols.
+    fn emit_protocol_impls(&mut self, class: &HirClass, module: &HirModule) {
+        for proto_name in &class.implements_protocols {
+            // Find the protocol definition to get its method list
+            let proto_class = module.classes.iter().find(|c| c.name == *proto_name && c.is_protocol);
+            let proto_method_names: Vec<String> = proto_class
+                .map(|pc| pc.methods.iter().map(|m| m.name.clone()).collect())
+                .unwrap_or_default();
+
+            if proto_method_names.is_empty() { continue; }
+
+            self.output.push('\n');
+            self.write_indent();
+            self.write(&format!("impl {} for {} {{\n", proto_name, class.name));
+            self.indent += 1;
+
+            // Only emit methods that are part of the protocol
+            for method in &class.methods {
+                if !proto_method_names.contains(&method.name) { continue; }
+
+                self.write_indent();
+                self.write("fn ");
+                self.write(&method.name);
+                self.write("(&self");
+                for param in &method.params {
+                    self.write(", ");
+                    self.write(&param.name);
+                    self.write(": ");
+                    self.write(&param.ty.rust_type());
+                }
+                self.write(")");
+                if method.return_type != Type::None {
+                    self.write(" -> ");
+                    self.write(&method.return_type.rust_type());
+                }
+                self.write(" {\n");
+                self.indent += 1;
+                for stmt in &method.body {
+                    self.emit_stmt(stmt);
+                }
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
+            }
+
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n");
         }
     }
 
@@ -1629,6 +2025,13 @@ impl RustEmitter {
                     self.write(".repeat(");
                     self.emit_expr(left);
                     self.write(" as usize)");
+                } else if matches!(left.ty(), Type::Class { .. }) {
+                    // Class type with operator overloading: use reference-based ops
+                    self.write("&");
+                    self.emit_expr(left);
+                    self.write(&format!(" {} ", op));
+                    self.write("&");
+                    self.emit_expr(right);
                 } else {
                     // Wrap sub-expressions in parens if they are BinOps to preserve precedence
                     let needs_left_parens = matches!(left.as_ref(), HirExpr::BinOp { .. });
@@ -1707,9 +2110,17 @@ impl RustEmitter {
                     } else if let HirExpr::FString { parts, .. } = &args[0] {
                         // Inline f-string directly into println! to avoid double-format
                         self.emit_fstring_macro("println!", parts);
-                    } else if matches!(args[0].ty(), Type::Class { .. }) {
-                        // Use Debug format for class instances
-                        self.write("println!(\"{:?}\", ");
+                    } else if matches!(args[0].ty(), Type::Class { .. } | Type::Newtype { .. }) {
+                        // Check if class has Display impl
+                        let class_name = match args[0].ty() {
+                            Type::Class { name, .. } | Type::Newtype { name, .. } => name.clone(),
+                            _ => String::new(),
+                        };
+                        if self.display_classes.contains(&class_name) {
+                            self.write("println!(\"{}\", ");
+                        } else {
+                            self.write("println!(\"{:?}\", ");
+                        }
                         self.emit_expr(&args[0]);
                         self.write(")");
                     } else {
@@ -2247,6 +2658,15 @@ fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
         }
     }
     None
+}
+
+/// Check if a type is hashable (for codegen derive decisions).
+fn is_hashable_type_codegen(ty: &Type) -> bool {
+    match ty {
+        Type::Int | Type::Bool | Type::Str | Type::None => true,
+        Type::Float => false,
+        _ => false,
+    }
 }
 
 /// Collect all parts of a chained string concatenation (`a + b + c`).
