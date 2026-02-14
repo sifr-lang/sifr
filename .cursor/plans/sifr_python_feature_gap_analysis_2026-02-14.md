@@ -1,89 +1,69 @@
-# Sifr vs Python Gap Analysis (Frequent Developer Features)
+# Sifr vs Python Gap Analysis (Frequent Developer Features) - Updated
 
-Reviewed source: `.cursor/plans/sifr_compiler_architecture_fa3c10ee.plan.md`
+Reviewed source: `.cursor/plans/sifr_compiler_architecture_fa3c10ee.plan.md` (updated revision)
 
 ## Scope
 
-This analysis compares the Sifr compiler plan against Python features that are commonly used by day-to-day developers (application/backend/data tooling), and highlights what is:
+This review checks which frequently used Python features are still missing, deferred too late, or intentionally divergent in the current Sifr plan.
 
-- already covered,
-- missing/unspecified,
-- intentionally divergent from CPython.
+## What is now covered (previous gaps that were fixed)
 
-## What the plan already covers well
+The updated plan now explicitly covers several high-frequency Python features that were previously missing/unclear:
 
-The plan is strong on many high-usage Python features:
+- Tuple slicing (`milestone_ergonomics`)
+- Walrus operator `:=` (`milestone_ergonomics`)
+- `del` for item/key deletion (`milestone_safe_indexing`)
+- `open()` contract in stdlib (`milestone_core_stdlib`)
+- Decorator ordering for web routing (`milestone_decorators` before `milestone_web_db`)
 
-- Core syntax and flow: functions, `if/elif/else`, loops, `break`/`continue`, range, tuple unpacking
-- Core data model: `list`, `dict`, `tuple`, `set`, `frozenset`, `bytes`, `bytearray`
-- Pythonic ergonomics: comprehensions, generators, `yield`, `with`, keyword args, defaults, keyword-only params
-- OOP: classes, methods, properties, protocols, operator overloading
-- Modern typing: unions, literals, narrowing, generics, protocols, utility types
-- Async stack: `async/await`, async iterators, async context managers
-- Practical ecosystem targets: web/db/data/tooling milestones
+This means the remaining gaps are narrower and mostly around dynamic Python behavior and API-edge features.
 
-## High-impact gaps and mismatches
+## Current high-impact gaps (frequent in real Python code)
 
-## 1) Frequently used Python features missing or under-specified
-
-| Feature (Python) | Plan status | Why this is a gap |
+| Python feature | Plan status | Impact |
 | --- | --- | --- |
-| Tuple slicing (`t[1:3]`) | Explicitly excluded (`dict/tuple` not sliceable) | Tuple slicing is common in parsing, ETL, and function-result handling. This is a behavior break vs Python. |
-| `del` statement (`del x`, `del d[k]`, `del a[i:j]`) | Not specified | Deletion semantics are used in real code for dict/list cleanup and scope control. |
-| Walrus operator (`:=`) | Not specified | Common in loop conditions, regex/file parsing, and concise assignment-with-check patterns. |
-| Positional-only params (`def f(x, /, y)`) | Not specified | Widely used by built-ins and some APIs; needed for parity and API surface precision. |
-| Reflection helpers (`getattr`, `setattr`, `hasattr`) | Not specified | Frequently used in frameworks, serializers, and plugin/config layers. |
-| Built-in `open()` behavior | Only implied in examples; no explicit language/builtin contract | `with open(...)` is shown, but no explicit plan for `open` as a built-in API contract. |
+| `getattr` / `setattr` / `hasattr` / `delattr` | Explicitly unsupported | Common in frameworks, serializers, plugin systems, ORMs, and dynamic config code. |
+| `global` / `nonlocal` | Explicitly unsupported | Common in closure-heavy scripts and quick tooling code; requires code restructuring. |
+| `del x` (name unbinding) | Explicitly unsupported (`del` only for container item/key) | Used in memory-sensitive scripts and namespace cleanup; behavior differs from Python expectations. |
+| `*args` / `**kwargs` | **RESOLVED -- moved to `milestone_decorators`** | Moved earlier to unblock generic decorators and web routing wrappers. |
+| Positional-only params (`def f(x, /, y)`) | Deferred to `milestone_metaprogramming` (accepted) | Niche syntax for library authors; no downstream dependencies. milestone_metaprogramming is the right place. |
+| Multiple inheritance | Explicitly rejected (`single inheritance only`) | A non-trivial subset of Python OOP codebases must be redesigned. |
 
-## 2) Features explicitly divergent from Python (migration friction)
+## Portability divergences (not missing, but migration blockers)
 
-These are documented divergences, but they are major for Python developers:
+These are intentional design choices, but they create major Python-to-Sifr migration friction:
 
-- Exception model replaced by `Result`/`Option` (no Python-style runtime exception flow)
-- Arbitrary-precision `int` replaced by checked `i64`
-- Import-time side effects removed (`__init__.sifr` is API-only)
-- `global` / `nonlocal` unsupported
-- Single inheritance only
+- Exceptions replaced by `Result`/`Option`
+- Safe indexing (`x[i] -> Option[...]`) instead of Python exceptions
+- No import-time side effects from `__init__.sifr`
+- No runtime type creation (`type(...)`) or runtime reflection model
+- No arbitrary-precision integers (Python big-int behavior is not preserved) -- **accepted divergence**, intentional for `i64` performance and Rust alignment
 
-These are intentional and coherent with safety goals, but they should be treated as migration blockers for many existing Python codebases.
+## Plan quality risk discovered in updated document
 
-## 3) Plan-internal sequencing mismatch (not just feature absence)
+~~There is a significant internal semantic conflict:~~
 
-There is a roadmap dependency inconsistency:
+**RESOLVED.** The Safety Philosophy section had stale text saying overflow returns `Result[int, OverflowError]`. This has been updated to match the canonical behavior: "panics in debug, wraps in release -- matches Rust; opt-in checked mode deferred." All sections now agree.
 
-- M12 (`sifr.web`) uses decorator-based routing (`@app.get`)
-- Decorators are formally introduced in M14
+## Priority recommendations
 
-Without an earlier decorator subset, M12 cannot be delivered as specified (or requires hidden special-casing).
+## P0 (before milestone_web_db adoption scale)
 
-## Priority recommendations (feature backlog)
+- ~~Resolve integer overflow contract inconsistency~~ -- **RESOLVED.** Safety Philosophy updated to match Rust-default behavior. All sections consistent.
+- ~~Bring `*args` / `**kwargs` earlier than `milestone_metaprogramming`~~ -- **RESOLVED.** Moved to milestone_decorators (Decorators + Variadics).
 
-## P0 (before or during M7b-M12)
+## P1 (language portability and framework ergonomics)
 
-- Add explicit milestone support for:
-  - Tuple slicing parity
-  - Built-in `open()` contract (sync + `with` integration)
-  - A minimal decorator subset required by web routing (`@app.get`, `@app.post`) before M12
-- Resolve the M12 vs M14 decorator dependency explicitly in roadmap ordering.
+- Add a constrained reflection subset:
+  - `hasattr` + read-only `getattr` first,
+  - delayed or restricted `setattr`/`delattr`.
+- Decide whether `del x` should remain unsupported or have explicit replacement syntax/idiom in language docs.
 
-## P1 (M8-M14 window)
+## P2 (library-author parity)
 
-- Add `del` statement semantics (name/item/slice forms)
-- Add reflection/introspection baseline (`getattr`, `hasattr`; optionally constrained `setattr`)
-- Add positional-only parameter syntax support
-
-## P2 (optional, ergonomics-heavy)
-
-- Add walrus operator (`:=`) for Python ergonomics parity
-- Consider controlled support for additional Python object-model conveniences where safe
-
-## Suggested roadmap patch (minimal disruption)
-
-- Split decorators into:
-  - **M11b/M12 prerequisite:** runtime function decorators required by web routes
-  - **M14:** full metaprogramming/decorator macros/custom transforms
-- Add a small **M7c or M8a "Python parity polish"** milestone for tuple slicing, `open()`, `del`, and reflection basics.
+- ~~Consider earlier positional-only parameter support~~ -- **Accepted as-is.** milestone_metaprogramming is the right place; niche syntax with no downstream blockers.
+- Add migration guides/patterns for common "dynamic Python" idioms that Sifr intentionally disallows.
 
 ## Bottom line
 
-The Sifr plan already covers a large portion of commonly used Python capabilities, especially for typed application development. The biggest practical gaps are not broad missing categories, but a set of high-friction Python features (tuple slicing, `del`, reflection helpers, `open()` contract) plus one roadmap inconsistency (decorators needed before they are introduced). Fixing those would materially improve Python-to-Sifr portability.
+The updated plan is much stronger and now covers many practical Python ergonomics that were missing before. The P0 items (overflow inconsistency and `*args`/`**kwargs` timing) have been resolved. The remaining gaps are concentrated in dynamic features that Sifr intentionally does not support (`getattr` family, `global`/`nonlocal`, runtime reflection) -- these are accepted divergences with migration guidance planned for P2.
