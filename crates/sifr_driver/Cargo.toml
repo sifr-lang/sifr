@@ -1,0 +1,19 @@
+[package]
+name = "sifr_driver"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+sifr_python_parser = { workspace = true }
+sifr_python_ast = { workspace = true }
+sifr_hir = { workspace = true }
+sifr_codegen = { workspace = true }
+sifr_type_system = { workspace = true }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

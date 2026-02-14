@@ -19,6 +19,10 @@ sifr_python_trivia = { path = "crates/sifr_python_trivia" }
 sifr_python_ast = { path = "crates/sifr_python_ast" }
 sifr_python_parser = { path = "crates/sifr_python_parser" }
 sifr_python_literal = { path = "crates/sifr_python_literal" }
+sifr_type_system = { path = "crates/sifr_type_system" }
+sifr_hir = { path = "crates/sifr_hir" }
+sifr_codegen = { path = "crates/sifr_codegen" }
+sifr_driver = { path = "crates/sifr_driver" }
 
 # External dependencies (versions from ruff upstream)
 aho-corasick = { version = "1.1.3" }
