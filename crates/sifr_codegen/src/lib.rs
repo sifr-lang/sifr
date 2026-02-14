@@ -1285,8 +1285,9 @@ impl RustEmitter {
                     }
                 } else if func == "abs" {
                     if !args.is_empty() {
+                        self.write("(");
                         self.emit_expr(&args[0]);
-                        self.write(".abs()");
+                        self.write(").abs()");
                     }
                 } else if func == "round" {
                     if args.len() == 1 {
