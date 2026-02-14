@@ -69,6 +69,24 @@ The type system draws heavily from TypeScript's design: union and intersection t
 
 The end goal is a language capable of building web applications and general-purpose programs -- anywhere Python is used today, but with native performance and compile-time safety.
 
+## Safety Philosophy
+
+Sifr's core guarantee: **if it compiles, it works.** The language is designed so that a successfully compiled program will not crash at runtime under normal conditions. This is achieved through the following principles:
+
+- **No panics in user code.** Sifr programs never panic during normal execution. Every operation that can fail returns `Result[T, E]` or `Option[T]`, forcing the caller to handle the failure case at compile time.
+- **Mandatory error handling.** `Result` and `Option` values are `#[must_use]`. Ignoring a `Result` returned by a function is a **compile-time error**. The programmer must either handle the error (`match`, `try`/`except`), propagate it (`?`), or explicitly discard it (`let _ = ...`).
+- **All fallible operations return `Result` or `Option`.** This includes:
+  - Indexing (`x[i]` returns `Option[T]`)
+  - Division (`a / b` returns `Result[T, DivisionError]` when the divisor is not provably non-zero)
+  - Type conversions (`int(s)` where `s: str` returns `Result[int, ParseError]`)
+  - File I/O, network, and all stdlib operations that can fail
+  - Integer overflow (checked arithmetic returns `Result[int, OverflowError]`)
+- `**assert` is the only panic.** The `assert` statement is a programmer invariant check -- it generates `panic!()` and is intentionally unrecoverable. It exists to catch programmer bugs (violated assumptions), not to handle runtime errors. It is the one escape hatch from the no-panic guarantee.
+- **Panic = unrecoverable system failure.** Beyond `assert`, panics only occur from truly unrecoverable situations: stack overflow, double panic, or hardware failure. These are never part of normal control flow.
+- **Exceptions are not errors.** Sifr does not use Python's exception model. There is no stack unwinding, no `try`/`except` for control flow. The `try`/`except` syntax is reinterpreted as pattern matching on `Result` values. `raise` is syntax sugar for returning `Err(...)`.
+
+This philosophy means that a Sifr programmer who handles all `Result` and `Option` values (which the compiler enforces) can be confident their program will not crash at runtime.
+
 ## Compiler Pipeline
 
 ```mermaid
@@ -691,11 +709,32 @@ class IOError(AppError):
 
 **Codegen:** Error types generate Rust enums (not structs with inheritance). `AppError` becomes `enum AppError { ValueError(ValueError), IOError(IOError) }`. The `Error` protocol maps to Rust's `std::error::Error` trait.
 
-### Panic vs Result Boundary
+### Safety Boundary (No-Panic Guarantee)
 
-- `**assert` statements:** generate `assert!()` or `panic!()` in Rust. These are unrecoverable and not catchable by `try`/`except`.
-- **Rust library panics (M15 FFI):** Rust library panics are caught at FFI boundaries via `catch_unwind` where possible and converted to `Result::Err`. C library crashes (segfault, `abort()`) are non-recoverable -- the process terminates (see M15 FFI contract for details).
-- **Out-of-bounds indexing (safe indexing contract):** `x[i]` returns `Option[T]`, never panics. Both `str` and `list` indexing return `Option`. The caller must unwrap or pattern-match to access the value. This applies uniformly to all indexable types.
+Sifr's safety philosophy: **all fallible operations return `Result` or `Option`; the compiler enforces handling.** Panic is reserved for programmer invariant violations only.
+
+**Operations that return `Result`:**
+
+- **Division:** `a / b` returns `Result[int, DivisionError]` (or `Result[float, DivisionError]`) when the divisor cannot be statically proven non-zero. If the compiler can prove `b != 0` (e.g., literal divisor `a / 2`), it returns the value directly with no wrapping. Codegen: checked division with zero-check.
+- **Integer overflow:** arithmetic on `int` uses checked operations by default. `a + b`, `a * b`, etc. return `Result[int, OverflowError]` when the compiler cannot prove the result fits. Codegen: Rust's `checked_add()`, `checked_mul()`, etc.
+- **Type conversions:** `int(s)` where `s: str` returns `Result[int, ParseError]`. `float(s)` returns `Result[float, ParseError]`. Conversions between numeric types that cannot lose precision (e.g., `int` to `float`) are implicit and infallible.
+- **Rust library panics (M15 FFI):** caught at FFI boundaries via `catch_unwind` where possible and converted to `Result::Err`. C library crashes are non-recoverable (see M15 FFI contract).
+
+**Operations that return `Option`:**
+
+- **Indexing:** `x[i]` returns `Option[T]` for all indexable types (`str`, `list`, `dict`). Never panics.
+- **Dict lookup:** `d[key]` returns `Option[V]`. Never panics on missing key.
+
+**The only panic -- `assert`:**
+
+- `**assert` statements:** generate `assert!()` or `panic!()` in Rust. These are programmer invariant checks -- they catch bugs in logic, not runtime errors. They are intentionally unrecoverable and not catchable by `try`/`except`. `assert` is the ONE place where Sifr intentionally panics.
+
+**Must-Use Contract:**
+
+- `Result` values are `#[must_use]`. Ignoring a `Result` returned by a function is a **compile-time error**.
+- `Option` values returned by functions are also `#[must_use]`.
+- To explicitly discard an error: `let _ = fallible_operation()` -- this acknowledges the error is intentionally ignored.
+- This is the key "if it compiles, it works" guarantee: every error path is either handled or explicitly acknowledged.
 
 ### Pattern Matching (M4 Foundation)
 
@@ -724,10 +763,15 @@ M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/
 - `?` operator works in functions returning `Result`
 - `try`/`except` generates correct `match` on error variants
 - `raise` inside a `Result`-returning function generates `Err(...)`
-- `assert` generates `assert!()` / `panic!()`
+- `assert` generates `assert!()` / `panic!()` -- the only panic source in user code
+- Division by zero returns `Result[T, DivisionError]`, not a panic
+- Integer overflow returns `Result[int, OverflowError]` (checked arithmetic)
+- `int(s)` / `float(s)` string-to-number conversions return `Result`
+- Unused `Result` is a compile-time error (`#[must_use]` enforcement)
+- Explicit discard via `let _ = expr` compiles without error
 - Exhaustiveness checking for `except` arms
-- E2E pass tests: result_basic, option_chaining, error_propagation, try_except
-- E2E fail tests: unhandled_error, non_exhaustive_except
+- E2E pass tests: result_basic, option_chaining, error_propagation, try_except, division_by_zero_result, int_parse_result, checked_overflow
+- E2E fail tests: unhandled_error, non_exhaustive_except, unused_result_error
 - Unit tests for Result/Option type checking and inference
 - Milestone demo in `./tmp/m4_demo.sifr`
 
@@ -858,11 +902,21 @@ After M5 stabilizes, Sifr should support newtypes -- thin wrappers around primit
 
 ```python
 class Port(int):
-    def __init__(self, value: int):
-        assert 0 <= value <= 65535
+    @staticmethod
+    def new(value: int) -> Result[Port, ValueError]:
+        if value < 0 or value > 65535:
+            raise ValueError("port must be 0-65535")
+        return Port(value)
 ```
 
-This maps to Rust's newtype pattern (`struct Port(u16)`) with zero-cost runtime representation. The compiler enforces that `Port` and `int` are distinct types -- you cannot pass an `int` where a `Port` is expected without explicit construction.
+Construction is fallible -- callers must handle the `Result`:
+
+```python
+port = Port.new(8080)?          # propagate error
+port = Port.new(99999)?         # returns Err(ValueError)
+```
+
+This maps to Rust's newtype pattern (`struct Port(u16)`) with zero-cost runtime representation. The compiler enforces that `Port` and `int` are distinct types -- you cannot pass an `int` where a `Port` is expected without explicit construction. Validation uses `Result`, not `assert`, because invalid input is a runtime condition (not a programmer bug).
 
 ### Struct Update / Spread Semantics
 
@@ -1231,7 +1285,7 @@ def main():
 ### Test Syntax
 
 ```python
-from sifr.test import test, assert_eq, assert_true, assert_raises
+from sifr.test import test, assert_eq, assert_true, assert_err
 
 def test_addition():
     assert_eq(1 + 1, 2)
@@ -1240,13 +1294,14 @@ def test_string_upper():
     assert_eq("hello".upper(), "HELLO")
 
 def test_division_by_zero():
-    assert_raises(ValueError, lambda: 1 / 0)
+    result = 1 / 0
+    assert_err(DivisionError, result)
 ```
 
 ### Features
 
 - **Test discovery:** `sifr test` finds all functions named `test_*` in files named `test_*.sifr` or `*_test.sifr`
-- **Assertions:** `assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_raises`, `assert_contains`
+- **Assertions:** `assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_err`, `assert_ok`, `assert_none`, `assert_contains`
 - **Test filtering:** `sifr test -k "test_string"` runs only matching tests
 - **Parallel execution:** tests run in parallel by default (each test is independent)
 - **Setup/teardown:** `setup()` and `teardown()` functions in test files run before/after each test
@@ -1264,7 +1319,7 @@ Depends on M8: needs `sifr.io` for test file discovery and `sifr.os` for process
 ### Definition of Done (M10)
 
 - `sifr test` discovers and runs `test_*` functions in `test_*.sifr` / `*_test.sifr` files
-- Assertions (`assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_raises`, `assert_contains`) work correctly
+- Assertions (`assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_err`, `assert_ok`, `assert_none`, `assert_contains`) work correctly
 - Test filtering (`-k`) works
 - Parallel execution works (tests run independently)
 - Setup/teardown functions execute before/after each test
@@ -1809,20 +1864,25 @@ Sifr uses move-by-default semantics (like Rust), but must define when the compil
 
 ### 3. Error Semantics Matrix
 
-Sifr replaces Python's exception model with Rust's `Result`/`Option` model (M4). This contract defines how errors behave across different contexts.
+Sifr replaces Python's exception model with Rust's `Result`/`Option` model (M4). This contract defines how errors behave across different contexts. **All fallible operations return `Result` or `Option`; the compiler enforces handling via `#[must_use]`.**
 
 **Contract:**
 
 
-| Context              | Error mechanism                | Propagation                             | Codegen                                                    |
-| -------------------- | ------------------------------ | --------------------------------------- | ---------------------------------------------------------- |
-| Sync function        | `Result[T, E]` return          | `?` operator or explicit `match`        | `Result<T, E>`                                             |
-| Async function (M11) | `Result[T, E]` return          | `?` operator (works across `.await`)    | `Result<T, E>`                                             |
-| `try`/`except` block | Pattern match on `Result`      | `except` arms match error variants      | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
-| Rust FFI (M15)       | Rust panics caught at boundary | `catch_unwind` at Rust FFI entry points | Panic -> `Result::Err` conversion                          |
-| C FFI (M15)          | Crashes are non-recoverable    | Safe wrappers validate inputs           | Process terminates on segfault/abort                       |
-| `assert` statement   | Panic (unrecoverable)          | Not catchable                           | `assert!()` or `panic!()`                                  |
-| Main function        | `Result` printed as exit code  | Non-zero exit on `Err`                  | `fn main() -> Result<(), Box<dyn Error>>`                  |
+| Context              | Error mechanism                   | Propagation                             | Codegen                                                    |
+| -------------------- | --------------------------------- | --------------------------------------- | ---------------------------------------------------------- |
+| Sync function        | `Result[T, E]` return             | `?` operator or explicit `match`        | `Result<T, E>`                                             |
+| Async function (M11) | `Result[T, E]` return             | `?` operator (works across `.await`)    | `Result<T, E>`                                             |
+| `try`/`except` block | Pattern match on `Result`         | `except` arms match error variants      | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
+| Indexing             | `Option[T]` return                | `?` or `match`                          | `.get(i).cloned()` / `.chars().nth(i)`                     |
+| Division             | `Result[T, DivisionError]`        | `?` or `match`                          | Checked division with zero-check                           |
+| Integer overflow     | `Result[int, OverflowError]`      | `?` or `match`                          | `checked_add()`, `checked_mul()`, etc.                     |
+| Type conversion      | `Result[T, ParseError]`           | `?` or `match`                          | `.parse::<T>()`                                            |
+| Unused `Result`      | **Compile-time error**            | Must handle or `let _ = ...` to discard | `#[must_use]` attribute on `Result`                        |
+| Rust FFI (M15)       | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points | Panic -> `Result::Err` conversion                          |
+| C FFI (M15)          | Crashes are non-recoverable       | Safe wrappers validate inputs           | Process terminates on segfault/abort                       |
+| `assert` statement   | Panic (programmer invariant only) | Not catchable                           | `assert!()` or `panic!()`                                  |
+| Main function        | `Result` printed as exit code     | Non-zero exit on `Err`                  | `fn main() -> Result<(), Box<dyn Error>>`                  |
 
 
 `**except` arm matching semantics:**
@@ -1933,7 +1993,7 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This contract
 - **Partial moves:** when a struct field is moved out, the entire struct becomes partially invalid. The compiler tracks which fields are still valid.
 - **User-defined destructors deferred:** Sifr does NOT expose `__del__` or custom destructors in MVP. The compiler auto-generates `Drop` for types that hold resources (file handles, connections) via stdlib wrappers.
 - **Explicit cleanup via `with`:** for resource management (files, connections), use `with` blocks that map to Rust's scoped resource patterns. The resource is cleaned up when the `with` block exits.
-- **Panic during destruction:** if a destructor panics, the program aborts (matches Rust behavior). This is rare since auto-generated destructors don't panic.
+- **Destructor failure:** auto-generated destructors do not fail. If an underlying Rust `Drop` implementation panics (only possible via FFI-wrapped types), the program aborts. This is a system-level failure, not a Sifr-level concern -- Sifr user code cannot trigger destructor panics.
 
 **Milestone responsibilities:**
 
