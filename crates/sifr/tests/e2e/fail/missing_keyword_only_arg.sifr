@@ -1,0 +1,8 @@
+# expect-error: missing argument
+def display(name: str, *, verbose: bool) -> str:
+    if verbose:
+        return f"Name: {name}"
+    return name
+
+def main():
+    print(display("Alice"))

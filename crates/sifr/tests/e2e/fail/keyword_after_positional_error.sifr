@@ -1,0 +1,6 @@
+# expect-error: given both positionally and as keyword
+def greet(name: str, greeting: str) -> str:
+    return f"{greeting}, {name}!"
+
+def main():
+    print(greet("Alice", name="Bob"))

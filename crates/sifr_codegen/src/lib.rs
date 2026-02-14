@@ -619,14 +619,11 @@ impl RustEmitter {
                 self.write(";\n");
             }
             HirStmt::StarUnpack { before, star, after, value } => {
-                // Emit: let _tmp = value;
-                self.writeln("let _star_tmp = {");
-                self.indent += 1;
+                // Emit: let _tmp = value.clone() to avoid moving;
                 self.write_indent();
+                self.write("let _star_tmp = ");
                 self.emit_expr(value);
-                self.write("\n");
-                self.indent -= 1;
-                self.writeln("};");
+                self.write(".clone();\n");
                 // Emit before vars
                 for (i, (name, _ty)) in before.iter().enumerate() {
                     self.write_indent();
