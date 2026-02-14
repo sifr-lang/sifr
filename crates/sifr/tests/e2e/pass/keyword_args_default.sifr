@@ -1,0 +1,8 @@
+# expect-stdout: Hello, Alice!
+# expect-stdout: Hi, Bob!
+def greet(name: str, greeting: str = "Hello") -> str:
+    return f"{greeting}, {name}!"
+
+def main():
+    print(greet("Alice"))
+    print(greet("Bob", "Hi"))

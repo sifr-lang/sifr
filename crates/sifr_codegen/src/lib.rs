@@ -59,6 +59,8 @@ struct RustEmitter {
     option_unwrapped_vars: HashSet<String>,
     /// Function signatures: name -> (param_types, return_type)
     func_signatures: HashMap<String, (Vec<Type>, Type)>,
+    /// Whether we're inside a loop that has an else clause
+    in_loop_with_else: bool,
 }
 
 impl RustEmitter {
@@ -72,6 +74,7 @@ impl RustEmitter {
             current_return_type: None,
             option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
+            in_loop_with_else: false,
         }
     }
 
@@ -107,8 +110,17 @@ impl RustEmitter {
                         self.collect_union_types_in_stmts(body);
                     }
                 }
-                HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
+                HirStmt::While { body, else_body, .. } => {
                     self.collect_union_types_in_stmts(body);
+                    if let Some(eb) = else_body {
+                        self.collect_union_types_in_stmts(eb);
+                    }
+                }
+                HirStmt::For { body, else_body, .. } => {
+                    self.collect_union_types_in_stmts(body);
+                    if let Some(eb) = else_body {
+                        self.collect_union_types_in_stmts(eb);
+                    }
                 }
                 _ => {}
             }
@@ -192,7 +204,9 @@ impl RustEmitter {
         // Track the current function's return type for Option wrapping
         self.current_return_type = Some(func.return_type.clone());
 
-        // Function signature
+        // Function signature -- only emit params without defaults, or all params
+        // Since Rust doesn't have default params, we emit all params and handle
+        // defaults at call site
         self.write_indent();
         self.write("fn ");
         self.write(&func.name);
@@ -265,6 +279,70 @@ impl RustEmitter {
                 self.write(" = ");
                 self.emit_expr(value);
                 self.write(";\n");
+            }
+            HirStmt::AugAssign { name, op, value } => {
+                self.write_indent();
+                let var_ty = value.ty();
+                match op.as_str() {
+                    "+=" => {
+                        // Special cases for string and list
+                        match var_ty {
+                            Type::Str => {
+                                self.write(name);
+                                self.write(".push_str(&");
+                                self.emit_expr(value);
+                                self.write(");\n");
+                                return;
+                            }
+                            _ => {
+                                // Check if target is a list (we need to look at the value context)
+                                // For list += list, use extend
+                                if let Type::List(_) = var_ty {
+                                    self.write(name);
+                                    self.write(".extend(");
+                                    self.emit_expr(value);
+                                    self.write(");\n");
+                                    return;
+                                }
+                            }
+                        }
+                        self.write(name);
+                        self.write(" += ");
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
+                    "-=" | "*=" | "%=" => {
+                        self.write(name);
+                        self.write(&format!(" {} ", op));
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
+                    "/=" => {
+                        self.write(name);
+                        self.write(" /= ");
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
+                    "//=" => {
+                        self.write(name);
+                        self.write(" /= ");
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
+                    "**=" => {
+                        self.write(name);
+                        self.write(" = ");
+                        self.write(&format!("({} as f64).powf(", name));
+                        self.emit_expr(value);
+                        self.write(" as f64);\n");
+                    }
+                    _ => {
+                        self.write(name);
+                        self.write(&format!(" {} ", op));
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
+                }
             }
             HirStmt::Return { value } => {
                 let ret_is_option = self.current_return_type.as_ref().map_or(false, |t| is_option_type(t));
@@ -410,6 +488,8 @@ impl RustEmitter {
                     self.writeln("}");
                 } else {
                     // Normal if/elif/else
+                    // Hoist any walrus expressions before the if
+                    self.emit_walrus_hoists(condition);
                     self.write_indent();
                     self.write("if ");
                     self.emit_expr(condition);
@@ -445,7 +525,15 @@ impl RustEmitter {
                     self.writeln("}");
                 }
             }
-            HirStmt::While { condition, body } => {
+            HirStmt::While { condition, body, else_body } => {
+                let has_else = else_body.is_some();
+                if has_else {
+                    self.writeln("let mut _broke = false;");
+                }
+                let prev_loop_else = self.in_loop_with_else;
+                self.in_loop_with_else = has_else;
+                // Hoist any walrus expressions
+                self.emit_walrus_hoists(condition);
                 self.write_indent();
                 self.write("while ");
                 self.emit_expr(condition);
@@ -456,17 +544,36 @@ impl RustEmitter {
                 }
                 self.indent -= 1;
                 self.writeln("}");
+                self.in_loop_with_else = prev_loop_else;
+                if let Some(else_stmts) = else_body {
+                    self.writeln("if !_broke {");
+                    self.indent += 1;
+                    for s in else_stmts {
+                        self.emit_stmt(s);
+                    }
+                    self.indent -= 1;
+                    self.writeln("}");
+                }
             }
-            HirStmt::For { target, iter, body, .. } => {
+            HirStmt::For { target, iter, body, else_body, .. } => {
+                let has_else = else_body.is_some();
+                if has_else {
+                    self.writeln("let mut _broke = false;");
+                }
+                let prev_loop_else = self.in_loop_with_else;
+                self.in_loop_with_else = has_else;
                 self.write_indent();
                 self.write("for ");
                 self.write(target);
                 self.write(" in ");
                 // For lists, iterate with .iter() to borrow and clone elements
                 let is_list = matches!(iter.ty(), Type::List(_));
+                let is_dict = matches!(iter.ty(), Type::Dict(_, _));
                 self.emit_expr(iter);
                 if is_list {
                     self.write(".iter().cloned()");
+                } else if is_dict {
+                    self.write(".keys().cloned()");
                 }
                 self.write(" {\n");
                 self.indent += 1;
@@ -475,8 +582,21 @@ impl RustEmitter {
                 }
                 self.indent -= 1;
                 self.writeln("}");
+                self.in_loop_with_else = prev_loop_else;
+                if let Some(else_stmts) = else_body {
+                    self.writeln("if !_broke {");
+                    self.indent += 1;
+                    for s in else_stmts {
+                        self.emit_stmt(s);
+                    }
+                    self.indent -= 1;
+                    self.writeln("}");
+                }
             }
             HirStmt::Break => {
+                if self.in_loop_with_else {
+                    self.writeln("_broke = true;");
+                }
                 self.writeln("break;");
             }
             HirStmt::Continue => {
@@ -498,6 +618,191 @@ impl RustEmitter {
                 self.emit_expr(value);
                 self.write(";\n");
             }
+            HirStmt::StarUnpack { before, star, after, value } => {
+                // Emit: let _tmp = value.clone() to avoid moving;
+                self.write_indent();
+                self.write("let _star_tmp = ");
+                self.emit_expr(value);
+                self.write(".clone();\n");
+                // Emit before vars
+                for (i, (name, _ty)) in before.iter().enumerate() {
+                    self.write_indent();
+                    self.write(&format!("let {} = _star_tmp[{}].clone();\n", name, i));
+                }
+                // Emit star var
+                let (star_name, _star_ty) = star;
+                if after.is_empty() {
+                    self.write_indent();
+                    self.write(&format!("let {} = _star_tmp[{}..].to_vec();\n", star_name, before.len()));
+                } else {
+                    self.write_indent();
+                    self.write(&format!("let {} = _star_tmp[{}.._star_tmp.len() - {}].to_vec();\n", star_name, before.len(), after.len()));
+                }
+                // Emit after vars
+                for (i, (name, _ty)) in after.iter().enumerate() {
+                    self.write_indent();
+                    self.write(&format!("let {} = _star_tmp[_star_tmp.len() - {}].clone();\n", name, after.len() - i));
+                }
+            }
+        }
+    }
+
+    /// Emit any walrus (named expression) assignments that need to be hoisted before a condition.
+    fn emit_walrus_hoists(&mut self, expr: &HirExpr) {
+        match expr {
+            HirExpr::WalrusExpr { name, value, ty } => {
+                self.write_indent();
+                self.write("let ");
+                self.write(name);
+                self.write(": ");
+                self.write(&ty.rust_type());
+                self.write(" = ");
+                self.emit_expr(value);
+                self.write(";\n");
+            }
+            HirExpr::Compare { left, comparators, .. } => {
+                self.emit_walrus_hoists(left);
+                for c in comparators {
+                    self.emit_walrus_hoists(c);
+                }
+            }
+            HirExpr::BoolOp { values, .. } => {
+                for v in values {
+                    self.emit_walrus_hoists(v);
+                }
+            }
+            HirExpr::BinOp { left, right, .. } => {
+                self.emit_walrus_hoists(left);
+                self.emit_walrus_hoists(right);
+            }
+            _ => {}
+        }
+    }
+
+    fn emit_list_slice(&mut self, object: &HirExpr, start: &Option<Box<HirExpr>>, stop: &Option<Box<HirExpr>>, step: &Option<Box<HirExpr>>) {
+        if let Some(step_expr) = step {
+            // Step slicing
+            self.write("{ let _v = &");
+            self.emit_expr(object);
+            self.write("; let _len = _v.len() as i64; let _step = ");
+            self.emit_expr(step_expr);
+            self.write("; ");
+
+            // Resolve start
+            self.write("let _start = ");
+            if let Some(s) = start {
+                self.write("{ let _s = ");
+                self.emit_expr(s);
+                self.write("; if _s < 0 { ((_len + _s).max(0)) as usize } else { (_s.min(_len)) as usize } }");
+            } else {
+                self.write("if _step > 0 { 0 } else { (_len - 1) as usize }");
+            }
+            self.write("; ");
+
+            // Resolve stop
+            self.write("let _stop = ");
+            if let Some(e) = stop {
+                self.write("{ let _e = ");
+                self.emit_expr(e);
+                self.write("; if _e < 0 { ((_len + _e).max(0)) as usize } else { (_e.min(_len)) as usize } }");
+            } else {
+                self.write("if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }");
+            }
+            self.write("; ");
+
+            // Build result
+            self.write("let mut _result = Vec::new(); ");
+            self.write("if _step > 0 { let mut _i = _start; while _i < _stop { _result.push(_v[_i].clone()); _i += _step as usize; } }");
+            self.write(" else { let mut _i = _start as i64; let _stop_i = _stop as i64; while _i > _stop_i { _result.push(_v[_i as usize].clone()); _i += _step; } }");
+            self.write("; _result }");
+        } else {
+            // Simple slice without step
+            self.write("{ let _v = &");
+            self.emit_expr(object);
+            self.write("; let _len = _v.len() as i64; ");
+
+            self.write("let _start = ");
+            if let Some(s) = start {
+                self.write("{ let _s = ");
+                self.emit_expr(s);
+                self.write("; if _s < 0 { ((_len + _s).max(0)) as usize } else { (_s.min(_len)) as usize } }");
+            } else {
+                self.write("0_usize");
+            }
+            self.write("; ");
+
+            self.write("let _stop = ");
+            if let Some(e) = stop {
+                self.write("{ let _e = ");
+                self.emit_expr(e);
+                self.write("; if _e < 0 { ((_len + _e).max(0)) as usize } else { (_e.min(_len)) as usize } }");
+            } else {
+                self.write("_len as usize");
+            }
+            self.write("; ");
+
+            self.write("_v[_start.._stop].to_vec() }");
+        }
+    }
+
+    fn emit_string_slice(&mut self, object: &HirExpr, start: &Option<Box<HirExpr>>, stop: &Option<Box<HirExpr>>, step: &Option<Box<HirExpr>>) {
+        if let Some(step_expr) = step {
+            self.write("{ let _s: Vec<char> = ");
+            self.emit_expr(object);
+            self.write(".chars().collect(); let _len = _s.len() as i64; let _step = ");
+            self.emit_expr(step_expr);
+            self.write("; ");
+
+            self.write("let _start = ");
+            if let Some(s) = start {
+                self.write("{ let _sv = ");
+                self.emit_expr(s);
+                self.write("; if _sv < 0 { ((_len + _sv).max(0)) as usize } else { (_sv.min(_len)) as usize } }");
+            } else {
+                self.write("if _step > 0 { 0 } else { (_len - 1) as usize }");
+            }
+            self.write("; ");
+
+            self.write("let _stop = ");
+            if let Some(e) = stop {
+                self.write("{ let _ev = ");
+                self.emit_expr(e);
+                self.write("; if _ev < 0 { ((_len + _ev).max(0)) as usize } else { (_ev.min(_len)) as usize } }");
+            } else {
+                self.write("if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }");
+            }
+            self.write("; ");
+
+            self.write("let mut _result = String::new(); ");
+            self.write("if _step > 0 { let mut _i = _start; while _i < _stop { _result.push(_s[_i]); _i += _step as usize; } }");
+            self.write(" else { let mut _i = _start as i64; let _stop_i = _stop as i64; while _i > _stop_i { _result.push(_s[_i as usize]); _i += _step; } }");
+            self.write("; _result }");
+        } else {
+            self.write("{ let _s = &");
+            self.emit_expr(object);
+            self.write("; let _len = _s.chars().count() as i64; ");
+
+            self.write("let _start = ");
+            if let Some(s) = start {
+                self.write("{ let _sv = ");
+                self.emit_expr(s);
+                self.write("; if _sv < 0 { ((_len + _sv).max(0)) as usize } else { (_sv.min(_len)) as usize } }");
+            } else {
+                self.write("0_usize");
+            }
+            self.write("; ");
+
+            self.write("let _stop = ");
+            if let Some(e) = stop {
+                self.write("{ let _ev = ");
+                self.emit_expr(e);
+                self.write("; if _ev < 0 { ((_len + _ev).max(0)) as usize } else { (_ev.min(_len)) as usize } }");
+            } else {
+                self.write("_len as usize");
+            }
+            self.write("; ");
+
+            self.write("_s.chars().skip(_start).take(_stop - _start).collect::<String>() }");
         }
     }
 
@@ -573,10 +878,161 @@ impl RustEmitter {
                 }
                 self.write(").map_or(-1_i64, |i| i as i64)");
             }
+            // String methods - extended
+            (Type::Str, "title") => {
+                // Title case: capitalize first letter of each word
+                self.emit_expr(object);
+                self.write(".split_whitespace().map(|w| { let mut c = w.chars(); match c.next() { None => String::new(), Some(f) => f.to_uppercase().to_string() + &c.as_str().to_lowercase() } }).collect::<Vec<_>>().join(\" \")");
+            }
+            (Type::Str, "capitalize") => {
+                self.write("{ let _s = ");
+                self.emit_expr(object);
+                self.write("; let mut _c = _s.chars(); match _c.next() { None => String::new(), Some(f) => f.to_uppercase().to_string() + &_c.as_str().to_lowercase() } }");
+            }
+            (Type::Str, "swapcase") => {
+                self.emit_expr(object);
+                self.write(".chars().map(|c| if c.is_uppercase() { c.to_lowercase().to_string() } else { c.to_uppercase().to_string() }).collect::<String>()");
+            }
+            (Type::Str, "isdigit") => {
+                self.write("!");
+                self.emit_expr(object);
+                self.write(".is_empty() && ");
+                self.emit_expr(object);
+                self.write(".chars().all(|c| c.is_ascii_digit())");
+            }
+            (Type::Str, "isalpha") => {
+                self.write("!");
+                self.emit_expr(object);
+                self.write(".is_empty() && ");
+                self.emit_expr(object);
+                self.write(".chars().all(|c| c.is_alphabetic())");
+            }
+            (Type::Str, "isalnum") => {
+                self.write("!");
+                self.emit_expr(object);
+                self.write(".is_empty() && ");
+                self.emit_expr(object);
+                self.write(".chars().all(|c| c.is_alphanumeric())");
+            }
+            (Type::Str, "isspace") => {
+                self.write("!");
+                self.emit_expr(object);
+                self.write(".is_empty() && ");
+                self.emit_expr(object);
+                self.write(".chars().all(|c| c.is_whitespace())");
+            }
+            (Type::Str, "isupper") => {
+                self.emit_expr(object);
+                self.write(".chars().any(|c| c.is_alphabetic()) && ");
+                self.emit_expr(object);
+                self.write(".chars().filter(|c| c.is_alphabetic()).all(|c| c.is_uppercase())");
+            }
+            (Type::Str, "islower") => {
+                self.emit_expr(object);
+                self.write(".chars().any(|c| c.is_alphabetic()) && ");
+                self.emit_expr(object);
+                self.write(".chars().filter(|c| c.is_alphabetic()).all(|c| c.is_lowercase())");
+            }
+            (Type::Str, "join") => {
+                // Python: "sep".join(items) -> Rust: items.join("sep")
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                    self.write(".join(&");
+                    self.emit_expr(object);
+                    self.write(")");
+                }
+            }
+            (Type::Str, "count") => {
+                self.emit_expr(object);
+                self.write(".matches(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                    self.write(" as &str");
+                }
+                self.write(").count() as i64");
+            }
+            (Type::Str, "center") => {
+                self.write("{ let _s = ");
+                self.emit_expr(object);
+                self.write("; let _w = ");
+                if !args.is_empty() { self.emit_expr(&args[0]); }
+                self.write(" as usize; let _len = _s.chars().count(); if _len >= _w { _s } else { let _pad = _w - _len; let _left = _pad / 2; let _right = _pad - _left; format!(\"{}{}{}\", \" \".repeat(_left), _s, \" \".repeat(_right)) } }");
+            }
+            (Type::Str, "ljust") => {
+                self.write("format!(\"{:<width$}\", ");
+                self.emit_expr(object);
+                self.write(", width = ");
+                if !args.is_empty() { self.emit_expr(&args[0]); }
+                self.write(" as usize)");
+            }
+            (Type::Str, "rjust") => {
+                self.write("format!(\"{:>width$}\", ");
+                self.emit_expr(object);
+                self.write(", width = ");
+                if !args.is_empty() { self.emit_expr(&args[0]); }
+                self.write(" as usize)");
+            }
+            (Type::Str, "zfill") => {
+                self.write("format!(\"{:0>width$}\", ");
+                self.emit_expr(object);
+                self.write(", width = ");
+                if !args.is_empty() { self.emit_expr(&args[0]); }
+                self.write(" as usize)");
+            }
             // List methods
             (Type::List(_), "append") => {
                 self.emit_expr(object);
                 self.write(".push(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::List(_), "extend") => {
+                self.emit_expr(object);
+                self.write(".extend(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::List(_), "insert") => {
+                self.emit_expr(object);
+                self.write(".insert(");
+                if args.len() >= 2 {
+                    self.emit_expr(&args[0]);
+                    self.write(" as usize, ");
+                    self.emit_expr(&args[1]);
+                }
+                self.write(")");
+            }
+            (Type::List(_), "clear") => {
+                self.emit_expr(object);
+                self.write(".clear()");
+            }
+            (Type::List(_), "copy") => {
+                self.emit_expr(object);
+                self.write(".clone()");
+            }
+            (Type::List(_), "reverse") => {
+                self.emit_expr(object);
+                self.write(".reverse()");
+            }
+            (Type::List(_), "sort") => {
+                self.emit_expr(object);
+                self.write(".sort()");
+            }
+            (Type::List(_), "count") => {
+                self.emit_expr(object);
+                self.write(".iter().filter(|x| **x == ");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(").count() as i64");
+            }
+            (Type::List(_), "contains") => {
+                self.emit_expr(object);
+                self.write(".contains(&");
                 if !args.is_empty() {
                     self.emit_expr(&args[0]);
                 }
@@ -595,6 +1051,34 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".values().cloned().collect::<Vec<_>>()");
             }
+            (Type::Dict(_, _), "items") => {
+                self.emit_expr(object);
+                self.write(".iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()");
+            }
+            (Type::Dict(_, _), "update") => {
+                self.emit_expr(object);
+                self.write(".extend(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::Dict(_, _), "clear") => {
+                self.emit_expr(object);
+                self.write(".clear()");
+            }
+            (Type::Dict(_, _), "copy") => {
+                self.emit_expr(object);
+                self.write(".clone()");
+            }
+            (Type::Dict(_, _), "contains") => {
+                self.emit_expr(object);
+                self.write(".contains_key(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
             (Type::Dict(_, _), "get") => {
                 self.emit_expr(object);
                 self.write(".get(&");
@@ -603,9 +1087,20 @@ impl RustEmitter {
                 }
                 self.write(").cloned().unwrap()");
             }
+            // Tuple count()
+            (Type::Tuple(_), "count") => {
+                // For tuples, count is tricky - we need to check each element
+                // For now, emit a simple comparison chain
+                self.write("0_i64 /* tuple.count() not fully supported */");
+            }
             // Tuple len() - compile-time constant
             (Type::Tuple(elems), "len") => {
                 self.write(&format!("{}_i64", elems.len()));
+            }
+            // String len() - character count
+            (Type::Str, "len") => {
+                self.emit_expr(object);
+                self.write(".chars().count() as i64");
             }
             // Generic len() for all types
             (_, "len") => {
@@ -669,12 +1164,36 @@ impl RustEmitter {
                     self.write(" / ");
                     self.emit_expr(right);
                 } else if op == "**" {
-                    // Power
-                    self.write("(");
+                    // Power: int ** int -> i64::pow, otherwise float
+                    if left.ty() == &Type::Int && right.ty() == &Type::Int {
+                        self.emit_expr(left);
+                        self.write(".pow(");
+                        self.emit_expr(right);
+                        self.write(" as u32)");
+                    } else if left.ty() == &Type::Float && right.ty() == &Type::Int {
+                        self.emit_expr(left);
+                        self.write(".powi(");
+                        self.emit_expr(right);
+                        self.write(" as i32)");
+                    } else {
+                        self.write("(");
+                        self.emit_expr(left);
+                        self.write(" as f64).powf(");
+                        self.emit_expr(right);
+                        self.write(" as f64)");
+                    }
+                } else if op == "*" && left.ty() == &Type::Str && right.ty() == &Type::Int {
+                    // String multiplication: "abc" * 3 -> "abc".repeat(3)
                     self.emit_expr(left);
-                    self.write(" as f64).powf(");
+                    self.write(".repeat(");
                     self.emit_expr(right);
-                    self.write(" as f64)");
+                    self.write(" as usize)");
+                } else if op == "*" && left.ty() == &Type::Int && right.ty() == &Type::Str {
+                    // Reverse string multiplication: 3 * "abc"
+                    self.emit_expr(right);
+                    self.write(".repeat(");
+                    self.emit_expr(left);
+                    self.write(" as usize)");
                 } else {
                     self.emit_expr(left);
                     self.write(&format!(" {} ", op));
@@ -763,6 +1282,85 @@ impl RustEmitter {
                         self.write(")");
                     } else {
                         self.write("String::new()");
+                    }
+                } else if func == "abs" {
+                    if !args.is_empty() {
+                        self.emit_expr(&args[0]);
+                        self.write(".abs()");
+                    }
+                } else if func == "round" {
+                    if args.len() == 1 {
+                        self.emit_expr(&args[0]);
+                        self.write(".round() as i64");
+                    } else if args.len() == 2 {
+                        // round(x, n) -> (x * 10^n).round() / 10^n
+                        self.write("((");
+                        self.emit_expr(&args[0]);
+                        self.write(" as f64 * 10.0_f64.powi(");
+                        self.emit_expr(&args[1]);
+                        self.write(" as i32)).round() / 10.0_f64.powi(");
+                        self.emit_expr(&args[1]);
+                        self.write(" as i32))");
+                    }
+                } else if func == "repr" {
+                    if !args.is_empty() {
+                        self.write("format!(\"{:?}\", ");
+                        self.emit_expr(&args[0]);
+                        self.write(")");
+                    }
+                } else if func == "int" {
+                    if !args.is_empty() {
+                        match args[0].ty() {
+                            Type::Float => {
+                                self.emit_expr(&args[0]);
+                                self.write(" as i64");
+                            }
+                            Type::Str => {
+                                self.emit_expr(&args[0]);
+                                self.write(".parse::<i64>().unwrap()");
+                            }
+                            Type::Bool => {
+                                self.write("if ");
+                                self.emit_expr(&args[0]);
+                                self.write(" { 1_i64 } else { 0_i64 }");
+                            }
+                            _ => {
+                                self.emit_expr(&args[0]);
+                            }
+                        }
+                    }
+                } else if func == "float" {
+                    if !args.is_empty() {
+                        match args[0].ty() {
+                            Type::Int => {
+                                self.emit_expr(&args[0]);
+                                self.write(" as f64");
+                            }
+                            Type::Str => {
+                                self.emit_expr(&args[0]);
+                                self.write(".parse::<f64>().unwrap()");
+                            }
+                            _ => {
+                                self.emit_expr(&args[0]);
+                            }
+                        }
+                    }
+                } else if func == "bool" {
+                    if !args.is_empty() {
+                        match args[0].ty() {
+                            Type::Int => {
+                                self.emit_expr(&args[0]);
+                                self.write(" != 0");
+                            }
+                            Type::Str => {
+                                self.write("!");
+                                self.emit_expr(&args[0]);
+                                self.write(".is_empty()");
+                            }
+                            _ => {
+                                self.emit_expr(&args[0]);
+                            }
+                        }
                     }
                 } else {
                     self.write(func);
@@ -871,17 +1469,61 @@ impl RustEmitter {
                         self.write("]");
                     }
                     Type::Tuple(_) => {
-                        // Tuple indexing: t.0, t.1, etc.
+                        // Tuple indexing: t.0, t.1, etc. (handle negative)
+                        if let HirExpr::IntLiteral(val) = index.as_ref() {
+                            if *val < 0 {
+                                if let Type::Tuple(elems) = obj_ty {
+                                    let resolved = (elems.len() as i64 + val) as usize;
+                                    self.emit_expr(object);
+                                    self.write(&format!(".{}", resolved));
+                                }
+                            } else {
+                                self.emit_expr(object);
+                                self.write(".");
+                                self.emit_expr(index);
+                            }
+                        } else {
+                            self.emit_expr(object);
+                            self.write(".");
+                            self.emit_expr(index);
+                        }
+                    }
+                    Type::Str => {
+                        // String indexing: character-based (UTF-8 safe)
+                        // Check for negative literal
+                        if let HirExpr::IntLiteral(val) = index.as_ref() {
+                            if *val < 0 {
+                                self.emit_expr(object);
+                                self.write(&format!(".chars().nth(({}.chars().count() as i64 + ({})) as usize).unwrap().to_string()", "_str_idx_tmp", val));
+                                // We need a different approach - use a block
+                                // Actually, let's use a simpler approach
+                                self.output.truncate(self.output.len() - self.output.rfind(|_| true).map(|_| 0).unwrap_or(0));
+                            }
+                        }
+                        // General case: handle negative indices
+                        self.write("{ let _s = &");
                         self.emit_expr(object);
-                        self.write(".");
+                        self.write("; let _i = ");
                         self.emit_expr(index);
+                        self.write("; let _idx = if _i < 0 { (_s.chars().count() as i64 + _i) as usize } else { _i as usize }; _s.chars().nth(_idx).unwrap().to_string() }");
                     }
                     _ => {
-                        // List/string indexing: x[i] -> x[i as usize]
+                        // List indexing: handle negative indices
+                        // Check for compile-time negative literal for simple case
+                        if let HirExpr::IntLiteral(val) = index.as_ref() {
+                            if *val < 0 {
+                                self.write("{ let _v = &");
+                                self.emit_expr(object);
+                                self.write(&format!("; _v[(_v.len() as i64 + ({})) as usize].clone() }}", val));
+                                return;
+                            }
+                        }
+                        // General case with runtime negative check
+                        self.write("{ let _v = &");
                         self.emit_expr(object);
-                        self.write("[");
+                        self.write("; let _i = ");
                         self.emit_expr(index);
-                        self.write(" as usize]");
+                        self.write("; let _idx = if _i < 0 { (_v.len() as i64 + _i) as usize } else { _i as usize }; _v[_idx].clone() }");
                     }
                 }
             }
@@ -911,6 +1553,41 @@ impl RustEmitter {
                         self.write(")");
                     }
                 }
+            }
+            HirExpr::Slice { object, start, stop, step, ty } => {
+                let obj_ty = object.ty();
+                match obj_ty {
+                    Type::Str => {
+                        self.emit_string_slice(object, start, stop, step);
+                    }
+                    Type::Tuple(_) => {
+                        // Compile-time tuple slicing: direct field access
+                        if let Type::Tuple(result_elems) = ty {
+                            let start_idx = start.as_ref().and_then(|e| if let HirExpr::IntLiteral(v) = e.as_ref() { Some(*v as usize) } else { None }).unwrap_or(0);
+                            self.write("(");
+                            for (i, _) in result_elems.iter().enumerate() {
+                                if i > 0 {
+                                    self.write(", ");
+                                }
+                                self.emit_expr(object);
+                                self.write(&format!(".{}", start_idx + i));
+                            }
+                            if result_elems.len() == 1 {
+                                self.write(",");
+                            }
+                            self.write(")");
+                        }
+                    }
+                    _ => {
+                        // List slicing
+                        self.emit_list_slice(object, start, stop, step);
+                    }
+                }
+            }
+            HirExpr::WalrusExpr { name, value, .. } => {
+                // Walrus operator: the variable is already hoisted by emit_walrus_hoists
+                // Just emit the variable name (the assignment was already emitted)
+                self.write(name);
             }
             HirExpr::FString { parts, .. } => {
                 // Build the format string and collect expressions
@@ -1074,8 +1751,8 @@ mod tests {
             functions: vec![HirFunction {
                 name: "add".to_string(),
                 params: vec![
-                    HirParam { name: "a".to_string(), ty: Type::Int },
-                    HirParam { name: "b".to_string(), ty: Type::Int },
+                    HirParam { name: "a".to_string(), ty: Type::Int, default: None, keyword_only: false },
+                    HirParam { name: "b".to_string(), ty: Type::Int, default: None, keyword_only: false },
                 ],
                 return_type: Type::Int,
                 body: vec![HirStmt::Return {

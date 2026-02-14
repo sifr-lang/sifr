@@ -1,0 +1,7 @@
+# expect-stdout: ----------
+# expect-stdout: abcabcabc
+def main():
+    line: str = "-" * 10
+    print(line)
+    repeated: str = "abc" * 3
+    print(repeated)

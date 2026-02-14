@@ -1,0 +1,10 @@
+# expect-stdout: Alice
+# expect-stdout: Name: Bob
+def display(name: str, *, verbose: bool = False) -> str:
+    if verbose:
+        return f"Name: {name}"
+    return name
+
+def main():
+    print(display("Alice"))
+    print(display("Bob", verbose=True))

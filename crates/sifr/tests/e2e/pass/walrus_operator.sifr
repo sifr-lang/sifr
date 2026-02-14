@@ -1,0 +1,5 @@
+# expect-stdout: 5
+def main():
+    items: list[int] = [1, 2, 3, 4, 5]
+    if (n := len(items)) > 3:
+        print(n)

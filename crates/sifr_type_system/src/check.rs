@@ -43,6 +43,17 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             if op == "*" && left == &Type::Str && right == &Type::Int {
                 return Ok(Type::Str);
             }
+            if op == "*" && left == &Type::Int && right == &Type::Str {
+                return Ok(Type::Str);
+            }
+            // List repetition with *
+            if op == "*" {
+                if let Type::List(_) = left {
+                    if right == &Type::Int {
+                        return Ok(left.clone());
+                    }
+                }
+            }
             Err(TypeError {
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
@@ -93,7 +104,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "**" => {
-            // Power
+            // Power: int ** int -> int, otherwise float
+            if left == &Type::Int && right == &Type::Int {
+                return Ok(Type::Int);
+            }
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
             }

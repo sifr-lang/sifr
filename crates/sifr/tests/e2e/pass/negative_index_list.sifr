@@ -1,0 +1,6 @@
+# expect-stdout: 5
+# expect-stdout: 4
+def main():
+    items: list[int] = [1, 2, 3, 4, 5]
+    print(items[-1])
+    print(items[-2])

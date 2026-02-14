@@ -1,0 +1,7 @@
+# expect-stdout: done
+def placeholder():
+    pass
+
+def main():
+    placeholder()
+    print("done")

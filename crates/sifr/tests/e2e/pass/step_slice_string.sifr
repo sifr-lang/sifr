@@ -1,0 +1,6 @@
+# expect-stdout: hlo
+# expect-stdout: olleh
+def main():
+    s: str = "hello"
+    print(s[::2])
+    print(s[::-1])

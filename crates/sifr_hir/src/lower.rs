@@ -33,6 +33,8 @@ impl std::fmt::Display for LoweringError {
 struct LowerCtx {
     /// Function signatures (name -> type)
     functions: HashMap<String, FunctionType>,
+    /// Default parameter values for functions (name -> vec of (param_index, default_expr))
+    function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     /// Current scope for name resolution
     scope: Scope,
     /// Collected errors
@@ -47,6 +49,7 @@ impl LowerCtx {
     fn new() -> Self {
         Self {
             functions: HashMap::new(),
+            function_defaults: HashMap::new(),
             scope: Scope::new(),
             errors: Vec::new(),
             loop_depth: 0,
@@ -86,6 +89,27 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
         match stmt {
             Stmt::FunctionDef(func) => {
                 if let Some(ft) = extract_function_type(func, &mut ctx) {
+                    // Collect default values for parameters
+                    let mut defaults = Vec::new();
+                    for (i, param) in func.parameters.args.iter().enumerate() {
+                        if let Some(ref default_expr) = param.default {
+                            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                                defaults.push((i, hir_default));
+                            }
+                        }
+                    }
+                    // Also collect defaults for keyword-only args
+                    let regular_count = func.parameters.args.len();
+                    for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
+                        if let Some(ref default_expr) = param.default {
+                            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                                defaults.push((regular_count + i, hir_default));
+                            }
+                        }
+                    }
+                    if !defaults.is_empty() {
+                        ctx.function_defaults.insert(func.name.to_string(), defaults);
+                    }
                     ctx.functions.insert(func.name.to_string(), ft);
                 }
             }
@@ -125,6 +149,36 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
     }
 }
 
+/// Lower a simple expression (literal values only) without requiring a full LowerCtx.
+/// Used for collecting default parameter values in the first pass.
+fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
+    match expr {
+        Expr::NumberLiteral(num) => {
+            match &num.value {
+                Number::Int(i) => Some(HirExpr::IntLiteral(i.as_i64()?)),
+                Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
+                _ => None,
+            }
+        }
+        Expr::StringLiteral(s) => Some(HirExpr::StringLiteral(s.value.to_str().to_string())),
+        Expr::BooleanLiteral(b) => Some(HirExpr::BoolLiteral(b.value)),
+        Expr::NoneLiteral(_) => Some(HirExpr::NoneLiteral),
+        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::USub) => {
+            // Handle negative literals like -1
+            if let Some(inner) = lower_expr_simple(&unary.operand) {
+                match inner {
+                    HirExpr::IntLiteral(v) => Some(HirExpr::IntLiteral(-v)),
+                    HirExpr::FloatLiteral(v) => Some(HirExpr::FloatLiteral(-v)),
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
 fn register_builtins(ctx: &mut LowerCtx) {
     // print() accepts any single argument and returns None
     ctx.functions.insert(
@@ -140,6 +194,21 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
     let mut params = Vec::new();
 
     for param in &func.parameters.args {
+        let name = param.parameter.name.to_string();
+        let ty = if let Some(annotation) = &param.parameter.annotation {
+            resolve_annotation_expr(annotation, ctx)
+        } else {
+            ctx.error(format!(
+                "parameter '{}' in function '{}' is missing a type annotation",
+                name, func.name
+            ));
+            Type::Any
+        };
+        params.push((name, ty));
+    }
+
+    // Also include keyword-only parameters
+    for param in &func.parameters.kwonlyargs {
         let name = param.parameter.name.to_string();
         let ty = if let Some(annotation) = &param.parameter.annotation {
             resolve_annotation_expr(annotation, ctx)
@@ -282,13 +351,39 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 
     ctx.scope.push();
 
-    // Define parameters in scope
+    // Define parameters in scope, handling defaults
     let mut params = Vec::new();
-    for (name, ty) in &ft.params {
+
+    // Regular args
+    for (i, param_def) in func.parameters.args.iter().enumerate() {
+        let name = param_def.parameter.name.to_string();
+        let ty = ft.params.get(i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
         ctx.scope.define(name.clone(), ty.clone());
+
+        let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+
         params.push(HirParam {
-            name: name.clone(),
-            ty: ty.clone(),
+            name,
+            ty,
+            default,
+            keyword_only: false,
+        });
+    }
+
+    // Keyword-only args (after * separator)
+    let regular_count = func.parameters.args.len();
+    for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
+        let name = param_def.parameter.name.to_string();
+        let ty = ft.params.get(regular_count + i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+        ctx.scope.define(name.clone(), ty.clone());
+
+        let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+
+        params.push(HirParam {
+            name,
+            ty,
+            default,
+            keyword_only: true,
         });
     }
 
@@ -319,6 +414,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
     match stmt {
         Stmt::AnnAssign(ann) => lower_ann_assign(ann, ctx),
         Stmt::Assign(assign) => lower_assign(assign, ctx),
+        Stmt::AugAssign(aug) => lower_aug_assign(aug, ctx),
         Stmt::Return(ret) => lower_return(ret, func_type, ctx),
         Stmt::Expr(expr_stmt) => {
             let expr = lower_expr(&expr_stmt.value, ctx)?;
@@ -393,8 +489,13 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
         return None;
     }
 
-    // Handle tuple unpacking: a, b = expr
+    // Handle tuple unpacking: a, b = expr or a, *b = expr
     if let Expr::Tuple(tuple) = &assign.targets[0] {
+        // Check if any element is a Starred expression (star unpacking)
+        let has_star = tuple.elts.iter().any(|e| matches!(e, Expr::Starred(_)));
+        if has_star {
+            return lower_star_unpack_assign(tuple, &assign.value, ctx);
+        }
         return lower_tuple_unpack_assign(tuple, &assign.value, ctx);
     }
 
@@ -433,6 +534,66 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
             is_mutable: true,
         })
     }
+}
+
+fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
+    let name = match aug.target.as_ref() {
+        Expr::Name(n) => n.id.to_string(),
+        _ => {
+            ctx.error("augmented assignment target must be a simple name".to_string());
+            return None;
+        }
+    };
+
+    let value = lower_expr(&aug.value, ctx)?;
+
+    let op_str = match aug.op {
+        Operator::Add => "+=",
+        Operator::Sub => "-=",
+        Operator::Mult => "*=",
+        Operator::Div => "/=",
+        Operator::FloorDiv => "//=",
+        Operator::Mod => "%=",
+        Operator::Pow => "**=",
+        _ => {
+            ctx.error("unsupported augmented assignment operator".to_string());
+            return None;
+        }
+    };
+
+    // Check that the variable exists
+    let var_info = ctx.scope.lookup(&name);
+    if var_info.is_none() {
+        ctx.error(format!("undefined variable: '{}'", name));
+        return None;
+    }
+    let var_ty = var_info.unwrap().ty.clone();
+
+    // Type check the operation
+    let base_op = &op_str[..op_str.len() - 1]; // Remove '='
+    // For += on strings, allow str += str
+    // For += on lists, allow list += list
+    if base_op == "+" {
+        match (&var_ty, value.ty()) {
+            (Type::Str, Type::Str) => {}
+            (Type::List(_), Type::List(_)) => {}
+            _ => {
+                if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
+                    ctx.error(e.message);
+                    return None;
+                }
+            }
+        }
+    } else if let Err(e) = type_check_binary_op(&var_ty, base_op, value.ty()) {
+        ctx.error(e.message);
+        return None;
+    }
+
+    Some(HirStmt::AugAssign {
+        name,
+        op: op_str.to_string(),
+        value,
+    })
 }
 
 fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
@@ -639,7 +800,16 @@ fn lower_while(while_stmt: &StmtWhile, func_type: &FunctionType, ctx: &mut Lower
     ctx.loop_depth -= 1;
     ctx.scope.pop();
 
-    Some(HirStmt::While { condition, body })
+    let else_body = if !while_stmt.orelse.is_empty() {
+        ctx.scope.push();
+        let else_stmts = lower_stmts(&while_stmt.orelse, func_type, ctx);
+        ctx.scope.pop();
+        Some(else_stmts)
+    } else {
+        None
+    };
+
+    Some(HirStmt::While { condition, body, else_body })
 }
 
 fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
@@ -673,11 +843,21 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
     ctx.loop_depth -= 1;
     ctx.scope.pop();
 
+    let else_body = if !for_stmt.orelse.is_empty() {
+        ctx.scope.push();
+        let else_stmts = lower_stmts(&for_stmt.orelse, func_type, ctx);
+        ctx.scope.pop();
+        Some(else_stmts)
+    } else {
+        None
+    };
+
     Some(HirStmt::For {
         target: target_name,
         target_ty: elem_ty,
         iter: iter_expr,
         body,
+        else_body,
     })
 }
 
@@ -703,6 +883,7 @@ fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Subscript(sub) => lower_subscript(sub, ctx),
         Expr::Attribute(attr) => lower_attribute(attr, ctx),
         Expr::FString(fstring) => lower_fstring(fstring, ctx),
+        Expr::Named(named) => lower_named_expr(named, ctx),
         _ => {
             ctx.error("unsupported expression type".to_string());
             None
@@ -996,28 +1177,211 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     }
 
+    // Special handling for abs() built-in
+    if func_name == "abs" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!("abs() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let ty = arg.ty().clone();
+        if !ty.is_numeric() {
+            ctx.error(format!("abs() argument must be numeric, got '{}'", ty.display_name()));
+            return None;
+        }
+        return Some(HirExpr::Call {
+            func: "abs".to_string(),
+            args: vec![arg],
+            ty,
+        });
+    }
+
+    // Special handling for round() built-in
+    if func_name == "round" {
+        if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
+            ctx.error(format!("round() takes 1 or 2 arguments, got {}", call.arguments.args.len()));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        if !arg.ty().is_numeric() {
+            ctx.error(format!("round() argument must be numeric, got '{}'", arg.ty().display_name()));
+            return None;
+        }
+        if call.arguments.args.len() == 2 {
+            let ndigits = lower_expr(&call.arguments.args[1], ctx)?;
+            return Some(HirExpr::Call {
+                func: "round".to_string(),
+                args: vec![arg, ndigits],
+                ty: Type::Float,
+            });
+        }
+        return Some(HirExpr::Call {
+            func: "round".to_string(),
+            args: vec![arg],
+            ty: Type::Int,
+        });
+    }
+
+    // Special handling for repr() built-in
+    if func_name == "repr" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!("repr() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        return Some(HirExpr::Call {
+            func: "repr".to_string(),
+            args: vec![arg],
+            ty: Type::Str,
+        });
+    }
+
+    // Special handling for int() conversion
+    if func_name == "int" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!("int() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        return Some(HirExpr::Call {
+            func: "int".to_string(),
+            args: vec![arg],
+            ty: Type::Int,
+        });
+    }
+
+    // Special handling for float() conversion
+    if func_name == "float" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!("float() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        return Some(HirExpr::Call {
+            func: "float".to_string(),
+            args: vec![arg],
+            ty: Type::Float,
+        });
+    }
+
+    // Special handling for bool() conversion
+    if func_name == "bool" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!("bool() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        return Some(HirExpr::Call {
+            func: "bool".to_string(),
+            args: vec![arg],
+            ty: Type::Bool,
+        });
+    }
+
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
         ctx.error(format!("undefined function: '{}'", func_name));
         None
     })?;
 
-    // Lower arguments
-    let mut args = Vec::new();
+    // Lower positional arguments
+    let mut positional_args = Vec::new();
     for arg in &call.arguments.args {
         let expr = lower_expr(arg, ctx)?;
-        args.push(expr);
+        positional_args.push(expr);
     }
 
-    // Check argument count (special case for print which accepts any number)
-    if func_name != "print" && args.len() != ft.params.len() {
-        ctx.error(format!(
-            "function '{}' expects {} argument(s), got {}",
-            func_name,
-            ft.params.len(),
-            args.len()
-        ));
-        return None;
+    // Lower keyword arguments
+    let mut keyword_args: Vec<(String, HirExpr)> = Vec::new();
+    for kw in &call.arguments.keywords {
+        if let Some(ref arg_name) = kw.arg {
+            let expr = lower_expr(&kw.value, ctx)?;
+            keyword_args.push((arg_name.to_string(), expr));
+        }
     }
+
+    // Resolve keyword arguments to positional order
+    let args = if func_name == "print" {
+        // print() is special - just pass positional args
+        positional_args
+    } else if keyword_args.is_empty() {
+        // No keyword args - check count and use positional directly
+        // Allow fewer args if there are defaults
+        if positional_args.len() > ft.params.len() {
+            ctx.error(format!(
+                "function '{}' expects at most {} argument(s), got {}",
+                func_name,
+                ft.params.len(),
+                positional_args.len()
+            ));
+            return None;
+        }
+        // Fill in defaults for missing arguments
+        if positional_args.len() < ft.params.len() {
+            let defaults = ctx.function_defaults.get(&func_name).cloned();
+            let mut filled = positional_args;
+            for i in filled.len()..ft.params.len() {
+                if let Some(ref defs) = defaults {
+                    if let Some((_, default_expr)) = defs.iter().find(|(idx, _)| *idx == i) {
+                        filled.push(default_expr.clone());
+                    } else {
+                        ctx.error(format!(
+                            "function '{}': missing argument '{}' with no default value",
+                            func_name, ft.params[i].0
+                        ));
+                        return None;
+                    }
+                } else {
+                    ctx.error(format!(
+                        "function '{}': missing argument '{}' with no default value",
+                        func_name, ft.params[i].0
+                    ));
+                    return None;
+                }
+            }
+            filled
+        } else {
+            positional_args
+        }
+    } else {
+        // Resolve keyword arguments into positional order
+        let mut resolved = Vec::new();
+        let mut used_kwargs: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+        // Check: no positional args after keyword args (already enforced by parser)
+        for (i, (param_name, _param_ty)) in ft.params.iter().enumerate() {
+            if i < positional_args.len() {
+                // Check no duplicate keyword for this position
+                if keyword_args.iter().any(|(k, _)| k == param_name) {
+                    ctx.error(format!(
+                        "function '{}': argument '{}' given both positionally and as keyword",
+                        func_name, param_name
+                    ));
+                    return None;
+                }
+                resolved.push(positional_args[i].clone());
+            } else if let Some(pos) = keyword_args.iter().position(|(k, _)| k == param_name) {
+                resolved.push(keyword_args[pos].1.clone());
+                used_kwargs.insert(param_name.clone());
+            } else {
+                // Will be filled by default value at codegen time
+                // For now, we leave it - the codegen handles defaults
+                break;
+            }
+        }
+
+        // Check for unknown keyword arguments
+        for (kw_name, _) in &keyword_args {
+            if !ft.params.iter().any(|(p, _)| p == kw_name) {
+                ctx.error(format!(
+                    "function '{}': unexpected keyword argument '{}'",
+                    func_name, kw_name
+                ));
+                return None;
+            }
+        }
+
+        resolved
+    };
 
     // Check argument types (skip for print)
     if func_name != "print" {
@@ -1133,6 +1497,69 @@ fn lower_tuple_unpack_assign(tuple: &ExprTuple, value: &Expr, ctx: &mut LowerCtx
     })
 }
 
+fn lower_star_unpack_assign(tuple: &ExprTuple, value: &Expr, ctx: &mut LowerCtx) -> Option<HirStmt> {
+    let value_expr = lower_expr(value, ctx)?;
+    let value_ty = value_expr.ty().clone();
+
+    // Get the element type from the list
+    let elem_ty = match &value_ty {
+        Type::List(elem) => *elem.clone(),
+        _ => {
+            ctx.error("star unpacking requires a list type".to_string());
+            return None;
+        }
+    };
+
+    let mut before = Vec::new();
+    let mut star: Option<(String, Type)> = None;
+    let mut after = Vec::new();
+
+    for elt in &tuple.elts {
+        match elt {
+            Expr::Starred(starred) => {
+                if star.is_some() {
+                    ctx.error("multiple starred expressions in assignment".to_string());
+                    return None;
+                }
+                if let Expr::Name(n) = starred.value.as_ref() {
+                    let name = n.id.to_string();
+                    let star_ty = Type::List(Box::new(elem_ty.clone()));
+                    ctx.scope.define(name.clone(), star_ty.clone());
+                    star = Some((name, star_ty));
+                } else {
+                    ctx.error("starred target must be a simple name".to_string());
+                    return None;
+                }
+            }
+            Expr::Name(n) => {
+                let name = n.id.to_string();
+                ctx.scope.define(name.clone(), elem_ty.clone());
+                if star.is_none() {
+                    before.push((name, elem_ty.clone()));
+                } else {
+                    after.push((name, elem_ty.clone()));
+                }
+            }
+            _ => {
+                ctx.error("star unpacking target must be a simple name".to_string());
+                return None;
+            }
+        }
+    }
+
+    let star = star.unwrap_or_else(|| {
+        ctx.error("star unpacking requires a starred expression".to_string());
+        ("_".to_string(), Type::List(Box::new(elem_ty.clone())))
+    });
+
+    Some(HirStmt::StarUnpack {
+        before,
+        star,
+        after,
+        value: value_expr,
+    })
+}
+
 fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut elements = Vec::new();
     let mut elem_ty: Option<Type> = None;
@@ -1239,6 +1666,70 @@ fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let object = lower_expr(&sub.value, ctx)?;
     let object_ty = object.ty().clone();
 
+    // Check if the slice is a Slice expression (x[start:stop] or x[start:stop:step])
+    if let Expr::Slice(slice_expr) = sub.slice.as_ref() {
+        let start = if let Some(ref s) = slice_expr.lower {
+            Some(Box::new(lower_expr(s, ctx)?))
+        } else {
+            None
+        };
+        let stop = if let Some(ref s) = slice_expr.upper {
+            Some(Box::new(lower_expr(s, ctx)?))
+        } else {
+            None
+        };
+        let step = if let Some(ref s) = slice_expr.step {
+            Some(Box::new(lower_expr(s, ctx)?))
+        } else {
+            None
+        };
+
+        // Determine result type for slicing
+        let result_ty = match &object_ty {
+            Type::List(elem_ty) => Type::List(elem_ty.clone()),
+            Type::Str => Type::Str,
+            Type::Tuple(elems) => {
+                // Compile-time tuple slicing: indices must be integer literals
+                if let (Some(start_expr), Some(stop_expr)) = (&start, &stop) {
+                    if let (HirExpr::IntLiteral(s), HirExpr::IntLiteral(e)) = (start_expr.as_ref(), stop_expr.as_ref()) {
+                        let s = if *s < 0 { (elems.len() as i64 + s) as usize } else { *s as usize };
+                        let e = if *e < 0 { (elems.len() as i64 + e) as usize } else { *e as usize };
+                        if s <= e && e <= elems.len() {
+                            Type::Tuple(elems[s..e].to_vec())
+                        } else {
+                            ctx.error("tuple slice indices out of range".to_string());
+                            Type::Any
+                        }
+                    } else {
+                        ctx.error("tuple slicing requires compile-time constant indices".to_string());
+                        Type::Any
+                    }
+                } else {
+                    // Partial slice on tuple
+                    let s = start.as_ref().and_then(|e| if let HirExpr::IntLiteral(v) = e.as_ref() { Some(*v as usize) } else { None }).unwrap_or(0);
+                    let e = stop.as_ref().and_then(|e| if let HirExpr::IntLiteral(v) = e.as_ref() { Some(*v as usize) } else { None }).unwrap_or(elems.len());
+                    if s <= e && e <= elems.len() {
+                        Type::Tuple(elems[s..e].to_vec())
+                    } else {
+                        Type::Tuple(elems.clone())
+                    }
+                }
+            }
+            _ => {
+                ctx.error(format!("cannot slice type '{}'", object_ty.display_name()));
+                Type::Any
+            }
+        };
+
+        return Some(HirExpr::Slice {
+            object: Box::new(object),
+            start,
+            stop,
+            step,
+            ty: result_ty,
+        });
+    }
+
     let index = lower_expr(&sub.slice, ctx)?;
     let index_ty = index.ty().clone();
 
@@ -1308,6 +1799,62 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 }
                 Some(Type::None)
             }
+            "extend" => {
+                if args.len() != 1 {
+                    ctx.error(format!("list.extend() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "insert" => {
+                if args.len() != 2 {
+                    ctx.error(format!("list.insert() takes exactly 2 arguments, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "clear" => {
+                if !args.is_empty() {
+                    ctx.error("list.clear() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "copy" => {
+                if !args.is_empty() {
+                    ctx.error("list.copy() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::List(elem_ty.clone()))
+            }
+            "reverse" => {
+                if !args.is_empty() {
+                    ctx.error("list.reverse() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "sort" => {
+                if !args.is_empty() {
+                    ctx.error("list.sort() takes no arguments in this milestone".to_string());
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "count" => {
+                if args.len() != 1 {
+                    ctx.error(format!("list.count() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Int)
+            }
+            "contains" => {
+                if args.len() != 1 {
+                    ctx.error(format!("list.contains() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Bool)
+            }
             "len" => {
                 if !args.is_empty() {
                     ctx.error("list.len() takes no arguments".to_string());
@@ -1349,6 +1896,41 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 }
                 Some(Type::List(val_ty.clone()))
             }
+            "items" => {
+                if !args.is_empty() {
+                    ctx.error("dict.items() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::List(Box::new(Type::Tuple(vec![*key_ty.clone(), *val_ty.clone()]))))
+            }
+            "update" => {
+                if args.len() != 1 {
+                    ctx.error(format!("dict.update() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "clear" => {
+                if !args.is_empty() {
+                    ctx.error("dict.clear() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "copy" => {
+                if !args.is_empty() {
+                    ctx.error("dict.copy() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::Dict(key_ty.clone(), val_ty.clone()))
+            }
+            "contains" => {
+                if args.len() != 1 {
+                    ctx.error(format!("dict.contains() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Bool)
+            }
             "get" => {
                 if args.len() != 1 {
                     ctx.error(format!("dict.get() takes exactly 1 argument, got {}", args.len()));
@@ -1363,10 +1945,17 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
         },
         Type::Str => match method {
             "len" => Some(Type::Int),
-            "upper" | "lower" | "strip" | "lstrip" | "rstrip" => Some(Type::Str),
+            "upper" | "lower" | "strip" | "lstrip" | "rstrip" | "title" | "capitalize" | "swapcase" => Some(Type::Str),
             "startswith" | "endswith" => {
                 if args.len() != 1 {
                     ctx.error(format!("str.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    return None;
+                }
+                Some(Type::Bool)
+            }
+            "isdigit" | "isalpha" | "isalnum" | "isspace" | "isupper" | "islower" => {
+                if !args.is_empty() {
+                    ctx.error(format!("str.{}() takes no arguments", method));
                     return None;
                 }
                 Some(Type::Bool)
@@ -1385,6 +1974,27 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 }
                 Some(Type::Str)
             }
+            "join" => {
+                if args.len() != 1 {
+                    ctx.error(format!("str.join() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Str)
+            }
+            "count" => {
+                if args.len() != 1 {
+                    ctx.error(format!("str.count() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Int)
+            }
+            "center" | "ljust" | "rjust" | "zfill" => {
+                if args.len() != 1 {
+                    ctx.error(format!("str.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    return None;
+                }
+                Some(Type::Str)
+            }
             "find" => {
                 if args.len() != 1 {
                     ctx.error(format!("str.find() takes exactly 1 argument, got {}", args.len()));
@@ -1399,6 +2009,13 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
         },
         Type::Tuple(_) => match method {
             "len" => Some(Type::Int),
+            "count" => {
+                if args.len() != 1 {
+                    ctx.error(format!("tuple.count() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Int)
+            }
             _ => {
                 ctx.error(format!("tuple has no method '{}'", method));
                 None
@@ -1559,6 +2176,28 @@ fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
         then_expr: Box::new(then_expr),
         else_expr: Box::new(else_expr),
         ty: then_ty,
+    })
+}
+
+fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let name = match named.target.as_ref() {
+        Expr::Name(n) => n.id.to_string(),
+        _ => {
+            ctx.error("walrus operator target must be a simple name".to_string());
+            return None;
+        }
+    };
+
+    let value = lower_expr(&named.value, ctx)?;
+    let ty = value.ty().clone();
+
+    // Define the variable in the current scope
+    ctx.scope.define(name.clone(), ty.clone());
+
+    Some(HirExpr::WalrusExpr {
+        name,
+        value: Box::new(value),
+        ty,
     })
 }
 
