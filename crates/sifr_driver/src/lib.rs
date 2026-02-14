@@ -78,8 +78,8 @@ pub fn compile(source: &str) -> CompileResult {
     };
 
     // Phase 2: Lower to HIR (type checking + name resolution)
-    let hir_module = match lower_module(parsed.suite()) {
-        Ok(module) => module,
+    let lowering_result = match lower_module(parsed.suite()) {
+        Ok(result) => result,
         Err(errors) => {
             let compile_errors: Vec<CompileError> = errors
                 .into_iter()
@@ -94,8 +94,13 @@ pub fn compile(source: &str) -> CompileResult {
         }
     };
 
+    // Print reveal_type diagnostics to stderr
+    for diag in &lowering_result.reveal_types {
+        eprintln!("{}", diag);
+    }
+
     // Phase 3: Generate Rust code
-    let rust_source = generate_rust(&hir_module);
+    let rust_source = generate_rust(&lowering_result.module);
 
     CompileResult::Success { rust_source }
 }

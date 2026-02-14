@@ -4,6 +4,7 @@ use sifr_python_ast::*;
 use sifr_type_system::{
     Type, FunctionType,
     type_check_binary_op, type_check_unary_op, type_check_comparison, type_check_bool_op,
+    make_union, NarrowingCondition, narrow_type,
 };
 use sifr_type_system::infer::resolve_type_annotation;
 use crate::hir_nodes::*;
@@ -38,6 +39,8 @@ struct LowerCtx {
     errors: Vec<LoweringError>,
     /// Loop nesting depth (for break/continue validation)
     loop_depth: usize,
+    /// reveal_type() diagnostics (informational, not errors)
+    reveal_types: Vec<String>,
 }
 
 impl LowerCtx {
@@ -47,6 +50,7 @@ impl LowerCtx {
             scope: Scope::new(),
             errors: Vec::new(),
             loop_depth: 0,
+            reveal_types: Vec::new(),
         }
     }
 
@@ -63,19 +67,41 @@ impl LowerCtx {
     }
 }
 
+/// Result of lowering, including the HIR module and any diagnostics.
+pub struct LoweringResult {
+    pub module: HirModule,
+    /// reveal_type() diagnostics (informational, printed to stderr)
+    pub reveal_types: Vec<String>,
+}
+
 /// Lower a parsed module AST into a typed HIR module.
-pub fn lower_module(stmts: &[Stmt]) -> Result<HirModule, Vec<LoweringError>> {
+pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>> {
     let mut ctx = LowerCtx::new();
 
     // Register built-in functions
     register_builtins(&mut ctx);
 
-    // First pass: collect all function signatures
+    // First pass: collect all function signatures and type aliases
     for stmt in stmts {
-        if let Stmt::FunctionDef(func) = stmt {
-            if let Some(ft) = extract_function_type(func, &mut ctx) {
-                ctx.functions.insert(func.name.to_string(), ft);
+        match stmt {
+            Stmt::FunctionDef(func) => {
+                if let Some(ft) = extract_function_type(func, &mut ctx) {
+                    ctx.functions.insert(func.name.to_string(), ft);
+                }
             }
+            // Handle `type X = ...` statement (Python 3.12 type alias)
+            Stmt::TypeAlias(type_alias) => {
+                let name = match type_alias.name.as_ref() {
+                    Expr::Name(n) => n.id.to_string(),
+                    _ => {
+                        ctx.error("type alias name must be a simple name".to_string());
+                        continue;
+                    }
+                };
+                let ty = resolve_annotation_expr(&type_alias.value, &mut ctx);
+                ctx.scope.define_type_alias(name, ty);
+            }
+            _ => {}
         }
     }
 
@@ -90,7 +116,10 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<HirModule, Vec<LoweringError>> {
     }
 
     if ctx.errors.is_empty() {
-        Ok(HirModule { functions })
+        Ok(LoweringResult {
+            module: HirModule { functions },
+            reveal_types: ctx.reveal_types,
+        })
     } else {
         Err(ctx.errors)
     }
@@ -139,12 +168,47 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
 fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
+            // Check type aliases first
+            if let Some(alias_ty) = ctx.scope.lookup_type_alias(&name.id) {
+                return alias_ty.clone();
+            }
             resolve_type_annotation(&name.id).unwrap_or_else(|| {
                 ctx.error(format!("unknown type: '{}'", name.id));
                 Type::Any
             })
         }
         Expr::NoneLiteral(_) => Type::None,
+        // Union type syntax: int | str (parsed as BinOp with BitOr)
+        Expr::BinOp(binop) if matches!(binop.op, Operator::BitOr) => {
+            let left = resolve_annotation_expr(&binop.left, ctx);
+            let right = resolve_annotation_expr(&binop.right, ctx);
+            make_union(vec![left, right])
+        }
+        // Literal string in type position: "GET" | "POST"
+        Expr::StringLiteral(s) => {
+            Type::LiteralStr(s.value.to_str().to_string())
+        }
+        // Literal int in type position: 200 | 404
+        Expr::NumberLiteral(num) => {
+            match &num.value {
+                Number::Int(i) => {
+                    if let Some(val) = i.as_i64() {
+                        Type::LiteralInt(val)
+                    } else {
+                        ctx.error("integer literal too large for type annotation".to_string());
+                        Type::Any
+                    }
+                }
+                _ => {
+                    ctx.error("only integer literals are supported in type annotations".to_string());
+                    Type::Any
+                }
+            }
+        }
+        // Literal bool in type position: True | False
+        Expr::BooleanLiteral(b) => {
+            Type::LiteralBool(b.value)
+        }
         Expr::Subscript(sub) => {
             // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
             let base_name = match sub.value.as_ref() {
@@ -192,6 +256,13 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                             Type::Tuple(vec![elem_ty])
                         }
                     }
+                }
+                "TypeGuard" => {
+                    // TypeGuard[T] -- type predicate return type
+                    let inner_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    // Store as the inner type; the function signature handler
+                    // will recognize TypeGuard and mark it as a type predicate
+                    inner_ty
                 }
                 _ => {
                     ctx.error(format!("unknown generic type: '{}'", base_name));
@@ -390,29 +461,64 @@ fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut LowerCtx) 
 }
 
 fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
+    // Try to detect a narrowing condition from the test expression
+    let narrowing_cond = detect_narrowing_condition(&if_stmt.test, ctx);
+
     let condition = lower_expr(&if_stmt.test, ctx)?;
+
+    // Save narrowing state before branches
+    let saved_state = ctx.scope.save_narrowing_state();
+
+    // Apply narrowing for then-branch (condition is true)
+    if let Some(ref cond) = narrowing_cond {
+        apply_narrowing(ctx, cond, true);
+    }
 
     ctx.scope.push();
     let then_body = lower_stmts(&if_stmt.body, func_type, ctx);
     ctx.scope.pop();
 
+    // Restore state before processing elif/else
+    ctx.scope.restore_narrowing_state(&saved_state);
+
     let mut elif_clauses = Vec::new();
     for clause in &if_stmt.elif_else_clauses {
         if let Some(test) = &clause.test {
+            // For elif, apply the negation of the original condition first
+            if let Some(ref cond) = narrowing_cond {
+                apply_narrowing(ctx, cond, false);
+            }
+
+            let elif_narrowing = detect_narrowing_condition(test, ctx);
             let cond = lower_expr(test, ctx)?;
+
+            let elif_saved = ctx.scope.save_narrowing_state();
+            if let Some(ref elif_cond) = elif_narrowing {
+                apply_narrowing(ctx, elif_cond, true);
+            }
+
             ctx.scope.push();
             let body = lower_stmts(&clause.body, func_type, ctx);
             ctx.scope.pop();
             elif_clauses.push((cond, body));
+
+            ctx.scope.restore_narrowing_state(&elif_saved);
         }
     }
 
+    // For else-branch, apply narrowing with condition = false
     let else_body = if_stmt.elif_else_clauses.iter().find(|c| c.test.is_none()).map(|clause| {
+        if let Some(ref cond) = narrowing_cond {
+            apply_narrowing(ctx, cond, false);
+        }
         ctx.scope.push();
         let body = lower_stmts(&clause.body, func_type, ctx);
         ctx.scope.pop();
         body
     });
+
+    // Restore original narrowing state after all branches
+    ctx.scope.restore_narrowing_state(&saved_state);
 
     Some(HirStmt::If {
         condition,
@@ -420,6 +526,108 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
         elif_clauses,
         else_body,
     })
+}
+
+/// Detect a narrowing condition from an if-test expression.
+fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCondition> {
+    match expr {
+        // isinstance(x, Type) -> IsInstance narrowing
+        Expr::Call(call) => {
+            if let Expr::Name(func_name) = call.func.as_ref() {
+                if func_name.id.as_str() == "isinstance" && call.arguments.args.len() == 2 {
+                    if let Expr::Name(var) = &call.arguments.args[0] {
+                        let var_name = var.id.to_string();
+                        // Check that the variable exists and has a union/Unknown type
+                        if ctx.scope.lookup(&var_name).is_some() {
+                            if let Expr::Name(type_name) = &call.arguments.args[1] {
+                                if let Some(target_ty) = resolve_type_annotation(&type_name.id) {
+                                    return Some(NarrowingCondition::IsInstance(var_name, target_ty));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            None
+        }
+        // x is None / x is not None
+        Expr::Compare(cmp) => {
+            if cmp.ops.len() == 1 && cmp.comparators.len() == 1 {
+                match &cmp.ops[0] {
+                    CmpOp::Is => {
+                        if let (Expr::Name(var), Expr::NoneLiteral(_)) = (cmp.left.as_ref(), &cmp.comparators[0]) {
+                            let var_name = var.id.to_string();
+                            if ctx.scope.lookup(&var_name).is_some() {
+                                return Some(NarrowingCondition::IsNone(var_name));
+                            }
+                        }
+                    }
+                    CmpOp::IsNot => {
+                        if let (Expr::Name(var), Expr::NoneLiteral(_)) = (cmp.left.as_ref(), &cmp.comparators[0]) {
+                            let var_name = var.id.to_string();
+                            if ctx.scope.lookup(&var_name).is_some() {
+                                return Some(NarrowingCondition::IsNotNone(var_name));
+                            }
+                        }
+                    }
+                    // x == "value" -> Equality narrowing
+                    CmpOp::Eq => {
+                        if let Expr::Name(var) = cmp.left.as_ref() {
+                            let var_name = var.id.to_string();
+                            if ctx.scope.lookup(&var_name).is_some() {
+                                if let Some(lit_val) = expr_to_literal_value(&cmp.comparators[0]) {
+                                    return Some(NarrowingCondition::Equality(var_name, lit_val));
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            None
+        }
+        // Simple variable name -> Truthiness narrowing
+        Expr::Name(name) => {
+            let var_name = name.id.to_string();
+            if ctx.scope.lookup(&var_name).is_some() {
+                Some(NarrowingCondition::Truthiness(var_name))
+            } else {
+                None
+            }
+        }
+        // not expr -> negate the inner condition
+        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::Not) => {
+            let inner = detect_narrowing_condition(&unary.operand, ctx)?;
+            Some(NarrowingCondition::Not(Box::new(inner)))
+        }
+        _ => None,
+    }
+}
+
+/// Convert an AST expression to a LiteralValue (for equality narrowing).
+fn expr_to_literal_value(expr: &Expr) -> Option<sifr_type_system::LiteralValue> {
+    match expr {
+        Expr::StringLiteral(s) => Some(sifr_type_system::LiteralValue::Str(s.value.to_str().to_string())),
+        Expr::NumberLiteral(num) => {
+            match &num.value {
+                Number::Int(i) => i.as_i64().map(sifr_type_system::LiteralValue::Int),
+                _ => None,
+            }
+        }
+        Expr::BooleanLiteral(b) => Some(sifr_type_system::LiteralValue::Bool(b.value)),
+        _ => None,
+    }
+}
+
+/// Apply narrowing to the scope based on a condition.
+fn apply_narrowing(ctx: &mut LowerCtx, condition: &NarrowingCondition, is_true: bool) {
+    if let Some(var_name) = condition.var_name() {
+        if let Some(info) = ctx.scope.lookup(var_name) {
+            let current_ty = info.effective_type().clone();
+            let narrowed = narrow_type(&current_ty, condition, is_true);
+            ctx.scope.narrow_var(var_name, narrowed);
+        }
+    }
 }
 
 fn lower_while(while_stmt: &StmtWhile, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
@@ -519,7 +727,8 @@ fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Check if it's a known variable
     if let Some(info) = ctx.scope.lookup(&var_name) {
         let is_moved = info.is_moved;
-        let ty = info.ty.clone();
+        // Use effective type (narrowed if available)
+        let ty = info.effective_type().clone();
         if is_moved {
             ctx.error(format!(
                 "use of moved value: '{}'",
@@ -683,6 +892,8 @@ fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<HirExpr> {
             CmpOp::Gt => ">",
             CmpOp::LtE => "<=",
             CmpOp::GtE => ">=",
+            CmpOp::Is => "is",
+            CmpOp::IsNot => "is not",
             _ => {
                 ctx.error("unsupported comparison operator".to_string());
                 return None;
@@ -691,9 +902,13 @@ fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<HirExpr> {
 
         let right = lower_expr(comparator, ctx)?;
 
-        if let Err(e) = type_check_comparison(left.ty(), op_str, right.ty()) {
-            ctx.error(e.message);
-            return None;
+        // `is` and `is not` are identity checks (used for None comparison)
+        // They don't need type_check_comparison
+        if op_str != "is" && op_str != "is not" {
+            if let Err(e) = type_check_comparison(left.ty(), op_str, right.ty()) {
+                ctx.error(e.message);
+                return None;
+            }
         }
 
         ops.push(op_str.to_string());
@@ -757,6 +972,28 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for len() built-in
     if func_name == "len" {
         return lower_len_call(call, ctx);
+    }
+
+    // Special handling for isinstance() built-in
+    if func_name == "isinstance" {
+        return lower_isinstance_call(call, ctx);
+    }
+
+    // Special handling for reveal_type() built-in
+    if func_name == "reveal_type" {
+        return lower_reveal_type_call(call, ctx);
+    }
+
+    // Special handling for str() conversion
+    if func_name == "str" {
+        if call.arguments.args.len() == 1 {
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            return Some(HirExpr::Call {
+                func: "str".to_string(),
+                args: vec![arg],
+                ty: Type::Str,
+            });
+        }
     }
 
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
@@ -1206,6 +1443,40 @@ fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     }
 }
 
+fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if call.arguments.args.len() != 2 {
+        ctx.error(format!(
+            "isinstance() takes exactly 2 arguments, got {}",
+            call.arguments.args.len()
+        ));
+        return None;
+    }
+    let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    // isinstance() always returns bool -- the narrowing happens at the if-statement level
+    Some(HirExpr::Call {
+        func: "isinstance".to_string(),
+        args: vec![arg],
+        ty: Type::Bool,
+    })
+}
+
+fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if call.arguments.args.len() != 1 {
+        ctx.error(format!(
+            "reveal_type() takes exactly 1 argument, got {}",
+            call.arguments.args.len()
+        ));
+        return None;
+    }
+    let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    let ty = arg.ty().clone();
+    // Store the reveal_type diagnostic (not an error, just informational)
+    ctx.reveal_types.push(format!("reveal_type: {}", ty.display_name()));
+    // reveal_type returns the value unchanged, so we emit a print of the type at runtime
+    // For now, just return the argument expression
+    Some(arg)
+}
+
 fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let args: Vec<_> = call.arguments.args.iter().collect();
 
@@ -1292,7 +1563,7 @@ mod tests {
 
     fn lower_source(source: &str) -> Result<HirModule, Vec<LoweringError>> {
         let parsed = parse_module(source).expect("parse failed");
-        lower_module(parsed.suite())
+        lower_module(parsed.suite()).map(|r| r.module)
     }
 
     #[test]
