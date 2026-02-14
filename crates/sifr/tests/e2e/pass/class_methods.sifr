@@ -1,0 +1,21 @@
+# expect-stdout: 15
+# expect-stdout: 16
+
+class Rectangle:
+    width: float
+    height: float
+
+    def __init__(self, width: float, height: float):
+        self.width = width
+        self.height = height
+
+    def area(self) -> float:
+        return self.width * self.height
+
+    def perimeter(self) -> float:
+        return 2.0 * (self.width + self.height)
+
+def main():
+    r: Rectangle = Rectangle(3.0, 5.0)
+    print(r.area())
+    print(r.perimeter())

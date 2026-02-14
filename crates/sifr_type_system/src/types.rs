@@ -47,6 +47,16 @@ pub enum Type {
     /// Unlike `Any` which opts out of type checking, `Unknown` forces
     /// the programmer to prove the type before operating on it.
     Unknown,
+
+    // --- milestone_classes: Basic Classes ---
+
+    /// Class instance type with named fields and methods.
+    /// `class Point: x: float; y: float` -> `Type::Class { name: "Point", fields: [...], methods: [...] }`
+    Class {
+        name: String,
+        fields: Vec<(String, Type)>,
+        methods: Vec<(String, FunctionType)>,
+    },
 }
 
 /// Represents a function's type signature.
@@ -84,6 +94,7 @@ impl Type {
             Self::Str | Self::Any | Self::List(_) | Self::Dict(_, _) | Self::Tuple(_) => OwnershipKind::Move,
             Self::LiteralStr(_) => OwnershipKind::Move,
             Self::Unknown => OwnershipKind::Move,
+            Self::Class { .. } => OwnershipKind::Move,
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -130,6 +141,7 @@ impl Type {
             }
             Self::Alias(name, _) => name.clone(),
             Self::Unknown => "Unknown".to_string(),
+            Self::Class { name, .. } => name.clone(),
         }
     }
 
@@ -177,6 +189,7 @@ impl Type {
             Self::Intersection(_) => "Box<dyn std::any::Any>".to_string(),
             Self::Alias(_, inner) => inner.rust_type(),
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
+            Self::Class { name, .. } => name.clone(),
         }
     }
 
@@ -223,6 +236,7 @@ impl Type {
             Type::Union(_) => "Union".to_string(),
             Type::Intersection(_) => "Intersection".to_string(),
             Type::Alias(name, _) => capitalize(name),
+            Type::Class { name, .. } => name.clone(),
         }
     }
 
@@ -368,6 +382,8 @@ impl Type {
             (Self::Tuple(a), Self::Tuple(b)) => {
                 a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))
             }
+            // Class types: nominal typing -- same name means same type
+            (Self::Class { name: a, .. }, Self::Class { name: b, .. }) => a == b,
             _ => false,
         }
     }

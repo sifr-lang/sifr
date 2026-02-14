@@ -35,6 +35,8 @@ struct LowerCtx {
     functions: HashMap<String, FunctionType>,
     /// Default parameter values for functions (name -> vec of (param_index, default_expr))
     function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
+    /// Class type definitions (name -> Type::Class)
+    class_types: HashMap<String, Type>,
     /// Current scope for name resolution
     scope: Scope,
     /// Collected errors
@@ -43,6 +45,8 @@ struct LowerCtx {
     loop_depth: usize,
     /// reveal_type() diagnostics (informational, not errors)
     reveal_types: Vec<String>,
+    /// Whether we're currently inside a class method (tracks `self` type)
+    current_class: Option<String>,
 }
 
 impl LowerCtx {
@@ -50,10 +54,12 @@ impl LowerCtx {
         Self {
             functions: HashMap::new(),
             function_defaults: HashMap::new(),
+            class_types: HashMap::new(),
             scope: Scope::new(),
             errors: Vec::new(),
             loop_depth: 0,
             reveal_types: Vec::new(),
+            current_class: None,
         }
     }
 
@@ -84,7 +90,7 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
     // Register built-in functions
     register_builtins(&mut ctx);
 
-    // First pass: collect all function signatures and type aliases
+    // First pass: collect all function signatures, type aliases, and class definitions
     for stmt in stmts {
         match stmt {
             Stmt::FunctionDef(func) => {
@@ -125,28 +131,262 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
                 let ty = resolve_annotation_expr(&type_alias.value, &mut ctx);
                 ctx.scope.define_type_alias(name, ty);
             }
+            // First pass for classes: collect fields and method signatures
+            Stmt::ClassDef(class_def) => {
+                collect_class_type(class_def, &mut ctx);
+            }
             _ => {}
         }
     }
 
-    // Second pass: lower function bodies
+    // Second pass: lower function bodies and class method bodies
     let mut functions = Vec::new();
+    let mut classes = Vec::new();
     for stmt in stmts {
-        if let Stmt::FunctionDef(func) = stmt {
-            if let Some(hir_func) = lower_function(func, &mut ctx) {
-                functions.push(hir_func);
+        match stmt {
+            Stmt::FunctionDef(func) => {
+                if let Some(hir_func) = lower_function(func, &mut ctx) {
+                    functions.push(hir_func);
+                }
             }
+            Stmt::ClassDef(class_def) => {
+                if let Some(hir_class) = lower_class(class_def, &mut ctx) {
+                    classes.push(hir_class);
+                }
+            }
+            _ => {}
         }
     }
 
     if ctx.errors.is_empty() {
         Ok(LoweringResult {
-            module: HirModule { functions },
+            module: HirModule { functions, classes },
             reveal_types: ctx.reveal_types,
         })
     } else {
         Err(ctx.errors)
     }
+}
+
+/// First pass: collect class fields and method signatures, register the class type.
+fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
+    let class_name = class_def.name.to_string();
+    let mut fields: Vec<(String, Type)> = Vec::new();
+    let mut methods: Vec<(String, FunctionType)> = Vec::new();
+
+    // Register a preliminary class type so self-referential annotations work
+    // (e.g., `def distance(self, other: Point)` inside class Point)
+    ctx.class_types.insert(class_name.clone(), Type::Class {
+        name: class_name.clone(),
+        fields: vec![],
+        methods: vec![],
+    });
+
+    for stmt in &class_def.body {
+        match stmt {
+            // Field annotations: `x: float`
+            Stmt::AnnAssign(ann) => {
+                if let Expr::Name(name) = ann.target.as_ref() {
+                    let ty = resolve_annotation_expr(&ann.annotation, ctx);
+                    fields.push((name.id.to_string(), ty));
+                }
+            }
+            // Method definitions
+            Stmt::FunctionDef(func) => {
+                let method_name = func.name.to_string();
+                if method_name == "__init__" {
+                    // Constructor: extract params (skip `self`)
+                    let mut params = Vec::new();
+                    for param in func.parameters.args.iter().skip(1) {
+                        let param_name = param.parameter.name.to_string();
+                        let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                            resolve_annotation_expr(ann, ctx)
+                        } else {
+                            ctx.error(format!(
+                                "parameter '{}' in {}.__init__ is missing a type annotation",
+                                param_name, class_name
+                            ));
+                            Type::Any
+                        };
+                        params.push((param_name, param_ty));
+                    }
+                    // Constructor returns the class type (registered below)
+                    // We store it as a function for call resolution
+                    let constructor_ft = FunctionType {
+                        params: params.clone(),
+                        return_type: Box::new(Type::None), // placeholder, updated below
+                    };
+                    ctx.functions.insert(class_name.clone(), constructor_ft);
+
+                    // Collect defaults for constructor
+                    let mut defaults = Vec::new();
+                    for (i, param) in func.parameters.args.iter().skip(1).enumerate() {
+                        if let Some(ref default_expr) = param.default {
+                            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                                defaults.push((i, hir_default));
+                            }
+                        }
+                    }
+                    if !defaults.is_empty() {
+                        ctx.function_defaults.insert(class_name.clone(), defaults);
+                    }
+                } else {
+                    // Regular method: extract params (skip `self`)
+                    let mut params = Vec::new();
+                    for param in func.parameters.args.iter().skip(1) {
+                        let param_name = param.parameter.name.to_string();
+                        let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                            resolve_annotation_expr(ann, ctx)
+                        } else {
+                            ctx.error(format!(
+                                "parameter '{}' in {}.{} is missing a type annotation",
+                                param_name, class_name, method_name
+                            ));
+                            Type::Any
+                        };
+                        params.push((param_name, param_ty));
+                    }
+                    let return_ty = if let Some(ref ret_ann) = func.returns {
+                        resolve_annotation_expr(ret_ann, ctx)
+                    } else {
+                        Type::None
+                    };
+                    methods.push((method_name, FunctionType {
+                        params,
+                        return_type: Box::new(return_ty),
+                    }));
+                }
+            }
+            Stmt::Pass(_) => {} // Allow pass in class body
+            _ => {
+                ctx.error(format!("unsupported statement in class '{}' body", class_name));
+            }
+        }
+    }
+
+    let class_ty = Type::Class {
+        name: class_name.clone(),
+        fields: fields.clone(),
+        methods: methods.clone(),
+    };
+
+    // Update the constructor function to return the class type
+    if let Some(ft) = ctx.functions.get_mut(&class_name) {
+        ft.return_type = Box::new(class_ty.clone());
+    } else {
+        // No __init__ defined -- create a default constructor from fields
+        let params: Vec<(String, Type)> = fields.clone();
+        let ft = FunctionType {
+            params,
+            return_type: Box::new(class_ty.clone()),
+        };
+        ctx.functions.insert(class_name.clone(), ft);
+    }
+
+    ctx.class_types.insert(class_name, class_ty);
+}
+
+/// Second pass: lower class method bodies into HirClass.
+fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass> {
+    let class_name = class_def.name.to_string();
+    let class_ty = ctx.class_types.get(&class_name)?.clone();
+
+    let (fields, method_types) = match &class_ty {
+        Type::Class { fields, methods, .. } => (fields.clone(), methods.clone()),
+        _ => return None,
+    };
+
+    // Determine if all fields are hashable (primitives: int, float, bool, str)
+    let is_hashable = fields.iter().all(|(_, ty)| is_hashable_type(ty));
+
+    let mut hir_methods = Vec::new();
+
+    for stmt in &class_def.body {
+        if let Stmt::FunctionDef(func) = stmt {
+            let method_name = func.name.to_string();
+
+            // Set current class context for `self` resolution
+            ctx.current_class = Some(class_name.clone());
+
+            // Push a new scope for the method
+            ctx.scope.push();
+
+            // Define `self` in scope
+            ctx.scope.define("self".to_string(), class_ty.clone());
+
+            // Define method parameters (skip `self`)
+            let mut params = Vec::new();
+            for param in func.parameters.args.iter().skip(1) {
+                let param_name = param.parameter.name.to_string();
+                let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                    resolve_annotation_expr(ann, ctx)
+                } else {
+                    Type::Any
+                };
+                ctx.scope.define(param_name.clone(), param_ty.clone());
+                params.push(HirParam {
+                    name: param_name,
+                    ty: param_ty,
+                    default: None,
+                    keyword_only: false,
+                });
+            }
+
+            let return_ty = if method_name == "__init__" {
+                Type::None
+            } else if let Some(ref ret_ann) = func.returns {
+                resolve_annotation_expr(ret_ann, ctx)
+            } else {
+                Type::None
+            };
+
+            // Create a dummy function type for lower_stmts
+            let method_ft = FunctionType {
+                params: params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
+                return_type: Box::new(return_ty.clone()),
+            };
+
+            // Lower method body
+            let body = lower_stmts(&func.body, &method_ft, ctx);
+
+            // Determine receiver mutability: if any statement assigns to self.field, it's &mut self
+            let is_mutating = method_name == "__init__" || body_contains_field_assign(&body);
+
+            ctx.scope.pop();
+            ctx.current_class = None;
+
+            hir_methods.push(HirFunction {
+                name: if method_name == "__init__" { "new".to_string() } else { method_name },
+                params,
+                return_type: return_ty,
+                body,
+            });
+        }
+    }
+
+    Some(HirClass {
+        name: class_name,
+        fields,
+        methods: hir_methods,
+        is_hashable,
+    })
+}
+
+/// Check if a type is hashable (can derive Hash + Eq).
+fn is_hashable_type(ty: &Type) -> bool {
+    match ty {
+        Type::Int | Type::Bool | Type::Str | Type::None => true,
+        Type::Float => false, // f64 doesn't implement Hash
+        Type::LiteralInt(_) | Type::LiteralBool(_) | Type::LiteralStr(_) => true,
+        Type::Tuple(elems) => elems.iter().all(is_hashable_type),
+        Type::Class { fields, .. } => fields.iter().all(|(_, t)| is_hashable_type(t)),
+        _ => false,
+    }
+}
+
+/// Check if a method body contains any field assignments (self.field = ...).
+fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
+    stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
 }
 
 /// Lower a simple expression (literal values only) without requiring a full LowerCtx.
@@ -240,6 +480,10 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
             // Check type aliases first
             if let Some(alias_ty) = ctx.scope.lookup_type_alias(&name.id) {
                 return alias_ty.clone();
+            }
+            // Check class types
+            if let Some(class_ty) = ctx.class_types.get(name.id.as_str()) {
+                return class_ty.clone();
             }
             resolve_type_annotation(&name.id).unwrap_or_else(|| {
                 ctx.error(format!("unknown type: '{}'", name.id));
@@ -499,6 +743,24 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
         return lower_tuple_unpack_assign(tuple, &assign.value, ctx);
     }
 
+    // Handle attribute assignment: self.field = value or obj.field = value
+    if let Expr::Attribute(attr) = &assign.targets[0] {
+        let obj_name = match attr.value.as_ref() {
+            Expr::Name(n) => n.id.to_string(),
+            _ => {
+                ctx.error("attribute assignment target must be a simple name".to_string());
+                return None;
+            }
+        };
+        let field_name = attr.attr.to_string();
+        let value = lower_expr(&assign.value, ctx)?;
+        return Some(HirStmt::FieldAssign {
+            object: obj_name,
+            field: field_name,
+            value,
+        });
+    }
+
     let name = match &assign.targets[0] {
         Expr::Name(n) => n.id.to_string(),
         _ => {
@@ -701,7 +963,10 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
                         // Check that the variable exists and has a union/Unknown type
                         if ctx.scope.lookup(&var_name).is_some() {
                             if let Expr::Name(type_name) = &call.arguments.args[1] {
-                                if let Some(target_ty) = resolve_type_annotation(&type_name.id) {
+                                // Try built-in types first, then class types
+                                let target_ty = resolve_type_annotation(&type_name.id)
+                                    .or_else(|| ctx.class_types.get(type_name.id.as_str()).cloned());
+                                if let Some(target_ty) = target_ty {
                                     return Some(NarrowingCondition::IsInstance(var_name, target_ty));
                                 }
                             }
@@ -1196,6 +1461,26 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         });
     }
 
+    // Special handling for hash() built-in
+    if func_name == "hash" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!("hash() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let ty = arg.ty().clone();
+        // Check if the type is hashable
+        if !is_hashable_type(&ty) {
+            ctx.error(format!("hash() argument must be hashable, got '{}'", ty.display_name()));
+            return None;
+        }
+        return Some(HirExpr::Call {
+            func: "hash".to_string(),
+            args: vec![arg],
+            ty: Type::Int,
+        });
+    }
+
     // Special handling for round() built-in
     if func_name == "round" {
         if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
@@ -1424,11 +1709,20 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     }
 
-    Some(HirExpr::Call {
-        func: func_name,
-        args,
-        ty: *ft.return_type,
-    })
+    // If this is a class constructor call, emit ConstructorCall
+    if ctx.class_types.contains_key(&func_name) {
+        Some(HirExpr::ConstructorCall {
+            class_name: func_name,
+            args,
+            ty: *ft.return_type,
+        })
+    } else {
+        Some(HirExpr::Call {
+            func: func_name,
+            args,
+            ty: *ft.return_type,
+        })
+    }
 }
 
 fn lower_fstring(fstring: &ExprFString, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -1766,11 +2060,29 @@ fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option<HirExpr> {
 }
 
 fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    // This handles attribute access like x.method -- but actual method calls
-    // come through as Call(Attribute(...)), so we handle them in lower_call.
-    // For now, just report unsupported.
-    let _object = lower_expr(&attr.value, ctx)?;
-    ctx.error(format!("attribute access '.{}' is not supported as an expression; use as a method call", attr.attr));
+    let object = lower_expr(&attr.value, ctx)?;
+    let object_ty = object.ty().clone();
+    let field_name = attr.attr.to_string();
+
+    // Check if the object is a class instance with this field
+    if let Type::Class { name: _, fields, .. } = &object_ty {
+        if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == &field_name) {
+            return Some(HirExpr::FieldAccess {
+                object: Box::new(object),
+                field: field_name,
+                ty: field_ty.clone(),
+            });
+        }
+        ctx.error(format!(
+            "type '{}' has no field '{}'",
+            object_ty.display_name(),
+            field_name
+        ));
+        return None;
+    }
+
+    // Not a class field access -- report unsupported
+    ctx.error(format!("attribute access '.{}' is not supported as an expression; use as a method call", field_name));
     None
 }
 
@@ -2037,6 +2349,32 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 None
             }
         },
+        Type::Class { name, methods, .. } => {
+            if let Some((_, ft)) = methods.iter().find(|(n, _)| n == method) {
+                // Check argument count
+                if args.len() != ft.params.len() {
+                    ctx.error(format!(
+                        "{}.{}() takes {} argument(s), got {}",
+                        name, method, ft.params.len(), args.len()
+                    ));
+                    return None;
+                }
+                // Check argument types
+                for (i, (arg, (param_name, param_ty))) in args.iter().zip(ft.params.iter()).enumerate() {
+                    if !arg.ty().is_assignable_to(param_ty) {
+                        ctx.error(format!(
+                            "argument {} ('{}') of {}.{}(): expected '{}', got '{}'",
+                            i + 1, param_name, name, method,
+                            param_ty.display_name(), arg.ty().display_name()
+                        ));
+                    }
+                }
+                Some(*ft.return_type.clone())
+            } else {
+                ctx.error(format!("class '{}' has no method '{}'", name, method));
+                None
+            }
+        }
         _ => {
             ctx.error(format!(
                 "type '{}' has no method '{}'",

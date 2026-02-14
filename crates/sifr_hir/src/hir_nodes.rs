@@ -6,6 +6,17 @@ use sifr_type_system::Type;
 #[derive(Debug, Clone)]
 pub struct HirModule {
     pub functions: Vec<HirFunction>,
+    pub classes: Vec<HirClass>,
+}
+
+/// A class definition with resolved types.
+#[derive(Debug, Clone)]
+pub struct HirClass {
+    pub name: String,
+    pub fields: Vec<(String, Type)>,
+    pub methods: Vec<HirFunction>,
+    /// Whether all fields support Eq + Hash (enables derive(Eq, Hash))
+    pub is_hashable: bool,
 }
 
 /// A function definition with resolved types.
@@ -94,6 +105,12 @@ pub enum HirStmt {
     },
     /// Pass (no-op)
     Pass,
+    /// Field assignment: self.field = value (inside methods)
+    FieldAssign {
+        object: String,
+        field: String,
+        value: HirExpr,
+    },
 }
 
 /// A part of an f-string.
@@ -222,6 +239,18 @@ pub enum HirExpr {
         value: Box<HirExpr>,
         ty: Type,
     },
+    /// Field access: obj.field
+    FieldAccess {
+        object: Box<HirExpr>,
+        field: String,
+        ty: Type,
+    },
+    /// Constructor call: ClassName(args)
+    ConstructorCall {
+        class_name: String,
+        args: Vec<HirExpr>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -249,7 +278,9 @@ impl HirExpr {
             | Self::ContainsOp { ty, .. }
             | Self::FString { ty, .. }
             | Self::Slice { ty, .. }
-            | Self::WalrusExpr { ty, .. } => ty,
+            | Self::WalrusExpr { ty, .. }
+            | Self::FieldAccess { ty, .. }
+            | Self::ConstructorCall { ty, .. } => ty,
         }
     }
 }
