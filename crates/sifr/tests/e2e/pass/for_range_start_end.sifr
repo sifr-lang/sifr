@@ -1,0 +1,6 @@
+# expect-stdout: 28
+def main():
+    total: int = 0
+    for i in range(1, 8):
+        total = total + i
+    print(total)

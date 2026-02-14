@@ -54,6 +54,22 @@ pub enum HirStmt {
         elif_clauses: Vec<(HirExpr, Vec<HirStmt>)>,
         else_body: Option<Vec<HirStmt>>,
     },
+    /// While loop
+    While {
+        condition: HirExpr,
+        body: Vec<HirStmt>,
+    },
+    /// For loop
+    For {
+        target: String,
+        target_ty: Type,
+        iter: HirExpr,
+        body: Vec<HirStmt>,
+    },
+    /// Break statement
+    Break,
+    /// Continue statement
+    Continue,
     /// Pass (no-op)
     Pass,
 }
@@ -115,6 +131,12 @@ pub enum HirExpr {
         else_expr: Box<HirExpr>,
         ty: Type,
     },
+    /// Range literal: range(end) or range(start, end)
+    RangeLiteral {
+        start: Box<HirExpr>,
+        end: Box<HirExpr>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -132,7 +154,8 @@ impl HirExpr {
             | Self::Compare { ty, .. }
             | Self::BoolOp { ty, .. }
             | Self::Call { ty, .. }
-            | Self::IfExpr { ty, .. } => ty,
+            | Self::IfExpr { ty, .. }
+            | Self::RangeLiteral { ty, .. } => ty,
         }
     }
 }

@@ -15,6 +15,8 @@ pub enum Type {
     None,
     /// Function type with parameter types and return type
     Function(FunctionType),
+    /// Range type (maps to `std::ops::Range<i64>` in Rust)
+    Range,
     /// Explicit opt-out of type checking
     Any,
     /// Bottom type (function that never returns)
@@ -50,7 +52,7 @@ impl Type {
     /// - `Function` is `Copy` (function pointers).
     pub fn ownership(&self) -> OwnershipKind {
         match self {
-            Self::Int | Self::Float | Self::Bool | Self::None | Self::Never => OwnershipKind::Copy,
+            Self::Int | Self::Float | Self::Bool | Self::None | Self::Never | Self::Range => OwnershipKind::Copy,
             Self::Function(_) => OwnershipKind::Copy,
             Self::Str | Self::Any => OwnershipKind::Move,
         }
@@ -65,6 +67,7 @@ impl Type {
             Self::Str => "str",
             Self::None => "None",
             Self::Function(_) => "function",
+            Self::Range => "range",
             Self::Any => "Any",
             Self::Never => "Never",
         }
@@ -78,6 +81,7 @@ impl Type {
             Self::Bool => "bool".to_string(),
             Self::Str => "String".to_string(),
             Self::None => "()".to_string(),
+            Self::Range => "std::ops::Range<i64>".to_string(),
             Self::Any => "Box<dyn std::any::Any>".to_string(),
             Self::Never => "!".to_string(),
             Self::Function(ft) => {
@@ -91,6 +95,14 @@ impl Type {
     /// Check if this type is a numeric type (int or float).
     pub fn is_numeric(&self) -> bool {
         matches!(self, Self::Int | Self::Float)
+    }
+
+    /// Returns the element type if this type is iterable, or None otherwise.
+    pub fn iterable_element_type(&self) -> Option<Type> {
+        match self {
+            Self::Range => Some(Type::Int),
+            _ => None,
+        }
     }
 
     /// Check if a value of type `self` can be assigned to a target of type `target`.
