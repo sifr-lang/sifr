@@ -47,6 +47,10 @@ struct LowerCtx {
     reveal_types: Vec<String>,
     /// Whether we're currently inside a class method (tracks `self` type)
     current_class: Option<String>,
+    /// Whether we're inside a try block (auto-unwrap Result values)
+    in_try_block: bool,
+    /// Set of class names that are error types (class Foo(Error))
+    error_types: std::collections::HashSet<String>,
 }
 
 impl LowerCtx {
@@ -60,6 +64,8 @@ impl LowerCtx {
             loop_depth: 0,
             reveal_types: Vec::new(),
             current_class: None,
+            in_try_block: false,
+            error_types: std::collections::HashSet::new(),
         }
     }
 
@@ -83,8 +89,22 @@ pub struct LoweringResult {
     pub reveal_types: Vec<String>,
 }
 
+/// External module definitions that can be imported.
+#[derive(Debug, Clone, Default)]
+pub struct ExternalDefs {
+    /// Map of module_name -> (function_name -> FunctionType)
+    pub functions: std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
+    /// Map of module_name -> (class_name -> Type)
+    pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
+}
+
 /// Lower a parsed module AST into a typed HIR module.
 pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>> {
+    lower_module_with_externals(stmts, &ExternalDefs::default())
+}
+
+/// Lower a parsed module AST into a typed HIR module, with external module definitions.
+pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> Result<LoweringResult, Vec<LoweringError>> {
     let mut ctx = LowerCtx::new();
 
     // Register built-in functions
@@ -139,6 +159,55 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
         }
     }
 
+    // Collect import statements and resolve imported names
+    let mut imports = Vec::new();
+    for stmt in stmts {
+        if let Stmt::ImportFrom(import_from) = stmt {
+            if let Some(ref module) = import_from.module {
+                let module_name = module.to_string();
+                let names: Vec<String> = import_from.names.iter()
+                    .map(|alias| alias.name.to_string())
+                    .collect();
+
+                // Resolve imported names from external definitions
+                for name in &names {
+                    // Check if it's a private name
+                    if name.starts_with('_') {
+                        ctx.error(format!("cannot import private name '{}' from module '{}'", name, module_name));
+                        continue;
+                    }
+
+                    // Look up in external functions
+                    if let Some(module_fns) = externals.functions.get(&module_name) {
+                        if let Some(ft) = module_fns.get(name) {
+                            ctx.functions.insert(name.clone(), ft.clone());
+                        }
+                    }
+                    // Look up in external classes
+                    if let Some(module_classes) = externals.classes.get(&module_name) {
+                        if let Some(class_ty) = module_classes.get(name) {
+                            ctx.class_types.insert(name.clone(), class_ty.clone());
+                            // Also register the constructor
+                            if let Type::Class { fields, .. } = class_ty {
+                                let params: Vec<(String, Type)> = fields.clone();
+                                let ft = FunctionType {
+                                    params,
+                                    return_type: Box::new(class_ty.clone()),
+                                };
+                                ctx.functions.insert(name.clone(), ft);
+                            }
+                        }
+                    }
+                }
+
+                imports.push(HirImport {
+                    module: module_name,
+                    names,
+                });
+            }
+        }
+    }
+
     // Second pass: lower function bodies and class method bodies
     let mut functions = Vec::new();
     let mut classes = Vec::new();
@@ -160,7 +229,7 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
 
     if ctx.errors.is_empty() {
         Ok(LoweringResult {
-            module: HirModule { functions, classes },
+            module: HirModule { functions, classes, imports },
             reveal_types: ctx.reveal_types,
         })
     } else {
@@ -168,11 +237,27 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
     }
 }
 
+/// Check if a class definition has `(Error)` as its base class.
+fn is_error_class(class_def: &StmtClassDef) -> bool {
+    for base in class_def.bases() {
+        if let Expr::Name(n) = base {
+            if n.id.as_str() == "Error" {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// First pass: collect class fields and method signatures, register the class type.
 fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     let class_name = class_def.name.to_string();
     let mut fields: Vec<(String, Type)> = Vec::new();
     let mut methods: Vec<(String, FunctionType)> = Vec::new();
+    let is_error = is_error_class(class_def);
+
+    // For error types, ensure a 'message' field exists (add if not explicitly declared)
+    // This will be checked after collecting all fields
 
     // Register a preliminary class type so self-referential annotations work
     // (e.g., `def distance(self, other: Point)` inside class Point)
@@ -283,6 +368,10 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         ctx.functions.insert(class_name.clone(), ft);
     }
 
+    if is_error {
+        ctx.error_types.insert(class_name.clone());
+    }
+
     ctx.class_types.insert(class_name, class_ty);
 }
 
@@ -364,11 +453,14 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         }
     }
 
+    let is_error = ctx.error_types.contains(&class_name);
+
     Some(HirClass {
         name: class_name,
         fields,
         methods: hir_methods,
         is_hashable,
+        is_error_type: is_error,
     })
 }
 
@@ -570,6 +662,29 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         }
                     }
                 }
+                "Result" => {
+                    // Result[T, E] -- the slice is a Tuple expression
+                    match sub.slice.as_ref() {
+                        Expr::Tuple(tuple) => {
+                            if tuple.elts.len() != 2 {
+                                ctx.error("Result type annotation requires exactly 2 type parameters".to_string());
+                                return Type::Any;
+                            }
+                            let ok_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
+                            let err_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
+                            Type::Result(Box::new(ok_ty), Box::new(err_ty))
+                        }
+                        _ => {
+                            ctx.error("Result type annotation requires [T, E] syntax".to_string());
+                            Type::Any
+                        }
+                    }
+                }
+                "Option" => {
+                    // Option[T] -> T | None (sugar)
+                    let inner_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    make_union(vec![inner_ty, Type::None])
+                }
                 "TypeGuard" => {
                     // TypeGuard[T] -- type predicate return type
                     let inner_ty = resolve_annotation_expr(&sub.slice, ctx);
@@ -662,6 +777,14 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
         Stmt::Return(ret) => lower_return(ret, func_type, ctx),
         Stmt::Expr(expr_stmt) => {
             let expr = lower_expr(&expr_stmt.value, ctx)?;
+            // #[must_use] enforcement: Result values must not be silently discarded
+            let expr_ty = expr.ty();
+            if matches!(expr_ty, Type::Result(_, _)) {
+                ctx.error(format!(
+                    "unused Result value of type '{}' must be used. Use 'let _ = expr' to explicitly discard",
+                    expr_ty.display_name()
+                ));
+            }
             Some(HirStmt::Expr { expr })
         }
         Stmt::If(if_stmt) => lower_if(if_stmt, func_type, ctx),
@@ -682,6 +805,96 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             Some(HirStmt::Continue)
         }
         Stmt::Pass(_) => Some(HirStmt::Pass),
+        Stmt::Delete(del_stmt) => {
+            if del_stmt.targets.len() != 1 {
+                ctx.error("del with multiple targets not supported".to_string());
+                return None;
+            }
+            match &del_stmt.targets[0] {
+                Expr::Subscript(sub) => {
+                    let object = lower_expr(&sub.value, ctx)?;
+                    let index = lower_expr(&sub.slice, ctx)?;
+                    Some(HirStmt::Delete { object, index })
+                }
+                _ => {
+                    ctx.error("del is only supported for collection items (del d[key], del a[i])".to_string());
+                    None
+                }
+            }
+        }
+        Stmt::Assert(assert_stmt) => {
+            let test = lower_expr(&assert_stmt.test, ctx)?;
+            let msg = if let Some(ref msg_expr) = assert_stmt.msg {
+                Some(lower_expr(msg_expr, ctx)?)
+            } else {
+                None
+            };
+            Some(HirStmt::Assert { test, msg })
+        }
+        Stmt::Raise(raise_stmt) => {
+            if let Some(ref exc) = raise_stmt.exc {
+                let value = lower_expr(exc, ctx)?;
+                Some(HirStmt::Raise { value })
+            } else {
+                ctx.error("bare 'raise' without an expression is not supported".to_string());
+                None
+            }
+        }
+        Stmt::Try(try_stmt) => {
+            let prev_in_try = ctx.in_try_block;
+            ctx.in_try_block = true;
+            let body = lower_stmts(&try_stmt.body, func_type, ctx);
+            ctx.in_try_block = prev_in_try;
+            let mut handlers = Vec::new();
+            for handler in &try_stmt.handlers {
+                if let ExceptHandler::ExceptHandler(h) = handler {
+                    let error_type = if let Some(ref type_expr) = h.type_ {
+                        if let Expr::Name(n) = type_expr.as_ref() {
+                            Some(n.id.to_string())
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    };
+                    let name = h.name.as_ref().map(|n| n.to_string());
+                    // Define the error variable in scope if named
+                    ctx.scope.push();
+                    if let Some(ref var_name) = name {
+                        // Determine the type of the error variable
+                        let error_var_ty = if let Some(ref et) = error_type {
+                            if let Some(class_ty) = ctx.class_types.get(et) {
+                                class_ty.clone()
+                            } else {
+                                Type::Str // Default: error messages are strings
+                            }
+                        } else {
+                            Type::Str
+                        };
+                        ctx.scope.define(var_name.clone(), error_var_ty);
+                    }
+                    let handler_body = lower_stmts(&h.body, func_type, ctx);
+                    ctx.scope.pop();
+                    // Resolve the error type for codegen
+                    let error_resolved_type = error_type.as_ref().and_then(|et| {
+                        if let Some(class_ty) = ctx.class_types.get(et) {
+                            Some(class_ty.clone())
+                        } else if et == "str" {
+                            Some(Type::Str)
+                        } else {
+                            None
+                        }
+                    });
+                    handlers.push(HirExceptHandler {
+                        error_type,
+                        error_resolved_type,
+                        name,
+                        body: handler_body,
+                    });
+                }
+            }
+            Some(HirStmt::TryExcept { body, handlers })
+        }
         _ => {
             ctx.error("unsupported statement type".to_string());
             None
@@ -701,14 +914,26 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
     let declared_type = resolve_annotation_expr(&ann.annotation, ctx);
 
     let value = if let Some(val) = &ann.value {
-        let expr = lower_expr(val, ctx)?;
-        // Type check: value must be assignable to declared type
+        let mut expr = lower_expr(val, ctx)?;
         let expr_ty = expr.ty().clone();
-        if !expr_ty.is_assignable_to(&declared_type) {
+        // Inside try blocks, auto-unwrap Result[T, E] when declared type is T
+        if ctx.in_try_block {
+            if let Type::Result(ref ok_ty, _) = expr_ty {
+                if ok_ty.as_ref().is_assignable_to(&declared_type) {
+                    expr = HirExpr::QuestionMark {
+                        expr: Box::new(expr),
+                        ty: declared_type.clone(),
+                    };
+                }
+            }
+        }
+        // Type check: value must be assignable to declared type
+        let final_ty = expr.ty().clone();
+        if !final_ty.is_assignable_to(&declared_type) {
             ctx.error(format!(
                 "type mismatch: expected '{}', got '{}'",
                 declared_type.display_name(),
-                expr_ty.display_name()
+                final_ty.display_name()
             ));
         }
         expr
@@ -768,6 +993,18 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
             return None;
         }
     };
+
+    // Handle `_ = expr` as explicit discard (suppresses #[must_use] warnings)
+    if name == "_" {
+        let value = lower_expr(&assign.value, ctx)?;
+        let value_ty = value.ty().clone();
+        return Some(HirStmt::Let {
+            name: "_".to_string(),
+            ty: value_ty,
+            value,
+            is_mutable: false,
+        });
+    }
 
     let value = lower_expr(&assign.value, ctx)?;
     let value_ty = value.ty().clone();
@@ -862,6 +1099,20 @@ fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut LowerCtx) 
     let value = if let Some(val) = &ret.value {
         let expr = lower_expr(val, ctx)?;
         let expr_ty = expr.ty().clone();
+
+        // If the function returns Result[T, E] and the value is T (not Result), wrap in Ok()
+        if let Type::Result(ref ok_ty, _) = *func_type.return_type {
+            if expr_ty.is_assignable_to(ok_ty) && !matches!(expr_ty, Type::Result(_, _)) {
+                // Wrap in Ok()
+                return Some(HirStmt::Return {
+                    value: Some(HirExpr::OkWrap {
+                        ty: func_type.return_type.as_ref().clone(),
+                        value: Box::new(expr),
+                    }),
+                });
+            }
+        }
+
         if !expr_ty.is_assignable_to(&func_type.return_type) {
             ctx.error(format!(
                 "return type mismatch: expected '{}', got '{}'",
@@ -872,6 +1123,17 @@ fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut LowerCtx) 
         Some(expr)
     } else {
         if *func_type.return_type != Type::None {
+            // If function returns Result[(), E], wrap in Ok(())
+            if let Type::Result(ref ok_ty, _) = *func_type.return_type {
+                if **ok_ty == Type::None {
+                    return Some(HirStmt::Return {
+                        value: Some(HirExpr::OkWrap {
+                            ty: func_type.return_type.as_ref().clone(),
+                            value: Box::new(HirExpr::NoneLiteral),
+                        }),
+                    });
+                }
+            }
             ctx.error(format!(
                 "function expects return type '{}', but returns nothing",
                 func_type.return_type.display_name()
@@ -1528,10 +1790,20 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let arg_ty = arg.ty().clone();
+        // int(str) -> Result[int, str] (fallible)
+        // int(float) -> int (infallible truncation)
+        // int(int) -> int (identity)
+        // int(bool) -> int (True=1, False=0)
+        let result_ty = if arg_ty == Type::Str {
+            Type::Result(Box::new(Type::Int), Box::new(Type::Str))
+        } else {
+            Type::Int
+        };
         return Some(HirExpr::Call {
             func: "int".to_string(),
             args: vec![arg],
-            ty: Type::Int,
+            ty: result_ty,
         });
     }
 
@@ -1542,10 +1814,19 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let arg_ty = arg.ty().clone();
+        // float(str) -> Result[float, str] (fallible)
+        // float(int) -> float (infallible widening)
+        // float(float) -> float (identity)
+        let result_ty = if arg_ty == Type::Str {
+            Type::Result(Box::new(Type::Float), Box::new(Type::Str))
+        } else {
+            Type::Float
+        };
         return Some(HirExpr::Call {
             func: "float".to_string(),
             args: vec![arg],
-            ty: Type::Float,
+            ty: result_ty,
         });
     }
 
@@ -2195,7 +2476,8 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     ctx.error("list.pop() takes no arguments".to_string());
                     return None;
                 }
-                Some(*elem_ty.clone())
+                // pop() returns Option[T] = T | None
+                Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
             }
             _ => {
                 ctx.error(format!("list has no method '{}'", method));
@@ -2264,7 +2546,16 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     ctx.error(format!("dict.get() takes exactly 1 argument, got {}", args.len()));
                     return None;
                 }
-                Some(*val_ty.clone())
+                // get() returns Option[V] = V | None
+                Some(Type::Union(vec![*val_ty.clone(), Type::None]))
+            }
+            "pop" => {
+                if args.len() != 1 {
+                    ctx.error(format!("dict.pop() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                // pop() returns Option[V] = V | None
+                Some(Type::Union(vec![*val_ty.clone(), Type::None]))
             }
             _ => {
                 ctx.error(format!("dict has no method '{}'", method));
@@ -2328,7 +2619,8 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     ctx.error(format!("str.find() takes exactly 1 argument, got {}", args.len()));
                     return None;
                 }
-                Some(Type::Int)
+                // find() returns Option[int] = int | None
+                Some(Type::Union(vec![Type::Int, Type::None]))
             }
             _ => {
                 ctx.error(format!("str has no method '{}'", method));

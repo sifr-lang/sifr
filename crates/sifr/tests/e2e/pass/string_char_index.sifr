@@ -2,5 +2,9 @@
 # expect-stdout: o
 def main():
     s: str = "hello"
-    print(s[0])
-    print(s[4])
+    c1: str | None = s[0]
+    if c1 is not None:
+        print(c1)
+    c2: str | None = s[4]
+    if c2 is not None:
+        print(c2)

@@ -31,6 +31,49 @@ pub fn generate_rust(module: &HirModule) -> String {
     result
 }
 
+/// Generate Rust source code for a multi-module project.
+/// Returns a map of filename -> Rust source code.
+pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, String> {
+    let mut files = HashMap::new();
+
+    for (module_name, module) in modules {
+        let mut emitter = RustEmitter::new();
+        // For non-main modules, enable pub mode
+        if *module_name != "main" {
+            emitter.pub_mode = true;
+        }
+        emitter.collect_union_types(module);
+        emitter.generate_enum_definitions();
+        emitter.emit_module(module);
+
+        let mut result = String::new();
+
+        // For non-main modules, add imports as `use` statements
+        for import in &module.imports {
+            for name in &import.names {
+                result.push_str(&format!("use crate::{}::{};\n", import.module, name));
+            }
+        }
+
+        if emitter.needs_hashmap {
+            result.push_str("use std::collections::HashMap;\n");
+        }
+        if !result.is_empty() {
+            result.push('\n');
+        }
+        if !emitter.enum_defs.is_empty() {
+            result.push_str(&emitter.enum_defs);
+            result.push('\n');
+        }
+
+        result.push_str(&emitter.output);
+
+        files.insert(module_name.to_string(), result);
+    }
+
+    files
+}
+
 /// Generate a complete Rust project (Cargo.toml + main.rs content).
 pub fn generate_project(module: &HirModule, project_name: &str) -> (String, String) {
     let cargo_toml = format!(
@@ -61,6 +104,8 @@ struct RustEmitter {
     func_signatures: HashMap<String, (Vec<Type>, Type)>,
     /// Whether we're inside a loop that has an else clause
     in_loop_with_else: bool,
+    /// Whether to emit `pub` on all top-level items (for module exports)
+    pub_mode: bool,
 }
 
 impl RustEmitter {
@@ -75,6 +120,7 @@ impl RustEmitter {
             option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
             in_loop_with_else: false,
+            pub_mode: false,
         }
     }
 
@@ -229,12 +275,19 @@ impl RustEmitter {
 
         // Struct definition
         self.write_indent();
-        self.write("struct ");
+        if self.pub_mode {
+            self.write("pub struct ");
+        } else {
+            self.write("struct ");
+        }
         self.write(&class.name);
         self.write(" {\n");
         self.indent += 1;
         for (field_name, field_ty) in &class.fields {
             self.write_indent();
+            if self.pub_mode {
+                self.write("pub ");
+            }
             self.write(field_name);
             self.write(": ");
             self.write(&field_ty.rust_type());
@@ -251,6 +304,41 @@ impl RustEmitter {
         self.write(" {\n");
         self.indent += 1;
 
+        // If no explicit constructor (no "new" method), generate a default one from fields
+        let has_constructor = class.methods.iter().any(|m| m.name == "new");
+        if !has_constructor && !class.fields.is_empty() {
+            self.write_indent();
+            if self.pub_mode {
+                self.write("pub fn new(");
+            } else {
+                self.write("fn new(");
+            }
+            for (i, (field_name, field_ty)) in class.fields.iter().enumerate() {
+                if i > 0 {
+                    self.write(", ");
+                }
+                self.write(field_name);
+                self.write(": ");
+                self.write(&field_ty.rust_type());
+            }
+            self.write(") -> Self {\n");
+            self.indent += 1;
+            self.write_indent();
+            self.write("Self {\n");
+            self.indent += 1;
+            for (field_name, _) in &class.fields {
+                self.write_indent();
+                self.write(field_name);
+                self.write(",\n");
+            }
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n");
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n\n");
+        }
+
         for method in &class.methods {
             self.emit_class_method(method, class);
             self.output.push('\n');
@@ -259,15 +347,49 @@ impl RustEmitter {
         self.indent -= 1;
         self.write_indent();
         self.write("}\n");
+
+        // For error types, implement Display and Error traits
+        if class.is_error_type {
+            self.output.push('\n');
+            self.write_indent();
+            self.write("impl std::fmt::Display for ");
+            self.write(&class.name);
+            self.write(" {\n");
+            self.indent += 1;
+            self.write_indent();
+            self.write("fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+            self.indent += 1;
+            // If there's a 'message' field, use it for Display
+            if class.fields.iter().any(|(name, _)| name == "message") {
+                self.write_indent();
+                self.write("write!(f, \"{}\", self.message)\n");
+            } else {
+                // Use Debug format as fallback
+                self.write_indent();
+                self.write("write!(f, \"{:?}\", self)\n");
+            }
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n");
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n\n");
+
+            self.write_indent();
+            self.write("impl std::error::Error for ");
+            self.write(&class.name);
+            self.write(" {}\n");
+        }
     }
 
     fn emit_class_method(&mut self, method: &HirFunction, class: &HirClass) {
         self.current_return_type = Some(method.return_type.clone());
 
         self.write_indent();
+        let pub_prefix = if self.pub_mode { "pub " } else { "" };
         if method.name == "new" {
             // Constructor: fn new(params) -> Self
-            self.write("fn new(");
+            self.write(&format!("{}fn new(", pub_prefix));
             for (i, param) in method.params.iter().enumerate() {
                 if i > 0 {
                     self.write(", ");
@@ -329,11 +451,11 @@ impl RustEmitter {
             // Regular method: determine &self vs &mut self
             let is_mutating = body_contains_field_assign_codegen(&method.body);
             if is_mutating {
-                self.write("fn ");
+                self.write(&format!("{}fn ", pub_prefix));
                 self.write(&method.name);
                 self.write("(&mut self");
             } else {
-                self.write("fn ");
+                self.write(&format!("{}fn ", pub_prefix));
                 self.write(&method.name);
                 self.write("(&self");
             }
@@ -377,7 +499,11 @@ impl RustEmitter {
         // Since Rust doesn't have default params, we emit all params and handle
         // defaults at call site
         self.write_indent();
-        self.write("fn ");
+        if self.pub_mode && func.name != "main" {
+            self.write("pub fn ");
+        } else {
+            self.write("fn ");
+        }
         self.write(&func.name);
         self.write("(");
 
@@ -813,6 +939,67 @@ impl RustEmitter {
                     self.write(&format!("let {} = _star_tmp[_star_tmp.len() - {}].clone();\n", name, after.len() - i));
                 }
             }
+            HirStmt::TryExcept { body, handlers } => {
+                // Determine the error type from the first handler
+                let error_rust_type = handlers.first()
+                    .and_then(|h| h.error_resolved_type.as_ref())
+                    .map(|t| t.rust_type())
+                    .unwrap_or_else(|| "String".to_string());
+
+                // Emit try body as a closure that returns Result, then match on it
+                self.write_indent();
+                self.write(&format!("match (|| -> Result<(), {}> {{\n", error_rust_type));
+                self.indent += 1;
+                for stmt in body {
+                    self.emit_stmt(stmt);
+                }
+                self.write_indent();
+                self.write("Ok(())\n");
+                self.indent -= 1;
+                self.write_indent();
+                self.write("})() {\n");
+                self.indent += 1;
+                self.write_indent();
+                self.write("Ok(()) => {}\n");
+                for handler in handlers {
+                    self.write_indent();
+                    if let Some(ref name) = handler.name {
+                        self.write(&format!("Err({}) => {{\n", name));
+                    } else {
+                        self.write("Err(_e) => {\n");
+                    }
+                    self.indent += 1;
+                    for stmt in &handler.body {
+                        self.emit_stmt(stmt);
+                    }
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
+                }
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
+            }
+            HirStmt::Raise { value } => {
+                self.write_indent();
+                self.write("return Err(");
+                self.emit_expr(value);
+                self.write(");\n");
+            }
+            HirStmt::Assert { test, msg } => {
+                self.write_indent();
+                if let Some(msg_expr) = msg {
+                    self.write("assert!(");
+                    self.emit_expr(test);
+                    self.write(", \"{}\", ");
+                    self.emit_expr(msg_expr);
+                    self.write(");\n");
+                } else {
+                    self.write("assert!(");
+                    self.emit_expr(test);
+                    self.write(");\n");
+                }
+            }
             HirStmt::FieldAssign { object, field, value } => {
                 self.write_indent();
                 self.write(object);
@@ -821,6 +1008,31 @@ impl RustEmitter {
                 self.write(" = ");
                 self.emit_expr(value);
                 self.write(";\n");
+            }
+            HirStmt::Delete { object, index } => {
+                let obj_ty = object.ty();
+                self.write_indent();
+                match obj_ty {
+                    Type::Dict(_, _) => {
+                        // del d[key] -> let _ = d.remove(&key);
+                        self.write("let _ = ");
+                        self.emit_expr(object);
+                        self.write(".remove(&");
+                        self.emit_expr(index);
+                        self.write(");\n");
+                    }
+                    Type::List(_) => {
+                        // del a[i] -> let _ = a.remove(i as usize);
+                        self.write("let _ = ");
+                        self.emit_expr(object);
+                        self.write(".remove(");
+                        self.emit_expr(index);
+                        self.write(" as usize);\n");
+                    }
+                    _ => {
+                        self.write("/* unsupported del */\n");
+                    }
+                }
             }
         }
     }
@@ -1048,13 +1260,14 @@ impl RustEmitter {
                 self.write(")");
             }
             (Type::Str, "find") => {
+                // Returns Option<i64> = int | None
                 self.emit_expr(object);
                 self.write(".find(");
                 if !args.is_empty() {
                     self.emit_expr(&args[0]);
                     self.write(".as_str()");
                 }
-                self.write(").map_or(-1_i64, |i| i as i64)");
+                self.write(").map(|i| i as i64)");
             }
             // String methods - extended
             (Type::Str, "title") => {
@@ -1217,8 +1430,9 @@ impl RustEmitter {
                 self.write(")");
             }
             (Type::List(_), "pop") => {
+                // Returns Option<T> = T | None
                 self.emit_expr(object);
-                self.write(".pop().unwrap()");
+                self.write(".pop()");
             }
             // Dict methods
             (Type::Dict(_, _), "keys") => {
@@ -1258,12 +1472,22 @@ impl RustEmitter {
                 self.write(")");
             }
             (Type::Dict(_, _), "get") => {
+                // Returns Option<V> = V | None
                 self.emit_expr(object);
                 self.write(".get(&");
                 if !args.is_empty() {
                     self.emit_expr(&args[0]);
                 }
-                self.write(").cloned().unwrap()");
+                self.write(").cloned()");
+            }
+            (Type::Dict(_, _), "pop") => {
+                // Returns Option<V> = V | None
+                self.emit_expr(object);
+                self.write(".remove(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
             }
             // Tuple count()
             (Type::Tuple(_), "count") => {
@@ -1530,8 +1754,9 @@ impl RustEmitter {
                                 self.write(" as i64");
                             }
                             Type::Str => {
+                                // int(str) -> Result<i64, String>
                                 self.emit_expr(&args[0]);
-                                self.write(".parse::<i64>().unwrap()");
+                                self.write(".parse::<i64>().map_err(|e| e.to_string())");
                             }
                             Type::Bool => {
                                 self.write("if ");
@@ -1551,8 +1776,9 @@ impl RustEmitter {
                                 self.write(" as f64");
                             }
                             Type::Str => {
+                                // float(str) -> Result<f64, String>
                                 self.emit_expr(&args[0]);
-                                self.write(".parse::<f64>().unwrap()");
+                                self.write(".parse::<f64>().map_err(|e| e.to_string())");
                             }
                             _ => {
                                 self.emit_expr(&args[0]);
@@ -1676,14 +1902,16 @@ impl RustEmitter {
                 let obj_ty = object.ty();
                 match obj_ty {
                     Type::Dict(_, _) => {
-                        // Dict indexing: d[key] -> d[&key] with clone
+                        // Safe dict indexing: d[key] -> d.get(&key).cloned()
+                        // Returns Option<V> which maps to our V | None union
                         self.emit_expr(object);
-                        self.write("[&");
+                        self.write(".get(&");
                         self.emit_expr(index);
-                        self.write("]");
+                        self.write(").cloned()");
                     }
                     Type::Tuple(_) => {
                         // Tuple indexing: t.0, t.1, etc. (handle negative)
+                        // Tuples are fixed-size, so indexing is always safe at compile time
                         if let HirExpr::IntLiteral(val) = index.as_ref() {
                             if *val < 0 {
                                 if let Type::Tuple(elems) = obj_ty {
@@ -1703,41 +1931,22 @@ impl RustEmitter {
                         }
                     }
                     Type::Str => {
-                        // String indexing: character-based (UTF-8 safe)
-                        // Check for negative literal
-                        if let HirExpr::IntLiteral(val) = index.as_ref() {
-                            if *val < 0 {
-                                self.emit_expr(object);
-                                self.write(&format!(".chars().nth(({}.chars().count() as i64 + ({})) as usize).unwrap().to_string()", "_str_idx_tmp", val));
-                                // We need a different approach - use a block
-                                // Actually, let's use a simpler approach
-                                self.output.truncate(self.output.len() - self.output.rfind(|_| true).map(|_| 0).unwrap_or(0));
-                            }
-                        }
-                        // General case: handle negative indices
+                        // Safe string indexing: returns Option<String>
+                        // Handle negative indices
                         self.write("{ let _s = &");
                         self.emit_expr(object);
                         self.write("; let _i = ");
                         self.emit_expr(index);
-                        self.write("; let _idx = if _i < 0 { (_s.chars().count() as i64 + _i) as usize } else { _i as usize }; _s.chars().nth(_idx).unwrap().to_string() }");
+                        self.write("; let _idx = if _i < 0 { (_s.chars().count() as i64 + _i) as usize } else { _i as usize }; _s.chars().nth(_idx).map(|c| c.to_string()) }");
                     }
                     _ => {
-                        // List indexing: handle negative indices
-                        // Check for compile-time negative literal for simple case
-                        if let HirExpr::IntLiteral(val) = index.as_ref() {
-                            if *val < 0 {
-                                self.write("{ let _v = &");
-                                self.emit_expr(object);
-                                self.write(&format!("; _v[(_v.len() as i64 + ({})) as usize].clone() }}", val));
-                                return;
-                            }
-                        }
-                        // General case with runtime negative check
+                        // Safe list indexing: returns Option<T>
+                        // Handle negative indices
                         self.write("{ let _v = &");
                         self.emit_expr(object);
                         self.write("; let _i = ");
                         self.emit_expr(index);
-                        self.write("; let _idx = if _i < 0 { (_v.len() as i64 + _i) as usize } else { _i as usize }; _v[_idx].clone() }");
+                        self.write("; let _idx = if _i < 0 { (_v.len() as i64 + _i) as usize } else { _i as usize }; _v.get(_idx).cloned() }");
                     }
                 }
             }
@@ -1817,6 +2026,20 @@ impl RustEmitter {
                     }
                     self.emit_expr(arg);
                 }
+                self.write(")");
+            }
+            HirExpr::QuestionMark { expr, .. } => {
+                self.emit_expr(expr);
+                self.write("?");
+            }
+            HirExpr::OkWrap { value, .. } => {
+                self.write("Ok(");
+                self.emit_expr(value);
+                self.write(")");
+            }
+            HirExpr::ErrWrap { value, .. } => {
+                self.write("Err(");
+                self.emit_expr(value);
                 self.write(")");
             }
             HirExpr::FString { parts, .. } => {
@@ -1982,6 +2205,7 @@ mod tests {
                 }],
             }],
             classes: vec![],
+            imports: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -2010,6 +2234,7 @@ mod tests {
                 }],
             }],
             classes: vec![],
+            imports: vec![],
         };
 
         let rust_code = generate_rust(&module);

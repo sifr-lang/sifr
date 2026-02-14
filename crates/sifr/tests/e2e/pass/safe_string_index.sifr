@@ -1,0 +1,17 @@
+# expect-stdout: char: h
+# expect-stdout: out of bounds
+
+def main():
+    s: str = "hello"
+
+    # Valid index returns Some
+    c: str | None = s[0]
+    if c is not None:
+        print(f"char: {c}")
+
+    # Out-of-bounds returns None
+    oob: str | None = s[100]
+    if oob is not None:
+        print(f"char: {oob}")
+    else:
+        print("out of bounds")

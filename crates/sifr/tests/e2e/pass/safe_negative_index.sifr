@@ -1,0 +1,14 @@
+# expect-stdout: last: 5
+# expect-stdout: second last: 4
+
+def main():
+    items: list[int] = [1, 2, 3, 4, 5]
+
+    # Negative index returns Some
+    last: int | None = items[-1]
+    if last is not None:
+        print(f"last: {last}")
+
+    second_last: int | None = items[-2]
+    if second_last is not None:
+        print(f"second last: {second_last}")

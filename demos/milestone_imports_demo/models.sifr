@@ -1,0 +1,23 @@
+# models.sifr - Data models for the application
+
+class User:
+    name: str
+    email: str
+
+    def __init__(self, name: str, email: str):
+        self.name = name
+        self.email = email
+
+    def display(self) -> str:
+        return f"{self.name} <{self.email}>"
+
+class Product:
+    name: str
+    price: float
+
+    def __init__(self, name: str, price: float):
+        self.name = name
+        self.price = price
+
+    def label(self) -> str:
+        return f"{self.name}: ${self.price}"

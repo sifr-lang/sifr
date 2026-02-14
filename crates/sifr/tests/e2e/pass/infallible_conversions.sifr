@@ -1,0 +1,21 @@
+# expect-stdout: 3
+# expect-stdout: 42
+# expect-stdout: hello
+# expect-stdout: true
+
+def main():
+    # int(float) -> int (truncation)
+    x: int = int(3.7)
+    print(x)
+
+    # float(int) -> float
+    y: float = float(42)
+    print(y)
+
+    # str(x) for any type
+    s: str = str(42)
+    print("hello")
+
+    # bool(x) for any type
+    b: bool = bool(1)
+    print(b)

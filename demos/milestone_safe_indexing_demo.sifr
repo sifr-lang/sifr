@@ -1,0 +1,140 @@
+# milestone_safe_indexing demo
+# Showcases: safe list/dict/string indexing, Option returns,
+#            collection methods, del statement, negative indexing
+
+# expect-stdout: === Safe List Indexing ===
+# expect-stdout: nums[1] = 20
+# expect-stdout: nums[99] = None (safe!)
+# expect-stdout: === Safe Dict Indexing ===
+# expect-stdout: ages[alice] = 25
+# expect-stdout: ages[charlie] = None (safe!)
+# expect-stdout: === Safe String Indexing ===
+# expect-stdout: s[0] = h
+# expect-stdout: s[99] = None (safe!)
+# expect-stdout: === Negative Indexing ===
+# expect-stdout: last item: 5
+# expect-stdout: last char: o
+# expect-stdout: === List pop() ===
+# expect-stdout: popped: 30
+# expect-stdout: empty pop: None
+# expect-stdout: === Dict get() and pop() ===
+# expect-stdout: get alice: 25
+# expect-stdout: get missing: None
+# expect-stdout: popped bob: 30
+# expect-stdout: === String find() ===
+# expect-stdout: found world at: 7
+# expect-stdout: xyz not found
+# expect-stdout: === Del Statement ===
+# expect-stdout: before del: 3
+# expect-stdout: after del: 2
+# expect-stdout: demo complete!
+
+def main():
+    # --- Safe List Indexing ---
+    print("=== Safe List Indexing ===")
+    nums: list[int] = [10, 20, 30]
+
+    val: int | None = nums[1]
+    if val is not None:
+        print(f"nums[1] = {val}")
+
+    oob: int | None = nums[99]
+    if oob is not None:
+        print(f"nums[99] = {oob}")
+    else:
+        print("nums[99] = None (safe!)")
+
+    # --- Safe Dict Indexing ---
+    print("=== Safe Dict Indexing ===")
+    ages: dict[str, int] = {"alice": 25, "bob": 30}
+
+    a: int | None = ages["alice"]
+    if a is not None:
+        print(f"ages[alice] = {a}")
+
+    c: int | None = ages["charlie"]
+    if c is not None:
+        print(f"ages[charlie] = {c}")
+    else:
+        print("ages[charlie] = None (safe!)")
+
+    # --- Safe String Indexing ---
+    print("=== Safe String Indexing ===")
+    s: str = "hello"
+
+    ch: str | None = s[0]
+    if ch is not None:
+        print(f"s[0] = {ch}")
+
+    oob_ch: str | None = s[99]
+    if oob_ch is not None:
+        print(f"s[99] = {oob_ch}")
+    else:
+        print("s[99] = None (safe!)")
+
+    # --- Negative Indexing ---
+    print("=== Negative Indexing ===")
+    items: list[int] = [1, 2, 3, 4, 5]
+    last: int | None = items[-1]
+    if last is not None:
+        print(f"last item: {last}")
+
+    last_ch: str | None = s[-1]
+    if last_ch is not None:
+        print(f"last char: {last_ch}")
+
+    # --- List pop() ---
+    print("=== List pop() ===")
+    stack: list[int] = [10, 20, 30]
+    top: int | None = stack.pop()
+    if top is not None:
+        print(f"popped: {top}")
+
+    _ = stack.pop()
+    _ = stack.pop()
+    empty: int | None = stack.pop()
+    if empty is not None:
+        print(f"got: {empty}")
+    else:
+        print("empty pop: None")
+
+    # --- Dict get() and pop() ---
+    print("=== Dict get() and pop() ===")
+    data: dict[str, int] = {"alice": 25, "bob": 30}
+
+    g: int | None = data.get("alice")
+    if g is not None:
+        print(f"get alice: {g}")
+
+    gm: int | None = data.get("missing")
+    if gm is not None:
+        print(f"get missing: {gm}")
+    else:
+        print("get missing: None")
+
+    p: int | None = data.pop("bob")
+    if p is not None:
+        print(f"popped bob: {p}")
+
+    # --- String find() ---
+    print("=== String find() ===")
+    text: str = "hello, world!"
+
+    pos: int | None = text.find("world")
+    if pos is not None:
+        print(f"found world at: {pos}")
+
+    miss: int | None = text.find("xyz")
+    if miss is not None:
+        print(f"found xyz at: {miss}")
+    else:
+        print("xyz not found")
+
+    # --- Del Statement ---
+    print("=== Del Statement ===")
+    config: dict[str, int] = {"a": 1, "b": 2, "c": 3}
+    print(f"before del: {len(config)}")
+    del config["b"]
+    print(f"after del: {len(config)}")
+
+    print("demo complete!")

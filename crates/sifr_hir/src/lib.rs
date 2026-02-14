@@ -11,5 +11,5 @@ mod scope;
 pub mod cfg;
 
 pub use hir_nodes::*;
-pub use lower::{lower_module, LoweringError, LoweringResult};
+pub use lower::{lower_module, lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult};
 pub use scope::{Scope, NarrowingSnapshot};

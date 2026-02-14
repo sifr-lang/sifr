@@ -7,6 +7,16 @@ use sifr_type_system::Type;
 pub struct HirModule {
     pub functions: Vec<HirFunction>,
     pub classes: Vec<HirClass>,
+    pub imports: Vec<HirImport>,
+}
+
+/// An import statement.
+#[derive(Debug, Clone)]
+pub struct HirImport {
+    /// The module to import from (e.g., "utils" for `from utils import helper`)
+    pub module: String,
+    /// The names to import
+    pub names: Vec<String>,
 }
 
 /// A class definition with resolved types.
@@ -17,6 +27,8 @@ pub struct HirClass {
     pub methods: Vec<HirFunction>,
     /// Whether all fields support Eq + Hash (enables derive(Eq, Hash))
     pub is_hashable: bool,
+    /// Whether this class is an error type (class Foo(Error))
+    pub is_error_type: bool,
 }
 
 /// A function definition with resolved types.
@@ -105,12 +117,44 @@ pub enum HirStmt {
     },
     /// Pass (no-op)
     Pass,
+    /// Assert statement: assert condition [, message]
+    Assert {
+        test: HirExpr,
+        msg: Option<HirExpr>,
+    },
+    /// Raise statement: raise expr -> Err(expr)
+    Raise {
+        value: HirExpr,
+    },
+    /// Try/except: pattern matching on Result
+    TryExcept {
+        body: Vec<HirStmt>,
+        handlers: Vec<HirExceptHandler>,
+    },
     /// Field assignment: self.field = value (inside methods)
     FieldAssign {
         object: String,
         field: String,
         value: HirExpr,
     },
+    /// Delete statement: del d[key] or del a[i]
+    Delete {
+        object: HirExpr,
+        index: HirExpr,
+    },
+}
+
+/// An except handler in a try/except block.
+#[derive(Debug, Clone)]
+pub struct HirExceptHandler {
+    /// The error type to match (None = catch-all)
+    pub error_type: Option<String>,
+    /// The resolved type of the error (for codegen)
+    pub error_resolved_type: Option<Type>,
+    /// Variable name to bind the error value
+    pub name: Option<String>,
+    /// Handler body
+    pub body: Vec<HirStmt>,
 }
 
 /// A part of an f-string.
@@ -251,6 +295,21 @@ pub enum HirExpr {
         args: Vec<HirExpr>,
         ty: Type,
     },
+    /// Question mark operator: expr? (early return on Err)
+    QuestionMark {
+        expr: Box<HirExpr>,
+        ty: Type,
+    },
+    /// Ok wrapping: Ok(expr)
+    OkWrap {
+        value: Box<HirExpr>,
+        ty: Type,
+    },
+    /// Err wrapping: Err(expr)
+    ErrWrap {
+        value: Box<HirExpr>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -280,7 +339,10 @@ impl HirExpr {
             | Self::Slice { ty, .. }
             | Self::WalrusExpr { ty, .. }
             | Self::FieldAccess { ty, .. }
-            | Self::ConstructorCall { ty, .. } => ty,
+            | Self::ConstructorCall { ty, .. }
+            | Self::QuestionMark { ty, .. }
+            | Self::OkWrap { ty, .. }
+            | Self::ErrWrap { ty, .. } => ty,
         }
     }
 }

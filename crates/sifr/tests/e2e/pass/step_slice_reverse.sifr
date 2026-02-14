@@ -3,5 +3,9 @@
 def main():
     items: list[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     reversed: list[int] = items[::-1]
-    print(reversed[0])
-    print(reversed[-1])
+    v1: int | None = reversed[0]
+    if v1 is not None:
+        print(v1)
+    v2: int | None = reversed[-1]
+    if v2 is not None:
+        print(v2)
