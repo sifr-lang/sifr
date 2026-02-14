@@ -91,22 +91,43 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    M1["M1: Core Language (DONE)\nVariables, functions, if/else,\nprimitives, print, CLI"] --> M2
-    M2["M2: Control Flow + Data (DONE)\nLoops, list, dict, tuple,\nstring ops, indexing"] --> M3
-    M3["M3: Advanced Type System\nUnion/intersection types,\nliteral types, type narrowing,\ncontrol flow analysis"] --> M4
-    M4["M4: Error Handling\nResult/Option via unions,\ntry/except as match,\n? operator, assert"] --> M5
-    M5["M5: Structs and Methods\nclass -> struct+impl,\nprotocols/traits,\ndiscriminated unions"] --> M6
-    M6["M6: Module System\nimport/from -> mod/use,\nmulti-file, sifr.toml"] --> M7
-    M7["M7: Generics\nType params, bounds,\nclosures/lambdas,\niterators, HOFs"] --> M8
-    M8["M8: Standard Library\nFile I/O, JSON, env,\nmath, collections,\ntime, regex"] --> M9
-    M9["M9: Async + Networking\nasync/await -> tokio,\nHTTP, web framework"] --> M10
-    M10["M10: Metaprogramming\nDecorators, dataclass,\ncompile-time eval"] --> M11
-    M11["M11: Production Readiness\nLSP, formatter, linter,\npackage registry, FFI"]
+    subgraph done [Completed]
+        M1["M1: Core Language\nVariables, functions, if/else,\nprimitives, print, CLI"]
+        M2["M2: Control Flow + Data\nLoops, list, dict, tuple,\nstring ops, indexing"]
+    end
+    subgraph lang [Language Features]
+        M3["M3: Advanced Type System\nUnion types, literal types,\ntype narrowing, Unknown"]
+        M4["M4: Error Handling\nResult/Option, ? operator,\ntry/except as match"]
+        M5["M5: Structs + Methods\nclass, protocols, traits,\ndiscriminated unions"]
+        M6["M6: Module System\nimport/from, multi-file,\nsifr.toml, packages"]
+        M7["M7: Generics + Closures\nType params, lambdas,\nutility types, iterators"]
+    end
+    subgraph ecosystem [Ecosystem]
+        M8["M8: Core Stdlib\nI/O, JSON, time, regex,\nlogging, env, math"]
+        M9["M9: Async Runtime\nasync/await, tokio,\ntasks, streams"]
+        M10["M10: Web + Database\naxum, reqwest, sqlx,\nREST APIs, SQL"]
+        M11["M11: Data Processing\npolars DataFrames,\nCSV/Parquet, CLI"]
+    end
+    subgraph prod [Production]
+        M12["M12: Metaprogramming\nDecorators, dataclass,\ncompile-time eval"]
+        M13["M13: Production Ready\nLSP, formatter, FFI,\npackage registry"]
+    end
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
+    M7 --> M8 --> M9 --> M10
+    M7 --> M11
+    M10 --> M12 --> M13
+    M11 --> M13
 ```
 
 
 
-**Rationale for milestone order:** Union types, literal types, and type narrowing are placed in M3 (before error handling) because they are foundational -- M4's `Result[T, E]` and `Option[T]` are union-based, M5's discriminated unions need narrowing, and M7's generics need type bounds with unions. Every milestone after M3 benefits from the advanced type system.
+**Rationale for milestone order:**
+
+- **M3 before M4:** Union types are prerequisites for `Result[T, E]` and `Option[T]`
+- **M7 before M8-M11:** Generics and closures are needed for stdlib APIs
+- **M9 before M10:** Async runtime is needed for web framework and database access
+- **M11 parallel to M10:** Data processing (polars) doesn't depend on web/async, only on generics and modules
+- **M12-M13 last:** Metaprogramming and tooling polish come after the language and ecosystem are functional
 
 ---
 
@@ -727,88 +748,207 @@ def main():
 
 ---
 
-## M8: Standard Library
+## M8: Core Standard Library
 
-**Goal:** Provide essential built-in functionality for real programs.
+**Goal:** Provide the essential built-in functionality every program needs. No async dependency -- these are synchronous building blocks.
 
 ### Modules
 
-- `**sifr.io`:** file read/write, stdin/stdout, path operations
-- `**sifr.json`:** JSON serialization/deserialization (wraps `serde_json`)
-- `**sifr.env`:** environment variables
-- `**sifr.fmt`:** string formatting, f-string internals
-- `**sifr.math`:** math functions (sqrt, pow, abs, min, max, etc.)
-- `**sifr.collections`:** `Set`, `OrderedDict`, `Deque`
-- `**sifr.time`:** timestamps, durations, sleep
-- `**sifr.random`:** random number generation
-- `**sifr.os`:** process spawning, signals, exit codes
-- `**sifr.re`:** regular expressions (wraps `regex` crate)
+- `**sifr.io`:** file read/write, stdin/stdout, path operations -> wraps `std::fs` + `std::io` + `std::path`
+- `**sifr.json`:** JSON serialization/deserialization -> wraps `serde` + `serde_json`
+- `**sifr.toml`:** TOML config parsing -> wraps `toml` crate
+- `**sifr.env`:** environment variables, dotenv loading -> wraps `std::env` + `dotenvy`
+- `**sifr.math`:** math functions (sqrt, pow, abs, min, max, floor, ceil, etc.) -> wraps `std::f64` + `num` traits
+- `**sifr.collections`:** `Set`, `OrderedDict`, `Deque` -> wraps `std::collections`
+- `**sifr.time`:** timestamps, durations, sleep, formatting -> wraps `std::time` + `chrono`
+- `**sifr.random`:** random number generation -> wraps `rand` crate
+- `**sifr.os`:** process spawning, signals, exit codes, argv -> wraps `std::process` + `std::env`
+- `**sifr.re`:** regular expressions -> wraps `regex` crate
+- `**sifr.log`:** structured logging -> wraps `tracing` crate
+- `**sifr.hash`:** hashing (sha256, md5, etc.) -> wraps `sha2` + `md5` crates
+- `**sifr.encoding`:** base64, hex, url encoding -> wraps `base64` + `hex` + `percent-encoding`
 
 ### Implementation Strategy
 
-Each stdlib module is a thin Sifr wrapper around battle-tested Rust crates:
+Each stdlib module is a thin Sifr wrapper around battle-tested Rust crates. The codegen emits `use` statements and function calls to the underlying Rust crate. The sifr compiler bundles these as Cargo dependencies in the generated project.
 
-- `sifr.json` -> `serde` + `serde_json`
-- `sifr.re` -> `regex`
-- `sifr.time` -> `std::time` + `chrono`
-- `sifr.io` -> `std::fs` + `std::io`
+```python
+# Sifr code
+from sifr.json import loads, dumps
+from sifr.io import read_file, write_file
+
+def main():
+    data: str = read_file("config.json")
+    config: dict[str, str] = loads(data)
+    print(config["name"])
+```
 
 ---
 
-## M9: Async and Networking
+## M9: Async Runtime
 
-**Goal:** Support async programming and HTTP, enabling web applications.
+**Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that M10 (web, database) builds on.
 
 ### Language Features
 
 - `**async def` / `await`:** maps to Rust `async fn` / `.await`
-- **Async runtime:** built on `tokio`
-- `**sifr.http`:** HTTP client and server primitives
-- `**sifr.net`:** TCP/UDP sockets
-- `**sifr.web`:** minimal web framework (routing, request/response, middleware)
+- **Async runtime:** built on `tokio` (bundled automatically when async is used)
+- `**sifr.net`:** TCP/UDP sockets (async) -> wraps `tokio::net`
+- `**sifr.task`:** task spawning, sleep, timeouts -> wraps `tokio::task` + `tokio::time`
+- **Async iterators:** `async for` over async streams
 
-### Example: Web Application
+### Example
 
 ```python
-from sifr.web import App, Request, Response
+from sifr.task import sleep
+from sifr.net import TcpListener
+
+async def handle_connection(stream: TcpStream):
+    data: str = await stream.read()
+    await stream.write(f"Echo: {data}")
+
+async def main():
+    listener = await TcpListener.bind("0.0.0.0:8080")
+    while True:
+        stream = await listener.accept()
+        await handle_connection(stream)
+```
+
+---
+
+## M10: Web and Database
+
+**Goal:** Enable production web applications and database-backed services. This is the milestone that makes sifr useful for the most common Python use case: web APIs.
+
+### Web Framework (`sifr.web`)
+
+Thin wrapper around `axum` -- the most popular async Rust web framework:
+
+- **Routing:** decorator-based route registration
+- **Request/Response:** typed request parsing, JSON responses
+- **Middleware:** logging, CORS, auth hooks
+- **Static files:** serve static assets
+- **WebSockets:** real-time communication
+
+```python
+from sifr.web import App, Request, Response, Router
 
 app = App()
 
-@app.route("/")
+@app.get("/")
 async def index(req: Request) -> Response:
     return Response.text("Hello, World!")
 
-@app.route("/users/{id}")
+@app.get("/users/{id}")
 async def get_user(req: Request) -> Response:
     user_id: str = req.params["id"]
     return Response.json({"id": user_id, "name": "Alice"})
+
+@app.post("/users")
+async def create_user(req: Request) -> Response:
+    body: dict[str, str] = await req.json()
+    return Response.json(body, status=201)
 
 def main():
     app.run(host="0.0.0.0", port=8000)
 ```
 
-### Generated Rust (Conceptual)
+### HTTP Client (`sifr.http`)
 
-The web framework layer wraps `axum` or `hyper`:
+Thin wrapper around `reqwest`:
 
-```rust
-use axum::{Router, routing::get, response::IntoResponse};
+```python
+from sifr.http import get, post
 
-async fn index() -> impl IntoResponse {
-    "Hello, World!"
-}
-
-#[tokio::main]
-async fn main() {
-    let app = Router::new().route("/", get(index));
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
-}
+async def fetch_data() -> dict[str, str]:
+    response = await get("https://api.example.com/data")
+    return await response.json()
 ```
+
+### Database (`sifr.db`)
+
+Thin wrapper around `sqlx` (async, compile-time checked SQL):
+
+- **Connection pools:** PostgreSQL, MySQL, SQLite
+- **Typed queries:** compile-time SQL validation
+- **Transactions:** context-manager style
+- **Migrations:** schema management
+
+```python
+from sifr.db import Database, query
+
+db = Database.connect("postgres://localhost/myapp")
+
+async def get_user(id: int) -> dict[str, str] | None:
+    row = await db.query_one("SELECT name, email FROM users WHERE id = $1", id)
+    if row is not None:
+        return {"name": row.name, "email": row.email}
+    return None
+```
+
+### Rust Crate Mapping
+
+- `sifr.web` -> `axum` + `tower` (middleware)
+- `sifr.http` -> `reqwest`
+- `sifr.db` -> `sqlx` (async, compile-time checked)
+- Generated Cargo.toml includes these as dependencies automatically
 
 ---
 
-## M10: Metaprogramming
+## M11: Data Processing
+
+**Goal:** Enable data science and data engineering workflows. This is what makes sifr competitive with Python's pandas/polars ecosystem.
+
+### DataFrame Library (`sifr.data`)
+
+Thin wrapper around `polars` -- the fastest DataFrame library, written in Rust:
+
+- **DataFrame creation:** from CSV, Parquet, JSON, dicts
+- **Lazy evaluation:** query optimization before execution
+- **Expressions:** filter, select, group_by, join, sort, aggregate
+- **I/O:** CSV, Parquet, JSON, Arrow IPC, cloud storage
+- **Streaming:** process datasets larger than RAM
+
+```python
+from sifr.data import DataFrame, col, lit
+
+def main():
+    # Read data
+    df = DataFrame.read_csv("sales.csv")
+
+    # Transform (lazy evaluation)
+    result = (
+        df.lazy()
+        .filter(col("amount") > 100)
+        .group_by("region")
+        .agg(
+            col("amount").sum().alias("total"),
+            col("amount").mean().alias("average"),
+            col("id").count().alias("count"),
+        )
+        .sort("total", descending=True)
+        .collect()
+    )
+
+    # Write output
+    result.write_parquet("summary.parquet")
+    print(result)
+```
+
+### Additional Data Modules
+
+- `**sifr.csv`:** simple CSV read/write (for when full DataFrame is overkill) -> wraps `csv` crate
+- `**sifr.args`:** CLI argument parsing with typed arguments -> wraps `clap` (derive mode)
+
+### Rust Crate Mapping
+
+- `sifr.data` -> `polars`
+- `sifr.csv` -> `csv`
+- `sifr.args` -> `clap`
+
+---
+
+## M12: Metaprogramming
 
 **Goal:** Support decorators and compile-time code generation.
 
@@ -836,7 +976,7 @@ class Config:
 
 ---
 
-## M11: Production Readiness
+## M13: Production Readiness
 
 **Goal:** Make Sifr a complete, usable language ecosystem.
 
@@ -851,7 +991,7 @@ class Config:
 
 ### Interop
 
-- **Rust FFI:** call Rust crates directly from Sifr code
+- **Rust FFI:** call Rust crates directly from Sifr code (the escape hatch for any Rust crate not yet wrapped)
 - **C FFI:** call C libraries via `unsafe` blocks
 - **Python interop (stretch):** call Python libraries via PyO3 bindings
 
@@ -866,20 +1006,30 @@ class Config:
 ## Milestone Summary
 
 ```
-M1:  Core Language (DONE)    -> "Hello World" compiles to native binary
+M1:  Core Language (DONE)       -> "Hello World" compiles to native binary
 M2:  Control Flow + Data (DONE) -> Process collections, loops, real algorithms
-M3:  Advanced Type System    -> Union/intersection types, literal types, type narrowing
-M4:  Error Handling          -> Safe error propagation via Result/Option (uses M3 unions)
-M5:  Structs + Methods       -> OOP, data modeling, discriminated unions (uses M3 narrowing)
-M6:  Module System           -> Multi-file projects, packages, dependencies
-M7:  Generics + Closures     -> Generic programming, higher-order functions
-M8:  Standard Library        -> File I/O, JSON, time, regex, OS operations
-M9:  Async + Networking      -> Web servers, HTTP clients, async I/O
-M10: Metaprogramming         -> Decorators, dataclasses, compile-time code gen
-M11: Production Readiness    -> LSP, formatter, package registry, FFI
+M3:  Advanced Type System       -> Union types, literal types, type narrowing, Unknown
+M4:  Error Handling             -> Result/Option, ? operator (uses M3 unions)
+M5:  Structs + Methods          -> OOP, protocols, discriminated unions (uses M3 narrowing)
+M6:  Module System              -> Multi-file projects, packages, sifr.toml
+M7:  Generics + Closures        -> Type params, lambdas, utility types, contextual typing
+M8:  Core Standard Library      -> I/O, JSON, time, regex, logging, env, math, os
+M9:  Async Runtime              -> async/await, tokio, tasks, async streams
+M10: Web + Database             -> axum web framework, reqwest HTTP, sqlx database
+M11: Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
+M12: Metaprogramming            -> Decorators, @dataclass, compile-time eval
+M13: Production Readiness       -> LSP, formatter, linter, FFI, package registry
 ```
 
-After M9, Sifr can build web applications. After M11, it is a complete language ecosystem.
+After M10, Sifr can build production web applications. After M11, it can handle data pipelines. After M13, it is a complete language ecosystem.
+
+### Ecosystem Strategy
+
+Sifr's standard library follows a **thin wrapper + FFI** strategy:
+
+- **Thin wrappers (M8-M11):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
+- **Rust FFI (M13):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
+- **No reinventing:** sifr never reimplements what Rust already has. Every stdlib module wraps a proven Rust crate.
 
 ---
 
