@@ -41,6 +41,8 @@ pub fn union_contains(union: &Type, ty: &Type) -> bool {
 /// the else branch has `x: str`.
 pub fn subtract_from_union(union: &Type, to_remove: &Type) -> Type {
     match union {
+        // Unknown minus a specific type is still Unknown (we can't enumerate what's left)
+        Type::Unknown => Type::Unknown,
         Type::Union(members) => {
             let remaining: Vec<Type> = members
                 .iter()
@@ -65,6 +67,8 @@ pub fn subtract_from_union(union: &Type, to_remove: &Type) -> Type {
 /// the then-branch has `x: int`.
 pub fn intersect_with_union(union: &Type, target: &Type) -> Type {
     match union {
+        // Unknown can be narrowed to anything via isinstance
+        Type::Unknown => target.clone(),
         Type::Union(members) => {
             let matching: Vec<Type> = members
                 .iter()

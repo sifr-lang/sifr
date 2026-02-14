@@ -1,26 +1,47 @@
 //! Scope-based name resolution for Sifr.
+//!
+//! Supports type narrowing: variables can have a `narrowed_type` that
+//! differs from their `declared_type` within control flow branches.
 
 use sifr_type_system::{Type, OwnershipKind};
 use std::collections::HashMap;
 
-/// Tracks variable state for ownership.
+/// Tracks variable state for ownership and narrowing.
 #[derive(Debug, Clone)]
 pub struct VarInfo {
+    /// The declared type (from annotation or inference).
     pub ty: Type,
+    /// The narrowed type (from control flow analysis). None means not narrowed.
+    pub narrowed_type: Option<Type>,
+    /// Whether the variable has been moved.
     pub is_moved: bool,
 }
+
+impl VarInfo {
+    /// Get the effective type (narrowed if available, otherwise declared).
+    pub fn effective_type(&self) -> &Type {
+        self.narrowed_type.as_ref().unwrap_or(&self.ty)
+    }
+}
+
+/// A snapshot of the narrowing state for all variables in scope.
+/// Used to save/restore narrowing at branch points.
+pub type NarrowingSnapshot = Vec<(String, Option<Type>)>;
 
 /// A scope for name resolution.
 #[derive(Debug, Clone)]
 pub struct Scope {
     /// Stack of scope frames (innermost last).
     frames: Vec<HashMap<String, VarInfo>>,
+    /// Type alias registry.
+    type_aliases: HashMap<String, Type>,
 }
 
 impl Scope {
     pub fn new() -> Self {
         Self {
             frames: vec![HashMap::new()],
+            type_aliases: HashMap::new(),
         }
     }
 
@@ -37,7 +58,7 @@ impl Scope {
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
         if let Some(frame) = self.frames.last_mut() {
-            frame.insert(name, VarInfo { ty, is_moved: false });
+            frame.insert(name, VarInfo { ty, narrowed_type: None, is_moved: false });
         }
     }
 
@@ -83,6 +104,70 @@ impl Scope {
                 return;
             }
         }
+    }
+
+    // --- Narrowing support ---
+
+    /// Set the narrowed type for a variable.
+    pub fn narrow_var(&mut self, name: &str, narrowed_type: Type) {
+        for frame in self.frames.iter_mut().rev() {
+            if let Some(info) = frame.get_mut(name) {
+                info.narrowed_type = Some(narrowed_type);
+                return;
+            }
+        }
+    }
+
+    /// Clear the narrowed type for a variable (restore to declared type).
+    pub fn clear_narrowing(&mut self, name: &str) {
+        for frame in self.frames.iter_mut().rev() {
+            if let Some(info) = frame.get_mut(name) {
+                info.narrowed_type = None;
+                return;
+            }
+        }
+    }
+
+    /// Save the current narrowing state for all variables in scope.
+    /// Used before entering a branch.
+    pub fn save_narrowing_state(&self) -> NarrowingSnapshot {
+        let mut snapshot = Vec::new();
+        for frame in &self.frames {
+            for (name, info) in frame {
+                snapshot.push((name.clone(), info.narrowed_type.clone()));
+            }
+        }
+        snapshot
+    }
+
+    /// Restore narrowing state from a snapshot.
+    /// Used after exiting a branch to restore the state before the branch.
+    pub fn restore_narrowing_state(&mut self, snapshot: &NarrowingSnapshot) {
+        for (name, narrowed) in snapshot {
+            for frame in self.frames.iter_mut().rev() {
+                if let Some(info) = frame.get_mut(name) {
+                    info.narrowed_type = narrowed.clone();
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Get the effective type of a variable (narrowed if available, otherwise declared).
+    pub fn effective_type(&self, name: &str) -> Option<&Type> {
+        self.lookup(name).map(|info| info.effective_type())
+    }
+
+    // --- Type alias support ---
+
+    /// Register a type alias.
+    pub fn define_type_alias(&mut self, name: String, ty: Type) {
+        self.type_aliases.insert(name, ty);
+    }
+
+    /// Look up a type alias.
+    pub fn lookup_type_alias(&self, name: &str) -> Option<&Type> {
+        self.type_aliases.get(name)
     }
 }
 
@@ -134,5 +219,51 @@ mod tests {
         let moved = scope.mark_moved("x");
         assert!(!moved); // Int is Copy, not moved
         assert!(!scope.is_moved("x"));
+    }
+
+    // --- M3: Narrowing tests ---
+
+    #[test]
+    fn test_narrowing() {
+        let mut scope = Scope::new();
+        let union_type = Type::Union(vec![Type::Int, Type::Str]);
+        scope.define("x".to_string(), union_type.clone());
+
+        // Before narrowing, effective type is declared type
+        assert_eq!(scope.effective_type("x"), Some(&union_type));
+
+        // Narrow to Int
+        scope.narrow_var("x", Type::Int);
+        assert_eq!(scope.effective_type("x"), Some(&Type::Int));
+
+        // Clear narrowing
+        scope.clear_narrowing("x");
+        assert_eq!(scope.effective_type("x"), Some(&union_type));
+    }
+
+    #[test]
+    fn test_narrowing_save_restore() {
+        let mut scope = Scope::new();
+        let union_type = Type::Union(vec![Type::Int, Type::Str]);
+        scope.define("x".to_string(), union_type.clone());
+
+        // Save state before branch
+        let snapshot = scope.save_narrowing_state();
+
+        // Narrow in branch
+        scope.narrow_var("x", Type::Int);
+        assert_eq!(scope.effective_type("x"), Some(&Type::Int));
+
+        // Restore state
+        scope.restore_narrowing_state(&snapshot);
+        assert_eq!(scope.effective_type("x"), Some(&union_type));
+    }
+
+    #[test]
+    fn test_type_alias() {
+        let mut scope = Scope::new();
+        scope.define_type_alias("UserId".to_string(), Type::Int);
+        assert_eq!(scope.lookup_type_alias("UserId"), Some(&Type::Int));
+        assert_eq!(scope.lookup_type_alias("Unknown"), None);
     }
 }

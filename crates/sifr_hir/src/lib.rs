@@ -8,7 +8,8 @@
 mod hir_nodes;
 mod lower;
 mod scope;
+pub mod cfg;
 
 pub use hir_nodes::*;
 pub use lower::{lower_module, LoweringError};
-pub use scope::Scope;
+pub use scope::{Scope, NarrowingSnapshot};
