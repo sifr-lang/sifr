@@ -102,6 +102,7 @@ flowchart TD
         M5["M5: Structs + Methods\nclass, protocols, traits,\ndiscriminated unions"]
         M6["M6: Module System\nimport/from, multi-file,\nsifr.toml, packages"]
         M7["M7: Generics + Closures\nType params, lambdas,\nutility types, iterators"]
+        M7b["M7b: Pythonic Sugar\nComprehensions, generators,\nwith statement"]
     end
     subgraph stdlib [Standard Library]
         M8["M8: Core Stdlib\nI/O, JSON, env, os,\ntoml, collections"]
@@ -119,8 +120,8 @@ flowchart TD
         M16["M16: Developer Tooling\nLSP, formatter, linter,\ndoc generator"]
         M17["M17: Package Ecosystem\nRegistry, incremental\ncompilation, REPL"]
     end
-    M1 --> M2 --> M3 --> M3b --> M4 --> M5 --> M6 --> M7
-    M7 --> M8
+    M1 --> M2 --> M3 --> M3b --> M4 --> M5 --> M6 --> M7 --> M7b
+    M7b --> M8
     M8 --> M9
     M8 --> M10
     M9 --> M11
@@ -139,7 +140,8 @@ flowchart TD
 
 - **M3 before M3b:** Union types and narrowing must exist before fixing collection/string semantics
 - **M3b before M4:** Correct string indexing, slice copy, and for-loop borrow semantics must be in place before building error handling on top of them
-- **M7 before M8-M13:** Generics and closures are needed for stdlib APIs
+- **M7 before M7b:** Generics, closures, and iterators are prerequisites for comprehensions and generators
+- **M7b before M8-M13:** Comprehensions and generators provide the Pythonic syntax that stdlib APIs rely on
 - **M8 before M9/M10:** Core stdlib (I/O, JSON, env, os) establishes the stdlib pattern and provides foundations that the extended stdlib and test runner build on
 - **M9 parallel to M10:** Extended stdlib (math, time, regex, etc.) and the test runner both depend on M8 but not on each other -- they can be developed in parallel
 - **M9/M10 before M11:** Async runtime needs the full stdlib and test runner in place
@@ -594,6 +596,18 @@ Fix `for item in collection` to borrow the collection rather than consuming it:
 - `**for item in collection.consume()`:** takes ownership (move). Codegen: `for item in collection` (Rust's `into_iter`).
 - Current behavior may already borrow in some cases; this milestone ensures it is consistent and tested.
 
+### Conditional Expressions (Ternary)
+
+Add Python's conditional expression syntax:
+
+```python
+x = "positive" if n > 0 else "non-positive"
+```
+
+Codegen: `let x = if n > 0 { "positive".to_string() } else { "non-positive".to_string() };`
+
+This is simple syntax sugar over `if`/`else` but used as an expression rather than a statement. Both branches must have the same type.
+
 ### Definition of Done (M3b)
 
 - `s[i]` returns the i-th character, not byte; panics on out-of-bounds
@@ -602,8 +616,9 @@ Fix `for item in collection` to borrow the collection rather than consuming it:
 - `s[a:b]` returns a new string of characters from `a` to `b`
 - `list[a:b]` produces a new list (copy, not view)
 - `for item in list` borrows the list; list is usable after the loop
-- E2E pass tests: string_char_index, string_safe_get, string_char_len, string_slice, list_slice_copy, for_loop_borrow
-- E2E fail tests: string_index_out_of_bounds (panic)
+- Conditional expressions (`a if cond else b`) work as expressions
+- E2E pass tests: string_char_index, string_safe_get, string_char_len, string_slice, list_slice_copy, for_loop_borrow, ternary_expr
+- E2E fail tests: string_index_out_of_bounds (panic), ternary_type_mismatch
 - Existing M1/M2 E2E tests still pass (no regressions)
 - Milestone demo in `./tmp/m3b_demo.sifr`
 
@@ -1040,6 +1055,95 @@ Sifr's `for` loop follows Python semantics for ergonomics:
 - E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator
 - E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice
 - Milestone demo in `./tmp/m7_demo.sifr`
+
+---
+
+## M7b: Pythonic Sugar
+
+**Goal:** Add Python's most-loved syntactic features that depend on iterators and closures from M7. These are sugar over existing primitives but are essential for Sifr to feel like Python.
+
+### List Comprehensions
+
+```python
+squares = [x * x for x in range(10)]
+evens = [x for x in numbers if x % 2 == 0]
+pairs = [(x, y) for x in range(3) for y in range(3)]
+```
+
+**Codegen:** list comprehensions desugar to iterator chains:
+
+- `[expr for x in iter]` -> `iter.iter().map(|x| expr).collect::<Vec<_>>()`
+- `[expr for x in iter if cond]` -> `iter.iter().filter(|x| cond).map(|x| expr).collect::<Vec<_>>()`
+- Nested `for` -> `.flat_map()`
+
+### Dict and Set Comprehensions
+
+```python
+word_lengths = {word: len(word) for word in words}
+unique_lengths = {len(word) for word in words}
+```
+
+**Codegen:**
+
+- Dict comprehension -> `.iter().map(|x| (key_expr, val_expr)).collect::<HashMap<_, _>>()`
+- Set comprehension -> `.iter().map(|x| expr).collect::<HashSet<_>>()`
+
+### Generator Expressions and `yield`
+
+```python
+# Generator expression (lazy)
+squares = (x * x for x in range(1000000))
+
+# Generator function
+def fibonacci() -> Generator[int]:
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+```
+
+**Codegen:** generators compile to Rust iterators via state machine transformation:
+
+- Generator expressions -> lazy iterator (no `.collect()`)
+- `yield` functions -> a struct implementing `Iterator` with a state enum tracking the current yield point
+- Each `yield` becomes a state transition; local variables are stored in the struct
+- `next()` resumes from the last yield point
+
+**Scope:** this milestone covers sync generators only. Async generators (`async for`, `yield` in `async def`) are deferred to M11.
+
+### `with` Statement (Context Managers)
+
+```python
+with open("file.txt") as f:
+    data = f.read()
+# f is automatically closed here
+```
+
+**Codegen:** `with` maps to Rust's scoped resource pattern:
+
+```rust
+{
+    let f = File::open("file.txt")?;
+    let data = read_to_string(&f)?;
+    // f is dropped (closed) at end of scope
+}
+```
+
+**Protocol:** types used in `with` must implement a `ContextManager` protocol with `__enter__` and `__exit__` methods. `__exit__` maps to `Drop` in the generated Rust.
+
+### Definition of Done (M7b)
+
+- List comprehensions compile to `.iter().map().collect()`
+- Filtered comprehensions compile to `.iter().filter().map().collect()`
+- Nested comprehensions compile to `.flat_map()`
+- Dict comprehensions compile to `.collect::<HashMap>()`
+- Set comprehensions compile to `.collect::<HashSet>()`
+- Generator expressions produce lazy iterators (no allocation until consumed)
+- `yield` functions compile to state machine iterators
+- `with` statement works for resource management (files, etc.)
+- E2E pass tests: list_comp, dict_comp, set_comp, filtered_comp, nested_comp, generator_expr, yield_basic, yield_infinite, with_file
+- E2E fail tests: comp_type_mismatch, yield_outside_function
+- Milestone demo in `./tmp/m7b_demo.sifr`
 
 ---
 
@@ -1627,6 +1731,7 @@ M4:  Error Handling             -> Result/Option, ? operator (uses M3 unions)
 M5:  Structs + Methods          -> OOP, protocols, discriminated unions (uses M3 narrowing)
 M6:  Module System              -> Multi-file projects, packages, sifr.toml
 M7:  Generics + Closures        -> Type params, lambdas, utility types, contextual typing
+M7b: Pythonic Sugar             -> Comprehensions, generators, yield, with statement
 M8:  Core Stdlib                -> I/O, JSON, toml, env, os, collections
 M9:  Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
 M10: Test Runner                -> sifr test, assertions, discovery, parallel execution
