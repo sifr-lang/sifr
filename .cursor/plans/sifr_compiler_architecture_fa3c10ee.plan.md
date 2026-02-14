@@ -192,6 +192,7 @@ flowchart TD
         milestone_error_handling["milestone_error_handling: Error Handling\nResult/Option, ? operator,\ntry/except, typed errors"]
         milestone_safe_indexing["milestone_safe_indexing: Safe Indexing\nOption returns, del,\nfallible methods"]
         milestone_imports["milestone_imports: Multi-file + Imports\nimport/from, visibility,\ncircular detection"]
+        milestone_codegen_quality["milestone_codegen_quality: Codegen Quality\nRemove unnecessary mut,\nidiomatic println/format,\nclean string/HashMap emit"]
     end
     subgraph phase2 [Phase 2: Type System Power]
         milestone_protocols["milestone_protocols: Protocols + Operators\nTraits, operator overload,\ndiscriminated unions, patterns"]
@@ -220,7 +221,7 @@ flowchart TD
     end
     milestone_core_language --> milestone_control_flow --> milestone_type_system
     milestone_type_system --> milestone_ergonomics --> milestone_classes --> milestone_error_handling --> milestone_safe_indexing
-    milestone_safe_indexing --> milestone_imports --> milestone_protocols
+    milestone_safe_indexing --> milestone_imports --> milestone_codegen_quality --> milestone_protocols
     milestone_protocols --> milestone_inheritance --> milestone_generics
     milestone_generics --> milestone_generators --> milestone_decorators --> milestone_core_stdlib
     milestone_core_stdlib --> milestone_test_runner --> milestone_ext_collections --> milestone_ext_stdlib
@@ -236,7 +237,8 @@ flowchart TD
 - **milestone_classes before milestone_error_handling:** Basic classes must exist before error handling so typed error hierarchies (`class ValueError(Error)`) work immediately in milestone_error_handling
 - **milestone_error_handling before milestone_safe_indexing:** Error handling tools (`?`, `match`, `unwrap_or`) must exist before safe indexing returns `Option` values that users need to handle
 - **milestone_safe_indexing before milestone_imports:** Safe indexing completes the safety story for single-file programs before adding multi-file compilation
-- **milestone_imports before milestone_protocols:** Multi-file compilation only needs classes and error handling, not protocols. Moving it earlier unblocks stdlib sooner. Protocols need imports for cross-module trait definitions in practice, but imports don't need protocols.
+- **milestone_imports before milestone_codegen_quality:** Phase 1 is complete after imports, so all codegen patterns are established. Fixing codegen quality now means every future milestone builds on clean, idiomatic Rust output.
+- **milestone_codegen_quality before milestone_protocols:** Codegen refinement is a natural Phase 1 cleanup step. Protocols add significant new codegen complexity, so starting from clean codegen avoids compounding quality issues.
 - **milestone_protocols before milestone_inheritance:** Protocols define the trait contracts; inheritance extends them. Having protocols first means inherited classes can implement protocols immediately.
 - **milestone_inheritance before milestone_generics:** Generics benefit from having the full class hierarchy (including inheritance) available, enabling generic constraints over class hierarchies.
 - **milestone_generics includes comprehensions:** List/dict/set comprehensions are trivial iterator sugar, naturally belonging with iterators and closures
@@ -1432,6 +1434,90 @@ def main():
 - E2E pass tests: multi_file_basic, package_import, relative_import
 - E2E fail tests: circular_import, private_access, missing_module
 - Milestone demo in `./demos/milestone_imports_demo.sifr` (multi-file project)
+
+---
+
+## milestone_codegen_quality: Codegen Quality Refinement
+
+**Goal:** Improve the quality and idiomaticity of generated Rust code by eliminating systematic codegen patterns that produce correct but non-idiomatic output. This is a Phase 1 refinement step that ensures all future milestones build on clean codegen.
+
+**Rationale:** Phase 1 is complete, so all codegen patterns are now established. Every demo generates correct Rust, but with recurring quality issues: unnecessary `mut`, redundant `format!` nesting, verbose string handling, and wasteful HashMap lookups. Fixing these now prevents the issues from compounding as Phase 2 adds more complex codegen.
+
+> **Note:** Some codegen issues are already covered by upcoming milestones: method receiver inference (`&self` vs `&mut self`) is in `milestone_classes`, redundant `as f64` will be addressed in `milestone_protocols` with operator overloading, and `std::collections::HashMap` qualification will improve as import handling matures.
+
+### Tasks
+
+#### Task 1: Remove unnecessary `mut` on variables never reassigned
+
+Every `let` binding is currently emitted as `let mut`. The codegen should track whether a variable is ever reassigned and only emit `mut` when needed.
+
+**Approach:** Before emitting a function body, scan the HIR statements to collect which variables are assigned more than once (or assigned after their initial `let` binding). Only emit `mut` for those variables.
+
+**Where to fix:** `crates/sifr_codegen/src/lib.rs` -- the variable declaration / `let` emission logic.
+
+**Expected impact:** ~60 fewer unnecessary `mut` annotations across all demos.
+
+#### Task 2: Eliminate `println!("{}", format!(...))` double-formatting
+
+When `print(f"...")` is compiled, it generates `println!("{}", format!("...", args))` -- a redundant double-format. Should emit `println!("...", args)` directly.
+
+**Approach:** When the `print` argument is an f-string (`HirExpr::FString`), instead of emitting `println!("{}", <fstring_expr>)`, inline the f-string format string and arguments directly into the `println!` macro call.
+
+**Where to fix:** `crates/sifr_codegen/src/lib.rs` -- the `print` call handling in `emit_expr` and the f-string emission logic.
+
+**Expected impact:** ~40 fewer redundant `format!` calls.
+
+#### Task 3: Remove redundant `.to_string()` on string literals in display contexts
+
+Patterns like `println!("{}", "hello".to_string())` and `"literal".to_string()` appear in contexts where `&str` suffices.
+
+**Approach:** In display contexts (println, format), emit string literals as `"hello"` not `"hello".to_string()`. Only call `.to_string()` when a `String` (owned) is actually needed (variable binding, function argument expecting `String`, etc.).
+
+**Where to fix:** `crates/sifr_codegen/src/lib.rs` -- string literal emission.
+
+**Expected impact:** ~20 fewer redundant `.to_string()` calls.
+
+#### Task 4: Remove `"lit".to_string().as_str()` for string method arguments
+
+`s.starts_with("sifr".to_string().as_str())` should be `s.starts_with("sifr")`.
+
+**Approach:** When emitting a string literal as an argument to a method that accepts `&str` (like `starts_with`, `ends_with`, `contains`, `replace`, `find`), emit the literal directly without `.to_string().as_str()`.
+
+**Where to fix:** `crates/sifr_codegen/src/lib.rs` -- string method call emission.
+
+**Expected impact:** ~10 fewer verbose string method calls.
+
+#### Task 5: Simplify HashMap lookups with string literal keys
+
+`ages.get(&"alice".to_string())` allocates a `String` unnecessarily. Should be `ages.get("alice")` since `HashMap<String, V>::get` accepts `&str` via `Borrow`.
+
+**Approach:** When the key expression is a string literal, emit `"key"` directly instead of `&"key".to_string()`.
+
+**Where to fix:** `crates/sifr_codegen/src/lib.rs` -- dict indexing / `.get()` emission.
+
+**Expected impact:** ~10 fewer unnecessary String allocations.
+
+#### Task 6: Flatten nested `format!` for string concatenation
+
+`format!("{}{}", format!("{}{}", a, b), c)` instead of `format!("{}{}{}", a, b, c)`.
+
+**Approach:** Flatten chained string `+` operations into a single `format!` call with all parts, by collecting all operands of a chain of `BinOp::Add` on strings before emitting.
+
+**Where to fix:** `crates/sifr_codegen/src/lib.rs` -- string concatenation (`+` operator on strings).
+
+**Expected impact:** Cleaner string concatenation in generated code.
+
+### Definition of Done (milestone_codegen_quality)
+
+- Generated Rust from all demos produces zero `cargo clippy` warnings (beyond vendored crate suppression)
+- No unnecessary `mut` on variables that are never reassigned
+- No `println!("{}", format!(...))` -- all print+fstring combos emit a single `println!`
+- String literals are not wrapped in `.to_string()` in display/borrow contexts
+- HashMap lookups with string literal keys use `"key"` not `&"key".to_string()`
+- No nested `format!` for string concatenation chains
+- All existing tests pass (no regressions)
+- New unit tests in `sifr_codegen` for each pattern
+- Re-emitted `.rs` files in `demos/` show clean, idiomatic Rust
 
 ---
 
