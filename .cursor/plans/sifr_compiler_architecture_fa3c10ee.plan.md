@@ -124,6 +124,7 @@ flowchart TD
     end
     subgraph stdlib [Standard Library]
         M8["M8: Core Stdlib\nI/O, JSON, env, os,\ntoml, collections"]
+        M8b["M8b: Extended Collections\nfrozenset, Counter,\ndefaultdict, bytes"]
         M9["M9: Extended Stdlib\nmath, time, random, regex,\nhash, encoding, stream, log"]
         M10["M10: Test Runner\nsifr test, assertions,\ndiscovery, parallel"]
     end
@@ -140,8 +141,10 @@ flowchart TD
     end
     M1 --> M2 --> M3 --> M3b --> M4 --> M5 --> M6 --> M7 --> M7b
     M7b --> M8
+    M8 --> M8b
     M8 --> M9
     M8 --> M10
+    M8b --> M9
     M9 --> M11
     M10 --> M11
     M11 --> M12
@@ -160,7 +163,8 @@ flowchart TD
 - **M3b before M4:** Correct string indexing, slice copy, and for-loop borrow semantics must be in place before building error handling on top of them
 - **M7 before M7b:** Generics, closures, and iterators are prerequisites for comprehensions and generators
 - **M7b before M8-M13:** Comprehensions and generators provide the Pythonic syntax that stdlib APIs rely on
-- **M8 before M9/M10:** Core stdlib (I/O, JSON, env, os) establishes the stdlib pattern and provides foundations that the extended stdlib and test runner build on
+- **M8 before M8b/M9/M10:** Core stdlib (I/O, JSON, env, os, basic collections) establishes the stdlib pattern and provides foundations that extended collections, extended stdlib, and test runner build on
+- **M8b before M9:** Extended collections (frozenset, Counter, defaultdict, bytes) should be available before the extended stdlib modules that may use them
 - **M9 parallel to M10:** Extended stdlib (math, time, regex, etc.) and the test runner both depend on M8 but not on each other -- they can be developed in parallel
 - **M9/M10 before M11:** Async runtime needs the full stdlib and test runner in place
 - **M11 before M12:** Async runtime is needed for web framework and database access
@@ -196,7 +200,7 @@ sifr/
 
 New crates added per milestone as needed:
 
-- M8: `sifr_std` (standard library wrappers)
+- M8/M8b: `sifr_std` (standard library wrappers, extended collections)
 - M15: FFI codegen extensions in `sifr_codegen`
 - M16: `sifr_lsp` (language server), `sifr_fmt` (formatter), `sifr_lint` (linter)
 - M17: `sifr_registry` (package registry client)
@@ -291,6 +295,17 @@ def main():
 - `dict[K, V]` -> `std::collections::HashMap<K, V>`
 - `tuple[A, B, C]` -> `(A, B, C)`
 - `range(n)` -> `0..n`
+
+### Deferred Built-ins and Methods
+
+M2 established the core data types but deferred comprehensive method suites and built-in functions to later milestones:
+
+- **Collection methods** (list `.append()`, `.pop()`, dict `.keys()`, `.values()`, etc.) -> M3b
+- **Extended string methods** (`.replace()`, `.find()`, `.join()`, etc.) -> M3b
+- **Non-generic built-in functions** (`len()`, `abs()`, `round()`, `hash()`) -> M3b
+- **Fallible conversions** (`int(s)`, `float(s)`, `input()`) -> M4 (return `Result`)
+- **Generic built-in functions** (`min()`, `max()`, `sorted()`, `zip()`, `enumerate()`) -> M7 (require generics)
+- **Extended collection types** (`frozenset`, `Counter`, `defaultdict`, `bytes`) -> M8b
 
 ---
 
@@ -625,6 +640,77 @@ Codegen: `let x = if n > 0 { "positive".to_string() } else { "non-positive".to_s
 
 This is simple syntax sugar over `if`/`else` but used as an expression rather than a statement. Both branches must have the same type.
 
+### List Methods
+
+Complete the `list[T]` method suite. All methods follow the safe indexing contract (no panics):
+
+- `.append(item)` -> `vec.push(item)` -- add item to end
+- `.extend(other)` -> `vec.extend(other)` -- add all items from another list
+- `.insert(i, item)` -> `vec.insert(i, item)` -- insert at index (clamps to bounds)
+- `.pop()` -> `Option[T]` via `vec.pop()` -- remove and return last item, or `None` if empty
+- `.pop(i)` -> `Option[T]` -- remove and return item at index, or `None` if out-of-bounds
+- `.remove(item)` -> `Result[None, ValueError]` -- remove first occurrence, or error if not found
+- `.clear()` -> `vec.clear()` -- remove all items
+- `.copy()` -> `vec.clone()` -- shallow copy
+- `.reverse()` -> `vec.reverse()` -- reverse in place
+- `.count(item)` -> `int` via `vec.iter().filter(|x| x == item).count()` -- count occurrences
+- `.index(item)` -> `Option[int]` via `vec.iter().position(|x| x == item)` -- find index, or `None`
+- `.contains(item)` -> `bool` via `vec.contains(item)` -- membership test (also via `in` operator)
+
+### Dict Methods
+
+Complete the `dict[K, V]` method suite:
+
+- `.keys()` -> iterator over keys. Codegen: `map.keys()`
+- `.values()` -> iterator over values. Codegen: `map.values()`
+- `.items()` -> iterator over `tuple[K, V]` pairs. Codegen: `map.iter()`
+- `.get(key)` -> `Option[V]` -- safe lookup (same as `d[key]` under safe indexing)
+- `.pop(key)` -> `Option[V]` via `map.remove(key)` -- remove and return value
+- `.update(other)` -> `map.extend(other)` -- merge another dict (overwrites existing keys)
+- `.setdefault(key, default)` -> `V` -- return value if key exists, otherwise insert default and return it
+- `.clear()` -> `map.clear()` -- remove all entries
+- `.copy()` -> `map.clone()` -- shallow copy
+- `.contains(key)` -> `bool` via `map.contains_key(key)` -- key membership (also via `in` operator)
+- `len(d)` -> `int` via `map.len()` -- number of entries
+
+### String Methods (Extended)
+
+Beyond what M2 already provides (`.len()`, `.upper()`, `.lower()`, `.split()`, `.strip()`):
+
+- `.replace(old, new)` -> `str` via `s.replace(old, new)`
+- `.find(sub)` -> `Option[int]` -- find first occurrence index, or `None`
+- `.rfind(sub)` -> `Option[int]` -- find last occurrence index, or `None`
+- `.startswith(prefix)` -> `bool`
+- `.endswith(suffix)` -> `bool`
+- `.join(iterable)` -> `str` -- join items with separator
+- `.count(sub)` -> `int` -- count non-overlapping occurrences
+- `.isdigit()` -> `bool`, `.isalpha()` -> `bool`, `.isalnum()` -> `bool`, `.isspace()` -> `bool`
+- `.lstrip()` -> `str`, `.rstrip()` -> `str` -- strip from left/right only
+- `.title()` -> `str`, `.capitalize()` -> `str`, `.swapcase()` -> `str`
+- `.center(width)` -> `str`, `.ljust(width)` -> `str`, `.rjust(width)` -> `str`
+- `.zfill(width)` -> `str` -- pad with zeros
+
+### Tuple Methods
+
+Tuples are immutable (enforced at compile time -- no mutation methods):
+
+- `len(t)` -> `int` -- number of elements (compile-time known)
+- Unpacking: `a, b, c = my_tuple` (already in M2)
+- `.index(item)` -> `Option[int]` -- find index of item
+- `.count(item)` -> `int` -- count occurrences
+
+### Built-in Functions (Non-Generic)
+
+Built-in functions that do not require generics (available without `import`):
+
+- `len(x)` -> `int` -- works on `list`, `dict`, `str`, `tuple`. Codegen: `.len()` or `.chars().count()` for strings
+- `abs(x)` -> `int` or `float` -- absolute value. Codegen: `.abs()`
+- `round(x)` -> `int` -- round float to nearest integer. Codegen: `.round() as i64`
+- `round(x, n)` -> `float` -- round to n decimal places
+- `hash(x)` -> `int` -- hash value (only for `Hash + Eq` types, compile-time enforced)
+- `isinstance(x, T)` -> `bool` -- already in M3 for type narrowing
+- `repr(x)` -> `str` -- debug representation. Codegen: `format!("{:?}", x)` (requires auto-derived `Debug`)
+
 ### Definition of Done (M3b)
 
 - `s[i]` returns `Option[str]` -- the i-th character, or `None` if out-of-bounds (safe indexing, no panic)
@@ -634,8 +720,13 @@ This is simple syntax sugar over `if`/`else` but used as an expression rather th
 - `list[a:b]` produces a new list (copy, not view)
 - `for item in list` borrows the list; list is usable after the loop
 - Conditional expressions (`a if cond else b`) work as expressions
-- E2E pass tests: string_char_index, string_oob_returns_none, string_char_len, string_slice, list_index_option, list_oob_returns_none, list_slice_copy, for_loop_borrow, ternary_expr
-- E2E fail tests: ternary_type_mismatch
+- List methods: `append`, `extend`, `insert`, `pop`, `remove`, `clear`, `copy`, `reverse`, `count`, `index`, `contains`
+- Dict methods: `keys`, `values`, `items`, `get`, `pop`, `update`, `setdefault`, `clear`, `copy`, `contains`
+- String methods: `replace`, `find`, `rfind`, `startswith`, `endswith`, `join`, `count`, `isdigit`, `isalpha`, `isalnum`, `isspace`, `lstrip`, `rstrip`, `title`, `capitalize`
+- Tuple methods: `index`, `count` (immutability enforced)
+- Built-in functions: `len`, `abs`, `round`, `hash`, `repr`
+- E2E pass tests: string_char_index, string_oob_returns_none, string_char_len, string_slice, list_index_option, list_oob_returns_none, list_slice_copy, for_loop_borrow, ternary_expr, list_append_pop, dict_keys_values_items, string_replace_find, builtin_len_abs_round
+- E2E fail tests: ternary_type_mismatch, list_remove_not_found, hash_unhashable_type
 - Existing M1/M2 E2E tests still pass (no regressions)
 - Milestone demo in `./tmp/m3b_demo.sifr`
 
@@ -654,6 +745,23 @@ This is simple syntax sugar over `if`/`else` but used as an expression rather th
 - `**raise` -> `Err()`:** raising maps to returning an error
 - **Custom error types:** classes that implement an `Error` protocol
 - `**assert` statement**
+
+### Fallible Built-in Functions
+
+Built-in functions that can fail return `Result` (following the Safety Philosophy):
+
+- `int(s)` where `s: str` -> `Result[int, ParseError]` -- parse string to integer. Codegen: `s.parse::<i64>()`
+- `float(s)` where `s: str` -> `Result[float, ParseError]` -- parse string to float. Codegen: `s.parse::<f64>()`
+- `bool(s)` where `s: str` -> `Result[bool, ParseError]` -- parse "true"/"false" to bool
+- `input()` -> `Result[str, IOError]` -- read a line from stdin. Codegen: `std::io::stdin().read_line()`
+- `input(prompt)` -> `Result[str, IOError]` -- print prompt, then read from stdin
+
+**Infallible conversions** (no `Result` wrapping needed):
+
+- `int(x)` where `x: float` -> `int` -- truncate float to integer. Codegen: `x as i64`
+- `float(x)` where `x: int` -> `float` -- widen integer to float. Codegen: `x as f64`
+- `str(x)` for any type -> `str` -- string representation. Codegen: `format!("{}", x)` (requires `Display`)
+- `bool(x)` for any type -> `bool` -- truthiness. Codegen: type-specific (0/empty = false, else true)
 
 ### Design Decision
 
@@ -766,11 +874,13 @@ M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/
 - `assert` generates `assert!()` / `panic!()` -- the only panic source in user code
 - Division by zero returns `Result[T, DivisionError]`, not a panic
 - Integer overflow returns `Result[int, OverflowError]` (checked arithmetic)
-- `int(s)` / `float(s)` string-to-number conversions return `Result`
+- `int(s)` / `float(s)` / `bool(s)` string conversions return `Result[T, ParseError]`
+- `input()` returns `Result[str, IOError]`
+- Infallible conversions: `int(f)`, `float(i)`, `str(x)`, `bool(x)` work without `Result`
 - Unused `Result` is a compile-time error (`#[must_use]` enforcement)
 - Explicit discard via `let _ = expr` compiles without error
 - Exhaustiveness checking for `except` arms
-- E2E pass tests: result_basic, option_chaining, error_propagation, try_except, division_by_zero_result, int_parse_result, checked_overflow
+- E2E pass tests: result_basic, option_chaining, error_propagation, try_except, division_by_zero_result, int_parse_result, float_parse_result, checked_overflow, input_basic, infallible_conversions
 - E2E fail tests: unhandled_error, non_exhaustive_except, unused_result_error
 - Unit tests for Result/Option type checking and inference
 - Milestone demo in `./tmp/m4_demo.sifr`
@@ -1037,8 +1147,10 @@ def main():
 - **Type bounds:** `def sort[T: Comparable](items: list[T])`
 - **Closures / lambdas:** `lambda x: x + 1` maps to Rust closures
 - **Contextual typing for lambdas:** lambda parameter types inferred from call-site context (e.g., `map_list(numbers, lambda x: x * 2)` infers `x: int` from `list[int]`)
-- **Higher-order functions:** `map`, `filter`, `reduce` on collections
+- **Higher-order functions:** `map`, `filter`, `reduce` on collections (lazy iterators)
 - **Iterators:** `__iter__` / `__next__` protocol maps to Rust `Iterator` trait
+- **Generic built-in functions:** `min`, `max`, `sum`, `sorted`, `reversed`, `zip`, `enumerate`, `any`, `all` (see below)
+- **Sorting:** `list.sort()`, `sorted()` with key functions and reverse option
 - **Utility types (TypeScript-inspired):** built-in type aliases for common transformations:
   - `Partial[T]` -- all fields optional (maps to `Option<field>` for each field)
   - `Readonly[T]` -- all fields immutable (maps to non-`mut` references)
@@ -1092,6 +1204,39 @@ Sifr's `for` loop follows Python semantics for ergonomics:
 - **Three iterator modes (internal):** the compiler generates `iter()` (borrow), `iter_mut()` (mutable borrow), or `into_iter()` (consume) based on usage context. The user only sees `for item in collection`.
 - **Lazy evaluation:** `map`, `filter`, and other iterator adapters are lazy -- they produce new iterators without allocating intermediate collections. Only consuming operations (`collect`, `sum`, `for` loop) trigger evaluation.
 
+### Generic Built-in Functions
+
+These built-in functions require generics and the iterator protocol. Available without `import`:
+
+- `min(iterable)` -> `Option[T]` where `T: Comparable` -- smallest element, or `None` if empty. Codegen: `.iter().min().cloned()`
+- `max(iterable)` -> `Option[T]` where `T: Comparable` -- largest element, or `None` if empty. Codegen: `.iter().max().cloned()`
+- `sum(iterable)` -> `T` where `T: Addable` -- sum of elements (with zero default). Codegen: `.iter().sum()`
+- `sum(iterable, start)` -> `T` -- sum with custom start value. Codegen: `.iter().fold(start, |a, b| a + b)`
+- `sorted(iterable)` -> `list[T]` where `T: Comparable` -- return new sorted list. Codegen: `{ let mut v = ...; v.sort(); v }`
+- `sorted(iterable, key=f)` -> `list[T]` -- sort by key function. Codegen: `.sort_by_key(f)`
+- `sorted(iterable, reverse=True)` -> `list[T]` -- sort descending. Codegen: `.sort(); .reverse()`
+- `reversed(iterable)` -> iterator -- reverse iterator. Codegen: `.iter().rev()`
+- `zip(a, b)` -> iterator of `tuple[A, B]` -- pair elements. Codegen: `a.iter().zip(b.iter())`
+- `zip(a, b, c)` -> iterator of `tuple[A, B, C]` -- variadic zip (up to reasonable arity)
+- `enumerate(iterable)` -> iterator of `tuple[int, T]` -- index-value pairs. Codegen: `.iter().enumerate()`
+- `enumerate(iterable, start=n)` -> iterator of `tuple[int, T]` -- with custom start index
+- `any(iterable)` -> `bool` -- `True` if any element is truthy. Codegen: `.iter().any(|x| x.into())`
+- `all(iterable)` -> `bool` -- `True` if all elements are truthy. Codegen: `.iter().all(|x| x.into())`
+- `map(f, iterable)` -> lazy iterator -- apply function to each element (already mentioned above)
+- `filter(f, iterable)` -> lazy iterator -- keep elements where function returns `True`
+- `reduce(f, iterable)` -> `Option[T]` -- reduce to single value, or `None` if empty. Codegen: `.iter().reduce(f)`
+
+### Sorting Contract
+
+Sorting requires a `Comparable` protocol (maps to Rust's `Ord` trait):
+
+- `list.sort()` -> in-place sort. Requires `T: Comparable`. Codegen: `vec.sort()`
+- `list.sort(key=f)` -> in-place sort by key. Codegen: `vec.sort_by_key(f)`
+- `list.sort(reverse=True)` -> in-place sort descending. Codegen: `vec.sort(); vec.reverse()`
+- `sorted(iterable)` -> new sorted list (see Generic Built-in Functions above)
+- **Stability:** all sorts are stable (matching Python and Rust's default sort behavior)
+- **Float sorting:** `list[float].sort()` is a compile-time error because `float` is not `Comparable` (due to `NaN`). Use `list.sort(key=lambda x: x)` with an explicit total-ordering wrapper, or filter `NaN` values first. This matches Rust's `f64` not implementing `Ord`.
+
 ### Definition of Done (M7)
 
 - Generic functions with type parameters compile correctly (monomorphized)
@@ -1105,8 +1250,11 @@ Sifr's `for` loop follows Python semantics for ergonomics:
 - Iterator protocol (`__iter__` / `__next__`) maps to Rust `Iterator`
 - `for item in collection` borrows by default; `collection.consume()` for ownership transfer
 - Lazy iterator adapters (`map`, `filter`) work without intermediate allocations
-- E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator
-- E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice
+- Generic built-ins: `min`, `max`, `sum`, `sorted`, `reversed`, `zip`, `enumerate`, `any`, `all`, `reduce`
+- `list.sort()` and `sorted()` work with key functions and reverse option
+- Float sorting rejected at compile time (not `Comparable`)
+- E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator, builtin_min_max_sum, sorted_basic, sorted_key_reverse, zip_enumerate, any_all, reduce_basic
+- E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice, float_sort_rejected
 - Milestone demo in `./tmp/m7_demo.sifr`
 
 ---
@@ -1243,6 +1391,69 @@ def main():
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
 - E2E pass tests: file_io, json_roundtrip, env_vars, os_process, collections_basic
 - Milestone demo in `./tmp/m8_demo.sifr`
+
+---
+
+## M8b: Extended Collections and Binary Data
+
+**Goal:** Provide Python's extended collection types and the `bytes` type for binary data handling. These types are commonly needed in real programs but were not part of the core `list`/`dict`/`tuple` foundation in M2 or the basic `Set`/`OrderedDict`/`Deque` in M8.
+
+### Extended Collection Types
+
+- `**frozenset[T]`:** immutable set. Codegen: `HashSet<T>` with compile-time mutation rejection. Useful as dict keys and set elements (since it's hashable). Supports all set operations (union, intersection, difference) but no `.add()` or `.remove()`.
+- `**Counter[T]`:** counting collection. Thin wrapper over `HashMap<T, int>` with counting operations:
+  - `Counter(iterable)` -> count occurrences of each element
+  - `.most_common(n)` -> `list[tuple[T, int]]` -- top N elements by count
+  - Counter arithmetic: `+` (combine counts), `-` (subtract counts), `&` (min counts), `|` (max counts)
+  - `.total()` -> `int` -- sum of all counts
+  - `.elements()` -> iterator repeating elements by count
+- `**defaultdict[K, V]`:** dict with default factory. Codegen: `HashMap` with `.entry().or_insert_with(factory)`:
+  - `defaultdict(int)` -> default value is `0`
+  - `defaultdict(list)` -> default value is `[]`
+  - `defaultdict(factory_fn)` -> custom default factory
+  - Indexing `d[key]` auto-creates the default if key is missing (unlike regular `dict` which returns `Option`)
+
+### Set Operations (for `Set` from M8 and `frozenset`)
+
+- `.add(item)` -> add item (Set only, compile error on frozenset)
+- `.remove(item)` -> `Result[None, KeyError]` -- remove item, error if not found
+- `.discard(item)` -> remove if present, no error if missing
+- `.union(other)` / `|` operator -> new set with elements from both
+- `.intersection(other)` / `&` operator -> new set with common elements
+- `.difference(other)` / `-` operator -> new set with elements not in other
+- `.symmetric_difference(other)` / `^` operator -> new set with elements in either but not both
+- `.issubset(other)` -> `bool`, `.issuperset(other)` -> `bool`
+- `len(s)` -> `int`, `in` operator for membership
+
+### Binary Data Types
+
+- `**bytes`:** immutable byte sequence. Codegen: `Vec<u8>` (with compile-time mutation rejection).
+  - `b"hello"` literal syntax
+  - `bytes(n)` -> zero-filled bytes of length n
+  - `bytes(iterable)` -> from iterable of ints (0-255)
+  - `.decode(encoding)` -> `Result[str, DecodeError]` -- decode to string (default UTF-8)
+  - `str.encode(encoding)` -> `bytes` -- encode string to bytes (default UTF-8)
+  - Indexing `b[i]` returns `Option[int]` (0-255)
+  - Slicing `b[a:b]` returns `bytes`
+  - `.hex()` -> `str` -- hexadecimal representation
+  - `bytes.fromhex(s)` -> `Result[bytes, ParseError]`
+- `**bytearray`:** mutable byte sequence. Codegen: `Vec<u8>`.
+  - Same API as `bytes` plus mutation methods: `.append()`, `.extend()`, `.pop()`, `.clear()`
+  - Converts to/from `bytes`: `bytes(ba)`, `bytearray(b)`
+
+### Definition of Done (M8b)
+
+- `frozenset` works as immutable set; mutation is a compile-time error
+- `frozenset` is hashable and usable as dict key / set element
+- `Counter` counts elements and supports arithmetic operations
+- `defaultdict` auto-creates default values on missing key access
+- Set operations (`|`, `&`, `-`, `^`) work for both `Set` and `frozenset`
+- `bytes` and `bytearray` handle binary data with encode/decode
+- `b"..."` literal syntax works
+- `.decode()` / `.encode()` convert between `str` and `bytes`
+- E2E pass tests: frozenset_basic, frozenset_as_key, counter_basic, counter_arithmetic, defaultdict_basic, set_operations, bytes_literal, bytes_decode_encode, bytearray_mutate
+- E2E fail tests: frozenset_mutation_rejected, bytes_mutation_rejected, decode_invalid_utf8
+- Milestone demo in `./tmp/m8b_demo.sifr`
 
 ---
 
@@ -1798,7 +2009,8 @@ M5:  Structs + Methods          -> OOP, protocols, discriminated unions (uses M3
 M6:  Module System              -> Multi-file projects, packages, sifr.toml
 M7:  Generics + Closures        -> Type params, lambdas, utility types, contextual typing
 M7b: Pythonic Sugar             -> Comprehensions, generators, yield, with statement
-M8:  Core Stdlib                -> I/O, JSON, toml, env, os, collections
+M8:  Core Stdlib                -> I/O, JSON, toml, env, os, collections (Set, OrderedDict, Deque)
+M8b: Extended Collections       -> frozenset, Counter, defaultdict, bytes, bytearray, set operations
 M9:  Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
 M10: Test Runner                -> sifr test, assertions, discovery, parallel execution
 M11: Async Runtime              -> async/await, tokio, tasks, async streams
