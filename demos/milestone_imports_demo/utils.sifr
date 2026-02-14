@@ -1,0 +1,7 @@
+# utils.sifr - Utility functions
+
+def greet(name: str) -> str:
+    return f"Welcome, {name}!"
+
+def format_total(items: int, total: float) -> str:
+    return f"{items} items, total: ${total}"

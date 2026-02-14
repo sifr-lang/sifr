@@ -1,0 +1,17 @@
+# expect-stdout: alice is 25
+# expect-stdout: charlie not found
+
+def main():
+    ages: dict[str, int] = {"alice": 25, "bob": 30}
+
+    # Existing key returns Some
+    val: int | None = ages["alice"]
+    if val is not None:
+        print(f"alice is {val}")
+
+    # Missing key returns None
+    missing: int | None = ages["charlie"]
+    if missing is not None:
+        print(f"charlie is {missing}")
+    else:
+        print("charlie not found")

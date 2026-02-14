@@ -162,6 +162,7 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Intersection(_) => (17, String::new()),
         Type::Alias(name, _) => (18, name.clone()),
         Type::Class { name, .. } => (19, name.clone()),
+        Type::Result(_, _) => (20, String::new()),
     }
 }
 

@@ -1,0 +1,20 @@
+# expect-stdout: ok: positive
+# expect-stdout: caught: value must be positive
+
+def validate(x: int) -> Result[str, str]:
+    if x > 0:
+        return "positive"
+    raise "value must be positive"
+
+def main():
+    try:
+        r1: str = validate(5)
+        print(f"ok: {r1}")
+    except str as e:
+        print(f"caught: {e}")
+
+    try:
+        r2: str = validate(-1)
+        print(f"ok: {r2}")
+    except str as e:
+        print(f"caught: {e}")

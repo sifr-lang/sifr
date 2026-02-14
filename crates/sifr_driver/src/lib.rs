@@ -4,8 +4,10 @@
 //! parse -> type-check/HIR -> codegen -> build
 
 use sifr_python_parser::parse_module;
-use sifr_hir::lower_module;
-use sifr_codegen::{generate_rust, generate_project};
+use sifr_hir::{lower_module, lower_module_with_externals, ExternalDefs, HirModule};
+use sifr_codegen::{generate_rust, generate_rust_multi, generate_project};
+use sifr_type_system::{Type, FunctionType};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -113,6 +115,249 @@ pub fn check(source: &str) -> Vec<CompileError> {
     }
 }
 
+/// Compile a multi-file project and build a native binary.
+/// `main_file` is the path to the main .sifr file. Other .sifr files in the same
+/// directory are compiled as modules.
+pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
+    let project_dir = main_file.parent().unwrap_or(Path::new("."));
+
+    // Discover all .sifr files in the project directory
+    let mut sifr_files: Vec<PathBuf> = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(project_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |ext| ext == "sifr") {
+                sifr_files.push(path);
+            }
+        }
+    }
+    sifr_files.sort();
+
+    // Read all source files
+    let mut sources: HashMap<String, String> = HashMap::new();
+    for file in &sifr_files {
+        let module_name = file.file_stem().unwrap().to_string_lossy().to_string();
+        let source = std::fs::read_to_string(file).map_err(|e| {
+            vec![CompileError {
+                message: format!("failed to read '{}': {}", file.display(), e),
+                phase: CompilePhase::Build,
+            }]
+        })?;
+        sources.insert(module_name, source);
+    }
+
+    // Phase 1: Parse all modules
+    let mut parsed_modules: HashMap<String, Vec<sifr_python_ast::Stmt>> = HashMap::new();
+    for (module_name, source) in &sources {
+        let parsed = match parse_module(source) {
+            Ok(parsed) => {
+                if !parsed.is_valid() {
+                    let errors: Vec<CompileError> = parsed
+                        .errors()
+                        .iter()
+                        .map(|e| CompileError {
+                            message: format!("[{}] {}", module_name, e),
+                            phase: CompilePhase::Parse,
+                        })
+                        .collect();
+                    return Err(errors);
+                }
+                parsed
+            }
+            Err(e) => {
+                return Err(vec![CompileError {
+                    message: format!("[{}] failed to parse: {}", module_name, e),
+                    phase: CompilePhase::Parse,
+                }]);
+            }
+        };
+        parsed_modules.insert(module_name.clone(), parsed.into_suite());
+    }
+
+    // Phase 2: Lower non-main modules first to collect their exports
+    let mut external_defs = ExternalDefs::default();
+    let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
+
+    // First, lower all non-main modules
+    for (module_name, stmts) in &parsed_modules {
+        if module_name == "main" {
+            continue;
+        }
+        let result = match lower_module(stmts) {
+            Ok(result) => result,
+            Err(errors) => {
+                let compile_errors: Vec<CompileError> = errors
+                    .into_iter()
+                    .map(|e| CompileError {
+                        message: format!("[{}] {}", module_name, e.message),
+                        phase: CompilePhase::TypeCheck,
+                    })
+                    .collect();
+                return Err(compile_errors);
+            }
+        };
+
+        // Collect exports for this module
+        let mut fn_exports = HashMap::new();
+        let mut class_exports = HashMap::new();
+
+        for func in &result.module.functions {
+            if !func.name.starts_with('_') {
+                let params: Vec<(String, Type)> = func.params.iter()
+                    .map(|p| (p.name.clone(), p.ty.clone()))
+                    .collect();
+                fn_exports.insert(func.name.clone(), FunctionType {
+                    params,
+                    return_type: Box::new(func.return_type.clone()),
+                });
+            }
+        }
+
+        for class in &result.module.classes {
+            if !class.name.starts_with('_') {
+                // Extract method types from the class
+                let methods: Vec<(String, FunctionType)> = class.methods.iter()
+                    .filter(|m| m.name != "new") // Skip constructor
+                    .map(|m| {
+                        let params: Vec<(String, Type)> = m.params.iter()
+                            .map(|p| (p.name.clone(), p.ty.clone()))
+                            .collect();
+                        (m.name.clone(), FunctionType {
+                            params,
+                            return_type: Box::new(m.return_type.clone()),
+                        })
+                    })
+                    .collect();
+                let class_ty = Type::Class {
+                    name: class.name.clone(),
+                    fields: class.fields.clone(),
+                    methods,
+                };
+                class_exports.insert(class.name.clone(), class_ty);
+            }
+        }
+
+        external_defs.functions.insert(module_name.clone(), fn_exports);
+        external_defs.classes.insert(module_name.clone(), class_exports);
+        hir_modules.insert(module_name.clone(), result.module);
+    }
+
+    // Then, lower main module with external definitions
+    if let Some(main_stmts) = parsed_modules.get("main") {
+        let result = match lower_module_with_externals(main_stmts, &external_defs) {
+            Ok(result) => result,
+            Err(errors) => {
+                let compile_errors: Vec<CompileError> = errors
+                    .into_iter()
+                    .map(|e| CompileError {
+                        message: format!("[main] {}", e.message),
+                        phase: CompilePhase::TypeCheck,
+                    })
+                    .collect();
+                return Err(compile_errors);
+            }
+        };
+        hir_modules.insert("main".to_string(), result.module);
+    }
+
+    // Phase 3: Generate Rust code
+    let module_refs: Vec<(&str, &HirModule)> = hir_modules.iter()
+        .map(|(name, module)| (name.as_str(), module))
+        .collect();
+    let rust_files = generate_rust_multi(&module_refs);
+
+    // Phase 4: Build the Rust project
+    let project_path = output_dir.join("sifr_output");
+    let src_dir = project_path.join("src");
+    std::fs::create_dir_all(&src_dir).map_err(|e| {
+        vec![CompileError {
+            message: format!("failed to create output directory: {}", e),
+            phase: CompilePhase::Build,
+        }]
+    })?;
+
+    // Write Cargo.toml
+    let (cargo_toml, _) = generate_project(
+        &HirModule { functions: vec![], classes: vec![], imports: vec![] },
+        "sifr_output",
+    );
+    std::fs::write(project_path.join("Cargo.toml"), cargo_toml).map_err(|e| {
+        vec![CompileError {
+            message: format!("failed to write Cargo.toml: {}", e),
+            phase: CompilePhase::Build,
+        }]
+    })?;
+
+    // Write main.rs with mod declarations and main module code
+    let mut main_rs = String::new();
+
+    // Add mod declarations for non-main modules
+    for (module_name, _) in &rust_files {
+        if module_name != "main" {
+            main_rs.push_str(&format!("mod {};\n", module_name));
+        }
+    }
+    if rust_files.len() > 1 {
+        main_rs.push('\n');
+    }
+
+    // Add main module code
+    if let Some(main_code) = rust_files.get("main") {
+        main_rs.push_str(main_code);
+    }
+
+    std::fs::write(src_dir.join("main.rs"), &main_rs).map_err(|e| {
+        vec![CompileError {
+            message: format!("failed to write main.rs: {}", e),
+            phase: CompilePhase::Build,
+        }]
+    })?;
+
+    // Write non-main module files
+    for (module_name, code) in &rust_files {
+        if module_name != "main" {
+            std::fs::write(src_dir.join(format!("{}.rs", module_name)), code).map_err(|e| {
+                vec![CompileError {
+                    message: format!("failed to write {}.rs: {}", module_name, e),
+                    phase: CompilePhase::Build,
+                }]
+            })?;
+        }
+    }
+
+    // Run cargo build
+    let output = Command::new("cargo")
+        .args(["build", "--release"])
+        .current_dir(&project_path)
+        .output()
+        .map_err(|e| {
+            vec![CompileError {
+                message: format!("failed to run cargo build: {}", e),
+                phase: CompilePhase::Build,
+            }]
+        })?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(vec![CompileError {
+            message: format!("cargo build failed:\n{}", stderr),
+            phase: CompilePhase::Build,
+        }]);
+    }
+
+    let binary_name = if cfg!(target_os = "windows") {
+        "sifr_output.exe"
+    } else {
+        "sifr_output"
+    };
+    let binary_path = project_path
+        .join("target")
+        .join("release")
+        .join(binary_name);
+
+    Ok(binary_path)
+}
+
 /// Compile and build a native binary.
 pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
     let rust_source = match compile(source) {
@@ -132,7 +377,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
 
     // Write Cargo.toml
     let (cargo_toml, _) = generate_project(
-        &sifr_hir::HirModule { functions: vec![], classes: vec![] },
+        &sifr_hir::HirModule { functions: vec![], classes: vec![], imports: vec![] },
         "sifr_output",
     );
     std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {

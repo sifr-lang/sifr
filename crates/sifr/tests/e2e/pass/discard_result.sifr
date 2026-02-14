@@ -1,0 +1,8 @@
+# expect-stdout: done
+
+def fallible() -> Result[int, str]:
+    return 42
+
+def main():
+    _ = fallible()
+    print("done")

@@ -1,0 +1,7 @@
+# expect-error: unused Result value
+
+def fallible() -> Result[int, str]:
+    return 42
+
+def main():
+    fallible()

@@ -2,5 +2,9 @@
 # expect-stdout: 4
 def main():
     items: list[int] = [1, 2, 3, 4, 5]
-    print(items[-1])
-    print(items[-2])
+    v1: int | None = items[-1]
+    if v1 is not None:
+        print(v1)
+    v2: int | None = items[-2]
+    if v2 is not None:
+        print(v2)

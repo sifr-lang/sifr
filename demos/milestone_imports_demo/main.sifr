@@ -1,0 +1,23 @@
+# milestone_imports demo
+# Multi-file project with imports
+
+from models import User, Product
+from utils import greet, format_total
+
+def main():
+    # Import and use functions from utils module
+    msg: str = greet("Alice")
+    print(msg)
+
+    # Import and use classes from models module
+    user: User = User("Alice", "alice@example.com")
+    print(user.display())
+
+    product: Product = Product("Widget", 9.99)
+    print(product.label())
+
+    # Use imported utility function
+    summary: str = format_total(3, 29.97)
+    print(summary)
+
+    print("multi-file compilation works!")

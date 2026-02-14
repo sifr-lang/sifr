@@ -50,6 +50,9 @@ pub enum Type {
 
     // --- milestone_classes: Basic Classes ---
 
+    /// Result type: `Result[T, E]` -> `Result<T, E>` in Rust
+    Result(Box<Type>, Box<Type>),
+
     /// Class instance type with named fields and methods.
     /// `class Point: x: float; y: float` -> `Type::Class { name: "Point", fields: [...], methods: [...] }`
     Class {
@@ -95,6 +98,7 @@ impl Type {
             Self::LiteralStr(_) => OwnershipKind::Move,
             Self::Unknown => OwnershipKind::Move,
             Self::Class { .. } => OwnershipKind::Move,
+            Self::Result(_, _) => OwnershipKind::Move,
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -142,6 +146,7 @@ impl Type {
             Self::Alias(name, _) => name.clone(),
             Self::Unknown => "Unknown".to_string(),
             Self::Class { name, .. } => name.clone(),
+            Self::Result(ok, err) => format!("Result[{}, {}]", ok.display_name(), err.display_name()),
         }
     }
 
@@ -190,6 +195,7 @@ impl Type {
             Self::Alias(_, inner) => inner.rust_type(),
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
             Self::Class { name, .. } => name.clone(),
+            Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
         }
     }
 
@@ -237,6 +243,7 @@ impl Type {
             Type::Intersection(_) => "Intersection".to_string(),
             Type::Alias(name, _) => capitalize(name),
             Type::Class { name, .. } => name.clone(),
+            Type::Result(_, _) => "Result".to_string(),
         }
     }
 
@@ -289,18 +296,22 @@ impl Type {
     }
 
     /// Returns the result type of indexing this type with the given index type.
+    /// For list, dict, and str: returns Option[T] (T | None) for safe indexing.
+    /// For tuple with literal index: returns the exact element type (no Option).
     pub fn index_result_type(&self, index_ty: &Type) -> Option<Type> {
         match self {
             Self::List(elem) => {
                 if index_ty == &Type::Int {
-                    Some(*elem.clone())
+                    // Safe indexing: returns Option[T] = T | None
+                    Some(Type::Union(vec![*elem.clone(), Type::None]))
                 } else {
                     None
                 }
             }
             Self::Dict(key, val) => {
                 if index_ty == key.as_ref() {
-                    Some(*val.clone())
+                    // Safe indexing: returns Option[V] = V | None
+                    Some(Type::Union(vec![*val.clone(), Type::None]))
                 } else {
                     None
                 }
@@ -316,7 +327,8 @@ impl Type {
             }
             Self::Str => {
                 if index_ty == &Type::Int {
-                    Some(Type::Str) // Single char as string
+                    // Safe indexing: returns Option[str] = str | None
+                    Some(Type::Union(vec![Type::Str, Type::None]))
                 } else {
                     None
                 }
@@ -384,6 +396,10 @@ impl Type {
             }
             // Class types: nominal typing -- same name means same type
             (Self::Class { name: a, .. }, Self::Class { name: b, .. }) => a == b,
+            // Result types: covariant in both T and E
+            (Self::Result(ok_a, err_a), Self::Result(ok_b, err_b)) => {
+                ok_a.is_assignable_to(ok_b) && err_a.is_assignable_to(err_b)
+            }
             _ => false,
         }
     }
@@ -476,7 +492,8 @@ mod tests {
     #[test]
     fn test_index_result_type() {
         let list_int = Type::List(Box::new(Type::Int));
-        assert_eq!(list_int.index_result_type(&Type::Int), Some(Type::Int));
+        // Safe indexing returns Option[T] = T | None
+        assert_eq!(list_int.index_result_type(&Type::Int), Some(Type::Union(vec![Type::Int, Type::None])));
         assert_eq!(list_int.index_result_type(&Type::Str), None);
     }
 

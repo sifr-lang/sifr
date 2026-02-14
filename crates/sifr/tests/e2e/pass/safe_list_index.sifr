@@ -1,0 +1,17 @@
+# expect-stdout: found: 20
+# expect-stdout: not found
+
+def main():
+    nums: list[int] = [10, 20, 30]
+
+    # Valid index returns Some
+    val: int | None = nums[1]
+    if val is not None:
+        print(f"found: {val}")
+
+    # Out-of-bounds returns None
+    oob: int | None = nums[10]
+    if oob is not None:
+        print(f"found: {oob}")
+    else:
+        print("not found")

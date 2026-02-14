@@ -1,0 +1,126 @@
+# milestone_error_handling demo
+# Showcases: Result type, custom errors, try/except, raise, assert,
+#            fallible/infallible conversions, must_use, let _ = discard
+
+# expect-stdout: === Result Type & Fallible Conversions ===
+# expect-stdout: parsed: 42
+# expect-stdout: parse failed (expected): invalid digit found in string
+# expect-stdout: === Custom Error Types ===
+# expect-stdout: validated: 50
+# expect-stdout: caught: value out of range: -5
+# expect-stdout: === Try/Except with Auto-Unwrap ===
+# expect-stdout: result: 100
+# expect-stdout: error handled: value out of range: 999
+# expect-stdout: === Infallible Conversions ===
+# expect-stdout: int(3.7) = 3
+# expect-stdout: float(5) = 5
+# expect-stdout: str(42) = 42
+# expect-stdout: bool(1) = true
+# expect-stdout: === Raise in Result Functions ===
+# expect-stdout: divide(10, 3) = 3
+# expect-stdout: divide(10, 0) error: division by zero
+# expect-stdout: === Assert Statement ===
+# expect-stdout: all assertions passed
+# expect-stdout: === Explicit Discard ===
+# expect-stdout: result discarded safely
+# expect-stdout: demo complete!
+
+class ValidationError(Error):
+    message: str
+
+def validate_range(x: int, lo: int, hi: int) -> Result[int, ValidationError]:
+    if x < lo:
+        raise ValidationError(f"value out of range: {x}")
+    if x > hi:
+        raise ValidationError(f"value out of range: {x}")
+    return x
+
+def safe_divide(a: int, b: int) -> Result[int, str]:
+    if b == 0:
+        raise "division by zero"
+    return a // b
+
+def main():
+    # --- Result Type & Fallible Conversions ---
+    print("=== Result Type & Fallible Conversions ===")
+
+    try:
+        n: int = int("42")
+        print(f"parsed: {n}")
+    except str as e:
+        print(f"parse failed: {e}")
+
+    try:
+        n2: int = int("not_a_number")
+        print(f"parsed: {n2}")
+    except str as e:
+        print(f"parse failed (expected): {e}")
+
+    # --- Custom Error Types ---
+    print("=== Custom Error Types ===")
+
+    try:
+        v: int = validate_range(50, 0, 100)
+        print(f"validated: {v}")
+    except ValidationError as e:
+        print(f"caught: {e.message}")
+
+    try:
+        v2: int = validate_range(-5, 0, 100)
+        print(f"validated: {v2}")
+    except ValidationError as e:
+        print(f"caught: {e.message}")
+
+    # --- Try/Except with Auto-Unwrap ---
+    print("=== Try/Except with Auto-Unwrap ===")
+
+    try:
+        a: int = validate_range(100, 0, 200)
+        print(f"result: {a}")
+    except ValidationError as e:
+        print(f"error handled: {e.message}")
+
+    try:
+        b: int = validate_range(999, 0, 200)
+        print(f"result: {b}")
+    except ValidationError as e:
+        print(f"error handled: {e.message}")
+
+    # --- Infallible Conversions ---
+    print("=== Infallible Conversions ===")
+    x1: int = int(3.7)
+    print(f"int(3.7) = {x1}")
+    x2: float = float(5)
+    print(f"float(5) = {x2}")
+    x3: str = str(42)
+    print(f"str(42) = {x3}")
+    x4: bool = bool(1)
+    print(f"bool(1) = {x4}")
+
+    # --- Raise in Result Functions ---
+    print("=== Raise in Result Functions ===")
+
+    try:
+        d1: int = safe_divide(10, 3)
+        print(f"divide(10, 3) = {d1}")
+    except str as e:
+        print(f"divide error: {e}")
+
+    try:
+        d2: int = safe_divide(10, 0)
+        print(f"divide(10, 0) = {d2}")
+    except str as e:
+        print(f"divide(10, 0) error: {e}")
+
+    # --- Assert Statement ---
+    print("=== Assert Statement ===")
+    assert 1 + 1 == 2
+    assert True
+    print("all assertions passed")
+
+    # --- Explicit Discard ---
+    print("=== Explicit Discard ===")
+    _ = safe_divide(10, 2)
+    print("result discarded safely")
+
+    print("demo complete!")

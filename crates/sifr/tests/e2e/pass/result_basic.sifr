@@ -1,0 +1,17 @@
+# expect-stdout: parsed: 42
+# expect-stdout: caught: not a number
+
+def parse_number(s: str) -> Result[int, str]:
+    return int(s)
+
+def main():
+    try:
+        val: int = parse_number("42")
+        print(f"parsed: {val}")
+    except str as e:
+        print(f"error: {e}")
+
+    try:
+        raise "not a number"
+    except str as e:
+        print(f"caught: {e}")

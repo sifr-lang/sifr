@@ -7,7 +7,7 @@
 //!   sifr emit <file.sifr>     Show generated Rust code
 
 use clap::{Parser, Subcommand};
-use sifr_driver::{compile, check, build, CompileResult};
+use sifr_driver::{compile, check, build, build_project, CompileResult};
 use std::path::PathBuf;
 use std::process;
 
@@ -83,10 +83,30 @@ fn cmd_build(file: &PathBuf, output: &PathBuf) {
 }
 
 fn cmd_run(file: &PathBuf) {
-    let source = read_source(file);
-
     let temp_dir = std::env::temp_dir().join("sifr_run");
-    match build(&source, &temp_dir) {
+
+    // Check if this is a multi-file project (other .sifr files in same directory)
+    let is_multi_file = if let Some(parent) = file.parent() {
+        if let Ok(entries) = std::fs::read_dir(parent) {
+            entries.flatten()
+                .filter(|e| e.path().extension().map_or(false, |ext| ext == "sifr"))
+                .filter(|e| e.path() != *file)
+                .count() > 0
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
+    let result = if is_multi_file {
+        build_project(file, &temp_dir)
+    } else {
+        let source = read_source(file);
+        build(&source, &temp_dir)
+    };
+
+    match result {
         Ok(binary_path) => {
             let output = std::process::Command::new(&binary_path)
                 .output()
