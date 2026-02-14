@@ -191,15 +191,16 @@ flowchart TD
         milestone_classes["milestone_classes: Basic Classes\nstruct + impl, __init__,\nmethods, auto-derive"]
         milestone_error_handling["milestone_error_handling: Error Handling\nResult/Option, ? operator,\ntry/except, typed errors"]
         milestone_safe_indexing["milestone_safe_indexing: Safe Indexing\nOption returns, del,\nfallible methods"]
+        milestone_imports["milestone_imports: Multi-file + Imports\nimport/from, visibility,\ncircular detection"]
     end
     subgraph phase2 [Phase 2: Type System Power]
         milestone_protocols["milestone_protocols: Protocols + Operators\nTraits, operator overload,\ndiscriminated unions, patterns"]
         milestone_inheritance["milestone_inheritance: Inheritance\nsuper, classmethod,\nstaticmethod, property"]
-        milestone_imports["milestone_imports: Multi-file + Imports\nimport/from, visibility,\ncircular detection"]
         milestone_generics["milestone_generics: Generics + Closures\nType params, lambdas,\ncomprehensions, iterators"]
-    end
-    subgraph phase3 [Phase 3: Pythonic Completeness]
         milestone_generators["milestone_generators: Generators + With\nyield, yield from,\ncontext managers"]
+        milestone_decorators["milestone_decorators: Decorators + Variadics\nFunction wrapping,\n*args/**kwargs"]
+    end
+    subgraph phase3 [Phase 3: Standard Library]
         milestone_core_stdlib["milestone_core_stdlib: Core Stdlib\nI/O, JSON, env, os,\ntoml, collections, open"]
         milestone_test_runner["milestone_test_runner: Test Runner\nsifr test, assertions,\ndiscovery, parallel"]
         milestone_ext_collections["milestone_ext_collections: Extended Collections\nfrozenset, Counter,\ndefaultdict, bytes"]
@@ -207,7 +208,6 @@ flowchart TD
     end
     subgraph phase4 [Phase 4: Ecosystem]
         milestone_async["milestone_async: Async Runtime\nasync/await, tokio,\ntasks, streams"]
-        milestone_decorators["milestone_decorators: Decorators + Variadics\nFunction wrapping,\n*args/**kwargs"]
         milestone_web_db["milestone_web_db: Web + Database\naxum, reqwest, sqlx,\nREST APIs, SQL"]
         milestone_data_processing["milestone_data_processing: Data Processing\npolars DataFrames,\nCSV/Parquet, CLI"]
     end
@@ -220,18 +220,12 @@ flowchart TD
     end
     milestone_core_language --> milestone_control_flow --> milestone_type_system
     milestone_type_system --> milestone_ergonomics --> milestone_classes --> milestone_error_handling --> milestone_safe_indexing
-    milestone_safe_indexing --> milestone_protocols --> milestone_imports --> milestone_generics
-    milestone_protocols --> milestone_inheritance
-    milestone_generics --> milestone_generators --> milestone_core_stdlib --> milestone_test_runner
-    milestone_core_stdlib --> milestone_ext_collections --> milestone_ext_stdlib
-    milestone_core_stdlib --> milestone_ext_stdlib
-    milestone_ext_stdlib --> milestone_async --> milestone_decorators --> milestone_web_db
-    milestone_test_runner --> milestone_async
-    milestone_web_db --> milestone_data_processing
-    milestone_generics --> milestone_data_processing
-    milestone_web_db --> milestone_metaprogramming
-    milestone_metaprogramming --> milestone_ffi
-    milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
+    milestone_safe_indexing --> milestone_imports --> milestone_protocols
+    milestone_protocols --> milestone_inheritance --> milestone_generics
+    milestone_generics --> milestone_generators --> milestone_decorators --> milestone_core_stdlib
+    milestone_core_stdlib --> milestone_test_runner --> milestone_ext_collections --> milestone_ext_stdlib
+    milestone_ext_stdlib --> milestone_async --> milestone_web_db --> milestone_data_processing
+    milestone_data_processing --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
 ```
 
 
@@ -241,15 +235,19 @@ flowchart TD
 - **milestone_ergonomics before milestone_classes:** Language ergonomics (ternary, kwargs, methods, slicing) make the language usable before adding classes
 - **milestone_classes before milestone_error_handling:** Basic classes must exist before error handling so typed error hierarchies (`class ValueError(Error)`) work immediately in milestone_error_handling
 - **milestone_error_handling before milestone_safe_indexing:** Error handling tools (`?`, `match`, `unwrap_or`) must exist before safe indexing returns `Option` values that users need to handle
-- **milestone_safe_indexing before milestone_protocols:** Safe indexing completes the safety story before adding advanced OOP features
-- **milestone_protocols before milestone_imports:** Protocols (traits) are needed for meaningful multi-file programs
+- **milestone_safe_indexing before milestone_imports:** Safe indexing completes the safety story for single-file programs before adding multi-file compilation
+- **milestone_imports before milestone_protocols:** Multi-file compilation only needs classes and error handling, not protocols. Moving it earlier unblocks stdlib sooner. Protocols need imports for cross-module trait definitions in practice, but imports don't need protocols.
+- **milestone_protocols before milestone_inheritance:** Protocols define the trait contracts; inheritance extends them. Having protocols first means inherited classes can implement protocols immediately.
+- **milestone_inheritance before milestone_generics:** Generics benefit from having the full class hierarchy (including inheritance) available, enabling generic constraints over class hierarchies.
 - **milestone_generics includes comprehensions:** List/dict/set comprehensions are trivial iterator sugar, naturally belonging with iterators and closures
-- **milestone_test_runner after milestone_core_stdlib, before milestone_ext_collections/milestone_ext_stdlib:** Test runner lands early so subsequent stdlib work can be tested using Sifr's own test runner (dogfooding)
-- **milestone_ext_stdlib parallel to milestone_test_runner:** Extended stdlib (math, time, regex) and the test runner both depend on milestone_core_stdlib but not on each other -- they can be developed in parallel
-- **milestone_ext_stdlib/milestone_test_runner before milestone_async:** Async runtime needs the full stdlib and test runner in place
+- **milestone_generators after milestone_generics:** Generators need closures and iterators from generics; context managers need the full type system
+- **milestone_decorators after milestone_generators, before milestone_core_stdlib:** Decorators need closures (from generics) and are useful for stdlib design patterns. They don't need async. Moving them earlier enables `@decorator` patterns in stdlib.
+- **milestone_core_stdlib after milestone_decorators:** Core stdlib benefits from decorators for API design patterns (e.g., `@contextmanager`)
+- **milestone_test_runner after milestone_core_stdlib:** Test runner lands early so subsequent stdlib work can be tested using Sifr's own test runner (dogfooding)
+- **milestone_ext_collections and milestone_ext_stdlib after milestone_test_runner:** Both depend on core stdlib; in flat order ext_collections comes first since extended stdlib modules may use extended collection types
+- **milestone_async after milestone_ext_stdlib:** Async runtime needs the full stdlib in place
 - **milestone_async before milestone_web_db:** Async runtime is needed for web framework and database access
-- **milestone_decorators before milestone_web_db:** Basic function decorators needed for web routing (`@app.get("/")`)
-- **milestone_data_processing after milestone_web_db and milestone_generics:** Data processing (polars) needs both web/database patterns and generics
+- **milestone_web_db before milestone_data_processing:** Data processing (polars) benefits from database patterns but primarily needs generics + core stdlib
 - **milestone_metaprogramming-milestone_ecosystem last:** Metaprogramming, FFI, package management, tooling, and ecosystem polish come after the language is functional
 - **milestone_ffi before milestone_package_mgmt:** FFI unlocks access to the full Rust crate ecosystem; package management benefits from a stable language surface
 - **milestone_package_mgmt before milestone_dev_tooling:** Package management infrastructure needed before developer tooling
@@ -353,7 +351,8 @@ def main():
 - **Slicing:** `my_list[1:3]`
 - **String operations:** `.len()`, `.upper()`, `.lower()`, `.split()`, `.strip()`, f-strings
 - **Type inference:** infer collection element types from usage
-- `**in` operator:** membership testing
+- `**in` operator:** membership testing (`item in collection`)
+- `**not in` operator:** negated membership testing (`item not in collection`) -- compiles to `!collection.contains(&item)`
 - `**range()` built-in**
 - **Multiple assignment:** `a, b = 1, 2` (tuple unpacking)
 
@@ -435,6 +434,7 @@ type Toggle = True | False
   - `isinstance()` checks: `if isinstance(x, int):` narrows union (Python built-in)
   - Equality checks: `if x == "GET":` narrows `x: str` to `x: "GET"` in the then-branch
   - `is None` / `is not None` checks (Python idiom)
+  - `== None` diagnostic: the compiler emits a warning suggesting `is None` instead of `== None` (identity check is more correct and idiomatic for None comparisons, matching Python best practice and linter rules)
   - `not` negation: else branches get the complement type
 - **Type predicates:** user-defined narrowing via return type annotation (Python typing style):
 
@@ -1135,6 +1135,8 @@ Now that classes exist with auto-derived `Hash + Eq`:
 - **Custom error types:** classes that implement an `Error` protocol
 - `**assert` statement**
 
+> **Note:** `class Foo(Error)` in this milestone is a **special-cased error declaration** -- the compiler recognizes the `(Error)` marker and generates the appropriate Rust error type. This is NOT general inheritance syntax. Full single inheritance (arbitrary `class Child(Parent)`) comes in milestone_inheritance.
+
 ### Fallible Built-in Functions
 
 Built-in functions that can fail return `Result` (following the Safety Philosophy):
@@ -1362,9 +1364,80 @@ del config["a"]       # removes key "a" -> config = {"b": 2}
 
 ---
 
+## milestone_imports: Multi-file Compilation and Imports
+
+**Goal:** Support multi-file projects with imports, enabling real application structure. This milestone focuses on the compilation model only -- package management (`sifr.toml`, `sifr.lock`, dependency resolution) is deferred to milestone_package_mgmt (just before milestone_ecosystem) since it's only useful once there's an ecosystem to manage.
+
+### Language Features
+
+- `**import` / `from ... import`:** maps to Rust `mod` / `use`
+- **Multi-file compilation:** compile a directory of `.sifr` files into one binary
+- **Package structure:** `__init__.sifr` defines a package (like `mod.rs`)
+- **Visibility:** `_private` prefix convention enforced as `pub`/non-`pub`
+- **Relative imports:** `from .utils import helper` works within a package
+
+### Project Structure
+
+```
+my_app/
+  src/
+    main.sifr
+    models/
+      __init__.sifr
+      user.sifr
+    utils/
+      __init__.sifr
+      helpers.sifr
+```
+
+### Import and Module Semantics
+
+- **Import cycle detection:** the compiler builds a module dependency graph during compilation. Circular imports are a compile-time error with a clear diagnostic showing the cycle path (e.g., `a.sifr -> b.sifr -> c.sifr -> a.sifr`).
+- `**__init__.sifr` semantics:** defines the public API of a package. Only symbols explicitly defined or re-exported in `__init__.sifr` are importable from outside the package. No side effects on import (unlike Python's `__init__.py` which executes on import).
+- **Module compilation order:** topological sort of the dependency graph. Each module is compiled exactly once per compilation run. The driver maintains a module cache keyed by canonical file path.
+- **Relative imports:** `from .utils import helper` works within a package. Relative imports cannot escape the package root.
+- **Multi-file span/diagnostic mapping:** error messages for imported modules show the correct source file and line number, not the generated Rust file.
+
+### Example
+
+```python
+# src/models/user.sifr
+class User:
+    name: str
+    email: str
+
+    def __init__(self, name: str, email: str):
+        self.name = name
+        self.email = email
+
+# src/main.sifr
+from models.user import User
+
+def main():
+    user = User("Alice", "alice@example.com")
+    print(user.name)
+```
+
+### Definition of Done (milestone_imports)
+
+- `import` / `from ... import` compiles to Rust `mod` / `use`
+- Multi-file projects compile into a single binary
+- `__init__.sifr` controls package public API
+- `_private` prefix enforced as non-`pub` in generated Rust
+- Circular import detection with clear diagnostics showing the cycle path
+- Multi-file diagnostics show correct source file and line numbers
+- Relative imports work within packages
+- E2E pass tests: multi_file_basic, package_import, relative_import
+- E2E fail tests: circular_import, private_access, missing_module
+- Milestone demo in `./demos/milestone_imports_demo.sifr` (multi-file project)
+
+---
+
 ## milestone_protocols: Protocols, Operators, and Discriminated Unions
 
 **Goal:** Add the advanced OOP features that make the type system expressive: protocols (traits), operator overloading, discriminated unions, and pattern matching on classes. Builds on milestone_classes's basic class support and milestone_type_system's narrowing engine.
+
+> **Note:** Protocols before generics are primarily for **operator overloading**, **discriminated union narrowing**, and **dynamic dispatch** (`&dyn Trait`). Protocol-as-generic-bound (e.g., `def sort[T: Comparable](items: list[T])`) is a milestone_generics feature -- protocols defined here will be usable as bounds once generics land.
 
 ### Design Decision: Nominal vs Structural Typing
 
@@ -1517,75 +1590,6 @@ class Dog(Animal):
 - E2E pass tests: inheritance_basic, super_call, classmethod_basic, staticmethod_basic, property_getter_setter
 - E2E fail tests: multiple_inheritance_rejected, super_no_parent
 - Milestone demo in `./demos/milestone_inheritance_demo.sifr`
-
----
-
-## milestone_imports: Multi-file Compilation and Imports
-
-**Goal:** Support multi-file projects with imports, enabling real application structure. This milestone focuses on the compilation model only -- package management (`sifr.toml`, `sifr.lock`, dependency resolution) is deferred to milestone_package_mgmt (just before milestone_ecosystem) since it's only useful once there's an ecosystem to manage.
-
-### Language Features
-
-- `**import` / `from ... import`:** maps to Rust `mod` / `use`
-- **Multi-file compilation:** compile a directory of `.sifr` files into one binary
-- **Package structure:** `__init__.sifr` defines a package (like `mod.rs`)
-- **Visibility:** `_private` prefix convention enforced as `pub`/non-`pub`
-- **Relative imports:** `from .utils import helper` works within a package
-
-### Project Structure
-
-```
-my_app/
-  src/
-    main.sifr
-    models/
-      __init__.sifr
-      user.sifr
-    utils/
-      __init__.sifr
-      helpers.sifr
-```
-
-### Import and Module Semantics
-
-- **Import cycle detection:** the compiler builds a module dependency graph during compilation. Circular imports are a compile-time error with a clear diagnostic showing the cycle path (e.g., `a.sifr -> b.sifr -> c.sifr -> a.sifr`).
-- `**__init__.sifr` semantics:** defines the public API of a package. Only symbols explicitly defined or re-exported in `__init__.sifr` are importable from outside the package. No side effects on import (unlike Python's `__init__.py` which executes on import).
-- **Module compilation order:** topological sort of the dependency graph. Each module is compiled exactly once per compilation run. The driver maintains a module cache keyed by canonical file path.
-- **Relative imports:** `from .utils import helper` works within a package. Relative imports cannot escape the package root.
-- **Multi-file span/diagnostic mapping:** error messages for imported modules show the correct source file and line number, not the generated Rust file.
-
-### Example
-
-```python
-# src/models/user.sifr
-class User:
-    name: str
-    email: str
-
-    def __init__(self, name: str, email: str):
-        self.name = name
-        self.email = email
-
-# src/main.sifr
-from models.user import User
-
-def main():
-    user = User("Alice", "alice@example.com")
-    print(user.name)
-```
-
-### Definition of Done (milestone_imports)
-
-- `import` / `from ... import` compiles to Rust `mod` / `use`
-- Multi-file projects compile into a single binary
-- `__init__.sifr` controls package public API
-- `_private` prefix enforced as non-`pub` in generated Rust
-- Circular import detection with clear diagnostics showing the cycle path
-- Multi-file diagnostics show correct source file and line numbers
-- Relative imports work within packages
-- E2E pass tests: multi_file_basic, package_import, relative_import
-- E2E fail tests: circular_import, private_access, missing_module
-- Milestone demo in `./demos/milestone_imports_demo.sifr` (multi-file project)
 
 ---
 
@@ -1791,6 +1795,55 @@ with open("file.txt") as f:
 - E2E pass tests: generator_expr, yield_basic, yield_infinite, yield_from_basic, yield_from_chain, with_file, with_multiple
 - E2E fail tests: yield_outside_function, with_non_context_manager
 - Milestone demo in `./demos/milestone_generators_demo.sifr`
+
+---
+
+## milestone_decorators: Basic Function Decorators
+
+**Goal:** Add function decorator support and variadic arguments (`*args`/`**kwargs`) -- the two features needed for milestone_web_db's web routing (`@app.get("/")`, `@app.post("/users")`). Generic decorators require `*args`/`**kwargs` to wrap functions with arbitrary signatures. Full metaprogramming decorators (`@dataclass`, custom compile-time transforms) remain in milestone_metaprogramming.
+
+### Language Features
+
+- **Function decorators:** `@decorator` syntax that wraps a function with another function
+- **Decorator with arguments:** `@app.get("/path")` -- decorator factories that return a decorator
+- **Multiple decorators:** stacked decorators applied bottom-up (same as Python)
+- `***args`:** variadic positional arguments captured as a tuple. Codegen: tuple of trait objects or monomorphized dispatch.
+- `****kwargs`:** variadic keyword arguments captured as a dict. Codegen: `HashMap<String, T>` with trait objects or monomorphized dispatch. **Note:** basic keyword arguments (named params, defaults, keyword-only params) are in milestone_ergonomics. This milestone adds the *variadic* forms needed for generic function wrapping.
+
+### Semantics
+
+A decorator is simply a function that takes a function and returns a function:
+
+```python
+def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before")
+        result = func(*args, **kwargs)
+        print("After")
+        return result
+    return wrapper
+
+@my_decorator
+def hello():
+    print("Hello!")
+```
+
+**Codegen:** `@decorator` desugars to `func = decorator(func)` at compile time. The compiler verifies that the decorator's return type is compatible with the decorated function's type.
+
+**Note:** this milestone provides runtime function wrapping and variadic arguments. Compile-time AST transformations (`@dataclass`, custom class decorators) are in milestone_metaprogramming.
+
+### Definition of Done (milestone_decorators)
+
+- `@decorator` syntax wraps functions correctly
+- `@decorator_factory(args)` works (decorator with arguments)
+- Multiple stacked decorators apply in correct order
+- Type checking verifies decorator input/output compatibility
+- `*args` captures extra positional arguments as a tuple
+- `**kwargs` captures extra keyword arguments as a dict
+- A generic decorator can wrap functions with different signatures using `*args`/`**kwargs`
+- E2E pass tests: basic_decorator, decorator_with_args, stacked_decorators, args_kwargs_basic, generic_decorator_wrapping
+- E2E fail tests: decorator_type_mismatch
+- Milestone demo in `./demos/milestone_decorators_demo.sifr`
 
 ---
 
@@ -2053,55 +2106,6 @@ milestone_async also provides basic cross-task communication primitives:
 - `sifr.sync.Lock`, `sifr.sync.Channel`, `sifr.sync.Semaphore` work for cross-task coordination
 - E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, async_with_basic, async_generator_basic, lock_basic, channel_basic
 - Milestone demo in `./demos/milestone_async_demo.sifr`
-
----
-
-## milestone_decorators: Basic Function Decorators
-
-**Goal:** Add function decorator support and variadic arguments (`*args`/`**kwargs`) -- the two features needed for milestone_web_db's web routing (`@app.get("/")`, `@app.post("/users")`). Generic decorators require `*args`/`**kwargs` to wrap functions with arbitrary signatures. Full metaprogramming decorators (`@dataclass`, custom compile-time transforms) remain in milestone_metaprogramming.
-
-### Language Features
-
-- **Function decorators:** `@decorator` syntax that wraps a function with another function
-- **Decorator with arguments:** `@app.get("/path")` -- decorator factories that return a decorator
-- **Multiple decorators:** stacked decorators applied bottom-up (same as Python)
-- `***args`:** variadic positional arguments captured as a tuple. Codegen: tuple of trait objects or monomorphized dispatch.
-- `****kwargs`:** variadic keyword arguments captured as a dict. Codegen: `HashMap<String, T>` with trait objects or monomorphized dispatch. **Note:** basic keyword arguments (named params, defaults, keyword-only params) are in milestone_ergonomics. This milestone adds the *variadic* forms needed for generic function wrapping.
-
-### Semantics
-
-A decorator is simply a function that takes a function and returns a function:
-
-```python
-def my_decorator(func):
-    def wrapper(*args, **kwargs):
-        print("Before")
-        result = func(*args, **kwargs)
-        print("After")
-        return result
-    return wrapper
-
-@my_decorator
-def hello():
-    print("Hello!")
-```
-
-**Codegen:** `@decorator` desugars to `func = decorator(func)` at compile time. The compiler verifies that the decorator's return type is compatible with the decorated function's type.
-
-**Note:** this milestone provides runtime function wrapping and variadic arguments. Compile-time AST transformations (`@dataclass`, custom class decorators) are in milestone_metaprogramming.
-
-### Definition of Done (milestone_decorators)
-
-- `@decorator` syntax wraps functions correctly
-- `@decorator_factory(args)` works (decorator with arguments)
-- Multiple stacked decorators apply in correct order
-- Type checking verifies decorator input/output compatibility
-- `*args` captures extra positional arguments as a tuple
-- `**kwargs` captures extra keyword arguments as a dict
-- A generic decorator can wrap functions with different signatures using `*args`/`**kwargs`
-- E2E pass tests: basic_decorator, decorator_with_args, stacked_decorators, args_kwargs_basic, generic_decorator_wrapping
-- E2E fail tests: decorator_type_mismatch
-- Milestone demo in `./demos/milestone_decorators_demo.sifr`
 
 ---
 
@@ -2543,6 +2547,8 @@ An interactive mode for quick experimentation:
 
 ---
 
+---
+
 ## Milestone Summary
 
 ```
@@ -2556,35 +2562,35 @@ PHASE 1 - Language Foundations:
   milestone_classes:  Basic Classes              -> struct + impl, __init__, methods, auto-derive, hash
   milestone_error_handling:  Error Handling             -> Result/Option, ? operator, try/except, typed errors
   milestone_safe_indexing:  Safe Indexing              -> Option returns from indexing, del, fallible methods
+  milestone_imports:  Multi-file + Imports       -> import/from, visibility, circular detection
 
 PHASE 2 - Type System Power:
   milestone_protocols:  Protocols + Operators      -> Traits, operator overload, discriminated unions, patterns
   milestone_inheritance:  Inheritance + Utilities    -> super(), classmethod, staticmethod, property
-  milestone_imports: Multi-file + Imports       -> import/from, visibility, circular detection
-  milestone_generics: Generics + Closures        -> Type params, lambdas, comprehensions, iterators
+  milestone_generics:  Generics + Closures        -> Type params, lambdas, comprehensions, iterators
+  milestone_generators:  Generators + With          -> yield, yield from, context managers
+  milestone_decorators:  Decorators + Variadics     -> Function wrapping, *args/**kwargs
 
-PHASE 3 - Pythonic Completeness:
-  milestone_generators: Generators + With          -> yield, yield from, context managers
-  milestone_core_stdlib: Core Stdlib                -> I/O, JSON, toml, env, os, collections, open()
-  milestone_test_runner: Test Runner                -> sifr test, assertions, discovery, parallel
-  milestone_ext_collections: Extended Collections       -> frozenset, Counter, defaultdict, bytes, bytearray
-  milestone_ext_stdlib: Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
+PHASE 3 - Standard Library:
+  milestone_core_stdlib:  Core Stdlib                -> I/O, JSON, toml, env, os, collections, open()
+  milestone_test_runner:  Test Runner                -> sifr test, assertions, discovery, parallel
+  milestone_ext_collections:  Extended Collections       -> frozenset, Counter, defaultdict, bytes, bytearray
+  milestone_ext_stdlib:  Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
 
 PHASE 4 - Ecosystem:
-  milestone_async: Async Runtime              -> async/await, tokio, tasks, async streams
-  milestone_decorators: Decorators + Variadics     -> Function wrapping, *args/**kwargs
-  milestone_web_db: Web + Database             -> axum web, reqwest HTTP, embedded SQLite, sqlx
-  milestone_data_processing: Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
+  milestone_async:  Async Runtime              -> async/await, tokio, tasks, async streams
+  milestone_web_db:  Web + Database             -> axum web, reqwest HTTP, embedded SQLite, sqlx
+  milestone_data_processing:  Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
 
 PHASE 5 - Polish:
-  milestone_metaprogramming: Metaprogramming            -> Compile-time decorators, @dataclass, const eval
-  milestone_ffi: FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
-  milestone_package_mgmt: Package Management         -> sifr.toml, sifr.lock, PubGrub solver
-  milestone_dev_tooling: Developer Tooling          -> LSP, formatter, linter, documentation generator
-  milestone_ecosystem: Package Ecosystem          -> Registry, incremental compilation, REPL
+  milestone_metaprogramming:  Metaprogramming            -> Compile-time decorators, @dataclass, const eval
+  milestone_ffi:  FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
+  milestone_package_mgmt:  Package Management         -> sifr.toml, sifr.lock, PubGrub solver
+  milestone_dev_tooling:  Developer Tooling          -> LSP, formatter, linter, documentation generator
+  milestone_ecosystem:  Package Ecosystem          -> Registry, incremental compilation, REPL
 ```
 
-After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_generics, the type system is fully expressive. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_web_db, Sifr can build production web applications. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
+After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_web_db, Sifr can build production web applications. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
 
 ---
 
@@ -2686,7 +2692,7 @@ match parse_int(s) {
 
 ### 4. Package Resolver and Reproducibility (milestone_imports/milestone_package_mgmt)
 
-This contract is split across two milestones: milestone_imports (multi-file compilation and imports) and milestone_package_mgmt (package management with dependency resolution). milestone_imports lands in Phase 2; milestone_package_mgmt lands in Phase 5 just before milestone_ecosystem.
+This contract is split across two milestones: milestone_imports (multi-file compilation and imports) and milestone_package_mgmt (package management with dependency resolution). milestone_imports lands in Phase 1 (after milestone_safe_indexing); milestone_package_mgmt lands in Phase 5 just before milestone_ecosystem.
 
 **Contract (milestone_imports -- imports and modules):**
 
@@ -2727,7 +2733,7 @@ Sifr uses Python-like slicing syntax, but must define whether slicing copies or 
 
 - **List slicing copies:** `list[a:b]` produces a new `list` (deep copy of elements). This matches Python semantics and avoids borrow complexity. Codegen: `vec[a..b].to_vec()`.
 - **String slicing copies:** `str[a:b]` produces a new `str`. Indices are character positions (not byte offsets). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
-- **Dict/tuple:** not sliceable.
+- **Dict:** not sliceable. **Tuple:** compile-time slicing supported (milestone_ergonomics) -- the compiler can statically verify tuple slice bounds and produce a new tuple type.
 - **Views deferred:** an explicit view API (e.g., `list.view(a, b)` mapping to `&[T]`) may be added in a later milestone for performance-critical paths. Not part of MVP.
 - `**for` loop borrows:** `for item in collection` borrows the collection (does not consume it). The collection remains usable after the loop. Codegen: `for item in &collection` (immutable borrow). Explicit consumption via `for item in collection.consume()` or similar if ownership transfer is needed.
 
@@ -2946,6 +2952,7 @@ Narrowing refines a variable's type within a control flow branch:
 - **Contextual typing (milestone_generics):** lambda/callback parameter types inferred from call-site context. E.g., `map_list(numbers, lambda x: x * 2)` infers `x: int` from the `list[int]` argument. Inspired by TypeScript's contextual typing which looks upward in the tree for type annotations.
 - **Enforced annotations:** function parameters MUST have types (or be inferable from defaults)
 - **Literal preservation:** `x: "GET" = "GET"` preserves the literal type; `x = "GET"` widens to `str`
+- **Empty collection inference:** `x = []` and `x = {}` are compile-time errors -- the element type cannot be inferred. Users must annotate: `x: list[int] = []`, `x: dict[str, int] = {}`. This prevents accidental `list[Unknown]` and matches Rust's requirement for explicit types on empty collections.
 
 ---
 
