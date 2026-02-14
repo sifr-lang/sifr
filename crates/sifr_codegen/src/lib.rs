@@ -1685,18 +1685,23 @@ impl RustEmitter {
             HirExpr::Call { func, args, .. } => {
                 if func == "print" {
                     // Map print() to println!
-                    if !args.is_empty() && matches!(args[0].ty(), Type::Class { .. }) {
+                    if args.is_empty() {
+                        self.write("println!(\"{}\", \"\")");
+                    } else if matches!(args[0].ty(), Type::Class { .. }) {
                         // Use Debug format for class instances
                         self.write("println!(\"{:?}\", ");
+                        self.emit_expr(&args[0]);
+                        self.write(")");
+                    } else if is_option_type(args[0].ty()) {
+                        // Option<T>: display inner value or "None"
+                        self.write("println!(\"{}\", ");
+                        self.emit_display_expr(&args[0]);
+                        self.write(")");
                     } else {
                         self.write("println!(\"{}\", ");
-                    }
-                    if args.is_empty() {
-                        self.write("\"\"");
-                    } else {
                         self.emit_expr(&args[0]);
-                    }
-                    self.write(")");
+                        self.write(")");
+                    };
                 } else if func == "isinstance" {
                     // isinstance() is handled by narrowing at the HIR level.
                     // At codegen time, we emit `true` since the narrowing has
@@ -1708,7 +1713,7 @@ impl RustEmitter {
                     // str() conversion -> format!("{}", arg)
                     if !args.is_empty() {
                         self.write("format!(\"{}\", ");
-                        self.emit_expr(&args[0]);
+                        self.emit_display_expr(&args[0]);
                         self.write(")");
                     } else {
                         self.write("String::new()");
@@ -2069,10 +2074,23 @@ impl RustEmitter {
                 self.write("\"");
                 for expr in &exprs {
                     self.write(", ");
-                    self.emit_expr(expr);
+                    self.emit_display_expr(expr);
                 }
                 self.write(")");
             }
+        }
+    }
+
+    /// Emit an expression suitable for use inside format!/println! contexts.
+    /// Wraps Option<T> expressions so they display as the inner value or "None".
+    fn emit_display_expr(&mut self, expr: &HirExpr) {
+        if is_option_type(expr.ty()) {
+            // Wrap: expr.map_or("None".to_string(), |_v| format!("{}", _v))
+            self.write("(");
+            self.emit_expr(expr);
+            self.write(").map_or(\"None\".to_string(), |_v| format!(\"{}\", _v))");
+        } else {
+            self.emit_expr(expr);
         }
     }
 }

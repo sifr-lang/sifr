@@ -85,19 +85,21 @@ fn cmd_build(file: &PathBuf, output: &PathBuf) {
 fn cmd_run(file: &PathBuf) {
     let temp_dir = std::env::temp_dir().join("sifr_run");
 
-    // Check if this is a multi-file project (other .sifr files in same directory)
-    let is_multi_file = if let Some(parent) = file.parent() {
-        if let Ok(entries) = std::fs::read_dir(parent) {
-            entries.flatten()
-                .filter(|e| e.path().extension().map_or(false, |ext| ext == "sifr"))
-                .filter(|e| e.path() != *file)
-                .count() > 0
+    // Check if this is a multi-file project:
+    // The file must be named main.sifr AND there must be other .sifr files in the same directory
+    let is_multi_file = file.file_stem().map_or(false, |stem| stem == "main")
+        && if let Some(parent) = file.parent() {
+            if let Ok(entries) = std::fs::read_dir(parent) {
+                entries.flatten()
+                    .filter(|e| e.path().extension().map_or(false, |ext| ext == "sifr"))
+                    .filter(|e| e.path() != *file)
+                    .count() > 0
+            } else {
+                false
+            }
         } else {
             false
-        }
-    } else {
-        false
-    };
+        };
 
     let result = if is_multi_file {
         build_project(file, &temp_dir)

@@ -1,0 +1,32 @@
+# Test: printing Option values directly in print() and f-strings
+# This covers the regression where Option<T> in display contexts
+# caused Rust compilation errors (Option doesn't impl Display).
+
+# expect-stdout: 20
+# expect-stdout: None
+# expect-stdout: first: 10
+# expect-stdout: missing: None
+# expect-stdout: alice age: 30
+# expect-stdout: missing key: None
+# expect-stdout: char: h
+# expect-stdout: oob char: None
+
+def main():
+    # --- print() with Option from list indexing ---
+    nums: list[int] = [10, 20, 30]
+    print(nums[1])
+    print(nums[99])
+
+    # --- f-string with Option from list indexing ---
+    print(f"first: {nums[0]}")
+    print(f"missing: {nums[99]}")
+
+    # --- f-string with Option from dict indexing ---
+    ages: dict[str, int] = {"alice": 30, "bob": 25}
+    print(f"alice age: {ages['alice']}")
+    print(f"missing key: {ages['charlie']}")
+
+    # --- f-string with Option from string indexing ---
+    s: str = "hello"
+    print(f"char: {s[0]}")
+    print(f"oob char: {s[99]}")
