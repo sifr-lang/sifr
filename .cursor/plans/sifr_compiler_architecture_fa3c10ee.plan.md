@@ -37,25 +37,25 @@ todos:
     status: completed
   - id: m3-type-enum
     content: "M3: Extend Type enum with Union, Intersection, LiteralInt, LiteralStr, LiteralBool, Optional, Alias variants. Add union normalization, literal widening, and subtyping rules."
-    status: pending
+    status: completed
   - id: m3-narrowing-engine
     content: "M3: Build the narrowing engine (narrow.rs) with NarrowingCondition enum and narrow_type function. Support truthiness, isinstance, equality, is None, type predicates, and negation."
-    status: pending
+    status: completed
   - id: m3-cfg
     content: "M3: Build control flow graph (cfg.rs) during HIR lowering. FlowNode types for assignments, conditions, labels, unreachable. Wire into scope for narrowed type tracking."
-    status: pending
+    status: completed
   - id: m3-hir-narrowing
     content: "M3: Update HIR lowering to use CFG and narrowing. If/else branches narrow types, isinstance calls trigger narrowing, equality checks narrow literals."
-    status: pending
+    status: completed
   - id: m3-codegen-unions
     content: "M3: Update codegen to emit Rust enums for union types, match expressions for narrowing, and handle literal type -> value mapping."
-    status: pending
+    status: completed
   - id: m3-tests
     content: "M3: Add comprehensive tests -- unit tests for union/literal/narrowing, E2E pass tests (union_basic, optional_narrowing, isinstance_narrowing, etc.), E2E fail tests (non-exhaustive, no-narrowing access)."
-    status: pending
+    status: completed
   - id: m3-demo
     content: "M3: Create milestone demo in ./tmp/m3_demo.sifr showcasing union types, literal types, type narrowing, and optional handling."
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -94,9 +94,9 @@ flowchart TD
     subgraph done [Completed]
         M1["M1: Core Language\nVariables, functions, if/else,\nprimitives, print, CLI"]
         M2["M2: Control Flow + Data\nLoops, list, dict, tuple,\nstring ops, indexing"]
+        M3["M3: Advanced Type System\nUnion types, literal types,\ntype narrowing, Unknown"]
     end
     subgraph lang [Language Features]
-        M3["M3: Advanced Type System\nUnion types, literal types,\ntype narrowing, Unknown"]
         M4["M4: Error Handling\nResult/Option, ? operator,\ntry/except as match"]
         M5["M5: Structs + Methods\nclass, protocols, traits,\ndiscriminated unions"]
         M6["M6: Module System\nimport/from, multi-file,\nsifr.toml, packages"]
@@ -110,13 +110,16 @@ flowchart TD
     end
     subgraph prod [Production]
         M12["M12: Metaprogramming\nDecorators, dataclass,\ncompile-time eval"]
-        M13["M13: Production Ready\nLSP, formatter, FFI,\npackage registry"]
+        M13["M13: FFI + Interop\nRust FFI, C FFI,\nunsafe boundary"]
+        M14["M14: Developer Tooling\nLSP, formatter, linter,\ndoc generator"]
+        M15["M15: Package Ecosystem\nRegistry, incremental\ncompilation, REPL"]
     end
     M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
     M7 --> M8 --> M9 --> M10
     M7 --> M11
     M10 --> M12 --> M13
     M11 --> M13
+    M13 --> M14 --> M15
 ```
 
 
@@ -127,7 +130,9 @@ flowchart TD
 - **M7 before M8-M11:** Generics and closures are needed for stdlib APIs
 - **M9 before M10:** Async runtime is needed for web framework and database access
 - **M11 parallel to M10:** Data processing (polars) doesn't depend on web/async, only on generics and modules
-- **M12-M13 last:** Metaprogramming and tooling polish come after the language and ecosystem are functional
+- **M12-M15 last:** Metaprogramming, FFI, tooling, and ecosystem polish come after the language and ecosystem are functional
+- **M13 before M14:** FFI unlocks access to the full Rust crate ecosystem; developer tooling benefits from a stable language surface
+- **M14 before M15:** LSP and formatter should exist before the package registry launches, so published packages have consistent quality
 
 ---
 
@@ -154,7 +159,12 @@ sifr/
   #   ruff_python_literal     -- literal parsing (string escapes, number formats)
 ```
 
-New crates added per milestone as needed (e.g. `sifr_std`, `sifr_lsp`, `sifr_fmt`).
+New crates added per milestone as needed:
+
+- M8: `sifr_std` (standard library wrappers)
+- M13: FFI codegen extensions in `sifr_codegen`
+- M14: `sifr_lsp` (language server), `sifr_fmt` (formatter), `sifr_lint` (linter)
+- M15: `sifr_registry` (package registry client)
 
 ---
 
@@ -567,6 +577,63 @@ def main():
 
 This maps cleanly to Rust's `Result<T, E>` and `?` operator.
 
+### `except` Arm Matching Semantics
+
+The `try`/`except` syntax is reinterpreted as pattern matching on `Result`. Each `except` arm matches a specific error type:
+
+```python
+try:
+    data = read_file("config.json")?
+    config = parse_json(data)?
+except IOError as e:
+    print(f"File error: {e}")
+except ParseError as e:
+    print(f"Parse error: {e}")
+```
+
+**Rules:**
+
+- `except` arms are matched in order (like `match` arms in Rust)
+- Each arm must specify a concrete error type (no bare `except:`)
+- The compiler checks exhaustiveness: if the `Result`'s error type is a union `IOError | ParseError`, all variants must be handled (or a catch-all `except Error` must be present)
+- `except` arms generate Rust `match` on the error enum variants (see Cross-cutting Contracts: Error Semantics Matrix)
+
+### Typed Error Hierarchies
+
+Error types are classes (M5 dependency for full class support, but M4 introduces the `Error` protocol):
+
+```python
+class AppError(Error):
+    message: str
+
+class ValueError(AppError):
+    pass
+
+class IOError(AppError):
+    path: str
+```
+
+**Codegen:** Error types generate Rust enums (not structs with inheritance). `AppError` becomes `enum AppError { ValueError(ValueError), IOError(IOError) }`. The `Error` protocol maps to Rust's `std::error::Error` trait.
+
+### Panic vs Result Boundary
+
+- `**assert` statements:** generate `assert!()` or `panic!()` in Rust. These are unrecoverable and not catchable by `try`/`except`.
+- **Rust library panics (M13 FFI):** caught at FFI boundaries via `catch_unwind` and converted to `Result::Err`. Sifr code never sees a panic from wrapped Rust crates.
+- **Out-of-bounds indexing:** returns `Result` or `Option`, not a panic. `list[i]` returns `Option[T]`; `list.get(i)` is the safe accessor.
+
+### Definition of Done (M4)
+
+- `Result[T, E]` type compiles to `Result<T, E>` in Rust
+- `?` operator works in functions returning `Result`
+- `try`/`except` generates correct `match` on error variants
+- `raise` inside a `Result`-returning function generates `Err(...)`
+- `assert` generates `assert!()` / `panic!()`
+- Exhaustiveness checking for `except` arms
+- E2E pass tests: result_basic, option_chaining, error_propagation, try_except
+- E2E fail tests: unhandled_error, non_exhaustive_except
+- Unit tests for Result/Option type checking and inference
+- Milestone demo in `./tmp/m4_demo.sifr`
+
 ---
 
 ## M5: Structs and Methods (OOP)
@@ -658,6 +725,35 @@ impl Point {
 }
 ```
 
+### Method Receiver Inference
+
+The compiler automatically determines the Rust receiver type for each method based on body analysis (see Cross-cutting Contracts: Borrow and Lifetime Strategy):
+
+- `self` only read -> `&self`
+- `self` fields mutated -> `&mut self`
+- `self` consumed (builder pattern, returned) -> `self` (move)
+
+The programmer can override with explicit annotations: `def method(ref self)` or `def method(mut ref self)`.
+
+### Runtime Type Representation for Classes
+
+- **Class instances:** generate Rust `struct` with fields. `isinstance(x, MyClass)` is resolved at compile time via the type system (no runtime RTTI needed for concrete types).
+- **Protocol/trait objects:** when a protocol is used as a parameter type, generate `&dyn Trait` or `Box<dyn Trait>`. This is the only dynamic dispatch for class types.
+- **Discriminated union of classes:** generate Rust `enum` with one variant per class. Tag-based narrowing generates `match` on the tag field.
+
+### Definition of Done (M5)
+
+- `class` compiles to Rust `struct` + `impl`
+- `__init__` maps to `new()` constructor
+- Method receiver inference (`&self` / `&mut self` / `self`) works correctly
+- `Protocol` compiles to Rust `trait`
+- Discriminated unions with tag fields narrow correctly via `match`
+- Operator overloading (`__add__`, `__eq__`) maps to Rust trait impls
+- Single inheritance via trait delegation
+- E2E pass tests: class_basic, protocol_dispatch, discriminated_union, operator_overload
+- E2E fail tests: missing_field, protocol_not_satisfied, use_after_move_self
+- Milestone demo in `./tmp/m5_demo.sifr`
+
 ---
 
 ## M6: Module System
@@ -678,6 +774,7 @@ impl Point {
 ```
 my_app/
   sifr.toml
+  sifr.lock          # auto-generated lockfile (committed to VCS)
   src/
     main.sifr
     models/
@@ -687,6 +784,21 @@ my_app/
       __init__.sifr
       helpers.sifr
 ```
+
+### Import and Module Semantics
+
+- **Import cycle detection:** the compiler builds a module dependency graph during compilation. Circular imports are a compile-time error with a clear diagnostic showing the cycle path (e.g., `a.sifr -> b.sifr -> c.sifr -> a.sifr`).
+- `**__init__.sifr` semantics:** defines the public API of a package. Only symbols explicitly defined or re-exported in `__init__.sifr` are importable from outside the package. No side effects on import (unlike Python's `__init__.py` which executes on import).
+- **Module compilation order:** topological sort of the dependency graph. Each module is compiled exactly once per compilation run. The driver maintains a module cache keyed by canonical file path.
+- **Relative imports:** `from .utils import helper` works within a package. Relative imports cannot escape the package root.
+
+### Package Management
+
+- `**sifr.toml`:** project manifest with `[dependencies]` section. Version ranges use semver (e.g., `requests = "^1.2"`).
+- `**sifr.lock`:** auto-generated lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Must be committed to version control for reproducible builds.
+- **Version solver:** PubGrub-based algorithm (same as Cargo and uv). Resolves the full dependency graph with conflict detection and clear error messages.
+- **Dependency sources (M6):** git repositories and local paths only. Registry support (`sifr.dev`) deferred to M15.
+- `**sifr add <package>`:** adds a dependency to `sifr.toml` and resolves the lockfile.
 
 ### Example
 
@@ -707,6 +819,20 @@ def main():
     user = User("Alice", "alice@example.com")
     print(user.name)
 ```
+
+### Definition of Done (M6)
+
+- `import` / `from ... import` compiles to Rust `mod` / `use`
+- Multi-file projects compile into a single binary
+- `__init__.sifr` controls package public API
+- `_private` prefix enforced as non-`pub` in generated Rust
+- Circular import detection with clear diagnostics
+- `sifr.toml` parsed and used for project configuration
+- `sifr.lock` generated with exact versions and content hashes
+- `sifr add` resolves and updates lockfile
+- E2E pass tests: multi_file_basic, package_import, relative_import
+- E2E fail tests: circular_import, private_access, missing_module
+- Milestone demo in `./tmp/m6_demo.sifr` (multi-file project)
 
 ---
 
@@ -746,6 +872,29 @@ def main():
     print(doubled)
 ```
 
+### Closure Capture Rules
+
+Closure captures are inferred from usage inside the closure body (see Cross-cutting Contracts: Borrow and Lifetime Strategy):
+
+- Read-only access to outer variable: capture by `&T`
+- Mutation of outer variable: capture by `&mut T`
+- Variable consumed or closure outlives scope: capture by value (move)
+- Explicit `move` keyword forces capture by value: `move lambda x: x + captured_var`
+
+### Definition of Done (M7)
+
+- Generic functions with type parameters compile correctly (monomorphized)
+- Generic classes with type parameters compile correctly
+- Type bounds (`T: Protocol`) enforce constraints
+- Lambda expressions compile to Rust closures
+- Contextual typing infers lambda parameter types from call-site
+- Closure capture inference works correctly (borrow vs move)
+- Higher-order functions (`map`, `filter`) work with lambdas
+- Iterator protocol (`__iter__` / `__next__`) maps to Rust `Iterator`
+- E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator
+- E2E fail tests: type_bound_violation, generic_mismatch
+- Milestone demo in `./tmp/m7_demo.sifr`
+
 ---
 
 ## M8: Core Standard Library
@@ -783,6 +932,18 @@ def main():
     print(config["name"])
 ```
 
+### Definition of Done (M8)
+
+- Each stdlib module has a working Sifr API that compiles to the underlying Rust crate
+- `sifr.io`: file read/write, path operations work end-to-end
+- `sifr.json`: serialize/deserialize dicts and lists
+- `sifr.env`: read environment variables
+- `sifr.math`: basic math functions work
+- Each module has integration tests verifying the Sifr API against the Rust crate behavior
+- Generated Cargo.toml includes correct dependencies for used stdlib modules
+- E2E pass tests: file_io, json_roundtrip, env_vars, math_ops
+- Milestone demo in `./tmp/m8_demo.sifr`
+
 ---
 
 ## M9: Async Runtime
@@ -813,6 +974,21 @@ async def main():
         stream = await listener.accept()
         await handle_connection(stream)
 ```
+
+### Async Error Propagation
+
+The `?` operator works across `.await` points. Async functions returning `Result` propagate errors the same way as sync functions. Closures captured across `.await` points must be `Send + 'static` (the compiler enforces this and emits clear diagnostics if violated).
+
+### Definition of Done (M9)
+
+- `async def` compiles to Rust `async fn`
+- `await` compiles to `.await`
+- Tokio runtime is automatically bundled when async is used
+- `?` operator works across `.await` points
+- Async closures captured across `.await` are checked for `Send + 'static`
+- `sifr.task.spawn` works for concurrent tasks
+- E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation
+- Milestone demo in `./tmp/m9_demo.sifr`
 
 ---
 
@@ -893,6 +1069,27 @@ async def get_user(id: int) -> dict[str, str] | None:
 - `sifr.db` -> `sqlx` (async, compile-time checked)
 - Generated Cargo.toml includes these as dependencies automatically
 
+### SQLx Build-time Contract
+
+SQLx's compile-time SQL checking requires database metadata at build time. Sifr supports two modes:
+
+- **Online mode (development):** the compiler connects to a running database during compilation to validate SQL queries. Connection string is read from `DATABASE_URL` in `.env` or `sifr.toml`.
+- **Offline mode (CI/production):** SQL metadata is cached in a `sqlx-data.json` file (generated by `sifr db prepare`). The compiler reads this file instead of connecting to a database. This file is committed to version control for reproducible CI builds.
+
+The compiler emits a clear error if neither a database connection nor offline metadata is available, with instructions on how to set up either mode.
+
+### Definition of Done (M10)
+
+- `sifr.web` routes compile to axum handlers
+- Decorator-based routing (`@app.get("/")`) works
+- Request/Response types are correctly typed
+- `sifr.http` GET/POST requests work end-to-end
+- `sifr.db` connects to PostgreSQL/SQLite
+- SQL queries are validated at compile time (online or offline mode)
+- `sifr db prepare` generates offline metadata
+- E2E pass tests: web_hello, http_get, db_query (with SQLite for testing)
+- Milestone demo in `./tmp/m10_demo.sifr` (simple REST API)
+
 ---
 
 ## M11: Data Processing
@@ -946,6 +1143,15 @@ def main():
 - `sifr.csv` -> `csv`
 - `sifr.args` -> `clap`
 
+### Definition of Done (M11)
+
+- `sifr.data.DataFrame` wraps polars DataFrame with Pythonic API
+- Lazy evaluation chain (filter, group_by, agg, sort) compiles correctly
+- CSV/Parquet read/write works end-to-end
+- `sifr.args` provides typed CLI argument parsing
+- E2E pass tests: dataframe_basic, csv_roundtrip, cli_args
+- Milestone demo in `./tmp/m11_demo.sifr` (data pipeline)
+
 ---
 
 ## M12: Metaprogramming
@@ -974,32 +1180,191 @@ class Config:
 # Maps to Rust #[derive(Debug, Clone, PartialEq)] struct
 ```
 
+### Security Boundary for Compile-time Evaluation
+
+Compile-time evaluation (`const` expressions, custom decorators) runs during compilation. To prevent supply-chain attacks via malicious packages:
+
+- **No I/O at compile time:** compile-time evaluation cannot read files, make network requests, or access environment variables. It is a pure computation sandbox.
+- **No arbitrary code execution:** custom decorators are limited to AST transformations (adding/removing/modifying fields and methods). They cannot execute arbitrary Rust code or shell commands.
+- **Deterministic:** compile-time evaluation must produce the same output for the same input, regardless of the host system.
+
+### Definition of Done (M12)
+
+- `@dataclass` generates `__init__`, `__eq__`, `__repr__`, `clone` methods
+- `@property` generates getter/setter methods
+- Custom decorators can transform class definitions (add/remove fields and methods)
+- `*args` / `**kwargs` work via macro expansion or trait objects
+- `const` expressions evaluated at compile time
+- Compile-time sandbox enforced (no I/O, no side effects)
+- E2E pass tests: dataclass_basic, property_decorator, custom_decorator, const_eval
+- Milestone demo in `./tmp/m12_demo.sifr`
+
 ---
 
-## M13: Production Readiness
+## M13: FFI and Interop
 
-**Goal:** Make Sifr a complete, usable language ecosystem.
+**Goal:** Give Sifr access to the entire Rust and C ecosystem via foreign function interfaces. This is the escape hatch that makes Sifr practical before every Rust crate has a Sifr wrapper -- users can call any Rust crate directly.
 
-### Tooling
+### Language Features
 
-- **LSP server (`sifr_lsp`):** autocomplete, go-to-definition, hover types, diagnostics
-- **Formatter (`sifr fmt`):** opinionated code formatter (like `ruff format` / `rustfmt`)
-- **Linter (`sifr lint`):** catch common mistakes beyond type errors
-- **Package registry:** `sifr.dev` -- publish and install packages
-- **Documentation generator:** `sifr doc` -- generate HTML docs from docstrings
-- **REPL:** `sifr repl` -- interactive mode (compile-and-run snippets)
-
-### Interop
-
-- **Rust FFI:** call Rust crates directly from Sifr code (the escape hatch for any Rust crate not yet wrapped)
-- **C FFI:** call C libraries via `unsafe` blocks
+- **Rust FFI:** call Rust crates directly from Sifr code using `extern` blocks
+- **C FFI:** call C libraries via `unsafe` blocks (maps to Rust's `extern "C"`)
+- `**unsafe` keyword:** required for any FFI call. The compiler emits a warning for any `unsafe` usage, encouraging safe wrappers
 - **Python interop (stretch):** call Python libraries via PyO3 bindings
 
-### Performance
+### FFI Syntax
 
-- **Incremental compilation:** only recompile changed modules
-- **Build caching:** cache generated Rust code and compiled artifacts
-- **Parallel compilation:** compile independent modules in parallel
+```python
+# Declare an external Rust crate dependency
+extern crate uuid
+
+# Use it in Sifr code
+from uuid import Uuid
+
+def main():
+    id: str = unsafe { Uuid.new_v4().to_string() }
+    print(f"Generated UUID: {id}")
+```
+
+### FFI Security Boundary
+
+FFI introduces unsafe code into the Sifr ecosystem. The following policies apply:
+
+- `**unsafe` keyword required:** any FFI call must be wrapped in an `unsafe` block
+- **Panic boundary:** all FFI entry points are wrapped in `catch_unwind`. Panics from Rust/C libraries are converted to `Result::Err` rather than crashing the Sifr program
+- **No implicit `unsafe`:** stdlib wrappers (M8-M11) encapsulate all `unsafe` internally. User code never needs `unsafe` unless calling raw FFI
+- **Type mapping:** the compiler maps Sifr types to Rust types at FFI boundaries. Mismatches are compile-time errors
+
+### Codegen
+
+- `extern crate` declarations add the crate to the generated `Cargo.toml` dependencies
+- `unsafe { ... }` blocks generate Rust `unsafe { ... }` blocks
+- FFI function calls generate direct Rust function calls with type-mapped arguments
+- Return values from FFI are wrapped in `Result` when `catch_unwind` is applied
+
+### Definition of Done (M13)
+
+- `extern crate` adds Rust crate dependencies to generated Cargo.toml
+- Rust FFI calls compile and execute correctly
+- `unsafe` blocks required and enforced by the compiler
+- Panic boundary (`catch_unwind`) wraps FFI entry points
+- C FFI via `extern "C"` works for basic function calls
+- Type mapping between Sifr and Rust types at FFI boundaries
+- E2E pass tests: ffi_rust_crate, ffi_c_function, unsafe_block
+- E2E fail tests: missing_unsafe, ffi_type_mismatch
+- Milestone demo in `./tmp/m13_demo.sifr` (calling a Rust crate from Sifr)
+
+---
+
+## M14: Developer Tooling
+
+**Goal:** Provide the developer experience tools that make Sifr productive for daily use: IDE support, code formatting, linting, and documentation generation. These tools are what make a language feel "real" to developers.
+
+### LSP Server (`sifr_lsp`)
+
+A Language Server Protocol implementation that provides IDE features:
+
+- **Autocomplete:** suggest variables, functions, methods, and types based on scope and type information
+- **Go-to-definition:** jump to the definition of any symbol
+- **Hover types:** show the inferred type of any expression on hover
+- **Diagnostics:** show type errors, unused variables, and linter warnings in real-time
+- **Rename refactor:** rename a symbol across all files in the project
+- **Find references:** find all usages of a symbol
+
+**Implementation:** built as a new `sifr_lsp` crate using the `tower-lsp` Rust crate. Reuses the existing parser, type checker, and HIR infrastructure. The LSP server runs the compiler pipeline incrementally on file changes.
+
+### Formatter (`sifr fmt`)
+
+An opinionated code formatter that enforces consistent style:
+
+- **Indentation:** 4 spaces (like Python/ruff)
+- **Line length:** 88 characters (like Black/ruff)
+- **String quotes:** double quotes by default
+- **Trailing commas:** always in multi-line constructs
+- **Import sorting:** alphabetical, grouped by stdlib/third-party/local
+
+**Implementation:** built as a new `sifr_fmt` crate. Can reuse ruff's formatting infrastructure as a reference. Operates on the AST (parse -> format -> emit), preserving comments.
+
+### Linter (`sifr lint`)
+
+A linter that catches common mistakes beyond type errors:
+
+- **Unused variables/imports:** warn when a variable or import is never used
+- **Unreachable code:** warn when code follows a `return` or `raise`
+- **Shadowed variables:** warn when a variable shadows an outer scope variable
+- **Style violations:** enforce naming conventions (snake_case for functions/variables, PascalCase for classes)
+- **Complexity warnings:** warn when functions exceed cyclomatic complexity thresholds
+
+**Implementation:** built as a new `sifr_lint` crate. Operates on the HIR (after type checking), so it has full type information available.
+
+### Documentation Generator (`sifr doc`)
+
+Generate HTML documentation from docstrings:
+
+- **Docstring format:** triple-quoted strings at the top of functions/classes/modules
+- **Output:** static HTML site (like Rust's `rustdoc`)
+- **Cross-references:** link to other symbols in the documentation
+- **Type signatures:** automatically include type annotations in the docs
+
+### Definition of Done (M14)
+
+- LSP server provides autocomplete, go-to-definition, hover types, and real-time diagnostics
+- LSP works with VS Code (via extension) and any LSP-compatible editor
+- `sifr fmt` formats all valid Sifr code consistently and idempotently
+- `sifr lint` detects unused variables, unreachable code, and style violations
+- `sifr doc` generates browsable HTML documentation from docstrings
+- E2E tests: LSP responds correctly to completion/hover/definition requests
+- Formatter round-trip test: `format(format(code)) == format(code)`
+- Milestone demo in `./tmp/m14_demo.sifr` (project with LSP, formatted code, and generated docs)
+
+---
+
+## M15: Package Ecosystem
+
+**Goal:** Build the infrastructure for sharing and reusing Sifr code: a package registry, incremental compilation for fast iteration, and a REPL for interactive exploration. This is the milestone that turns Sifr from a language into an ecosystem.
+
+### Package Registry (`sifr.dev`)
+
+A package registry for publishing and installing Sifr packages:
+
+- **Publish:** `sifr publish` uploads a package to `sifr.dev`
+- **Install:** `sifr add <package>` resolves from the registry (extends M6's git/path-only support)
+- **Versioning:** semver with the PubGrub solver (from M6)
+- **Trust model:** packages with `unsafe` usage are flagged and require explicit opt-in by the consumer (`allow_unsafe = true` in `sifr.toml`)
+- **Package metadata:** name, version, description, license, repository URL, dependencies
+- **Search:** `sifr search <query>` searches the registry
+
+### Incremental Compilation
+
+Optimize the compiler for fast iteration during development:
+
+- **Module-level caching:** only recompile modules whose source (or dependencies) changed
+- **Generated Rust caching:** cache the generated `.rs` files and skip codegen for unchanged modules
+- **Cargo build caching:** leverage Cargo's built-in incremental compilation for the Rust compilation step
+- **File watcher mode:** `sifr watch` recompiles on file changes (like `cargo watch`)
+
+### REPL (`sifr repl`)
+
+An interactive mode for quick experimentation:
+
+- **Expression evaluation:** type an expression, see the result immediately
+- **Type display:** show the inferred type of each expression
+- **Multi-line input:** support for function definitions and control flow
+- **History:** up/down arrow for command history
+
+**Implementation:** compile each REPL input as a small Sifr program, run it, and display the result. Use `rustyline` for line editing.
+
+### Definition of Done (M15)
+
+- `sifr publish` uploads packages to `sifr.dev`
+- `sifr add <package>` resolves and installs from the registry
+- Package trust model enforced (unsafe flagging, opt-in)
+- Incremental compilation skips unchanged modules
+- `sifr watch` recompiles on file changes
+- `sifr repl` provides interactive expression evaluation with type display
+- Fuzz testing for parser and type checker integrated into CI
+- Benchmark suite with regression thresholds for compile time and binary size
+- Milestone demo: a complete web application built entirely in Sifr, published as a package
 
 ---
 
@@ -1008,7 +1373,7 @@ class Config:
 ```
 M1:  Core Language (DONE)       -> "Hello World" compiles to native binary
 M2:  Control Flow + Data (DONE) -> Process collections, loops, real algorithms
-M3:  Advanced Type System       -> Union types, literal types, type narrowing, Unknown
+M3:  Advanced Type System (DONE)-> Union types, literal types, type narrowing, Unknown
 M4:  Error Handling             -> Result/Option, ? operator (uses M3 unions)
 M5:  Structs + Methods          -> OOP, protocols, discriminated unions (uses M3 narrowing)
 M6:  Module System              -> Multi-file projects, packages, sifr.toml
@@ -1018,18 +1383,139 @@ M9:  Async Runtime              -> async/await, tokio, tasks, async streams
 M10: Web + Database             -> axum web framework, reqwest HTTP, sqlx database
 M11: Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
 M12: Metaprogramming            -> Decorators, @dataclass, compile-time eval
-M13: Production Readiness       -> LSP, formatter, linter, FFI, package registry
+M13: FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
+M14: Developer Tooling          -> LSP, formatter, linter, documentation generator
+M15: Package Ecosystem          -> Package registry, incremental compilation, REPL
 ```
 
-After M10, Sifr can build production web applications. After M11, it can handle data pipelines. After M13, it is a complete language ecosystem.
+After M10, Sifr can build production web applications. After M11, it can handle data pipelines. After M13, Sifr has access to the entire Rust crate ecosystem. After M14, developers have full IDE support. After M15, it is a complete language ecosystem with package sharing.
+
+---
+
+## Cross-cutting Contracts
+
+These are design decisions that span multiple milestones. They must be resolved early to prevent milestones from diverging and breaking each other.
+
+### 1. Runtime Type Representation
+
+Union types, `Unknown`, and class instances all need a coherent runtime representation in generated Rust code. This contract ensures M3/M5/M7 produce compatible code.
+
+**Contract:**
+
+- **Primitive unions** (`int | str`): generate Rust `enum` with one variant per member type. The enum name is deterministic from the sorted member types (e.g., `IntOrStr`). Narrowing via `isinstance` generates `match` arms.
+- **Optional types** (`T | None`): generate Rust `Option<T>`. Narrowing via `is not None` generates `if let Some(x) = x`.
+- **Class unions** (`Circle | Square`, M5): generate Rust `enum` with one variant per class. Discriminated union narrowing via tag field generates `match` on the tag.
+- `**Unknown` type**: generates `Box<dyn std::any::Any>` in Rust. The compiler enforces that every use site is guarded by a narrowing check (`isinstance`, equality, etc.) before any operation. At runtime, `downcast_ref::<T>()` is used after narrowing. This is the only type that requires runtime type information (RTTI).
+- `**Any` type**: generates the same `Box<dyn Any>` but the compiler does NOT enforce narrowing. This is the escape hatch.
+- **Generics** (M7): monomorphized at compile time (like Rust). No runtime type erasure for generic types. `list[int]` generates `Vec<i64>`, not `Vec<Box<dyn Any>>`.
+- **Protocol/trait objects** (M5): when a protocol is used as a type (not just a bound), generate `Box<dyn Trait>` with vtable dispatch. This is the only case of dynamic dispatch besides `Unknown`/`Any`.
+
+**Invariant:** Every `Type` variant must have exactly one Rust representation. The `rust_type()` method on `Type` is the single source of truth for this mapping.
+
+### 2. Borrow and Lifetime Strategy
+
+Sifr uses move-by-default semantics (like Rust), but must define when the compiler auto-borrows to keep the language usable. Without this contract, M5 (methods), M7 (closures), and M9 (async) will produce user-hostile "use-after-move" errors.
+
+**Contract:**
+
+- **Function arguments:** move by default. Use `ref` keyword for explicit borrowing (`ref x: str` generates `x: &String`). Use `mut ref` for mutable borrowing.
+- **Method receivers:** auto-borrow based on method body analysis:
+  - If the method only reads `self` fields: `&self`
+  - If the method mutates `self` fields: `&mut self`
+  - If the method consumes `self` (e.g., builder pattern): `self` (move)
+  - The programmer can override with explicit `ref self` or `mut ref self` annotations
+- **Closure captures (M7):** inferred from usage inside the closure body:
+  - Read-only access: capture by `&T`
+  - Mutation: capture by `&mut T`
+  - Move into closure: capture by value (when the closure outlives the variable's scope, or when explicitly requested with `move` keyword)
+- **Temporary lifetimes:** temporaries created in expressions live until the end of the enclosing statement. Method chains like `x.upper().split(",")` work without explicit borrows.
+- **Escape analysis:** the compiler tracks whether a reference escapes its scope. If it does, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: clone explicitly, or restructure to avoid the escape.
+- **No lifetime annotations in user code:** Sifr does not expose Rust's `'a` lifetime syntax. The compiler infers lifetimes using the rules above. If inference fails, the compiler emits a clear error suggesting `.clone()` or restructuring.
+
+**Milestone responsibilities:**
+
+- M5: implement method receiver inference (`&self` / `&mut self` / `self`)
+- M7: implement closure capture inference
+- M9: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
+
+### 3. Error Semantics Matrix
+
+Sifr replaces Python's exception model with Rust's `Result`/`Option` model (M4). This contract defines how errors behave across different contexts.
+
+**Contract:**
+
+
+| Context              | Error mechanism                | Propagation                          | Codegen                                                    |
+| -------------------- | ------------------------------ | ------------------------------------ | ---------------------------------------------------------- |
+| Sync function        | `Result[T, E]` return          | `?` operator or explicit `match`     | `Result<T, E>`                                             |
+| Async function (M9)  | `Result[T, E]` return          | `?` operator (works across `.await`) | `Result<T, E>`                                             |
+| `try`/`except` block | Pattern match on `Result`      | `except` arms match error variants   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
+| FFI boundary (M13)   | Rust panics caught at boundary | `catch_unwind` at FFI entry points   | Panic -> `Result::Err` conversion                          |
+| `assert` statement   | Panic (unrecoverable)          | Not catchable                        | `assert!()` or `panic!()`                                  |
+| Main function        | `Result` printed as exit code  | Non-zero exit on `Err`               | `fn main() -> Result<(), Box<dyn Error>>`                  |
+
+
+`**except` arm matching semantics:**
+
+```python
+try:
+    result = parse_int(s)?
+except ValueError as e:
+    print(f"Bad value: {e}")
+except IOError as e:
+    print(f"IO failed: {e}")
+```
+
+This generates:
+
+```rust
+match parse_int(s) {
+    Ok(result) => { /* ... */ }
+    Err(e) => match e {
+        AppError::ValueError(e) => { println!("Bad value: {}", e); }
+        AppError::IOError(e) => { println!("IO failed: {}", e); }
+    }
+}
+```
+
+**Typed error hierarchies:** Error types are classes (M5) that implement an `Error` protocol. The `raise` keyword maps to `Err(ErrorType::new(...))`. Error types compose via union: `Result[int, ValueError | IOError]`.
+
+### 4. Package Resolver and Reproducibility (M6)
+
+**Contract:**
+
+- `**sifr.toml`:** project manifest with `[dependencies]` section specifying version ranges (semver)
+- `**sifr.lock`:** lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Committed to version control.
+- **Version solver:** PubGrub-based solver (same algorithm as Cargo and uv). Resolves dependency graph with conflict detection.
+- **Registry:** `sifr.dev` package registry (M15). Before M15, dependencies are git-only or path-only.
+- **Import cycle detection:** the compiler builds a dependency graph of modules during compilation. Cycles are a compile-time error with a clear diagnostic showing the cycle path.
+- `**__init__.sifr` semantics:** defines the public API of a package. Symbols not re-exported from `__init__.sifr` are private to the package. No side effects on import (unlike Python's `__init__.py`).
+- **Import caching:** each module is compiled exactly once per compilation. The driver maintains a module cache keyed by canonical path.
+
+### 5. CI Quality Gates
+
+**Contract for every PR:**
+
+- `cargo test` passes (all layers: unit, snapshot, E2E, corpus)
+- `cargo clippy -- -D warnings` passes
+- No new `unsafe` blocks without explicit justification
+- E2E pass tests compile generated Rust and verify runtime stdout
+- E2E fail tests verify expected diagnostics
+
+**Milestone-specific gates (added as milestones land):**
+
+- M7+: benchmark suite with regression thresholds (compile time, binary size)
+- M8+: stdlib wrapper tests (each module has integration tests against the underlying Rust crate)
+- M15: fuzz testing for parser and type checker (cargo-fuzz or afl)
 
 ### Ecosystem Strategy
 
 Sifr's standard library follows a **thin wrapper + FFI** strategy:
 
 - **Thin wrappers (M8-M11):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
-- **Rust FFI (M13):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
-- **No reinventing:** sifr never reimplements what Rust already has. Every stdlib module wraps a proven Rust crate.
+- **Rust FFI (M13):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives Sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
+- **Package ecosystem (M15):** A package registry (`sifr.dev`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
+- **No reinventing:** Sifr never reimplements what Rust already has. Every stdlib module wraps a proven Rust crate.
 
 ---
 
@@ -1182,7 +1668,16 @@ flowchart TD
     subgraph layer4 [Layer 4: Corpus Tests]
         Corpus["Corpus tests\n(no panics on large inputs)"]
     end
-    layer1 --> layer2 --> layer3 --> layer4
+    subgraph layer5 [Layer 5: Fuzz + Property Tests - M7 plus]
+        FuzzParser["Parser fuzz\n(cargo-fuzz)"]
+        FuzzChecker["Type checker fuzz\n(random ASTs)"]
+        PropTests["Property tests\n(algebraic invariants)"]
+    end
+    subgraph layer6 [Layer 6: Performance Tests - M7 plus]
+        CompileBench["Compile-time benchmarks\n(criterion)"]
+        BinarySizeBench["Binary-size benchmarks"]
+    end
+    layer1 --> layer2 --> layer3 --> layer4 --> layer5 --> layer6
 ```
 
 ### Layer 1: Unit Tests (per crate, `#[cfg(test)]`)
@@ -1510,6 +2005,53 @@ fn corpus_no_panics() {
 }
 ```
 
+### Layer 5: Fuzz and Property Tests (M7+)
+
+**Purpose:** Discover edge cases and crashes that hand-written tests miss. Especially important for a compiler built by AI agents, where subtle regressions can be introduced silently.
+
+**Fuzz testing (parser):**
+
+- Use `cargo-fuzz` or `afl` to generate random/mutated inputs and feed them to the parser
+- Goal: no panics, no infinite loops, no memory safety issues
+- Run in CI on a schedule (nightly) rather than on every PR
+
+**Fuzz testing (type checker):**
+
+- Generate random well-formed ASTs and run the type checker on them
+- Goal: no panics, no infinite loops in type inference or narrowing
+
+**Property tests:**
+
+- Use `proptest` or `quickcheck` for algebraic properties:
+  - Union normalization is idempotent: `normalize(normalize(u)) == normalize(u)`
+  - Subtyping is reflexive: `is_subtype(T, T) == true`
+  - Subtyping is transitive: if `A <: B` and `B <: C` then `A <: C`
+  - Narrowing preserves subtyping: `narrow(T, cond) <: T`
+
+### Layer 6: Performance Regression Tests (M7+)
+
+**Purpose:** Prevent compile-time and binary-size regressions as the compiler grows.
+
+**Benchmark suite:**
+
+- Compile-time benchmarks: measure time to compile representative `.sifr` programs of increasing size
+- Binary-size benchmarks: measure output binary size for representative programs
+- Use `criterion` crate for statistical benchmarking
+
+**CI integration:**
+
+- Benchmarks run on every PR (compared against `main` baseline)
+- Regressions beyond threshold (e.g., >10% compile time increase, >20% binary size increase) block the PR
+- Thresholds are configurable in `sifr.toml` or CI config
+
+### Parser Fixture Migration Plan
+
+The parser snapshot tests currently use `.py` fixtures inherited from ruff. These should be incrementally migrated to `.sifr` fixtures as the language diverges from Python:
+
+- **Keep `.py` fixtures** as a compatibility lane (ensure the parser still handles standard Python syntax)
+- **Add `.sifr` fixtures** for Sifr-specific syntax (e.g., `?` operator in M4, custom type syntax)
+- **Migration timeline:** start in M4 when the first non-Python syntax is introduced. Complete by M7 when the language has significantly diverged.
+
 ### Test Infrastructure Crate: `sifr_test_utils`
 
 A shared crate providing test helpers used across all other crates:
@@ -1535,7 +2077,7 @@ crates/sifr_test_utils/
 ### Test Commands
 
 ```bash
-# Run all tests
+# Run all tests (layers 1-3)
 cargo test
 
 # Run specific layer
@@ -1547,8 +2089,14 @@ cargo test --test e2e                       # End-to-end tests
 # Update snapshots after intentional changes
 cargo insta review
 
-# Run corpus tests (slower)
+# Run corpus tests (slower, layer 4)
 cargo test -- corpus --ignored
+
+# Run fuzz tests (layer 5, M7+)
+cargo fuzz run parser_fuzz -- -max_total_time=300
+
+# Run benchmarks (layer 6, M7+)
+cargo bench
 ```
 
 ### Adding Tests for New Features (Agent Workflow)
