@@ -1,3 +1,6 @@
+// Vendored from ruff -- suppress upstream warnings we don't control.
+#![allow(warnings)]
+
 use std::ffi::OsStr;
 use std::path::Path;
 

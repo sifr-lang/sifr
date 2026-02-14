@@ -380,7 +380,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
     let class_name = class_def.name.to_string();
     let class_ty = ctx.class_types.get(&class_name)?.clone();
 
-    let (fields, method_types) = match &class_ty {
+    let (fields, _method_types) = match &class_ty {
         Type::Class { fields, methods, .. } => (fields.clone(), methods.clone()),
         _ => return None,
     };
@@ -439,7 +439,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             let body = lower_stmts(&func.body, &method_ft, ctx);
 
             // Determine receiver mutability: if any statement assigns to self.field, it's &mut self
-            let is_mutating = method_name == "__init__" || body_contains_field_assign(&body);
+            let _is_mutating = method_name == "__init__" || body_contains_field_assign(&body);
 
             ctx.scope.pop();
             ctx.current_class = None;
@@ -847,51 +847,50 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             ctx.in_try_block = prev_in_try;
             let mut handlers = Vec::new();
             for handler in &try_stmt.handlers {
-                if let ExceptHandler::ExceptHandler(h) = handler {
-                    let error_type = if let Some(ref type_expr) = h.type_ {
-                        if let Expr::Name(n) = type_expr.as_ref() {
-                            Some(n.id.to_string())
-                        } else {
-                            None
-                        }
+                let ExceptHandler::ExceptHandler(h) = handler;
+                let error_type = if let Some(ref type_expr) = h.type_ {
+                    if let Expr::Name(n) = type_expr.as_ref() {
+                        Some(n.id.to_string())
                     } else {
                         None
-                    };
-                    let name = h.name.as_ref().map(|n| n.to_string());
-                    // Define the error variable in scope if named
-                    ctx.scope.push();
-                    if let Some(ref var_name) = name {
-                        // Determine the type of the error variable
-                        let error_var_ty = if let Some(ref et) = error_type {
-                            if let Some(class_ty) = ctx.class_types.get(et) {
-                                class_ty.clone()
-                            } else {
-                                Type::Str // Default: error messages are strings
-                            }
-                        } else {
-                            Type::Str
-                        };
-                        ctx.scope.define(var_name.clone(), error_var_ty);
                     }
-                    let handler_body = lower_stmts(&h.body, func_type, ctx);
-                    ctx.scope.pop();
-                    // Resolve the error type for codegen
-                    let error_resolved_type = error_type.as_ref().and_then(|et| {
+                } else {
+                    None
+                };
+                let name = h.name.as_ref().map(|n| n.to_string());
+                // Define the error variable in scope if named
+                ctx.scope.push();
+                if let Some(ref var_name) = name {
+                    // Determine the type of the error variable
+                    let error_var_ty = if let Some(ref et) = error_type {
                         if let Some(class_ty) = ctx.class_types.get(et) {
-                            Some(class_ty.clone())
-                        } else if et == "str" {
-                            Some(Type::Str)
+                            class_ty.clone()
                         } else {
-                            None
+                            Type::Str // Default: error messages are strings
                         }
-                    });
-                    handlers.push(HirExceptHandler {
-                        error_type,
-                        error_resolved_type,
-                        name,
-                        body: handler_body,
-                    });
+                    } else {
+                        Type::Str
+                    };
+                    ctx.scope.define(var_name.clone(), error_var_ty);
                 }
+                let handler_body = lower_stmts(&h.body, func_type, ctx);
+                ctx.scope.pop();
+                // Resolve the error type for codegen
+                let error_resolved_type = error_type.as_ref().and_then(|et| {
+                    if let Some(class_ty) = ctx.class_types.get(et) {
+                        Some(class_ty.clone())
+                    } else if et == "str" {
+                        Some(Type::Str)
+                    } else {
+                        None
+                    }
+                });
+                handlers.push(HirExceptHandler {
+                    error_type,
+                    error_resolved_type,
+                    name,
+                    body: handler_body,
+                });
             }
             Some(HirStmt::TryExcept { body, handlers })
         }

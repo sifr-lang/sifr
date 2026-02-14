@@ -2012,7 +2012,7 @@ impl RustEmitter {
                     }
                 }
             }
-            HirExpr::WalrusExpr { name, value, .. } => {
+            HirExpr::WalrusExpr { name, value: _, .. } => {
                 // Walrus operator: the variable is already hoisted by emit_walrus_hoists
                 // Just emit the variable name (the assignment was already emitted)
                 self.write(name);

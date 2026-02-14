@@ -1,3 +1,6 @@
+// Vendored from ruff -- suppress upstream warnings we don't control.
+#![allow(warnings)]
+
 //! This crate can be used to parse Python source code into an Abstract
 //! Syntax Tree.
 //!
