@@ -1,30 +1,60 @@
 ---
 name: Sifr Compiler Architecture
-overview: Build "sifr", a compiled programming language with Python syntax and enforced typing that emits Rust source code, compiled via rustc into native binaries. The compiler is built in Rust, forking ruff's parser/AST crates and adding type checking, IR, and Rust codegen phases. The end goal is a language capable of building web applications and general-purpose programs.
+overview: Build "sifr", a compiled programming language with Python syntax and enforced typing that emits Rust source code, compiled via rustc into native binaries. The compiler is built in Rust, forking ruff's parser/AST crates and adding type checking, IR, and Rust codegen phases. TypeScript-inspired type system features (union/intersection types, literal types, full control-flow-based type narrowing) are first-class citizens. The end goal is a language capable of building web applications and general-purpose programs.
 todos:
   - id: fork-parser
     content: "M1: Fork ruff parser/AST crates (python_ast, python_parser) into crates/ with sifr_ prefix. Use git deps for infrastructure crates (text_size, source_file, python_trivia, python_literal). Set up Cargo workspace."
-    status: pending
+    status: completed
   - id: strip-ast
     content: "M1: Strip the forked AST to only the nodes needed for M1 (function def, if/elif/else, assign, ann_assign, return, expr, basic expressions, literals). Remove IPython, match, async, with, try, import, etc."
-    status: pending
+    status: completed
   - id: type-system
     content: "M1: Build sifr_type_system crate -- Type enum (Int, Float, Bool, Str, None, Function, Any, Never), type inference from initializers, type checking (binary ops, comparisons, function calls), subtyping rules."
-    status: pending
+    status: completed
   - id: hir
     content: "M1: Build sifr_hir crate -- Typed IR with resolved names and types on every node. Name resolution (scopes). Ownership tracking (move vs copy)."
-    status: pending
+    status: completed
   - id: codegen
     content: "M1: Build sifr_codegen crate -- Walk HIR and emit Rust source code. Type mapping (int->i64, str->String, etc.). Generate Cargo.toml + main.rs. Handle print() as println! macro."
-    status: pending
+    status: completed
   - id: driver
     content: "M1: Build sifr_driver crate -- Orchestrate parse -> type-check -> HIR -> codegen pipeline. Error reporting with source spans and nice diagnostics (use miette or ariadne)."
-    status: pending
+    status: completed
   - id: cli
     content: "M1: Build sifr CLI binary -- sifr build/run/check/emit commands using clap. Invoke cargo build on generated Rust project."
-    status: pending
+    status: completed
   - id: test-e2e
     content: "M1: End-to-end test -- Write sample .sifr programs (hello world, factorial, fibonacci, basic arithmetic) and verify they compile and run correctly."
+    status: completed
+  - id: m2-loops
+    content: "M2: While/for loops, break/continue, range() support."
+    status: completed
+  - id: m2-collections
+    content: "M2: List, dict, tuple types with collection operations."
+    status: completed
+  - id: m2-strings
+    content: "M2: String operations, f-strings, and tuple unpacking."
+    status: completed
+  - id: m3-type-enum
+    content: "M3: Extend Type enum with Union, Intersection, LiteralInt, LiteralStr, LiteralBool, Optional, Alias variants. Add union normalization, literal widening, and subtyping rules."
+    status: pending
+  - id: m3-narrowing-engine
+    content: "M3: Build the narrowing engine (narrow.rs) with NarrowingCondition enum and narrow_type function. Support truthiness, isinstance, equality, is None, type predicates, and negation."
+    status: pending
+  - id: m3-cfg
+    content: "M3: Build control flow graph (cfg.rs) during HIR lowering. FlowNode types for assignments, conditions, labels, unreachable. Wire into scope for narrowed type tracking."
+    status: pending
+  - id: m3-hir-narrowing
+    content: "M3: Update HIR lowering to use CFG and narrowing. If/else branches narrow types, isinstance calls trigger narrowing, equality checks narrow literals."
+    status: pending
+  - id: m3-codegen-unions
+    content: "M3: Update codegen to emit Rust enums for union types, match expressions for narrowing, and handle literal type -> value mapping."
+    status: pending
+  - id: m3-tests
+    content: "M3: Add comprehensive tests -- unit tests for union/literal/narrowing, E2E pass tests (union_basic, optional_narrowing, isinstance_narrowing, etc.), E2E fail tests (non-exhaustive, no-narrowing access)."
+    status: pending
+  - id: m3-demo
+    content: "M3: Create milestone demo in ./tmp/m3_demo.sifr showcasing union types, literal types, type narrowing, and optional handling."
     status: pending
 isProject: false
 ---
@@ -34,6 +64,8 @@ isProject: false
 ## Vision
 
 Sifr is a compiled programming language that uses Python syntax with enforced static typing. It compiles Python-like source code to Rust source code, which is then compiled by `rustc` into native binaries. Ownership semantics follow Rust's move-by-default model. Types are strict with an opt-in `Any` escape hatch (like TypeScript's strict mode).
+
+The type system draws heavily from TypeScript's design: union and intersection types, literal types, and full control-flow-based type narrowing are first-class citizens. Unlike TypeScript (which erases types at runtime), sifr uses types to generate efficient Rust code -- union types become Rust enums, narrowing becomes `match` expressions, and literal types enable compile-time value checking.
 
 The end goal is a language capable of building web applications and general-purpose programs -- anywhere Python is used today, but with native performance and compile-time safety.
 
@@ -59,19 +91,22 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    M1["M1: Core Language\nVariables, functions, if/else,\nprimitives, print, CLI"] --> M2
-    M2["M2: Control Flow and Data\nLoops, list, dict, tuple,\nstring ops, indexing"] --> M3
-    M3["M3: Error Handling\nResult/Option types,\ntry/except -> match,\ncustom error types"] --> M4
-    M4["M4: Structs and Methods\nclass -> struct + impl,\n__init__ -> new, methods,\ntraits/protocols"] --> M5
-    M5["M5: Module System\nimport/from -> mod/use,\nmulti-file projects,\npackage manager"] --> M6
-    M6["M6: Generics and Collections\nType parameters, generic\nfunctions/structs, iterators,\nclosures/lambdas"] --> M7
-    M7["M7: Standard Library\nFile I/O, JSON, env vars,\nstring formatting, math,\ncollections utilities"] --> M8
-    M8["M8: Async and Networking\nasync/await -> tokio,\nHTTP server/client,\nweb framework primitives"] --> M9
-    M9["M9: Metaprogramming\nDecorators -> proc macros,\nattribute macros,\nderiving traits"] --> M10
-    M10["M10: Production Readiness\nLSP server, formatter,\npackage registry,\nFFI, documentation"]
+    M1["M1: Core Language (DONE)\nVariables, functions, if/else,\nprimitives, print, CLI"] --> M2
+    M2["M2: Control Flow + Data (DONE)\nLoops, list, dict, tuple,\nstring ops, indexing"] --> M3
+    M3["M3: Advanced Type System\nUnion/intersection types,\nliteral types, type narrowing,\ncontrol flow analysis"] --> M4
+    M4["M4: Error Handling\nResult/Option via unions,\ntry/except as match,\n? operator, assert"] --> M5
+    M5["M5: Structs and Methods\nclass -> struct+impl,\nprotocols/traits,\ndiscriminated unions"] --> M6
+    M6["M6: Module System\nimport/from -> mod/use,\nmulti-file, sifr.toml"] --> M7
+    M7["M7: Generics\nType params, bounds,\nclosures/lambdas,\niterators, HOFs"] --> M8
+    M8["M8: Standard Library\nFile I/O, JSON, env,\nmath, collections,\ntime, regex"] --> M9
+    M9["M9: Async + Networking\nasync/await -> tokio,\nHTTP, web framework"] --> M10
+    M10["M10: Metaprogramming\nDecorators, dataclass,\ncompile-time eval"] --> M11
+    M11["M11: Production Readiness\nLSP, formatter, linter,\npackage registry, FFI"]
 ```
 
 
+
+**Rationale for milestone order:** Union types, literal types, and type narrowing are placed in M3 (before error handling) because they are foundational -- M4's `Result[T, E]` and `Option[T]` are union-based, M5's discriminated unions need narrowing, and M7's generics need type bounds with unions. Every milestone after M3 benefits from the advanced type system.
 
 ---
 
@@ -193,14 +228,244 @@ def main():
 
 ---
 
-## M3: Error Handling
+## M3: Advanced Type System
 
-**Goal:** Provide safe error handling that maps to Rust's `Result`/`Option` types rather than Python's exception model.
+**Goal:** Add union types, intersection types, literal types, and full control-flow-based type narrowing to the sifr compiler. This makes sifr's type system as expressive as TypeScript's while compiling to Rust.
+
+### Why M3 (before Error Handling)
+
+Union types, literal types, and type narrowing are **prerequisites** for clean error handling and later milestones:
+
+- M4's `Result[T, E]` and `Option[T]` are union-based types
+- M5's discriminated unions (e.g., `Shape` with a `.tag` field) need narrowing
+- M7's generics need type bounds with unions
+- Every milestone after M3 benefits from the advanced type system
+
+### Language Features
+
+- **Union types:** `int | str`, `A | B | C` -- a value can be one of several types
+- **Intersection types:** `A & B` -- a value satisfies multiple type constraints (used internally for narrowing, exposed later for protocols)
+- **Literal types:** `Literal[42]`, `Literal["GET"]`, `Literal[True]` -- types that are specific values
+- **Type aliases:** `type HttpMethod = Literal["GET"] | Literal["POST"] | Literal["PUT"]`
+- **Optional sugar:** `T?` or `T | None` -- shorthand for optional types
+- **Type narrowing via control flow analysis:**
+  - Truthiness checks: `if x:` narrows `x: str | None` to `x: str`
+  - `isinstance()` checks: `if isinstance(x, int):` narrows union
+  - Equality checks: `if x == "GET":` narrows `x: str` to `x: Literal["GET"]`
+  - `is None` / `is not None` checks
+  - `not` negation: else branches get the complement type
+  - Nested attribute narrowing: `if obj.tag == "circle":` narrows `obj`
+- **Type predicates:** `def is_string(x: int | str) -> TypeGuard[str]:` -- user-defined narrowing functions
+- **Assertion functions:** `def assert_int(x: int | str) -> AssertType[int]:` -- narrow after call
+- `**reveal_type()` built-in:** for debugging type inference (prints inferred type at compile time)
+- `**never` exhaustiveness:** matching all union variants leaves `never` -- compiler error if not exhaustive
+
+### Compiler Architecture Changes
+
+#### Type System Changes
+
+Extend the `Type` enum in `crates/sifr_type_system/src/types.rs`:
+
+```rust
+enum Type {
+    // ... existing types ...
+
+    // Union: value is one of these types
+    Union(Vec<Type>),
+
+    // Intersection: value satisfies all of these (internal, for narrowing)
+    Intersection(Vec<Type>),
+
+    // Literal types: specific values as types
+    LiteralInt(i64),
+    LiteralStr(String),
+    LiteralBool(bool),
+
+    // Optional sugar: T | None
+    Optional(Box<Type>),
+
+    // Type alias reference (resolved during checking)
+    Alias(String, Box<Type>),
+}
+```
+
+Key design decisions:
+
+- `Optional(T)` is sugar that normalizes to `Union(vec![T, None])` internally
+- Union types are **flattened** and **deduplicated** (no nested unions)
+- Literal types **widen** to their base type at mutable assignment (like TypeScript's fresh literal behavior)
+- `Union` maps to Rust `enum` in codegen (auto-generated discriminated enum)
+
+#### Control Flow Graph (new module: `sifr_hir/src/cfg.rs`)
+
+**Inspired by TypeScript's binder** (see `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/binder.md`):
+
+Build a control flow graph during HIR lowering. Each statement/expression gets a `FlowNode` that points to its antecedents:
+
+```rust
+enum FlowNode {
+    Start,
+    Assignment { var: String, ty: Type, antecedent: FlowNodeId },
+    Condition { expr: HirExprId, true_branch: FlowNodeId, false_branch: FlowNodeId },
+    Label { antecedents: Vec<FlowNodeId> },  // join point
+    Unreachable,
+}
+```
+
+#### Narrowing Engine (new module: `sifr_type_system/src/narrow.rs`)
+
+**Inspired by TypeScript's checker narrowing** (see `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker-widening-narrowing.md`) and **ty's intersection-based narrowing**:
+
+```rust
+/// Narrow a type based on a condition being true/false.
+fn narrow_type(ty: &Type, condition: &NarrowingCondition, is_true: bool) -> Type
+
+enum NarrowingCondition {
+    Truthiness(VarId),                          // if x:
+    IsNone(VarId),                              // if x is None
+    IsNotNone(VarId),                           // if x is not None
+    IsInstance(VarId, Type),                     // if isinstance(x, int)
+    Equality(VarId, LiteralValue),              // if x == "GET"
+    TypePredicate(VarId, Type),                 // user-defined guard
+    AttributeEquality(VarId, String, LiteralValue), // if x.tag == "circle"
+    Not(Box<NarrowingCondition>),               // negation
+    And(Vec<NarrowingCondition>),               // conjunction
+    Or(Vec<NarrowingCondition>),                // disjunction
+}
+```
+
+#### Scope Changes (update `sifr_hir/src/scope.rs`)
+
+The scope must track **narrowed types** per variable at each point in the control flow:
+
+```rust
+struct VariableInfo {
+    declared_type: Type,     // the annotation or inferred type
+    narrowed_type: Type,     // current type after narrowing (starts = declared_type)
+    is_moved: bool,
+}
+```
+
+#### Codegen Changes (update `sifr_codegen/src/lib.rs`)
+
+Union types map to Rust enums:
+
+```python
+# Sifr
+x: int | str = 42
+```
+
+```rust
+// Generated Rust
+enum IntOrStr {
+    Int(i64),
+    Str(String),
+}
+let x: IntOrStr = IntOrStr::Int(42);
+```
+
+Narrowing maps to `match` or `if let`:
+
+```python
+# Sifr
+def process(x: int | str):
+    if isinstance(x, int):
+        print(x + 1)     # x is int here
+    else:
+        print(x.upper())  # x is str here
+```
+
+```rust
+// Generated Rust
+fn process(x: IntOrStr) {
+    match &x {
+        IntOrStr::Int(x_val) => {
+            println!("{}", x_val + 1);
+        }
+        IntOrStr::Str(x_val) => {
+            println!("{}", x_val.to_uppercase());
+        }
+    }
+}
+```
+
+### Example Programs (M3)
+
+**Union types and narrowing:**
+
+```python
+type Shape = Literal["circle"] | Literal["square"]
+
+def area(shape: Shape, size: float) -> float:
+    if shape == "circle":
+        return 3.14159 * size * size
+    else:
+        return size * size
+
+def main():
+    print(area("circle", 5.0))
+    print(area("square", 4.0))
+```
+
+**Optional / None narrowing:**
+
+```python
+def find_user(name: str) -> str | None:
+    if name == "alice":
+        return "Alice Smith"
+    return None
+
+def main():
+    user: str | None = find_user("alice")
+    if user is not None:
+        print(user.upper())   # narrowed to str
+    else:
+        print("not found")
+```
+
+**Type predicates:**
+
+```python
+def is_positive(x: int) -> TypeGuard[int]:
+    return x > 0
+
+def main():
+    val: int = 42
+    if is_positive(val):
+        print("positive")  # val narrowed
+```
+
+### Files to Modify/Create for M3
+
+**Modify:**
+
+- `crates/sifr_type_system/src/types.rs` -- extend `Type` enum
+- `crates/sifr_type_system/src/check.rs` -- type checking for unions
+- `crates/sifr_type_system/src/infer.rs` -- inference with unions/literals
+- `crates/sifr_hir/src/hir_nodes.rs` -- new HIR nodes for narrowing
+- `crates/sifr_hir/src/lower.rs` -- lowering with CFG and narrowing
+- `crates/sifr_hir/src/scope.rs` -- narrowed type tracking
+- `crates/sifr_codegen/src/lib.rs` -- union -> enum codegen
+- `crates/sifr_driver/src/lib.rs` -- pipeline updates
+
+**Create:**
+
+- `crates/sifr_type_system/src/narrow.rs` -- narrowing engine
+- `crates/sifr_type_system/src/union.rs` -- union construction, normalization, simplification
+- `crates/sifr_type_system/src/literal.rs` -- literal type handling, widening
+- `crates/sifr_hir/src/cfg.rs` -- control flow graph
+- E2E test files in `crates/sifr/tests/e2e/pass/` and `fail/`
+
+---
+
+## M4: Error Handling
+
+**Goal:** Provide safe error handling that maps to Rust's `Result`/`Option` types rather than Python's exception model. Benefits from M3's union types -- `Result[T, E]` and `Option[T]` are union-based.
 
 ### Language Features
 
 - `**Result[T, E]` type:** explicit error return type (replaces exceptions)
-- `**Option[T]` type:** sugar for `T | None`, maps to Rust `Option<T>`
+- `**Option[T]` type:** sugar for `T | None`, maps to Rust `Option<T>` (leverages M3's union types)
 - `**try`/`except` syntax:** reinterpreted as pattern matching on `Result`
 - `**?` operator:** early return on error (borrowed from Rust, new syntax for Sifr)
 - `**raise` -> `Err()`:** raising maps to returning an error
@@ -225,9 +490,9 @@ This maps cleanly to Rust's `Result<T, E>` and `?` operator.
 
 ---
 
-## M4: Structs and Methods (OOP)
+## M5: Structs and Methods (OOP)
 
-**Goal:** Support class-based programming that compiles to Rust structs with impl blocks.
+**Goal:** Support class-based programming that compiles to Rust structs with impl blocks. Benefits from M3's discriminated unions and narrowing.
 
 ### Language Features
 
@@ -236,9 +501,10 @@ This maps cleanly to Rust's `Result<T, E>` and `?` operator.
 - **Methods:** `self` parameter maps to `&self` or `&mut self`
 - **Properties:** `@property` maps to getter methods
 - **Protocols/Interfaces:** `Protocol` classes map to Rust traits
-- `**isinstance` -> type narrowing:** compile-time type checking
+- `**isinstance` -> type narrowing:** compile-time type checking (leverages M3's narrowing)
 - **Inheritance:** single inheritance via trait delegation (not Rust inheritance, which doesn't exist)
 - **Operator overloading:** `__add__`, `__eq__`, etc. map to Rust trait impls (`Add`, `PartialEq`)
+- **Discriminated unions:** classes with a `.tag` field can be narrowed via M3's attribute narrowing
 
 ### Example Program
 
@@ -285,7 +551,7 @@ impl Point {
 
 ---
 
-## M5: Module System
+## M6: Module System
 
 **Goal:** Support multi-file projects with imports, enabling real application structure.
 
@@ -335,9 +601,9 @@ def main():
 
 ---
 
-## M6: Generics and Advanced Types
+## M7: Generics and Advanced Types
 
-**Goal:** Support generic programming, closures, and advanced type system features.
+**Goal:** Support generic programming, closures, and higher-order functions. Union types and type aliases already exist from M3, so this focuses on parameterized types.
 
 ### Language Features
 
@@ -347,9 +613,7 @@ def main():
 - **Closures / lambdas:** `lambda x: x + 1` maps to Rust closures
 - **Higher-order functions:** `map`, `filter`, `reduce` on collections
 - **Iterators:** `__iter__` / `__next__` protocol maps to Rust `Iterator` trait
-- **Union types:** `int | str` maps to Rust enums
-- **Type aliases:** `type UserId = int`
-- **Literal types:** `Literal["GET", "POST"]`
+- **Mapped/conditional types (stretch):** type-level programming
 
 ### Example Program
 
@@ -368,7 +632,7 @@ def main():
 
 ---
 
-## M7: Standard Library
+## M8: Standard Library
 
 **Goal:** Provide essential built-in functionality for real programs.
 
@@ -396,7 +660,7 @@ Each stdlib module is a thin Sifr wrapper around battle-tested Rust crates:
 
 ---
 
-## M8: Async and Networking
+## M9: Async and Networking
 
 **Goal:** Support async programming and HTTP, enabling web applications.
 
@@ -449,7 +713,7 @@ async fn main() {
 
 ---
 
-## M9: Metaprogramming
+## M10: Metaprogramming
 
 **Goal:** Support decorators and compile-time code generation.
 
@@ -477,7 +741,7 @@ class Config:
 
 ---
 
-## M10: Production Readiness
+## M11: Production Readiness
 
 **Goal:** Make Sifr a complete, usable language ecosystem.
 
@@ -507,19 +771,20 @@ class Config:
 ## Milestone Summary
 
 ```
-M1:  Core Language           -> "Hello World" compiles to native binary
-M2:  Control Flow + Data     -> Process collections, loops, real algorithms
-M3:  Error Handling          -> Safe error propagation via Result/Option
-M4:  Structs + Methods       -> Object-oriented programming, data modeling
-M5:  Module System           -> Multi-file projects, packages, dependencies
-M6:  Generics + Closures     -> Generic programming, higher-order functions
-M7:  Standard Library        -> File I/O, JSON, time, regex, OS operations
-M8:  Async + Networking      -> Web servers, HTTP clients, async I/O
-M9:  Metaprogramming         -> Decorators, dataclasses, compile-time code gen
-M10: Production Readiness    -> LSP, formatter, package registry, FFI
+M1:  Core Language (DONE)    -> "Hello World" compiles to native binary
+M2:  Control Flow + Data (DONE) -> Process collections, loops, real algorithms
+M3:  Advanced Type System    -> Union/intersection types, literal types, type narrowing
+M4:  Error Handling          -> Safe error propagation via Result/Option (uses M3 unions)
+M5:  Structs + Methods       -> OOP, data modeling, discriminated unions (uses M3 narrowing)
+M6:  Module System           -> Multi-file projects, packages, dependencies
+M7:  Generics + Closures     -> Generic programming, higher-order functions
+M8:  Standard Library        -> File I/O, JSON, time, regex, OS operations
+M9:  Async + Networking      -> Web servers, HTTP clients, async I/O
+M10: Metaprogramming         -> Decorators, dataclasses, compile-time code gen
+M11: Production Readiness    -> LSP, formatter, package registry, FFI
 ```
 
-After M8, Sifr can build web applications. After M10, it is a complete language ecosystem.
+After M9, Sifr can build web applications. After M11, it is a complete language ecosystem.
 
 ---
 
@@ -542,24 +807,34 @@ enum Type {
     Tuple(Vec<Type>),
     Set(Box<Type>),
 
-    // Optional / Union / Intersection
+    // Literal types (Copy) -- specific values as types (M3)
+    LiteralInt(i64),
+    LiteralStr(String),
+    LiteralBool(bool),
+
+    // Union / Intersection / Optional (M3)
+    Union(Vec<Type>),           // int | str -- flattened, deduplicated
+    Intersection(Vec<Type>),    // A & B -- internal, for narrowing
     Optional(Box<Type>),        // sugar for Union(T, None)
-    Union(Vec<Type>),
-    Intersection(Vec<Type>),
+
+    // Type alias (M3)
+    Alias(String, Box<Type>),   // type HttpMethod = Literal["GET"] | Literal["POST"]
 
     // Function
     Function(FunctionType),
 
-    // Class instance
+    // Class instance (M5)
     Instance(ClassId),
 
-    // Generics
+    // Generics (M7)
     TypeVar(TypeVarId),
     GenericInstance(ClassId, Vec<Type>),
 
-    // Result / Option
+    // Result / Option (M4)
     Result(Box<Type>, Box<Type>),
-    Option(Box<Type>),
+
+    // Range (M2)
+    Range,
 
     // Escape hatch
     Any,
@@ -567,6 +842,37 @@ enum Type {
     // Bottom
     Never,
 }
+```
+
+### Literal Type Behavior (TypeScript-inspired)
+
+Literal types represent specific values at the type level. Key behaviors:
+
+- **Fresh literals widen at mutable locations:** `x = 42` infers `x: int` (widened), but `x: Literal[42] = 42` preserves the literal type
+- **Literal types are subtypes of their base type:** `Literal[42]` is assignable to `int`
+- **Equality narrows to literals:** `if x == "GET":` narrows `x: str` to `x: Literal["GET"]` in the then-branch
+- **Union of literals:** `Literal["GET"] | Literal["POST"]` is a valid type representing exactly two string values
+
+### Union Type Behavior
+
+- **Flattened:** `Union(vec![Union(vec![A, B]), C])` normalizes to `Union(vec![A, B, C])`
+- **Deduplicated:** `Union(vec![Int, Int, Str])` normalizes to `Union(vec![Int, Str])`
+- **Single-element unions collapse:** `Union(vec![Int])` becomes `Int`
+- **Subtyping:** `A` is assignable to `A | B`; `A | B` is assignable to `C` only if both `A` and `C` and `B` and `C` are assignable
+- **Codegen:** `int | str` generates a Rust enum `enum IntOrStr { Int(i64), Str(String) }`
+
+### Type Narrowing (TypeScript-inspired, M3)
+
+Narrowing refines a variable's type within a control flow branch:
+
+- **Truthiness:** `if x:` removes `None` and falsy types from unions
+- **isinstance:** `if isinstance(x, int):` narrows `x: int | str` to `x: int`
+- **Equality:** `if x == "GET":` narrows to literal type
+- **is None / is not None:** narrows optional types
+- **Type predicates:** `def is_str(x: int | str) -> TypeGuard[str]:` enables user-defined narrowing
+- **Assertion functions:** `def assert_int(x: int | str) -> AssertType[int]:` narrows after call
+- **Exhaustiveness:** after narrowing all variants of a union, the remaining type is `Never` -- compiler error if not exhaustive
+
 ```
 
 ### Ownership Model
@@ -622,8 +928,6 @@ flowchart TD
     end
     layer1 --> layer2 --> layer3 --> layer4
 ```
-
-
 
 ### Layer 1: Unit Tests (per crate, `#[cfg(test)]`)
 
@@ -1017,10 +1321,27 @@ Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a referenc
 
 ## Key Files to Reference During Implementation
 
+### Ruff (parser, AST)
+
 - **Ruff parser:** `/Users/yaseralnajjar/work/sifr/ruff/crates/ruff_python_parser/`
 - **Ruff AST:** `/Users/yaseralnajjar/work/sifr/ruff/crates/ruff_python_ast/src/nodes.rs`
+
+### ty (type checker)
+
 - **ty type system:** `/Users/yaseralnajjar/work/sifr/ty/ruff/crates/ty_python_semantic/src/types.rs`
-- **TypeScript checker architecture:** `/Users/yaseralnajjar/work/sifr/TypeScript.wiki/`
+
+### TypeScript (type system design, narrowing, control flow analysis)
+
+- **Checker architecture:** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker.md`
+- **Type narrowing and widening:** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker-widening-narrowing.md`
+- **Type relations (subtyping, assignability):** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker-relations.md`
+- **Type inference:** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker-inference.md`
+- **Binder (control flow graph):** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/binder.md`
+- **Type definitions:** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/types.md`
+- **TypeScript wiki:** `/Users/yaseralnajjar/work/sifr/TypeScript.wiki/`
+
+### Mojo (ownership model)
+
 - **Mojo ownership design:** `/Users/yaseralnajjar/work/sifr/modular/mojo/proposals/value-ownership.md`
 - **Mojo lifetimes design:** `/Users/yaseralnajjar/work/sifr/modular/mojo/proposals/lifetimes-and-provenance.md`
 
