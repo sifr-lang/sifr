@@ -1,226 +1,169 @@
-# Sifr Compiler Plan — Recheck Analysis (Post-Update)
+# Sifr Compiler Plan — Recheck Analysis (Post-Update #2)
 
 **Date:** 2026-02-14
-**Plan reviewed:** `sifr_compiler_architecture_fa3c10ee.plan.md`
+**Plan reviewed:** `sifr_compiler_architecture_fa3c10ee.plan.md` (3546 lines)
 **Scope:** milestone_ergonomics onward (all unstarted milestones)
+**Constraint:** Strictly sequential execution — no parallel milestones.
 
 ---
 
-## What Improved Since Last Review
+## What Was Fixed Since Last Recheck
 
-The plan has been significantly improved:
+Two of the previous issues have been addressed:
 
-1. **`milestone_imports` moved into Phase 1** — now sits right after `milestone_safe_indexing`, before `milestone_protocols`. This was a key recommendation: multi-file compilation is needed early to unblock stdlib and real project structure.
+1. **`@staticmethod` in `milestone_protocols` newtype example — FIXED.** The example now uses a module-level factory function `make_port()` (line 1503) and includes an explicit forward-reference note (line 1516): "this example uses a module-level factory function because `@staticmethod` is not available until milestone_inheritance."
 
-2. **`milestone_decorators` moved before `milestone_core_stdlib`** — decorators now land before the stdlib, enabling `@contextmanager` and `@app.get(...)` patterns in stdlib design. The chain is: `milestone_generators` -> `milestone_decorators` -> `milestone_core_stdlib`.
-
-3. **`*args`/`**kwargs` consolidated into `milestone_decorators`** — no more split between basic kwargs (ergonomics) and variadic kwargs (decorators). Basic keyword arguments remain in `milestone_ergonomics`; variadic forms are cleanly in `milestone_decorators`.
-
-4. **`milestone_classes` before `milestone_error_handling`** — classes land first so typed error hierarchies (`class ValueError(Error)`) are available immediately in error handling. This was a previous recommendation now incorporated.
-
-5. **`milestone_ext_collections` and `milestone_ext_stdlib` are now strictly serialized** — `milestone_ext_collections` -> `milestone_ext_stdlib` in a flat chain after `milestone_test_runner`. This is cleaner than the previous parallel arrangement.
-
-6. **Comprehensions moved to `milestone_generics`** — list/dict/set comprehensions are now with iterators and closures where they naturally belong.
-
-7. **Rationale section added** — every ordering decision now has an explicit justification (lines 233-254).
+2. **Panic-based indexing in `milestone_ergonomics` — CLARIFIED.** A safety staging note (line 767) now explicitly states: "milestones before milestone_safe_indexing use panic-based indexing as a bootstrap mechanism. The global no-panic guarantee is fully enforced from milestone_safe_indexing onward." This resolves the apparent conflict between `milestone_ergonomics` indexing and the global safety contract.
 
 ---
 
-## Remaining Issues
+## Remaining Issues (Strictly Sequential)
 
 ### Issue 1: `.sort()` in `milestone_ergonomics` Requires `Comparable` Protocol (HIGH)
 
-**Location:** Line 835, line 1022
+**Location:** Line 837, line 1024
 
 `milestone_ergonomics` includes `.sort()` as a concrete list method:
 
 > `.sort()` -> in-place sort (requires `Comparable` -- basic version for primitive types)
 
-But the `Comparable` protocol is defined in `milestone_protocols`, which is 5 milestones later. The parenthetical "(basic version for primitive types)" suggests a hardcoded sort for primitives, but this is never explicitly defined.
+The `Comparable` protocol is defined in `milestone_protocols` (5 milestones later). The parenthetical "basic version for primitive types" implies a hardcoded sort for primitives, but this is never explicitly defined anywhere in the plan.
 
-**Options:**
-- **(A) Hardcode primitive sort in `milestone_ergonomics`:** `.sort()` works only for `list[int]`, `list[str]`, `list[float]` via direct `vec.sort()` / `vec.sort_unstable()` codegen, without any protocol dispatch. Then `milestone_generics` upgrades it to the full `T: Comparable` version.
-- **(B) Defer `.sort()` to `milestone_generics`:** Remove it from `milestone_ergonomics` DoD and add it to `milestone_generics` where the `Comparable` bound and `key=` function support already live (lines 1694-1701).
+Meanwhile, `milestone_generics` has a complete "Sorting Contract" (lines 1697-1706) covering `.sort()`, `sorted()`, key functions, reverse, and float rejection — all requiring `T: Comparable`.
 
-**Recommendation:** Option (B). The `milestone_generics` section already has a full "Sorting Contract" (lines 1692-1701) that covers `.sort()`, `sorted()`, key functions, reverse, and float rejection. Having `.sort()` in both milestones creates ambiguity about which version is canonical. Remove `.sort()` from `milestone_ergonomics` line 1022 and let `milestone_generics` own all sorting.
+**Problem:** `.sort()` appears in two milestones with different semantics — a vague "basic version" in `milestone_ergonomics` and a fully specified version in `milestone_generics`. This creates ambiguity about what the implementer should build in `milestone_ergonomics`.
 
----
-
-### Issue 2: `@staticmethod` in `milestone_protocols` Newtype Example (MEDIUM)
-
-**Location:** Lines 1498-1503
-
-The newtype pattern example in `milestone_protocols` uses `@staticmethod`:
-
-```python
-class Port(int):
-    @staticmethod
-    def new(value: int) -> Result[Port, ValueError]:
-```
-
-But `@staticmethod` is introduced in `milestone_inheritance`, which comes *after* `milestone_protocols` in the dependency chain. This means the example uses syntax that doesn't exist yet at that milestone.
-
-**Fix:** Either:
-- **(A)** Change the example to use a regular function: `def Port_new(value: int) -> Result[Port, ValueError]` (less Pythonic but accurate).
-- **(B)** Use a regular method with `self` that acts as a factory, or a module-level function.
-- **(C)** Add a note that `@staticmethod` in this example is a forward reference to `milestone_inheritance` and the actual newtype pattern is fully usable only after that milestone.
-
-**Recommendation:** Option (C) with a note. The newtype pattern is conceptually part of protocols, but the ergonomic `@staticmethod` form requires inheritance. Add a note like: "Note: `@staticmethod` shown here for clarity; it is introduced in `milestone_inheritance`. Until then, use a module-level factory function."
+**Recommendation:** Choose one:
+- **(A) Clarify the primitive hardcode:** Add explicit text to `milestone_ergonomics` specifying that `.sort()` works only for `list[int]`, `list[str]`, `list[bool]` via direct `vec.sort()` codegen (Rust's `Ord` trait covers these). No protocol dispatch, no key functions, no float rejection. Then `milestone_generics` upgrades to the full generic version.
+- **(B) Defer `.sort()` entirely to `milestone_generics`:** Remove it from `milestone_ergonomics` DoD (line 1024). This is cleaner — one milestone owns sorting completely.
 
 ---
 
-### Issue 3: `@property` Appears in Both `milestone_inheritance` and `milestone_metaprogramming` (MEDIUM)
+### Issue 2: `@property` Duplicated Across Two Milestones (MEDIUM)
 
-**Location:** Lines 1551, 1589 (milestone_inheritance) and lines 2303, 2332 (milestone_metaprogramming)
+**Location:** Lines 1556, 1594 (`milestone_inheritance`) and lines 2308, 2337 (`milestone_metaprogramming`)
 
-`@property` is listed as a feature in `milestone_inheritance`:
-> Properties: `@property` maps to getter methods, `@property.setter` maps to setter methods.
+`@property` is listed as a feature and in the DoD of both milestones:
 
-And also in `milestone_metaprogramming`:
-> `@property`: getter/setter generation
+- `milestone_inheritance`: "Properties: `@property` maps to getter methods, `@property.setter` maps to setter methods." DoD: "`@property` getter/setter works"
+- `milestone_metaprogramming`: "`@property`: getter/setter generation." DoD: "`@property` generates getter/setter methods"
 
-**Issue:** It's unclear which milestone actually implements `@property`. If `milestone_inheritance` implements it (as its DoD suggests: "property_getter_setter" test), then `milestone_metaprogramming` should not re-list it. If `milestone_metaprogramming` is meant to *enhance* the basic property with compile-time generation, that distinction should be explicit.
+**Problem:** An implementer reaching `milestone_inheritance` will build `@property`. When they reach `milestone_metaprogramming`, the DoD says to build it again. This is confusing.
 
-**Recommendation:** `@property` is fundamentally a method-level feature (getter/setter), not a compile-time AST transform. It belongs in `milestone_inheritance`. Remove it from `milestone_metaprogramming`'s feature list and DoD, or clarify that `milestone_metaprogramming` only adds *computed/cached* property variants.
+**Recommendation:** `@property` is a method-level feature (getter/setter dispatch), not a compile-time AST transform. It belongs in `milestone_inheritance`. Remove `@property` from `milestone_metaprogramming`'s feature list (line 2308) and DoD (line 2337). If `milestone_metaprogramming` is meant to add *enhanced* property variants (cached properties, computed properties), state that explicitly instead.
 
 ---
 
-### Issue 4: `str(x)` Requires `Display` Trait Before Protocols Exist (LOW)
+### Issue 3: `str(x)` Codegen Requires `Display` Before It Exists (LOW)
 
-**Location:** Line 1154
+**Location:** Line 1156
 
 `milestone_error_handling` defines:
 > `str(x)` for any type -> `str` -- string representation. Codegen: `format!("{}", x)` (requires `Display`)
 
-The `Display` trait is formalized as part of operator overloading in `milestone_protocols` (`__str__` maps to `Display`). However, `milestone_error_handling` comes 3 milestones before `milestone_protocols`.
+The `Display` trait (`__str__` mapping) is formalized in `milestone_protocols` (3 milestones later). However, all classes auto-derive `Debug` from `milestone_classes`, so `format!("{:?}", x)` is always available.
 
-**Mitigation:** This is actually fine because Rust's auto-derived `Debug` trait (from `milestone_classes`) provides `format!("{:?}", x)`, and the compiler can use `Debug` as a fallback for `str(x)` until `Display` is formally available. The plan should note this: `str(x)` uses `Debug` formatting until `milestone_protocols` provides `Display` via `__str__`.
-
----
-
-### Issue 5: `milestone_data_processing` Hard-Depends on `milestone_web_db` (LOW)
-
-**Location:** Line 227 (roadmap arrow)
-
-The dependency graph has: `milestone_web_db` -> `milestone_data_processing`
-
-But `milestone_data_processing` (polars, CSV, CLI args) has no real dependency on web/database features. It needs:
-- `milestone_generics` (for generic DataFrame operations)
-- `milestone_core_stdlib` (for file I/O)
-- `milestone_decorators` (arguably, for API patterns)
-
-The rationale (line 250) says "Data processing (polars) benefits from database patterns" — but polars and CSV processing are independent of web routing and SQL.
-
-**Recommendation:** Remove the `milestone_web_db` -> `milestone_data_processing` edge. Instead, have `milestone_data_processing` depend on `milestone_decorators` (or `milestone_core_stdlib`). This allows data processing work to proceed in parallel with web/database work.
+**Recommendation:** Add a note: "Until `milestone_protocols` provides `Display` via `__str__`, `str(x)` uses `Debug` formatting (`format!(\"{:?}\", x)`). After `milestone_protocols`, user-defined `__str__` maps to `Display` and `str(x)` uses `format!(\"{}\", x)`."
 
 ---
 
-### Issue 6: `milestone_ext_collections` -> `milestone_ext_stdlib` Hard-Link May Be Unnecessary (LOW)
+### Issue 4: `class Port(int)` Newtype Uses Inheritance Syntax Before `milestone_inheritance` (LOW)
 
-**Location:** Line 226
+**Location:** Line 1500
 
-The chain is: `milestone_test_runner` -> `milestone_ext_collections` -> `milestone_ext_stdlib`
+The newtype example `class Port(int):` uses `(int)` syntax, which looks like inheritance. The plan already has a precedent for special-casing this pattern — `milestone_error_handling` (line 1140) explicitly notes that `class Foo(Error)` is a "special-cased error declaration" and "NOT general inheritance syntax."
 
-The rationale (line 247) says "ext_collections comes first since extended stdlib modules may use extended collection types." This is reasonable for `sifr.encoding` (which may use `bytes`) and `sifr.hash` (which may use `bytes`), but most extended stdlib modules (`sifr.math`, `sifr.time`, `sifr.random`, `sifr.re`, `sifr.log`) don't need extended collections.
-
-**Recommendation:** Keep the current ordering but note that `milestone_ext_collections` and `milestone_ext_stdlib` *could* run in parallel if needed for schedule compression. The hard link is a soft preference, not a hard dependency.
+**Recommendation:** Add the same kind of note to the newtype section: "Note: `class Port(int)` is a special-cased newtype declaration — the compiler recognizes primitive type parents (`int`, `float`, `str`, `bool`) and generates a Rust newtype struct (`struct Port(i64)`). This is NOT general inheritance syntax; full single inheritance comes in `milestone_inheritance`."
 
 ---
 
-### Issue 7: `class Port(int)` Newtype Uses Inheritance Syntax Before `milestone_inheritance` (MEDIUM)
+### Issue 5: Tuple Slicing Contract Inconsistency (LOW)
 
-**Location:** Lines 1498-1503
+**Location:** Line 2741 vs lines 808-812
 
-The newtype example `class Port(int):` uses `(int)` inheritance syntax, but general inheritance (`class Child(Parent)`) is a `milestone_inheritance` feature. The `milestone_protocols` section doesn't explain how `class Port(int)` works without inheritance.
+The cross-cutting slice contract (line 2741) says:
+> **Tuple:** compile-time slicing supported (milestone_ergonomics) -- the compiler can statically verify tuple slice bounds and produce a new tuple type.
 
-**Clarification needed:** Is `class Port(int)` a special-cased newtype syntax (like `class ValueError(Error)` in `milestone_error_handling`)? If so, the plan should explicitly state: "Newtype over primitives (`class Port(int)`) is a special-cased syntax recognized by the compiler, not general inheritance. The compiler generates a Rust newtype struct (`struct Port(i64)`)."
+This is consistent with `milestone_ergonomics` (lines 808-812) which specifies compile-time tuple slicing with constant indices. No contradiction remains — this was flagged in the earlier recheck but appears to be resolved. The contract now correctly states tuple slicing is supported.
 
----
-
-### Issue 8: Dependency Graph Missing `milestone_inheritance` -> `milestone_generics` Justification (LOW)
-
-**Location:** Line 224
-
-The graph has: `milestone_protocols` -> `milestone_inheritance` -> `milestone_generics`
-
-The rationale (line 241) says "Generics benefit from having the full class hierarchy (including inheritance) available, enabling generic constraints over class hierarchies."
-
-This is a weak dependency. Generics with type bounds (`T: Protocol`) only need protocols, not inheritance. The main thing inheritance adds is that `class Dog(Animal)` can satisfy a `T: Animal` bound — but this is a convenience, not a blocker.
-
-**Assessment:** The ordering is fine for simplicity (linear chain is easier to implement), but if schedule pressure arises, `milestone_generics` could theoretically start after `milestone_protocols` without waiting for `milestone_inheritance`. Note this as a potential parallelization opportunity.
+**Status:** Resolved. No action needed.
 
 ---
 
-## Current Dependency Graph (As-Is)
+## Dependency Chain Verification (Sequential)
+
+The current strictly sequential chain is:
 
 ```
-milestone_ergonomics -> milestone_classes -> milestone_error_handling -> milestone_safe_indexing
-  -> milestone_imports -> milestone_protocols -> milestone_inheritance -> milestone_generics
-    -> milestone_generators -> milestone_decorators -> milestone_core_stdlib
-      -> milestone_test_runner -> milestone_ext_collections -> milestone_ext_stdlib
-        -> milestone_async -> milestone_web_db -> milestone_data_processing
-          -> milestone_metaprogramming -> milestone_ffi -> milestone_package_mgmt
-            -> milestone_dev_tooling -> milestone_ecosystem
+milestone_ergonomics
+  -> milestone_classes
+    -> milestone_error_handling
+      -> milestone_safe_indexing
+        -> milestone_imports
+          -> milestone_protocols
+            -> milestone_inheritance
+              -> milestone_generics
+                -> milestone_generators
+                  -> milestone_decorators
+                    -> milestone_core_stdlib
+                      -> milestone_test_runner
+                        -> milestone_ext_collections
+                          -> milestone_ext_stdlib
+                            -> milestone_async
+                              -> milestone_web_db
+                                -> milestone_data_processing
+                                  -> milestone_metaprogramming
+                                    -> milestone_ffi
+                                      -> milestone_package_mgmt
+                                        -> milestone_dev_tooling
+                                          -> milestone_ecosystem
 ```
 
-## Proposed Optimized Graph (Minimal Changes)
+**25 milestones total** (3 completed, 22 remaining).
 
-Changes from current:
-1. Remove `.sort()` from `milestone_ergonomics` (defer to `milestone_generics`)
-2. Remove `milestone_web_db` -> `milestone_data_processing` hard edge
-3. Add `milestone_decorators` -> `milestone_data_processing` edge (actual dependency)
+### Dependency Audit (each arrow checked)
 
-```mermaid
-flowchart TD
-    subgraph done [Completed]
-        milestone_core_language --> milestone_control_flow --> milestone_type_system
-    end
-    subgraph phase1 [Phase 1: Language Foundations]
-        milestone_ergonomics --> milestone_classes --> milestone_error_handling --> milestone_safe_indexing --> milestone_imports
-    end
-    subgraph phase2 [Phase 2: Type System Power]
-        milestone_protocols --> milestone_inheritance --> milestone_generics
-        milestone_generics --> milestone_generators --> milestone_decorators
-    end
-    subgraph phase3 [Phase 3: Standard Library]
-        milestone_core_stdlib --> milestone_test_runner --> milestone_ext_collections --> milestone_ext_stdlib
-    end
-    subgraph phase4 [Phase 4: Ecosystem]
-        milestone_async --> milestone_web_db
-        milestone_async --> milestone_data_processing
-    end
-    subgraph phase5 [Phase 5: Polish]
-        milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
-    end
-    milestone_type_system --> milestone_ergonomics
-    milestone_imports --> milestone_protocols
-    milestone_decorators --> milestone_core_stdlib
-    milestone_ext_stdlib --> milestone_async
-    milestone_web_db --> milestone_metaprogramming
-    milestone_data_processing --> milestone_metaprogramming
-    milestone_decorators --> milestone_data_processing
-```
+| From -> To | Real dependency? | Notes |
+|---|---|---|
+| milestone_ergonomics -> milestone_classes | Yes | Classes need ergonomic features (kwargs for `__init__`, methods, etc.) |
+| milestone_classes -> milestone_error_handling | Yes | Error types need `class ValueError(Error)` |
+| milestone_error_handling -> milestone_safe_indexing | Yes | Safe indexing returns `Option` which needs `?`/`match` from error handling |
+| milestone_safe_indexing -> milestone_imports | Yes (soft) | Completes single-file safety before multi-file. Not a hard technical dependency but good sequencing. |
+| milestone_imports -> milestone_protocols | Yes | Cross-module trait definitions need imports |
+| milestone_protocols -> milestone_inheritance | Yes | Inherited classes should implement protocols immediately |
+| milestone_inheritance -> milestone_generics | Weak | Generics only need protocols for type bounds, not inheritance. But keeping sequential avoids complexity. |
+| milestone_generics -> milestone_generators | Yes | Generators need closures and iterators |
+| milestone_generators -> milestone_decorators | Yes | Decorators need closures; `@contextmanager` pattern benefits from generators |
+| milestone_decorators -> milestone_core_stdlib | Yes | Stdlib uses `@decorator` patterns |
+| milestone_core_stdlib -> milestone_test_runner | Yes | Test runner needs `sifr.io` and `sifr.os` |
+| milestone_test_runner -> milestone_ext_collections | Yes (soft) | Dogfooding: test extended collections with Sifr's own test runner |
+| milestone_ext_collections -> milestone_ext_stdlib | Yes (soft) | Some stdlib modules use `bytes` and extended collections |
+| milestone_ext_stdlib -> milestone_async | Yes | Async runtime benefits from full stdlib |
+| milestone_async -> milestone_web_db | Yes | Web framework needs async/await |
+| milestone_web_db -> milestone_data_processing | Weak | Data processing (polars, CSV) doesn't need web/DB. Needs generics + core stdlib + decorators. |
+| milestone_data_processing -> milestone_metaprogramming | Yes (soft) | Metaprogramming comes after language is functional |
+| milestone_metaprogramming -> milestone_ffi | Yes | FFI benefits from stable language surface |
+| milestone_ffi -> milestone_package_mgmt | Yes | Package management benefits from FFI (access to Rust ecosystem) |
+| milestone_package_mgmt -> milestone_dev_tooling | Yes | Tooling needs package infrastructure |
+| milestone_dev_tooling -> milestone_ecosystem | Yes | Registry needs tooling quality |
 
-This allows `milestone_data_processing` and `milestone_web_db` to proceed in parallel after `milestone_async`, reducing the critical path by one milestone.
+**Verdict:** All dependencies are valid for sequential execution. The `milestone_web_db` -> `milestone_data_processing` link is the weakest (data processing doesn't technically need web/DB), but in a strictly sequential plan this doesn't matter — it just determines order, and doing web before data processing is a reasonable choice (web is higher priority for most users).
 
 ---
 
 ## Spec Fixes Needed (Prioritized)
 
-| Priority | Issue | Fix |
-|----------|-------|-----|
-| HIGH | `.sort()` in `milestone_ergonomics` requires `Comparable` from `milestone_protocols` | Remove `.sort()` from `milestone_ergonomics` DoD; it's fully covered in `milestone_generics` Sorting Contract |
-| MEDIUM | `@staticmethod` in `milestone_protocols` newtype example | Add forward-reference note; suggest module-level factory function as interim |
-| MEDIUM | `@property` duplicated in `milestone_inheritance` and `milestone_metaprogramming` | Remove from `milestone_metaprogramming` or clarify the distinction |
-| MEDIUM | `class Port(int)` newtype uses inheritance syntax before `milestone_inheritance` | Add explicit note that this is special-cased newtype syntax, not general inheritance |
-| LOW | `str(x)` uses `Display` before `milestone_protocols` | Note that `Debug` is used as fallback until `Display` is available |
-| LOW | `milestone_web_db` -> `milestone_data_processing` is unnecessary | Remove edge; add `milestone_decorators` -> `milestone_data_processing` |
-| LOW | `milestone_ext_collections` -> `milestone_ext_stdlib` could be parallelized | Keep current order but note as parallelization opportunity |
+| # | Priority | Issue | Recommended Fix |
+|---|----------|-------|-----------------|
+| 1 | HIGH | `.sort()` in `milestone_ergonomics` references `Comparable` from `milestone_protocols` | Either clarify primitive-only hardcode or defer to `milestone_generics` |
+| 2 | MEDIUM | `@property` duplicated in `milestone_inheritance` and `milestone_metaprogramming` | Remove from `milestone_metaprogramming` |
+| 3 | LOW | `str(x)` codegen says `Display` but `Display` doesn't exist yet | Add note: uses `Debug` fallback until `milestone_protocols` |
+| 4 | LOW | `class Port(int)` newtype needs special-case note (like `class Foo(Error)`) | Add "special-cased newtype declaration" note |
 
 ---
 
 ## Overall Assessment
 
-The plan is in **good shape**. The major structural issues from the previous review (circular dependencies, milestone overload, premature features) have been resolved. The remaining issues are mostly spec-level clarifications and one genuine dependency conflict (`.sort()` / `Comparable`). The milestone ordering is sound and the rationale section makes the design decisions transparent.
+The plan is in **very good shape**. The two issues from the previous recheck that were flagged as MEDIUM have been fixed (`@staticmethod` newtype example, panic-based indexing clarification). The dependency chain is sound for strictly sequential execution.
 
-The single most impactful change would be removing `.sort()` from `milestone_ergonomics` — it eliminates a real dependency conflict and the feature is already fully specified in `milestone_generics`.
+The one genuinely problematic item is `.sort()` in `milestone_ergonomics` — it references a concept (`Comparable`) that doesn't exist for 5 more milestones and has ambiguous semantics ("basic version for primitive types" is never defined). Everything else is a minor clarification.

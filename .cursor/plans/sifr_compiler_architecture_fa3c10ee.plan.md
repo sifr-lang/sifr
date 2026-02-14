@@ -834,7 +834,7 @@ List methods that return concrete types (no `Option`/`Result`):
 - `.reverse()` -> `vec.reverse()` -- reverse in place
 - `.count(item)` -> `int` via `vec.iter().filter(|x| x == item).count()` -- count occurrences
 - `.contains(item)` -> `bool` via `vec.contains(item)` -- membership test (also via `in` operator)
-- `.sort()` -> in-place sort (requires `Comparable` -- basic version for primitive types)
+- `.sort()` -> in-place sort, **primitive types only** (`list[int]`, `list[str]`, `list[bool]`). Codegen: `vec.sort()` (Rust's `Ord` trait covers these types natively -- no protocol dispatch needed). No key functions, no reverse option, no float support in this milestone. The full generic sorting API (key functions, reverse, float rejection, `sorted()` built-in) comes in milestone_generics once `Comparable` protocol and generic bounds exist.
 
 **Deferred to milestone_safe_indexing:** `.pop()` -> `Option[T]`, `.pop(i)` -> `Option[T]`, `.index(item)` -> `Option[int]`, `.remove(item)` -> `Result[None, ValueError]`
 
@@ -1021,7 +1021,7 @@ if !_broke {
 - Step slicing: `a[::2]`, `a[::-1]`, `a[1:7:2]` all produce new collections
 - Tuple slicing with compile-time constant indices works
 - String indexing is character-based (UTF-8 safe), `s.len()` returns character count
-- List methods (concrete): `append`, `extend`, `insert`, `clear`, `copy`, `reverse`, `count`, `contains`, `sort`
+- List methods (concrete): `append`, `extend`, `insert`, `clear`, `copy`, `reverse`, `count`, `contains`, `sort` (primitive types only -- `list[int]`, `list[str]`, `list[bool]`)
 - Dict methods (concrete): `keys`, `values`, `items`, `update`, `clear`, `copy`, `contains`
 - String methods: `replace`, `startswith`, `endswith`, `join`, `count`, `isdigit`, `isalpha`, `isalnum`, `isspace`, `lstrip`, `rstrip`, `title`, `capitalize`
 - Tuple methods: `count` (immutability enforced)
@@ -1153,7 +1153,7 @@ Built-in functions that can fail return `Result` (following the Safety Philosoph
 
 - `int(x)` where `x: float` -> `int` -- truncate float to integer. Codegen: `x as i64`
 - `float(x)` where `x: int` -> `float` -- widen integer to float. Codegen: `x as f64`
-- `str(x)` for any type -> `str` -- string representation. Codegen: `format!("{}", x)` (requires `Display`)
+- `str(x)` for any type -> `str` -- string representation. Codegen: `format!("{:?}", x)` using `Debug` (auto-derived for all classes from milestone_classes). Once milestone_protocols provides `Display` via user-defined `__str__`, `str(x)` upgrades to `format!("{}", x)` for types that implement `Display`, falling back to `Debug` for types that don't.
 - `bool(x)` for any type -> `bool` -- truthiness. Codegen: type-specific (0/empty = false, else true)
 
 ### Design Decision
@@ -1515,7 +1515,9 @@ port = make_port(99999)?         # returns Err(ValueError)
 
 > **Note:** this example uses a module-level factory function because `@staticmethod` is not available until milestone_inheritance. Once milestone_inheritance lands, the idiomatic pattern becomes `Port.new(value)` via `@staticmethod`.
 
-This maps to Rust's newtype pattern (`struct Port(u16)`) with zero-cost runtime representation. The compiler enforces that `Port` and `int` are distinct types -- you cannot pass an `int` where a `Port` is expected without explicit construction. Validation uses `Result`, not `assert`, because invalid input is a runtime condition (not a programmer bug).
+> **Note:** `class Port(int)` is a **special-cased newtype declaration** -- the compiler recognizes primitive type parents (`int`, `float`, `str`, `bool`) and generates a Rust newtype struct (e.g., `struct Port(i64)`). This is NOT general inheritance syntax; full single inheritance (`class Child(Parent)` for arbitrary classes) comes in milestone_inheritance. This follows the same pattern as `class Foo(Error)` in milestone_error_handling, which is also a special-cased declaration.
+
+This maps to Rust's newtype pattern (`struct Port(i64)`) with zero-cost runtime representation. The compiler enforces that `Port` and `int` are distinct types -- you cannot pass an `int` where a `Port` is expected without explicit construction. Validation uses `Result`, not `assert`, because invalid input is a runtime condition (not a programmer bug).
 
 ### Struct Update / Spread Semantics
 
@@ -2305,8 +2307,7 @@ def main():
 
 - **Compile-time decorators:** `@decorator` maps to Rust attribute macros or AST transforms (extends milestone_decorators's runtime decorators with compile-time power)
 - `**@dataclass`:** auto-generate `__init__`, `__eq__`, `__repr__` (like Rust `#[derive]`)
-- `**@property`:** getter/setter generation
-- **Custom decorators:** user-defined compile-time transforms
+- **Custom decorators:** user-defined compile-time transforms (note: basic `@property` getter/setter is delivered in milestone_inheritance; this milestone extends it with compile-time computed/cached property variants if needed)
 - `***args` / `**kwargs`:** delivered in milestone_decorators (needed for generic decorators). Available here for use in compile-time decorator transforms.
 - **Compile-time evaluation:** `const` expressions evaluated at compile time
 
@@ -2334,7 +2335,6 @@ Compile-time evaluation (`const` expressions, custom decorators) runs during com
 ### Definition of Done (milestone_metaprogramming)
 
 - `@dataclass` generates `__init__`, `__eq__`, `__repr__`, `clone` methods
-- `@property` generates getter/setter methods
 - Custom decorators can transform class definitions (add/remove fields and methods)
 - `*args` / `**kwargs` (delivered in milestone_decorators) work within compile-time decorator transforms
 - Positional-only parameters (`def f(x, /, y)`) work
