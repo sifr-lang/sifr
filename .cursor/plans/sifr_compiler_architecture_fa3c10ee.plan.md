@@ -570,13 +570,12 @@ def main():
 
 ### String Indexing (UTF-8 Safe)
 
-Current codegen lowers `s[i]` to `x[i as usize]`, which is invalid for Rust `String` (byte-indexed, not character-indexed). This milestone fixes string operations to be character-based:
+Current codegen lowers `s[i]` to `x[i as usize]`, which is invalid for Rust `String` (byte-indexed, not character-indexed). This milestone fixes string operations to be character-based with **safe indexing** (no panics):
 
-- `**s[i]`:** returns the i-th character (Unicode code point) as a single-character `str`. Panics on out-of-bounds (matches Python). Codegen: `s.chars().nth(i).unwrap()`.
-- `**s.get(i)`:** safe accessor, returns `Option[str]`. Codegen: `s.chars().nth(i).map(|c| c.to_string())`.
+- `**s[i]`:** returns `Option[str]` -- the i-th character (Unicode code point) as a single-character `str`, or `None` if out-of-bounds. Codegen: `s.chars().nth(i).map(|c| c.to_string())`.
 - `**s.len()`:** returns the number of Unicode code points (not bytes). Codegen: `s.chars().count()`.
 - `**s.byte_len()`:** returns the number of bytes (O(1)). Codegen: `s.len()`.
-- `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
+- `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`. Returns an empty string if indices are out of range.
 
 **Complexity note:** character-based indexing is O(n) for non-ASCII strings. The compiler should emit a diagnostic note when string indexing is used in a loop, suggesting `.chars()` iteration instead.
 
@@ -610,15 +609,15 @@ This is simple syntax sugar over `if`/`else` but used as an expression rather th
 
 ### Definition of Done (M3b)
 
-- `s[i]` returns the i-th character, not byte; panics on out-of-bounds
-- `s.get(i)` returns `Option[str]` for safe access
+- `s[i]` returns `Option[str]` -- the i-th character, or `None` if out-of-bounds (safe indexing, no panic)
+- `list[i]` returns `Option[T]` -- the i-th element, or `None` if out-of-bounds (safe indexing, no panic)
 - `s.len()` returns character count, not byte count
 - `s[a:b]` returns a new string of characters from `a` to `b`
 - `list[a:b]` produces a new list (copy, not view)
 - `for item in list` borrows the list; list is usable after the loop
 - Conditional expressions (`a if cond else b`) work as expressions
-- E2E pass tests: string_char_index, string_safe_get, string_char_len, string_slice, list_slice_copy, for_loop_borrow, ternary_expr
-- E2E fail tests: string_index_out_of_bounds (panic), ternary_type_mismatch
+- E2E pass tests: string_char_index, string_oob_returns_none, string_char_len, string_slice, list_index_option, list_oob_returns_none, list_slice_copy, for_loop_borrow, ternary_expr
+- E2E fail tests: ternary_type_mismatch
 - Existing M1/M2 E2E tests still pass (no regressions)
 - Milestone demo in `./tmp/m3b_demo.sifr`
 
@@ -695,8 +694,8 @@ class IOError(AppError):
 ### Panic vs Result Boundary
 
 - `**assert` statements:** generate `assert!()` or `panic!()` in Rust. These are unrecoverable and not catchable by `try`/`except`.
-- **Rust library panics (M15 FFI):** caught at FFI boundaries via `catch_unwind` and converted to `Result::Err`. Sifr code never sees a panic from wrapped Rust crates.
-- **Out-of-bounds indexing:** returns `Result` or `Option`, not a panic. `list[i]` returns `Option[T]`; `list.get(i)` is the safe accessor.
+- **Rust library panics (M15 FFI):** Rust library panics are caught at FFI boundaries via `catch_unwind` where possible and converted to `Result::Err`. C library crashes (segfault, `abort()`) are non-recoverable -- the process terminates (see M15 FFI contract for details).
+- **Out-of-bounds indexing (safe indexing contract):** `x[i]` returns `Option[T]`, never panics. Both `str` and `list` indexing return `Option`. The caller must unwrap or pattern-match to access the value. This applies uniformly to all indexable types.
 
 ### Pattern Matching (M4 Foundation)
 
@@ -1583,7 +1582,9 @@ def main():
 FFI introduces unsafe code into the Sifr ecosystem. The following policies apply:
 
 - `**unsafe` keyword required:** any FFI call must be wrapped in an `unsafe` block
-- **Panic boundary:** all FFI entry points are wrapped in `catch_unwind`. Panics from Rust/C libraries are converted to `Result::Err` rather than crashing the Sifr program
+- **Panic boundary (Rust FFI):** Rust FFI entry points are wrapped in `catch_unwind`. Unwinding panics from Rust libraries are caught and converted to `Result::Err`. Note: if the Rust library is compiled with `panic=abort`, the process will abort instead of unwinding -- this is a known limitation documented in the FFI guide.
+- **Crash boundary (C FFI):** C library crashes (segfault, `abort()`, stack overflow) are **not recoverable** -- the process terminates. Safe wrappers must validate inputs before calling C functions. The compiler emits a warning when `extern "C"` functions are called without a safe wrapper.
+- **Non-recoverable cases:** stack overflow, double panic, `abort()`, and C-level undefined behavior always terminate the process. These are explicitly documented as non-catchable.
 - **No implicit `unsafe`:** stdlib wrappers (M8-M13) encapsulate all `unsafe` internally. User code never needs `unsafe` unless calling raw FFI
 - **Type mapping:** the compiler maps Sifr types to Rust types at FFI boundaries. Mismatches are compile-time errors
 
@@ -1592,17 +1593,19 @@ FFI introduces unsafe code into the Sifr ecosystem. The following policies apply
 - `extern crate` declarations add the crate to the generated `Cargo.toml` dependencies
 - `unsafe { ... }` blocks generate Rust `unsafe { ... }` blocks
 - FFI function calls generate direct Rust function calls with type-mapped arguments
-- Return values from FFI are wrapped in `Result` when `catch_unwind` is applied
+- Rust FFI return values are wrapped in `Result` when `catch_unwind` is applied
+- C FFI return values are passed through directly (no automatic wrapping)
 
 ### Definition of Done (M15)
 
 - `extern crate` adds Rust crate dependencies to generated Cargo.toml
 - Rust FFI calls compile and execute correctly
 - `unsafe` blocks required and enforced by the compiler
-- Panic boundary (`catch_unwind`) wraps FFI entry points
+- Rust FFI panic boundary (`catch_unwind`) wraps entry points and converts panics to `Result::Err`
 - C FFI via `extern "C"` works for basic function calls
+- C FFI non-recoverability is documented; compiler warns on unwrapped `extern "C"` calls
 - Type mapping between Sifr and Rust types at FFI boundaries
-- E2E pass tests: ffi_rust_crate, ffi_c_function, unsafe_block
+- E2E pass tests: ffi_rust_crate, ffi_c_function, unsafe_block, ffi_rust_panic_caught
 - E2E fail tests: missing_unsafe, ffi_type_mismatch
 - Milestone demo in `./tmp/m15_demo.sifr` (calling a Rust crate from Sifr)
 
@@ -1694,6 +1697,14 @@ Optimize the compiler for fast iteration during development:
 - **Generated Rust caching:** cache the generated `.rs` files and skip codegen for unchanged modules
 - **Cargo build caching:** leverage Cargo's built-in incremental compilation for the Rust compilation step
 - **File watcher mode:** `sifr watch` recompiles on file changes (like `cargo watch`)
+
+**Cache key and invalidation contract:**
+
+- **Cache key:** content hash (SHA-256) of the source file combined with the public API signature hash of all transitive dependencies. Two compilations with the same cache key produce identical output.
+- **Public API signature hash:** a hash of the module's exported symbols (function signatures, type definitions, re-exports). If only the implementation body changes but the public API is identical, dependents are NOT recompiled.
+- **Transitive invalidation:** if module A depends on module B, and B's public API hash changes, A is recompiled. If B's API hash is unchanged (implementation-only change), A is skipped.
+- **Decorator/macro expansion:** expansion output is included in the content hash. A decorator that changes its output invalidates the module even if the source text is unchanged.
+- **Detailed design deferred:** the full cache storage format, eviction policy, and cross-machine sharing strategy will be designed during M17 implementation.
 
 ### REPL (`sifr repl`)
 
@@ -1803,14 +1814,15 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (M4).
 **Contract:**
 
 
-| Context              | Error mechanism                | Propagation                          | Codegen                                                    |
-| -------------------- | ------------------------------ | ------------------------------------ | ---------------------------------------------------------- |
-| Sync function        | `Result[T, E]` return          | `?` operator or explicit `match`     | `Result<T, E>`                                             |
-| Async function (M11) | `Result[T, E]` return          | `?` operator (works across `.await`) | `Result<T, E>`                                             |
-| `try`/`except` block | Pattern match on `Result`      | `except` arms match error variants   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
-| FFI boundary (M15)   | Rust panics caught at boundary | `catch_unwind` at FFI entry points   | Panic -> `Result::Err` conversion                          |
-| `assert` statement   | Panic (unrecoverable)          | Not catchable                        | `assert!()` or `panic!()`                                  |
-| Main function        | `Result` printed as exit code  | Non-zero exit on `Err`               | `fn main() -> Result<(), Box<dyn Error>>`                  |
+| Context              | Error mechanism                | Propagation                             | Codegen                                                    |
+| -------------------- | ------------------------------ | --------------------------------------- | ---------------------------------------------------------- |
+| Sync function        | `Result[T, E]` return          | `?` operator or explicit `match`        | `Result<T, E>`                                             |
+| Async function (M11) | `Result[T, E]` return          | `?` operator (works across `.await`)    | `Result<T, E>`                                             |
+| `try`/`except` block | Pattern match on `Result`      | `except` arms match error variants      | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
+| Rust FFI (M15)       | Rust panics caught at boundary | `catch_unwind` at Rust FFI entry points | Panic -> `Result::Err` conversion                          |
+| C FFI (M15)          | Crashes are non-recoverable    | Safe wrappers validate inputs           | Process terminates on segfault/abort                       |
+| `assert` statement   | Panic (unrecoverable)          | Not catchable                           | `assert!()` or `panic!()`                                  |
+| Main function        | `Result` printed as exit code  | Non-zero exit on `Err`                  | `fn main() -> Result<(), Box<dyn Error>>`                  |
 
 
 `**except` arm matching semantics:**
@@ -1882,15 +1894,16 @@ Sifr uses Python-like slicing syntax, but must define whether slicing copies or 
 
 Sifr's `str` maps to Rust `String` (UTF-8). String indexing and length must be defined carefully because UTF-8 is variable-width.
 
-**Contract:**
+**Contract (safe indexing -- no panics):**
 
-- `**s[i]`:** returns the i-th character (Unicode code point) as a single-character `str`. Panics on out-of-bounds (matches Python behavior). Codegen: `s.chars().nth(i).unwrap()`. This is O(n), not O(1).
-- `**s.get(i)`:** safe accessor, returns `Option[str]`. Codegen: `s.chars().nth(i).map(|c| c.to_string())`.
+- `**s[i]`:** returns `Option[str]` -- the i-th character (Unicode code point) as a single-character `str`, or `None` if out-of-bounds. Codegen: `s.chars().nth(i).map(|c| c.to_string())`. This is O(n), not O(1).
+- `**list[i]`:** returns `Option[T]` -- the i-th element, or `None` if out-of-bounds. Codegen: `vec.get(i).cloned()`. This is O(1).
 - `**s.len()`:** returns the number of Unicode code points (not bytes). Codegen: `s.chars().count()`. This is O(n).
 - `**s.byte_len()`:** returns the number of bytes (O(1)). Codegen: `s.len()`.
-- `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
+- `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`. Returns empty string if indices are out of range.
 - **String literals:** type is `str`, stored as `String` in generated Rust.
 - **Complexity documentation:** the compiler should emit a note when string indexing is used in a loop, suggesting `.chars()` iteration instead for performance.
+- **Global indexing contract:** all indexable types (`str`, `list`, `dict`) use safe indexing. `x[i]` returns `Option[T]`, never panics. This is enforced uniformly across the language.
 
 ### 8. Concurrency Safety
 
@@ -1924,7 +1937,7 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This contract
 
 **Milestone responsibilities:**
 
-- M4: define `with` block semantics for `Result`-returning resources
+- M7b: define `with` block semantics and `ContextManager` protocol (`__enter__`/`__exit__`)
 - M5: implement scope-end destruction for class instances
 - M8: implement `with` blocks for file handles and other stdlib resources
 
@@ -1946,6 +1959,26 @@ Sifr auto-derives common Rust traits for all user-defined types. This is a langu
   - `Copy` -- only primitives (`int`, `float`, `bool`) are `Copy`. User-defined types are move-by-default.
 - **Codegen:** the compiler emits `#[derive(Debug, Clone, PartialEq)]` (and conditionally `Eq`, `Hash`) on all generated structs and enums.
 - **Dict key constraint:** types used as `dict` keys must be `Hash + Eq`. The compiler enforces this at the call site and emits a clear error if the type is not hashable.
+
+### 11. Diagnostic Mapping
+
+Sifr compiles to Rust source code, which is then compiled by `rustc`. This creates a two-stage compilation where errors can originate from either the Sifr compiler or `rustc`. This contract defines how diagnostics are attributed, mapped, and rendered.
+
+**Contract:**
+
+- **Stable Sifr diagnostic codes:** every Sifr compiler diagnostic has a stable code (e.g., `S0001: type-mismatch`, `S0002: move-after-use`, `S0003: unused-variable`). Each code is owned by a specific compiler phase (parser, type checker, borrow checker, codegen).
+- **Span mapping:** the codegen phase maintains a mapping from generated Rust line/column positions to original `.sifr` line/column positions. All compiler errors shown to users reference `.sifr` source locations, never generated Rust locations.
+- `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
+- **Suppression policy:** `rustc` warnings on generated code are suppressed by default (generated code includes `#[allow(warnings)]`). Only `rustc` errors are surfaced to the user.
+- **Multi-file rendering:** errors that span multiple `.sifr` files show each file's relevant snippet with labeled spans. Uses `miette` or `ariadne` for rich terminal rendering with colors, underlines, and related notes.
+- **Diagnostic ownership:** the Sifr compiler should catch as many errors as possible before invoking `rustc`. Over time, the set of errors that reach `rustc` should shrink to near-zero as the type checker and borrow checker mature.
+
+**Milestone responsibilities:**
+
+- M1-M3: basic span tracking (single-file, Sifr-native errors only)
+- M6: multi-file span tracking (import errors reference both files)
+- M15: FFI-related `rustc` error translation (extern crate mismatches)
+- M16: LSP diagnostic integration (real-time diagnostics in editor)
 
 ### Ecosystem Strategy
 
