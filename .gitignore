@@ -23,3 +23,13 @@ build/
 /target/
 Cargo.lock
 /tmp/
+
+# Demos - ignore generated/compiled artifacts, keep .sifr source files
+demos/**/sifr_output/
+demos/**/*.d
+demos/**/*.o
+demos/**/*.so
+demos/**/*.dylib
+demos/**/*.exe
+!demos/**/*.sifr
+!demos/**/*.rs

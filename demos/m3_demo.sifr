@@ -1,0 +1,65 @@
+# ============================================================
+# M3 Demo: Advanced Type System
+# ============================================================
+# This demo showcases the M3 milestone features:
+# - Type aliases (type X = ...)
+# - Optional types (str | None) -> Option<T>
+# - Type narrowing via is/is not None
+# - Type narrowing via equality checks
+# - Type narrowing via truthiness
+# - Union type annotations (int | str)
+# - isinstance-based narrowing
+# ============================================================
+
+# --- Type Aliases ---
+# The `type` statement creates named type aliases
+type UserId = int
+type UserName = str
+
+# --- Type Aliases in Function Signatures ---
+def create_user(id: UserId, name: UserName) -> UserId:
+    return id
+
+# --- Equality Narrowing ---
+# `if x == value:` narrows to the literal value
+def handle_command(cmd: str) -> str:
+    if cmd == "start":
+        return "Starting..."
+    else:
+        return "Unknown command"
+
+# --- Union Type Annotations ---
+# int | str declares a union type parameter
+def describe(x: int | str) -> str:
+    if isinstance(x, int):
+        return f"number: {x + 1}"
+    else:
+        return f"text: {x}"
+
+# --- Optional Types with None Narrowing ---
+# str | None maps to Option<String> in Rust
+def find_user(name: str) -> str | None:
+    if name == "alice":
+        return "Alice Smith"
+    return None
+
+# --- Main: Exercise All Features ---
+def main():
+    # Type aliases work transparently
+    uid: UserId = create_user(42, "alice")
+    print(uid)
+
+    # Equality narrowing
+    print(handle_command("start"))
+    print(handle_command("stop"))
+
+    # Union types with isinstance narrowing
+    print(describe(42))
+    print(describe("hello"))
+
+    # Optional types with None narrowing
+    user: str | None = find_user("alice")
+    if user is not None:
+        print(user)
+    else:
+        print("not found")

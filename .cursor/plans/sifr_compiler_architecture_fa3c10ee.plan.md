@@ -54,7 +54,7 @@ todos:
     content: "M3: Add comprehensive tests -- unit tests for union/literal/narrowing, E2E pass tests (union_basic, optional_narrowing, isinstance_narrowing, etc.), E2E fail tests (non-exhaustive, no-narrowing access)."
     status: completed
   - id: m3-demo
-    content: "M3: Create milestone demo in ./tmp/m3_demo.sifr showcasing union types, literal types, type narrowing, and optional handling."
+    content: "M3: Create milestone demo in ./demos/m3_demo.sifr showcasing union types, literal types, type narrowing, and optional handling."
     status: completed
 isProject: false
 ---
@@ -1035,7 +1035,7 @@ if !_broke {
 - E2E pass tests: augmented_assign, ternary_expr, keyword_args_basic, keyword_args_default, keyword_only_params, for_loop_borrow, list_slice_copy, negative_index_list, negative_index_string, step_slice_basic, step_slice_reverse, step_slice_string, tuple_slice, string_char_index, string_char_len, string_slice, list_methods_concrete, dict_methods_concrete, string_replace, chained_comparison, string_multiply, pass_statement, star_unpacking, walrus_operator, power_operator, multiple_return, loop_else
 - E2E fail tests: ternary_type_mismatch, keyword_after_positional_error, missing_keyword_only_arg
 - Existing M1/M2/M3 E2E tests still pass (no regressions)
-- Milestone demo in `./tmp/m4_demo.sifr`
+- Milestone demo in `./demos/m4_demo.sifr`
 
 ---
 
@@ -1116,7 +1116,7 @@ Now that classes exist with auto-derived `Hash + Eq`:
 - E2E pass tests: class_basic, class_methods, class_field_access, class_isinstance, class_union, hash_builtin
 - E2E fail tests: missing_field, use_after_move_self, unhashable_dict_key
 - Existing M1/M2/M3/M4 E2E tests still pass (no regressions)
-- Milestone demo in `./tmp/m5_demo.sifr`
+- Milestone demo in `./demos/m5_demo.sifr`
 
 ---
 
@@ -1273,7 +1273,7 @@ M6 introduces pattern matching as the mechanism for `try`/`except` and `Result`/
 - E2E fail tests: unhandled_error, non_exhaustive_except, unused_result_error
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (int/float/bool conversions, input), `Lib/test/test_builtin.py`
 - Unit tests for Result/Option type checking and inference
-- Milestone demo in `./tmp/m6_demo.sifr`
+- Milestone demo in `./demos/m6_demo.sifr`
 
 ---
 
@@ -1358,7 +1358,7 @@ del config["a"]       # removes key "a" -> config = {"b": 2}
 - E2E fail tests: unused_option_error, unused_result_error
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/listobject.c`, `Objects/dictobject.c`, `Objects/unicodeobject.c`, `Lib/test/test_list.py`, `Lib/test/test_dict.py`, `Lib/test/test_str.py`
 - Existing E2E tests still pass (no regressions)
-- Milestone demo in `./tmp/m7_demo.sifr`
+- Milestone demo in `./demos/m7_demo.sifr`
 
 ---
 
@@ -1461,7 +1461,7 @@ new_user = User(email="new@example.com", **old_user)
 - Struct update/spread clones non-overridden fields
 - E2E pass tests: protocol_dispatch, discriminated_union, operator_overload, pattern_destructure, nested_pattern, at_binding, property_narrowing, newtype_basic, struct_update
 - E2E fail tests: protocol_not_satisfied, non_exhaustive_match, newtype_validation_error
-- Milestone demo in `./tmp/m8_demo.sifr`
+- Milestone demo in `./demos/m8_demo.sifr`
 
 ---
 
@@ -1516,7 +1516,7 @@ class Dog(Animal):
 - `@property` getter/setter works
 - E2E pass tests: inheritance_basic, super_call, classmethod_basic, staticmethod_basic, property_getter_setter
 - E2E fail tests: multiple_inheritance_rejected, super_no_parent
-- Milestone demo in `./tmp/m9_demo.sifr`
+- Milestone demo in `./demos/m9_demo.sifr`
 
 ---
 
@@ -1585,7 +1585,7 @@ def main():
 - Relative imports work within packages
 - E2E pass tests: multi_file_basic, package_import, relative_import
 - E2E fail tests: circular_import, private_access, missing_module
-- Milestone demo in `./tmp/m10_demo.sifr` (multi-file project)
+- Milestone demo in `./demos/m10_demo.sifr` (multi-file project)
 
 ---
 
@@ -1720,7 +1720,7 @@ Sorting requires a `Comparable` protocol (maps to Rust's `Ord` trait):
 - E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator, builtin_min_max_sum, sorted_basic, sorted_key_reverse, zip_enumerate, any_all, reduce_basic, list_comp, dict_comp, set_comp, filtered_comp, nested_comp
 - E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice, float_sort_rejected, comp_type_mismatch
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (min, max, sum, sorted, zip, enumerate, any, all), `Objects/listobject.c` (list.sort), `Lib/test/test_builtin.py`
-- Milestone demo in `./tmp/m11_demo.sifr`
+- Milestone demo in `./demos/m11_demo.sifr`
 
 ---
 
@@ -1790,7 +1790,7 @@ with open("file.txt") as f:
 - `ContextManager` protocol enforced at compile time
 - E2E pass tests: generator_expr, yield_basic, yield_infinite, yield_from_basic, yield_from_chain, with_file, with_multiple
 - E2E fail tests: yield_outside_function, with_non_context_manager
-- Milestone demo in `./tmp/m12_demo.sifr`
+- Milestone demo in `./demos/m12_demo.sifr`
 
 ---
 
@@ -1843,7 +1843,7 @@ def main():
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
 - E2E pass tests: file_io, json_roundtrip, env_vars, os_process, collections_basic
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Lib/json/`, `Lib/os.py`, `Lib/test/test_json/`, `Lib/test/test_os.py`, `Objects/setobject.c`, `Objects/odictobject.c`
-- Milestone demo in `./tmp/m13_demo.sifr`
+- Milestone demo in `./demos/m13_demo.sifr`
 
 ---
 
@@ -1896,7 +1896,7 @@ Depends on M13: needs `sifr.io` for test file discovery and `sifr.os` for proces
 - Non-zero exit code on any failure (CI-friendly)
 - Codegen emits `#[test]` attributes and maps assertions to Rust equivalents
 - E2E pass tests: test_runner_basic, test_filtering, test_assertions, test_setup_teardown
-- Milestone demo in `./tmp/m14_demo.sifr`
+- Milestone demo in `./demos/m14_demo.sifr`
 
 ---
 
@@ -1960,7 +1960,7 @@ Depends on M13: needs `sifr.io` for test file discovery and `sifr.os` for proces
 - E2E pass tests: frozenset_basic, frozenset_as_key, counter_basic, counter_arithmetic, defaultdict_basic, set_operations, bytes_literal, bytes_decode_encode, bytearray_mutate
 - E2E fail tests: frozenset_mutation_rejected, bytes_mutation_rejected, decode_invalid_utf8
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/setobject.c`, `Objects/bytesobject.c`, `Objects/bytearrayobject.c`, `Lib/collections/__init__.py` (Counter, defaultdict), `Lib/test/test_set.py`, `Lib/test/test_bytes.py`, `Lib/test/test_collections.py`
-- Milestone demo in `./tmp/m15_demo.sifr`
+- Milestone demo in `./demos/m15_demo.sifr`
 
 ---
 
@@ -1993,7 +1993,7 @@ Depends on M13: needs `sifr.io` for test file discovery and `sifr.os` for proces
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
 - E2E pass tests: math_ops, time_basic, random_gen, regex_match, hash_sha256, encoding_base64, stream_lines, log_basic
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Lib/test/test_math.py`, `Lib/test/test_time.py`, `Lib/test/test_random.py`, `Lib/test/test_re/`
-- Milestone demo in `./tmp/m16_demo.sifr`
+- Milestone demo in `./demos/m16_demo.sifr`
 
 ---
 
@@ -2052,7 +2052,7 @@ M17 also provides basic cross-task communication primitives:
 - Async generators (`yield` in `async def`) produce async iterators
 - `sifr.sync.Lock`, `sifr.sync.Channel`, `sifr.sync.Semaphore` work for cross-task coordination
 - E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, async_with_basic, async_generator_basic, lock_basic, channel_basic
-- Milestone demo in `./tmp/m17_demo.sifr`
+- Milestone demo in `./demos/m17_demo.sifr`
 
 ---
 
@@ -2096,7 +2096,7 @@ def hello():
 - Type checking verifies decorator input/output compatibility
 - E2E pass tests: basic_decorator, decorator_with_args, stacked_decorators
 - E2E fail tests: decorator_type_mismatch
-- Milestone demo in `./tmp/m18_demo.sifr`
+- Milestone demo in `./demos/m18_demo.sifr`
 
 ---
 
@@ -2217,7 +2217,7 @@ The compiler emits a clear error if neither a database connection nor offline me
 - SQL queries are validated at compile time (online or offline mode)
 - `sifr db prepare` generates offline metadata
 - E2E pass tests: web_hello, http_get, sqlite_basic, db_query
-- Milestone demo in `./tmp/m19_demo.sifr` (simple REST API with embedded SQLite)
+- Milestone demo in `./demos/m19_demo.sifr` (simple REST API with embedded SQLite)
 
 ---
 
@@ -2279,7 +2279,7 @@ def main():
 - CSV/Parquet read/write works end-to-end
 - `sifr.args` provides typed CLI argument parsing
 - E2E pass tests: dataframe_basic, csv_roundtrip, cli_args
-- Milestone demo in `./tmp/m20_demo.sifr` (data pipeline)
+- Milestone demo in `./demos/m20_demo.sifr` (data pipeline)
 
 ---
 
@@ -2328,7 +2328,7 @@ Compile-time evaluation (`const` expressions, custom decorators) runs during com
 - Compile-time sandbox enforced (no I/O, no side effects)
 - Deterministic compile-time expansion: same source always produces same output (important for caching in M25)
 - E2E pass tests: dataclass_basic, property_decorator, custom_decorator, const_eval, args_kwargs, positional_only_params
-- Milestone demo in `./tmp/m21_demo.sifr`
+- Milestone demo in `./demos/m21_demo.sifr`
 
 ---
 
@@ -2388,7 +2388,7 @@ FFI introduces unsafe code into the Sifr ecosystem. The following policies apply
 - Rustc-to-Sifr error span translation: errors from FFI-generated code map back to the Sifr source location
 - E2E pass tests: ffi_rust_crate, ffi_c_function, unsafe_block, ffi_rust_panic_caught
 - E2E fail tests: missing_unsafe, ffi_type_mismatch
-- Milestone demo in `./tmp/m22_demo.sifr` (calling a Rust crate from Sifr)
+- Milestone demo in `./demos/m22_demo.sifr` (calling a Rust crate from Sifr)
 
 ---
 
@@ -2414,7 +2414,7 @@ FFI introduces unsafe code into the Sifr ecosystem. The following policies apply
 - PubGrub solver handles version conflicts with clear diagnostics
 - Git and local path dependencies work
 - E2E pass tests: add_dependency, remove_dependency, lockfile_generation, version_conflict_resolution
-- Milestone demo in `./tmp/m23_demo.sifr`
+- Milestone demo in `./demos/m23_demo.sifr`
 
 ---
 
@@ -2477,7 +2477,7 @@ Generate HTML documentation from docstrings:
 - `sifr doc` generates browsable HTML documentation from docstrings
 - E2E tests: LSP responds correctly to completion/hover/definition requests
 - Formatter round-trip test: `format(format(code)) == format(code)`
-- Milestone demo in `./tmp/m24_demo.sifr` (project with LSP, formatted code, and generated docs)
+- Milestone demo in `./demos/m24_demo.sifr` (project with LSP, formatted code, and generated docs)
 
 ---
 

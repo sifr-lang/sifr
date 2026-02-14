@@ -1,0 +1,123 @@
+# ============================================================
+# Sifr M2 Demo: Control Flow and Data Structures
+# Loops, list, dict, tuple, f-strings, string ops, unpacking
+# ============================================================
+
+def sum_range(n: int) -> int:
+    total: int = 0
+    for i in range(n):
+        total = total + i
+    return total
+
+def fizzbuzz(n: int):
+    for i in range(1, n + 1):
+        if i % 15 == 0:
+            print("FizzBuzz")
+        if i % 3 == 0:
+            if i % 5 != 0:
+                print("Fizz")
+        if i % 5 == 0:
+            if i % 3 != 0:
+                print("Buzz")
+        if i % 3 != 0:
+            if i % 5 != 0:
+                print(i)
+
+def countdown(n: int):
+    i: int = n
+    while i > 0:
+        print(i)
+        i = i - 1
+    print("Go!")
+
+def main():
+    # --- While loop ---
+    print(f"=== While Loop: Countdown ===")
+    countdown(5)
+
+    # --- For loop with range ---
+    print(f"=== For Loop: Sum of 0..9 ===")
+    s: int = sum_range(10)
+    print(f"Sum of range(10) = {s}")
+
+    # --- Nested loops ---
+    print(f"=== Nested Loops: Multiplication Table ===")
+    for i in range(1, 4):
+        for j in range(1, 4):
+            product: int = i * j
+            print(f"{i} x {j} = {product}")
+
+    # --- Break and continue ---
+    print(f"=== Break/Continue ===")
+    i: int = 0
+    while i < 10:
+        i = i + 1
+        if i == 3:
+            continue
+        if i == 7:
+            break
+        print(i)
+
+    # --- Lists ---
+    print(f"=== Lists ===")
+    nums: list[int] = [10, 20, 30, 40, 50]
+    print(f"Length: {len(nums)}")
+    print(f"First: {nums[0]}")
+    print(f"Last: {nums[4]}")
+
+    total: int = 0
+    for n in nums:
+        total = total + n
+    print(f"Sum: {total}")
+
+    # --- List append ---
+    fruits: list[str] = ["apple", "banana"]
+    fruits.append("cherry")
+    print(f"Fruits count: {len(fruits)}")
+
+    # --- Dict ---
+    print(f"=== Dict ===")
+    ages: dict[str, int] = {"Alice": 30, "Bob": 25, "Charlie": 35}
+    print(f"Alice is {ages['Alice']} years old")
+    print(f"Bob is {ages['Bob']} years old")
+
+    # --- In operator ---
+    print(f"=== In Operator ===")
+    numbers: list[int] = [1, 2, 3, 4, 5]
+    found: bool = 3 in numbers
+    print(f"3 in list: {found}")
+    missing: bool = 9 in numbers
+    print(f"9 in list: {missing}")
+
+    # --- Tuples ---
+    print(f"=== Tuples ===")
+    point: tuple[int, int, str] = (10, 20, "origin")
+    print(f"Tuple length: {len(point)}")
+
+    # --- Tuple unpacking ---
+    print(f"=== Tuple Unpacking ===")
+    pair: tuple[str, int] = ("Sifr", 2025)
+    name, year = pair
+    print(f"{name} was born in {year}")
+
+    # --- F-strings with expressions ---
+    print(f"=== F-Strings ===")
+    a: int = 7
+    b: int = 8
+    print(f"{a} * {b} = {a * b}")
+    print(f"Is {a} > {b}? {a > b}")
+
+    # --- String operations ---
+    print(f"=== String Operations ===")
+    greeting: str = "  Hello, World!  "
+    print(greeting.strip())
+    print(greeting.strip().upper())
+    print(greeting.strip().lower())
+
+    lang: str = "sifr-lang"
+    print(f"Starts with 'sifr': {lang.startswith('sifr')}")
+    print(f"Ends with 'lang': {lang.endswith('lang')}")
+
+    # --- FizzBuzz ---
+    print(f"=== FizzBuzz (1-15) ===")
+    fizzbuzz(15)

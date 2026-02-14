@@ -1,0 +1,77 @@
+# ============================================================
+# Sifr M1 Demo: Core Language
+# Variables, functions, if/else, primitives, print, recursion
+# ============================================================
+
+def factorial(n: int) -> int:
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+def fibonacci(n: int) -> int:
+    if n <= 0:
+        return 0
+    if n == 1:
+        return 1
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+def greet(name: str) -> str:
+    return "Hello, " + name + "!"
+
+def classify(x: int) -> str:
+    if x > 0:
+        return "positive"
+    if x < 0:
+        return "negative"
+    return "zero"
+
+def double(n: int) -> int:
+    return n * 2
+
+def is_even(n: int) -> bool:
+    if n == 0:
+        return True
+    if n == 1:
+        return False
+    return is_even(n - 2)
+
+def main():
+    # --- Primitives and type annotations ---
+    x: int = 42
+    pi: float = 3.14
+    flag: bool = True
+    name: str = "Sifr"
+
+    # --- Arithmetic ---
+    sum: int = x + 8
+    product: int = double(sum)
+    print(product)
+
+    # --- Function calls: factorial ---
+    fact: int = factorial(5)
+    print(fact)
+
+    # --- Function calls: fibonacci ---
+    fib: int = fibonacci(10)
+    print(fib)
+
+    # --- String concatenation ---
+    msg: str = greet(name)
+    print(msg)
+
+    # --- If/else branching ---
+    label: str = classify(x)
+    print(label)
+
+    neg_label: str = classify(-7)
+    print(neg_label)
+
+    zero_label: str = classify(0)
+    print(zero_label)
+
+    # --- Boolean logic with recursion ---
+    even: bool = is_even(4)
+    print(even)
+
+    odd: bool = is_even(7)
+    print(odd)
