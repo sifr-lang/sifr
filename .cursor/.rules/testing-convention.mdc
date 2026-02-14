@@ -1,0 +1,179 @@
+---
+description: Testing conventions for backend-node project.
+globs: 
+alwaysApply: true
+---
+# Testing Convention
+
+## Testing Philosophy: The 80/20 Rule
+
+**Goal:**  
+Cover 80% of critical business flows with 20% of the testing effort.
+
+**Ask:**
+- Can users use the app?
+- Are users happy?
+- Can users pay, and does the business get paid?
+
+**Emphasis:**  
+Prioritize business value over technical details.
+
+---
+
+## Testing Strategy
+
+**Test Layer Distribution**
+- **E2E Tests (70%)** — Full user journeys, real DB/services
+- **Integration Tests (20%)** — Critical edge cases only
+- **Unit Tests (10%)** — High-value utility code only (**rare**; most eliminated)
+
+**Tools**
+- **Vitest**: Integration tests (TypeScript)
+- **amiceli/vitest-cucumber + Playwright**: BDD-style E2E tests
+
+---
+
+## Test Directory Layout
+
+```
+backend-node/
+└── apps/
+    └── core/
+        ├── src/
+        ├── test/
+        │   ├── integration/     # Only critical edge cases
+        │   ├── e2e/             # Full user flows (features + specs)
+        │   │   ├── features/
+        │   │   └── feature-name.spec.ts
+        │   └── fixtures/
+        ├── vitest.config.ts
+        ├── vitest.config.e2e.mts
+        └── package.json
+```
+
+---
+
+## E2E Tests (Primary, 70%)
+
+- **Goal:** Validate real user journeys end-to-end
+- **Style:** BDD, readable Gherkin scenarios
+- **Coverage:** Example: Registration → Magic Link → Dashboard
+
+### Playwright Best Practices for E2E
+
+**Use User-Facing Locators:**
+```typescript
+// Good: Role-based locators
+page.getByRole("button", { name: "Submit" })
+page.getByLabel("Email")
+page.getByText("Welcome")
+
+// Avoid: CSS/XPath selectors
+page.locator('button[type="submit"]')
+page.locator('input[name="email"]')
+page.locator('#welcome-text')
+```
+
+**Prioritize Locator Types:**
+1. `getByRole()` - accessible elements
+2. `getByLabel()` - form controls  
+3. `getByText()` - visible text
+4. `getByTestId()` - only when needed
+5. CSS selectors - last resort
+
+---
+
+## Integration Tests (Secondary, 20%)
+
+- **Goal:** Test business-critical edge cases and infrastructure errors
+- **Examples:** Auth failures, expired tokens, invalid sessions, DB errors, concurrent requests
+- **Note:** No “happy paths” (covered by E2E)
+- **Grouping:** One spec covers all relevant edge cases for a feature
+
+---
+
+## Unit Tests
+
+- **Goal:** Only for high-value, business-critical utilities (e.g., `hashToken`)
+- **Not for:** Libraries, frameworks, or code without business logic
+- **No happy paths:** E2E covers these
+
+---
+
+## Organization & Conventions
+
+### File Naming
+- **Integration:** `{feature}.spec.ts` (e.g., `magic-link.spec.ts`)
+- **E2E:** `{feature}.spec.ts` + `features/{feature}.feature`
+- **Group by business feature** (not by technical layer)
+
+### Code Quality
+- **Shared utilities:** Extract and reuse (e.g., `crypto.ts`)
+- **No code duplication:** Use real service functions in tests
+- **Use real dependencies** in E2E (database, services)
+
+### Test Names
+- Format: `should {action} {condition} {expected outcome}`
+- Focus on *business* scenarios
+
+---
+
+## Running Tests
+
+Run from `backend-node/apps/core/`:
+
+```bash
+# All tests (recommended)
+npm test
+
+# Unit tests only
+npm run test:unit
+
+# Integration tests only
+npm run test:integration
+
+# E2E tests only (requires server running)
+npm run test:e2e
+
+# Specific integration test
+npx vitest test/integration/magic-link.spec.ts
+
+# Specific E2E feature
+npx cucumber-js test/e2e/features/account.feature
+```
+
+### E2E Test Requirements
+
+E2E tests require the application server to be running:
+
+```bash
+# Terminal 1: Start the development server
+npm run dev
+
+# Terminal 2: Run E2E tests
+npm run test:e2e
+```
+
+**Note:** E2E tests hit the real application at `http://localhost:8900` and test the complete user experience through the browser.
+
+---
+
+## Best Practices
+
+### Do
+- Focus on user journeys and business scenarios
+- Use real databases/services for E2E
+- Test edge cases that affect users/business
+- Write descriptive test names
+- Keep tests independent/order-agnostic
+- Extract utilities to avoid duplication
+
+### Don’t
+- Don't over-test happy paths
+- Don't test external libraries/frameworks
+- Don't duplicate code between service and tests
+- Don't mock critical integrations in E2E
+
+---
+
+**Remember:** Maximize business confidence. Minimize test bloat.
