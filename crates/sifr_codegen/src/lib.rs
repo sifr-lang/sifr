@@ -9,7 +9,11 @@ use sifr_type_system::Type;
 pub fn generate_rust(module: &HirModule) -> String {
     let mut emitter = RustEmitter::new();
     emitter.emit_module(module);
-    emitter.output
+    if emitter.needs_hashmap {
+        format!("use std::collections::HashMap;\n\n{}", emitter.output)
+    } else {
+        emitter.output
+    }
 }
 
 /// Generate a complete Rust project (Cargo.toml + main.rs content).
@@ -29,6 +33,7 @@ edition = "2021"
 struct RustEmitter {
     output: String,
     indent: usize,
+    needs_hashmap: bool,
 }
 
 impl RustEmitter {
@@ -36,6 +41,7 @@ impl RustEmitter {
         Self {
             output: String::new(),
             indent: 0,
+            needs_hashmap: false,
         }
     }
 
@@ -197,7 +203,12 @@ impl RustEmitter {
                 self.write("for ");
                 self.write(target);
                 self.write(" in ");
+                // For lists, iterate with .iter() to borrow and clone elements
+                let is_list = matches!(iter.ty(), Type::List(_));
                 self.emit_expr(iter);
+                if is_list {
+                    self.write(".iter().cloned()");
+                }
                 self.write(" {\n");
                 self.indent += 1;
                 for s in body {
@@ -214,6 +225,132 @@ impl RustEmitter {
             }
             HirStmt::Pass => {
                 // No-op in Rust
+            }
+        }
+    }
+
+    fn emit_method_call(&mut self, object: &HirExpr, method: &str, args: &[HirExpr]) {
+        let obj_ty = object.ty();
+        match (obj_ty, method) {
+            // String methods
+            (Type::Str, "upper") => {
+                self.emit_expr(object);
+                self.write(".to_uppercase()");
+            }
+            (Type::Str, "lower") => {
+                self.emit_expr(object);
+                self.write(".to_lowercase()");
+            }
+            (Type::Str, "strip") => {
+                self.emit_expr(object);
+                self.write(".trim().to_string()");
+            }
+            (Type::Str, "lstrip") => {
+                self.emit_expr(object);
+                self.write(".trim_start().to_string()");
+            }
+            (Type::Str, "rstrip") => {
+                self.emit_expr(object);
+                self.write(".trim_end().to_string()");
+            }
+            (Type::Str, "startswith") => {
+                self.emit_expr(object);
+                self.write(".starts_with(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                    self.write(".as_str()");
+                }
+                self.write(")");
+            }
+            (Type::Str, "endswith") => {
+                self.emit_expr(object);
+                self.write(".ends_with(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                    self.write(".as_str()");
+                }
+                self.write(")");
+            }
+            (Type::Str, "split") => {
+                self.emit_expr(object);
+                if args.is_empty() {
+                    self.write(".split_whitespace().map(|s| s.to_string()).collect::<Vec<String>>()");
+                } else {
+                    self.write(".split(");
+                    self.emit_expr(&args[0]);
+                    self.write(".as_str()).map(|s| s.to_string()).collect::<Vec<String>>()");
+                }
+            }
+            (Type::Str, "replace") => {
+                self.emit_expr(object);
+                self.write(".replace(");
+                if args.len() >= 2 {
+                    self.emit_expr(&args[0]);
+                    self.write(".as_str(), ");
+                    self.emit_expr(&args[1]);
+                    self.write(".as_str()");
+                }
+                self.write(")");
+            }
+            (Type::Str, "find") => {
+                self.emit_expr(object);
+                self.write(".find(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                    self.write(".as_str()");
+                }
+                self.write(").map_or(-1_i64, |i| i as i64)");
+            }
+            // List methods
+            (Type::List(_), "append") => {
+                self.emit_expr(object);
+                self.write(".push(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::List(_), "pop") => {
+                self.emit_expr(object);
+                self.write(".pop().unwrap()");
+            }
+            // Dict methods
+            (Type::Dict(_, _), "keys") => {
+                self.emit_expr(object);
+                self.write(".keys().cloned().collect::<Vec<_>>()");
+            }
+            (Type::Dict(_, _), "values") => {
+                self.emit_expr(object);
+                self.write(".values().cloned().collect::<Vec<_>>()");
+            }
+            (Type::Dict(_, _), "get") => {
+                self.emit_expr(object);
+                self.write(".get(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(").cloned().unwrap()");
+            }
+            // Tuple len() - compile-time constant
+            (Type::Tuple(elems), "len") => {
+                self.write(&format!("{}_i64", elems.len()));
+            }
+            // Generic len() for all types
+            (_, "len") => {
+                self.emit_expr(object);
+                self.write(".len() as i64");
+            }
+            _ => {
+                // Fallback: emit as-is
+                self.emit_expr(object);
+                self.write(&format!(".{}(", method));
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.emit_expr(arg);
+                }
+                self.write(")");
             }
         }
     }
@@ -348,6 +485,96 @@ impl RustEmitter {
                 self.emit_expr(start);
                 self.write("..");
                 self.emit_expr(end);
+            }
+            HirExpr::ListLiteral { elements, .. } => {
+                self.write("vec![");
+                for (i, elem) in elements.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.emit_expr(elem);
+                }
+                self.write("]");
+            }
+            HirExpr::DictLiteral { keys, values, .. } => {
+                self.needs_hashmap = true;
+                self.write("std::collections::HashMap::from([");
+                for (i, (key, val)) in keys.iter().zip(values.iter()).enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.write("(");
+                    self.emit_expr(key);
+                    self.write(", ");
+                    self.emit_expr(val);
+                    self.write(")");
+                }
+                self.write("])");
+            }
+            HirExpr::TupleLiteral { elements, .. } => {
+                self.write("(");
+                for (i, elem) in elements.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.emit_expr(elem);
+                }
+                if elements.len() == 1 {
+                    self.write(","); // Single-element tuple needs trailing comma in Rust
+                }
+                self.write(")");
+            }
+            HirExpr::Index { object, index, .. } => {
+                let obj_ty = object.ty();
+                match obj_ty {
+                    Type::Dict(_, _) => {
+                        // Dict indexing: d[key] -> d[&key] with clone
+                        self.emit_expr(object);
+                        self.write("[&");
+                        self.emit_expr(index);
+                        self.write("]");
+                    }
+                    Type::Tuple(_) => {
+                        // Tuple indexing: t.0, t.1, etc.
+                        self.emit_expr(object);
+                        self.write(".");
+                        self.emit_expr(index);
+                    }
+                    _ => {
+                        // List/string indexing: x[i] -> x[i as usize]
+                        self.emit_expr(object);
+                        self.write("[");
+                        self.emit_expr(index);
+                        self.write(" as usize]");
+                    }
+                }
+            }
+            HirExpr::MethodCall { object, method, args, .. } => {
+                self.emit_method_call(object, method, args);
+            }
+            HirExpr::ContainsOp { element, collection, .. } => {
+                let coll_ty = collection.ty();
+                match coll_ty {
+                    Type::Dict(_, _) => {
+                        self.emit_expr(collection);
+                        self.write(".contains_key(&");
+                        self.emit_expr(element);
+                        self.write(")");
+                    }
+                    Type::Str => {
+                        self.emit_expr(collection);
+                        self.write(".contains(&");
+                        self.emit_expr(element);
+                        self.write(" as &str)");
+                    }
+                    _ => {
+                        // List: collection.contains(&element)
+                        self.emit_expr(collection);
+                        self.write(".contains(&");
+                        self.emit_expr(element);
+                        self.write(")");
+                    }
+                }
             }
         }
     }

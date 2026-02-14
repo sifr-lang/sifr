@@ -145,6 +145,60 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
             })
         }
         Expr::NoneLiteral(_) => Type::None,
+        Expr::Subscript(sub) => {
+            // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
+            let base_name = match sub.value.as_ref() {
+                Expr::Name(n) => n.id.to_string(),
+                _ => {
+                    ctx.error("unsupported type annotation base".to_string());
+                    return Type::Any;
+                }
+            };
+            match base_name.as_str() {
+                "list" => {
+                    let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::List(Box::new(elem_ty))
+                }
+                "dict" => {
+                    // dict[K, V] -- the slice is a Tuple expression
+                    match sub.slice.as_ref() {
+                        Expr::Tuple(tuple) => {
+                            if tuple.elts.len() != 2 {
+                                ctx.error("dict type annotation requires exactly 2 type parameters".to_string());
+                                return Type::Any;
+                            }
+                            let key_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
+                            let val_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
+                            Type::Dict(Box::new(key_ty), Box::new(val_ty))
+                        }
+                        _ => {
+                            ctx.error("dict type annotation requires [K, V] syntax".to_string());
+                            Type::Any
+                        }
+                    }
+                }
+                "tuple" => {
+                    // tuple[A, B, ...] -- the slice is a Tuple expression
+                    match sub.slice.as_ref() {
+                        Expr::Tuple(tuple) => {
+                            let elem_types: Vec<Type> = tuple.elts.iter()
+                                .map(|e| resolve_annotation_expr(e, ctx))
+                                .collect();
+                            Type::Tuple(elem_types)
+                        }
+                        _ => {
+                            // Single-element tuple: tuple[int]
+                            let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                            Type::Tuple(vec![elem_ty])
+                        }
+                    }
+                }
+                _ => {
+                    ctx.error(format!("unknown generic type: '{}'", base_name));
+                    Type::Any
+                }
+            }
+        }
         _ => {
             ctx.error("unsupported type annotation expression".to_string());
             Type::Any
@@ -430,6 +484,11 @@ fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::BoolOp(boolop) => lower_boolop(boolop, ctx),
         Expr::Call(call) => lower_call(call, ctx),
         Expr::If(if_expr) => lower_if_expr(if_expr, ctx),
+        Expr::List(list) => lower_list_literal(list, ctx),
+        Expr::Dict(dict) => lower_dict_literal(dict, ctx),
+        Expr::Tuple(tuple) => lower_tuple_literal(tuple, ctx),
+        Expr::Subscript(sub) => lower_subscript(sub, ctx),
+        Expr::Attribute(attr) => lower_attribute(attr, ctx),
         _ => {
             ctx.error("unsupported expression type".to_string());
             None
@@ -548,6 +607,65 @@ fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
 fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let left = lower_expr(&cmp.left, ctx)?;
 
+    // Handle `in` and `not in` operators specially
+    if cmp.ops.len() == 1 {
+        match &cmp.ops[0] {
+            CmpOp::In => {
+                let collection = lower_expr(&cmp.comparators[0], ctx)?;
+                let collection_ty = collection.ty().clone();
+                if let Some(elem_ty) = collection_ty.contains_element_type() {
+                    if !left.ty().is_assignable_to(&elem_ty) {
+                        ctx.error(format!(
+                            "'in' operator: element type '{}' is not compatible with collection element type '{}'",
+                            left.ty().display_name(),
+                            elem_ty.display_name()
+                        ));
+                    }
+                } else {
+                    ctx.error(format!(
+                        "'in' operator not supported for type '{}'",
+                        collection_ty.display_name()
+                    ));
+                }
+                return Some(HirExpr::ContainsOp {
+                    element: Box::new(left),
+                    collection: Box::new(collection),
+                    ty: Type::Bool,
+                });
+            }
+            CmpOp::NotIn => {
+                let collection = lower_expr(&cmp.comparators[0], ctx)?;
+                let collection_ty = collection.ty().clone();
+                if let Some(elem_ty) = collection_ty.contains_element_type() {
+                    if !left.ty().is_assignable_to(&elem_ty) {
+                        ctx.error(format!(
+                            "'not in' operator: element type '{}' is not compatible with collection element type '{}'",
+                            left.ty().display_name(),
+                            elem_ty.display_name()
+                        ));
+                    }
+                } else {
+                    ctx.error(format!(
+                        "'not in' operator not supported for type '{}'",
+                        collection_ty.display_name()
+                    ));
+                }
+                // Wrap in a UnaryOp not
+                let contains = HirExpr::ContainsOp {
+                    element: Box::new(left),
+                    collection: Box::new(collection),
+                    ty: Type::Bool,
+                };
+                return Some(HirExpr::UnaryOp {
+                    op: "not".to_string(),
+                    operand: Box::new(contains),
+                    ty: Type::Bool,
+                });
+            }
+            _ => {}
+        }
+    }
+
     let mut ops = Vec::new();
     let mut comparators = Vec::new();
 
@@ -612,6 +730,11 @@ fn lower_boolop(boolop: &ExprBoolOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
 }
 
 fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    // Handle method calls: obj.method(args)
+    if let Expr::Attribute(attr) = call.func.as_ref() {
+        return lower_method_call(attr, call, ctx);
+    }
+
     let func_name = match call.func.as_ref() {
         Expr::Name(n) => n.id.to_string(),
         _ => {
@@ -623,6 +746,11 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for range() built-in
     if func_name == "range" {
         return lower_range_call(call, ctx);
+    }
+
+    // Special handling for len() built-in
+    if func_name == "len" {
+        return lower_len_call(call, ctx);
     }
 
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
@@ -678,6 +806,316 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         args,
         ty: *ft.return_type,
     })
+}
+
+fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let mut elements = Vec::new();
+    let mut elem_ty: Option<Type> = None;
+
+    for elt in &list.elts {
+        let expr = lower_expr(elt, ctx)?;
+        let ty = expr.ty().clone();
+        if let Some(ref expected) = elem_ty {
+            if !ty.is_assignable_to(expected) {
+                ctx.error(format!(
+                    "list element type mismatch: expected '{}', got '{}'",
+                    expected.display_name(),
+                    ty.display_name()
+                ));
+            }
+        } else {
+            elem_ty = Some(ty);
+        }
+        elements.push(expr);
+    }
+
+    let final_elem_ty = elem_ty.unwrap_or(Type::Any);
+    let list_ty = Type::List(Box::new(final_elem_ty));
+
+    Some(HirExpr::ListLiteral {
+        elements,
+        ty: list_ty,
+    })
+}
+
+fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let mut keys = Vec::new();
+    let mut values = Vec::new();
+    let mut key_ty: Option<Type> = None;
+    let mut val_ty: Option<Type> = None;
+
+    for item in &dict.items {
+        if let Some(ref key_expr) = item.key {
+            let key = lower_expr(key_expr, ctx)?;
+            let kt = key.ty().clone();
+            if let Some(ref expected) = key_ty {
+                if !kt.is_assignable_to(expected) {
+                    ctx.error(format!(
+                        "dict key type mismatch: expected '{}', got '{}'",
+                        expected.display_name(),
+                        kt.display_name()
+                    ));
+                }
+            } else {
+                key_ty = Some(kt);
+            }
+            keys.push(key);
+        } else {
+            ctx.error("dict unpacking (**) not supported".to_string());
+            return None;
+        }
+
+        let val = lower_expr(&item.value, ctx)?;
+        let vt = val.ty().clone();
+        if let Some(ref expected) = val_ty {
+            if !vt.is_assignable_to(expected) {
+                ctx.error(format!(
+                    "dict value type mismatch: expected '{}', got '{}'",
+                    expected.display_name(),
+                    vt.display_name()
+                ));
+            }
+        } else {
+            val_ty = Some(vt);
+        }
+        values.push(val);
+    }
+
+    let final_key_ty = key_ty.unwrap_or(Type::Any);
+    let final_val_ty = val_ty.unwrap_or(Type::Any);
+    let dict_ty = Type::Dict(Box::new(final_key_ty), Box::new(final_val_ty));
+
+    Some(HirExpr::DictLiteral {
+        keys,
+        values,
+        ty: dict_ty,
+    })
+}
+
+fn lower_tuple_literal(tuple: &ExprTuple, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let mut elements = Vec::new();
+    let mut elem_types = Vec::new();
+
+    for elt in &tuple.elts {
+        let expr = lower_expr(elt, ctx)?;
+        elem_types.push(expr.ty().clone());
+        elements.push(expr);
+    }
+
+    let tuple_ty = Type::Tuple(elem_types);
+
+    Some(HirExpr::TupleLiteral {
+        elements,
+        ty: tuple_ty,
+    })
+}
+
+fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let object = lower_expr(&sub.value, ctx)?;
+    let object_ty = object.ty().clone();
+
+    let index = lower_expr(&sub.slice, ctx)?;
+    let index_ty = index.ty().clone();
+
+    let result_ty = object_ty.index_result_type(&index_ty).unwrap_or_else(|| {
+        ctx.error(format!(
+            "cannot index type '{}' with '{}'",
+            object_ty.display_name(),
+            index_ty.display_name()
+        ));
+        Type::Any
+    });
+
+    Some(HirExpr::Index {
+        object: Box::new(object),
+        index: Box::new(index),
+        ty: result_ty,
+    })
+}
+
+fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    // This handles attribute access like x.method -- but actual method calls
+    // come through as Call(Attribute(...)), so we handle them in lower_call.
+    // For now, just report unsupported.
+    let _object = lower_expr(&attr.value, ctx)?;
+    ctx.error(format!("attribute access '.{}' is not supported as an expression; use as a method call", attr.attr));
+    None
+}
+
+fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let object = lower_expr(&attr.value, ctx)?;
+    let object_ty = object.ty().clone();
+    let method_name = attr.attr.to_string();
+
+    // Lower arguments
+    let mut args = Vec::new();
+    for arg in &call.arguments.args {
+        let expr = lower_expr(arg, ctx)?;
+        args.push(expr);
+    }
+
+    // Resolve method return type based on object type and method name
+    let return_ty = resolve_method_type(&object_ty, &method_name, &args, ctx)?;
+
+    Some(HirExpr::MethodCall {
+        object: Box::new(object),
+        method: method_name,
+        args,
+        ty: return_ty,
+    })
+}
+
+/// Resolve the return type of a method call on a given type.
+fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &mut LowerCtx) -> Option<Type> {
+    match object_ty {
+        Type::List(elem_ty) => match method {
+            "append" => {
+                if args.len() != 1 {
+                    ctx.error(format!("list.append() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                if !args[0].ty().is_assignable_to(elem_ty) {
+                    ctx.error(format!(
+                        "list.append() argument type '{}' is not compatible with list element type '{}'",
+                        args[0].ty().display_name(),
+                        elem_ty.display_name()
+                    ));
+                }
+                Some(Type::None)
+            }
+            "len" => {
+                if !args.is_empty() {
+                    ctx.error("list.len() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::Int)
+            }
+            "pop" => {
+                if !args.is_empty() {
+                    ctx.error("list.pop() takes no arguments".to_string());
+                    return None;
+                }
+                Some(*elem_ty.clone())
+            }
+            _ => {
+                ctx.error(format!("list has no method '{}'", method));
+                None
+            }
+        },
+        Type::Dict(key_ty, val_ty) => match method {
+            "len" => {
+                if !args.is_empty() {
+                    ctx.error("dict.len() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::Int)
+            }
+            "keys" => {
+                if !args.is_empty() {
+                    ctx.error("dict.keys() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::List(key_ty.clone()))
+            }
+            "values" => {
+                if !args.is_empty() {
+                    ctx.error("dict.values() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::List(val_ty.clone()))
+            }
+            "get" => {
+                if args.len() != 1 {
+                    ctx.error(format!("dict.get() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(*val_ty.clone())
+            }
+            _ => {
+                ctx.error(format!("dict has no method '{}'", method));
+                None
+            }
+        },
+        Type::Str => match method {
+            "len" => Some(Type::Int),
+            "upper" | "lower" | "strip" | "lstrip" | "rstrip" => Some(Type::Str),
+            "startswith" | "endswith" => {
+                if args.len() != 1 {
+                    ctx.error(format!("str.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    return None;
+                }
+                Some(Type::Bool)
+            }
+            "split" => {
+                if args.len() > 1 {
+                    ctx.error(format!("str.split() takes 0 or 1 arguments, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::List(Box::new(Type::Str)))
+            }
+            "replace" => {
+                if args.len() != 2 {
+                    ctx.error(format!("str.replace() takes exactly 2 arguments, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Str)
+            }
+            "find" => {
+                if args.len() != 1 {
+                    ctx.error(format!("str.find() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Int)
+            }
+            _ => {
+                ctx.error(format!("str has no method '{}'", method));
+                None
+            }
+        },
+        Type::Tuple(_) => match method {
+            "len" => Some(Type::Int),
+            _ => {
+                ctx.error(format!("tuple has no method '{}'", method));
+                None
+            }
+        },
+        _ => {
+            ctx.error(format!(
+                "type '{}' has no method '{}'",
+                object_ty.display_name(),
+                method
+            ));
+            None
+        }
+    }
+}
+
+fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if call.arguments.args.len() != 1 {
+        ctx.error(format!("len() takes exactly 1 argument, got {}", call.arguments.args.len()));
+        return None;
+    }
+    let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    let arg_ty = arg.ty().clone();
+
+    // len() works on str, list, dict, tuple
+    match &arg_ty {
+        Type::Str | Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) => {
+            Some(HirExpr::MethodCall {
+                object: Box::new(arg),
+                method: "len".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            })
+        }
+        _ => {
+            ctx.error(format!(
+                "len() argument must be a string, list, dict, or tuple, got '{}'",
+                arg_ty.display_name()
+            ));
+            None
+        }
+    }
 }
 
 fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {

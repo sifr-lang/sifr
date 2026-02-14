@@ -1,0 +1,4 @@
+# expect-stdout: 20
+def main():
+    nums: list[int] = [10, 20, 30]
+    print(nums[1])

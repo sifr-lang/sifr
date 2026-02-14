@@ -137,6 +137,41 @@ pub enum HirExpr {
         end: Box<HirExpr>,
         ty: Type,
     },
+    /// List literal: [1, 2, 3]
+    ListLiteral {
+        elements: Vec<HirExpr>,
+        ty: Type,
+    },
+    /// Dict literal: {"a": 1, "b": 2}
+    DictLiteral {
+        keys: Vec<HirExpr>,
+        values: Vec<HirExpr>,
+        ty: Type,
+    },
+    /// Tuple literal: (1, "hello")
+    TupleLiteral {
+        elements: Vec<HirExpr>,
+        ty: Type,
+    },
+    /// Indexing: x[0], d["key"]
+    Index {
+        object: Box<HirExpr>,
+        index: Box<HirExpr>,
+        ty: Type,
+    },
+    /// Method call: x.append(1), s.upper()
+    MethodCall {
+        object: Box<HirExpr>,
+        method: String,
+        args: Vec<HirExpr>,
+        ty: Type,
+    },
+    /// Contains check: x in collection
+    ContainsOp {
+        element: Box<HirExpr>,
+        collection: Box<HirExpr>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -155,7 +190,13 @@ impl HirExpr {
             | Self::BoolOp { ty, .. }
             | Self::Call { ty, .. }
             | Self::IfExpr { ty, .. }
-            | Self::RangeLiteral { ty, .. } => ty,
+            | Self::RangeLiteral { ty, .. }
+            | Self::ListLiteral { ty, .. }
+            | Self::DictLiteral { ty, .. }
+            | Self::TupleLiteral { ty, .. }
+            | Self::Index { ty, .. }
+            | Self::MethodCall { ty, .. }
+            | Self::ContainsOp { ty, .. } => ty,
         }
     }
 }

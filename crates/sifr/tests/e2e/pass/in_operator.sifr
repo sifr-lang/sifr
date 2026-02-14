@@ -1,0 +1,5 @@
+# expect-stdout: true
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+    result: bool = 3 in nums
+    print(result)

@@ -15,6 +15,12 @@ pub enum Type {
     None,
     /// Function type with parameter types and return type
     Function(FunctionType),
+    /// List type (`list[T]` in Sifr, `Vec<T>` in Rust)
+    List(Box<Type>),
+    /// Dictionary type (`dict[K, V]` in Sifr, `HashMap<K, V>` in Rust)
+    Dict(Box<Type>, Box<Type>),
+    /// Tuple type (`tuple[A, B, ...]` in Sifr, `(A, B, ...)` in Rust)
+    Tuple(Vec<Type>),
     /// Range type (maps to `std::ops::Range<i64>` in Rust)
     Range,
     /// Explicit opt-out of type checking
@@ -54,22 +60,28 @@ impl Type {
         match self {
             Self::Int | Self::Float | Self::Bool | Self::None | Self::Never | Self::Range => OwnershipKind::Copy,
             Self::Function(_) => OwnershipKind::Copy,
-            Self::Str | Self::Any => OwnershipKind::Move,
+            Self::Str | Self::Any | Self::List(_) | Self::Dict(_, _) | Self::Tuple(_) => OwnershipKind::Move,
         }
     }
 
     /// Returns the Sifr source name for this type.
-    pub fn display_name(&self) -> &str {
+    pub fn display_name(&self) -> String {
         match self {
-            Self::Int => "int",
-            Self::Float => "float",
-            Self::Bool => "bool",
-            Self::Str => "str",
-            Self::None => "None",
-            Self::Function(_) => "function",
-            Self::Range => "range",
-            Self::Any => "Any",
-            Self::Never => "Never",
+            Self::Int => "int".to_string(),
+            Self::Float => "float".to_string(),
+            Self::Bool => "bool".to_string(),
+            Self::Str => "str".to_string(),
+            Self::None => "None".to_string(),
+            Self::Function(_) => "function".to_string(),
+            Self::List(elem) => format!("list[{}]", elem.display_name()),
+            Self::Dict(key, val) => format!("dict[{}, {}]", key.display_name(), val.display_name()),
+            Self::Tuple(elems) => {
+                let parts: Vec<String> = elems.iter().map(Self::display_name).collect();
+                format!("tuple[{}]", parts.join(", "))
+            }
+            Self::Range => "range".to_string(),
+            Self::Any => "Any".to_string(),
+            Self::Never => "Never".to_string(),
         }
     }
 
@@ -81,6 +93,12 @@ impl Type {
             Self::Bool => "bool".to_string(),
             Self::Str => "String".to_string(),
             Self::None => "()".to_string(),
+            Self::List(elem) => format!("Vec<{}>", elem.rust_type()),
+            Self::Dict(key, val) => format!("std::collections::HashMap<{}, {}>", key.rust_type(), val.rust_type()),
+            Self::Tuple(elems) => {
+                let parts: Vec<String> = elems.iter().map(Self::rust_type).collect();
+                format!("({})", parts.join(", "))
+            }
             Self::Range => "std::ops::Range<i64>".to_string(),
             Self::Any => "Box<dyn std::any::Any>".to_string(),
             Self::Never => "!".to_string(),
@@ -101,6 +119,54 @@ impl Type {
     pub fn iterable_element_type(&self) -> Option<Type> {
         match self {
             Self::Range => Some(Type::Int),
+            Self::List(elem) => Some(*elem.clone()),
+            _ => None,
+        }
+    }
+
+    /// Returns the result type of indexing this type with the given index type.
+    pub fn index_result_type(&self, index_ty: &Type) -> Option<Type> {
+        match self {
+            Self::List(elem) => {
+                if index_ty == &Type::Int {
+                    Some(*elem.clone())
+                } else {
+                    None
+                }
+            }
+            Self::Dict(key, val) => {
+                if index_ty == key.as_ref() {
+                    Some(*val.clone())
+                } else {
+                    None
+                }
+            }
+            Self::Tuple(elems) => {
+                // Tuple indexing requires a literal int, but at type level we just return Any
+                // The actual positional type is resolved during lowering
+                if index_ty == &Type::Int && !elems.is_empty() {
+                    Some(elems[0].clone()) // Placeholder; real resolution happens in lowering
+                } else {
+                    None
+                }
+            }
+            Self::Str => {
+                if index_ty == &Type::Int {
+                    Some(Type::Str) // Single char as string
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    }
+
+    /// Returns the result type of the `in` operator for this collection type.
+    pub fn contains_element_type(&self) -> Option<Type> {
+        match self {
+            Self::List(elem) => Some(*elem.clone()),
+            Self::Dict(key, _) => Some(*key.clone()),
+            Self::Str => Some(Type::Str),
             _ => None,
         }
     }
@@ -118,13 +184,21 @@ impl Type {
         if matches!(self, Self::Never) {
             return true;
         }
-        false
+        // Structural subtyping for collections
+        match (self, target) {
+            (Self::List(a), Self::List(b)) => a.is_assignable_to(b),
+            (Self::Dict(ak, av), Self::Dict(bk, bv)) => ak.is_assignable_to(bk) && av.is_assignable_to(bv),
+            (Self::Tuple(a), Self::Tuple(b)) => {
+                a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))
+            }
+            _ => false,
+        }
     }
 }
 
 impl std::fmt::Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.display_name())
+        write!(f, "{}", &self.display_name())
     }
 }
 
@@ -161,5 +235,46 @@ mod tests {
         assert!(Type::Any.is_assignable_to(&Type::Int));
         assert!(Type::Int.is_assignable_to(&Type::Any));
         assert!(Type::Never.is_assignable_to(&Type::Int));
+    }
+
+    #[test]
+    fn test_list_type() {
+        let list_int = Type::List(Box::new(Type::Int));
+        assert_eq!(list_int.ownership(), OwnershipKind::Move);
+        assert_eq!(list_int.display_name(), "list[int]");
+        assert_eq!(list_int.rust_type(), "Vec<i64>");
+        assert_eq!(list_int.iterable_element_type(), Some(Type::Int));
+    }
+
+    #[test]
+    fn test_dict_type() {
+        let dict_str_int = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
+        assert_eq!(dict_str_int.ownership(), OwnershipKind::Move);
+        assert_eq!(dict_str_int.display_name(), "dict[str, int]");
+        assert_eq!(dict_str_int.rust_type(), "std::collections::HashMap<String, i64>");
+    }
+
+    #[test]
+    fn test_tuple_type() {
+        let tuple = Type::Tuple(vec![Type::Int, Type::Str]);
+        assert_eq!(tuple.ownership(), OwnershipKind::Move);
+        assert_eq!(tuple.display_name(), "tuple[int, str]");
+        assert_eq!(tuple.rust_type(), "(i64, String)");
+    }
+
+    #[test]
+    fn test_collection_assignability() {
+        let list_int = Type::List(Box::new(Type::Int));
+        let list_int2 = Type::List(Box::new(Type::Int));
+        let list_str = Type::List(Box::new(Type::Str));
+        assert!(list_int.is_assignable_to(&list_int2));
+        assert!(!list_int.is_assignable_to(&list_str));
+    }
+
+    #[test]
+    fn test_index_result_type() {
+        let list_int = Type::List(Box::new(Type::Int));
+        assert_eq!(list_int.index_result_type(&Type::Int), Some(Type::Int));
+        assert_eq!(list_int.index_result_type(&Type::Str), None);
     }
 }

@@ -1,0 +1,7 @@
+# expect-stdout: 6
+def main():
+    nums: list[int] = [1, 2, 3]
+    total: int = 0
+    for n in nums:
+        total = total + n
+    print(total)

@@ -1,0 +1,4 @@
+# expect-stdout: 3
+def main():
+    point: tuple[int, int, int] = (1, 2, 3)
+    print(len(point))
