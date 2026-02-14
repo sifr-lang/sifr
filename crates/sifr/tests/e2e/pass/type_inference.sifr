@@ -1,0 +1,4 @@
+# expect-stdout: 42
+def main():
+    x = 42
+    print(x)

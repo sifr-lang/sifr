@@ -1,0 +1,11 @@
+# expect-stdout: positive
+def classify(n: int) -> str:
+    if n > 0:
+        return "positive"
+    if n < 0:
+        return "negative"
+    return "zero"
+
+def main():
+    result: str = classify(42)
+    print(result)

@@ -1,0 +1,5 @@
+# expect-error: moved value
+def main():
+    s: str = "hello"
+    print(s)
+    print(s)

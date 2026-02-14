@@ -1,0 +1,3 @@
+# expect-error: undefined variable
+def main():
+    print(x)

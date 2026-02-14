@@ -1,0 +1,14 @@
+[package]
+name = "sifr_type_system"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+
+[dev-dependencies]
+
+[lints]
+workspace = true

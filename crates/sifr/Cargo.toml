@@ -1,0 +1,20 @@
+[package]
+name = "sifr"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[[bin]]
+name = "sifr"
+path = "src/main.rs"
+
+[dependencies]
+sifr_driver = { workspace = true }
+clap = { version = "4.5.3", features = ["derive"] }
+
+[dev-dependencies]
+
+[lints]
+workspace = true
