@@ -21,5 +21,5 @@ Edit ticket fields (Priority and Status):
 
 2. Change highly prioritized tickets `Status` into `Ready`:
 ```
-gh project item-edit --project-id PVT_kwHOAKAfcc4A6-Vk --id <item-id> --field-id <field-id> --single-select-option-id <single-select-option-id>
+gh project item-edit --project-id PVT_kwHOAKAfcc4BPKkL --id <item-id> --field-id <field-id> --single-select-option-id <single-select-option-id>
 ```

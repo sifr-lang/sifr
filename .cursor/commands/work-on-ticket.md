@@ -37,5 +37,5 @@ Check @.cursor/references/available-field-id-and-single-selection-option-id.md
 
 7. Update ticket `Status` into `In review`:
 ```
-gh project item-edit --project-id PVT_kwHOAKAfcc4A6-Vk --id <item-id> --field-id <field-id> --single-select-option-id <single-select-option-id>
+gh project item-edit --project-id PVT_kwHOAKAfcc4BPKkL --id <item-id> --field-id <field-id> --single-select-option-id <single-select-option-id>
 ```
