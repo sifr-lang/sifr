@@ -1,0 +1,28 @@
+[package]
+name = "sifr_source_file"
+version = "0.0.0"
+publish = false
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+license = { workspace = true }
+
+[lib]
+
+[dependencies]
+sifr_text_size = { workspace = true }
+
+memchr = { workspace = true }
+once_cell = { workspace = true }
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+
+[features]
+serde = ["dep:serde", "sifr_text_size/serde"]
+
+[lints]
+workspace = true
