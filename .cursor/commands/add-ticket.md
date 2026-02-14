@@ -19,7 +19,7 @@ Check @.cursor/references/available-field-id-and-single-selection-option-id.md
 
 4. Add item to the project (last added github issue):
 ```
-gh project item-add 1 --owner yaseralnajjar --url https://github.com/yaseralnajjar/deplora/issues/<issue-id>
+gh project item-add 1 --owner yaseralnajjar --url https://github.com/yaseralnajjar/sifr/issues/<issue-id>
 ```
 
 5. Edit ticket fields (Status and Type):
