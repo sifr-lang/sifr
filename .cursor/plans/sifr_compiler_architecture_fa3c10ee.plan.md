@@ -87,6 +87,51 @@ Sifr's core guarantee: **if it compiles, it works.** The language is designed so
 
 This philosophy means that a Sifr programmer who handles all `Result` and `Option` values (which the compiler enforces) can be confident their program will not crash at runtime.
 
+## CPython Reference
+
+Sifr uses the CPython source code (`/Users/yaseralnajjar/work/sifr/cpython`) as the **authoritative reference** for Python behavior. The goal is to match CPython's semantics for built-in functions, data structure methods, and standard library behavior -- but always through Sifr's safety lens.
+
+### Reference Directory Mapping
+
+
+| Sifr feature area                                                                   | CPython reference location                                              | Notes                                                                        |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Built-in functions (`len`, `abs`, `min`, `max`, `sorted`, `zip`, `enumerate`, etc.) | `Python/bltinmodule.c`                                                  | Match behavior, but return `Result`/`Option` where CPython would raise/panic |
+| `list` methods (`.append`, `.pop`, `.sort`, `.index`, etc.)                         | `Objects/listobject.c`                                                  | Match semantics, safe indexing returns `Option`                              |
+| `dict` methods (`.keys`, `.values`, `.get`, `.pop`, etc.)                           | `Objects/dictobject.c`                                                  | Match semantics, safe lookup returns `Option`                                |
+| `str` methods (`.replace`, `.find`, `.split`, `.join`, etc.)                        | `Objects/unicodeobject.c`                                               | Match behavior, UTF-8 safe, character-based indexing                         |
+| `tuple`                                                                             | `Objects/tupleobject.c`                                                 | Immutable, compile-time enforced                                             |
+| `set` / `frozenset`                                                                 | `Objects/setobject.c`                                                   | Match operations, `frozenset` immutability enforced at compile time          |
+| `int` / `float` / `bool`                                                            | `Objects/longobject.c`, `Objects/floatobject.c`, `Objects/boolobject.c` | Checked arithmetic, safe conversions                                         |
+| `bytes` / `bytearray`                                                               | `Objects/bytesobject.c`, `Objects/bytearrayobject.c`                    | Match API, safe encode/decode                                                |
+| `range` / `slice`                                                                   | `Objects/rangeobject.c`, `Objects/sliceobject.c`                        | Match iteration and slicing behavior                                         |
+| Iterators / generators                                                              | `Objects/iterobject.c`, `Objects/genobject.c`                           | Match protocol, `Option`-based `__next__`                                    |
+| Standard library modules                                                            | `Lib/<module>.py`, `Modules/<module>module.c`                           | Match API surface, wrap Rust crates                                          |
+| Test suite (behavioral reference)                                                   | `Lib/test/test_<module>.py`                                             | Use as specification for expected behavior                                   |
+
+
+### Safety Adaptation Rules
+
+When adapting CPython behavior to Sifr, apply these rules:
+
+1. **Where CPython raises an exception, Sifr returns `Result[T, E]`.** Example: `int("abc")` raises `ValueError` in CPython; in Sifr it returns `Result[int, ParseError]`.
+2. **Where CPython raises `IndexError`, Sifr returns `Option[T]`.** Example: `list[99]` raises `IndexError` in CPython; in Sifr it returns `None`.
+3. **Where CPython raises `KeyError`, Sifr returns `Option[V]`.** Example: `dict["missing"]` raises `KeyError` in CPython; in Sifr it returns `None`.
+4. **Where CPython silently overflows or wraps, Sifr returns `Result`.** Example: large integer arithmetic in CPython uses arbitrary precision; Sifr uses checked `i64` arithmetic with `Result[int, OverflowError]`.
+5. **Where CPython allows mutation on immutable types at runtime, Sifr rejects at compile time.** Example: `tuple[0] = 1` raises `TypeError` at runtime in CPython; in Sifr it is a compile-time error.
+6. **Where CPython behavior is undefined or platform-dependent, Sifr defines explicit behavior.** Document any deviations from CPython in the milestone's notes.
+
+### Safety Testing Contract
+
+Every milestone that implements built-in functions, data structure methods, or stdlib modules must include a **safety test layer** that verifies:
+
+1. **Behavioral parity with CPython:** for each function/method, write tests that match CPython's expected output for valid inputs. Use `Lib/test/test_<module>.py` as the specification.
+2. **Safe error handling:** for each CPython operation that raises an exception, verify that Sifr returns the correct `Result::Err` or `Option::None` instead.
+3. **No panics on any input:** fuzz or property-test each function/method to ensure it never panics, regardless of input. The only acceptable panic is from `assert` statements.
+4. **Compile-time rejection of unsafe patterns:** verify that operations CPython rejects at runtime (e.g., mutating a tuple, unhashable dict key) are caught at compile time in Sifr.
+
+This safety test layer is tracked in each milestone's Definition of Done as: **"CPython parity tests pass with safe error handling (no panics, Result/Option where CPython raises)"**.
+
 ## Compiler Pipeline
 
 ```mermaid
@@ -727,6 +772,7 @@ Built-in functions that do not require generics (available without `import`):
 - Built-in functions: `len`, `abs`, `round`, `hash`, `repr`
 - E2E pass tests: string_char_index, string_oob_returns_none, string_char_len, string_slice, list_index_option, list_oob_returns_none, list_slice_copy, for_loop_borrow, ternary_expr, list_append_pop, dict_keys_values_items, string_replace_find, builtin_len_abs_round
 - E2E fail tests: ternary_type_mismatch, list_remove_not_found, hash_unhashable_type
+- CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/listobject.c`, `Objects/dictobject.c`, `Objects/unicodeobject.c`, `Lib/test/test_list.py`, `Lib/test/test_dict.py`, `Lib/test/test_str.py`
 - Existing M1/M2 E2E tests still pass (no regressions)
 - Milestone demo in `./tmp/m3b_demo.sifr`
 
@@ -882,6 +928,7 @@ M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/
 - Exhaustiveness checking for `except` arms
 - E2E pass tests: result_basic, option_chaining, error_propagation, try_except, division_by_zero_result, int_parse_result, float_parse_result, checked_overflow, input_basic, infallible_conversions
 - E2E fail tests: unhandled_error, non_exhaustive_except, unused_result_error
+- CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (int/float/bool conversions, input), `Lib/test/test_builtin.py`
 - Unit tests for Result/Option type checking and inference
 - Milestone demo in `./tmp/m4_demo.sifr`
 
@@ -1255,6 +1302,7 @@ Sorting requires a `Comparable` protocol (maps to Rust's `Ord` trait):
 - Float sorting rejected at compile time (not `Comparable`)
 - E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator, builtin_min_max_sum, sorted_basic, sorted_key_reverse, zip_enumerate, any_all, reduce_basic
 - E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice, float_sort_rejected
+- CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (min, max, sum, sorted, zip, enumerate, any, all), `Objects/listobject.c` (list.sort), `Lib/test/test_builtin.py`
 - Milestone demo in `./tmp/m7_demo.sifr`
 
 ---
@@ -1390,6 +1438,7 @@ def main():
 - Each module has integration tests verifying the Sifr API against the Rust crate behavior
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
 - E2E pass tests: file_io, json_roundtrip, env_vars, os_process, collections_basic
+- CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Lib/json/`, `Lib/os.py`, `Lib/test/test_json/`, `Lib/test/test_os.py`, `Objects/setobject.c`, `Objects/odictobject.c`
 - Milestone demo in `./tmp/m8_demo.sifr`
 
 ---
@@ -1453,6 +1502,7 @@ def main():
 - `.decode()` / `.encode()` convert between `str` and `bytes`
 - E2E pass tests: frozenset_basic, frozenset_as_key, counter_basic, counter_arithmetic, defaultdict_basic, set_operations, bytes_literal, bytes_decode_encode, bytearray_mutate
 - E2E fail tests: frozenset_mutation_rejected, bytes_mutation_rejected, decode_invalid_utf8
+- CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/setobject.c`, `Objects/bytesobject.c`, `Objects/bytearrayobject.c`, `Lib/collections/__init__.py` (Counter, defaultdict), `Lib/test/test_set.py`, `Lib/test/test_bytes.py`, `Lib/test/test_collections.py`
 - Milestone demo in `./tmp/m8b_demo.sifr`
 
 ---
@@ -1485,6 +1535,7 @@ def main():
 - Each module has integration tests verifying the Sifr API against the Rust crate behavior
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
 - E2E pass tests: math_ops, time_basic, random_gen, regex_match, hash_sha256, encoding_base64, stream_lines, log_basic
+- CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Lib/test/test_math.py`, `Lib/test/test_time.py`, `Lib/test/test_random.py`, `Lib/test/test_re/`
 - Milestone demo in `./tmp/m9_demo.sifr`
 
 ---
@@ -2146,6 +2197,7 @@ match parse_int(s) {
 
 **Milestone-specific gates (added as milestones land):**
 
+- M3b+: CPython parity tests -- verify behavioral match with CPython (`/Users/yaseralnajjar/work/sifr/cpython`) for all built-in functions, data structure methods, and stdlib modules, with safe error handling (no panics, `Result`/`Option` where CPython raises exceptions)
 - M7+: benchmark suite with regression thresholds (compile time, binary size)
 - M8+: stdlib wrapper tests (each module has integration tests against the underlying Rust crate)
 - M17: fuzz testing for parser and type checker (cargo-fuzz or afl)
@@ -2409,19 +2461,23 @@ flowchart TD
         E2EFail["Compile-fail tests\n(expected errors)"]
         E2EOwnership["Ownership tests\n(move/borrow errors)"]
     end
-    subgraph layer4 [Layer 4: Corpus Tests]
+    subgraph layer4 [Layer 4: CPython Parity Tests]
+        CPythonParity["CPython parity tests\n(match behavior, safe errors)"]
+        SafetyTests["Safety tests\n(no panics, Result/Option)"]
+    end
+    subgraph layer5 [Layer 5: Corpus Tests]
         Corpus["Corpus tests\n(no panics on large inputs)"]
     end
-    subgraph layer5 [Layer 5: Fuzz + Property Tests - M7 plus]
+    subgraph layer6 [Layer 6: Fuzz + Property Tests - M7 plus]
         FuzzParser["Parser fuzz\n(cargo-fuzz)"]
         FuzzChecker["Type checker fuzz\n(random ASTs)"]
         PropTests["Property tests\n(algebraic invariants)"]
     end
-    subgraph layer6 [Layer 6: Performance Tests - M7 plus]
+    subgraph layer7 [Layer 7: Performance Tests - M7 plus]
         CompileBench["Compile-time benchmarks\n(criterion)"]
         BinarySizeBench["Binary-size benchmarks"]
     end
-    layer1 --> layer2 --> layer3 --> layer4 --> layer5 --> layer6
+    layer1 --> layer2 --> layer3 --> layer4 --> layer5 --> layer6 --> layer7
 ```
 
 ### Layer 1: Unit Tests (per crate, `#[cfg(test)]`)
@@ -2726,7 +2782,41 @@ fn test_e2e_fail() {
 }
 ```
 
-### Layer 4: Corpus Tests (Robustness)
+### Layer 4: CPython Parity and Safety Tests (M3b+)
+
+**Purpose:** Verify that Sifr's built-in functions, data structure methods, and stdlib modules match CPython's behavior -- but with safe error handling. This layer ensures behavioral compatibility while enforcing Sifr's no-panic guarantee.
+
+**Reference:** `/Users/yaseralnajjar/work/sifr/cpython` -- specifically `Lib/test/test_<module>.py` for expected behavior, and `Objects/<type>object.c` / `Python/bltinmodule.c` for implementation semantics.
+
+**Test structure:**
+
+```
+tests/cpython_parity/
+  test_list_methods.sifr      # list.append, pop, sort, etc.
+  test_dict_methods.sifr      # dict.keys, values, get, etc.
+  test_str_methods.sifr       # str.replace, find, join, etc.
+  test_builtins.sifr          # len, abs, min, max, sorted, zip, etc.
+  test_set_operations.sifr    # set union, intersection, etc.
+  test_bytes.sifr             # bytes/bytearray operations
+  test_conversions.sifr       # int(), float(), str() conversions
+```
+
+**Each test file contains:**
+
+1. **Behavioral parity tests:** verify that valid inputs produce the same output as CPython. Example: `assert_eq(sorted([3, 1, 2]), [1, 2, 3])`.
+2. **Safe error tests:** verify that inputs which raise exceptions in CPython return `Result::Err` or `Option::None` in Sifr. Example: `assert_err(ParseError, int("abc"))`.
+3. **No-panic tests:** verify that no input causes a panic. Fuzz inputs are fed to each function; the test passes if no panic occurs (errors via `Result`/`Option` are acceptable).
+4. **Compile-time safety tests:** verify that operations CPython rejects at runtime are caught at compile time in Sifr. Example: `tuple[0] = 1` should not compile.
+
+**When CPython behavior differs from Sifr's safety model, document the deviation in the test file with a comment:**
+
+```python
+# CPython: list[99] raises IndexError
+# Sifr: list[99] returns None (safe indexing)
+assert_eq(my_list[99], None)
+```
+
+### Layer 5: Corpus Tests (Robustness)
 
 **Inspired by:** ty's corpus tests -- ensure the compiler doesn't panic on large/varied inputs.
 
@@ -2749,7 +2839,7 @@ fn corpus_no_panics() {
 }
 ```
 
-### Layer 5: Fuzz and Property Tests (M7+)
+### Layer 6: Fuzz and Property Tests (M7+)
 
 **Purpose:** Discover edge cases and crashes that hand-written tests miss. Especially important for a compiler built by AI agents, where subtle regressions can be introduced silently.
 
@@ -2772,7 +2862,7 @@ fn corpus_no_panics() {
   - Subtyping is transitive: if `A <: B` and `B <: C` then `A <: C`
   - Narrowing preserves subtyping: `narrow(T, cond) <: T`
 
-### Layer 6: Performance Regression Tests (M7+)
+### Layer 7: Performance Regression Tests (M7+)
 
 **Purpose:** Prevent compile-time and binary-size regressions as the compiler grows.
 
