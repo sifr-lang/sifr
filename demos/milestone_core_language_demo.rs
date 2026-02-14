@@ -16,7 +16,7 @@ fn fibonacci(n: i64) -> i64 {
 }
 
 fn greet(name: String) -> String {
-    return format!("{}{}", format!("{}{}", "Hello, ".to_string(), name), "!".to_string());
+    return format!("{}{}{}", "Hello, ".to_string(), name, "!".to_string());
 }
 
 fn classify(x: i64) -> String {
@@ -44,27 +44,27 @@ fn is_even(n: i64) -> bool {
 }
 
 fn main() {
-    let mut x: i64 = 42_i64;
-    let mut pi: f64 = 3.14_f64;
-    let mut flag: bool = true;
-    let mut name: String = "Sifr".to_string();
-    let mut sum: i64 = x + 8_i64;
-    let mut product: i64 = double(sum);
+    let x: i64 = 42_i64;
+    let pi: f64 = 3.14_f64;
+    let flag: bool = true;
+    let name: String = "Sifr".to_string();
+    let sum: i64 = x + 8_i64;
+    let product: i64 = double(sum);
     println!("{}", product);
-    let mut fact: i64 = factorial(5_i64);
+    let fact: i64 = factorial(5_i64);
     println!("{}", fact);
-    let mut fib: i64 = fibonacci(10_i64);
+    let fib: i64 = fibonacci(10_i64);
     println!("{}", fib);
-    let mut msg: String = greet(name);
+    let msg: String = greet(name);
     println!("{}", msg);
-    let mut label: String = classify(x);
+    let label: String = classify(x);
     println!("{}", label);
-    let mut neg_label: String = classify(-7_i64);
+    let neg_label: String = classify(-7_i64);
     println!("{}", neg_label);
-    let mut zero_label: String = classify(0_i64);
+    let zero_label: String = classify(0_i64);
     println!("{}", zero_label);
-    let mut even: bool = is_even(4_i64);
+    let even: bool = is_even(4_i64);
     println!("{}", even);
-    let mut odd: bool = is_even(7_i64);
+    let odd: bool = is_even(7_i64);
     println!("{}", odd);
 }

@@ -38,105 +38,105 @@ fn safe_divide(a: i64, b: i64) -> Result<i64, String> {
 }
 
 fn main() {
-    println!("{}", "=== Result Type & Fallible Conversions ===".to_string());
+    println!("{}", "=== Result Type & Fallible Conversions ===");
     match (|| -> Result<(), String> {
-        let mut n: i64 = "42".to_string().parse::<i64>().map_err(|e| e.to_string())?;
-        println!("{}", format!("parsed: {}", n));
+        let n: i64 = "42".to_string().parse::<i64>().map_err(|e| e.to_string())?;
+        println!("parsed: {}", n);
         Ok(())
     })() {
         Ok(()) => {}
         Err(e) => {
-            println!("{}", format!("parse failed: {}", e));
-        }
-    }
-    match (|| -> Result<(), String> {
-        let mut n2: i64 = "not_a_number".to_string().parse::<i64>().map_err(|e| e.to_string())?;
-        println!("{}", format!("parsed: {}", n2));
-        Ok(())
-    })() {
-        Ok(()) => {}
-        Err(e) => {
-            println!("{}", format!("parse failed (expected): {}", e));
-        }
-    }
-    println!("{}", "=== Custom Error Types ===".to_string());
-    match (|| -> Result<(), ValidationError> {
-        let mut v: i64 = validate_range(50_i64, 0_i64, 100_i64)?;
-        println!("{}", format!("validated: {}", v));
-        Ok(())
-    })() {
-        Ok(()) => {}
-        Err(e) => {
-            println!("{}", format!("caught: {}", e.message));
-        }
-    }
-    match (|| -> Result<(), ValidationError> {
-        let mut v2: i64 = validate_range(-5_i64, 0_i64, 100_i64)?;
-        println!("{}", format!("validated: {}", v2));
-        Ok(())
-    })() {
-        Ok(()) => {}
-        Err(e) => {
-            println!("{}", format!("caught: {}", e.message));
-        }
-    }
-    println!("{}", "=== Try/Except with Auto-Unwrap ===".to_string());
-    match (|| -> Result<(), ValidationError> {
-        let mut a: i64 = validate_range(100_i64, 0_i64, 200_i64)?;
-        println!("{}", format!("result: {}", a));
-        Ok(())
-    })() {
-        Ok(()) => {}
-        Err(e) => {
-            println!("{}", format!("error handled: {}", e.message));
-        }
-    }
-    match (|| -> Result<(), ValidationError> {
-        let mut b: i64 = validate_range(999_i64, 0_i64, 200_i64)?;
-        println!("{}", format!("result: {}", b));
-        Ok(())
-    })() {
-        Ok(()) => {}
-        Err(e) => {
-            println!("{}", format!("error handled: {}", e.message));
-        }
-    }
-    println!("{}", "=== Infallible Conversions ===".to_string());
-    let mut x1: i64 = 3.7_f64 as i64;
-    println!("{}", format!("int(3.7) = {}", x1));
-    let mut x2: f64 = 5_i64 as f64;
-    println!("{}", format!("float(5) = {}", x2));
-    let mut x3: String = format!("{}", 42_i64);
-    println!("{}", format!("str(42) = {}", x3));
-    let mut x4: bool = 1_i64 != 0;
-    println!("{}", format!("bool(1) = {}", x4));
-    println!("{}", "=== Raise in Result Functions ===".to_string());
-    match (|| -> Result<(), String> {
-        let mut d1: i64 = safe_divide(10_i64, 3_i64)?;
-        println!("{}", format!("divide(10, 3) = {}", d1));
-        Ok(())
-    })() {
-        Ok(()) => {}
-        Err(e) => {
-            println!("{}", format!("divide error: {}", e));
+            println!("parse failed: {}", e);
         }
     }
     match (|| -> Result<(), String> {
-        let mut d2: i64 = safe_divide(10_i64, 0_i64)?;
-        println!("{}", format!("divide(10, 0) = {}", d2));
+        let n2: i64 = "not_a_number".to_string().parse::<i64>().map_err(|e| e.to_string())?;
+        println!("parsed: {}", n2);
         Ok(())
     })() {
         Ok(()) => {}
         Err(e) => {
-            println!("{}", format!("divide(10, 0) error: {}", e));
+            println!("parse failed (expected): {}", e);
         }
     }
-    println!("{}", "=== Assert Statement ===".to_string());
+    println!("{}", "=== Custom Error Types ===");
+    match (|| -> Result<(), ValidationError> {
+        let v: i64 = validate_range(50_i64, 0_i64, 100_i64)?;
+        println!("validated: {}", v);
+        Ok(())
+    })() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("caught: {}", e.message);
+        }
+    }
+    match (|| -> Result<(), ValidationError> {
+        let v2: i64 = validate_range(-5_i64, 0_i64, 100_i64)?;
+        println!("validated: {}", v2);
+        Ok(())
+    })() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("caught: {}", e.message);
+        }
+    }
+    println!("{}", "=== Try/Except with Auto-Unwrap ===");
+    match (|| -> Result<(), ValidationError> {
+        let a: i64 = validate_range(100_i64, 0_i64, 200_i64)?;
+        println!("result: {}", a);
+        Ok(())
+    })() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("error handled: {}", e.message);
+        }
+    }
+    match (|| -> Result<(), ValidationError> {
+        let b: i64 = validate_range(999_i64, 0_i64, 200_i64)?;
+        println!("result: {}", b);
+        Ok(())
+    })() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("error handled: {}", e.message);
+        }
+    }
+    println!("{}", "=== Infallible Conversions ===");
+    let x1: i64 = 3.7_f64 as i64;
+    println!("int(3.7) = {}", x1);
+    let x2: f64 = 5_i64 as f64;
+    println!("float(5) = {}", x2);
+    let x3: String = format!("{}", 42_i64);
+    println!("str(42) = {}", x3);
+    let x4: bool = 1_i64 != 0;
+    println!("bool(1) = {}", x4);
+    println!("{}", "=== Raise in Result Functions ===");
+    match (|| -> Result<(), String> {
+        let d1: i64 = safe_divide(10_i64, 3_i64)?;
+        println!("divide(10, 3) = {}", d1);
+        Ok(())
+    })() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("divide error: {}", e);
+        }
+    }
+    match (|| -> Result<(), String> {
+        let d2: i64 = safe_divide(10_i64, 0_i64)?;
+        println!("divide(10, 0) = {}", d2);
+        Ok(())
+    })() {
+        Ok(()) => {}
+        Err(e) => {
+            println!("divide(10, 0) error: {}", e);
+        }
+    }
+    println!("{}", "=== Assert Statement ===");
     assert!(1_i64 + 1_i64 == 2_i64);
     assert!(true);
-    println!("{}", "all assertions passed".to_string());
-    println!("{}", "=== Explicit Discard ===".to_string());
+    println!("{}", "all assertions passed");
+    println!("{}", "=== Explicit Discard ===");
     let _: Result<i64, String> = safe_divide(10_i64, 2_i64);
-    println!("{}", "result discarded safely".to_string());
-    println!("{}", "demo complete!".to_string());
+    println!("{}", "result discarded safely");
+    println!("{}", "demo complete!");
 }
