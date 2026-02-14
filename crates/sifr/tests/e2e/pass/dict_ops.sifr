@@ -1,0 +1,4 @@
+# expect-stdout: 25
+def main():
+    ages: dict[str, int] = {"alice": 25, "bob": 30}
+    print(ages["alice"])

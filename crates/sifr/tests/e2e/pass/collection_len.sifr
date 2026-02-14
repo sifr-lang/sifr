@@ -1,0 +1,4 @@
+# expect-stdout: 5
+def main():
+    name: str = "hello"
+    print(len(name))
