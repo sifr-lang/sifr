@@ -584,6 +584,424 @@ enum Type {
 
 ---
 
+## Test Suite Architecture
+
+This compiler is built entirely by AI agents. The test suite is the contract that ensures correctness across all agents working on different parts of the compiler. It must be:
+
+- **Deterministic:** same input always produces same output
+- **Self-documenting:** test files are readable specifications of language behavior
+- **Layered:** each compiler phase has its own test layer
+- **Easy to extend:** adding a new language feature means adding test files, not modifying test infrastructure
+- **Fast to run:** `cargo test` completes in seconds for the full suite
+
+### Testing Strategy Overview
+
+```mermaid
+flowchart TD
+    subgraph layer1 [Layer 1: Unit Tests]
+        LexerUnit["Lexer unit tests\n(token output)"]
+        ASTUnit["AST node tests\n(construction, size)"]
+        TypeUnit["Type system tests\n(subtyping, inference)"]
+    end
+    subgraph layer2 [Layer 2: Snapshot Tests]
+        ParseSnap["Parser snapshots\n(.sifr -> AST dump)"]
+        TypeSnap["Type checker snapshots\n(inline assertions)"]
+        CodegenSnap["Codegen snapshots\n(.sifr -> .rs output)"]
+    end
+    subgraph layer3 [Layer 3: End-to-End Tests]
+        E2EPass["Compile + run tests\n(expected stdout)"]
+        E2EFail["Compile-fail tests\n(expected errors)"]
+        E2EOwnership["Ownership tests\n(move/borrow errors)"]
+    end
+    subgraph layer4 [Layer 4: Corpus Tests]
+        Corpus["Corpus tests\n(no panics on large inputs)"]
+    end
+    layer1 --> layer2 --> layer3 --> layer4
+```
+
+
+
+### Layer 1: Unit Tests (per crate, `#[cfg(test)]`)
+
+Standard Rust unit tests inside each crate. These test individual functions and data structures.
+
+**Where:** `src/*.rs` in each crate, in `#[cfg(test)] mod tests { }` blocks.
+
+**Examples:**
+
+- Lexer: tokenize a string, assert token sequence
+- AST: construct nodes, verify `Debug` output, check memory layout sizes
+- Type system: `is_subtype(Int, Int) == true`, `is_subtype(Int, Str) == false`
+- HIR: name resolution resolves `x` to the correct `DefId`
+
+**Pattern (from ruff_python_ast):**
+
+```rust
+#[test]
+fn size() {
+    assert!(std::mem::size_of::<Stmt>() <= 120);
+    assert_eq!(std::mem::size_of::<Expr>(), 64);
+}
+```
+
+### Layer 2: Snapshot Tests (insta crate)
+
+Snapshot testing using the `insta` crate. The compiler produces output that is compared against stored `.snap` files. When behavior changes intentionally, run `cargo insta review` to accept new baselines.
+
+**Crate:** `insta` with `glob` feature.
+
+#### 2a. Parser Snapshots
+
+**Inspired by:** ruff_python_parser's fixture-driven snapshot tests.
+
+**Directory structure:**
+
+```
+crates/sifr_python_parser/
+  resources/
+    valid/          # .sifr files that must parse successfully
+      expressions/
+        arithmetic.sifr
+        boolean.sifr
+        string.sifr
+      statements/
+        assignment.sifr
+        if_else.sifr
+        function_def.sifr
+    invalid/        # .sifr files that must produce parse errors
+      missing_colon.sifr
+      bad_indent.sifr
+      unterminated_string.sifr
+  tests/
+    snapshots/      # auto-generated .snap files
+    fixtures.rs     # test harness
+```
+
+**Test harness (`fixtures.rs`):**
+
+```rust
+#[test]
+fn test_valid_syntax() {
+    insta::glob!("../resources/valid/**/*.sifr", |path| {
+        let source = std::fs::read_to_string(path).unwrap();
+        let parsed = parse_module(&source);
+        assert!(parsed.is_valid(), "Parse errors: {:?}", parsed.errors());
+
+        let mut output = String::new();
+        writeln!(&mut output, "## AST\n\n```\n{:#?}\n```", parsed.syntax()).unwrap();
+
+        insta::with_settings!({
+            input_file => path,
+            omit_expression => true,
+        }, {
+            insta::assert_snapshot!(output);
+        });
+    });
+}
+
+#[test]
+fn test_invalid_syntax() {
+    insta::glob!("../resources/invalid/**/*.sifr", |path| {
+        let source = std::fs::read_to_string(path).unwrap();
+        let parsed = parse_module(&source);
+        assert!(!parsed.is_valid());
+
+        let mut output = String::new();
+        writeln!(&mut output, "## AST\n\n```\n{:#?}\n```", parsed.syntax()).unwrap();
+        writeln!(&mut output, "\n## Errors\n").unwrap();
+        for error in parsed.errors() {
+            writeln!(&mut output, "  {}", error).unwrap();
+        }
+
+        insta::with_settings!({
+            input_file => path,
+        }, {
+            insta::assert_snapshot!(output);
+        });
+    });
+}
+```
+
+#### 2b. Type Checker Snapshots (Markdown Tests)
+
+**Inspired by:** ty's mdtest framework -- Markdown files with inline assertions.
+
+**Directory structure:**
+
+```
+crates/sifr_type_system/
+  resources/
+    mdtest/
+      basics/
+        literals.md
+        variables.md
+        arithmetic.md
+      functions/
+        parameters.md
+        return_types.md
+        inference.md
+      ownership/
+        move_semantics.md
+        copy_types.md
+        borrow.md
+      errors/
+        type_mismatch.md
+        undefined_variable.md
+  tests/
+    mdtest.rs       # test harness using datatest-stable
+```
+
+**Markdown test format:**
+
+```markdown
+# Variable type inference
+
+## Integer literal
+
+`​`​`sifr
+x = 42
+reveal_type(x)  # revealed: int
+`​`​`
+
+## String literal
+
+`​`​`sifr
+name = "hello"
+reveal_type(name)  # revealed: str
+`​`​`
+
+## Type mismatch
+
+`​`​`sifr
+x: int = "hello"  # error: [type-mismatch] expected `int`, got `str`
+`​`​`
+
+## Move semantics
+
+`​`​`sifr
+a: str = "hello"
+b: str = a
+print(a)  # error: [use-after-move] `a` was moved to `b`
+`​`​`
+```
+
+**Assertion syntax:**
+
+- `# revealed: <type>` -- assert inferred type (like ty)
+- `# error: [rule-code] "optional message"` -- assert diagnostic
+- `# error: <col> [rule-code]` -- assert diagnostic at specific column
+
+#### 2c. Codegen Snapshots
+
+**Inspired by:** TypeScript's `.js` baseline files.
+
+**Directory structure:**
+
+```
+crates/sifr_codegen/
+  resources/
+    codegen/
+      hello_world.sifr
+      arithmetic.sifr
+      functions.sifr
+      if_else.sifr
+      string_ops.sifr
+  tests/
+    snapshots/      # .snap files with expected Rust output
+    codegen.rs      # test harness
+```
+
+**Test harness:**
+
+```rust
+#[test]
+fn test_codegen() {
+    insta::glob!("../resources/codegen/**/*.sifr", |path| {
+        let source = std::fs::read_to_string(path).unwrap();
+        let rust_output = compile_to_rust(&source).unwrap();
+
+        insta::with_settings!({
+            input_file => path,
+        }, {
+            insta::assert_snapshot!(rust_output);
+        });
+    });
+}
+```
+
+**Snapshot content (e.g. `hello_world.sifr.snap`):**
+
+```
+---
+source: crates/sifr_codegen/tests/codegen.rs
+input_file: crates/sifr_codegen/resources/codegen/hello_world.sifr
+---
+fn main() {
+    println!("{}", "Hello, World!");
+}
+```
+
+### Layer 3: End-to-End Tests (Compile + Run)
+
+**Inspired by:** Mojo's Lit + FileCheck pattern, adapted for Rust.
+
+These tests compile `.sifr` files to binaries, run them, and check stdout/stderr.
+
+**Directory structure:**
+
+```
+tests/
+  e2e/
+    pass/           # must compile and produce expected output
+      hello_world.sifr
+      factorial.sifr
+      fibonacci.sifr
+      arithmetic.sifr
+      string_concat.sifr
+      if_else.sifr
+    fail/            # must fail to compile with expected errors
+      type_mismatch.sifr
+      undefined_var.sifr
+      missing_return_type.sifr
+      use_after_move.sifr
+    ownership/       # ownership-specific compile failures
+      move_on_assign.sifr
+      double_move.sifr
+      borrow_after_move.sifr
+  e2e.rs             # test runner
+```
+
+**Test file format (pass tests) -- inline expected output:**
+
+```python
+# expect-stdout: 120
+def factorial(n: int) -> int:
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+def main():
+    print(factorial(5))
+```
+
+**Test file format (fail tests) -- inline expected errors:**
+
+```python
+# expect-error: [type-mismatch]
+def main():
+    x: int = "hello"
+```
+
+**Test runner (`e2e.rs`):**
+
+```rust
+#[test]
+fn test_e2e_pass() {
+    for path in glob("tests/e2e/pass/**/*.sifr") {
+        let source = fs::read_to_string(&path).unwrap();
+        let expected_stdout = extract_expect_stdout(&source);
+
+        // Compile to Rust, build, and run
+        let output = compile_and_run(&path).unwrap();
+        assert_eq!(output.stdout.trim(), expected_stdout,
+            "Failed: {}", path.display());
+    }
+}
+
+#[test]
+fn test_e2e_fail() {
+    for path in glob("tests/e2e/fail/**/*.sifr") {
+        let source = fs::read_to_string(&path).unwrap();
+        let expected_errors = extract_expect_errors(&source);
+
+        let result = compile(&path);
+        assert!(result.is_err());
+        for expected in expected_errors {
+            assert!(result.errors().any(|e| e.code() == expected));
+        }
+    }
+}
+```
+
+### Layer 4: Corpus Tests (Robustness)
+
+**Inspired by:** ty's corpus tests -- ensure the compiler doesn't panic on large/varied inputs.
+
+**Purpose:** Run the parser and type checker on a large body of Python source code to catch panics, infinite loops, and crashes. These tests don't check correctness -- only that the compiler doesn't blow up.
+
+**Sources:**
+
+- Ruff's parser test fixtures (`/Users/yaseralnajjar/work/sifr/ruff/crates/ruff_python_parser/resources/`)
+- Python stdlib source files
+- Any `.sifr` files in the test suite
+
+```rust
+#[test]
+fn corpus_no_panics() {
+    for path in glob("tests/corpus/**/*.sifr") {
+        let source = fs::read_to_string(&path).unwrap();
+        // Must not panic
+        let _ = parse_module(&source);
+    }
+}
+```
+
+### Test Infrastructure Crate: `sifr_test_utils`
+
+A shared crate providing test helpers used across all other crates:
+
+```
+crates/sifr_test_utils/
+  src/
+    lib.rs
+    assertions.rs    # extract_expect_stdout, extract_expect_errors
+    compile.rs       # compile_to_rust, compile_and_run helpers
+    fixtures.rs      # fixture loading, glob helpers
+    mdtest.rs        # markdown test parser (inline assertions)
+```
+
+**Key functions:**
+
+- `extract_expect_stdout(source: &str) -> &str` -- parse `# expect-stdout:` header
+- `extract_expect_errors(source: &str) -> Vec<&str>` -- parse `# expect-error:` comments
+- `compile_to_rust(source: &str) -> Result<String, Vec<Diagnostic>>` -- full pipeline
+- `compile_and_run(path: &Path) -> Result<Output, Error>` -- compile, build, execute
+- `parse_mdtest(markdown: &str) -> Vec<TestCase>` -- parse markdown test files
+
+### Test Commands
+
+```bash
+# Run all tests
+cargo test
+
+# Run specific layer
+cargo test -p sifr_python_parser           # Parser snapshots
+cargo test -p sifr_type_system -- mdtest    # Type checker markdown tests
+cargo test -p sifr_codegen                  # Codegen snapshots
+cargo test --test e2e                       # End-to-end tests
+
+# Update snapshots after intentional changes
+cargo insta review
+
+# Run corpus tests (slower)
+cargo test -- corpus --ignored
+```
+
+### Adding Tests for New Features (Agent Workflow)
+
+When an AI agent adds a new language feature, it must:
+
+1. **Parser:** Add `.sifr` fixture files in `resources/valid/` and `resources/invalid/`
+2. **Type checker:** Add markdown test cases in `resources/mdtest/`
+3. **Codegen:** Add `.sifr` fixture files in `resources/codegen/`
+4. **E2E:** Add pass/fail test files in `tests/e2e/`
+5. **Run `cargo insta review**` to accept new snapshots
+6. **Run `cargo test**` to verify everything passes
+
+This ensures every feature is tested at every layer of the compiler, and any agent can verify the full system by running `cargo test`.
+
+---
+
 ## Design Note: Mojo Comparison
 
 Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a reference. Key findings:
