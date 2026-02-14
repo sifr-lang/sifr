@@ -1,0 +1,6 @@
+# String operations
+# expect-stdout: HELLO
+def main():
+    s: str = "hello"
+    upper: str = s.upper()
+    print(upper)

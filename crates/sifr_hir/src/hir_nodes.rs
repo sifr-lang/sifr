@@ -70,8 +70,22 @@ pub enum HirStmt {
     Break,
     /// Continue statement
     Continue,
+    /// Tuple unpacking: a, b = expr
+    TupleUnpack {
+        targets: Vec<(String, Type)>,
+        value: HirExpr,
+    },
     /// Pass (no-op)
     Pass,
+}
+
+/// A part of an f-string.
+#[derive(Debug, Clone)]
+pub enum HirFStringPart {
+    /// A literal string part
+    Literal(String),
+    /// An interpolated expression
+    Expr(HirExpr),
 }
 
 /// A typed expression.
@@ -172,6 +186,11 @@ pub enum HirExpr {
         collection: Box<HirExpr>,
         ty: Type,
     },
+    /// F-string: f"Hello {name}"
+    FString {
+        parts: Vec<HirFStringPart>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -196,7 +215,8 @@ impl HirExpr {
             | Self::TupleLiteral { ty, .. }
             | Self::Index { ty, .. }
             | Self::MethodCall { ty, .. }
-            | Self::ContainsOp { ty, .. } => ty,
+            | Self::ContainsOp { ty, .. }
+            | Self::FString { ty, .. } => ty,
         }
     }
 }
