@@ -1346,6 +1346,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         // Resolve keyword arguments into positional order
         let mut resolved = Vec::new();
         let mut used_kwargs: std::collections::HashSet<String> = std::collections::HashSet::new();
+        let defaults = ctx.function_defaults.get(&func_name).cloned();
 
         // Check: no positional args after keyword args (already enforced by parser)
         for (i, (param_name, _param_ty)) in ft.params.iter().enumerate() {
@@ -1363,9 +1364,24 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 resolved.push(keyword_args[pos].1.clone());
                 used_kwargs.insert(param_name.clone());
             } else {
-                // Will be filled by default value at codegen time
-                // For now, we leave it - the codegen handles defaults
-                break;
+                // Try to fill from default values
+                if let Some(ref defs) = defaults {
+                    if let Some((_, default_expr)) = defs.iter().find(|(idx, _)| *idx == i) {
+                        resolved.push(default_expr.clone());
+                    } else {
+                        ctx.error(format!(
+                            "function '{}': missing argument '{}' with no default value",
+                            func_name, param_name
+                        ));
+                        return None;
+                    }
+                } else {
+                    ctx.error(format!(
+                        "function '{}': missing argument '{}' with no default value",
+                        func_name, param_name
+                    ));
+                    return None;
+                }
             }
         }
 

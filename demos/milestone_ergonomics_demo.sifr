@@ -1,0 +1,183 @@
+# demos/milestone_ergonomics_demo.sifr
+# This demo showcases all major Language Ergonomics features:
+# - Augmented assignment operators
+# - Conditional expressions (ternary)
+# - Keyword arguments and default parameters
+# - Negative indexing
+# - Step slicing
+# - String methods and UTF-8 character-based operations
+# - List/Dict methods
+# - Chained comparisons
+# - String multiplication
+# - Star unpacking
+# - For/while...else clauses
+# - Power operator
+# - Multiple return values
+# - Walrus operator
+# - pass statement
+
+# --- Augmented Assignment ---
+def demo_augmented_assign():
+    x: int = 10
+    x += 5
+    x -= 2
+    x *= 3
+    print(f"Augmented assign result: {x}")
+
+    s: str = "Hello"
+    s += " World"
+    print(f"String +=: {s}")
+
+    items: list[int] = [1, 2]
+    items += [3, 4]
+    print(f"List += length: {len(items)}")
+
+# --- Conditional Expression (Ternary) ---
+def classify(n: int) -> str:
+    return "positive" if n > 0 else "non-positive"
+
+# --- Keyword Arguments and Defaults ---
+def greet(name: str, greeting: str = "Hello", punctuation: str = "!") -> str:
+    return f"{greeting}, {name}{punctuation}"
+
+# --- Negative Indexing ---
+def demo_negative_indexing():
+    items: list[int] = [10, 20, 30, 40, 50]
+    print(f"Last element: {items[-1]}")
+    print(f"Second to last: {items[-2]}")
+
+    s: str = "Sifr"
+    print(f"Last char: {s[-1]}")
+
+# --- Step Slicing ---
+def demo_step_slicing():
+    nums: list[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    evens: list[int] = nums[::2]
+    print(f"Evens: {len(evens)} elements")
+
+    reversed: list[int] = nums[::-1]
+    print(f"Reversed first: {reversed[0]}, last: {reversed[-1]}")
+
+    s: str = "abcdefgh"
+    print(f"Every other char: {s[::2]}")
+    print(f"Reversed string: {s[::-1]}")
+
+# --- String Methods ---
+def demo_string_methods():
+    s: str = "hello world"
+    print(f"Replace: {s.replace('world', 'Sifr')}")
+    print(f"Starts with 'hello': {s.startswith('hello')}")
+    print(f"Ends with 'world': {s.endswith('world')}")
+    print(f"Title: {s.title()}")
+    print(f"Is alpha: {'abc'.isalpha()}")
+    print(f"Is digit: {'123'.isdigit()}")
+
+    separator: str = ", "
+    items: list[str] = ["a", "b", "c"]
+    print(f"Join: {separator.join(items)}")
+
+# --- List Methods ---
+def demo_list_methods():
+    items: list[int] = [3, 1, 4, 1, 5]
+    items.append(9)
+    print(f"After append: length={len(items)}")
+    print(f"Count of 1: {items.count(1)}")
+    print(f"Contains 4: {items.contains(4)}")
+
+    copy: list[int] = items.copy()
+    copy.reverse()
+    print(f"Reversed copy first: {copy[0]}")
+
+# --- Dict Methods ---
+def demo_dict_methods():
+    d: dict[str, int] = {"a": 1, "b": 2, "c": 3}
+    print(f"Dict contains 'a': {d.contains('a')}")
+    print(f"Dict length: {len(d)}")
+
+    d.clear()
+    print(f"After clear: {len(d)}")
+
+# --- Chained Comparisons ---
+def demo_chained_comparisons():
+    x: int = 5
+    if 1 < x < 10:
+        print("5 is between 1 and 10")
+
+    y: int = 15
+    if 1 < y < 10:
+        print("This won't print")
+    else:
+        print("15 is NOT between 1 and 10")
+
+# --- String Multiplication ---
+def demo_string_multiply():
+    print("=" * 30)
+    print("  String Multiplication Demo")
+    print("-" * 30)
+
+# --- Star Unpacking ---
+def demo_star_unpacking():
+    items: list[int] = [1, 2, 3, 4, 5]
+    first, *rest = items
+    print(f"First: {first}, Rest length: {len(rest)}")
+
+# --- For...Else ---
+def demo_loop_else():
+    items: list[int] = [2, 4, 6, 8]
+    target: int = 5
+    for item in items:
+        if item == target:
+            print("Found target!")
+            break
+    else:
+        print("Target not found in list (loop else)")
+
+# --- Power Operator ---
+def demo_power():
+    print(f"2 ** 10 = {2 ** 10}")
+    print(f"3 ** 3 = {3 ** 3}")
+
+# --- Multiple Return Values ---
+def divmod(a: int, b: int) -> tuple[int, int]:
+    return a // b, a % b
+
+# --- Walrus Operator ---
+def demo_walrus():
+    items: list[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    if (n := len(items)) > 5:
+        print(f"List has {n} items (more than 5)")
+
+# --- Pass Statement ---
+def placeholder():
+    pass
+
+# --- Built-in Functions ---
+def demo_builtins():
+    print(f"abs(-42) = {abs(-42)}")
+    print(f"round(3.7) = {round(3.7)}")
+    print(f"repr(42) = {repr(42)}")
+
+# --- Main ---
+def main():
+    demo_augmented_assign()
+    print(f"classify(5): {classify(5)}")
+    print(f"classify(-3): {classify(-3)}")
+    print(greet("Alice"))
+    print(greet("Bob", greeting="Hi"))
+    print(greet("Charlie", greeting="Hey", punctuation="?"))
+    demo_negative_indexing()
+    demo_step_slicing()
+    demo_string_methods()
+    demo_list_methods()
+    demo_dict_methods()
+    demo_chained_comparisons()
+    demo_string_multiply()
+    demo_star_unpacking()
+    demo_loop_else()
+    demo_power()
+    q, r = divmod(17, 5)
+    print(f"17 divmod 5: quotient={q}, remainder={r}")
+    demo_walrus()
+    placeholder()
+    demo_builtins()
+    print("All milestone_ergonomics features working!")
