@@ -45,16 +45,16 @@ fn find_user(name: String) -> Option<String> {
 }
 
 fn main() {
-    let mut uid: i64 = create_user(42_i64, "alice".to_string());
+    let uid: i64 = create_user(42_i64, "alice".to_string());
     println!("{}", uid);
     println!("{}", handle_command("start".to_string()));
     println!("{}", handle_command("stop".to_string()));
     println!("{}", describe(IntOrStr::Int(42_i64)));
     println!("{}", describe(IntOrStr::Str("hello".to_string())));
-    let mut user: Option<String> = find_user("alice".to_string());
+    let user: Option<String> = find_user("alice".to_string());
     if let Some(user) = user {
         println!("{}", user);
     } else {
-        println!("{}", "not found".to_string());
+        println!("{}", "not found");
     }
 }

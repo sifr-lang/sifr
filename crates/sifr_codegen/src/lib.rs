@@ -106,6 +106,8 @@ struct RustEmitter {
     in_loop_with_else: bool,
     /// Whether to emit `pub` on all top-level items (for module exports)
     pub_mode: bool,
+    /// Set of variable names that are mutated in the current function body
+    mutated_vars: HashSet<String>,
 }
 
 impl RustEmitter {
@@ -121,6 +123,7 @@ impl RustEmitter {
             func_signatures: HashMap::new(),
             in_loop_with_else: false,
             pub_mode: false,
+            mutated_vars: HashSet::new(),
         }
     }
 
@@ -385,6 +388,9 @@ impl RustEmitter {
     fn emit_class_method(&mut self, method: &HirFunction, class: &HirClass) {
         self.current_return_type = Some(method.return_type.clone());
 
+        // Pre-scan: collect mutated variables so we know which need `mut`
+        self.mutated_vars = collect_mutated_vars(&method.body);
+
         self.write_indent();
         let pub_prefix = if self.pub_mode { "pub " } else { "" };
         if method.name == "new" {
@@ -489,11 +495,15 @@ impl RustEmitter {
         }
 
         self.current_return_type = None;
+        self.mutated_vars.clear();
     }
 
     fn emit_function(&mut self, func: &HirFunction) {
         // Track the current function's return type for Option wrapping
         self.current_return_type = Some(func.return_type.clone());
+
+        // Pre-scan: collect mutated variables so we know which need `mut`
+        self.mutated_vars = collect_mutated_vars(&func.body);
 
         // Function signature -- only emit params without defaults, or all params
         // Since Rust doesn't have default params, we emit all params and handle
@@ -510,6 +520,10 @@ impl RustEmitter {
         for (i, param) in func.params.iter().enumerate() {
             if i > 0 {
                 self.write(", ");
+            }
+            // Emit `mut` for parameters that are mutated in the body
+            if self.mutated_vars.contains(&param.name) {
+                self.write("mut ");
             }
             self.write(&param.name);
             self.write(": ");
@@ -538,13 +552,15 @@ impl RustEmitter {
         self.writeln("}");
 
         self.current_return_type = None;
+        self.mutated_vars.clear();
     }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         match stmt {
-            HirStmt::Let { name, ty, value, is_mutable } => {
+            HirStmt::Let { name, ty, value, is_mutable: _ } => {
                 self.write_indent();
-                if *is_mutable {
+                // Only emit `mut` if the variable is actually mutated later
+                if self.mutated_vars.contains(name) {
                     self.write("let mut ");
                 } else {
                     self.write("let ");
@@ -584,8 +600,8 @@ impl RustEmitter {
                         match var_ty {
                             Type::Str => {
                                 self.write(name);
-                                self.write(".push_str(&");
-                                self.emit_expr(value);
+                                self.write(".push_str(");
+                                self.emit_str_ref_expr(value);
                                 self.write(");\n");
                                 return;
                             }
@@ -992,7 +1008,7 @@ impl RustEmitter {
                     self.write("assert!(");
                     self.emit_expr(test);
                     self.write(", \"{}\", ");
-                    self.emit_expr(msg_expr);
+                    self.emit_display_expr(msg_expr);
                     self.write(");\n");
                 } else {
                     self.write("assert!(");
@@ -1017,8 +1033,8 @@ impl RustEmitter {
                         // del d[key] -> let _ = d.remove(&key);
                         self.write("let _ = ");
                         self.emit_expr(object);
-                        self.write(".remove(&");
-                        self.emit_expr(index);
+                        self.write(".remove(");
+                        self.emit_key_ref_expr(index);
                         self.write(");\n");
                     }
                     Type::List(_) => {
@@ -1224,8 +1240,7 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".starts_with(");
                 if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    self.write(".as_str()");
+                    self.emit_str_ref_expr(&args[0]);
                 }
                 self.write(")");
             }
@@ -1233,8 +1248,7 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".ends_with(");
                 if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    self.write(".as_str()");
+                    self.emit_str_ref_expr(&args[0]);
                 }
                 self.write(")");
             }
@@ -1244,18 +1258,17 @@ impl RustEmitter {
                     self.write(".split_whitespace().map(|s| s.to_string()).collect::<Vec<String>>()");
                 } else {
                     self.write(".split(");
-                    self.emit_expr(&args[0]);
-                    self.write(".as_str()).map(|s| s.to_string()).collect::<Vec<String>>()");
+                    self.emit_str_ref_expr(&args[0]);
+                    self.write(").map(|s| s.to_string()).collect::<Vec<String>>()");
                 }
             }
             (Type::Str, "replace") => {
                 self.emit_expr(object);
                 self.write(".replace(");
                 if args.len() >= 2 {
-                    self.emit_expr(&args[0]);
-                    self.write(".as_str(), ");
-                    self.emit_expr(&args[1]);
-                    self.write(".as_str()");
+                    self.emit_str_ref_expr(&args[0]);
+                    self.write(", ");
+                    self.emit_str_ref_expr(&args[1]);
                 }
                 self.write(")");
             }
@@ -1264,8 +1277,7 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".find(");
                 if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    self.write(".as_str()");
+                    self.emit_str_ref_expr(&args[0]);
                 }
                 self.write(").map(|i| i as i64)");
             }
@@ -1328,17 +1340,16 @@ impl RustEmitter {
                 // Python: "sep".join(items) -> Rust: items.join("sep")
                 if !args.is_empty() {
                     self.emit_expr(&args[0]);
-                    self.write(".join(&");
-                    self.emit_expr(object);
+                    self.write(".join(");
+                    self.emit_str_ref_expr(object);
                     self.write(")");
                 }
             }
             (Type::Str, "count") => {
                 self.emit_expr(object);
-                self.write(".matches(&");
+                self.write(".matches(");
                 if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    self.write(" as &str");
+                    self.emit_str_ref_expr(&args[0]);
                 }
                 self.write(").count() as i64");
             }
@@ -1465,27 +1476,27 @@ impl RustEmitter {
             }
             (Type::Dict(_, _), "contains") => {
                 self.emit_expr(object);
-                self.write(".contains_key(&");
+                self.write(".contains_key(");
                 if !args.is_empty() {
-                    self.emit_expr(&args[0]);
+                    self.emit_key_ref_expr(&args[0]);
                 }
                 self.write(")");
             }
             (Type::Dict(_, _), "get") => {
                 // Returns Option<V> = V | None
                 self.emit_expr(object);
-                self.write(".get(&");
+                self.write(".get(");
                 if !args.is_empty() {
-                    self.emit_expr(&args[0]);
+                    self.emit_key_ref_expr(&args[0]);
                 }
                 self.write(").cloned()");
             }
             (Type::Dict(_, _), "pop") => {
                 // Returns Option<V> = V | None
                 self.emit_expr(object);
-                self.write(".remove(&");
+                self.write(".remove(");
                 if !args.is_empty() {
-                    self.emit_expr(&args[0]);
+                    self.emit_key_ref_expr(&args[0]);
                 }
                 self.write(")");
             }
@@ -1571,10 +1582,16 @@ impl RustEmitter {
             HirExpr::BinOp { left, op, right, ty } => {
                 // Special handling for string concatenation
                 if op == "+" && *ty == Type::Str {
-                    self.write("format!(\"{}{}\", ");
-                    self.emit_expr(left);
-                    self.write(", ");
-                    self.emit_expr(right);
+                    // Flatten chained string concatenation into a single format! call
+                    let mut parts: Vec<&HirExpr> = Vec::new();
+                    collect_string_concat_parts(left, &mut parts);
+                    collect_string_concat_parts(right, &mut parts);
+                    let placeholders: String = parts.iter().map(|_| "{}").collect::<Vec<_>>().join("");
+                    self.write(&format!("format!(\"{}\"", placeholders));
+                    for part in &parts {
+                        self.write(", ");
+                        self.emit_expr(part);
+                    }
                     self.write(")");
                 } else if op == "//" {
                     // Floor division
@@ -1686,20 +1703,22 @@ impl RustEmitter {
                 if func == "print" {
                     // Map print() to println!
                     if args.is_empty() {
-                        self.write("println!(\"{}\", \"\")");
+                        self.write("println!()");
+                    } else if let HirExpr::FString { parts, .. } = &args[0] {
+                        // Inline f-string directly into println! to avoid double-format
+                        self.emit_fstring_macro("println!", parts);
                     } else if matches!(args[0].ty(), Type::Class { .. }) {
                         // Use Debug format for class instances
                         self.write("println!(\"{:?}\", ");
                         self.emit_expr(&args[0]);
                         self.write(")");
-                    } else if is_option_type(args[0].ty()) {
-                        // Option<T>: display inner value or "None"
+                    } else {
+                        // Use emit_display_expr for all other cases:
+                        // - Option<T> gets map_or wrapping
+                        // - String literals omit .to_string()
+                        // - Everything else emits normally
                         self.write("println!(\"{}\", ");
                         self.emit_display_expr(&args[0]);
-                        self.write(")");
-                    } else {
-                        self.write("println!(\"{}\", ");
-                        self.emit_expr(&args[0]);
                         self.write(")");
                     };
                 } else if func == "isinstance" {
@@ -1877,7 +1896,7 @@ impl RustEmitter {
             }
             HirExpr::DictLiteral { keys, values, .. } => {
                 self.needs_hashmap = true;
-                self.write("std::collections::HashMap::from([");
+                self.write("HashMap::from([");
                 for (i, (key, val)) in keys.iter().zip(values.iter()).enumerate() {
                     if i > 0 {
                         self.write(", ");
@@ -1910,8 +1929,8 @@ impl RustEmitter {
                         // Safe dict indexing: d[key] -> d.get(&key).cloned()
                         // Returns Option<V> which maps to our V | None union
                         self.emit_expr(object);
-                        self.write(".get(&");
-                        self.emit_expr(index);
+                        self.write(".get(");
+                        self.emit_key_ref_expr(index);
                         self.write(").cloned()");
                     }
                     Type::Tuple(_) => {
@@ -1963,15 +1982,15 @@ impl RustEmitter {
                 match coll_ty {
                     Type::Dict(_, _) => {
                         self.emit_expr(collection);
-                        self.write(".contains_key(&");
-                        self.emit_expr(element);
+                        self.write(".contains_key(");
+                        self.emit_key_ref_expr(element);
                         self.write(")");
                     }
                     Type::Str => {
                         self.emit_expr(collection);
-                        self.write(".contains(&");
-                        self.emit_expr(element);
-                        self.write(" as &str)");
+                        self.write(".contains(");
+                        self.emit_str_ref_expr(element);
+                        self.write(")");
                     }
                     _ => {
                         // List: collection.contains(&element)
@@ -2048,47 +2067,81 @@ impl RustEmitter {
                 self.write(")");
             }
             HirExpr::FString { parts, .. } => {
-                // Build the format string and collect expressions
-                let mut format_str = String::new();
-                let mut exprs: Vec<&HirExpr> = Vec::new();
-                for part in parts {
-                    match part {
-                        HirFStringPart::Literal(s) => {
-                            // Escape braces in the literal for Rust's format!
-                            for ch in s.chars() {
-                                match ch {
-                                    '{' => format_str.push_str("{{"),
-                                    '}' => format_str.push_str("}}"),
-                                    _ => format_str.push(ch),
-                                }
-                            }
-                        }
-                        HirFStringPart::Expr(expr) => {
-                            format_str.push_str("{}");
-                            exprs.push(expr);
+                self.emit_fstring_macro("format!", parts);
+            }
+        }
+    }
+
+    /// Emit an f-string as a Rust format macro call (format!, println!, etc.).
+    /// This avoids the double-format pattern `println!("{}", format!(...))`.
+    fn emit_fstring_macro(&mut self, macro_name: &str, parts: &[HirFStringPart]) {
+        let mut format_str = String::new();
+        let mut exprs: Vec<&HirExpr> = Vec::new();
+        for part in parts {
+            match part {
+                HirFStringPart::Literal(s) => {
+                    // Escape braces in the literal for Rust's format!
+                    for ch in s.chars() {
+                        match ch {
+                            '{' => format_str.push_str("{{"),
+                            '}' => format_str.push_str("}}"),
+                            _ => format_str.push(ch),
                         }
                     }
                 }
-                self.write("format!(\"");
-                self.write(&format_str);
-                self.write("\"");
-                for expr in &exprs {
-                    self.write(", ");
-                    self.emit_display_expr(expr);
+                HirFStringPart::Expr(expr) => {
+                    format_str.push_str("{}");
+                    exprs.push(expr);
                 }
-                self.write(")");
             }
+        }
+        self.write(macro_name);
+        self.write("(\"");
+        self.write(&format_str);
+        self.write("\"");
+        for expr in &exprs {
+            self.write(", ");
+            self.emit_display_expr(expr);
+        }
+        self.write(")");
+    }
+
+    /// Emit an expression as a HashMap key reference.
+    /// String literals are emitted directly (e.g., `"key"`) since HashMap::get accepts &str via Borrow.
+    /// Other expressions are emitted with `&` prefix (e.g., `&var`).
+    fn emit_key_ref_expr(&mut self, expr: &HirExpr) {
+        if let HirExpr::StringLiteral(val) = expr {
+            self.write(&format!("{:?}", val));
+        } else {
+            self.write("&");
+            self.emit_expr(expr);
+        }
+    }
+
+    /// Emit an expression as a `&str` reference.
+    /// String literals are emitted directly (e.g., `"hello"`).
+    /// Other string expressions are emitted with `.as_str()` (e.g., `s.as_str()`).
+    fn emit_str_ref_expr(&mut self, expr: &HirExpr) {
+        if let HirExpr::StringLiteral(val) = expr {
+            self.write(&format!("{:?}", val));
+        } else {
+            self.emit_expr(expr);
+            self.write(".as_str()");
         }
     }
 
     /// Emit an expression suitable for use inside format!/println! contexts.
     /// Wraps Option<T> expressions so they display as the inner value or "None".
+    /// Omits `.to_string()` on string literals since format macros accept &str.
     fn emit_display_expr(&mut self, expr: &HirExpr) {
         if is_option_type(expr.ty()) {
             // Wrap: expr.map_or("None".to_string(), |_v| format!("{}", _v))
             self.write("(");
             self.emit_expr(expr);
             self.write(").map_or(\"None\".to_string(), |_v| format!(\"{}\", _v))");
+        } else if let HirExpr::StringLiteral(val) = expr {
+            // In display contexts, string literals don't need .to_string()
+            self.write(&format!("{:?}", val));
         } else {
             self.emit_expr(expr);
         }
@@ -2196,9 +2249,156 @@ fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
     None
 }
 
+/// Collect all parts of a chained string concatenation (`a + b + c`).
+/// Recursively flattens nested BinOp::Add on strings into a flat list of expressions.
+fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
+    if let HirExpr::BinOp { left, op, right, ty } = expr {
+        if op == "+" && *ty == Type::Str {
+            collect_string_concat_parts(left, parts);
+            collect_string_concat_parts(right, parts);
+            return;
+        }
+    }
+    parts.push(expr);
+}
+
 /// Check if a method body contains any field assignments (self.field = ...).
 fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
     stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
+}
+
+/// Mutating methods that require the receiver variable to be `mut`.
+const MUTATING_METHODS: &[&str] = &[
+    "append", "extend", "insert", "clear", "reverse", "sort", "pop", "remove",
+    "push_str", "update",
+];
+
+/// Collect the set of variable names that are mutated in a function body.
+/// A variable is mutated if it appears in:
+/// - `HirStmt::Assign` (reassignment)
+/// - `HirStmt::AugAssign` (augmented assignment like +=)
+/// - `HirStmt::Expr` containing a `MethodCall` on the variable with a mutating method
+/// - `HirStmt::Delete` on the variable
+fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
+    let mut mutated = HashSet::new();
+    collect_mutated_vars_inner(stmts, &mut mutated);
+    mutated
+}
+
+fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) {
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Assign { name, .. } => {
+                mutated.insert(name.clone());
+            }
+            HirStmt::AugAssign { name, .. } => {
+                mutated.insert(name.clone());
+            }
+            HirStmt::Expr { expr } => {
+                collect_mutated_vars_in_expr(expr, mutated);
+            }
+            HirStmt::Let { value, .. } => {
+                // Scan the value expression for mutating method calls
+                collect_mutated_vars_in_expr(value, mutated);
+            }
+            HirStmt::Return { value: Some(expr) } => {
+                collect_mutated_vars_in_expr(expr, mutated);
+            }
+            HirStmt::If { condition, then_body, elif_clauses, else_body } => {
+                collect_mutated_vars_in_expr(condition, mutated);
+                collect_mutated_vars_inner(then_body, mutated);
+                for (cond, body) in elif_clauses {
+                    collect_mutated_vars_in_expr(cond, mutated);
+                    collect_mutated_vars_inner(body, mutated);
+                }
+                if let Some(body) = else_body {
+                    collect_mutated_vars_inner(body, mutated);
+                }
+            }
+            HirStmt::While { condition, body, else_body } => {
+                collect_mutated_vars_in_expr(condition, mutated);
+                collect_mutated_vars_inner(body, mutated);
+                if let Some(eb) = else_body {
+                    collect_mutated_vars_inner(eb, mutated);
+                }
+            }
+            HirStmt::For { body, else_body, .. } => {
+                collect_mutated_vars_inner(body, mutated);
+                if let Some(eb) = else_body {
+                    collect_mutated_vars_inner(eb, mutated);
+                }
+            }
+            HirStmt::TryExcept { body, handlers } => {
+                collect_mutated_vars_inner(body, mutated);
+                for handler in handlers {
+                    collect_mutated_vars_inner(&handler.body, mutated);
+                }
+            }
+            HirStmt::Delete { object, .. } => {
+                if let HirExpr::Name { name, .. } = object {
+                    mutated.insert(name.clone());
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>) {
+    match expr {
+        HirExpr::MethodCall { object, method, args, .. } => {
+            if MUTATING_METHODS.contains(&method.as_str()) {
+                if let HirExpr::Name { name, .. } = object.as_ref() {
+                    mutated.insert(name.clone());
+                }
+            }
+            // Recurse into sub-expressions
+            collect_mutated_vars_in_expr(object, mutated);
+            for arg in args {
+                collect_mutated_vars_in_expr(arg, mutated);
+            }
+        }
+        HirExpr::Call { args, .. } => {
+            for arg in args {
+                collect_mutated_vars_in_expr(arg, mutated);
+            }
+        }
+        HirExpr::BinOp { left, right, .. } => {
+            collect_mutated_vars_in_expr(left, mutated);
+            collect_mutated_vars_in_expr(right, mutated);
+        }
+        HirExpr::UnaryOp { operand, .. } => {
+            collect_mutated_vars_in_expr(operand, mutated);
+        }
+        HirExpr::Compare { left, comparators, .. } => {
+            collect_mutated_vars_in_expr(left, mutated);
+            for c in comparators {
+                collect_mutated_vars_in_expr(c, mutated);
+            }
+        }
+        HirExpr::BoolOp { values, .. } => {
+            for v in values {
+                collect_mutated_vars_in_expr(v, mutated);
+            }
+        }
+        HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
+            collect_mutated_vars_in_expr(condition, mutated);
+            collect_mutated_vars_in_expr(then_expr, mutated);
+            collect_mutated_vars_in_expr(else_expr, mutated);
+        }
+        HirExpr::Index { object, index, .. } => {
+            collect_mutated_vars_in_expr(object, mutated);
+            collect_mutated_vars_in_expr(index, mutated);
+        }
+        HirExpr::FString { parts, .. } => {
+            for part in parts {
+                if let HirFStringPart::Expr(e) = part {
+                    collect_mutated_vars_in_expr(e, mutated);
+                }
+            }
+        }
+        _ => {}
+    }
 }
 
 #[cfg(test)]
@@ -2258,5 +2458,305 @@ mod tests {
         let rust_code = generate_rust(&module);
         assert!(rust_code.contains("fn add(a: i64, b: i64) -> i64"));
         assert!(rust_code.contains("return a + b;"));
+    }
+
+    // --- Codegen Quality Tests ---
+
+    #[test]
+    fn test_no_unnecessary_mut() {
+        // Variable that is never reassigned should NOT have `mut`
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![
+                    HirStmt::Let {
+                        name: "x".to_string(),
+                        ty: Type::Int,
+                        value: HirExpr::IntLiteral(42),
+                        is_mutable: true, // HIR says mutable, but codegen should ignore
+                    },
+                    HirStmt::Expr {
+                        expr: HirExpr::Call {
+                            func: "print".to_string(),
+                            args: vec![HirExpr::Name { name: "x".to_string(), ty: Type::Int }],
+                            ty: Type::None,
+                        },
+                    },
+                ],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains("let x: i64"), "should emit `let x` without mut");
+        assert!(!rust_code.contains("let mut x"), "should NOT emit `let mut x`");
+    }
+
+    #[test]
+    fn test_mut_on_reassigned_variable() {
+        // Variable that IS reassigned should have `mut`
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![
+                    HirStmt::Let {
+                        name: "x".to_string(),
+                        ty: Type::Int,
+                        value: HirExpr::IntLiteral(0),
+                        is_mutable: true,
+                    },
+                    HirStmt::Assign {
+                        name: "x".to_string(),
+                        value: HirExpr::IntLiteral(1),
+                    },
+                ],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains("let mut x: i64"), "should emit `let mut x` for reassigned var");
+    }
+
+    #[test]
+    fn test_println_fstring_inlined() {
+        // print(f"hello {name}") should emit println!("hello {}", name) not println!("{}", format!(...))
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![
+                    HirStmt::Let {
+                        name: "name".to_string(),
+                        ty: Type::Str,
+                        value: HirExpr::StringLiteral("World".to_string()),
+                        is_mutable: false,
+                    },
+                    HirStmt::Expr {
+                        expr: HirExpr::Call {
+                            func: "print".to_string(),
+                            args: vec![HirExpr::FString {
+                                parts: vec![
+                                    HirFStringPart::Literal("Hello, ".to_string()),
+                                    HirFStringPart::Expr(HirExpr::Name { name: "name".to_string(), ty: Type::Str }),
+                                    HirFStringPart::Literal("!".to_string()),
+                                ],
+                                ty: Type::Str,
+                            }],
+                            ty: Type::None,
+                        },
+                    },
+                ],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains("println!(\"Hello, {}!\", name)"), "should inline f-string into println!");
+        assert!(!rust_code.contains("format!(\"Hello, {}!\""), "should NOT have standalone format! inside println!");
+    }
+
+    #[test]
+    fn test_no_tostring_in_println() {
+        // print("hello") should emit println!("{}", "hello") not println!("{}", "hello".to_string())
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::StringLiteral("hello".to_string())],
+                        ty: Type::None,
+                    },
+                }],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains("println!(\"{}\", \"hello\")"), "should emit string literal without .to_string()");
+        assert!(!rust_code.contains("\"hello\".to_string()"), "should NOT have .to_string() in println context");
+    }
+
+    #[test]
+    fn test_hashmap_short_name() {
+        // Dict literal should use HashMap::from not std::collections::HashMap::from
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Let {
+                    name: "d".to_string(),
+                    ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                    value: HirExpr::DictLiteral {
+                        keys: vec![HirExpr::StringLiteral("a".to_string())],
+                        values: vec![HirExpr::IntLiteral(1)],
+                        ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                    },
+                    is_mutable: false,
+                }],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains("use std::collections::HashMap;"), "should have HashMap import");
+        assert!(rust_code.contains("HashMap::from("), "should use short HashMap::from");
+        assert!(!rust_code.contains("std::collections::HashMap::from("), "should NOT use fully qualified HashMap::from");
+        assert!(rust_code.contains("HashMap<String, i64>"), "type annotation should use short HashMap");
+    }
+
+    #[test]
+    fn test_dict_get_string_literal_key() {
+        // d["key"] should emit d.get("key") not d.get(&"key".to_string())
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![
+                    HirStmt::Let {
+                        name: "d".to_string(),
+                        ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                        value: HirExpr::DictLiteral {
+                            keys: vec![HirExpr::StringLiteral("key".to_string())],
+                            values: vec![HirExpr::IntLiteral(1)],
+                            ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                        },
+                        is_mutable: false,
+                    },
+                    HirStmt::Let {
+                        name: "v".to_string(),
+                        ty: Type::Union(vec![Type::Int, Type::None]),
+                        value: HirExpr::Index {
+                            object: Box::new(HirExpr::Name {
+                                name: "d".to_string(),
+                                ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                            }),
+                            index: Box::new(HirExpr::StringLiteral("key".to_string())),
+                            ty: Type::Union(vec![Type::Int, Type::None]),
+                        },
+                        is_mutable: false,
+                    },
+                ],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains(".get(\"key\")"), "should emit .get(\"key\") for string literal key");
+        assert!(!rust_code.contains("&\"key\".to_string()"), "should NOT have &\"key\".to_string()");
+    }
+
+    #[test]
+    fn test_string_concat_flattened() {
+        // "a" + "b" + "c" should emit format!("{}{}{}", ...) not nested format!
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Let {
+                    name: "s".to_string(),
+                    ty: Type::Str,
+                    value: HirExpr::BinOp {
+                        left: Box::new(HirExpr::BinOp {
+                            left: Box::new(HirExpr::StringLiteral("a".to_string())),
+                            op: "+".to_string(),
+                            right: Box::new(HirExpr::StringLiteral("b".to_string())),
+                            ty: Type::Str,
+                        }),
+                        op: "+".to_string(),
+                        right: Box::new(HirExpr::StringLiteral("c".to_string())),
+                        ty: Type::Str,
+                    },
+                    is_mutable: false,
+                }],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains("format!(\"{}{}{}\","), "should flatten into single format! with 3 placeholders");
+        assert_eq!(rust_code.matches("format!").count(), 1, "should have exactly one format! call");
+    }
+
+    #[test]
+    fn test_mut_on_mutating_method_call() {
+        // Variable with .push() call should have `mut`
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![
+                    HirStmt::Let {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                        value: HirExpr::ListLiteral {
+                            elements: vec![HirExpr::IntLiteral(1)],
+                            ty: Type::List(Box::new(Type::Int)),
+                        },
+                        is_mutable: true,
+                    },
+                    HirStmt::Expr {
+                        expr: HirExpr::MethodCall {
+                            object: Box::new(HirExpr::Name {
+                                name: "items".to_string(),
+                                ty: Type::List(Box::new(Type::Int)),
+                            }),
+                            method: "append".to_string(),
+                            args: vec![HirExpr::IntLiteral(2)],
+                            ty: Type::None,
+                        },
+                    },
+                ],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains("let mut items"), "should emit `let mut items` for variable with .push()");
+    }
+
+    #[test]
+    fn test_empty_print() {
+        // print() should emit println!() not println!("{}", "")
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![],
+                        ty: Type::None,
+                    },
+                }],
+            }],
+            classes: vec![],
+            imports: vec![],
+        };
+
+        let rust_code = generate_rust(&module);
+        assert!(rust_code.contains("println!()"), "should emit println!() for empty print");
+        assert!(!rust_code.contains(r#"println!("{}", "")"#), "should NOT emit println with empty string arg");
     }
 }

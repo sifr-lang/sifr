@@ -162,7 +162,7 @@ impl Type {
             Self::Str => "String".to_string(),
             Self::None => "()".to_string(),
             Self::List(elem) => format!("Vec<{}>", elem.rust_type()),
-            Self::Dict(key, val) => format!("std::collections::HashMap<{}, {}>", key.rust_type(), val.rust_type()),
+            Self::Dict(key, val) => format!("HashMap<{}, {}>", key.rust_type(), val.rust_type()),
             Self::Tuple(elems) => {
                 let parts: Vec<String> = elems.iter().map(Self::rust_type).collect();
                 format!("({})", parts.join(", "))
@@ -469,7 +469,7 @@ mod tests {
         let dict_str_int = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
         assert_eq!(dict_str_int.ownership(), OwnershipKind::Move);
         assert_eq!(dict_str_int.display_name(), "dict[str, int]");
-        assert_eq!(dict_str_int.rust_type(), "std::collections::HashMap<String, i64>");
+        assert_eq!(dict_str_int.rust_type(), "HashMap<String, i64>");
     }
 
     #[test]

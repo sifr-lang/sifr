@@ -1,0 +1,70 @@
+# ============================================================
+# Sifr Codegen Quality Demo
+# Showcases all codegen quality improvements:
+# 1. No unnecessary `mut` on immutable variables
+# 2. F-strings inlined directly into println! (no double format!)
+# 3. String literals clean in display contexts (no .to_string())
+# 4. String method args use literals directly (no .to_string().as_str())
+# 5. HashMap lookups with string literal keys (no &"key".to_string())
+# 6. Flattened string concatenation (single format! call)
+# ============================================================
+
+def main():
+    # --- 1. Immutable vs mutable variables ---
+    # `x` is never reassigned -> no `mut`
+    x: int = 42
+    print(f"Immutable x = {x}")
+
+    # `counter` IS reassigned -> `mut`
+    counter: int = 0
+    counter = counter + 1
+    counter = counter + 1
+    print(f"Mutable counter = {counter}")
+
+    # `items` has a mutating method call (.append) -> `mut`
+    items: list[int] = [1, 2, 3]
+    items.append(4)
+    print(f"List after append: length = {items.len()}")
+
+    # --- 2. F-strings inlined into println! ---
+    name: str = "Sifr"
+    version: int = 2
+    # Emits: println!("Welcome to {} v{}!", name, version)
+    print(f"Welcome to {name} v{version}!")
+
+    # --- 3. String literals in print without .to_string() ---
+    # Emits: println!("{}", "hello world")
+    print("hello world")
+
+    # --- 4. String methods with literal args ---
+    lang: str = "sifr-lang"
+    # Emits: lang.starts_with("sifr")
+    print(f"Starts with sifr: {lang.startswith('sifr')}")
+    print(f"Ends with lang: {lang.endswith('lang')}")
+
+    # Emits: lang.replace("sifr", "SIFR")
+    replaced: str = lang.replace("sifr", "SIFR")
+    print(f"Replaced: {replaced}")
+
+    # Emits: csv.split(",")
+    csv: str = "a,b,c"
+    parts: list[str] = csv.split(",")
+    print(f"Split count: {parts.len()}")
+
+    # --- 5. HashMap with string literal keys ---
+    ages: dict[str, int] = {"alice": 25, "bob": 30, "charlie": 35}
+    # Emits: ages.get("alice")
+    alice_age: int | None = ages["alice"]
+    if alice_age is not None:
+        print(f"Alice is {alice_age} years old")
+
+    # Emits: ages.contains_key("bob")
+    has_bob: bool = "bob" in ages
+    print(f"Has bob: {has_bob}")
+
+    # --- 6. Flattened string concatenation ---
+    greeting: str = "Hello" + ", " + "World" + "!"
+    # Emits: format!("{}{}{}{}", ...)
+    print(f"Greeting: {greeting}")
+
+    print("All codegen quality improvements verified!")

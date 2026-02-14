@@ -29,8 +29,8 @@ impl Point {
     }
 
     fn distance(&self, other: &Point) -> f64 {
-        let mut dx: f64 = self.x - other.x;
-        let mut dy: f64 = self.y - other.y;
+        let dx: f64 = self.x - other.x;
+        let dy: f64 = self.y - other.y;
         return ((dx * dx) + (dy * dy) as f64).powf(0.5_f64 as f64);
     }
 
@@ -109,37 +109,37 @@ impl Color {
 fn describe_shape(shape: CircleOrSquare) {
     match shape {
         CircleOrSquare::Circle(shape) => {
-            println!("{}", format!("Circle: radius={}", shape.radius));
+            println!("Circle: radius={}", shape.radius);
         }
         CircleOrSquare::Square(shape) => {
-            println!("{}", format!("Square: side={}", shape.side));
+            println!("Square: side={}", shape.side);
         }
     }
 }
 
 fn main() {
-    println!("{}", "=== Basic Class ===".to_string());
-    let mut origin: Point = Point::new(0.0_f64, 0.0_f64);
-    let mut target: Point = Point::new(3.0_f64, 4.0_f64);
-    let mut d: f64 = origin.distance(&target);
-    println!("{}", format!("Distance from origin to (3,4): {}", d));
-    println!("{}", "=== Methods ===".to_string());
-    let mut rect: Rectangle = Rectangle::new(5.0_f64, 3.0_f64);
-    println!("{}", format!("Rectangle area: {}", rect.area()));
-    println!("{}", format!("Rectangle perimeter: {}", rect.perimeter()));
-    println!("{}", "=== Field Access ===".to_string());
-    println!("{}", format!("Rectangle width: {}", rect.width));
-    println!("{}", format!("Rectangle height: {}", rect.height));
-    println!("{}", "=== Union + isinstance ===".to_string());
-    let mut c: Circle = Circle::new(10.0_f64);
-    let mut s: Square = Square::new(7.0_f64);
+    println!("{}", "=== Basic Class ===");
+    let origin: Point = Point::new(0.0_f64, 0.0_f64);
+    let target: Point = Point::new(3.0_f64, 4.0_f64);
+    let d: f64 = origin.distance(&target);
+    println!("Distance from origin to (3,4): {}", d);
+    println!("{}", "=== Methods ===");
+    let rect: Rectangle = Rectangle::new(5.0_f64, 3.0_f64);
+    println!("Rectangle area: {}", rect.area());
+    println!("Rectangle perimeter: {}", rect.perimeter());
+    println!("{}", "=== Field Access ===");
+    println!("Rectangle width: {}", rect.width);
+    println!("Rectangle height: {}", rect.height);
+    println!("{}", "=== Union + isinstance ===");
+    let c: Circle = Circle::new(10.0_f64);
+    let s: Square = Square::new(7.0_f64);
     describe_shape(CircleOrSquare::Circle(c));
     describe_shape(CircleOrSquare::Square(s));
-    println!("{}", "=== Hash ===".to_string());
-    let mut red: Color = Color::new(255_i64, 0_i64, 0_i64);
-    let mut also_red: Color = Color::new(255_i64, 0_i64, 0_i64);
-    let mut h1: i64 = { use std::hash::{Hash, Hasher}; let mut _h = std::collections::hash_map::DefaultHasher::new(); red.hash(&mut _h); _h.finish() as i64 };
-    let mut h2: i64 = { use std::hash::{Hash, Hasher}; let mut _h = std::collections::hash_map::DefaultHasher::new(); also_red.hash(&mut _h); _h.finish() as i64 };
-    println!("{}", format!("Same color same hash: {}", h1 == h2));
-    println!("{}", "=== Done ===".to_string());
+    println!("{}", "=== Hash ===");
+    let red: Color = Color::new(255_i64, 0_i64, 0_i64);
+    let also_red: Color = Color::new(255_i64, 0_i64, 0_i64);
+    let h1: i64 = { use std::hash::{Hash, Hasher}; let mut _h = std::collections::hash_map::DefaultHasher::new(); red.hash(&mut _h); _h.finish() as i64 };
+    let h2: i64 = { use std::hash::{Hash, Hasher}; let mut _h = std::collections::hash_map::DefaultHasher::new(); also_red.hash(&mut _h); _h.finish() as i64 };
+    println!("Same color same hash: {}", h1 == h2);
+    println!("{}", "=== Done ===");
 }
