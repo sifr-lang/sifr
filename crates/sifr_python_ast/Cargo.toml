@@ -1,0 +1,32 @@
+[package]
+name = "sifr_python_ast"
+version = "0.0.0"
+publish = false
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+license = { workspace = true }
+
+[lib]
+
+[dependencies]
+sifr_python_trivia = { workspace = true }
+sifr_source_file = { workspace = true }
+sifr_text_size = { workspace = true }
+
+aho-corasick = { workspace = true }
+bitflags = { workspace = true }
+is-macro = { workspace = true }
+itertools = { workspace = true }
+once_cell = { workspace = true }
+rustc-hash = { workspace = true }
+serde = { workspace = true, optional = true }
+
+[features]
+serde = ["dep:serde", "sifr_text_size/serde"]
+
+[lints]
+workspace = true

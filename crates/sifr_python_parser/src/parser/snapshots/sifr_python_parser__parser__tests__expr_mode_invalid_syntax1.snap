@@ -1,0 +1,8 @@
+---
+source: crates/sifr_python_parser/src/parser/tests.rs
+expression: error
+---
+ParseError {
+    error: UnexpectedExpressionToken,
+    location: 6..12,
+}

@@ -1,0 +1,20 @@
+---
+source: crates/sifr_python_parser/src/lexer.rs
+expression: ipython_escape_command_line_continuation_with_eol_and_eof(WINDOWS_EOL)
+---
+## Tokens
+```
+[
+    (
+        IpyEscapeCommand {
+            value: "matplotlib ",
+            kind: Magic,
+        },
+        0..15,
+    ),
+    (
+        Newline,
+        15..15,
+    ),
+]
+```

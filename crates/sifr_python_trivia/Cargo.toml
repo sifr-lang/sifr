@@ -1,0 +1,23 @@
+[package]
+name = "sifr_python_trivia"
+version = "0.0.0"
+publish = false
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+license = { workspace = true }
+
+[lib]
+
+[dependencies]
+sifr_text_size = { workspace = true }
+sifr_source_file = { workspace = true }
+
+itertools = { workspace = true }
+unicode-ident = { workspace = true }
+
+[lints]
+workspace = true

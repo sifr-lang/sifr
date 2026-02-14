@@ -1,0 +1,29 @@
+---
+source: crates/sifr_python_parser/src/string.rs
+expression: parse_ast
+---
+[
+    Expr(
+        StmtExpr {
+            range: 0..20,
+            value: StringLiteral(
+                ExprStringLiteral {
+                    range: 0..20,
+                    value: StringLiteralValue {
+                        inner: Single(
+                            StringLiteral {
+                                range: 0..20,
+                                value: "Hello, world!",
+                                flags: StringLiteralFlags {
+                                    quote_style: Single,
+                                    prefix: Unicode,
+                                    triple_quoted: true,
+                                },
+                            },
+                        ),
+                    },
+                },
+            ),
+        },
+    ),
+]
