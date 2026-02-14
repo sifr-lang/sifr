@@ -488,6 +488,8 @@ impl RustEmitter {
                     self.writeln("}");
                 } else {
                     // Normal if/elif/else
+                    // Hoist any walrus expressions before the if
+                    self.emit_walrus_hoists(condition);
                     self.write_indent();
                     self.write("if ");
                     self.emit_expr(condition);
@@ -530,6 +532,8 @@ impl RustEmitter {
                 }
                 let prev_loop_else = self.in_loop_with_else;
                 self.in_loop_with_else = has_else;
+                // Hoist any walrus expressions
+                self.emit_walrus_hoists(condition);
                 self.write_indent();
                 self.write("while ");
                 self.emit_expr(condition);
@@ -643,6 +647,38 @@ impl RustEmitter {
                     self.write(&format!("let {} = _star_tmp[_star_tmp.len() - {}].clone();\n", name, after.len() - i));
                 }
             }
+        }
+    }
+
+    /// Emit any walrus (named expression) assignments that need to be hoisted before a condition.
+    fn emit_walrus_hoists(&mut self, expr: &HirExpr) {
+        match expr {
+            HirExpr::WalrusExpr { name, value, ty } => {
+                self.write_indent();
+                self.write("let ");
+                self.write(name);
+                self.write(": ");
+                self.write(&ty.rust_type());
+                self.write(" = ");
+                self.emit_expr(value);
+                self.write(";\n");
+            }
+            HirExpr::Compare { left, comparators, .. } => {
+                self.emit_walrus_hoists(left);
+                for c in comparators {
+                    self.emit_walrus_hoists(c);
+                }
+            }
+            HirExpr::BoolOp { values, .. } => {
+                for v in values {
+                    self.emit_walrus_hoists(v);
+                }
+            }
+            HirExpr::BinOp { left, right, .. } => {
+                self.emit_walrus_hoists(left);
+                self.emit_walrus_hoists(right);
+            }
+            _ => {}
         }
     }
 
@@ -1552,14 +1588,9 @@ impl RustEmitter {
                 }
             }
             HirExpr::WalrusExpr { name, value, .. } => {
-                // Walrus operator: emit as block that assigns and returns value
-                self.write("{ let ");
+                // Walrus operator: the variable is already hoisted by emit_walrus_hoists
+                // Just emit the variable name (the assignment was already emitted)
                 self.write(name);
-                self.write(" = ");
-                self.emit_expr(value);
-                self.write("; ");
-                self.write(name);
-                self.write(" }");
             }
             HirExpr::FString { parts, .. } => {
                 // Build the format string and collect expressions

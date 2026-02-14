@@ -1,0 +1,7 @@
+# expect-stdout: 1
+# expect-stdout: 4
+def main():
+    items: list[int] = [1, 2, 3, 4, 5]
+    first, *rest = items
+    print(first)
+    print(len(rest))

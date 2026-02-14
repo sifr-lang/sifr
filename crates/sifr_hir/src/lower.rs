@@ -33,6 +33,8 @@ impl std::fmt::Display for LoweringError {
 struct LowerCtx {
     /// Function signatures (name -> type)
     functions: HashMap<String, FunctionType>,
+    /// Default parameter values for functions (name -> vec of (param_index, default_expr))
+    function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     /// Current scope for name resolution
     scope: Scope,
     /// Collected errors
@@ -47,6 +49,7 @@ impl LowerCtx {
     fn new() -> Self {
         Self {
             functions: HashMap::new(),
+            function_defaults: HashMap::new(),
             scope: Scope::new(),
             errors: Vec::new(),
             loop_depth: 0,
@@ -86,6 +89,27 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
         match stmt {
             Stmt::FunctionDef(func) => {
                 if let Some(ft) = extract_function_type(func, &mut ctx) {
+                    // Collect default values for parameters
+                    let mut defaults = Vec::new();
+                    for (i, param) in func.parameters.args.iter().enumerate() {
+                        if let Some(ref default_expr) = param.default {
+                            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                                defaults.push((i, hir_default));
+                            }
+                        }
+                    }
+                    // Also collect defaults for keyword-only args
+                    let regular_count = func.parameters.args.len();
+                    for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
+                        if let Some(ref default_expr) = param.default {
+                            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                                defaults.push((regular_count + i, hir_default));
+                            }
+                        }
+                    }
+                    if !defaults.is_empty() {
+                        ctx.function_defaults.insert(func.name.to_string(), defaults);
+                    }
                     ctx.functions.insert(func.name.to_string(), ft);
                 }
             }
@@ -122,6 +146,36 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
         })
     } else {
         Err(ctx.errors)
+    }
+}
+
+/// Lower a simple expression (literal values only) without requiring a full LowerCtx.
+/// Used for collecting default parameter values in the first pass.
+fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
+    match expr {
+        Expr::NumberLiteral(num) => {
+            match &num.value {
+                Number::Int(i) => Some(HirExpr::IntLiteral(i.as_i64()?)),
+                Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
+                _ => None,
+            }
+        }
+        Expr::StringLiteral(s) => Some(HirExpr::StringLiteral(s.value.to_str().to_string())),
+        Expr::BooleanLiteral(b) => Some(HirExpr::BoolLiteral(b.value)),
+        Expr::NoneLiteral(_) => Some(HirExpr::NoneLiteral),
+        Expr::UnaryOp(unary) if matches!(unary.op, UnaryOp::USub) => {
+            // Handle negative literals like -1
+            if let Some(inner) = lower_expr_simple(&unary.operand) {
+                match inner {
+                    HirExpr::IntLiteral(v) => Some(HirExpr::IntLiteral(-v)),
+                    HirExpr::FloatLiteral(v) => Some(HirExpr::FloatLiteral(-v)),
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        }
+        _ => None,
     }
 }
 
@@ -1261,7 +1315,33 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             ));
             return None;
         }
-        positional_args
+        // Fill in defaults for missing arguments
+        if positional_args.len() < ft.params.len() {
+            let defaults = ctx.function_defaults.get(&func_name).cloned();
+            let mut filled = positional_args;
+            for i in filled.len()..ft.params.len() {
+                if let Some(ref defs) = defaults {
+                    if let Some((_, default_expr)) = defs.iter().find(|(idx, _)| *idx == i) {
+                        filled.push(default_expr.clone());
+                    } else {
+                        ctx.error(format!(
+                            "function '{}': missing argument '{}' with no default value",
+                            func_name, ft.params[i].0
+                        ));
+                        return None;
+                    }
+                } else {
+                    ctx.error(format!(
+                        "function '{}': missing argument '{}' with no default value",
+                        func_name, ft.params[i].0
+                    ));
+                    return None;
+                }
+            }
+            filled
+        } else {
+            positional_args
+        }
     } else {
         // Resolve keyword arguments into positional order
         let mut resolved = Vec::new();
