@@ -163,6 +163,8 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Alias(name, _) => (18, name.clone()),
         Type::Class { name, .. } => (19, name.clone()),
         Type::Result(_, _) => (20, String::new()),
+        Type::Protocol { name, .. } => (21, name.clone()),
+        Type::Newtype { name, .. } => (22, name.clone()),
     }
 }
 

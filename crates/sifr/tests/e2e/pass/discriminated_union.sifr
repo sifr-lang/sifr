@@ -1,0 +1,28 @@
+# expect-stdout: 78.5
+# expect-stdout: 25
+
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+class Square:
+    side: float
+
+    def __init__(self, side: float):
+        self.side = side
+
+type Shape = Circle | Square
+
+def compute_area(shape: Shape) -> float:
+    if isinstance(shape, Circle):
+        return 3.14 * shape.radius * shape.radius
+    else:
+        return shape.side * shape.side
+
+def main():
+    c: Circle = Circle(5.0)
+    s: Square = Square(5.0)
+    print(compute_area(c))
+    print(compute_area(s))
