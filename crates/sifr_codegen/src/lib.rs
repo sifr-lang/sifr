@@ -226,6 +226,19 @@ impl RustEmitter {
             HirStmt::Pass => {
                 // No-op in Rust
             }
+            HirStmt::TupleUnpack { targets, value } => {
+                self.write_indent();
+                self.write("let (");
+                for (i, (name, _ty)) in targets.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.write(name);
+                }
+                self.write(") = ");
+                self.emit_expr(value);
+                self.write(";\n");
+            }
         }
     }
 
@@ -575,6 +588,37 @@ impl RustEmitter {
                         self.write(")");
                     }
                 }
+            }
+            HirExpr::FString { parts, .. } => {
+                // Build the format string and collect expressions
+                let mut format_str = String::new();
+                let mut exprs: Vec<&HirExpr> = Vec::new();
+                for part in parts {
+                    match part {
+                        HirFStringPart::Literal(s) => {
+                            // Escape braces in the literal for Rust's format!
+                            for ch in s.chars() {
+                                match ch {
+                                    '{' => format_str.push_str("{{"),
+                                    '}' => format_str.push_str("}}"),
+                                    _ => format_str.push(ch),
+                                }
+                            }
+                        }
+                        HirFStringPart::Expr(expr) => {
+                            format_str.push_str("{}");
+                            exprs.push(expr);
+                        }
+                    }
+                }
+                self.write("format!(\"");
+                self.write(&format_str);
+                self.write("\"");
+                for expr in &exprs {
+                    self.write(", ");
+                    self.emit_expr(expr);
+                }
+                self.write(")");
             }
         }
     }

@@ -1,0 +1,7 @@
+# F-string basic interpolation
+# expect-stdout: Hello, Alice! You are 30 years old.
+def main():
+    name: str = "Alice"
+    age: int = 30
+    msg: str = f"Hello, {name}! You are {age} years old."
+    print(msg)

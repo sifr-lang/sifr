@@ -322,6 +322,11 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
         return None;
     }
 
+    // Handle tuple unpacking: a, b = expr
+    if let Expr::Tuple(tuple) = &assign.targets[0] {
+        return lower_tuple_unpack_assign(tuple, &assign.value, ctx);
+    }
+
     let name = match &assign.targets[0] {
         Expr::Name(n) => n.id.to_string(),
         _ => {
@@ -489,6 +494,7 @@ fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Tuple(tuple) => lower_tuple_literal(tuple, ctx),
         Expr::Subscript(sub) => lower_subscript(sub, ctx),
         Expr::Attribute(attr) => lower_attribute(attr, ctx),
+        Expr::FString(fstring) => lower_fstring(fstring, ctx),
         _ => {
             ctx.error("unsupported expression type".to_string());
             None
@@ -805,6 +811,88 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         func: func_name,
         args,
         ty: *ft.return_type,
+    })
+}
+
+fn lower_fstring(fstring: &ExprFString, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let mut parts = Vec::new();
+
+    for part in &fstring.value {
+        match part {
+            sifr_python_ast::FStringPart::Literal(s) => {
+                parts.push(HirFStringPart::Literal(s.to_string()));
+            }
+            sifr_python_ast::FStringPart::FString(fs) => {
+                for element in fs.elements.iter() {
+                    match element {
+                        FStringElement::Literal(lit) => {
+                            parts.push(HirFStringPart::Literal(lit.value.to_string()));
+                        }
+                        FStringElement::Expression(expr_elem) => {
+                            let expr = lower_expr(&expr_elem.expression, ctx)?;
+                            parts.push(HirFStringPart::Expr(expr));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Some(HirExpr::FString {
+        parts,
+        ty: Type::Str,
+    })
+}
+
+fn lower_tuple_unpack_assign(tuple: &ExprTuple, value: &Expr, ctx: &mut LowerCtx) -> Option<HirStmt> {
+    // Extract target names
+    let mut target_names = Vec::new();
+    for elt in &tuple.elts {
+        match elt {
+            Expr::Name(n) => target_names.push(n.id.to_string()),
+            _ => {
+                ctx.error("tuple unpacking target must be a simple name".to_string());
+                return None;
+            }
+        }
+    }
+
+    // Lower the value expression
+    let value_expr = lower_expr(value, ctx)?;
+    let value_ty = value_expr.ty().clone();
+
+    // Check that the value is a tuple with matching length
+    let elem_types = match &value_ty {
+        Type::Tuple(elems) => {
+            if elems.len() != target_names.len() {
+                ctx.error(format!(
+                    "tuple unpacking: expected {} values, got {}",
+                    target_names.len(),
+                    elems.len()
+                ));
+                return None;
+            }
+            elems.clone()
+        }
+        _ => {
+            ctx.error(format!(
+                "cannot unpack non-tuple type '{}'",
+                value_ty.display_name()
+            ));
+            return None;
+        }
+    };
+
+    // Define variables in scope
+    let mut targets = Vec::new();
+    for (name, ty) in target_names.into_iter().zip(elem_types.into_iter()) {
+        ctx.scope.define(name.clone(), ty.clone());
+        targets.push((name, ty));
+    }
+
+    Some(HirStmt::TupleUnpack {
+        targets,
+        value: value_expr,
     })
 }
 
@@ -1318,5 +1406,54 @@ mod tests {
             "def main():\n    for i in range(3):\n        for j in range(2):\n            print(i)\n"
         ).unwrap();
         assert_eq!(module.functions.len(), 1);
+    }
+
+    #[test]
+    fn test_fstring_basic() {
+        let module = lower_source(
+            "def main():\n    name: str = \"Alice\"\n    msg: str = f\"Hello, {name}!\"\n    print(msg)\n"
+        ).unwrap();
+        assert_eq!(module.functions.len(), 1);
+        // Should have 3 statements: let name, let msg, print
+        assert_eq!(module.functions[0].body.len(), 3);
+    }
+
+    #[test]
+    fn test_fstring_with_expression() {
+        let module = lower_source(
+            "def main():\n    a: int = 2\n    b: int = 3\n    print(f\"{a} + {b} = {a + b}\")\n"
+        ).unwrap();
+        assert_eq!(module.functions.len(), 1);
+    }
+
+    #[test]
+    fn test_tuple_unpack() {
+        let module = lower_source(
+            "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y = pair\n    print(x)\n"
+        ).unwrap();
+        assert_eq!(module.functions.len(), 1);
+        // Should have: let pair, tuple_unpack, print
+        assert!(module.functions[0].body.len() >= 3);
+        assert!(matches!(module.functions[0].body[1], HirStmt::TupleUnpack { .. }));
+    }
+
+    #[test]
+    fn test_tuple_unpack_wrong_count() {
+        let result = lower_source(
+            "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y, z = pair\n"
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|e| e.message.contains("expected 3 values, got 2")));
+    }
+
+    #[test]
+    fn test_tuple_unpack_non_tuple() {
+        let result = lower_source(
+            "def main():\n    x: int = 42\n    a, b = x\n"
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|e| e.message.contains("cannot unpack non-tuple")));
     }
 }
