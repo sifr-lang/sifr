@@ -80,7 +80,7 @@ Sifr's core guarantee: **if it compiles, it works.** The language is designed so
   - Division (`a / b` returns `Result[T, DivisionError]` when the divisor is not provably non-zero)
   - Type conversions (`int(s)` where `s: str` returns `Result[int, ParseError]`)
   - File I/O, network, and all stdlib operations that can fail
-  - Integer overflow (checked arithmetic returns `Result[int, OverflowError]`)
+  - Integer overflow (panics in debug, wraps in release -- matches Rust; opt-in checked mode deferred)
 - `**assert` is the only panic.** The `assert` statement is a programmer invariant check -- it generates `panic!()` and is intentionally unrecoverable. It exists to catch programmer bugs (violated assumptions), not to handle runtime errors. It is the one escape hatch from the no-panic guarantee.
 - **Panic = unrecoverable system failure.** Beyond `assert`, panics only occur from truly unrecoverable situations: stack overflow, double panic, or hardware failure. These are never part of normal control flow.
 - **Exceptions are not errors.** Sifr does not use Python's exception model. There is no stack unwinding, no `try`/`except` for control flow. The `try`/`except` syntax is reinterpreted as pattern matching on `Result` values. `raise` is syntax sugar for returning `Err(...)`.
@@ -207,12 +207,12 @@ flowchart TD
     end
     subgraph phase4 [Phase 4: Ecosystem]
         M17["M17: Async Runtime\nasync/await, tokio,\ntasks, streams"]
-        M18["M18: Basic Decorators\nFunction wrapping,\ndecorator factories"]
+        M18["M18: Decorators + Variadics\nFunction wrapping,\n*args/**kwargs"]
         M19["M19: Web + Database\naxum, reqwest, sqlx,\nREST APIs, SQL"]
         M20["M20: Data Processing\npolars DataFrames,\nCSV/Parquet, CLI"]
     end
     subgraph phase5 [Phase 5: Polish]
-        M21["M21: Metaprogramming\nCompile-time decorators,\ndataclass, *args/**kwargs"]
+        M21["M21: Metaprogramming\nCompile-time decorators,\ndataclass, const eval"]
         M22["M22: FFI + Interop\nRust FFI, C FFI,\nunsafe boundary"]
         M23["M23: Package Management\nsifr.toml, sifr.lock,\nPubGrub solver"]
         M24["M24: Developer Tooling\nLSP, formatter, linter,\ndoc generator"]
@@ -732,7 +732,7 @@ greet("Alice", greeting="Hi")         # mixed
 
 **Codegen:** Rust does not have named arguments. The compiler resolves keyword arguments to positional order at compile time and emits a normal positional function call. Default values are inserted for omitted parameters.
 
-**Note:** `*args` and `**kwargs` (variadic arguments) remain in M21 as they require more complex type system support.
+**Note:** `*args` and `**kwargs` (variadic arguments) are in M18, where they are needed for generic function decorators.
 
 ### For-Loop Borrow Semantics
 
@@ -2058,13 +2058,15 @@ M17 also provides basic cross-task communication primitives:
 
 ## M18: Basic Function Decorators
 
-**Goal:** Add basic function decorator support -- just enough for M19's web routing (`@app.get("/")`, `@app.post("/users")`). Full metaprogramming decorators (`@dataclass`, custom compile-time transforms, `*args`/`**kwargs`) remain in M21.
+**Goal:** Add function decorator support and variadic arguments (`*args`/`**kwargs`) -- the two features needed for M19's web routing (`@app.get("/")`, `@app.post("/users")`). Generic decorators require `*args`/`**kwargs` to wrap functions with arbitrary signatures. Full metaprogramming decorators (`@dataclass`, custom compile-time transforms) remain in M21.
 
 ### Language Features
 
 - **Function decorators:** `@decorator` syntax that wraps a function with another function
 - **Decorator with arguments:** `@app.get("/path")` -- decorator factories that return a decorator
 - **Multiple decorators:** stacked decorators applied bottom-up (same as Python)
+- `***args`:** variadic positional arguments captured as a tuple. Codegen: tuple of trait objects or monomorphized dispatch.
+- `****kwargs`:** variadic keyword arguments captured as a dict. Codegen: `HashMap<String, T>` with trait objects or monomorphized dispatch. **Note:** basic keyword arguments (named params, defaults, keyword-only params) are in M4. This milestone adds the *variadic* forms needed for generic function wrapping.
 
 ### Semantics
 
@@ -2086,7 +2088,7 @@ def hello():
 
 **Codegen:** `@decorator` desugars to `func = decorator(func)` at compile time. The compiler verifies that the decorator's return type is compatible with the decorated function's type.
 
-**Note:** this milestone provides runtime function wrapping only. Compile-time AST transformations (`@dataclass`, custom class decorators) are in M21.
+**Note:** this milestone provides runtime function wrapping and variadic arguments. Compile-time AST transformations (`@dataclass`, custom class decorators) are in M21.
 
 ### Definition of Done (M18)
 
@@ -2094,7 +2096,10 @@ def hello():
 - `@decorator_factory(args)` works (decorator with arguments)
 - Multiple stacked decorators apply in correct order
 - Type checking verifies decorator input/output compatibility
-- E2E pass tests: basic_decorator, decorator_with_args, stacked_decorators
+- `*args` captures extra positional arguments as a tuple
+- `**kwargs` captures extra keyword arguments as a dict
+- A generic decorator can wrap functions with different signatures using `*args`/`**kwargs`
+- E2E pass tests: basic_decorator, decorator_with_args, stacked_decorators, args_kwargs_basic, generic_decorator_wrapping
 - E2E fail tests: decorator_type_mismatch
 - Milestone demo in `./demos/m18_demo.sifr`
 
@@ -2293,7 +2298,7 @@ def main():
 - `**@dataclass`:** auto-generate `__init__`, `__eq__`, `__repr__` (like Rust `#[derive]`)
 - `**@property`:** getter/setter generation
 - **Custom decorators:** user-defined compile-time transforms
-- `***args` / `**kwargs`:** variadic positional and keyword arguments via macro expansion or trait objects. **Note:** basic keyword arguments (named params, defaults, keyword-only params) are in M4. This milestone adds the *variadic* forms (`*args` captures extra positional args as a tuple, `**kwargs` captures extra keyword args as a dict).
+- `***args` / `**kwargs`:** delivered in M18 (needed for generic decorators). Available here for use in compile-time decorator transforms.
 - **Compile-time evaluation:** `const` expressions evaluated at compile time
 
 ### Example
@@ -2322,12 +2327,12 @@ Compile-time evaluation (`const` expressions, custom decorators) runs during com
 - `@dataclass` generates `__init__`, `__eq__`, `__repr__`, `clone` methods
 - `@property` generates getter/setter methods
 - Custom decorators can transform class definitions (add/remove fields and methods)
-- `*args` / `**kwargs` work via macro expansion or trait objects
+- `*args` / `**kwargs` (delivered in M18) work within compile-time decorator transforms
 - Positional-only parameters (`def f(x, /, y)`) work
 - `const` expressions evaluated at compile time
 - Compile-time sandbox enforced (no I/O, no side effects)
 - Deterministic compile-time expansion: same source always produces same output (important for caching in M25)
-- E2E pass tests: dataclass_basic, property_decorator, custom_decorator, const_eval, args_kwargs, positional_only_params
+- E2E pass tests: dataclass_basic, property_decorator, custom_decorator, const_eval, positional_only_params
 - Milestone demo in `./demos/m21_demo.sifr`
 
 ---
@@ -2567,12 +2572,12 @@ PHASE 3 - Pythonic Completeness:
 
 PHASE 4 - Ecosystem:
   M17: Async Runtime              -> async/await, tokio, tasks, async streams
-  M18: Basic Decorators           -> Function wrapping, decorator factories
+  M18: Decorators + Variadics     -> Function wrapping, *args/**kwargs
   M19: Web + Database             -> axum web, reqwest HTTP, embedded SQLite, sqlx
   M20: Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
 
 PHASE 5 - Polish:
-  M21: Metaprogramming            -> Compile-time decorators, @dataclass, *args/**kwargs
+  M21: Metaprogramming            -> Compile-time decorators, @dataclass, const eval
   M22: FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
   M23: Package Management         -> sifr.toml, sifr.lock, PubGrub solver
   M24: Developer Tooling          -> LSP, formatter, linter, documentation generator
