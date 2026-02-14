@@ -14,7 +14,7 @@ gh project item-list 1 --owner yaseralnajjar --format json
 
 ## Available field-id and single-selection-option-id
 
-Check @.cursor/templates/available-field-id-and-single-selection-option-id.md
+Check @.cursor/references/available-field-id-and-single-selection-option-id.md
 
 ## Creating PRs
 
@@ -33,7 +33,7 @@ Check @.cursor/templates/available-field-id-and-single-selection-option-id.md
 
 5. Run tests locally and make sure all tests are passing.
 
-6. Create a PR in github with title `<github-issue-id>-<github-issue-title>` using github mcp. Use this template @.cursor/templates/pr-template.md
+6. Create a PR in github with title `<github-issue-id>-<github-issue-title>` using github mcp. Use this template @.cursor/references/pr-template.md
 
 7. Update ticket `Status` into `In review`:
 ```

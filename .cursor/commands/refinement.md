@@ -11,7 +11,7 @@ gh project item-list 1 --owner yaseralnajjar
 
 ## Available field-id and single-selection-option-id
 
-Check @.cursor/templates/available-field-id-and-single-selection-option-id.md
+Check @.cursor/references/available-field-id-and-single-selection-option-id.md
 
 ## Refinement of items/tickets
 

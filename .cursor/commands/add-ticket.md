@@ -5,13 +5,13 @@ Add one ticket at a time.
 
 ## Available field-id and single-selection-option-id
 
-Check @.cursor/templates/available-field-id-and-single-selection-option-id.md
+Check @.cursor/references/available-field-id-and-single-selection-option-id.md
 
 ## Adding items/tickets
 
 1. Output ticket description into `/issues/<issue-title>.md`:
-   - If it's a task, use @.cursor/templates/task-template.md
-   - If it's an epic, use @.cursor/templates/prd-solution-design-template.md
+   - If it's a task, use @.cursor/references/task-template.md
+   - If it's an epic, use @.cursor/references/prd-solution-design-template.md
 
 2. Create github issue using github mcp.
 
