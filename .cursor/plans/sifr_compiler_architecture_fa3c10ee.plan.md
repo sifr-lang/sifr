@@ -117,7 +117,7 @@ When adapting CPython behavior to Sifr, apply these rules:
 1. **Where CPython raises an exception, Sifr returns `Result[T, E]`.** Example: `int("abc")` raises `ValueError` in CPython; in Sifr it returns `Result[int, ParseError]`.
 2. **Where CPython raises `IndexError`, Sifr returns `Option[T]`.** Example: `list[99]` raises `IndexError` in CPython; in Sifr it returns `None`.
 3. **Where CPython raises `KeyError`, Sifr returns `Option[V]`.** Example: `dict["missing"]` raises `KeyError` in CPython; in Sifr it returns `None`.
-4. **Where CPython silently overflows or wraps, Sifr returns `Result`.** Example: large integer arithmetic in CPython uses arbitrary precision; Sifr uses checked `i64` arithmetic with `Result[int, OverflowError]`.
+4. **Where CPython silently overflows or wraps, Sifr uses Rust's default behavior.** Example: large integer arithmetic in CPython uses arbitrary precision; Sifr uses `i64` arithmetic that panics on overflow in debug mode and wraps in release mode (matching Rust). An opt-in checked mode returning `Result[int, OverflowError]` is a future enhancement.
 5. **Where CPython allows mutation on immutable types at runtime, Sifr rejects at compile time.** Example: `tuple[0] = 1` raises `TypeError` at runtime in CPython; in Sifr it is a compile-time error.
 6. **Where CPython behavior is undefined or platform-dependent, Sifr defines explicit behavior.** Document any deviations from CPython in the milestone's notes.
 
@@ -137,22 +137,27 @@ This safety test layer is tracked in each milestone's Definition of Done as: **"
 Sifr intentionally diverges from CPython in several areas to achieve compile-time safety. This table documents each divergence, its rationale, and the milestone where it is introduced.
 
 
-| Python Behavior                                        | Sifr Behavior                                                                                                        | Rationale                                                                                | Milestone |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------- |
-| Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` | Compile-time error handling eliminates unhandled exceptions at runtime                   | M4        |
-| `IndexError` on out-of-bounds access                   | `x[i]` returns `Option[T]` (no panic)                                                                                | Safe indexing -- no runtime crashes from bad indices                                     | M3b       |
-| `KeyError` on missing dict key                         | `d[key]` returns `Option[V]` (no panic)                                                                              | Safe access -- caller must handle missing keys                                           | M3b       |
-| Arbitrary-precision integers                           | Checked `i64` arithmetic; overflow returns `Result[int, OverflowError]`                                              | Predictable performance; overflow is explicit                                            | M4        |
-| Import-time side effects (`__init__.py` runs code)     | `__init__.sifr` defines exported API only; no side effects on import                                                 | Deterministic, safe module loading                                                       | M6        |
-| Mutable default arguments (`def f(x=[])`)              | Default values are evaluated fresh each call (no shared mutable state)                                               | Eliminates a common Python footgun                                                       | M3b       |
-| `global` / `nonlocal` keywords                         | Not supported; use closures (M7) or pass values explicitly                                                           | Encourages explicit data flow; avoids hidden state mutation                              | --        |
-| Metaclasses (`type()`, `__metaclass__`)                | Not supported; use decorators (M14) and protocols (M5) instead                                                       | Simplification -- metaclasses add complexity with limited benefit in a compiled language | --        |
-| `__slots__`                                            | Not needed; all classes compile to Rust structs (already memory-efficient)                                           | Rust structs are fixed-layout by default                                                 | --        |
-| Runtime duck typing                                    | Structural typing via Protocols (compile-time checked)                                                               | Same flexibility as duck typing but errors caught at compile time                        | M5        |
-| `finally` for cleanup                                  | Supported in M4; prefer `with` statement (M7b) which maps to Rust `Drop`                                             | Scope-based cleanup is more idiomatic and less error-prone                               | M4, M7b   |
+| Python Behavior                                        | Sifr Behavior                                                                                                        | Rationale                                                                                 | Milestone |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------- |
+| Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` | Compile-time error handling eliminates unhandled exceptions at runtime                    | M4        |
+| `IndexError` on out-of-bounds access                   | `x[i]` returns `Option[T]` (no panic)                                                                                | Safe indexing -- no runtime crashes from bad indices                                      | M3b-safe  |
+| `KeyError` on missing dict key                         | `d[key]` returns `Option[V]` (no panic)                                                                              | Safe access -- caller must handle missing keys                                            | M3b-safe  |
+| Arbitrary-precision integers                           | `i64` arithmetic; overflow panics in debug, wraps in release (matches Rust)                                          | Predictable performance; matches Rust's default behavior                                  | M4        |
+| Import-time side effects (`__init__.py` runs code)     | `__init__.sifr` defines exported API only; no side effects on import                                                 | Deterministic, safe module loading                                                        | M6a       |
+| Mutable default arguments (`def f(x=[])`)              | Default values are evaluated fresh each call (no shared mutable state)                                               | Eliminates a common Python footgun                                                        | M3b       |
+| Augmented assignment on immutables                     | Augmented assignment (`+=`) on immutable types (tuple, frozenset) is a compile-time error                            | Compile-time enforcement of immutability                                                  | M3b       |
+| `global` / `nonlocal` keywords                         | Not supported; use closures (M7) or pass values explicitly                                                           | Encourages explicit data flow; avoids hidden state mutation                               | --        |
+| Metaclasses (`type()`, `__metaclass__`)                | Not supported; use decorators (M14) and protocols (M5b) instead                                                      | Simplification -- metaclasses add complexity with limited benefit in a compiled language  | --        |
+| `__slots__`                                            | Not needed; all classes compile to Rust structs (already memory-efficient)                                           | Rust structs are fixed-layout by default                                                  | --        |
+| Runtime duck typing                                    | Structural typing via Protocols (compile-time checked)                                                               | Same flexibility as duck typing but errors caught at compile time                         | M5b       |
+| `finally` for cleanup                                  | Supported in M4; prefer `with` statement (M7b) which maps to Rust `Drop`                                             | Scope-based cleanup is more idiomatic and less error-prone                                | M4, M7b   |
+| `del x` (name unbinding)                               | Not supported; variables are dropped at scope end (Rust RAII)                                                        | Explicit lifetime management is handled by the compiler; manual unbinding adds complexity | --        |
+| `getattr`/`setattr`/`hasattr`/`delattr` (reflection)   | Not supported; use protocols (M5b) for dynamic dispatch, pattern matching for type inspection                        | Compile-time type safety; runtime reflection undermines static guarantees                 | --        |
+| `type()` for runtime type creation                     | Not supported; use class definitions (compile-time only)                                                             | All types must be known at compile time for Rust codegen                                  | --        |
+| Positional-only parameters (`def f(x, /, y)`)          | Deferred to M14 (metaprogramming); not commonly needed in user code                                                  | Low priority; most APIs use keyword arguments                                             | M14       |
 
 
-**Migration note:** code that relies heavily on exception propagation, import-time side effects, or arbitrary-precision integers will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
+**Migration note:** code that relies heavily on exception propagation, import-time side effects, arbitrary-precision integers, or runtime reflection will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
 
 ## Compiler Pipeline
 
@@ -181,57 +186,67 @@ flowchart TD
         M2["M2: Control Flow + Data\nLoops, list, dict, tuple,\nstring ops, indexing"]
         M3["M3: Advanced Type System\nUnion types, literal types,\ntype narrowing, Unknown"]
     end
-    subgraph lang [Language Features]
-        M3b["M3b: Semantic Fixes\nUTF-8 string indexing,\nslice copy, for-loop borrow"]
-        M4["M4: Error Handling\nResult/Option, ? operator,\ntry/except as match"]
-        M5["M5: Structs + Methods\nclass, protocols, traits,\ndiscriminated unions"]
-        M6["M6: Module System\nimport/from, multi-file,\nsifr.toml, packages"]
-        M7["M7: Generics + Closures\nType params, lambdas,\nutility types, iterators"]
-        M7b["M7b: Pythonic Sugar\nComprehensions, generators,\nwith statement"]
+    subgraph phase1 [Phase 1: Language Foundations]
+        M3b["M3b: Language Ergonomics\nTernary, kwargs, augmented assign,\nmethods, slicing, walrus"]
+        M5a["M5a: Basic Classes\nstruct + impl, __init__,\nmethods, auto-derive"]
+        M4["M4: Error Handling\nResult/Option, ? operator,\ntry/except, typed errors"]
+        M3bSafe["M3b-safe: Safe Indexing\nOption returns, del,\nfallible methods"]
     end
-    subgraph stdlib [Standard Library]
-        M8["M8: Core Stdlib\nI/O, JSON, env, os,\ntoml, collections"]
+    subgraph phase2 [Phase 2: Type System Power]
+        M5b["M5b: Protocols + Operators\nTraits, operator overload,\ndiscriminated unions, patterns"]
+        M5c["M5c: Inheritance\nsuper, classmethod,\nstaticmethod, property"]
+        M6a["M6a: Multi-file + Imports\nimport/from, visibility,\ncircular detection"]
+        M7["M7: Generics + Closures\nType params, lambdas,\ncomprehensions, iterators"]
+    end
+    subgraph phase3 [Phase 3: Pythonic Completeness]
+        M7b["M7b: Generators + With\nyield, yield from,\ncontext managers"]
+        M8["M8: Core Stdlib\nI/O, JSON, env, os,\ntoml, collections, open"]
+        M10["M10: Test Runner\nsifr test, assertions,\ndiscovery, parallel"]
         M8b["M8b: Extended Collections\nfrozenset, Counter,\ndefaultdict, bytes"]
         M9["M9: Extended Stdlib\nmath, time, random, regex,\nhash, encoding, stream, log"]
-        M10["M10: Test Runner\nsifr test, assertions,\ndiscovery, parallel"]
     end
-    subgraph ecosystem [Ecosystem]
+    subgraph phase4 [Phase 4: Ecosystem]
         M11["M11: Async Runtime\nasync/await, tokio,\ntasks, streams"]
+        M11b["M11b: Basic Decorators\nFunction wrapping,\ndecorator factories"]
         M12["M12: Web + Database\naxum, reqwest, sqlx,\nREST APIs, SQL"]
         M13["M13: Data Processing\npolars DataFrames,\nCSV/Parquet, CLI"]
     end
-    subgraph prod [Production]
-        M14["M14: Metaprogramming\nDecorators, dataclass,\ncompile-time eval"]
+    subgraph phase5 [Phase 5: Polish]
+        M14["M14: Metaprogramming\nCompile-time decorators,\ndataclass, *args/**kwargs"]
         M15["M15: FFI + Interop\nRust FFI, C FFI,\nunsafe boundary"]
+        M6b["M6b: Package Management\nsifr.toml, sifr.lock,\nPubGrub solver"]
         M16["M16: Developer Tooling\nLSP, formatter, linter,\ndoc generator"]
         M17["M17: Package Ecosystem\nRegistry, incremental\ncompilation, REPL"]
     end
-    M1 --> M2 --> M3 --> M3b --> M4 --> M5 --> M6 --> M7 --> M7b
-    M7b --> M8
-    M8 --> M8b
+    M1 --> M2 --> M3
+    M3 --> M3b --> M5a --> M4 --> M3bSafe
+    M3bSafe --> M5b --> M6a --> M7
+    M5b --> M5c
+    M7 --> M7b --> M8 --> M10
+    M8 --> M8b --> M9
     M8 --> M9
-    M8 --> M10
-    M8b --> M9
-    M9 --> M11
+    M9 --> M11 --> M11b --> M12
     M10 --> M11
-    M11 --> M12
+    M12 --> M13
     M7 --> M13
     M12 --> M14
-    M13 --> M15
     M14 --> M15
-    M15 --> M16 --> M17
+    M15 --> M6b --> M16 --> M17
 ```
 
 
 
 **Rationale for milestone order:**
 
-- **M3 before M3b:** Union types and narrowing must exist before fixing collection/string semantics
-- **M3b before M4:** Correct string indexing, slice copy, and for-loop borrow semantics must be in place before building error handling on top of them
-- **M7 before M7b:** Generics, closures, and iterators are prerequisites for comprehensions and generators
-- **M7b before M8-M13:** Comprehensions and generators provide the Pythonic syntax that stdlib APIs rely on
-- **M8 before M8b/M9/M10:** Core stdlib (I/O, JSON, env, os, basic collections) establishes the stdlib pattern and provides foundations that extended collections, extended stdlib, and test runner build on
-- **M8b before M9:** Extended collections (frozenset, Counter, defaultdict, bytes) should be available before the extended stdlib modules that may use them
+- **M3b before M5a:** Language ergonomics (ternary, kwargs, methods) make the language usable before adding classes
+- **M5a before M4:** Basic classes enable typed error hierarchies in M4 (eliminates circular dependency between old M3b and M4)
+- **M4 before M3b-safe:** Error handling tools (`?`, `match`, `unwrap_or`) must exist before safe indexing returns `Option` values
+- **M3b-safe before M5b:** Safe indexing completes the safety story before adding advanced OOP
+- **M5b before M6a:** Protocols (traits) are needed for meaningful multi-file programs
+- **M7 includes comprehensions:** List/dict/set comprehensions are trivial iterator sugar, naturally belonging with iterators and closures
+- **M10 after M8, before M8b/M9:** Test runner lands early so subsequent stdlib work can be tested using Sifr's own test runner (dogfooding)
+- **M11b before M12:** Basic function decorators needed for web routing (`@app.get("/")`)
+- **M6b before M17:** Package management infrastructure needed just before the registry
 - **M9 parallel to M10:** Extended stdlib (math, time, regex, etc.) and the test runner both depend on M8 but not on each other -- they can be developed in parallel
 - **M9/M10 before M11:** Async runtime needs the full stdlib and test runner in place
 - **M11 before M12:** Async runtime is needed for web framework and database access
@@ -368,9 +383,11 @@ def main():
 
 M2 established the core data types but deferred comprehensive method suites and built-in functions to later milestones:
 
-- **Collection methods** (list `.append()`, `.pop()`, dict `.keys()`, `.values()`, etc.) -> M3b
-- **Extended string methods** (`.replace()`, `.find()`, `.join()`, etc.) -> M3b
-- **Non-generic built-in functions** (`len()`, `abs()`, `round()`, `hash()`) -> M3b
+- **Collection methods (concrete returns)** (list `.append()`, `.clear()`, dict `.keys()`, `.values()`, etc.) -> M3b
+- **Collection methods (Option/Result returns)** (list `.pop()`, `.index()`, dict `.get()`, `.pop()`, etc.) -> M3b-safe
+- **Extended string methods (concrete)** (`.replace()`, `.startswith()`, `.join()`, etc.) -> M3b
+- **Extended string methods (Option)** (`.find()`, `.rfind()`) -> M3b-safe
+- **Non-generic built-in functions** (`len()`, `abs()`, `round()`, `repr()`) -> M3b; `hash()` -> M5a
 - **Fallible conversions** (`int(s)`, `float(s)`, `input()`) -> M4 (return `Result`)
 - **Generic built-in functions** (`min()`, `max()`, `sorted()`, `zip()`, `enumerate()`) -> M7 (require generics)
 - **Extended collection types** (`frozenset`, `Counter`, `defaultdict`, `bytes`) -> M8b
@@ -386,7 +403,7 @@ M2 established the core data types but deferred comprehensive method suites and 
 Union types, literal types, and type narrowing are **prerequisites** for clean error handling and later milestones:
 
 - M4's `Result[T, E]` and `Option[T]` are union-based types
-- M5's discriminated unions (e.g., `Shape` with a `.tag` field) need narrowing
+- M5b's discriminated unions (e.g., `Shape` with a `.tag` field) need narrowing
 - M7's generics need type bounds with unions
 - Every milestone after M3 benefits from the advanced type system
 
@@ -432,7 +449,7 @@ def is_string(x: int | str) -> TypeGuard[str]:
 - `**never` exhaustiveness:** matching all union variants leaves `never` -- compiler error if not exhaustive
 - **Intersection types:** internal to the narrowing engine only. No user-facing `A & B` syntax in M3. Exposed later when protocols land in M5
 
-Note: **Discriminated unions** (union of structs with a shared tag field) are deferred to M5 when classes exist. M3 focuses on unions of primitive/literal types with narrowing via isinstance and equality.
+Note: **Discriminated unions** (union of structs with a shared tag field) are deferred to M5b when protocols and pattern matching exist. M3 focuses on unions of primitive/literal types with narrowing via isinstance and equality.
 
 ### Compiler Architecture Changes
 
@@ -665,36 +682,18 @@ def main():
 
 ---
 
-## M3b: Semantic Fixes
+## M3b: Language Ergonomics
 
-**Goal:** Fix foundational semantics for strings, slicing, and iteration that were implemented with placeholder behavior in M1-M2. These fixes must land before M4 because error handling (`Option`/`Result`) depends on correct indexing and collection behavior.
+**Goal:** Add essential language features that make Sifr pleasant to use for everyday programming. These features have no dependency on error handling (`Option`/`Result`) -- they work with concrete types only. Safe indexing (returning `Option`) is deferred to M3b-safe (after M4) so that users have `?` and `match` available when they need to handle `Option` values.
 
-### String Indexing (UTF-8 Safe)
+### Augmented Assignment Operators
 
-Current codegen lowers `s[i]` to `x[i as usize]`, which is invalid for Rust `String` (byte-indexed, not character-indexed). This milestone fixes string operations to be character-based with **safe indexing** (no panics):
+Add compound assignment operators used in virtually every Python program:
 
-- `**s[i]`:** returns `Option[str]` -- the i-th character (Unicode code point) as a single-character `str`, or `None` if out-of-bounds. Codegen: `s.chars().nth(i).map(|c| c.to_string())`.
-- `**s.len()`:** returns the number of Unicode code points (not bytes). Codegen: `s.chars().count()`.
-- `**s.byte_len()`:** returns the number of bytes (O(1)). Codegen: `s.len()`.
-- `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`. Returns an empty string if indices are out of range.
-
-**Complexity note:** character-based indexing is O(n) for non-ASCII strings. The compiler should emit a diagnostic note when string indexing is used in a loop, suggesting `.chars()` iteration instead.
-
-### List Slice Copy Semantics
-
-Verify and enforce that `list[a:b]` produces a new list (copy semantics, not a view):
-
-- Codegen: `vec[a..b].to_vec()`
-- The original list is not affected by mutations to the slice
-- Views (borrowed slices mapping to `&[T]`) are deferred to a future milestone
-
-### For-Loop Borrow Semantics
-
-Fix `for item in collection` to borrow the collection rather than consuming it:
-
-- `**for item in collection`:** borrows immutably. The collection remains usable after the loop. Codegen: `for item in &collection`.
-- `**for item in collection.consume()`:** takes ownership (move). Codegen: `for item in collection` (Rust's `into_iter`).
-- Current behavior may already borrow in some cases; this milestone ensures it is consistent and tested.
+- `+=`, `-=`, `*=`, `/=`, `//=`, `%=`, `**=`
+- Codegen: `x += 1` -> `x += 1` in Rust (direct mapping for numeric types)
+- For strings: `s += "suffix"` -> `s.push_str("suffix")`
+- For lists: `items += [4, 5]` -> `items.extend([4, 5])`
 
 ### Conditional Expressions (Ternary)
 
@@ -707,77 +706,6 @@ x = "positive" if n > 0 else "non-positive"
 Codegen: `let x = if n > 0 { "positive".to_string() } else { "non-positive".to_string() };`
 
 This is simple syntax sugar over `if`/`else` but used as an expression rather than a statement. Both branches must have the same type.
-
-### List Methods
-
-Complete the `list[T]` method suite. All methods follow the safe indexing contract (no panics):
-
-- `.append(item)` -> `vec.push(item)` -- add item to end
-- `.extend(other)` -> `vec.extend(other)` -- add all items from another list
-- `.insert(i, item)` -> `vec.insert(i, item)` -- insert at index (clamps to bounds)
-- `.pop()` -> `Option[T]` via `vec.pop()` -- remove and return last item, or `None` if empty
-- `.pop(i)` -> `Option[T]` -- remove and return item at index, or `None` if out-of-bounds
-- `.remove(item)` -> `Result[None, ValueError]` -- remove first occurrence, or error if not found
-- `.clear()` -> `vec.clear()` -- remove all items
-- `.copy()` -> `vec.clone()` -- shallow copy
-- `.reverse()` -> `vec.reverse()` -- reverse in place
-- `.count(item)` -> `int` via `vec.iter().filter(|x| x == item).count()` -- count occurrences
-- `.index(item)` -> `Option[int]` via `vec.iter().position(|x| x == item)` -- find index, or `None`
-- `.contains(item)` -> `bool` via `vec.contains(item)` -- membership test (also via `in` operator)
-
-### Dict Methods
-
-Complete the `dict[K, V]` method suite:
-
-- `.keys()` -> iterator over keys. Codegen: `map.keys()`
-- `.values()` -> iterator over values. Codegen: `map.values()`
-- `.items()` -> iterator over `tuple[K, V]` pairs. Codegen: `map.iter()`
-- `.get(key)` -> `Option[V]` -- safe lookup (same as `d[key]` under safe indexing)
-- `.pop(key)` -> `Option[V]` via `map.remove(key)` -- remove and return value
-- `.update(other)` -> `map.extend(other)` -- merge another dict (overwrites existing keys)
-- `.setdefault(key, default)` -> `V` -- return value if key exists, otherwise insert default and return it
-- `.clear()` -> `map.clear()` -- remove all entries
-- `.copy()` -> `map.clone()` -- shallow copy
-- `.contains(key)` -> `bool` via `map.contains_key(key)` -- key membership (also via `in` operator)
-- `len(d)` -> `int` via `map.len()` -- number of entries
-
-### String Methods (Extended)
-
-Beyond what M2 already provides (`.len()`, `.upper()`, `.lower()`, `.split()`, `.strip()`):
-
-- `.replace(old, new)` -> `str` via `s.replace(old, new)`
-- `.find(sub)` -> `Option[int]` -- find first occurrence index, or `None`
-- `.rfind(sub)` -> `Option[int]` -- find last occurrence index, or `None`
-- `.startswith(prefix)` -> `bool`
-- `.endswith(suffix)` -> `bool`
-- `.join(iterable)` -> `str` -- join items with separator
-- `.count(sub)` -> `int` -- count non-overlapping occurrences
-- `.isdigit()` -> `bool`, `.isalpha()` -> `bool`, `.isalnum()` -> `bool`, `.isspace()` -> `bool`
-- `.lstrip()` -> `str`, `.rstrip()` -> `str` -- strip from left/right only
-- `.title()` -> `str`, `.capitalize()` -> `str`, `.swapcase()` -> `str`
-- `.center(width)` -> `str`, `.ljust(width)` -> `str`, `.rjust(width)` -> `str`
-- `.zfill(width)` -> `str` -- pad with zeros
-
-### Tuple Methods
-
-Tuples are immutable (enforced at compile time -- no mutation methods):
-
-- `len(t)` -> `int` -- number of elements (compile-time known)
-- Unpacking: `a, b, c = my_tuple` (already in M2)
-- `.index(item)` -> `Option[int]` -- find index of item
-- `.count(item)` -> `int` -- count occurrences
-
-### Built-in Functions (Non-Generic)
-
-Built-in functions that do not require generics (available without `import`):
-
-- `len(x)` -> `int` -- works on `list`, `dict`, `str`, `tuple`. Codegen: `.len()` or `.chars().count()` for strings
-- `abs(x)` -> `int` or `float` -- absolute value. Codegen: `.abs()`
-- `round(x)` -> `int` -- round float to nearest integer. Codegen: `.round() as i64`
-- `round(x, n)` -> `float` -- round to n decimal places
-- `hash(x)` -> `int` -- hash value (only for `Hash + Eq` types, compile-time enforced)
-- `isinstance(x, T)` -> `bool` -- already in M3 for type narrowing
-- `repr(x)` -> `str` -- debug representation. Codegen: `format!("{:?}", x)` (requires auto-derived `Debug`)
 
 ### Keyword Arguments
 
@@ -806,21 +734,37 @@ greet("Alice", greeting="Hi")         # mixed
 
 **Note:** `*args` and `**kwargs` (variadic arguments) remain in M14 as they require more complex type system support.
 
+### For-Loop Borrow Semantics
+
+Fix `for item in collection` to borrow the collection rather than consuming it:
+
+- `**for item in collection`:** borrows immutably. The collection remains usable after the loop. Codegen: `for item in &collection`.
+- `**for item in collection.consume()`:** takes ownership (move). Codegen: `for item in collection` (Rust's `into_iter`).
+- Current behavior may already borrow in some cases; this milestone ensures it is consistent and tested.
+
+### List Slice Copy Semantics
+
+Verify and enforce that `list[a:b]` produces a new list (copy semantics, not a view):
+
+- Codegen: `vec[a..b].to_vec()`
+- The original list is not affected by mutations to the slice
+- Views (borrowed slices mapping to `&[T]`) are deferred to a future milestone
+
 ### Negative Indexing
 
 Add support for negative indices, a heavily used Python idiom:
 
 ```python
 items = [1, 2, 3, 4, 5]
-last = items[-1]        # Option[int] -> Some(5)
-second_last = items[-2] # Option[int] -> Some(4)
+last = items[-1]        # returns last element
+second_last = items[-2] # returns second-to-last
 s = "hello"
-s[-1]                   # Option[str] -> Some("o")
+s[-1]                   # returns "o"
 ```
 
-**Semantics:** negative index `i` is equivalent to `len - abs(i)`. Returns `Option[T]` (consistent with safe indexing contract -- no panics). If the computed index is still out of bounds, returns `None`.
+**Semantics:** negative index `i` is equivalent to `len - abs(i)`. In this milestone, indexing returns the value directly (panics on out-of-bounds, like current M2 behavior). Safe indexing returning `Option[T]` is added in M3b-safe after M4 provides the ergonomic tools to handle `Option`.
 
-**Codegen:** `if i < 0 { collection.get((len as isize + i) as usize) } else { collection.get(i) }`
+**Codegen:** `if i < 0 { collection[((len as isize) + i) as usize] } else { collection[i] }`
 
 ### Step Slicing
 
@@ -849,37 +793,336 @@ subset = items[1:7:2]   # [1, 3, 5]
 - Negative step: `vec.iter().rev().skip(len - start - 1).take(start - stop).step_by(step.abs()).cloned().collect()`
 - String step slicing: same logic over `.chars()` iterator
 
+### Tuple Slicing
+
+Add support for slicing tuples, a common Python idiom for parsing and ETL:
+
+```python
+t = (1, "hello", True, 3.14)
+first_two = t[0:2]     # (1, "hello")
+last = t[-1]            # 3.14
+```
+
+**Semantics:** tuple slicing is resolved at compile time because tuple element types can differ. `t[0:2]` on `tuple[int, str, bool, float]` returns `tuple[int, str]`. The slice indices must be compile-time constants (literals or `const` values).
+
+**Codegen:** direct field access on the Rust tuple. `t[0:2]` -> `(t.0, t.1)`.
+
+**Limitation:** variable-index tuple slicing is not supported (the return type cannot be determined at compile time). Use list conversion for dynamic slicing.
+
+### String Semantics (UTF-8 Fixes)
+
+Current codegen lowers `s[i]` to `x[i as usize]`, which is invalid for Rust `String` (byte-indexed, not character-indexed). This milestone fixes string operations to be character-based:
+
+- `**s[i]`:** returns the i-th character (Unicode code point) as a single-character `str`. Codegen: `s.chars().nth(i).unwrap().to_string()`. In this milestone, panics on out-of-bounds (safe `Option` return added in M3b-safe).
+- `**s.len()`:** returns the number of Unicode code points (not bytes). Codegen: `s.chars().count()`.
+- `**s.byte_len()`:** returns the number of bytes (O(1)). Codegen: `s.len()`.
+- `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`. Returns an empty string if indices are out of range.
+
+**Complexity note:** character-based indexing is O(n) for non-ASCII strings. The compiler should emit a diagnostic note when string indexing is used in a loop, suggesting `.chars()` iteration instead.
+
+### List Methods (Concrete Returns)
+
+List methods that return concrete types (no `Option`/`Result`):
+
+- `.append(item)` -> `vec.push(item)` -- add item to end
+- `.extend(other)` -> `vec.extend(other)` -- add all items from another list
+- `.insert(i, item)` -> `vec.insert(i, item)` -- insert at index (clamps to bounds)
+- `.clear()` -> `vec.clear()` -- remove all items
+- `.copy()` -> `vec.clone()` -- shallow copy
+- `.reverse()` -> `vec.reverse()` -- reverse in place
+- `.count(item)` -> `int` via `vec.iter().filter(|x| x == item).count()` -- count occurrences
+- `.contains(item)` -> `bool` via `vec.contains(item)` -- membership test (also via `in` operator)
+- `.sort()` -> in-place sort (requires `Comparable` -- basic version for primitive types)
+
+**Deferred to M3b-safe:** `.pop()` -> `Option[T]`, `.pop(i)` -> `Option[T]`, `.index(item)` -> `Option[int]`, `.remove(item)` -> `Result[None, ValueError]`
+
+### Dict Methods (Concrete Returns)
+
+Dict methods that return concrete types:
+
+- `.keys()` -> iterator over keys. Codegen: `map.keys()`
+- `.values()` -> iterator over values. Codegen: `map.values()`
+- `.items()` -> iterator over `tuple[K, V]` pairs. Codegen: `map.iter()`
+- `.update(other)` -> `map.extend(other)` -- merge another dict (overwrites existing keys)
+- `.clear()` -> `map.clear()` -- remove all entries
+- `.copy()` -> `map.clone()` -- shallow copy
+- `.contains(key)` -> `bool` via `map.contains_key(key)` -- key membership (also via `in` operator)
+- `len(d)` -> `int` via `map.len()` -- number of entries
+
+**Deferred to M3b-safe:** `.get(key)` -> `Option[V]`, `.pop(key)` -> `Option[V]`, `.setdefault(key, default)` -> `V`
+
+### String Methods (Extended)
+
+Beyond what M2 already provides (`.len()`, `.upper()`, `.lower()`, `.split()`, `.strip()`):
+
+- `.replace(old, new)` -> `str` via `s.replace(old, new)`
+- `.startswith(prefix)` -> `bool`
+- `.endswith(suffix)` -> `bool`
+- `.join(iterable)` -> `str` -- join items with separator
+- `.count(sub)` -> `int` -- count non-overlapping occurrences
+- `.isdigit()` -> `bool`, `.isalpha()` -> `bool`, `.isalnum()` -> `bool`, `.isspace()` -> `bool`
+- `.lstrip()` -> `str`, `.rstrip()` -> `str` -- strip from left/right only
+- `.title()` -> `str`, `.capitalize()` -> `str`, `.swapcase()` -> `str`
+- `.center(width)` -> `str`, `.ljust(width)` -> `str`, `.rjust(width)` -> `str`
+- `.zfill(width)` -> `str` -- pad with zeros
+
+**Deferred to M3b-safe:** `.find(sub)` -> `Option[int]`, `.rfind(sub)` -> `Option[int]`
+
+### Tuple Methods
+
+Tuples are immutable (enforced at compile time -- no mutation methods):
+
+- `len(t)` -> `int` -- number of elements (compile-time known)
+- Unpacking: `a, b, c = my_tuple` (already in M2)
+- `.count(item)` -> `int` -- count occurrences
+
+**Deferred to M3b-safe:** `.index(item)` -> `Option[int]`
+
+### Built-in Functions (Non-Generic)
+
+Built-in functions that do not require generics (available without `import`):
+
+- `len(x)` -> `int` -- works on `list`, `dict`, `str`, `tuple`. Codegen: `.len()` or `.chars().count()` for strings
+- `abs(x)` -> `int` or `float` -- absolute value. Codegen: `.abs()`
+- `round(x)` -> `int` -- round float to nearest integer. Codegen: `.round() as i64`
+- `round(x, n)` -> `float` -- round to n decimal places
+- `isinstance(x, T)` -> `bool` -- already in M3 for type narrowing
+- `repr(x)` -> `str` -- debug representation. Codegen: `format!("{:?}", x)` (requires auto-derived `Debug`)
+
+**Deferred to M5a:** `hash(x)` -> `int` (needs `Hash + Eq` traits from class system)
+
+### Chained Comparisons
+
+Add Python's chained comparison syntax:
+
+```python
+if 1 < x < 10:
+    print("in range")
+
+if a <= b <= c:
+    print("sorted")
+```
+
+**Codegen:** `1 < x < 10` desugars to `1 < x && x < 10`, with `x` evaluated only once (use a temporary if `x` is a complex expression).
+
+### String Multiplication
+
+Add string repetition via the `*` operator:
+
+```python
+line = "-" * 40     # "----------------------------------------"
+header = "abc" * 3  # "abcabcabc"
+```
+
+**Codegen:** `"-".repeat(40)` in Rust.
+
+### `pass` Statement
+
+Add the `pass` statement for empty function/class bodies:
+
+```python
+def placeholder():
+    pass
+
+class EmptyBase:
+    pass
+```
+
+**Codegen:** no-op (empty block `{}` in Rust).
+
+### Star Unpacking
+
+Add star unpacking for capturing remaining elements:
+
+```python
+first, *rest = [1, 2, 3, 4, 5]
+# first = 1, rest = [2, 3, 4, 5]
+
+first, *middle, last = [1, 2, 3, 4, 5]
+# first = 1, middle = [2, 3, 4], last = 5
+```
+
+**Codegen:** slice operations on the underlying `Vec`. `first, *rest = items` -> `let first = items[0]; let rest = items[1..].to_vec();`
+
+### Walrus Operator (`:=`)
+
+Add assignment expressions for concise assign-and-test patterns:
+
+```python
+if (n := len(items)) > 10:
+    print(f"Too many items: {n}")
+
+while (line := read_line()) != "":
+    process(line)
+```
+
+**Codegen:** `let n = items.len(); if n > 10 { ... }` -- the compiler hoists the assignment and uses the bound variable in the condition.
+
+### Power Operator Codegen
+
+Specify the codegen for the `**` exponentiation operator (syntax already parsed in M1):
+
+- `int ** int` -> `i64::pow(base, exp as u32)` (panics on negative exponent; safe version in M3b-safe)
+- `float ** float` -> `f64::powf(base, exp)`
+- `float ** int` -> `f64::powi(base, exp as i32)`
+
+### Multiple Return Values
+
+Explicitly support returning multiple values as tuples (syntax already works via M2 tuples, but should be tested):
+
+```python
+def divmod(a: int, b: int) -> tuple[int, int]:
+    return a // b, a % b
+
+q, r = divmod(17, 5)  # q = 3, r = 2
+```
+
+### `for`/`while` ... `else` Clauses
+
+Add Python's loop `else` clause:
+
+```python
+for item in items:
+    if item == target:
+        print("Found!")
+        break
+else:
+    print("Not found")  # runs only if loop completes without break
+```
+
+**Codegen:** use a boolean flag to track whether `break` was executed:
+
+```rust
+let mut _broke = false;
+for item in &items {
+    if item == &target {
+        println!("Found!");
+        _broke = true;
+        break;
+    }
+}
+if !_broke {
+    println!("Not found");
+}
+```
+
 ### Definition of Done (M3b)
 
-- `s[i]` returns `Option[str]` -- the i-th character, or `None` if out-of-bounds (safe indexing, no panic)
-- `list[i]` returns `Option[T]` -- the i-th element, or `None` if out-of-bounds (safe indexing, no panic)
-- `s.len()` returns character count, not byte count
-- `s[a:b]` returns a new string of characters from `a` to `b`
-- `list[a:b]` produces a new list (copy, not view)
-- `for item in list` borrows the list; list is usable after the loop
+- Augmented assignment (`+=`, `-=`, `*=`, `/=`, `//=`, `%=`, `**=`) works for numeric types, strings, and lists
 - Conditional expressions (`a if cond else b`) work as expressions
-- List methods: `append`, `extend`, `insert`, `pop`, `remove`, `clear`, `copy`, `reverse`, `count`, `index`, `contains`
-- Dict methods: `keys`, `values`, `items`, `get`, `pop`, `update`, `setdefault`, `clear`, `copy`, `contains`
-- String methods: `replace`, `find`, `rfind`, `startswith`, `endswith`, `join`, `count`, `isdigit`, `isalpha`, `isalnum`, `isspace`, `lstrip`, `rstrip`, `title`, `capitalize`
-- Tuple methods: `index`, `count` (immutability enforced)
-- Built-in functions: `len`, `abs`, `round`, `hash`, `repr`
 - Keyword arguments resolve correctly at call site (positional, keyword, mixed)
 - Default parameter values are inserted for omitted arguments
 - Keyword-only parameters (after `*`) enforced at compile time
-- Negative indexing: `a[-1]` returns last element as `Option[T]`
+- `for item in list` borrows the list; list is usable after the loop
+- `list[a:b]` produces a new list (copy, not view)
+- Negative indexing: `a[-1]` returns last element
 - Step slicing: `a[::2]`, `a[::-1]`, `a[1:7:2]` all produce new collections
-- Negative slice indices resolve relative to length
-- E2E pass tests: string_char_index, string_oob_returns_none, string_char_len, string_slice, list_index_option, list_oob_returns_none, list_slice_copy, for_loop_borrow, ternary_expr, list_append_pop, dict_keys_values_items, string_replace_find, builtin_len_abs_round, keyword_args_basic, keyword_args_default, keyword_only_params, negative_index_list, negative_index_string, step_slice_basic, step_slice_reverse, step_slice_string
-- E2E fail tests: ternary_type_mismatch, list_remove_not_found, hash_unhashable_type, keyword_after_positional_error, missing_keyword_only_arg
-- CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/listobject.c`, `Objects/dictobject.c`, `Objects/unicodeobject.c`, `Lib/test/test_list.py`, `Lib/test/test_dict.py`, `Lib/test/test_str.py`
-- Existing M1/M2 E2E tests still pass (no regressions)
+- Tuple slicing with compile-time constant indices works
+- String indexing is character-based (UTF-8 safe), `s.len()` returns character count
+- List methods (concrete): `append`, `extend`, `insert`, `clear`, `copy`, `reverse`, `count`, `contains`, `sort`
+- Dict methods (concrete): `keys`, `values`, `items`, `update`, `clear`, `copy`, `contains`
+- String methods: `replace`, `startswith`, `endswith`, `join`, `count`, `isdigit`, `isalpha`, `isalnum`, `isspace`, `lstrip`, `rstrip`, `title`, `capitalize`
+- Tuple methods: `count` (immutability enforced)
+- Built-in functions: `len`, `abs`, `round`, `repr`
+- Chained comparisons: `1 < x < 10` works
+- String multiplication: `"abc" * 3` works
+- `pass` statement works in empty bodies
+- Star unpacking: `first, *rest = items` works
+- Walrus operator: `if (n := len(x)) > 0` works
+- Power operator: `x ** y` has correct codegen for int and float
+- Multiple return values: `return a, b` works as tuple packing
+- `for`/`while` ... `else` clauses work correctly
+- E2E pass tests: augmented_assign, ternary_expr, keyword_args_basic, keyword_args_default, keyword_only_params, for_loop_borrow, list_slice_copy, negative_index_list, negative_index_string, step_slice_basic, step_slice_reverse, step_slice_string, tuple_slice, string_char_index, string_char_len, string_slice, list_methods_concrete, dict_methods_concrete, string_replace, chained_comparison, string_multiply, pass_statement, star_unpacking, walrus_operator, power_operator, multiple_return, loop_else
+- E2E fail tests: ternary_type_mismatch, keyword_after_positional_error, missing_keyword_only_arg
+- Existing M1/M2/M3 E2E tests still pass (no regressions)
 - Milestone demo in `./tmp/m3b_demo.sifr`
+
+---
+
+## M5a: Basic Classes
+
+**Goal:** Provide minimal class support -- enough to define data types and error types. This must land before M4 because typed error hierarchies (`class ValueError(Error)`) require classes. M5a is structurally simpler than error handling: a basic `class Point: x: float; y: float` with `__init__` and methods is straightforward struct codegen.
+
+### Language Features
+
+- `**class` -> `struct` + `impl`:** class definitions become Rust structs with named fields
+- `**__init__` -> `new()`:** constructor mapping
+- **Methods:** `self` parameter maps to `&self` or `&mut self`
+- **Field access:** `obj.field` maps to Rust field access
+- **Method receiver inference:** compiler determines `&self` vs `&mut self` vs `self` from body analysis (see Cross-cutting Contracts: Borrow and Lifetime Strategy)
+- **Auto-derived traits:** `Debug`, `Clone`, `PartialEq` auto-derived on all classes (conditional `Eq`/`Hash` when all fields support it)
+- `**isinstance` narrowing for class types:** extends M3's narrowing engine to class instances
+- **Class instances as union members:** `Circle | Square` -> Rust enum with one variant per class
+
+### Example Program
+
+```python
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def distance(self, other: Point) -> float:
+        dx: float = self.x - other.x
+        dy: float = self.y - other.y
+        return (dx * dx + dy * dy) ** 0.5
+
+def main():
+    p1 = Point(0.0, 0.0)
+    p2 = Point(3.0, 4.0)
+    print(p1.distance(p2))  # 5.0
+```
+
+### Generated Rust
+
+```rust
+struct Point {
+    x: f64,
+    y: f64,
+}
+
+impl Point {
+    fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
+    }
+
+    fn distance(&self, other: &Point) -> f64 {
+        let dx: f64 = self.x - other.x;
+        let dy: f64 = self.y - other.y;
+        (dx * dx + dy * dy).sqrt()
+    }
+}
+```
+
+### `hash()` Built-in
+
+Now that classes exist with auto-derived `Hash + Eq`:
+
+- `hash(x)` -> `int` -- hash value (only for types where all fields are `Hash + Eq`, compile-time enforced). Codegen: uses `std::hash::Hash` trait.
+
+### Definition of Done (M5a)
+
+- `class` compiles to Rust `struct` + `impl`
+- `__init__` maps to `new()` constructor
+- Method receiver inference (`&self` / `&mut self` / `self`) works correctly
+- Field access compiles to Rust field access
+- Auto-derived traits (`Debug`, `Clone`, `PartialEq`, conditional `Eq`/`Hash`) on all classes
+- `isinstance` narrowing works for class types
+- Class instances work as union type members
+- `hash(x)` works for hashable types
+- E2E pass tests: class_basic, class_methods, class_field_access, class_isinstance, class_union, hash_builtin
+- E2E fail tests: missing_field, use_after_move_self, unhashable_dict_key
+- Existing M1/M2/M3/M3b E2E tests still pass (no regressions)
+- Milestone demo in `./tmp/m5a_demo.sifr`
 
 ---
 
 ## M4: Error Handling
 
-**Goal:** Provide safe error handling that maps to Rust's `Result`/`Option` types rather than Python's exception model. Benefits from M3's union types -- `Result[T, E]` and `Option[T]` are union-based.
+**Goal:** Provide safe error handling that maps to Rust's `Result`/`Option` types rather than Python's exception model. Benefits from M3's union types -- `Result[T, E]` and `Option[T]` are union-based. Benefits from M5a's classes -- typed error hierarchies (`class ValueError(Error)`) are available immediately.
 
 ### Language Features
 
@@ -948,7 +1191,7 @@ except ParseError as e:
 
 ### Typed Error Hierarchies
 
-Error types are classes (M5 dependency for full class support, but M4 introduces the `Error` protocol):
+Error types are classes (M5a provides basic class support, which is now a prerequisite for M4):
 
 ```python
 class AppError(Error):
@@ -970,7 +1213,7 @@ Sifr's safety philosophy: **all fallible operations return `Result` or `Option`;
 **Operations that return `Result`:**
 
 - **Division:** `a / b` returns `Result[int, DivisionError]` (or `Result[float, DivisionError]`) when the divisor cannot be statically proven non-zero. If the compiler can prove `b != 0` (e.g., literal divisor `a / 2`), it returns the value directly with no wrapping. Codegen: checked division with zero-check.
-- **Integer overflow:** arithmetic on `int` uses checked operations by default. `a + b`, `a * b`, etc. return `Result[int, OverflowError]` when the compiler cannot prove the result fits. Codegen: Rust's `checked_add()`, `checked_mul()`, etc.
+- **Integer overflow:** arithmetic on `int` panics on overflow in debug mode (like Rust) and wraps in release mode. This matches Rust's default behavior and avoids making every arithmetic expression require error handling. **Future enhancement:** an opt-in `checked` mode where `a + b` returns `Result[int, OverflowError]` using `checked_add()` etc. This is deferred to avoid making basic programs excessively verbose.
 - **Type conversions:** `int(s)` where `s: str` returns `Result[int, ParseError]`. `float(s)` returns `Result[float, ParseError]`. Conversions between numeric types that cannot lose precision (e.g., `int` to `float`) are implicit and infallible.
 - **Rust library panics (M15 FFI):** caught at FFI boundaries via `catch_unwind` where possible and converted to `Result::Err`. C library crashes are non-recoverable (see M15 FFI contract).
 
@@ -992,7 +1235,7 @@ Sifr's safety philosophy: **all fallible operations return `Result` or `Option`;
 
 ### Pattern Matching (M4 Foundation)
 
-M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/`Option` handling. This establishes the foundation that M5 extends with struct destructuring.
+M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/`Option` handling. This establishes the foundation that M5b extends with struct destructuring.
 
 **M4 pattern matching scope:**
 
@@ -1001,7 +1244,7 @@ M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/
 - **Catch-all arms:** `except Error as e` matches any error type (like `_` in Rust `match`).
 - **Match guards:** `case x if x > 0` -- extra conditions on match arms. Codegen: Rust match guards (`pattern if condition => ...`).
 
-**Deferred to M5:**
+**Deferred to M5b:**
 
 - Struct/class field destructuring in match arms
 - Nested pattern matching
@@ -1019,14 +1262,14 @@ M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/
 - `raise` inside a `Result`-returning function generates `Err(...)`
 - `assert` generates `assert!()` / `panic!()` -- the only panic source in user code
 - Division by zero returns `Result[T, DivisionError]`, not a panic
-- Integer overflow returns `Result[int, OverflowError]` (checked arithmetic)
+- Integer overflow panics in debug mode, wraps in release mode (matches Rust behavior)
 - `int(s)` / `float(s)` / `bool(s)` string conversions return `Result[T, ParseError]`
 - `input()` returns `Result[str, IOError]`
 - Infallible conversions: `int(f)`, `float(i)`, `str(x)`, `bool(x)` work without `Result`
 - Unused `Result` is a compile-time error (`#[must_use]` enforcement)
 - Explicit discard via `let _ = expr` compiles without error
 - Exhaustiveness checking for `except` arms
-- E2E pass tests: result_basic, option_chaining, error_propagation, try_except, division_by_zero_result, int_parse_result, float_parse_result, checked_overflow, input_basic, infallible_conversions
+- E2E pass tests: result_basic, option_chaining, error_propagation, try_except, division_by_zero_result, int_parse_result, float_parse_result, input_basic, infallible_conversions
 - E2E fail tests: unhandled_error, non_exhaustive_except, unused_result_error
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (int/float/bool conversions, input), `Lib/test/test_builtin.py`
 - Unit tests for Result/Option type checking and inference
@@ -1034,9 +1277,94 @@ M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/
 
 ---
 
-## M5: Structs and Methods (OOP)
+## M3b-safe: Safe Indexing and Option Returns
 
-**Goal:** Support class-based programming that compiles to Rust structs with impl blocks. Benefits from M3's discriminated unions and narrowing.
+**Goal:** Now that `Option[T]`, `Result[T, E]`, the `?` operator, and `try`/`except` exist (from M4), make all indexing and fallible collection operations safe. This eliminates the last remaining panic sources from collection access.
+
+### Safe Indexing
+
+All indexing operations now return `Option[T]` instead of panicking on out-of-bounds:
+
+- `**list[i]`** -> `Option[T]` via `vec.get(i).cloned()` -- returns `None` if out-of-bounds
+- `**dict[key]`** -> `Option[V]` via `map.get(key).cloned()` -- returns `None` if key missing
+- `**str[i]`** -> `Option[str]` via `s.chars().nth(i).map(|c| c.to_string())` -- returns `None` if out-of-bounds
+- **Negative indexing:** `list[-1]` -> `Option[T]` -- negative index resolved relative to length, then safe lookup
+
+This is the core of Sifr's "no panic" guarantee for data access. Users handle the `Option` with `?`, `match`, `.unwrap_or(default)`, or `.expect("msg")`.
+
+### List Methods (Option/Result Returns)
+
+Methods deferred from M3b that return `Option` or `Result`:
+
+- `.pop()` -> `Option[T]` via `vec.pop()` -- remove and return last item, or `None` if empty
+- `.pop(i)` -> `Option[T]` -- remove and return item at index, or `None` if out-of-bounds
+- `.index(item)` -> `Option[int]` via `vec.iter().position(|x| x == item)` -- find index, or `None`
+- `.remove(item)` -> `Result[None, ValueError]` -- remove first occurrence, or error if not found
+
+### Dict Methods (Option Returns)
+
+- `.get(key)` -> `Option[V]` -- safe lookup (same as `d[key]` under safe indexing)
+- `.pop(key)` -> `Option[V]` via `map.remove(key)` -- remove and return value
+- `.setdefault(key, default)` -> `V` -- return value if key exists, otherwise insert default and return it
+
+### String Methods (Option Returns)
+
+- `.find(sub)` -> `Option[int]` -- find first occurrence index, or `None`
+- `.rfind(sub)` -> `Option[int]` -- find last occurrence index, or `None`
+
+### Tuple Methods (Option Returns)
+
+- `.index(item)` -> `Option[int]` -- find index of item
+
+### Safe Power Operator
+
+- `int ** negative_int` -> `Result[int, ValueError]` (negative exponents produce fractions, not representable as `int`)
+
+### `del` Statement (Item/Key Deletion)
+
+Add `del` for collection item removal as syntax sugar:
+
+```python
+items = [1, 2, 3, 4, 5]
+del items[2]          # removes element at index 2 -> items = [1, 2, 4, 5]
+
+config = {"a": 1, "b": 2}
+del config["a"]       # removes key "a" -> config = {"b": 2}
+```
+
+**Semantics:**
+
+- `del d[key]` -> `d.pop(key)` (discards the returned `Option`)
+- `del a[i]` -> `a.pop(i)` (discards the returned `Option`)
+- `del a[i:j]` -> removes a slice of elements
+- `del x` (name unbinding) -> **not supported** in Sifr. Variables are dropped at scope end (Rust's RAII). This is an intentional divergence from Python.
+
+**Codegen:** `del d[key]` -> `let _ = d.remove(&key);`
+
+### Definition of Done (M3b-safe)
+
+- `list[i]` returns `Option[T]` -- no panic on out-of-bounds
+- `dict[key]` returns `Option[V]` -- no panic on missing key
+- `str[i]` returns `Option[str]` -- no panic on out-of-bounds
+- Negative indexing returns `Option[T]` consistently
+- List methods: `pop`, `index`, `remove` return `Option`/`Result`
+- Dict methods: `get`, `pop`, `setdefault` return `Option`
+- String methods: `find`, `rfind` return `Option`
+- Tuple methods: `index` returns `Option`
+- `del d[key]` and `del a[i]` work as syntax sugar
+- `int ** negative_int` returns `Result`
+- Users can ergonomically handle `Option` with `?`, `match`, `.unwrap_or()`, `.expect()`
+- E2E pass tests: safe_list_index, safe_dict_key, safe_string_index, list_pop_option, list_index_option, list_remove_result, dict_get_option, dict_pop_option, string_find_option, del_dict_key, del_list_item, safe_negative_index, safe_power_negative
+- E2E fail tests: unused_option_error, unused_result_error
+- CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/listobject.c`, `Objects/dictobject.c`, `Objects/unicodeobject.c`, `Lib/test/test_list.py`, `Lib/test/test_dict.py`, `Lib/test/test_str.py`
+- Existing E2E tests still pass (no regressions)
+- Milestone demo in `./tmp/m3b_safe_demo.sifr`
+
+---
+
+## M5b: Protocols, Operators, and Discriminated Unions
+
+**Goal:** Add the advanced OOP features that make the type system expressive: protocols (traits), operator overloading, discriminated unions, and pattern matching on classes. Builds on M5a's basic class support and M3's narrowing engine.
 
 ### Design Decision: Nominal vs Structural Typing
 
@@ -1050,17 +1378,8 @@ This is a deliberate middle ground between TypeScript (fully structural) and Rus
 
 ### Language Features
 
-- `**class` -> `struct` + `impl`:** class definitions become Rust structs
-- `**__init__` -> `new()`:** constructor mapping
-- **Methods:** `self` parameter maps to `&self` or `&mut self`
-- `**super()`:** calls parent class method in inheritance chains. Codegen: direct call to the parent struct's impl method (e.g., `ParentType::method(self, ...)`). Works with single inheritance only.
-- `**@classmethod`:** class-level methods that receive the class type rather than an instance. Codegen: associated functions (no `self` parameter) on the struct impl. Called as `MyClass.method()` rather than `instance.method()`.
-- `**@staticmethod`:** methods that belong to the class namespace but receive neither `self` nor `cls`. Codegen: free functions in the struct's impl block with no receiver.
-- **Properties:** `@property` maps to getter methods
 - **Protocols/Interfaces:** `Protocol` classes map to Rust traits (structural matching -- any class with the right shape satisfies the protocol)
-- `**isinstance` -> type narrowing:** compile-time type checking (leverages M3's narrowing)
-- **Inheritance:** single inheritance via trait delegation (not Rust inheritance, which doesn't exist)
-- **Operator overloading:** `__add__`, `__eq__`, etc. map to Rust trait impls (`Add`, `PartialEq`)
+- **Operator overloading:** `__add__`, `__eq__`, `__lt__`, `__str__`, etc. map to Rust trait impls (`Add`, `PartialEq`, `PartialOrd`, `Display`)
 - **Discriminated unions:** classes with a shared literal-typed tag field, narrowed via attribute equality (leverages M3's narrowing engine):
 
 ```python
@@ -1082,63 +1401,13 @@ def area(shape: Shape) -> float:
 ```
 
 - **Property existence narrowing (`in`):** `if "name" in obj:` narrows the type to one that has a `name` field (extends M3's narrowing to object properties)
-
-### Example Program
-
-```python
-class Point:
-    x: float
-    y: float
-
-    def __init__(self, x: float, y: float):
-        self.x = x
-        self.y = y
-
-    def distance(self, other: Point) -> float:
-        dx: float = self.x - other.x
-        dy: float = self.y - other.y
-        return (dx * dx + dy * dy) ** 0.5
-
-def main():
-    p1 = Point(0.0, 0.0)
-    p2 = Point(3.0, 4.0)
-    print(p1.distance(p2))  # 5.0
-```
-
-### Generated Rust
-
-```rust
-struct Point {
-    x: f64,
-    y: f64,
-}
-
-impl Point {
-    fn new(x: f64, y: f64) -> Self {
-        Self { x, y }
-    }
-
-    fn distance(&self, other: &Point) -> f64 {
-        let dx: f64 = self.x - other.x;
-        let dy: f64 = self.y - other.y;
-        (dx * dx + dy * dy).sqrt()
-    }
-}
-```
-
-### Method Receiver Inference
-
-The compiler automatically determines the Rust receiver type for each method based on body analysis (see Cross-cutting Contracts: Borrow and Lifetime Strategy):
-
-- `self` only read -> `&self`
-- `self` fields mutated -> `&mut self`
-- `self` consumed (builder pattern, returned) -> `self` (move)
-
-The programmer can override with explicit annotations: `def method(ref self)` or `def method(mut ref self)`.
+- **Pattern matching on classes (extends M4):**
+  - **Field destructuring:** `case Point(x=x, y=y)` or `case Point(x, y)` in match arms
+  - **Nested patterns:** `case Line(start=Point(x=0, y=0), end=end_point)`
+  - `**@` bindings:** `case p @ Point(x=0, y=_)` -- bind the whole value while matching fields
 
 ### Runtime Type Representation for Classes
 
-- **Class instances:** generate Rust `struct` with fields. `isinstance(x, MyClass)` is resolved at compile time via the type system (no runtime RTTI needed for concrete types).
 - **Protocol/trait objects:** when a protocol is used as a parameter type, generate `&dyn Trait` or `Box<dyn Trait>`. This is the only dynamic dispatch for class types.
 - **Discriminated union of classes:** generate Rust `enum` with one variant per class. Tag-based narrowing generates `match` on the tag field.
 
@@ -1146,19 +1415,11 @@ The programmer can override with explicit annotations: `def method(ref self)` or
 
 Class unions already provide ADT-like modeling: `Circle | Square` compiles to a Rust enum with one variant per class, and `isinstance` narrowing generates exhaustive `match`. This means Sifr already has algebraic data types via its existing union + class system.
 
-Explicit `enum` syntax with data-carrying variants (e.g., `enum Shape: Circle(radius: float) | Rectangle(w: float, h: float)`) is an **optional ergonomic enhancement**, not a conceptual gap. It may be evaluated after M5 stabilizes as syntax sugar over class unions.
+Explicit `enum` syntax with data-carrying variants (e.g., `enum Shape: Circle(radius: float) | Rectangle(w: float, h: float)`) is an **optional ergonomic enhancement**, not a conceptual gap. It may be evaluated after M5b stabilizes as syntax sugar over class unions.
 
-### Pattern Matching on Classes (extends M4)
+### Newtype Pattern
 
-M5 extends M4's pattern matching with struct destructuring:
-
-- **Field destructuring:** `case Point(x=x, y=y)` or `case Point(x, y)` in match arms
-- **Nested patterns:** `case Line(start=Point(x=0, y=0), end=end_point)`
-- `**@` bindings:** `case p @ Point(x=0, y=_)` -- bind the whole value while matching fields
-
-### Newtype Pattern (Post-M5 Enhancement)
-
-After M5 stabilizes, Sifr should support newtypes -- thin wrappers around primitives that add validation and type safety:
+Newtypes -- thin wrappers around primitives that add validation and type safety:
 
 ```python
 class Port(int):
@@ -1188,27 +1449,80 @@ new_user = User(email="new@example.com", **old_user)
 
 **Contract:** spread/update **clones** non-overridden fields (implicit `.clone()`). This matches Python semantics and avoids partial-move complexity. The compiler emits `.clone()` for each non-overridden field. If a field type does not implement `Clone`, this is a compile-time error.
 
-### Definition of Done (M5)
+### Definition of Done (M5b)
 
-- `class` compiles to Rust `struct` + `impl`
-- `__init__` maps to `new()` constructor
-- Method receiver inference (`&self` / `&mut self` / `self`) works correctly
 - `Protocol` compiles to Rust `trait`
 - Discriminated unions with tag fields narrow correctly via `match`
-- Operator overloading (`__add__`, `__eq__`) maps to Rust trait impls
-- Single inheritance via trait delegation
+- Operator overloading (`__add__`, `__eq__`, `__lt__`) maps to Rust trait impls
 - Pattern matching with field destructuring works on class types
-- Auto-derived traits (`Debug`, `Clone`, `PartialEq`, conditional `Eq`/`Hash`) on all classes
+- Nested patterns and `@` bindings work
+- Property existence narrowing (`in`) works
+- Newtype pattern works with fallible construction
 - Struct update/spread clones non-overridden fields
-- E2E pass tests: class_basic, protocol_dispatch, discriminated_union, operator_overload, pattern_destructure, struct_update
-- E2E fail tests: missing_field, protocol_not_satisfied, use_after_move_self, unhashable_dict_key
-- Milestone demo in `./tmp/m5_demo.sifr`
+- E2E pass tests: protocol_dispatch, discriminated_union, operator_overload, pattern_destructure, nested_pattern, at_binding, property_narrowing, newtype_basic, struct_update
+- E2E fail tests: protocol_not_satisfied, non_exhaustive_match, newtype_validation_error
+- Milestone demo in `./tmp/m5b_demo.sifr`
 
 ---
 
-## M6: Module System
+## M5c: Inheritance and Class Utilities
 
-**Goal:** Support multi-file projects with imports, enabling real application structure.
+**Goal:** Add single inheritance, `super()`, class-level methods, and properties. These are important for OOP but not blocking for error handling or protocols.
+
+### Language Features
+
+- **Single inheritance:** via trait delegation (not Rust inheritance, which doesn't exist). A child class inherits all fields and methods from its parent. Codegen: the child struct embeds the parent struct and delegates method calls.
+- `**super()`:** calls parent class method in inheritance chains. Codegen: direct call to the parent struct's impl method (e.g., `ParentType::method(self, ...)`). Works with single inheritance only.
+- `**@classmethod`:** class-level methods that receive the class type rather than an instance. Codegen: associated functions (no `self` parameter) on the struct impl. Called as `MyClass.method()` rather than `instance.method()`.
+- `**@staticmethod`:** methods that belong to the class namespace but receive neither `self` nor `cls`. Codegen: free functions in the struct's impl block with no receiver.
+- **Properties:** `@property` maps to getter methods, `@property.setter` maps to setter methods.
+
+### Example
+
+```python
+class Animal:
+    name: str
+    sound: str
+
+    def __init__(self, name: str, sound: str):
+        self.name = name
+        self.sound = sound
+
+    def speak(self) -> str:
+        return f"{self.name} says {self.sound}"
+
+class Dog(Animal):
+    breed: str
+
+    def __init__(self, name: str, breed: str):
+        super().__init__(name, "Woof")
+        self.breed = breed
+
+    @classmethod
+    def from_shelter(cls, name: str) -> Dog:
+        return Dog(name, "Unknown")
+
+    @staticmethod
+    def species() -> str:
+        return "Canis familiaris"
+```
+
+### Definition of Done (M5c)
+
+- Single inheritance works (child inherits parent fields and methods)
+- `super()` calls parent methods correctly
+- `@classmethod` compiles to associated functions
+- `@staticmethod` compiles to free functions in impl block
+- `@property` getter/setter works
+- E2E pass tests: inheritance_basic, super_call, classmethod_basic, staticmethod_basic, property_getter_setter
+- E2E fail tests: multiple_inheritance_rejected, super_no_parent
+- Milestone demo in `./tmp/m5c_demo.sifr`
+
+---
+
+## M6a: Multi-file Compilation and Imports
+
+**Goal:** Support multi-file projects with imports, enabling real application structure. This milestone focuses on the compilation model only -- package management (`sifr.toml`, `sifr.lock`, dependency resolution) is deferred to M6b (just before M17) since it's only useful once there's an ecosystem to manage.
 
 ### Language Features
 
@@ -1216,15 +1530,12 @@ new_user = User(email="new@example.com", **old_user)
 - **Multi-file compilation:** compile a directory of `.sifr` files into one binary
 - **Package structure:** `__init__.sifr` defines a package (like `mod.rs`)
 - **Visibility:** `_private` prefix convention enforced as `pub`/non-`pub`
-- `**sifr.toml`:** project manifest (like `Cargo.toml` + `pyproject.toml`)
-- **Dependency management:** `sifr add <package>`, resolve from a registry or git
+- **Relative imports:** `from .utils import helper` works within a package
 
 ### Project Structure
 
 ```
 my_app/
-  sifr.toml
-  sifr.lock          # auto-generated lockfile (committed to VCS)
   src/
     main.sifr
     models/
@@ -1241,14 +1552,7 @@ my_app/
 - `**__init__.sifr` semantics:** defines the public API of a package. Only symbols explicitly defined or re-exported in `__init__.sifr` are importable from outside the package. No side effects on import (unlike Python's `__init__.py` which executes on import).
 - **Module compilation order:** topological sort of the dependency graph. Each module is compiled exactly once per compilation run. The driver maintains a module cache keyed by canonical file path.
 - **Relative imports:** `from .utils import helper` works within a package. Relative imports cannot escape the package root.
-
-### Package Management
-
-- `**sifr.toml`:** project manifest with `[dependencies]` section. Version ranges use semver (e.g., `requests = "^1.2"`).
-- `**sifr.lock`:** auto-generated lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Must be committed to version control for reproducible builds.
-- **Version solver:** PubGrub-based algorithm (same as Cargo and uv). Resolves the full dependency graph with conflict detection and clear error messages.
-- **Dependency sources (M6):** git repositories and local paths only. Registry support (`sifr.dev`) deferred to M17.
-- `**sifr add <package>`:** adds a dependency to `sifr.toml` and resolves the lockfile.
+- **Multi-file span/diagnostic mapping:** error messages for imported modules show the correct source file and line number, not the generated Rust file.
 
 ### Example
 
@@ -1270,19 +1574,18 @@ def main():
     print(user.name)
 ```
 
-### Definition of Done (M6)
+### Definition of Done (M6a)
 
 - `import` / `from ... import` compiles to Rust `mod` / `use`
 - Multi-file projects compile into a single binary
 - `__init__.sifr` controls package public API
 - `_private` prefix enforced as non-`pub` in generated Rust
-- Circular import detection with clear diagnostics
-- `sifr.toml` parsed and used for project configuration
-- `sifr.lock` generated with exact versions and content hashes
-- `sifr add` resolves and updates lockfile
+- Circular import detection with clear diagnostics showing the cycle path
+- Multi-file diagnostics show correct source file and line numbers
+- Relative imports work within packages
 - E2E pass tests: multi_file_basic, package_import, relative_import
 - E2E fail tests: circular_import, private_access, missing_module
-- Milestone demo in `./tmp/m6_demo.sifr` (multi-file project)
+- Milestone demo in `./tmp/m6a_demo.sifr` (multi-file project)
 
 ---
 
@@ -1308,6 +1611,12 @@ def main():
   - `Omit[T, "field1"]` -- all fields except specified
   - `Record[K, V]` -- sugar for `dict[K, V]`
 - **Mapped/conditional types (stretch):** type-level programming
+- **List/dict/set comprehensions:** syntactic sugar over iterator chains (naturally belongs with iterators):
+  - `[x * 2 for x in items]` -> `.iter().map(|x| x * 2).collect::<Vec<_>>()`
+  - `[x for x in items if x > 0]` -> `.iter().filter(|x| x > 0).map(|x| x).collect()`
+  - `{k: v for k, v in pairs}` -> `.iter().map(|(k, v)| (k, v)).collect::<HashMap<_, _>>()`
+  - `{x for x in items}` -> `.iter().map(|x| x).collect::<HashSet<_>>()`
+  - Nested `for` -> `.flat_map()`
 
 ### Example Program
 
@@ -1403,42 +1712,21 @@ Sorting requires a `Comparable` protocol (maps to Rust's `Ord` trait):
 - Generic built-ins: `min`, `max`, `sum`, `sorted`, `reversed`, `zip`, `enumerate`, `any`, `all`, `reduce`
 - `list.sort()` and `sorted()` work with key functions and reverse option
 - Float sorting rejected at compile time (not `Comparable`)
-- E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator, builtin_min_max_sum, sorted_basic, sorted_key_reverse, zip_enumerate, any_all, reduce_basic
-- E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice, float_sort_rejected
+- List comprehensions compile to `.iter().map().collect()`
+- Filtered comprehensions compile to `.iter().filter().map().collect()`
+- Nested comprehensions compile to `.flat_map()`
+- Dict comprehensions compile to `.collect::<HashMap>()`
+- Set comprehensions compile to `.collect::<HashSet>()`
+- E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator, builtin_min_max_sum, sorted_basic, sorted_key_reverse, zip_enumerate, any_all, reduce_basic, list_comp, dict_comp, set_comp, filtered_comp, nested_comp
+- E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice, float_sort_rejected, comp_type_mismatch
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Python/bltinmodule.c` (min, max, sum, sorted, zip, enumerate, any, all), `Objects/listobject.c` (list.sort), `Lib/test/test_builtin.py`
 - Milestone demo in `./tmp/m7_demo.sifr`
 
 ---
 
-## M7b: Pythonic Sugar
+## M7b: Generators and Context Managers
 
-**Goal:** Add Python's most-loved syntactic features that depend on iterators and closures from M7. These are sugar over existing primitives but are essential for Sifr to feel like Python.
-
-### List Comprehensions
-
-```python
-squares = [x * x for x in range(10)]
-evens = [x for x in numbers if x % 2 == 0]
-pairs = [(x, y) for x in range(3) for y in range(3)]
-```
-
-**Codegen:** list comprehensions desugar to iterator chains:
-
-- `[expr for x in iter]` -> `iter.iter().map(|x| expr).collect::<Vec<_>>()`
-- `[expr for x in iter if cond]` -> `iter.iter().filter(|x| cond).map(|x| expr).collect::<Vec<_>>()`
-- Nested `for` -> `.flat_map()`
-
-### Dict and Set Comprehensions
-
-```python
-word_lengths = {word: len(word) for word in words}
-unique_lengths = {len(word) for word in words}
-```
-
-**Codegen:**
-
-- Dict comprehension -> `.iter().map(|x| (key_expr, val_expr)).collect::<HashMap<_, _>>()`
-- Set comprehension -> `.iter().map(|x| expr).collect::<HashSet<_>>()`
+**Goal:** Add generators (`yield`) and context managers (`with` statement). These are complex features that deserve focused attention: generators require state machine transformation, and context managers require the `ContextManager` protocol. Comprehensions have been moved to M7 since they are simple iterator sugar.
 
 ### Generator Expressions and `yield`
 
@@ -1495,17 +1783,13 @@ with open("file.txt") as f:
 
 ### Definition of Done (M7b)
 
-- List comprehensions compile to `.iter().map().collect()`
-- Filtered comprehensions compile to `.iter().filter().map().collect()`
-- Nested comprehensions compile to `.flat_map()`
-- Dict comprehensions compile to `.collect::<HashMap>()`
-- Set comprehensions compile to `.collect::<HashSet>()`
 - Generator expressions produce lazy iterators (no allocation until consumed)
 - `yield` functions compile to state machine iterators
 - `yield from` delegates to sub-generators correctly
 - `with` statement works for resource management (files, etc.)
-- E2E pass tests: list_comp, dict_comp, set_comp, filtered_comp, nested_comp, generator_expr, yield_basic, yield_infinite, yield_from_basic, yield_from_chain, with_file
-- E2E fail tests: comp_type_mismatch, yield_outside_function
+- `ContextManager` protocol enforced at compile time
+- E2E pass tests: generator_expr, yield_basic, yield_infinite, yield_from_basic, yield_from_chain, with_file, with_multiple
+- E2E fail tests: yield_outside_function, with_non_context_manager
 - Milestone demo in `./tmp/m7b_demo.sifr`
 
 ---
@@ -1516,7 +1800,13 @@ with open("file.txt") as f:
 
 ### Stdlib Modules
 
-- `**sifr.io`:** file read/write, stdin/stdout, path operations -> wraps `std::fs` + `std::io` + `std::path`
+- `**sifr.io`:** file read/write, stdin/stdout, path operations -> wraps `std::fs` + `std::io` + `std::path`. Includes the `open()` built-in function:
+  - `open(path)` -> `Result[File, IOError]` -- open file for reading (default mode)
+  - `open(path, mode="w")` -> `Result[File, IOError]` -- open for writing
+  - `open(path, mode="a")` -> `Result[File, IOError]` -- open for appending
+  - `File` implements `ContextManager` protocol for use with `with` statement
+  - `File.read()` -> `Result[str, IOError]`, `File.write(s)` -> `Result[int, IOError]`
+  - `File.readlines()` -> `Result[list[str], IOError]`, `File.readline()` -> `Result[str, IOError]`
 - `**sifr.json`:** JSON serialization/deserialization -> wraps `serde` + `serde_json`
 - `**sifr.toml`:** TOML config parsing -> wraps `toml` crate
 - `**sifr.env`:** environment variables, dotenv loading -> wraps `std::env` + `dotenvy`
@@ -1554,6 +1844,59 @@ def main():
 - E2E pass tests: file_io, json_roundtrip, env_vars, os_process, collections_basic
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Lib/json/`, `Lib/os.py`, `Lib/test/test_json/`, `Lib/test/test_os.py`, `Objects/setobject.c`, `Objects/odictobject.c`
 - Milestone demo in `./tmp/m8_demo.sifr`
+
+---
+
+## M10: Built-in Test Runner
+
+**Goal:** Ship a built-in test runner early so that all subsequent stdlib work (M8b, M9) can be tested using Sifr's own test runner, dogfooding the language. Every modern language (Go, Rust, Bun, Deno) ships with a test runner -- Sifr does too. Tests are first-class citizens of the language.
+
+### Test Syntax
+
+```python
+from sifr.test import test, assert_eq, assert_true, assert_err
+
+def test_addition():
+    assert_eq(1 + 1, 2)
+
+def test_string_upper():
+    assert_eq("hello".upper(), "HELLO")
+
+def test_division_by_zero():
+    result = 1 / 0
+    assert_err(DivisionError, result)
+```
+
+### Features
+
+- **Test discovery:** `sifr test` finds all functions named `test_*` in files named `test_*.sifr` or `*_test.sifr`
+- **Assertions:** `assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_err`, `assert_ok`, `assert_none`, `assert_contains`
+- **Test filtering:** `sifr test -k "test_string"` runs only matching tests
+- **Parallel execution:** tests run in parallel by default (each test is independent)
+- **Setup/teardown:** `setup()` and `teardown()` functions in test files run before/after each test
+- **Test output:** clear pass/fail reporting with source locations for failures
+- **Exit code:** non-zero exit on any failure (CI-friendly)
+
+### Codegen
+
+`sifr test` compiles test files into a Rust test binary using `#[test]` attributes. Assertions map to Rust's `assert_eq!`, `assert!`, etc. The test binary is built and run via `cargo test`.
+
+### Dependencies
+
+Depends on M8: needs `sifr.io` for test file discovery and `sifr.os` for process management. Does NOT depend on M8b or M9.
+
+### Definition of Done (M10)
+
+- `sifr test` discovers and runs `test_*` functions in `test_*.sifr` / `*_test.sifr` files
+- Assertions (`assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_err`, `assert_ok`, `assert_none`, `assert_contains`) work correctly
+- Test filtering (`-k`) works
+- Parallel execution works (tests run independently)
+- Setup/teardown functions execute before/after each test
+- Clear pass/fail reporting with source locations for failures
+- Non-zero exit code on any failure (CI-friendly)
+- Codegen emits `#[test]` attributes and maps assertions to Rust equivalents
+- E2E pass tests: test_runner_basic, test_filtering, test_assertions, test_setup_teardown
+- Milestone demo in `./tmp/m10_demo.sifr`
 
 ---
 
@@ -1654,59 +1997,6 @@ def main():
 
 ---
 
-## M10: Built-in Test Runner
-
-**Goal:** Ship a built-in test runner. Every modern language (Go, Rust, Bun, Deno) ships with a test runner -- Sifr does too. Tests are first-class citizens of the language.
-
-### Test Syntax
-
-```python
-from sifr.test import test, assert_eq, assert_true, assert_err
-
-def test_addition():
-    assert_eq(1 + 1, 2)
-
-def test_string_upper():
-    assert_eq("hello".upper(), "HELLO")
-
-def test_division_by_zero():
-    result = 1 / 0
-    assert_err(DivisionError, result)
-```
-
-### Features
-
-- **Test discovery:** `sifr test` finds all functions named `test_*` in files named `test_*.sifr` or `*_test.sifr`
-- **Assertions:** `assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_err`, `assert_ok`, `assert_none`, `assert_contains`
-- **Test filtering:** `sifr test -k "test_string"` runs only matching tests
-- **Parallel execution:** tests run in parallel by default (each test is independent)
-- **Setup/teardown:** `setup()` and `teardown()` functions in test files run before/after each test
-- **Test output:** clear pass/fail reporting with source locations for failures
-- **Exit code:** non-zero exit on any failure (CI-friendly)
-
-### Codegen
-
-`sifr test` compiles test files into a Rust test binary using `#[test]` attributes. Assertions map to Rust's `assert_eq!`, `assert!`, etc. The test binary is built and run via `cargo test`.
-
-### Dependencies
-
-Depends on M8: needs `sifr.io` for test file discovery and `sifr.os` for process management. Does NOT depend on M9.
-
-### Definition of Done (M10)
-
-- `sifr test` discovers and runs `test_*` functions in `test_*.sifr` / `*_test.sifr` files
-- Assertions (`assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_err`, `assert_ok`, `assert_none`, `assert_contains`) work correctly
-- Test filtering (`-k`) works
-- Parallel execution works (tests run independently)
-- Setup/teardown functions execute before/after each test
-- Clear pass/fail reporting with source locations for failures
-- Non-zero exit code on any failure (CI-friendly)
-- Codegen emits `#[test]` attributes and maps assertions to Rust equivalents
-- E2E pass tests: test_runner_basic, test_filtering, test_assertions, test_setup_teardown
-- Milestone demo in `./tmp/m10_demo.sifr`
-
----
-
 ## M11: Async Runtime
 
 **Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that M12 (web, database) builds on.
@@ -1742,6 +2032,14 @@ async def main():
 
 The `?` operator works across `.await` points. Async functions returning `Result` propagate errors the same way as sync functions. Closures captured across `.await` points must be `Send + 'static` (the compiler enforces this and emits clear diagnostics if violated).
 
+### Concurrency Primitives
+
+M11 also provides basic cross-task communication primitives:
+
+- `**sifr.sync.Lock`:** async mutex for shared mutable state. Codegen: `tokio::sync::Mutex<T>`.
+- `**sifr.sync.Channel`:** async channel for message passing. Codegen: `tokio::sync::mpsc::channel`.
+- `**sifr.sync.Semaphore`:** async semaphore for rate limiting. Codegen: `tokio::sync::Semaphore`.
+
 ### Definition of Done (M11)
 
 - `async def` compiles to Rust `async fn`
@@ -1752,8 +2050,53 @@ The `?` operator works across `.await` points. Async functions returning `Result
 - `sifr.task.spawn` works for concurrent tasks
 - `async with` works for async context managers
 - Async generators (`yield` in `async def`) produce async iterators
-- E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, async_with_basic, async_generator_basic
+- `sifr.sync.Lock`, `sifr.sync.Channel`, `sifr.sync.Semaphore` work for cross-task coordination
+- E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, async_with_basic, async_generator_basic, lock_basic, channel_basic
 - Milestone demo in `./tmp/m11_demo.sifr`
+
+---
+
+## M11b: Basic Function Decorators
+
+**Goal:** Add basic function decorator support -- just enough for M12's web routing (`@app.get("/")`, `@app.post("/users")`). Full metaprogramming decorators (`@dataclass`, custom compile-time transforms, `*args`/`**kwargs`) remain in M14.
+
+### Language Features
+
+- **Function decorators:** `@decorator` syntax that wraps a function with another function
+- **Decorator with arguments:** `@app.get("/path")` -- decorator factories that return a decorator
+- **Multiple decorators:** stacked decorators applied bottom-up (same as Python)
+
+### Semantics
+
+A decorator is simply a function that takes a function and returns a function:
+
+```python
+def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before")
+        result = func(*args, **kwargs)
+        print("After")
+        return result
+    return wrapper
+
+@my_decorator
+def hello():
+    print("Hello!")
+```
+
+**Codegen:** `@decorator` desugars to `func = decorator(func)` at compile time. The compiler verifies that the decorator's return type is compatible with the decorated function's type.
+
+**Note:** this milestone provides runtime function wrapping only. Compile-time AST transformations (`@dataclass`, custom class decorators) are in M14.
+
+### Definition of Done (M11b)
+
+- `@decorator` syntax wraps functions correctly
+- `@decorator_factory(args)` works (decorator with arguments)
+- Multiple stacked decorators apply in correct order
+- Type checking verifies decorator input/output compatibility
+- E2E pass tests: basic_decorator, decorator_with_args, stacked_decorators
+- E2E fail tests: decorator_type_mismatch
+- Milestone demo in `./tmp/m11b_demo.sifr`
 
 ---
 
@@ -1942,11 +2285,11 @@ def main():
 
 ## M14: Metaprogramming
 
-**Goal:** Support decorators and compile-time code generation.
+**Goal:** Support compile-time code generation and advanced decorators. **Note:** basic function decorators (runtime wrapping) are already available from M11b. This milestone adds compile-time AST transformation decorators.
 
 ### Language Features
 
-- **Decorators:** `@decorator` maps to Rust attribute macros or code transforms
+- **Compile-time decorators:** `@decorator` maps to Rust attribute macros or AST transforms (extends M11b's runtime decorators with compile-time power)
 - `**@dataclass`:** auto-generate `__init__`, `__eq__`, `__repr__` (like Rust `#[derive]`)
 - `**@property`:** getter/setter generation
 - **Custom decorators:** user-defined compile-time transforms
@@ -1980,9 +2323,11 @@ Compile-time evaluation (`const` expressions, custom decorators) runs during com
 - `@property` generates getter/setter methods
 - Custom decorators can transform class definitions (add/remove fields and methods)
 - `*args` / `**kwargs` work via macro expansion or trait objects
+- Positional-only parameters (`def f(x, /, y)`) work
 - `const` expressions evaluated at compile time
 - Compile-time sandbox enforced (no I/O, no side effects)
-- E2E pass tests: dataclass_basic, property_decorator, custom_decorator, const_eval
+- Deterministic compile-time expansion: same source always produces same output (important for caching in M17)
+- E2E pass tests: dataclass_basic, property_decorator, custom_decorator, const_eval, args_kwargs, positional_only_params
 - Milestone demo in `./tmp/m14_demo.sifr`
 
 ---
@@ -2040,6 +2385,7 @@ FFI introduces unsafe code into the Sifr ecosystem. The following policies apply
 - C FFI via `extern "C"` works for basic function calls
 - C FFI non-recoverability is documented; compiler warns on unwrapped `extern "C"` calls
 - Type mapping between Sifr and Rust types at FFI boundaries
+- Rustc-to-Sifr error span translation: errors from FFI-generated code map back to the Sifr source location
 - E2E pass tests: ffi_rust_crate, ffi_c_function, unsafe_block, ffi_rust_panic_caught
 - E2E fail tests: missing_unsafe, ffi_type_mismatch
 - Milestone demo in `./tmp/m15_demo.sifr` (calling a Rust crate from Sifr)
@@ -2109,6 +2455,32 @@ Generate HTML documentation from docstrings:
 
 ---
 
+## M6b: Package Management
+
+**Goal:** Add the package management infrastructure that was deferred from M6a. Now that the language is mature and a registry is about to be built (M17), it's time to add dependency resolution, lockfiles, and the `sifr add` command.
+
+### Language Features
+
+- `**sifr.toml`:** project manifest with `[dependencies]` section. Version ranges use semver (e.g., `requests = "^1.2"`).
+- `**sifr.lock`:** auto-generated lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Must be committed to version control for reproducible builds.
+- **Version solver:** PubGrub-based algorithm (same as Cargo and uv). Resolves the full dependency graph with conflict detection and clear error messages.
+- **Dependency sources:** git repositories and local paths. Registry support (`sifr.dev`) added in M17.
+- `**sifr add <package>`:** adds a dependency to `sifr.toml` and resolves the lockfile.
+- `**sifr remove <package>`:** removes a dependency.
+
+### Definition of Done (M6b)
+
+- `sifr.toml` parsed and used for project configuration and dependencies
+- `sifr.lock` generated with exact versions and content hashes
+- `sifr add` resolves and updates lockfile
+- `sifr remove` removes dependencies cleanly
+- PubGrub solver handles version conflicts with clear diagnostics
+- Git and local path dependencies work
+- E2E pass tests: add_dependency, remove_dependency, lockfile_generation, version_conflict_resolution
+- Milestone demo in `./tmp/m6b_demo.sifr`
+
+---
+
 ## M17: Package Ecosystem
 
 **Goal:** Build the infrastructure for sharing and reusing Sifr code: a package registry, incremental compilation for fast iteration, and a REPL for interactive exploration. This is the milestone that turns Sifr from a language into an ecosystem.
@@ -2118,8 +2490,8 @@ Generate HTML documentation from docstrings:
 A package registry for publishing and installing Sifr packages:
 
 - **Publish:** `sifr publish` uploads a package to `sifr.dev`
-- **Install:** `sifr add <package>` resolves from the registry (extends M6's git/path-only support)
-- **Versioning:** semver with the PubGrub solver (from M6)
+- **Install:** `sifr add <package>` resolves from the registry (extends M6b's git/path-only support)
+- **Versioning:** semver with the PubGrub solver (from M6b)
 - **Trust model:** packages with `unsafe` usage are flagged and require explicit opt-in by the consumer (`allow_unsafe = true` in `sifr.toml`)
 - **Package metadata:** name, version, description, license, repository URL, dependencies
 - **Search:** `sifr search <query>` searches the registry
@@ -2169,29 +2541,45 @@ An interactive mode for quick experimentation:
 ## Milestone Summary
 
 ```
-M1:  Core Language (DONE)       -> "Hello World" compiles to native binary
-M2:  Control Flow + Data (DONE) -> Process collections, loops, real algorithms
-M3:  Advanced Type System (DONE)-> Union types, literal types, type narrowing, Unknown
-M3b: Semantic Fixes             -> UTF-8 string indexing, slice copy, for-loop borrow
-M4:  Error Handling             -> Result/Option, ? operator (uses M3 unions)
-M5:  Structs + Methods          -> OOP, protocols, discriminated unions (uses M3 narrowing)
-M6:  Module System              -> Multi-file projects, packages, sifr.toml
-M7:  Generics + Closures        -> Type params, lambdas, utility types, contextual typing
-M7b: Pythonic Sugar             -> Comprehensions, generators, yield, with statement
-M8:  Core Stdlib                -> I/O, JSON, toml, env, os, collections (Set, OrderedDict, Deque)
-M8b: Extended Collections       -> frozenset, Counter, defaultdict, bytes, bytearray, set operations
-M9:  Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
-M10: Test Runner                -> sifr test, assertions, discovery, parallel execution
-M11: Async Runtime              -> async/await, tokio, tasks, async streams
-M12: Web + Database             -> axum web, reqwest HTTP, embedded SQLite, sqlx
-M13: Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
-M14: Metaprogramming            -> Decorators, @dataclass, compile-time eval
-M15: FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
-M16: Developer Tooling          -> LSP, formatter, linter, documentation generator
-M17: Package Ecosystem          -> Package registry, incremental compilation, REPL
+COMPLETED:
+  M1:       Core Language              -> "Hello World" compiles to native binary
+  M2:       Control Flow + Data        -> Process collections, loops, real algorithms
+  M3:       Advanced Type System       -> Union types, literal types, type narrowing, Unknown
+
+PHASE 1 - Language Foundations:
+  M3b:      Language Ergonomics        -> Ternary, kwargs, augmented assign, methods, slicing, walrus
+  M5a:      Basic Classes              -> struct + impl, __init__, methods, auto-derive, hash
+  M4:       Error Handling             -> Result/Option, ? operator, try/except, typed errors
+  M3b-safe: Safe Indexing              -> Option returns from indexing, del, fallible methods
+
+PHASE 2 - Type System Power:
+  M5b:      Protocols + Operators      -> Traits, operator overload, discriminated unions, patterns
+  M5c:      Inheritance + Utilities    -> super(), classmethod, staticmethod, property
+  M6a:      Multi-file + Imports       -> import/from, visibility, circular detection
+  M7:       Generics + Closures        -> Type params, lambdas, comprehensions, iterators
+
+PHASE 3 - Pythonic Completeness:
+  M7b:      Generators + With          -> yield, yield from, context managers
+  M8:       Core Stdlib                -> I/O, JSON, toml, env, os, collections, open()
+  M10:      Test Runner                -> sifr test, assertions, discovery, parallel
+  M8b:      Extended Collections       -> frozenset, Counter, defaultdict, bytes, bytearray
+  M9:       Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
+
+PHASE 4 - Ecosystem:
+  M11:      Async Runtime              -> async/await, tokio, tasks, async streams
+  M11b:     Basic Decorators           -> Function wrapping, decorator factories
+  M12:      Web + Database             -> axum web, reqwest HTTP, embedded SQLite, sqlx
+  M13:      Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
+
+PHASE 5 - Polish:
+  M14:      Metaprogramming            -> Compile-time decorators, @dataclass, *args/**kwargs
+  M15:      FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
+  M6b:      Package Management         -> sifr.toml, sifr.lock, PubGrub solver
+  M16:      Developer Tooling          -> LSP, formatter, linter, documentation generator
+  M17:      Package Ecosystem          -> Registry, incremental compilation, REPL
 ```
 
-After M10, Sifr has a complete standard library and test runner. After M12, Sifr can build production web applications. After M13, it can handle data pipelines. After M15, Sifr has access to the entire Rust crate ecosystem. After M16, developers have full IDE support. After M17, it is a complete language ecosystem with package sharing.
+After M3b-safe, Sifr has a complete safety story (no panics from data access). After M7, the type system is fully expressive. After M10, Sifr can test itself (dogfooding). After M12, Sifr can build production web applications. After M13, it can handle data pipelines. After M15, Sifr has access to the entire Rust crate ecosystem. After M16, developers have full IDE support. After M17, it is a complete language ecosystem with package sharing.
 
 ---
 
@@ -2201,23 +2589,23 @@ These are design decisions that span multiple milestones. They must be resolved 
 
 ### 1. Runtime Type Representation
 
-Union types, `Unknown`, and class instances all need a coherent runtime representation in generated Rust code. This contract ensures M3/M5/M7 produce compatible code.
+Union types, `Unknown`, and class instances all need a coherent runtime representation in generated Rust code. This contract ensures M3/M5a/M5b/M7 produce compatible code.
 
 **Contract:**
 
 - **Primitive unions** (`int | str`): generate Rust `enum` with one variant per member type. The enum name is deterministic from the sorted member types (e.g., `IntOrStr`). Narrowing via `isinstance` generates `match` arms.
 - **Optional types** (`T | None`): generate Rust `Option<T>`. Narrowing via `is not None` generates `if let Some(x) = x`.
-- **Class unions** (`Circle | Square`, M5): generate Rust `enum` with one variant per class. Discriminated union narrowing via tag field generates `match` on the tag.
+- **Class unions** (`Circle | Square`, M5a/M5b): generate Rust `enum` with one variant per class. Discriminated union narrowing via tag field generates `match` on the tag.
 - `**Unknown` type**: generates `Box<dyn std::any::Any>` in Rust. The compiler enforces that every use site is guarded by a narrowing check (`isinstance`, equality, etc.) before any operation. At runtime, `downcast_ref::<T>()` is used after narrowing. This is the only type that requires runtime type information (RTTI).
 - `**Any` type**: generates the same `Box<dyn Any>` but the compiler does NOT enforce narrowing. This is the escape hatch.
 - **Generics** (M7): monomorphized at compile time (like Rust). No runtime type erasure for generic types. `list[int]` generates `Vec<i64>`, not `Vec<Box<dyn Any>>`.
-- **Protocol/trait objects** (M5): when a protocol is used as a type (not just a bound), generate `Box<dyn Trait>` with vtable dispatch. This is the only case of dynamic dispatch besides `Unknown`/`Any`.
+- **Protocol/trait objects** (M5b): when a protocol is used as a type (not just a bound), generate `Box<dyn Trait>` with vtable dispatch. This is the only case of dynamic dispatch besides `Unknown`/`Any`.
 
 **Invariant:** Every `Type` variant must have exactly one Rust representation. The `rust_type()` method on `Type` is the single source of truth for this mapping.
 
 ### 2. Borrow and Lifetime Strategy
 
-Sifr uses move-by-default semantics (like Rust), but must define when the compiler auto-borrows to keep the language usable. Without this contract, M5 (methods), M7 (closures), and M11 (async) will produce user-hostile "use-after-move" errors.
+Sifr uses move-by-default semantics (like Rust), but must define when the compiler auto-borrows to keep the language usable. Without this contract, M5a (methods), M7 (closures), and M11 (async) will produce user-hostile "use-after-move" errors.
 
 **Contract:**
 
@@ -2234,14 +2622,14 @@ Sifr uses move-by-default semantics (like Rust), but must define when the compil
 - **Temporary lifetimes:** temporaries created in expressions live until the end of the enclosing statement. Method chains like `x.upper().split(",")` work without explicit borrows.
 - **Escape analysis:** the compiler tracks whether a reference escapes its scope. If it does, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: clone explicitly, or restructure to avoid the escape.
 - **No lifetime annotations in user code:** Sifr does not expose Rust's `'a` lifetime syntax. The compiler infers lifetimes using the rules above. If inference fails, the compiler emits a clear error suggesting `.clone()` or restructuring.
-- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-M5). Default behavior is move-by-default with explicit `ref`/`mut ref` for borrowing. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
+- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-M5b). Default behavior is move-by-default with explicit `ref`/`mut ref` for borrowing. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
 
 **Milestone responsibilities:**
 
-- M5: implement method receiver inference (`&self` / `&mut self` / `self`)
+- M5a: implement method receiver inference (`&self` / `&mut self` / `self`)
 - M7: implement closure capture inference
 - M11: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
-- Post-M5: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
+- Post-M5b: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
 
 ### 3. Error Semantics Matrix
 
@@ -2257,7 +2645,7 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (M4).
 | `try`/`except` block | Pattern match on `Result`         | `except` arms match error variants      | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
 | Indexing             | `Option[T]` return                | `?` or `match`                          | `.get(i).cloned()` / `.chars().nth(i)`                     |
 | Division             | `Result[T, DivisionError]`        | `?` or `match`                          | Checked division with zero-check                           |
-| Integer overflow     | `Result[int, OverflowError]`      | `?` or `match`                          | `checked_add()`, `checked_mul()`, etc.                     |
+| Integer overflow     | Panic in debug, wrap in release   | N/A (matches Rust default behavior)     | Default Rust arithmetic (opt-in checked mode deferred)     |
 | Type conversion      | `Result[T, ParseError]`           | `?` or `match`                          | `.parse::<T>()`                                            |
 | Unused `Result`      | **Compile-time error**            | Must handle or `let _ = ...` to discard | `#[must_use]` attribute on `Result`                        |
 | Rust FFI (M15)       | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points | Panic -> `Result::Err` conversion                          |
@@ -2289,19 +2677,25 @@ match parse_int(s) {
 }
 ```
 
-**Typed error hierarchies:** Error types are classes (M5) that implement an `Error` protocol. The `raise` keyword maps to `Err(ErrorType::new(...))`. Error types compose via union: `Result[int, ValueError | IOError]`.
+**Typed error hierarchies:** Error types are classes (M5a) that implement an `Error` protocol. The `raise` keyword maps to `Err(ErrorType::new(...))`. Error types compose via union: `Result[int, ValueError | IOError]`.
 
-### 4. Package Resolver and Reproducibility (M6)
+### 4. Package Resolver and Reproducibility (M6a/M6b)
 
-**Contract:**
+This contract is split across two milestones: M6a (multi-file compilation and imports) and M6b (package management with dependency resolution). M6a lands in Phase 2; M6b lands in Phase 5 just before M17.
+
+**Contract (M6a -- imports and modules):**
+
+- **Import cycle detection:** the compiler builds a dependency graph of modules during compilation. Cycles are a compile-time error with a clear diagnostic showing the cycle path.
+- `**__init__.sifr` semantics:** defines the public API of a package. Symbols not re-exported from `__init__.sifr` are private to the package. No side effects on import (unlike Python's `__init__.py`).
+- **Import caching:** each module is compiled exactly once per compilation. The driver maintains a module cache keyed by canonical path.
+- **Multi-file diagnostics:** error messages show correct source file and line numbers across module boundaries.
+
+**Contract (M6b -- package management):**
 
 - `**sifr.toml`:** project manifest with `[dependencies]` section specifying version ranges (semver)
 - `**sifr.lock`:** lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Committed to version control.
 - **Version solver:** PubGrub-based solver (same algorithm as Cargo and uv). Resolves dependency graph with conflict detection.
 - **Registry:** `sifr.dev` package registry (M17). Before M17, dependencies are git-only or path-only.
-- **Import cycle detection:** the compiler builds a dependency graph of modules during compilation. Cycles are a compile-time error with a clear diagnostic showing the cycle path.
-- `**__init__.sifr` semantics:** defines the public API of a package. Symbols not re-exported from `__init__.sifr` are private to the package. No side effects on import (unlike Python's `__init__.py`).
-- **Import caching:** each module is compiled exactly once per compilation. The driver maintains a module cache keyed by canonical path.
 
 ### 5. CI Quality Gates
 
@@ -2380,7 +2774,7 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This contract
 **Milestone responsibilities:**
 
 - M7b: define `with` block semantics and `ContextManager` protocol (`__enter__`/`__exit__`)
-- M5: implement scope-end destruction for class instances
+- M5a: implement scope-end destruction for class instances
 - M8: implement `with` blocks for file handles and other stdlib resources
 
 ### 10. Auto-Derived Traits
@@ -2418,7 +2812,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 **Milestone responsibilities:**
 
 - M1-M3: basic span tracking (single-file, Sifr-native errors only)
-- M6: multi-file span tracking (import errors reference both files)
+- M6a: multi-file span tracking (import errors reference both files)
 - M15: FFI-related `rustc` error translation (extern crate mismatches)
 - M16: LSP diagnostic integration (real-time diagnostics in editor)
 
@@ -2467,7 +2861,7 @@ enum Type {
     // Function
     Function(FunctionType),
 
-    // Class instance (M5)
+    // Class instance (M5a)
     Instance(ClassId),
 
     // Generics (M7)
