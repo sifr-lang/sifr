@@ -6,10 +6,14 @@
 mod types;
 mod check;
 pub mod infer;
+pub mod union;
+pub mod literal;
 
 pub use types::{Type, FunctionType, OwnershipKind};
 pub use check::{type_check_binary_op, type_check_unary_op, type_check_comparison, type_check_bool_op};
 pub use infer::infer_literal_type;
+pub use union::{make_union, subtract_from_union, intersect_with_union, remove_none_from_union, union_contains, union_contains_none};
+pub use literal::{LiteralValue, widen as widen_literal};
 
 /// A type error produced during type checking.
 #[derive(Debug, Clone, PartialEq, Eq)]

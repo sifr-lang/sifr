@@ -27,6 +27,26 @@ pub enum Type {
     Any,
     /// Bottom type (function that never returns)
     Never,
+
+    // --- M3: Advanced Type System ---
+
+    /// Union type: value is one of several types (`int | str`)
+    /// Members are normalized: flattened, deduplicated, sorted.
+    Union(Vec<Type>),
+    /// Intersection type: value satisfies all types (internal, for narrowing)
+    Intersection(Vec<Type>),
+    /// Literal integer type: a specific int value as a type (`42`)
+    LiteralInt(i64),
+    /// Literal string type: a specific string value as a type (`"GET"`)
+    LiteralStr(String),
+    /// Literal boolean type: a specific bool value as a type (`True`)
+    LiteralBool(bool),
+    /// Type alias reference (resolved during checking)
+    Alias(String, Box<Type>),
+    /// Safe top type: accepts any value but must be narrowed before use.
+    /// Unlike `Any` which opts out of type checking, `Unknown` forces
+    /// the programmer to prove the type before operating on it.
+    Unknown,
 }
 
 /// Represents a function's type signature.
@@ -59,8 +79,21 @@ impl Type {
     pub fn ownership(&self) -> OwnershipKind {
         match self {
             Self::Int | Self::Float | Self::Bool | Self::None | Self::Never | Self::Range => OwnershipKind::Copy,
+            Self::LiteralInt(_) | Self::LiteralBool(_) => OwnershipKind::Copy,
             Self::Function(_) => OwnershipKind::Copy,
             Self::Str | Self::Any | Self::List(_) | Self::Dict(_, _) | Self::Tuple(_) => OwnershipKind::Move,
+            Self::LiteralStr(_) => OwnershipKind::Move,
+            Self::Unknown => OwnershipKind::Move,
+            // Union/Intersection: Move if any member is Move
+            Self::Union(members) | Self::Intersection(members) => {
+                if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
+                    OwnershipKind::Move
+                } else {
+                    OwnershipKind::Copy
+                }
+            }
+            // Alias: delegate to the underlying type
+            Self::Alias(_, inner) => inner.ownership(),
         }
     }
 
@@ -82,10 +115,28 @@ impl Type {
             Self::Range => "range".to_string(),
             Self::Any => "Any".to_string(),
             Self::Never => "Never".to_string(),
+            Self::Union(members) => {
+                let parts: Vec<String> = members.iter().map(Self::display_name).collect();
+                parts.join(" | ")
+            }
+            Self::Intersection(members) => {
+                let parts: Vec<String> = members.iter().map(Self::display_name).collect();
+                parts.join(" & ")
+            }
+            Self::LiteralInt(v) => format!("{v}"),
+            Self::LiteralStr(v) => format!("\"{v}\""),
+            Self::LiteralBool(v) => {
+                if *v { "True".to_string() } else { "False".to_string() }
+            }
+            Self::Alias(name, _) => name.clone(),
+            Self::Unknown => "Unknown".to_string(),
         }
     }
 
     /// Returns the Rust type name for code generation.
+    ///
+    /// For union types, this returns a generated enum name.
+    /// The actual enum definition is emitted by the codegen phase.
     pub fn rust_type(&self) -> String {
         match self {
             Self::Int => "i64".to_string(),
@@ -107,12 +158,111 @@ impl Type {
                 let ret = ft.return_type.rust_type();
                 format!("fn({}) -> {}", params.join(", "), ret)
             }
+            // Literal types map to their base Rust type
+            Self::LiteralInt(_) => "i64".to_string(),
+            Self::LiteralStr(_) => "String".to_string(),
+            Self::LiteralBool(_) => "bool".to_string(),
+            // Union: special case for T | None -> Option<T>
+            Self::Union(members) => {
+                let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+                let has_none = members.iter().any(|m| matches!(m, Type::None));
+                if has_none && non_none.len() == 1 {
+                    // T | None -> Option<T>
+                    format!("Option<{}>", non_none[0].rust_type())
+                } else {
+                    // General union -> generated enum name
+                    self.union_enum_name()
+                }
+            }
+            Self::Intersection(_) => "Box<dyn std::any::Any>".to_string(),
+            Self::Alias(_, inner) => inner.rust_type(),
+            Self::Unknown => "Box<dyn std::any::Any>".to_string(),
+        }
+    }
+
+    /// Generate a Rust enum name for a union type.
+    ///
+    /// E.g., `int | str` -> `IntOrStr`, `int | str | bool` -> `IntOrStrOrBool`
+    pub fn union_enum_name(&self) -> String {
+        match self {
+            Self::Union(members) => {
+                let parts: Vec<String> = members
+                    .iter()
+                    .map(|m| Self::type_to_enum_variant_prefix(m))
+                    .collect();
+                parts.join("Or")
+            }
+            _ => self.rust_type(),
+        }
+    }
+
+    /// Get the enum variant name for a type when it appears in a union enum.
+    pub fn union_variant_name(&self) -> String {
+        Self::type_to_enum_variant_prefix(self)
+    }
+
+    /// Helper: map a type to a PascalCase name for enum variant/name generation.
+    fn type_to_enum_variant_prefix(ty: &Type) -> String {
+        match ty {
+            Type::Int => "Int".to_string(),
+            Type::Float => "Float".to_string(),
+            Type::Bool => "Bool".to_string(),
+            Type::Str => "Str".to_string(),
+            Type::None => "None".to_string(),
+            Type::LiteralInt(v) => format!("LitInt{v}"),
+            Type::LiteralStr(v) => format!("Lit{}", capitalize(v)),
+            Type::LiteralBool(v) => format!("Lit{}", if *v { "True" } else { "False" }),
+            Type::List(_) => "List".to_string(),
+            Type::Dict(_, _) => "Dict".to_string(),
+            Type::Tuple(_) => "Tuple".to_string(),
+            Type::Range => "Range".to_string(),
+            Type::Function(_) => "Fn".to_string(),
+            Type::Unknown => "Unknown".to_string(),
+            Type::Any => "Any".to_string(),
+            Type::Never => "Never".to_string(),
+            Type::Union(_) => "Union".to_string(),
+            Type::Intersection(_) => "Intersection".to_string(),
+            Type::Alias(name, _) => capitalize(name),
         }
     }
 
     /// Check if this type is a numeric type (int or float).
     pub fn is_numeric(&self) -> bool {
-        matches!(self, Self::Int | Self::Float)
+        matches!(self, Self::Int | Self::Float | Self::LiteralInt(_))
+    }
+
+    /// Check if this type is a union type.
+    pub fn is_union(&self) -> bool {
+        matches!(self, Self::Union(_))
+    }
+
+    /// Check if this type is a literal type.
+    pub fn is_literal(&self) -> bool {
+        matches!(
+            self,
+            Self::LiteralInt(_) | Self::LiteralStr(_) | Self::LiteralBool(_)
+        )
+    }
+
+    /// Check if this type is the Unknown type.
+    pub fn is_unknown(&self) -> bool {
+        matches!(self, Self::Unknown)
+    }
+
+    /// Get the members of a union type, or a single-element vec for non-unions.
+    pub fn union_members(&self) -> Vec<Type> {
+        match self {
+            Self::Union(members) => members.clone(),
+            other => vec![other.clone()],
+        }
+    }
+
+    /// Resolve an alias to its underlying type.
+    pub fn resolve_alias(&self) -> &Type {
+        match self {
+            Self::Alias(_, inner) => inner.resolve_alias(),
+            other => other,
+        }
     }
 
     /// Returns the element type if this type is iterable, or None otherwise.
@@ -173,19 +323,46 @@ impl Type {
 
     /// Check if a value of type `self` can be assigned to a target of type `target`.
     pub fn is_assignable_to(&self, target: &Type) -> bool {
-        if self == target {
+        // Resolve aliases
+        let source = self.resolve_alias();
+        let target_resolved = target.resolve_alias();
+
+        if source == target_resolved {
             return true;
         }
         // Any is compatible with everything
-        if matches!(self, Self::Any) || matches!(target, Self::Any) {
+        if matches!(source, Self::Any) || matches!(target_resolved, Self::Any) {
             return true;
         }
         // Never is assignable to everything
-        if matches!(self, Self::Never) {
+        if matches!(source, Self::Never) {
             return true;
         }
+        // Unknown accepts any value (but operations on it are restricted)
+        if matches!(target_resolved, Self::Unknown) {
+            return true;
+        }
+        // Literal types are assignable to their base types
+        match (source, target_resolved) {
+            (Self::LiteralInt(_), Self::Int) => return true,
+            (Self::LiteralStr(_), Self::Str) => return true,
+            (Self::LiteralBool(_), Self::Bool) => return true,
+            _ => {}
+        }
+        // Source is assignable to a union target if assignable to any member
+        if let Self::Union(target_members) = target_resolved {
+            if target_members.iter().any(|m| source.is_assignable_to(m)) {
+                return true;
+            }
+        }
+        // Union source is assignable to target if ALL members are assignable
+        if let Self::Union(source_members) = source {
+            if source_members.iter().all(|m| m.is_assignable_to(target_resolved)) {
+                return true;
+            }
+        }
         // Structural subtyping for collections
-        match (self, target) {
+        match (source, target_resolved) {
             (Self::List(a), Self::List(b)) => a.is_assignable_to(b),
             (Self::Dict(ak, av), Self::Dict(bk, bv)) => ak.is_assignable_to(bk) && av.is_assignable_to(bv),
             (Self::Tuple(a), Self::Tuple(b)) => {
@@ -193,6 +370,15 @@ impl Type {
             }
             _ => false,
         }
+    }
+}
+
+/// Capitalize the first letter of a string.
+fn capitalize(s: &str) -> String {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(c) => c.to_uppercase().to_string() + chars.as_str(),
     }
 }
 
@@ -276,5 +462,120 @@ mod tests {
         let list_int = Type::List(Box::new(Type::Int));
         assert_eq!(list_int.index_result_type(&Type::Int), Some(Type::Int));
         assert_eq!(list_int.index_result_type(&Type::Str), None);
+    }
+
+    // --- M3: Union type tests ---
+
+    #[test]
+    fn test_union_display_name() {
+        let u = Type::Union(vec![Type::Int, Type::Str]);
+        assert_eq!(u.display_name(), "int | str");
+    }
+
+    #[test]
+    fn test_literal_display_name() {
+        assert_eq!(Type::LiteralInt(42).display_name(), "42");
+        assert_eq!(Type::LiteralStr("GET".to_string()).display_name(), "\"GET\"");
+        assert_eq!(Type::LiteralBool(true).display_name(), "True");
+        assert_eq!(Type::LiteralBool(false).display_name(), "False");
+    }
+
+    #[test]
+    fn test_unknown_display_name() {
+        assert_eq!(Type::Unknown.display_name(), "Unknown");
+    }
+
+    #[test]
+    fn test_literal_assignable_to_base() {
+        assert!(Type::LiteralInt(42).is_assignable_to(&Type::Int));
+        assert!(Type::LiteralStr("GET".to_string()).is_assignable_to(&Type::Str));
+        assert!(Type::LiteralBool(true).is_assignable_to(&Type::Bool));
+    }
+
+    #[test]
+    fn test_literal_not_assignable_to_wrong_base() {
+        assert!(!Type::LiteralInt(42).is_assignable_to(&Type::Str));
+        assert!(!Type::LiteralStr("GET".to_string()).is_assignable_to(&Type::Int));
+    }
+
+    #[test]
+    fn test_assignable_to_union() {
+        let u = Type::Union(vec![Type::Int, Type::Str]);
+        assert!(Type::Int.is_assignable_to(&u));
+        assert!(Type::Str.is_assignable_to(&u));
+        assert!(!Type::Bool.is_assignable_to(&u));
+    }
+
+    #[test]
+    fn test_union_assignable_to_target() {
+        // Union is assignable to target only if ALL members are assignable
+        let u = Type::Union(vec![Type::Int, Type::Int]);
+        assert!(u.is_assignable_to(&Type::Int));
+
+        let u2 = Type::Union(vec![Type::Int, Type::Str]);
+        assert!(!u2.is_assignable_to(&Type::Int));
+    }
+
+    #[test]
+    fn test_anything_assignable_to_unknown() {
+        assert!(Type::Int.is_assignable_to(&Type::Unknown));
+        assert!(Type::Str.is_assignable_to(&Type::Unknown));
+        assert!(Type::Bool.is_assignable_to(&Type::Unknown));
+    }
+
+    #[test]
+    fn test_union_rust_type_option() {
+        let optional_str = Type::Union(vec![Type::None, Type::Str]);
+        assert_eq!(optional_str.rust_type(), "Option<String>");
+    }
+
+    #[test]
+    fn test_union_rust_type_enum() {
+        let u = Type::Union(vec![Type::Int, Type::Str]);
+        assert_eq!(u.rust_type(), "IntOrStr");
+    }
+
+    #[test]
+    fn test_union_ownership() {
+        // Union with Move member -> Move
+        let u = Type::Union(vec![Type::Int, Type::Str]);
+        assert_eq!(u.ownership(), OwnershipKind::Move);
+        // Union with only Copy members -> Copy
+        let u2 = Type::Union(vec![Type::Int, Type::Bool]);
+        assert_eq!(u2.ownership(), OwnershipKind::Copy);
+    }
+
+    #[test]
+    fn test_alias_resolves() {
+        let alias = Type::Alias("UserId".to_string(), Box::new(Type::Int));
+        assert_eq!(alias.display_name(), "UserId");
+        assert_eq!(alias.rust_type(), "i64");
+        assert!(alias.is_assignable_to(&Type::Int));
+    }
+
+    #[test]
+    fn test_literal_is_numeric() {
+        assert!(Type::LiteralInt(42).is_numeric());
+        assert!(!Type::LiteralStr("x".to_string()).is_numeric());
+    }
+
+    #[test]
+    fn test_is_union() {
+        assert!(Type::Union(vec![Type::Int, Type::Str]).is_union());
+        assert!(!Type::Int.is_union());
+    }
+
+    #[test]
+    fn test_is_literal() {
+        assert!(Type::LiteralInt(42).is_literal());
+        assert!(Type::LiteralStr("x".to_string()).is_literal());
+        assert!(Type::LiteralBool(true).is_literal());
+        assert!(!Type::Int.is_literal());
+    }
+
+    #[test]
+    fn test_never_assignable_to_union() {
+        let u = Type::Union(vec![Type::Int, Type::Str]);
+        assert!(Type::Never.is_assignable_to(&u));
     }
 }
