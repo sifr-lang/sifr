@@ -1,8 +1,3 @@
----
-description: Create a PRDS template for a feature or epic
-globs: 
-alwaysApply: false
----
 Use this template when creating a PRDS (a PRD and a solution design) for a feature or an epic (output is written into `/issues` folder):
 
 

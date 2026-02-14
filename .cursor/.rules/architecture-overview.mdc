@@ -1,28 +1,7 @@
 ---
-description: Architecture overview of backend-node project.
+description: Architecture overview of the project.
 globs: 
 alwaysApply: true
 ---
 # Architecture Overview
 
-This cloudflare worker application has these directories:
-- **Core app**: backend-node/apps/core/ - core application
-Working directory `cd backend-node/apps/core/`
-- **Shared Types**: backend-node/packages/ - Shared TypeScript code.
-
-
-## Main components
-
-- account: user, organization, authentication system, the invitation system, and weak references to the project ids.
-- project: the project system (deploying models into Google Cloud infrastructure).
-- payment: the payment system with Stripe and weak references ot the project ids
-
-## Storage
-- D1 Database - Relational storage for product data.
-- KV Storage - Fast, globally distributed key-value store.
-
-## Tooling
-- Use npm for dependency management.
-- Use vitest.
-- Use DaisyUI 5 for styling.
-- Use console.log for logging.

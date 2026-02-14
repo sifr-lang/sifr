@@ -1,9 +1,0 @@
----
-alwaysApply: true
----
-
-Use claude-4-sonnet model.
-
-Before you start, say "Hello Yaser, I'm using X model" where X is the model you're using.
-
-Do attempts to fix the code as much as possible (no limit).

@@ -1,14 +1,11 @@
----
-description: Work on gh project items/tickets
-globs: 
-alwaysApply: false
----
+# Review PR
+
 Use the following guidelines to review PRs for github project In review items.
 Review one PR at a time.
 
 Review comments are preferred to be github PR inline comments, but in cases where it's better to be a review comment, use github PR review comments.
 
-## Reviewing PRs
+## Review Criteria
 
 Review PR should be focused on the following (review these one step at a time):
 
@@ -39,6 +36,7 @@ gh project item-list 1 --owner yaseralnajjar --format json
 ```
 
 ## Reviewing PRs
+
 Edit ticket fields (Status):
 
 1. Pickup the highest prioritized ticket in the `Review` column.
@@ -51,8 +49,8 @@ Edit ticket fields (Status):
 
 5. Review the PR and check the following (do not use start review functionality):
 * Solving the problem it's intended to solve.
-* Would not make a problem given [architecture-overview.mdc](mdc:.cursor/rules/architecture-overview.mdc)
-* Following [code-style.mdc](mdc:.cursor/rules/code-style.mdc)
+* Would not make a problem given @.cursor/.rules/architecture-overview.mdc
+* Following @.cursor/.rules/code-style.mdc
 * Other considerations...
 
 6. Reply to already existing PR comments (if it adds value or if you have a different opinion):

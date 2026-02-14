@@ -1,8 +1,3 @@
----
-description: Create a task template
-globs: 
-alwaysApply: false
----
 Use this template when creating a scoped task (output is written into `/issues` folder):
 
 ## Issue Title

@@ -1,8 +1,5 @@
----
-description: Work on gh project items/tickets
-globs: 
-alwaysApply: false
----
+# Work on Ticket
+
 Use the following guidelines to create PRs for github project Ready items.
 Work on one ticket at a time.
 
@@ -17,7 +14,7 @@ gh project item-list 1 --owner yaseralnajjar --format json
 
 ## Available field-id and single-selection-option-id
 
-Check [available-field-id-and-single-selection-option-id.mdc](mdc:.cursor/rules/available-field-id-and-single-selection-option-id.mdc)
+Check @.cursor/templates/available-field-id-and-single-selection-option-id.md
 
 ## Creating PRs
 
@@ -36,7 +33,7 @@ Check [available-field-id-and-single-selection-option-id.mdc](mdc:.cursor/rules/
 
 5. Run tests locally and make sure all tests are passing.
 
-6. Create a PR in github with title `<github-issue-id>-<github-issue-title>` using github mcp. Use this template [pr-template.mdc](mdc:.cursor/rules/pr-template.mdc)
+6. Create a PR in github with title `<github-issue-id>-<github-issue-title>` using github mcp. Use this template @.cursor/templates/pr-template.md
 
 7. Update ticket `Status` into `In review`:
 ```

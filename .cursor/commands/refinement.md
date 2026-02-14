@@ -1,8 +1,5 @@
----
-description: Refinement of gh project items/tickets
-globs: 
-alwaysApply: false
----
+# Refinement
+
 Use the following guidelines to manage github project Backlog items.
 
 ## Get all project items
@@ -14,9 +11,10 @@ gh project item-list 1 --owner yaseralnajjar
 
 ## Available field-id and single-selection-option-id
 
-Check [available-field-id-and-single-selection-option-id.mdc](mdc:.cursor/rules/available-field-id-and-single-selection-option-id.mdc)
+Check @.cursor/templates/available-field-id-and-single-selection-option-id.md
 
 ## Refinement of items/tickets
+
 Edit ticket fields (Priority and Status):
 
 1. Assess the `Priority` of each ticket based on effort vs value matrix in the backlog then set it.

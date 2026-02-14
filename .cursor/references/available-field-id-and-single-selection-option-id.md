@@ -1,11 +1,4 @@
----
-description: Available github project items field-id and single-selection-option-id
-globs: 
-alwaysApply: false
----
-Use the following guidelines to manage github project items.
-
-## Available field-id and single-selection-option-id
+# Available field-id and single-selection-option-id
 
 These are the available field-id and single-selection-option-id:
 ```

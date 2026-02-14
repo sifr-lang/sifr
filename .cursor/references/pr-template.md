@@ -1,8 +1,3 @@
----
-description: Create a task template
-globs: 
-alwaysApply: false
----
 Use this template when creating PR.
 
 ## PR Title

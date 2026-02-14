@@ -1,20 +1,17 @@
----
-description: Manage gh project items/tickets
-globs: 
-alwaysApply: false
----
+# Add Ticket
+
 Use the following guidelines to add github project items.
 Add one ticket at a time.
 
 ## Available field-id and single-selection-option-id
 
-Check [available-field-id-and-single-selection-option-id.mdc](mdc:.cursor/rules/available-field-id-and-single-selection-option-id.mdc)
+Check @.cursor/templates/available-field-id-and-single-selection-option-id.md
 
 ## Adding items/tickets
 
 1. Output ticket description into `/issues/<issue-title>.md`:
-   - If it's a task, use [task-template.mdc](mdc:.cursor/rules/task-template.mdc)
-   - If it's an epic, use [prd-solution-design-template.mdc](mdc:.cursor/rules/prd-solution-design-template.mdc)
+   - If it's a task, use @.cursor/templates/task-template.md
+   - If it's an epic, use @.cursor/templates/prd-solution-design-template.md
 
 2. Create github issue using github mcp.
 
