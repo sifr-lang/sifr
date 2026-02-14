@@ -97,6 +97,7 @@ flowchart TD
         M3["M3: Advanced Type System\nUnion types, literal types,\ntype narrowing, Unknown"]
     end
     subgraph lang [Language Features]
+        M3b["M3b: Semantic Fixes\nUTF-8 string indexing,\nslice copy, for-loop borrow"]
         M4["M4: Error Handling\nResult/Option, ? operator,\ntry/except as match"]
         M5["M5: Structs + Methods\nclass, protocols, traits,\ndiscriminated unions"]
         M6["M6: Module System\nimport/from, multi-file,\nsifr.toml, packages"]
@@ -118,7 +119,7 @@ flowchart TD
         M16["M16: Developer Tooling\nLSP, formatter, linter,\ndoc generator"]
         M17["M17: Package Ecosystem\nRegistry, incremental\ncompilation, REPL"]
     end
-    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
+    M1 --> M2 --> M3 --> M3b --> M4 --> M5 --> M6 --> M7
     M7 --> M8
     M8 --> M9
     M8 --> M10
@@ -136,7 +137,8 @@ flowchart TD
 
 **Rationale for milestone order:**
 
-- **M3 before M4:** Union types are prerequisites for `Result[T, E]` and `Option[T]`
+- **M3 before M3b:** Union types and narrowing must exist before fixing collection/string semantics
+- **M3b before M4:** Correct string indexing, slice copy, and for-loop borrow semantics must be in place before building error handling on top of them
 - **M7 before M8-M13:** Generics and closures are needed for stdlib APIs
 - **M8 before M9/M10:** Core stdlib (I/O, JSON, env, os) establishes the stdlib pattern and provides foundations that the extended stdlib and test runner build on
 - **M9 parallel to M10:** Extended stdlib (math, time, regex, etc.) and the test runner both depend on M8 but not on each other -- they can be developed in parallel
@@ -560,6 +562,53 @@ def main():
 
 ---
 
+## M3b: Semantic Fixes
+
+**Goal:** Fix foundational semantics for strings, slicing, and iteration that were implemented with placeholder behavior in M1-M2. These fixes must land before M4 because error handling (`Option`/`Result`) depends on correct indexing and collection behavior.
+
+### String Indexing (UTF-8 Safe)
+
+Current codegen lowers `s[i]` to `x[i as usize]`, which is invalid for Rust `String` (byte-indexed, not character-indexed). This milestone fixes string operations to be character-based:
+
+- `**s[i]`:** returns the i-th character (Unicode code point) as a single-character `str`. Panics on out-of-bounds (matches Python). Codegen: `s.chars().nth(i).unwrap()`.
+- `**s.get(i)`:** safe accessor, returns `Option[str]`. Codegen: `s.chars().nth(i).map(|c| c.to_string())`.
+- `**s.len()`:** returns the number of Unicode code points (not bytes). Codegen: `s.chars().count()`.
+- `**s.byte_len()`:** returns the number of bytes (O(1)). Codegen: `s.len()`.
+- `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
+
+**Complexity note:** character-based indexing is O(n) for non-ASCII strings. The compiler should emit a diagnostic note when string indexing is used in a loop, suggesting `.chars()` iteration instead.
+
+### List Slice Copy Semantics
+
+Verify and enforce that `list[a:b]` produces a new list (copy semantics, not a view):
+
+- Codegen: `vec[a..b].to_vec()`
+- The original list is not affected by mutations to the slice
+- Views (borrowed slices mapping to `&[T]`) are deferred to a future milestone
+
+### For-Loop Borrow Semantics
+
+Fix `for item in collection` to borrow the collection rather than consuming it:
+
+- `**for item in collection`:** borrows immutably. The collection remains usable after the loop. Codegen: `for item in &collection`.
+- `**for item in collection.consume()`:** takes ownership (move). Codegen: `for item in collection` (Rust's `into_iter`).
+- Current behavior may already borrow in some cases; this milestone ensures it is consistent and tested.
+
+### Definition of Done (M3b)
+
+- `s[i]` returns the i-th character, not byte; panics on out-of-bounds
+- `s.get(i)` returns `Option[str]` for safe access
+- `s.len()` returns character count, not byte count
+- `s[a:b]` returns a new string of characters from `a` to `b`
+- `list[a:b]` produces a new list (copy, not view)
+- `for item in list` borrows the list; list is usable after the loop
+- E2E pass tests: string_char_index, string_safe_get, string_char_len, string_slice, list_slice_copy, for_loop_borrow
+- E2E fail tests: string_index_out_of_bounds (panic)
+- Existing M1/M2 E2E tests still pass (no regressions)
+- Milestone demo in `./tmp/m3b_demo.sifr`
+
+---
+
 ## M4: Error Handling
 
 **Goal:** Provide safe error handling that maps to Rust's `Result`/`Option` types rather than Python's exception model. Benefits from M3's union types -- `Result[T, E]` and `Option[T]` are union-based.
@@ -633,6 +682,27 @@ class IOError(AppError):
 - `**assert` statements:** generate `assert!()` or `panic!()` in Rust. These are unrecoverable and not catchable by `try`/`except`.
 - **Rust library panics (M15 FFI):** caught at FFI boundaries via `catch_unwind` and converted to `Result::Err`. Sifr code never sees a panic from wrapped Rust crates.
 - **Out-of-bounds indexing:** returns `Result` or `Option`, not a panic. `list[i]` returns `Option[T]`; `list.get(i)` is the safe accessor.
+
+### Pattern Matching (M4 Foundation)
+
+M4 introduces pattern matching as the mechanism for `try`/`except` and `Result`/`Option` handling. This establishes the foundation that M5 extends with struct destructuring.
+
+**M4 pattern matching scope:**
+
+- **Exhaustiveness checking:** `match` on `Result` and `Option` must cover all variants. Missing arms are compile-time errors.
+- **Variable binding in arms:** `except ValueError as e` binds the error value.
+- **Catch-all arms:** `except Error as e` matches any error type (like `_` in Rust `match`).
+- **Match guards:** `case x if x > 0` -- extra conditions on match arms. Codegen: Rust match guards (`pattern if condition => ...`).
+
+**Deferred to M5:**
+
+- Struct/class field destructuring in match arms
+- Nested pattern matching
+- `@` bindings (bind and match simultaneously)
+
+**Deferred to M7:**
+
+- Pattern matching on generic types
 
 ### Definition of Done (M4)
 
@@ -754,6 +824,42 @@ The programmer can override with explicit annotations: `def method(ref self)` or
 - **Protocol/trait objects:** when a protocol is used as a parameter type, generate `&dyn Trait` or `Box<dyn Trait>`. This is the only dynamic dispatch for class types.
 - **Discriminated union of classes:** generate Rust `enum` with one variant per class. Tag-based narrowing generates `match` on the tag field.
 
+### Algebraic Data Types (ADTs)
+
+Class unions already provide ADT-like modeling: `Circle | Square` compiles to a Rust enum with one variant per class, and `isinstance` narrowing generates exhaustive `match`. This means Sifr already has algebraic data types via its existing union + class system.
+
+Explicit `enum` syntax with data-carrying variants (e.g., `enum Shape: Circle(radius: float) | Rectangle(w: float, h: float)`) is an **optional ergonomic enhancement**, not a conceptual gap. It may be evaluated after M5 stabilizes as syntax sugar over class unions.
+
+### Pattern Matching on Classes (extends M4)
+
+M5 extends M4's pattern matching with struct destructuring:
+
+- **Field destructuring:** `case Point(x=x, y=y)` or `case Point(x, y)` in match arms
+- **Nested patterns:** `case Line(start=Point(x=0, y=0), end=end_point)`
+- `**@` bindings:** `case p @ Point(x=0, y=_)` -- bind the whole value while matching fields
+
+### Newtype Pattern (Post-M5 Enhancement)
+
+After M5 stabilizes, Sifr should support newtypes -- thin wrappers around primitives that add validation and type safety:
+
+```python
+class Port(int):
+    def __init__(self, value: int):
+        assert 0 <= value <= 65535
+```
+
+This maps to Rust's newtype pattern (`struct Port(u16)`) with zero-cost runtime representation. The compiler enforces that `Port` and `int` are distinct types -- you cannot pass an `int` where a `Port` is expected without explicit construction.
+
+### Struct Update / Spread Semantics
+
+When copying a class instance with field overrides (similar to Python's `dataclasses.replace` or JS spread):
+
+```python
+new_user = User(email="new@example.com", **old_user)
+```
+
+**Contract:** spread/update **clones** non-overridden fields (implicit `.clone()`). This matches Python semantics and avoids partial-move complexity. The compiler emits `.clone()` for each non-overridden field. If a field type does not implement `Clone`, this is a compile-time error.
+
 ### Definition of Done (M5)
 
 - `class` compiles to Rust `struct` + `impl`
@@ -763,8 +869,11 @@ The programmer can override with explicit annotations: `def method(ref self)` or
 - Discriminated unions with tag fields narrow correctly via `match`
 - Operator overloading (`__add__`, `__eq__`) maps to Rust trait impls
 - Single inheritance via trait delegation
-- E2E pass tests: class_basic, protocol_dispatch, discriminated_union, operator_overload
-- E2E fail tests: missing_field, protocol_not_satisfied, use_after_move_self
+- Pattern matching with field destructuring works on class types
+- Auto-derived traits (`Debug`, `Clone`, `PartialEq`, conditional `Eq`/`Hash`) on all classes
+- Struct update/spread clones non-overridden fields
+- E2E pass tests: class_basic, protocol_dispatch, discriminated_union, operator_overload, pattern_destructure, struct_update
+- E2E fail tests: missing_field, protocol_not_satisfied, use_after_move_self, unhashable_dict_key
 - Milestone demo in `./tmp/m5_demo.sifr`
 
 ---
@@ -894,6 +1003,27 @@ Closure captures are inferred from usage inside the closure body (see Cross-cutt
 - Variable consumed or closure outlives scope: capture by value (move)
 - Explicit `move` keyword forces capture by value: `move lambda x: x + captured_var`
 
+### Closure Kind Inference
+
+Rust has three closure traits: `Fn` (immutable borrow), `FnMut` (mutable borrow), and `FnOnce` (consumes captured values). Sifr **hides these from the user** and infers the closure kind automatically:
+
+- The compiler analyzes the closure body to determine the most permissive kind.
+- Functions accepting closures declare their requirement implicitly via usage (how many times the closure is called, whether it's stored, etc.).
+- If a closure moves a captured value but is called multiple times, the compiler emits a clear error: "this closure moves `x` but is called multiple times -- consider using `.clone()` or restructuring."
+- The user never sees `FnOnce`, `FnMut`, or `Fn` -- these are internal codegen details.
+
+**Codegen:** the compiler emits the correct Rust closure trait bound based on inference. `sort_by_key` gets `FnMut`, `unwrap_or_else` gets `FnOnce`, etc.
+
+### Iterator Borrowing Semantics
+
+Sifr's `for` loop follows Python semantics for ergonomics:
+
+- `**for item in collection`:** borrows the collection (does not consume it). The collection remains usable after the loop. Codegen: `for item in &collection`.
+- `**for item in collection.consume()`:** takes ownership of the collection. The collection is moved and cannot be used after the loop. Codegen: `for item in collection`.
+- **Iterator protocol:** `__iter__` returns an iterator; `__next__` returns `Option[T]`. Maps to Rust's `Iterator` trait with `next(&mut self) -> Option<Self::Item>`.
+- **Three iterator modes (internal):** the compiler generates `iter()` (borrow), `iter_mut()` (mutable borrow), or `into_iter()` (consume) based on usage context. The user only sees `for item in collection`.
+- **Lazy evaluation:** `map`, `filter`, and other iterator adapters are lazy -- they produce new iterators without allocating intermediate collections. Only consuming operations (`collect`, `sum`, `for` loop) trigger evaluation.
+
 ### Definition of Done (M7)
 
 - Generic functions with type parameters compile correctly (monomorphized)
@@ -902,10 +1032,13 @@ Closure captures are inferred from usage inside the closure body (see Cross-cutt
 - Lambda expressions compile to Rust closures
 - Contextual typing infers lambda parameter types from call-site
 - Closure capture inference works correctly (borrow vs move)
+- Closure kind inference (Fn/FnMut/FnOnce) works automatically without user annotation
 - Higher-order functions (`map`, `filter`) work with lambdas
 - Iterator protocol (`__iter__` / `__next__`) maps to Rust `Iterator`
-- E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator
-- E2E fail tests: type_bound_violation, generic_mismatch
+- `for item in collection` borrows by default; `collection.consume()` for ownership transfer
+- Lazy iterator adapters (`map`, `filter`) work without intermediate allocations
+- E2E pass tests: generic_function, generic_class, lambda_basic, higher_order, iterator, for_loop_borrow, lazy_iterator
+- E2E fail tests: type_bound_violation, generic_mismatch, closure_move_called_twice
 - Milestone demo in `./tmp/m7_demo.sifr`
 
 ---
@@ -1489,6 +1622,7 @@ An interactive mode for quick experimentation:
 M1:  Core Language (DONE)       -> "Hello World" compiles to native binary
 M2:  Control Flow + Data (DONE) -> Process collections, loops, real algorithms
 M3:  Advanced Type System (DONE)-> Union types, literal types, type narrowing, Unknown
+M3b: Semantic Fixes             -> UTF-8 string indexing, slice copy, for-loop borrow
 M4:  Error Handling             -> Result/Option, ? operator (uses M3 unions)
 M5:  Structs + Methods          -> OOP, protocols, discriminated unions (uses M3 narrowing)
 M6:  Module System              -> Multi-file projects, packages, sifr.toml
@@ -1548,12 +1682,14 @@ Sifr uses move-by-default semantics (like Rust), but must define when the compil
 - **Temporary lifetimes:** temporaries created in expressions live until the end of the enclosing statement. Method chains like `x.upper().split(",")` work without explicit borrows.
 - **Escape analysis:** the compiler tracks whether a reference escapes its scope. If it does, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: clone explicitly, or restructure to avoid the escape.
 - **No lifetime annotations in user code:** Sifr does not expose Rust's `'a` lifetime syntax. The compiler infers lifetimes using the rules above. If inference fails, the compiler emits a clear error suggesting `.clone()` or restructuring.
+- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-M5). Default behavior is move-by-default with explicit `ref`/`mut ref` for borrowing. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
 
 **Milestone responsibilities:**
 
 - M5: implement method receiver inference (`&self` / `&mut self` / `self`)
 - M7: implement closure capture inference
 - M11: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
+- Post-M5: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
 
 ### 3. Error Semantics Matrix
 
@@ -1624,6 +1760,87 @@ match parse_int(s) {
 - M7+: benchmark suite with regression thresholds (compile time, binary size)
 - M8+: stdlib wrapper tests (each module has integration tests against the underlying Rust crate)
 - M17: fuzz testing for parser and type checker (cargo-fuzz or afl)
+
+### 6. Slice and Collection Semantics
+
+Sifr uses Python-like slicing syntax, but must define whether slicing copies or creates a view. This affects performance expectations and ownership behavior.
+
+**Contract:**
+
+- **List slicing copies:** `list[a:b]` produces a new `list` (deep copy of elements). This matches Python semantics and avoids borrow complexity. Codegen: `vec[a..b].to_vec()`.
+- **String slicing copies:** `str[a:b]` produces a new `str`. Indices are character positions (not byte offsets). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
+- **Dict/tuple:** not sliceable.
+- **Views deferred:** an explicit view API (e.g., `list.view(a, b)` mapping to `&[T]`) may be added in a later milestone for performance-critical paths. Not part of MVP.
+- `**for` loop borrows:** `for item in collection` borrows the collection (does not consume it). The collection remains usable after the loop. Codegen: `for item in &collection` (immutable borrow). Explicit consumption via `for item in collection.consume()` or similar if ownership transfer is needed.
+
+### 7. String Semantics (UTF-8)
+
+Sifr's `str` maps to Rust `String` (UTF-8). String indexing and length must be defined carefully because UTF-8 is variable-width.
+
+**Contract:**
+
+- `**s[i]`:** returns the i-th character (Unicode code point) as a single-character `str`. Panics on out-of-bounds (matches Python behavior). Codegen: `s.chars().nth(i).unwrap()`. This is O(n), not O(1).
+- `**s.get(i)`:** safe accessor, returns `Option[str]`. Codegen: `s.chars().nth(i).map(|c| c.to_string())`.
+- `**s.len()`:** returns the number of Unicode code points (not bytes). Codegen: `s.chars().count()`. This is O(n).
+- `**s.byte_len()`:** returns the number of bytes (O(1)). Codegen: `s.len()`.
+- `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`.
+- **String literals:** type is `str`, stored as `String` in generated Rust.
+- **Complexity documentation:** the compiler should emit a note when string indexing is used in a loop, suggesting `.chars()` iteration instead for performance.
+
+### 8. Concurrency Safety
+
+Sifr must define which types can cross thread/task boundaries. This extends the async capture rules in contract #2 to cover all concurrency scenarios.
+
+**Contract:**
+
+- **Auto-derived Send/Sync:** Sifr types are `Send` and `Sync` when all their fields are `Send` and `Sync` (matches Rust's auto-derivation). The compiler tracks this automatically.
+- **Spawn boundaries are checked:** when a value is sent to a spawned task (`sifr.task.spawn`) or thread, the compiler verifies the value is `Send`. If not, it emits a clear error explaining which field is not sendable.
+- **No silent upgrades:** the compiler does NOT auto-upgrade `Rc` to `Arc` or `RefCell` to `Mutex`. If a non-sendable type is used across a task boundary, the programmer must fix it explicitly.
+- **Shared mutable state across tasks:** requires explicit primitives (deferred to M11). The compiler rejects sharing mutable references across task boundaries without synchronization.
+- **Single-threaded by default:** code that does not use `async` or `spawn` has no concurrency overhead. `Rc` and `RefCell` are used internally only when appropriate for single-threaded code.
+
+**Milestone responsibilities:**
+
+- M11: implement Send/Sync checking at spawn boundaries
+- M11: provide `sifr.sync.Lock` (maps to `Arc<Mutex<T>>`) and `sifr.sync.Channel` for explicit cross-task sharing
+
+### 9. Destruction and Cleanup Semantics
+
+Sifr compiles to Rust, which has deterministic destruction (RAII). This contract defines when and how values are cleaned up.
+
+**Contract:**
+
+- **Scope-end destruction:** values are dropped at the end of their enclosing scope, in reverse declaration order. This matches Rust's `Drop` semantics and is deterministic (unlike Python's GC).
+- **Move invalidates source:** when a value is moved (assigned to another variable, passed to a function), the source is invalidated. Accessing it after move is a compile-time error.
+- **Partial moves:** when a struct field is moved out, the entire struct becomes partially invalid. The compiler tracks which fields are still valid.
+- **User-defined destructors deferred:** Sifr does NOT expose `__del__` or custom destructors in MVP. The compiler auto-generates `Drop` for types that hold resources (file handles, connections) via stdlib wrappers.
+- **Explicit cleanup via `with`:** for resource management (files, connections), use `with` blocks that map to Rust's scoped resource patterns. The resource is cleaned up when the `with` block exits.
+- **Panic during destruction:** if a destructor panics, the program aborts (matches Rust behavior). This is rare since auto-generated destructors don't panic.
+
+**Milestone responsibilities:**
+
+- M4: define `with` block semantics for `Result`-returning resources
+- M5: implement scope-end destruction for class instances
+- M8: implement `with` blocks for file handles and other stdlib resources
+
+### 10. Auto-Derived Traits
+
+Sifr auto-derives common Rust traits for all user-defined types. This is a language contract, not an implementation detail.
+
+**Contract:**
+
+- **Always derived (when valid):**
+  - `Debug` -- enables `print()` and `repr()` for all types. Derived for all structs and enums.
+  - `Clone` -- enables `.clone()`. Derived when all fields implement `Clone`.
+  - `PartialEq` -- enables `==` and `!=`. Derived when all fields implement `PartialEq`.
+- **Conditionally derived:**
+  - `Eq` -- derived when `PartialEq` is derived AND no fields are `float` (since `f64` is not `Eq` in Rust due to `NaN`).
+  - `Hash` -- derived when `Eq` is derived AND all fields implement `Hash`. NOT derived for types containing `float`, `dict`, or other unhashable types.
+- **Not auto-derived (require explicit opt-in):**
+  - `Ord` / `PartialOrd` -- comparison ordering requires explicit definition via `__lt__`, `__le__`, etc.
+  - `Copy` -- only primitives (`int`, `float`, `bool`) are `Copy`. User-defined types are move-by-default.
+- **Codegen:** the compiler emits `#[derive(Debug, Clone, PartialEq)]` (and conditionally `Eq`, `Hash`) on all generated structs and enums.
+- **Dict key constraint:** types used as `dict` keys must be `Hash + Eq`. The compiler enforces this at the call site and emits a clear error if the type is not hashable.
 
 ### Ecosystem Strategy
 
