@@ -3,9 +3,9 @@ use std::path::Path;
 
 use rustc_hash::FxHashMap;
 
-use sifr_python_trivia::{indentation_at_offset, CommentRanges, SimpleTokenKind, SimpleTokenizer};
-use sifr_source_file::Locator;
-use sifr_text_size::{Ranged, TextLen, TextRange, TextSize};
+use ruff_python_trivia::{indentation_at_offset, CommentRanges, SimpleTokenKind, SimpleTokenizer};
+use ruff_source_file::Locator;
+use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 
 use crate::name::{QualifiedName, QualifiedNameBuilder};
 use crate::parenthesize::parenthesized_range;
@@ -1529,7 +1529,7 @@ mod tests {
     use std::cell::RefCell;
     use std::vec;
 
-    use sifr_text_size::TextRange;
+    use ruff_text_size::TextRange;
 
     use crate::helpers::{any_over_stmt, any_over_type_param, resolve_imported_module_path};
     use crate::{

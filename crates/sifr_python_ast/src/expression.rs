@@ -1,6 +1,6 @@
 use std::iter::FusedIterator;
 
-use sifr_text_size::{Ranged, TextRange};
+use ruff_text_size::{Ranged, TextRange};
 
 use crate::{self as ast, AnyNodeRef, AnyStringFlags, Expr};
 

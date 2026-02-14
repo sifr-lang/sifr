@@ -11,9 +11,9 @@
 //! This module can be used to identify the [`TextRange`] of the `except` token.
 
 use crate::{self as ast, Alias, ExceptHandler, Parameter, ParameterWithDefault, Stmt};
-use sifr_text_size::{Ranged, TextLen, TextRange, TextSize};
+use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 
-use sifr_python_trivia::{is_python_whitespace, Cursor};
+use ruff_python_trivia::{is_python_whitespace, Cursor};
 
 pub trait Identifier {
     /// Return the [`TextRange`] of the identifier in the given AST node.
@@ -225,7 +225,7 @@ impl Iterator for IdentifierTokenizer<'_> {
 #[cfg(test)]
 mod tests {
     use super::IdentifierTokenizer;
-    use sifr_text_size::{TextLen, TextRange, TextSize};
+    use ruff_text_size::{TextLen, TextRange, TextSize};
 
     #[test]
     fn extract_global_names() {

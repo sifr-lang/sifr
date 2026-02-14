@@ -10,7 +10,7 @@ use std::sync::OnceLock;
 use bitflags::bitflags;
 use itertools::Itertools;
 
-use sifr_text_size::{Ranged, TextLen, TextRange, TextSize};
+use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 
 use crate::{
     int,

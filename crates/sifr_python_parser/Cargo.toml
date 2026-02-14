@@ -14,8 +14,8 @@ license = { workspace = true }
 
 [dependencies]
 sifr_python_ast = { workspace = true }
-sifr_python_trivia = { workspace = true }
-sifr_text_size = { workspace = true }
+ruff_python_trivia = { workspace = true }
+ruff_text_size = { workspace = true }
 
 bitflags = { workspace = true }
 bstr = { workspace = true }
@@ -27,7 +27,7 @@ unicode_names2 = { workspace = true }
 unicode-normalization = { workspace = true }
 
 [dev-dependencies]
-sifr_source_file = { workspace = true }
+ruff_source_file = { workspace = true }
 
 annotate-snippets = { workspace = true }
 anyhow = { workspace = true }

@@ -6,7 +6,7 @@ use rustc_hash::FxHashSet;
 use sifr_python_ast::{
     self as ast, ExceptHandler, Expr, ExprContext, IpyEscapeKind, Operator, Stmt, WithItem,
 };
-use sifr_text_size::{Ranged, TextSize};
+use ruff_text_size::{Ranged, TextSize};
 
 use crate::lexer::TokenValue;
 use crate::parser::expression::{ParsedExpr, EXPR_SET};

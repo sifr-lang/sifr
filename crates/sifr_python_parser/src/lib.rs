@@ -73,8 +73,8 @@ pub use crate::token::TokenKind;
 use crate::parser::Parser;
 
 use sifr_python_ast::{Expr, Mod, ModExpression, ModModule, PySourceType, Suite};
-use sifr_python_trivia::CommentRanges;
-use sifr_text_size::{Ranged, TextRange, TextSize};
+use ruff_python_trivia::CommentRanges;
+use ruff_text_size::{Ranged, TextRange, TextSize};
 
 mod error;
 pub mod lexer;
@@ -149,7 +149,7 @@ pub fn parse_expression(source: &str) -> Result<Parsed<ModExpression>, ParseErro
 ///
 /// ```
 /// use sifr_python_parser::parse_expression_range;
-/// # use sifr_text_size::{TextRange, TextSize};
+/// # use ruff_text_size::{TextRange, TextSize};
 ///
 /// let parsed = parse_expression_range("11 + 22 + 33", TextRange::new(TextSize::new(5), TextSize::new(7)));
 /// assert!(parsed.is_ok());

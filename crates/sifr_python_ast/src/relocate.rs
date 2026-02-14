@@ -1,4 +1,4 @@
-use sifr_text_size::TextRange;
+use ruff_text_size::TextRange;
 
 use crate::visitor::transformer::{walk_expr, walk_keyword, Transformer};
 use crate::{nodes, Expr, Keyword};

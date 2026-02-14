@@ -9,7 +9,7 @@ use crate::{
     StmtWith, TypeParam, TypeParamParamSpec, TypeParamTypeVar, TypeParamTypeVarTuple, TypeParams,
     WithItem,
 };
-use sifr_text_size::{Ranged, TextRange};
+use ruff_text_size::{Ranged, TextRange};
 use std::ptr::NonNull;
 
 pub trait AstNode: Ranged {

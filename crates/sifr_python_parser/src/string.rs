@@ -3,7 +3,7 @@
 use bstr::ByteSlice;
 
 use sifr_python_ast::{self as ast, AnyStringFlags, Expr, StringFlags};
-use sifr_text_size::{Ranged, TextRange, TextSize};
+use ruff_text_size::{Ranged, TextRange, TextSize};
 
 use crate::lexer::{LexicalError, LexicalErrorType};
 

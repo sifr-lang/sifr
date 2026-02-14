@@ -4,25 +4,25 @@ overview: Hybrid approach -- use git dependencies for 4 pure-infrastructure ruff
 todos:
   - id: update-workspace-toml
     content: "Update workspace Cargo.toml: remove 4 infrastructure crates from members, add git deps for ruff_text_size/source_file/python_trivia/python_literal; keep sifr_python_ast and sifr_python_parser as workspace members"
-    status: pending
+    status: completed
   - id: update-crate-tomls
     content: "Update Cargo.toml in all crates: switch infrastructure deps from sifr_* to ruff_*, keep sifr_python_ast and sifr_python_parser references"
-    status: pending
+    status: completed
   - id: rename-imports
     content: Rename only the 4 infrastructure imports (sifr_text_size -> ruff_text_size, etc.) in source files; leave sifr_python_ast and sifr_python_parser imports unchanged
-    status: pending
+    status: completed
   - id: update-forked-crates
     content: Update sifr_python_ast and sifr_python_parser Cargo.toml to depend on ruff_text_size/ruff_source_file/ruff_python_trivia via git instead of sifr_* path deps
-    status: pending
+    status: completed
   - id: delete-infra-crates
     content: Delete the 4 infrastructure crate directories (sifr_text_size, sifr_source_file, sifr_python_trivia, sifr_python_literal)
-    status: pending
+    status: completed
   - id: build-and-test
     content: Run cargo build, cargo test, and verify demos still work
-    status: pending
+    status: completed
   - id: update-docs
     content: Update plan file and any comments referencing the crate structure
-    status: pending
+    status: completed
 isProject: false
 ---
 

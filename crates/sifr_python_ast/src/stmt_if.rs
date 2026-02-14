@@ -1,7 +1,7 @@
 use std::iter;
 
-use sifr_python_trivia::{SimpleTokenKind, SimpleTokenizer};
-use sifr_text_size::{Ranged, TextRange};
+use ruff_python_trivia::{SimpleTokenKind, SimpleTokenizer};
+use ruff_text_size::{Ranged, TextRange};
 
 use crate::{ElifElseClause, Expr, Stmt, StmtIf};
 

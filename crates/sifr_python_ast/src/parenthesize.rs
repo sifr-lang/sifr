@@ -1,5 +1,5 @@
-use sifr_python_trivia::{BackwardsTokenizer, CommentRanges, SimpleTokenKind, SimpleTokenizer};
-use sifr_text_size::{Ranged, TextLen, TextRange};
+use ruff_python_trivia::{BackwardsTokenizer, CommentRanges, SimpleTokenKind, SimpleTokenizer};
+use ruff_text_size::{Ranged, TextLen, TextRange};
 
 use crate::AnyNodeRef;
 use crate::ExpressionRef;

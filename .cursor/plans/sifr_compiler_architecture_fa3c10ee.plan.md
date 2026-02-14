@@ -3,7 +3,7 @@ name: Sifr Compiler Architecture
 overview: Build "sifr", a compiled programming language with Python syntax and enforced typing that emits Rust source code, compiled via rustc into native binaries. The compiler is built in Rust, forking ruff's parser/AST crates and adding type checking, IR, and Rust codegen phases. The end goal is a language capable of building web applications and general-purpose programs.
 todos:
   - id: fork-parser
-    content: "M1: Fork and rename 6 ruff crates (text_size, source_file, python_trivia, python_ast, python_parser, python_literal) into crates/ with sifr_ prefix. Set up Cargo workspace."
+    content: "M1: Fork ruff parser/AST crates (python_ast, python_parser) into crates/ with sifr_ prefix. Use git deps for infrastructure crates (text_size, source_file, python_trivia, python_literal). Set up Cargo workspace."
     status: pending
   - id: strip-ast
     content: "M1: Strip the forked AST to only the nodes needed for M1 (function def, if/elif/else, assign, ann_assign, return, expr, basic expressions, literals). Remove IPython, match, async, with, try, import, etc."
@@ -77,21 +77,25 @@ flowchart TD
 
 ## Crate Structure (Rust Workspace)
 
+**Hybrid dependency approach:** Infrastructure crates are referenced as git dependencies from ruff v0.4.10 (unmodified). Parser and AST crates are vendored forks that may diverge from Python syntax in future milestones.
+
 ```
 sifr/
   Cargo.toml                (workspace root)
   crates/
-    sifr_text_size/         (forked from ruff_text_size)
-    sifr_source_file/       (forked from ruff_source_file)
-    sifr_python_trivia/     (forked from ruff_python_trivia)
-    sifr_python_ast/        (forked from ruff_python_ast)
-    sifr_python_parser/     (forked from ruff_python_parser)
-    sifr_python_literal/    (forked from ruff_python_literal)
+    sifr_python_ast/        (vendored fork of ruff_python_ast -- may diverge for sifr syntax)
+    sifr_python_parser/     (vendored fork of ruff_python_parser -- may diverge for sifr syntax)
     sifr_hir/               (High-level IR: typed AST after name resolution + type checking)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_codegen/           (Rust source code generation from HIR)
     sifr_driver/            (orchestrates the pipeline, error reporting)
     sifr/                   (CLI binary: sifr build, sifr check, sifr run)
+
+  # Git dependencies from ruff v0.4.10 (not vendored):
+  #   ruff_text_size          -- text span/range utilities
+  #   ruff_source_file        -- source file representation, line indexing
+  #   ruff_python_trivia      -- whitespace/comment handling
+  #   ruff_python_literal     -- literal parsing (string escapes, number formats)
 ```
 
 New crates added per milestone as needed (e.g. `sifr_std`, `sifr_lsp`, `sifr_fmt`).
@@ -117,7 +121,7 @@ New crates added per milestone as needed (e.g. `sifr_std`, `sifr_lsp`, `sifr_fmt
 
 ### Implementation Steps
 
-1. Fork and rename 6 ruff crates into `crates/` with `sifr_` prefix
+1. Fork ruff parser/AST crates into `crates/` with `sifr_` prefix; use git deps for infrastructure crates
 2. Strip the AST to M1-relevant nodes only
 3. Build `sifr_type_system` -- Type enum, inference from initializers, checking binary ops / function calls
 4. Build `sifr_hir` -- Typed IR with name resolution and ownership tracking
