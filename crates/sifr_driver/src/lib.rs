@@ -132,7 +132,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
 
     // Write Cargo.toml
     let (cargo_toml, _) = generate_project(
-        &sifr_hir::HirModule { functions: vec![] },
+        &sifr_hir::HirModule { functions: vec![], classes: vec![] },
         "sifr_output",
     );
     std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {

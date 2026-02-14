@@ -1,0 +1,12 @@
+# expect-error: hash() argument must be hashable
+
+class Measurement:
+    value: float
+
+    def __init__(self, value: float):
+        self.value = value
+
+def main():
+    m: Measurement = Measurement(3.14)
+    h: int = hash(m)
+    print(h)

@@ -1,0 +1,13 @@
+# expect-stdout: Person { name: "Alice", age: 30 }
+
+class Person:
+    name: str
+    age: int
+
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+def main():
+    p: Person = Person("Alice", 30)
+    print(p)

@@ -1,0 +1,99 @@
+# ============================================================
+# Sifr milestone_classes Demo
+# ============================================================
+# Demonstrates: class definitions, constructors, methods,
+# field access, isinstance narrowing, class unions, hash()
+
+# --- 1. Basic class with constructor and methods ---
+
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def distance(self, other: Point) -> float:
+        dx: float = self.x - other.x
+        dy: float = self.y - other.y
+        return (dx * dx + dy * dy) ** 0.5
+
+# --- 2. Class with multiple methods ---
+
+class Rectangle:
+    width: float
+    height: float
+
+    def __init__(self, width: float, height: float):
+        self.width = width
+        self.height = height
+
+    def area(self) -> float:
+        return self.width * self.height
+
+    def perimeter(self) -> float:
+        return 2.0 * (self.width + self.height)
+
+# --- 3. Classes as union members with isinstance narrowing ---
+
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+class Square:
+    side: float
+
+    def __init__(self, side: float):
+        self.side = side
+
+def describe_shape(shape: Circle | Square):
+    if isinstance(shape, Circle):
+        print(f"Circle: radius={shape.radius}")
+    else:
+        print(f"Square: side={shape.side}")
+
+# --- 4. Hashable class ---
+
+class Color:
+    r: int
+    g: int
+    b: int
+
+    def __init__(self, r: int, g: int, b: int):
+        self.r = r
+        self.g = g
+        self.b = b
+
+def main():
+    print("=== Basic Class ===")
+    origin: Point = Point(0.0, 0.0)
+    target: Point = Point(3.0, 4.0)
+    d: float = origin.distance(target)
+    print(f"Distance from origin to (3,4): {d}")
+
+    print("=== Methods ===")
+    rect: Rectangle = Rectangle(5.0, 3.0)
+    print(f"Rectangle area: {rect.area()}")
+    print(f"Rectangle perimeter: {rect.perimeter()}")
+
+    print("=== Field Access ===")
+    print(f"Rectangle width: {rect.width}")
+    print(f"Rectangle height: {rect.height}")
+
+    print("=== Union + isinstance ===")
+    c: Circle = Circle(10.0)
+    s: Square = Square(7.0)
+    describe_shape(c)
+    describe_shape(s)
+
+    print("=== Hash ===")
+    red: Color = Color(255, 0, 0)
+    also_red: Color = Color(255, 0, 0)
+    h1: int = hash(red)
+    h2: int = hash(also_red)
+    print(f"Same color same hash: {h1 == h2}")
+
+    print("=== Done ===")

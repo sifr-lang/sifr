@@ -95,6 +95,16 @@ impl RustEmitter {
             // Check body statements
             self.collect_union_types_in_stmts(&func.body);
         }
+        // Also scan class method bodies
+        for class in &module.classes {
+            for method in &class.methods {
+                for param in &method.params {
+                    self.register_union_type(&param.ty);
+                }
+                self.register_union_type(&method.return_type);
+                self.collect_union_types_in_stmts(&method.body);
+            }
+        }
     }
 
     fn collect_union_types_in_stmts(&mut self, stmts: &[HirStmt]) {
@@ -164,9 +174,11 @@ impl RustEmitter {
             self.enum_defs.push_str("        match self {\n");
             for member in members {
                 let variant = member.union_variant_name();
+                // Use {:?} for class types (they derive Debug, not Display)
+                let fmt_spec = if matches!(member, Type::Class { .. }) { "{:?}" } else { "{}" };
                 self.enum_defs.push_str(&format!(
-                    "            {}::{}(v) => write!(f, \"{{}}\", v),\n",
-                    enum_name, variant
+                    "            {}::{}(v) => write!(f, \"{}\", v),\n",
+                    enum_name, variant, fmt_spec
                 ));
             }
             self.enum_defs.push_str("        }\n");
@@ -192,12 +204,169 @@ impl RustEmitter {
     }
 
     fn emit_module(&mut self, module: &HirModule) {
+        // Emit class definitions first (structs + impls)
+        for class in &module.classes {
+            self.emit_class(class);
+            self.output.push('\n');
+        }
+
         for (i, func) in module.functions.iter().enumerate() {
             if i > 0 {
                 self.output.push('\n');
             }
             self.emit_function(func);
         }
+    }
+
+    fn emit_class(&mut self, class: &HirClass) {
+        // Derive attributes
+        self.write_indent();
+        if class.is_hashable {
+            self.write("#[derive(Debug, Clone, PartialEq, Eq, Hash)]\n");
+        } else {
+            self.write("#[derive(Debug, Clone, PartialEq)]\n");
+        }
+
+        // Struct definition
+        self.write_indent();
+        self.write("struct ");
+        self.write(&class.name);
+        self.write(" {\n");
+        self.indent += 1;
+        for (field_name, field_ty) in &class.fields {
+            self.write_indent();
+            self.write(field_name);
+            self.write(": ");
+            self.write(&field_ty.rust_type());
+            self.write(",\n");
+        }
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n\n");
+
+        // Impl block
+        self.write_indent();
+        self.write("impl ");
+        self.write(&class.name);
+        self.write(" {\n");
+        self.indent += 1;
+
+        for method in &class.methods {
+            self.emit_class_method(method, class);
+            self.output.push('\n');
+        }
+
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+    }
+
+    fn emit_class_method(&mut self, method: &HirFunction, class: &HirClass) {
+        self.current_return_type = Some(method.return_type.clone());
+
+        self.write_indent();
+        if method.name == "new" {
+            // Constructor: fn new(params) -> Self
+            self.write("fn new(");
+            for (i, param) in method.params.iter().enumerate() {
+                if i > 0 {
+                    self.write(", ");
+                }
+                self.write(&param.name);
+                self.write(": ");
+                self.write(&param.ty.rust_type());
+            }
+            self.write(") -> Self {\n");
+            self.indent += 1;
+
+            // Emit constructor body -- collect field assignments and emit Self { ... }
+            // First emit any non-field-assign statements
+            let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
+            let mut other_stmts: Vec<&HirStmt> = Vec::new();
+            for stmt in &method.body {
+                if let HirStmt::FieldAssign { field, value, .. } = stmt {
+                    field_inits.push((field, value));
+                } else {
+                    other_stmts.push(stmt);
+                }
+            }
+
+            // Emit non-field statements first
+            for stmt in &other_stmts {
+                self.emit_stmt(stmt);
+            }
+
+            // Emit Self { field: value, ... }
+            self.write_indent();
+            self.write("Self {\n");
+            self.indent += 1;
+            for (field_name, value) in &field_inits {
+                self.write_indent();
+                self.write(field_name);
+                self.write(": ");
+                self.emit_expr(value);
+                self.write(",\n");
+            }
+            // For any fields not explicitly assigned, check if param name matches
+            for (field_name, _) in &class.fields {
+                if !field_inits.iter().any(|(f, _)| f == field_name) {
+                    // Check if there's a parameter with the same name
+                    if method.params.iter().any(|p| &p.name == field_name) {
+                        self.write_indent();
+                        self.write(field_name);
+                        self.write(",\n");
+                    }
+                }
+            }
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n");
+
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n");
+        } else {
+            // Regular method: determine &self vs &mut self
+            let is_mutating = body_contains_field_assign_codegen(&method.body);
+            if is_mutating {
+                self.write("fn ");
+                self.write(&method.name);
+                self.write("(&mut self");
+            } else {
+                self.write("fn ");
+                self.write(&method.name);
+                self.write("(&self");
+            }
+            for param in &method.params {
+                self.write(", ");
+                self.write(&param.name);
+                self.write(": ");
+                // Pass class types by reference
+                if matches!(param.ty, Type::Class { .. }) {
+                    self.write("&");
+                }
+                self.write(&param.ty.rust_type());
+            }
+            self.write(")");
+
+            if method.return_type != Type::None {
+                self.write(" -> ");
+                self.write(&method.return_type.rust_type());
+            }
+
+            self.write(" {\n");
+            self.indent += 1;
+
+            for stmt in &method.body {
+                self.emit_stmt(stmt);
+            }
+
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n");
+        }
+
+        self.current_return_type = None;
     }
 
     fn emit_function(&mut self, func: &HirFunction) {
@@ -643,6 +812,15 @@ impl RustEmitter {
                     self.write_indent();
                     self.write(&format!("let {} = _star_tmp[_star_tmp.len() - {}].clone();\n", name, after.len() - i));
                 }
+            }
+            HirStmt::FieldAssign { object, field, value } => {
+                self.write_indent();
+                self.write(object);
+                self.write(".");
+                self.write(field);
+                self.write(" = ");
+                self.emit_expr(value);
+                self.write(";\n");
             }
         }
     }
@@ -1107,6 +1285,22 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".len() as i64");
             }
+            (Type::Class { .. }, _) => {
+                // Class instance method call
+                self.emit_expr(object);
+                self.write(&format!(".{}(", method));
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    // Pass class instances by reference
+                    if matches!(arg.ty(), Type::Class { .. }) {
+                        self.write("&");
+                    }
+                    self.emit_expr(arg);
+                }
+                self.write(")");
+            }
             _ => {
                 // Fallback: emit as-is
                 self.emit_expr(object);
@@ -1195,9 +1389,16 @@ impl RustEmitter {
                     self.emit_expr(left);
                     self.write(" as usize)");
                 } else {
+                    // Wrap sub-expressions in parens if they are BinOps to preserve precedence
+                    let needs_left_parens = matches!(left.as_ref(), HirExpr::BinOp { .. });
+                    let needs_right_parens = matches!(right.as_ref(), HirExpr::BinOp { .. });
+                    if needs_left_parens { self.write("("); }
                     self.emit_expr(left);
+                    if needs_left_parens { self.write(")"); }
                     self.write(&format!(" {} ", op));
+                    if needs_right_parens { self.write("("); }
                     self.emit_expr(right);
+                    if needs_right_parens { self.write(")"); }
                 }
             }
             HirExpr::UnaryOp { op, operand, .. } => {
@@ -1260,7 +1461,12 @@ impl RustEmitter {
             HirExpr::Call { func, args, .. } => {
                 if func == "print" {
                     // Map print() to println!
-                    self.write("println!(\"{}\", ");
+                    if !args.is_empty() && matches!(args[0].ty(), Type::Class { .. }) {
+                        // Use Debug format for class instances
+                        self.write("println!(\"{:?}\", ");
+                    } else {
+                        self.write("println!(\"{}\", ");
+                    }
                     if args.is_empty() {
                         self.write("\"\"");
                     } else {
@@ -1288,6 +1494,13 @@ impl RustEmitter {
                         self.write("(");
                         self.emit_expr(&args[0]);
                         self.write(").abs()");
+                    }
+                } else if func == "hash" {
+                    // hash(x) -> { use std::hash::{Hash, Hasher}; let mut h = std::collections::hash_map::DefaultHasher::new(); x.hash(&mut h); h.finish() as i64 }
+                    if !args.is_empty() {
+                        self.write("{ use std::hash::{Hash, Hasher}; let mut _h = std::collections::hash_map::DefaultHasher::new(); ");
+                        self.emit_expr(&args[0]);
+                        self.write(".hash(&mut _h); _h.finish() as i64 }");
                     }
                 } else if func == "round" {
                     if args.len() == 1 {
@@ -1590,6 +1803,22 @@ impl RustEmitter {
                 // Just emit the variable name (the assignment was already emitted)
                 self.write(name);
             }
+            HirExpr::FieldAccess { object, field, .. } => {
+                self.emit_expr(object);
+                self.write(".");
+                self.write(field);
+            }
+            HirExpr::ConstructorCall { class_name, args, .. } => {
+                self.write(class_name);
+                self.write("::new(");
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.emit_expr(arg);
+                }
+                self.write(")");
+            }
             HirExpr::FString { parts, .. } => {
                 // Build the format string and collect expressions
                 let mut format_str = String::new();
@@ -1673,7 +1902,16 @@ fn detect_isinstance_union(expr: &HirExpr) -> Option<(String, String, String, Ve
                                 "str" => Type::Str,
                                 "float" => Type::Float,
                                 "bool" => Type::Bool,
-                                _ => return None,
+                                other => {
+                                    // Check if it's a class type in the union members
+                                    if let Some(class_ty) = members.iter().find(|m| {
+                                        matches!(m, Type::Class { name, .. } if name == other)
+                                    }) {
+                                        class_ty.clone()
+                                    } else {
+                                        return None;
+                                    }
+                                }
                             };
                             // Check that this type is a member of the union
                             if members.contains(&target_ty) {
@@ -1717,6 +1955,11 @@ fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
     None
 }
 
+/// Check if a method body contains any field assignments (self.field = ...).
+fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
+    stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1738,6 +1981,7 @@ mod tests {
                     },
                 }],
             }],
+            classes: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -1765,6 +2009,7 @@ mod tests {
                     }),
                 }],
             }],
+            classes: vec![],
         };
 
         let rust_code = generate_rust(&module);

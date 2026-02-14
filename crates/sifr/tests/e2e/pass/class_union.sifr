@@ -1,0 +1,26 @@
+# expect-stdout: Circle with radius 5
+# expect-stdout: Square with side 3
+
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+class Square:
+    side: float
+
+    def __init__(self, side: float):
+        self.side = side
+
+def describe(shape: Circle | Square):
+    if isinstance(shape, Circle):
+        print(f"Circle with radius {shape.radius}")
+    else:
+        print(f"Square with side {shape.side}")
+
+def main():
+    c: Circle = Circle(5.0)
+    s: Square = Square(3.0)
+    describe(c)
+    describe(s)

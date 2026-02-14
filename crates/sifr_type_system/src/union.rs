@@ -161,6 +161,7 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Union(_) => (16, String::new()),
         Type::Intersection(_) => (17, String::new()),
         Type::Alias(name, _) => (18, name.clone()),
+        Type::Class { name, .. } => (19, name.clone()),
     }
 }
 

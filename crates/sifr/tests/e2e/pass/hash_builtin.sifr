@@ -1,0 +1,24 @@
+# expect-stdout: true
+# expect-stdout: true
+
+class Color:
+    r: int
+    g: int
+    b: int
+
+    def __init__(self, r: int, g: int, b: int):
+        self.r = r
+        self.g = g
+        self.b = b
+
+def main():
+    c1: Color = Color(255, 0, 0)
+    c2: Color = Color(255, 0, 0)
+    h1: int = hash(c1)
+    h2: int = hash(c2)
+    # Same values should produce same hash
+    print(h1 == h2)
+    # Hash of an int should be consistent
+    a: int = hash(42)
+    b: int = hash(42)
+    print(a == b)
