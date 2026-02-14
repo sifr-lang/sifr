@@ -1,0 +1,11 @@
+# Type alias with type statement
+# expect-stdout: 42
+
+type UserId = int
+
+def get_user_id() -> UserId:
+    return 42
+
+def main():
+    uid: UserId = get_user_id()
+    print(uid)

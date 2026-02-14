@@ -1,0 +1,12 @@
+# Truthiness-based narrowing
+# expect-stdout: has value
+
+def check(x: str | None) -> str:
+    if x:
+        return "has value"
+    else:
+        return "no value"
+
+def main():
+    result: str = check("hello")
+    print(result)

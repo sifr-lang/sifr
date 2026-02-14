@@ -1,0 +1,12 @@
+# isinstance-based type narrowing
+# expect-stdout: number: 43
+
+def describe(x: int | str) -> str:
+    if isinstance(x, int):
+        return f"number: {x + 1}"
+    else:
+        return f"text: {x}"
+
+def main():
+    result: str = describe(42)
+    print(result)
