@@ -22,3 +22,4 @@ dist/
 build/
 /target/
 Cargo.lock
+/tmp/
