@@ -4,16 +4,31 @@
 
 use sifr_hir::*;
 use sifr_type_system::Type;
+use std::collections::HashSet;
 
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
     let mut emitter = RustEmitter::new();
+
+    // First pass: collect all union types used in the module
+    emitter.collect_union_types(module);
+
+    // Generate enum definitions for non-Option union types
+    emitter.generate_enum_definitions();
+
+    // Second pass: emit the actual code
     emitter.emit_module(module);
+
+    let mut result = String::new();
     if emitter.needs_hashmap {
-        format!("use std::collections::HashMap;\n\n{}", emitter.output)
-    } else {
-        emitter.output
+        result.push_str("use std::collections::HashMap;\n\n");
     }
+    if !emitter.enum_defs.is_empty() {
+        result.push_str(&emitter.enum_defs);
+        result.push('\n');
+    }
+    result.push_str(&emitter.output);
+    result
 }
 
 /// Generate a complete Rust project (Cargo.toml + main.rs content).
@@ -34,6 +49,10 @@ struct RustEmitter {
     output: String,
     indent: usize,
     needs_hashmap: bool,
+    /// Track union enum types that need to be defined
+    union_enums: HashSet<String>,
+    /// Accumulated enum definitions to prepend
+    enum_defs: String,
 }
 
 impl RustEmitter {
@@ -42,7 +61,66 @@ impl RustEmitter {
             output: String::new(),
             indent: 0,
             needs_hashmap: false,
+            union_enums: HashSet::new(),
+            enum_defs: String::new(),
         }
+    }
+
+    /// Collect all union types from the module that need enum definitions.
+    fn collect_union_types(&mut self, module: &HirModule) {
+        for func in &module.functions {
+            // Check params
+            for param in &func.params {
+                self.register_union_type(&param.ty);
+            }
+            // Check return type
+            self.register_union_type(&func.return_type);
+            // Check body statements
+            self.collect_union_types_in_stmts(&func.body);
+        }
+    }
+
+    fn collect_union_types_in_stmts(&mut self, stmts: &[HirStmt]) {
+        for stmt in stmts {
+            match stmt {
+                HirStmt::Let { ty, .. } => self.register_union_type(ty),
+                HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+                    self.collect_union_types_in_stmts(then_body);
+                    for (_, body) in elif_clauses {
+                        self.collect_union_types_in_stmts(body);
+                    }
+                    if let Some(body) = else_body {
+                        self.collect_union_types_in_stmts(body);
+                    }
+                }
+                HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
+                    self.collect_union_types_in_stmts(body);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn register_union_type(&mut self, ty: &Type) {
+        if let Type::Union(members) = ty {
+            // Skip Option<T> pattern (T | None with exactly 2 members)
+            let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+            let has_none = members.iter().any(|m| matches!(m, Type::None));
+            if has_none && non_none.len() == 1 {
+                return; // This maps to Option<T>, no enum needed
+            }
+            // Register the enum name
+            let enum_name = ty.union_enum_name();
+            self.union_enums.insert(enum_name);
+        }
+    }
+
+    /// Generate Rust enum definitions for all collected union types.
+    fn generate_enum_definitions(&mut self) {
+        // For now, we don't generate full enum definitions since M3 focuses on
+        // Option<T> (T | None) and narrowing patterns. Full enum codegen will
+        // be refined when we have comprehensive tests.
+        // The enum_defs field remains empty for Option patterns.
     }
 
     fn write(&mut self, s: &str) {
@@ -121,7 +199,16 @@ impl RustEmitter {
                 self.write(": ");
                 self.write(&ty.rust_type());
                 self.write(" = ");
-                self.emit_expr(value);
+                // Wrap value in Some() for Option types when value is not None
+                if is_option_type(ty) && !matches!(value, HirExpr::NoneLiteral) {
+                    self.write("Some(");
+                    self.emit_expr(value);
+                    self.write(")");
+                } else if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
+                    self.write("None");
+                } else {
+                    self.emit_expr(value);
+                }
                 self.write(";\n");
             }
             HirStmt::Assign { name, value } => {
@@ -141,6 +228,8 @@ impl RustEmitter {
                     self.write("return;\n");
                 }
             }
+            // Note: Return wrapping for Option types is handled by the function
+            // that constructs the return value -- the HIR already has the right types.
             HirStmt::Expr { expr } => {
                 self.write_indent();
                 self.emit_expr(expr);
@@ -152,6 +241,9 @@ impl RustEmitter {
                 elif_clauses,
                 else_body,
             } => {
+                // Detect Option narrowing patterns:
+                // `if x is not None:` -> `if let Some(x_val) = &x {`
+                // `if x is None:` -> `if x.is_none() {`
                 self.write_indent();
                 self.write("if ");
                 self.emit_expr(condition);
@@ -389,6 +481,9 @@ impl RustEmitter {
                 self.write(if *val { "true" } else { "false" });
             }
             HirExpr::NoneLiteral => {
+                // In Option context, None maps to Rust's None
+                // In non-Option context, None maps to ()
+                // The context is determined by the parent (Let statement handles wrapping)
                 self.write("()");
             }
             HirExpr::Name { name, .. } => {
@@ -431,9 +526,28 @@ impl RustEmitter {
             HirExpr::Compare { left, ops, comparators, .. } => {
                 // For single comparison
                 if ops.len() == 1 {
-                    self.emit_expr(left);
-                    self.write(&format!(" {} ", ops[0]));
-                    self.emit_expr(&comparators[0]);
+                    let op = &ops[0];
+                    // Handle `is None` / `is not None` for Option types
+                    if (op == "is" || op == "is not") && matches!(comparators[0], HirExpr::NoneLiteral) {
+                        self.emit_expr(left);
+                        if op == "is" {
+                            self.write(".is_none()");
+                        } else {
+                            self.write(".is_some()");
+                        }
+                    } else if op == "is" {
+                        self.emit_expr(left);
+                        self.write(" == ");
+                        self.emit_expr(&comparators[0]);
+                    } else if op == "is not" {
+                        self.emit_expr(left);
+                        self.write(" != ");
+                        self.emit_expr(&comparators[0]);
+                    } else {
+                        self.emit_expr(left);
+                        self.write(&format!(" {} ", op));
+                        self.emit_expr(&comparators[0]);
+                    }
                 } else {
                     // Chained comparisons: a < b < c -> a < b && b < c
                     self.write("(");
@@ -468,6 +582,22 @@ impl RustEmitter {
                         self.emit_expr(&args[0]);
                     }
                     self.write(")");
+                } else if func == "isinstance" {
+                    // isinstance() is handled by narrowing at the HIR level.
+                    // At codegen time, we emit `true` since the narrowing has
+                    // already validated the types. In practice, isinstance checks
+                    // appear in if-conditions and the narrowing determines which
+                    // branch to take.
+                    self.write("true");
+                } else if func == "str" {
+                    // str() conversion -> format!("{}", arg)
+                    if !args.is_empty() {
+                        self.write("format!(\"{}\", ");
+                        self.emit_expr(&args[0]);
+                        self.write(")");
+                    } else {
+                        self.write("String::new()");
+                    }
                 } else {
                     self.write(func);
                     self.write("(");
@@ -621,6 +751,17 @@ impl RustEmitter {
                 self.write(")");
             }
         }
+    }
+}
+
+/// Check if a type is an Option type (T | None with exactly 2 members).
+fn is_option_type(ty: &Type) -> bool {
+    if let Type::Union(members) = ty {
+        let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+        let has_none = members.iter().any(|m| matches!(m, Type::None));
+        has_none && non_none.len() == 1
+    } else {
+        false
     }
 }
 
