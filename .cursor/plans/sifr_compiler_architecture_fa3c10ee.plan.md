@@ -132,6 +132,28 @@ Every milestone that implements built-in functions, data structure methods, or s
 
 This safety test layer is tracked in each milestone's Definition of Done as: **"CPython parity tests pass with safe error handling (no panics, Result/Option where CPython raises)"**.
 
+## Python Divergences
+
+Sifr intentionally diverges from CPython in several areas to achieve compile-time safety. This table documents each divergence, its rationale, and the milestone where it is introduced.
+
+
+| Python Behavior                                        | Sifr Behavior                                                                                                        | Rationale                                                                                | Milestone |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------- |
+| Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` | Compile-time error handling eliminates unhandled exceptions at runtime                   | M4        |
+| `IndexError` on out-of-bounds access                   | `x[i]` returns `Option[T]` (no panic)                                                                                | Safe indexing -- no runtime crashes from bad indices                                     | M3b       |
+| `KeyError` on missing dict key                         | `d[key]` returns `Option[V]` (no panic)                                                                              | Safe access -- caller must handle missing keys                                           | M3b       |
+| Arbitrary-precision integers                           | Checked `i64` arithmetic; overflow returns `Result[int, OverflowError]`                                              | Predictable performance; overflow is explicit                                            | M4        |
+| Import-time side effects (`__init__.py` runs code)     | `__init__.sifr` defines exported API only; no side effects on import                                                 | Deterministic, safe module loading                                                       | M6        |
+| Mutable default arguments (`def f(x=[])`)              | Default values are evaluated fresh each call (no shared mutable state)                                               | Eliminates a common Python footgun                                                       | M3b       |
+| `global` / `nonlocal` keywords                         | Not supported; use closures (M7) or pass values explicitly                                                           | Encourages explicit data flow; avoids hidden state mutation                              | --        |
+| Metaclasses (`type()`, `__metaclass__`)                | Not supported; use decorators (M14) and protocols (M5) instead                                                       | Simplification -- metaclasses add complexity with limited benefit in a compiled language | --        |
+| `__slots__`                                            | Not needed; all classes compile to Rust structs (already memory-efficient)                                           | Rust structs are fixed-layout by default                                                 | --        |
+| Runtime duck typing                                    | Structural typing via Protocols (compile-time checked)                                                               | Same flexibility as duck typing but errors caught at compile time                        | M5        |
+| `finally` for cleanup                                  | Supported in M4; prefer `with` statement (M7b) which maps to Rust `Drop`                                             | Scope-based cleanup is more idiomatic and less error-prone                               | M4, M7b   |
+
+
+**Migration note:** code that relies heavily on exception propagation, import-time side effects, or arbitrary-precision integers will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
+
 ## Compiler Pipeline
 
 ```mermaid
@@ -310,6 +332,7 @@ def main():
 ### Language Features
 
 - **Loops:** `while` loop, `for` loop over ranges and iterables
+- `**break` / `continue`:** loop control flow (exit loop early or skip to next iteration)
 - **Data types:** `list[T]`, `dict[K, V]`, `tuple[T, ...]`
 - **Indexing:** `my_list[0]`, `my_dict["key"]`
 - **Slicing:** `my_list[1:3]`
@@ -756,6 +779,76 @@ Built-in functions that do not require generics (available without `import`):
 - `isinstance(x, T)` -> `bool` -- already in M3 for type narrowing
 - `repr(x)` -> `str` -- debug representation. Codegen: `format!("{:?}", x)` (requires auto-derived `Debug`)
 
+### Keyword Arguments
+
+Add support for keyword (named) arguments in function calls. This is basic call ergonomics used in virtually every Python API:
+
+```python
+def greet(name: str, greeting: str = "Hello") -> str:
+    return f"{greeting}, {name}!"
+
+# All valid call styles:
+greet("Alice")                        # positional
+greet("Alice", "Hi")                  # positional
+greet(name="Alice")                   # keyword
+greet(name="Alice", greeting="Hi")    # keyword
+greet("Alice", greeting="Hi")         # mixed
+```
+
+**Features:**
+
+- **Default parameter values:** `def f(x: int, y: int = 0)` -- parameters with defaults can be omitted at call site
+- **Keyword arguments at call site:** `f(name="Alice")` -- pass arguments by name
+- **Mixed positional and keyword:** positional args must come before keyword args (same as Python)
+- **Keyword-only parameters:** parameters after `*` separator must be passed by name: `def f(x: int, *, verbose: bool = False)`
+
+**Codegen:** Rust does not have named arguments. The compiler resolves keyword arguments to positional order at compile time and emits a normal positional function call. Default values are inserted for omitted parameters.
+
+**Note:** `*args` and `**kwargs` (variadic arguments) remain in M14 as they require more complex type system support.
+
+### Negative Indexing
+
+Add support for negative indices, a heavily used Python idiom:
+
+```python
+items = [1, 2, 3, 4, 5]
+last = items[-1]        # Option[int] -> Some(5)
+second_last = items[-2] # Option[int] -> Some(4)
+s = "hello"
+s[-1]                   # Option[str] -> Some("o")
+```
+
+**Semantics:** negative index `i` is equivalent to `len - abs(i)`. Returns `Option[T]` (consistent with safe indexing contract -- no panics). If the computed index is still out of bounds, returns `None`.
+
+**Codegen:** `if i < 0 { collection.get((len as isize + i) as usize) } else { collection.get(i) }`
+
+### Step Slicing
+
+Add support for step (stride) slicing:
+
+```python
+items = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+evens = items[::2]      # [0, 2, 4, 6, 8]
+odds = items[1::2]      # [1, 3, 5, 7, 9]
+reversed = items[::-1]  # [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+subset = items[1:7:2]   # [1, 3, 5]
+```
+
+**Full slice syntax:** `collection[start:stop:step]` where all three components are optional.
+
+**Semantics:**
+
+- Positive step: iterate forward from `start` to `stop` (exclusive), taking every `step`-th element
+- Negative step: iterate backward (e.g., `[::-1]` reverses)
+- Negative start/stop: resolved relative to length (same as negative indexing)
+- Returns a new collection (copy semantics, consistent with existing slice contract)
+
+**Codegen:**
+
+- Positive step: `vec.iter().skip(start).take(stop - start).step_by(step).cloned().collect()`
+- Negative step: `vec.iter().rev().skip(len - start - 1).take(start - stop).step_by(step.abs()).cloned().collect()`
+- String step slicing: same logic over `.chars()` iterator
+
 ### Definition of Done (M3b)
 
 - `s[i]` returns `Option[str]` -- the i-th character, or `None` if out-of-bounds (safe indexing, no panic)
@@ -770,8 +863,14 @@ Built-in functions that do not require generics (available without `import`):
 - String methods: `replace`, `find`, `rfind`, `startswith`, `endswith`, `join`, `count`, `isdigit`, `isalpha`, `isalnum`, `isspace`, `lstrip`, `rstrip`, `title`, `capitalize`
 - Tuple methods: `index`, `count` (immutability enforced)
 - Built-in functions: `len`, `abs`, `round`, `hash`, `repr`
-- E2E pass tests: string_char_index, string_oob_returns_none, string_char_len, string_slice, list_index_option, list_oob_returns_none, list_slice_copy, for_loop_borrow, ternary_expr, list_append_pop, dict_keys_values_items, string_replace_find, builtin_len_abs_round
-- E2E fail tests: ternary_type_mismatch, list_remove_not_found, hash_unhashable_type
+- Keyword arguments resolve correctly at call site (positional, keyword, mixed)
+- Default parameter values are inserted for omitted arguments
+- Keyword-only parameters (after `*`) enforced at compile time
+- Negative indexing: `a[-1]` returns last element as `Option[T]`
+- Step slicing: `a[::2]`, `a[::-1]`, `a[1:7:2]` all produce new collections
+- Negative slice indices resolve relative to length
+- E2E pass tests: string_char_index, string_oob_returns_none, string_char_len, string_slice, list_index_option, list_oob_returns_none, list_slice_copy, for_loop_borrow, ternary_expr, list_append_pop, dict_keys_values_items, string_replace_find, builtin_len_abs_round, keyword_args_basic, keyword_args_default, keyword_only_params, negative_index_list, negative_index_string, step_slice_basic, step_slice_reverse, step_slice_string
+- E2E fail tests: ternary_type_mismatch, list_remove_not_found, hash_unhashable_type, keyword_after_positional_error, missing_keyword_only_arg
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Objects/listobject.c`, `Objects/dictobject.c`, `Objects/unicodeobject.c`, `Lib/test/test_list.py`, `Lib/test/test_dict.py`, `Lib/test/test_str.py`
 - Existing M1/M2 E2E tests still pass (no regressions)
 - Milestone demo in `./tmp/m3b_demo.sifr`
@@ -787,6 +886,7 @@ Built-in functions that do not require generics (available without `import`):
 - `**Result[T, E]` type:** explicit error return type (replaces exceptions)
 - `**Option[T]` type:** sugar for `T | None`, maps to Rust `Option<T>` (leverages M3's union types)
 - `**try`/`except` syntax:** reinterpreted as pattern matching on `Result`
+- `**try`/`except`/`finally`:** the `finally` block maps to Rust's scope-based cleanup (`Drop` trait). Code in `finally` always executes when the scope exits, regardless of whether an error occurred. Codegen: the `finally` body is placed after the `match` on `Result`, or uses a scope guard pattern. For resource cleanup, prefer `with` statement (M7b) which provides the same guarantee more idiomatically.
 - `**?` operator:** early return on error (borrowed from Rust, new syntax for Sifr)
 - `**raise` -> `Err()`:** raising maps to returning an error
 - **Custom error types:** classes that implement an `Error` protocol
@@ -953,6 +1053,9 @@ This is a deliberate middle ground between TypeScript (fully structural) and Rus
 - `**class` -> `struct` + `impl`:** class definitions become Rust structs
 - `**__init__` -> `new()`:** constructor mapping
 - **Methods:** `self` parameter maps to `&self` or `&mut self`
+- `**super()`:** calls parent class method in inheritance chains. Codegen: direct call to the parent struct's impl method (e.g., `ParentType::method(self, ...)`). Works with single inheritance only.
+- `**@classmethod`:** class-level methods that receive the class type rather than an instance. Codegen: associated functions (no `self` parameter) on the struct impl. Called as `MyClass.method()` rather than `instance.method()`.
+- `**@staticmethod`:** methods that belong to the class namespace but receive neither `self` nor `cls`. Codegen: free functions in the struct's impl block with no receiver.
 - **Properties:** `@property` maps to getter methods
 - **Protocols/Interfaces:** `Protocol` classes map to Rust traits (structural matching -- any class with the right shape satisfies the protocol)
 - `**isinstance` -> type narrowing:** compile-time type checking (leverages M3's narrowing)
@@ -1358,6 +1461,16 @@ def fibonacci() -> Generator[int]:
 - Each `yield` becomes a state transition; local variables are stored in the struct
 - `next()` resumes from the last yield point
 
+`**yield from`:** delegates to a sub-generator, forwarding all values:
+
+```python
+def chain(a, b):
+    yield from a
+    yield from b
+```
+
+Codegen: `yield from sub` desugars to `for item in sub: yield item` -- the sub-generator is iterated and each value is yielded. This compiles to chaining the sub-iterator's state machine into the parent's state machine.
+
 **Scope:** this milestone covers sync generators only. Async generators (`async for`, `yield` in `async def`) are deferred to M11.
 
 ### `with` Statement (Context Managers)
@@ -1389,8 +1502,9 @@ with open("file.txt") as f:
 - Set comprehensions compile to `.collect::<HashSet>()`
 - Generator expressions produce lazy iterators (no allocation until consumed)
 - `yield` functions compile to state machine iterators
+- `yield from` delegates to sub-generators correctly
 - `with` statement works for resource management (files, etc.)
-- E2E pass tests: list_comp, dict_comp, set_comp, filtered_comp, nested_comp, generator_expr, yield_basic, yield_infinite, with_file
+- E2E pass tests: list_comp, dict_comp, set_comp, filtered_comp, nested_comp, generator_expr, yield_basic, yield_infinite, yield_from_basic, yield_from_chain, with_file
 - E2E fail tests: comp_type_mismatch, yield_outside_function
 - Milestone demo in `./tmp/m7b_demo.sifr`
 
@@ -1604,6 +1718,8 @@ Depends on M8: needs `sifr.io` for test file discovery and `sifr.os` for process
 - `**sifr.net`:** TCP/UDP sockets (async) -> wraps `tokio::net`
 - `**sifr.task`:** task spawning, sleep, timeouts -> wraps `tokio::task` + `tokio::time`
 - **Async iterators:** `async for` over async streams
+- `**async with`:** async context managers for resources that require async setup/teardown (e.g., database connections, HTTP sessions). Codegen: the `__aenter__` and `__aexit__` methods are `async fn`, and the `with` block `.await`s them. Maps to Rust's async scope pattern with `Drop` + async cleanup.
+- **Async generators:** `yield` inside `async def` produces an async iterator. Codegen: combines the state machine from M7b generators with async/await from this milestone.
 
 ### Example
 
@@ -1634,7 +1750,9 @@ The `?` operator works across `.await` points. Async functions returning `Result
 - `?` operator works across `.await` points
 - Async closures captured across `.await` are checked for `Send + 'static`
 - `sifr.task.spawn` works for concurrent tasks
-- E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation
+- `async with` works for async context managers
+- Async generators (`yield` in `async def`) produce async iterators
+- E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, async_with_basic, async_generator_basic
 - Milestone demo in `./tmp/m11_demo.sifr`
 
 ---
@@ -1832,7 +1950,7 @@ def main():
 - `**@dataclass`:** auto-generate `__init__`, `__eq__`, `__repr__` (like Rust `#[derive]`)
 - `**@property`:** getter/setter generation
 - **Custom decorators:** user-defined compile-time transforms
-- `***args` / `**kwargs`:** variadic arguments via macro expansion or trait objects
+- `***args` / `**kwargs`:** variadic positional and keyword arguments via macro expansion or trait objects. **Note:** basic keyword arguments (named params, defaults, keyword-only params) are in M3b. This milestone adds the *variadic* forms (`*args` captures extra positional args as a tuple, `**kwargs` captures extra keyword args as a dict).
 - **Compile-time evaluation:** `const` expressions evaluated at compile time
 
 ### Example
