@@ -1,6 +1,6 @@
 use std::fmt;
 
-use sifr_text_size::TextRange;
+use ruff_text_size::TextRange;
 
 use crate::lexer::{LexicalError, LexicalErrorType};
 use crate::TokenKind;

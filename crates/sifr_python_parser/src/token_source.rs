@@ -1,4 +1,4 @@
-use sifr_text_size::{Ranged, TextRange, TextSize};
+use ruff_text_size::{Ranged, TextRange, TextSize};
 
 use crate::lexer::{Lexer, LexerCheckpoint, LexicalError, Token, TokenFlags, TokenValue};
 use crate::{Mode, TokenKind};

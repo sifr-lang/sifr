@@ -1,6 +1,6 @@
-use sifr_python_trivia::{indentation_at_offset, is_python_whitespace, PythonWhitespace};
-use sifr_source_file::{Locator, UniversalNewlineIterator};
-use sifr_text_size::{Ranged, TextRange, TextSize};
+use ruff_python_trivia::{indentation_at_offset, is_python_whitespace, PythonWhitespace};
+use ruff_source_file::{Locator, UniversalNewlineIterator};
+use ruff_text_size::{Ranged, TextRange, TextSize};
 
 use crate::Stmt;
 

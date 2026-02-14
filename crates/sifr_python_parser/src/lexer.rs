@@ -18,8 +18,8 @@ use sifr_python_ast::str_prefix::{
     AnyStringPrefix, ByteStringPrefix, FStringPrefix, StringLiteralPrefix,
 };
 use sifr_python_ast::{AnyStringFlags, Int, IpyEscapeKind, StringFlags};
-use sifr_python_trivia::is_python_whitespace;
-use sifr_text_size::{Ranged, TextLen, TextRange, TextSize};
+use ruff_python_trivia::is_python_whitespace;
+use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 
 use crate::error::FStringErrorType;
 use crate::lexer::cursor::{Cursor, EOF_CHAR};

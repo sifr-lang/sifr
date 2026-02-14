@@ -9,8 +9,8 @@ use annotate_snippets::snippet::{AnnotationType, Slice, Snippet, SourceAnnotatio
 use sifr_python_ast::visitor::source_order::{walk_module, SourceOrderVisitor, TraversalSignal};
 use sifr_python_ast::{AnyNodeRef, Mod};
 use sifr_python_parser::{parse_unchecked, Mode, ParseErrorType};
-use sifr_source_file::{LineIndex, OneIndexed, SourceCode};
-use sifr_text_size::{Ranged, TextLen, TextRange, TextSize};
+use ruff_source_file::{LineIndex, OneIndexed, SourceCode};
+use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 
 #[test]
 fn valid_syntax() {

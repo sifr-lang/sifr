@@ -1,5 +1,13 @@
 [workspace]
-members = ["crates/*"]
+members = [
+    "crates/sifr_python_ast",
+    "crates/sifr_python_parser",
+    "crates/sifr_type_system",
+    "crates/sifr_hir",
+    "crates/sifr_codegen",
+    "crates/sifr_driver",
+    "crates/sifr",
+]
 exclude = ["tmp"]
 resolver = "2"
 
@@ -13,13 +21,17 @@ authors = ["Yaser Al-Najjar"]
 license = "MIT"
 
 [workspace.dependencies]
-# Internal crates
-sifr_text_size = { path = "crates/sifr_text_size" }
-sifr_source_file = { path = "crates/sifr_source_file" }
-sifr_python_trivia = { path = "crates/sifr_python_trivia" }
+# Infrastructure crates -- unmodified, referenced from ruff v0.4.10
+ruff_text_size = { git = "https://github.com/astral-sh/ruff", tag = "v0.4.10" }
+ruff_source_file = { git = "https://github.com/astral-sh/ruff", tag = "v0.4.10" }
+ruff_python_trivia = { git = "https://github.com/astral-sh/ruff", tag = "v0.4.10" }
+ruff_python_literal = { git = "https://github.com/astral-sh/ruff", tag = "v0.4.10" }
+
+# Vendored forks -- kept for future modification (parser/AST may diverge from Python syntax)
 sifr_python_ast = { path = "crates/sifr_python_ast" }
 sifr_python_parser = { path = "crates/sifr_python_parser" }
-sifr_python_literal = { path = "crates/sifr_python_literal" }
+
+# Sifr-specific crates
 sifr_type_system = { path = "crates/sifr_type_system" }
 sifr_hir = { path = "crates/sifr_hir" }
 sifr_codegen = { path = "crates/sifr_codegen" }

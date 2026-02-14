@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use bitflags::bitflags;
 
 use sifr_python_ast::{Mod, ModExpression, ModModule};
-use sifr_text_size::{Ranged, TextRange, TextSize};
+use ruff_text_size::{Ranged, TextRange, TextSize};
 
 use crate::lexer::TokenValue;
 use crate::parser::expression::ExpressionContext;

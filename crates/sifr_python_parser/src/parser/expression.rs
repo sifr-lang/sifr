@@ -9,7 +9,7 @@ use sifr_python_ast::{
     self as ast, BoolOp, CmpOp, ConversionFlag, Expr, ExprContext, FStringElement, FStringElements,
     IpyEscapeKind, Number, Operator, UnaryOp,
 };
-use sifr_text_size::{Ranged, TextLen, TextRange, TextSize};
+use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 
 use crate::lexer::TokenValue;
 use crate::parser::progress::ParserProgress;

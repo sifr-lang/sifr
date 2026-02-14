@@ -10,7 +10,7 @@ license = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_python_parser = { workspace = true }
 sifr_type_system = { workspace = true }
-sifr_text_size = { workspace = true }
+ruff_text_size = { workspace = true }
 
 [dev-dependencies]
 
