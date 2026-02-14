@@ -3,7 +3,7 @@
 These are the available field-id and single-selection-option-id:
 ```
 {
-  "field_id": "PVTSSF_lAHOAKAfcc4A6-VkzgvaOqc",
+  "field_id": "PVTSSF_lAHOAKAfcc4BPKkLzg9p4e8",
   "field_name": "Status",
   "options": [
     {
@@ -11,16 +11,16 @@ These are the available field-id and single-selection-option-id:
       "name": "Backlog"
     },
     {
-      "id": "e18bf179",
+      "id": "244b4188",
       "name": "Ready"
     },
     {
       "id": "47fc9ee4",
-      "name": "In progress"
+      "name": "In Progress"
     },
     {
-      "id": "aba860b9",
-      "name": "In review"
+      "id": "2d2c3b25",
+      "name": "Review"
     },
     {
       "id": "98236657",
@@ -29,59 +29,59 @@ These are the available field-id and single-selection-option-id:
   ]
 }
 {
-  "field_id": "PVTSSF_lAHOAKAfcc4A6-VkzgvaOvU",
+  "field_id": "PVTSSF_lAHOAKAfcc4BPKkLzg9p5HQ",
   "field_name": "Priority",
   "options": [
     {
-      "id": "79628723",
+      "id": "6dda94fa",
       "name": "P0"
     },
     {
-      "id": "0a877460",
+      "id": "2b598731",
       "name": "P1"
     },
     {
-      "id": "da944a9c",
+      "id": "1925f16b",
       "name": "P2"
     }
   ]
 }
 {
-  "field_id": "PVTSSF_lAHOAKAfcc4A6-VkzgvaOvY",
+  "field_id": "PVTSSF_lAHOAKAfcc4BPKkLzg9p5Ik",
   "field_name": "Size",
   "options": [
     {
-      "id": "911790be",
+      "id": "972337ac",
       "name": "XS"
     },
     {
-      "id": "b277fb01",
+      "id": "24189a8f",
       "name": "S"
     },
     {
-      "id": "86db8eb3",
+      "id": "bd5043f1",
       "name": "M"
     },
     {
-      "id": "853c8207",
+      "id": "bc57cbe0",
       "name": "L"
     },
     {
-      "id": "2d0801e2",
+      "id": "05f38345",
       "name": "XL"
     }
   ]
 }
 {
-  "field_id": "PVTSSF_lAHOAKAfcc4A6-VkzgvaTMM",
+  "field_id": "PVTSSF_lAHOAKAfcc4BPKkLzg9p5JU",
   "field_name": "Type",
   "options": [
     {
-      "id": "369bd3de",
+      "id": "fb75e245",
       "name": "Epic"
     },
     {
-      "id": "c5677c6a",
+      "id": "a2752bac",
       "name": "Task"
     }
   ]
@@ -91,5 +91,5 @@ These are the available field-id and single-selection-option-id:
 If not found, use the following command to get all the single select fields and their options:
 
 ```
-gh project field-list 1 --owner yaseralnajjar --format json | jq '.fields[] | select(.type == "ProjectV2SingleSelectField") | {field_id: .id, field_name: .name, options: .options}'
+gh project field-list 2 --owner yaseralnajjar --format json | jq '.fields[] | select(.type == "ProjectV2SingleSelectField") | {field_id: .id, field_name: .name, options: .options}'
 ```
