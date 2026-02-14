@@ -71,7 +71,7 @@ The end goal is a language capable of building web applications and general-purp
 
 ## Safety Philosophy
 
-Sifr's core guarantee: **if it compiles, it works.** The language is designed so that a successfully compiled program will not crash at runtime under normal conditions. This is achieved through the following principles:
+Sifr's core guarantee: **if it compiles, it works.** The language is designed so that a successfully compiled program will not crash at runtime under normal conditions. This guarantee is **fully enforced from milestone_safe_indexing onward** -- earlier milestones use panic-based indexing as a bootstrap mechanism until `Option`/`Result` types are available. The principles are:
 
 - **No panics in user code.** Sifr programs never panic during normal execution. Every operation that can fail returns `Result[T, E]` or `Option[T]`, forcing the caller to handle the failure case at compile time.
 - **Mandatory error handling.** `Result` and `Option` values are `#[must_use]`. Ignoring a `Result` returned by a function is a **compile-time error**. The programmer must either handle the error (`match`, `try`/`except`), propagate it (`?`), or explicitly discard it (`let _ = ...`).
@@ -762,7 +762,9 @@ s = "hello"
 s[-1]                   # returns "o"
 ```
 
-**Semantics:** negative index `i` is equivalent to `len - abs(i)`. In this milestone, indexing returns the value directly (panics on out-of-bounds, like current milestone_control_flow behavior). Safe indexing returning `Option[T]` is added in milestone_safe_indexing after milestone_error_handling provides the ergonomic tools to handle `Option`.
+**Semantics:** negative index `i` is equivalent to `len - abs(i)`. In this milestone, indexing returns the value directly (panics on out-of-bounds, like current milestone_control_flow behavior). This is a **temporary measure** -- `Option`/`Result` types don't exist yet (they arrive in milestone_error_handling). Safe indexing returning `Option[T]` is added in milestone_safe_indexing, which retroactively replaces all panic-based indexing with safe `Option` returns. No user-facing API changes are needed because the switch is transparent to callers who already handle the value.
+
+> **Safety staging note:** milestones before milestone_safe_indexing use panic-based indexing as a bootstrap mechanism. The global no-panic guarantee (see Safety Philosophy) is fully enforced from milestone_safe_indexing onward. Tests written in earlier milestones are updated in milestone_safe_indexing to use `Option` handling.
 
 **Codegen:** `if i < 0 { collection[((len as isize) + i) as usize] } else { collection[i] }`
 
@@ -813,7 +815,7 @@ last = t[-1]            # 3.14
 
 Current codegen lowers `s[i]` to `x[i as usize]`, which is invalid for Rust `String` (byte-indexed, not character-indexed). This milestone fixes string operations to be character-based:
 
-- `**s[i]`:** returns the i-th character (Unicode code point) as a single-character `str`. Codegen: `s.chars().nth(i).unwrap().to_string()`. In this milestone, panics on out-of-bounds (safe `Option` return added in milestone_safe_indexing).
+- `**s[i]`:** returns the i-th character (Unicode code point) as a single-character `str`. Codegen: `s.chars().nth(i).unwrap().to_string()`. In this milestone, panics on out-of-bounds (temporary -- safe `Option` return replaces this in milestone_safe_indexing).
 - `**s.len()`:** returns the number of Unicode code points (not bytes). Codegen: `s.chars().count()`.
 - `**s.byte_len()`:** returns the number of bytes (O(1)). Codegen: `s.len()`.
 - `**s[a:b]`:** returns characters from position `a` to `b` (exclusive). Codegen: `s.chars().skip(a).take(b - a).collect::<String>()`. Returns an empty string if indices are out of range.
@@ -1496,19 +1498,22 @@ Newtypes -- thin wrappers around primitives that add validation and type safety:
 
 ```python
 class Port(int):
-    @staticmethod
-    def new(value: int) -> Result[Port, ValueError]:
-        if value < 0 or value > 65535:
-            raise ValueError("port must be 0-65535")
-        return Port(value)
+    pass
+
+def make_port(value: int) -> Result[Port, ValueError]:
+    if value < 0 or value > 65535:
+        raise ValueError("port must be 0-65535")
+    return Port(value)
 ```
 
 Construction is fallible -- callers must handle the `Result`:
 
 ```python
-port = Port.new(8080)?          # propagate error
-port = Port.new(99999)?         # returns Err(ValueError)
+port = make_port(8080)?          # propagate error
+port = make_port(99999)?         # returns Err(ValueError)
 ```
+
+> **Note:** this example uses a module-level factory function because `@staticmethod` is not available until milestone_inheritance. Once milestone_inheritance lands, the idiomatic pattern becomes `Port.new(value)` via `@staticmethod`.
 
 This maps to Rust's newtype pattern (`struct Port(u16)`) with zero-cost runtime representation. The compiler enforces that `Port` and `int` are distinct types -- you cannot pass an `int` where a `Port` is expected without explicit construction. Validation uses `Result`, not `assert`, because invalid input is a runtime condition (not a programmer bug).
 
@@ -2826,6 +2831,37 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - milestone_imports: multi-file span tracking (import errors reference both files)
 - milestone_ffi: FFI-related `rustc` error translation (extern crate mismatches)
 - milestone_dev_tooling: LSP diagnostic integration (real-time diagnostics in editor)
+
+### 12. Standard Protocol Primitives
+
+Sifr defines a set of built-in protocols (traits) that are used across multiple milestones. This contract formalizes when each becomes available and what it maps to in Rust.
+
+**Contract:**
+
+
+| Protocol         | Rust Trait                                      | Available From                                                                      | Purpose                                                       |
+| ---------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `Comparable`     | `Ord` (+ `PartialOrd`, `Eq`, `PartialEq`)       | milestone_protocols (defined), milestone_generics (usable as bound)                 | Ordering for `sort()`, `min()`, `max()`, comparison operators |
+| `Addable`        | `Add` (+ `Sum` for `sum()`)                     | milestone_protocols (defined), milestone_generics (usable as bound)                 | Arithmetic `+` operator, `sum()` built-in                     |
+| `Display`        | `std::fmt::Display`                             | milestone_classes (auto-derived for `__str__`), milestone_protocols (explicit impl) | String representation via `str()`, f-strings, `print()`       |
+| `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (defined and enforced)                                         | `with` statement resource management                          |
+| `Iterator`       | `Iterator`                                      | milestone_generics (defined), milestone_generators (yield-based)                    | `for` loops, comprehensions, generator expressions            |
+| `Hashable`       | `Hash` (+ `Eq`)                                 | milestone_classes (auto-derived)                                                    | Dict keys, set membership                                     |
+
+
+**Semantics:**
+
+- **Auto-derived protocols:** `Display`, `Hashable`, `Comparable` are auto-derived for classes where all fields implement the corresponding Rust trait (see contract #10: Auto-Derived Traits). Users can override with explicit `__str__`, `__hash__`, `__lt__` etc.
+- **Pre-generics usage:** Before milestone_generics, protocols are used for operator overloading and dynamic dispatch (`&dyn Trait`). After milestone_generics, they become usable as generic bounds (`T: Comparable`).
+- **Primitive types:** `int`, `float`, `str`, `bool` implement all applicable protocols from the start. `float` does NOT implement `Comparable` (because `NaN` violates total ordering) -- this is a compile-time error, matching Rust's `f64` not implementing `Ord`.
+- **Protocol composition:** a function can require multiple protocols via intersection bounds (milestone_generics): `def process[T: Comparable & Display](item: T)`.
+
+**Milestone responsibilities:**
+
+- milestone_classes: auto-derive `Display` and `Hashable` for classes with eligible fields
+- milestone_protocols: define `Comparable`, `Addable`, `Display` as explicit protocols; enable operator overloading via protocol impl
+- milestone_generics: enable protocols as generic bounds (`T: Comparable`); define `Iterator` protocol
+- milestone_generators: define `ContextManager` protocol; enforce `with` statement compliance
 
 ### Ecosystem Strategy
 
