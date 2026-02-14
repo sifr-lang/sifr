@@ -23,7 +23,7 @@ pub enum LiteralKind {
     None,
 }
 
-/// Resolve a type annotation name (e.g., "int", "str") to a Type.
+/// Resolve a type annotation name (e.g., "int", "str", "Unknown") to a Type.
 pub fn resolve_type_annotation(name: &str) -> Option<Type> {
     match name {
         "int" => Some(Type::Int),
@@ -32,6 +32,8 @@ pub fn resolve_type_annotation(name: &str) -> Option<Type> {
         "str" => Some(Type::Str),
         "None" => Some(Type::None),
         "Any" => Some(Type::Any),
+        "Unknown" => Some(Type::Unknown),
+        "Never" => Some(Type::Never),
         _ => None,
     }
 }
@@ -57,6 +59,8 @@ mod tests {
         assert_eq!(resolve_type_annotation("bool"), Some(Type::Bool));
         assert_eq!(resolve_type_annotation("None"), Some(Type::None));
         assert_eq!(resolve_type_annotation("Any"), Some(Type::Any));
+        assert_eq!(resolve_type_annotation("Unknown"), Some(Type::Unknown));
+        assert_eq!(resolve_type_annotation("Never"), Some(Type::Never));
         assert_eq!(resolve_type_annotation("unknown"), None);
     }
 }

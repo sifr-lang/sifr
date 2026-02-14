@@ -1,0 +1,285 @@
+//! Union type construction, normalization, and operations.
+//!
+//! Union types represent "one of several types" (e.g., `int | str`).
+//! They are normalized: flattened (no nested unions), deduplicated,
+//! and sorted for consistent comparison.
+
+use crate::types::Type;
+
+/// Construct a union type from a list of member types.
+///
+/// Applies normalization:
+/// 1. Flatten nested unions
+/// 2. Deduplicate
+/// 3. Sort for consistent ordering
+/// 4. If only one type remains, return it directly (no single-element union)
+/// 5. If empty, return Never
+pub fn make_union(types: Vec<Type>) -> Type {
+    let mut members = Vec::new();
+    flatten_into(&mut members, types);
+    deduplicate(&mut members);
+    sort_members(&mut members);
+
+    match members.len() {
+        0 => Type::Never,
+        1 => members.into_iter().next().unwrap(),
+        _ => Type::Union(members),
+    }
+}
+
+/// Check if `ty` is a member of the union (or equal to a non-union type).
+pub fn union_contains(union: &Type, ty: &Type) -> bool {
+    match union {
+        Type::Union(members) => members.iter().any(|m| m == ty || member_contains(m, ty)),
+        other => other == ty,
+    }
+}
+
+/// Remove a type from a union, returning the remaining type.
+///
+/// Used for narrowing: if `x: int | str` and we know `x` is `int`,
+/// the else branch has `x: str`.
+pub fn subtract_from_union(union: &Type, to_remove: &Type) -> Type {
+    match union {
+        Type::Union(members) => {
+            let remaining: Vec<Type> = members
+                .iter()
+                .filter(|m| !types_overlap(m, to_remove))
+                .cloned()
+                .collect();
+            make_union(remaining)
+        }
+        other => {
+            if types_overlap(other, to_remove) {
+                Type::Never
+            } else {
+                other.clone()
+            }
+        }
+    }
+}
+
+/// Filter a union to only include types that overlap with `target`.
+///
+/// Used for narrowing: if `x: int | str | bool` and `isinstance(x, int)`,
+/// the then-branch has `x: int`.
+pub fn intersect_with_union(union: &Type, target: &Type) -> Type {
+    match union {
+        Type::Union(members) => {
+            let matching: Vec<Type> = members
+                .iter()
+                .filter(|m| types_overlap(m, target))
+                .cloned()
+                .collect();
+            make_union(matching)
+        }
+        other => {
+            if types_overlap(other, target) {
+                other.clone()
+            } else {
+                Type::Never
+            }
+        }
+    }
+}
+
+/// Check if a type is assignable to a union (i.e., assignable to at least one member).
+pub fn is_assignable_to_union(ty: &Type, union_members: &[Type]) -> bool {
+    union_members.iter().any(|m| ty.is_assignable_to(m))
+}
+
+/// Check if a union type is assignable to a target (all members must be assignable).
+pub fn union_is_assignable_to(union_members: &[Type], target: &Type) -> bool {
+    union_members.iter().all(|m| m.is_assignable_to(target))
+}
+
+/// Remove `None` from a union, returning the remaining type.
+/// Used for `is not None` narrowing.
+pub fn remove_none_from_union(union: &Type) -> Type {
+    subtract_from_union(union, &Type::None)
+}
+
+/// Check if a union contains None.
+pub fn union_contains_none(ty: &Type) -> bool {
+    union_contains(ty, &Type::None)
+}
+
+// --- Internal helpers ---
+
+/// Flatten nested unions into a flat list.
+fn flatten_into(out: &mut Vec<Type>, types: Vec<Type>) {
+    for ty in types {
+        match ty {
+            Type::Union(inner) => flatten_into(out, inner),
+            other => out.push(other),
+        }
+    }
+}
+
+/// Remove duplicate types.
+fn deduplicate(types: &mut Vec<Type>) {
+    let mut seen = Vec::new();
+    types.retain(|ty| {
+        if seen.contains(ty) {
+            false
+        } else {
+            seen.push(ty.clone());
+            true
+        }
+    });
+}
+
+/// Sort types for consistent ordering.
+/// Order: None, Bool, Int, Float, Str, LiteralBool, LiteralInt, LiteralStr,
+///        List, Dict, Tuple, Range, Function, Unknown, Any, Never, Union, Intersection, Alias
+fn sort_members(types: &mut Vec<Type>) {
+    types.sort_by_key(|ty| type_sort_key(ty));
+}
+
+fn type_sort_key(ty: &Type) -> (u8, String) {
+    match ty {
+        Type::None => (0, String::new()),
+        Type::Bool => (1, String::new()),
+        Type::Int => (2, String::new()),
+        Type::Float => (3, String::new()),
+        Type::Str => (4, String::new()),
+        Type::LiteralBool(v) => (5, format!("{v}")),
+        Type::LiteralInt(v) => (6, format!("{v}")),
+        Type::LiteralStr(v) => (7, v.clone()),
+        Type::List(_) => (8, String::new()),
+        Type::Dict(_, _) => (9, String::new()),
+        Type::Tuple(_) => (10, String::new()),
+        Type::Range => (11, String::new()),
+        Type::Function(_) => (12, String::new()),
+        Type::Unknown => (13, String::new()),
+        Type::Any => (14, String::new()),
+        Type::Never => (15, String::new()),
+        Type::Union(_) => (16, String::new()),
+        Type::Intersection(_) => (17, String::new()),
+        Type::Alias(name, _) => (18, name.clone()),
+    }
+}
+
+/// Check if a member type contains a target type (for literal-to-base matching).
+fn member_contains(member: &Type, target: &Type) -> bool {
+    match (member, target) {
+        (Type::Int, Type::LiteralInt(_)) => true,
+        (Type::Str, Type::LiteralStr(_)) => true,
+        (Type::Bool, Type::LiteralBool(_)) => true,
+        _ => false,
+    }
+}
+
+/// Check if two types overlap (share possible values).
+fn types_overlap(a: &Type, b: &Type) -> bool {
+    if a == b {
+        return true;
+    }
+    match (a, b) {
+        // Literal types overlap with their base types
+        (Type::LiteralInt(_), Type::Int) | (Type::Int, Type::LiteralInt(_)) => true,
+        (Type::LiteralStr(_), Type::Str) | (Type::Str, Type::LiteralStr(_)) => true,
+        (Type::LiteralBool(_), Type::Bool) | (Type::Bool, Type::LiteralBool(_)) => true,
+        // Any overlaps with everything
+        (Type::Any, _) | (_, Type::Any) => true,
+        // Union: overlap if any member overlaps
+        (Type::Union(members), other) | (other, Type::Union(members)) => {
+            members.iter().any(|m| types_overlap(m, other))
+        }
+        _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_make_union_basic() {
+        let u = make_union(vec![Type::Int, Type::Str]);
+        assert_eq!(u, Type::Union(vec![Type::Int, Type::Str]));
+    }
+
+    #[test]
+    fn test_make_union_single_element() {
+        let u = make_union(vec![Type::Int]);
+        assert_eq!(u, Type::Int);
+    }
+
+    #[test]
+    fn test_make_union_empty() {
+        let u = make_union(vec![]);
+        assert_eq!(u, Type::Never);
+    }
+
+    #[test]
+    fn test_make_union_dedup() {
+        let u = make_union(vec![Type::Int, Type::Str, Type::Int]);
+        assert_eq!(u, Type::Union(vec![Type::Int, Type::Str]));
+    }
+
+    #[test]
+    fn test_make_union_flatten() {
+        let inner = Type::Union(vec![Type::Str, Type::Bool]);
+        let u = make_union(vec![Type::Int, inner]);
+        assert_eq!(u, Type::Union(vec![Type::Bool, Type::Int, Type::Str]));
+    }
+
+    #[test]
+    fn test_make_union_sorted() {
+        let u = make_union(vec![Type::Str, Type::Int, Type::None]);
+        assert_eq!(u, Type::Union(vec![Type::None, Type::Int, Type::Str]));
+    }
+
+    #[test]
+    fn test_subtract_from_union() {
+        let u = Type::Union(vec![Type::Int, Type::Str]);
+        let result = subtract_from_union(&u, &Type::Int);
+        assert_eq!(result, Type::Str);
+    }
+
+    #[test]
+    fn test_subtract_none_from_optional() {
+        let u = Type::Union(vec![Type::None, Type::Str]);
+        let result = remove_none_from_union(&u);
+        assert_eq!(result, Type::Str);
+    }
+
+    #[test]
+    fn test_intersect_with_union() {
+        let u = Type::Union(vec![Type::Bool, Type::Int, Type::Str]);
+        let result = intersect_with_union(&u, &Type::Int);
+        assert_eq!(result, Type::Int);
+    }
+
+    #[test]
+    fn test_union_contains() {
+        let u = Type::Union(vec![Type::Int, Type::Str]);
+        assert!(union_contains(&u, &Type::Int));
+        assert!(union_contains(&u, &Type::Str));
+        assert!(!union_contains(&u, &Type::Bool));
+    }
+
+    #[test]
+    fn test_union_contains_none() {
+        let u = Type::Union(vec![Type::None, Type::Str]);
+        assert!(union_contains_none(&u));
+        let u2 = Type::Union(vec![Type::Int, Type::Str]);
+        assert!(!union_contains_none(&u2));
+    }
+
+    #[test]
+    fn test_is_assignable_to_union() {
+        let members = vec![Type::Int, Type::Str];
+        assert!(is_assignable_to_union(&Type::Int, &members));
+        assert!(is_assignable_to_union(&Type::Str, &members));
+        assert!(!is_assignable_to_union(&Type::Bool, &members));
+    }
+
+    #[test]
+    fn test_literal_overlap_with_base() {
+        let u = Type::Union(vec![Type::Int, Type::Str]);
+        let result = intersect_with_union(&u, &Type::LiteralInt(42));
+        assert_eq!(result, Type::Int);
+    }
+}
