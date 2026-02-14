@@ -1,0 +1,12 @@
+# Type alias for simple type
+# expect-stdout: 42
+
+type UserId = int
+type Name = str
+
+def create_user(id: UserId, name: Name) -> UserId:
+    return id
+
+def main():
+    uid: UserId = create_user(42, "alice")
+    print(uid)

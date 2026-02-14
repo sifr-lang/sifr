@@ -1,0 +1,5 @@
+# Assigning incompatible type to union
+# expect-error: type mismatch
+
+def main():
+    x: int | str = 3.14

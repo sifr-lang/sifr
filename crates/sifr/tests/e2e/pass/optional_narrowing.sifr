@@ -1,0 +1,12 @@
+# Optional type with is not None narrowing
+# expect-stdout: ALICE
+
+def greet(name: str | None) -> str:
+    if name is not None:
+        return name.upper()
+    else:
+        return "stranger"
+
+def main():
+    result: str = greet("alice")
+    print(result)
