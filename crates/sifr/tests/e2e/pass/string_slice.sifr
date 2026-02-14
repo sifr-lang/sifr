@@ -1,0 +1,6 @@
+# expect-stdout: ell
+# expect-stdout: hel
+def main():
+    s: str = "hello"
+    print(s[1:4])
+    print(s[:3])

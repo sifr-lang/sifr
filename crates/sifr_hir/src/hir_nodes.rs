@@ -17,11 +17,13 @@ pub struct HirFunction {
     pub body: Vec<HirStmt>,
 }
 
-/// A function parameter with its type.
+/// A function parameter with its type and optional default value.
 #[derive(Debug, Clone)]
 pub struct HirParam {
     pub name: String,
     pub ty: Type,
+    pub default: Option<HirExpr>,
+    pub keyword_only: bool,
 }
 
 /// A typed statement.
@@ -37,6 +39,12 @@ pub enum HirStmt {
     /// Assignment to existing variable: `x = expr`
     Assign {
         name: String,
+        value: HirExpr,
+    },
+    /// Augmented assignment: `x += expr`
+    AugAssign {
+        name: String,
+        op: String,
         value: HirExpr,
     },
     /// Return statement
@@ -58,6 +66,7 @@ pub enum HirStmt {
     While {
         condition: HirExpr,
         body: Vec<HirStmt>,
+        else_body: Option<Vec<HirStmt>>,
     },
     /// For loop
     For {
@@ -65,6 +74,7 @@ pub enum HirStmt {
         target_ty: Type,
         iter: HirExpr,
         body: Vec<HirStmt>,
+        else_body: Option<Vec<HirStmt>>,
     },
     /// Break statement
     Break,
@@ -73,6 +83,13 @@ pub enum HirStmt {
     /// Tuple unpacking: a, b = expr
     TupleUnpack {
         targets: Vec<(String, Type)>,
+        value: HirExpr,
+    },
+    /// Star unpacking: first, *rest = items
+    StarUnpack {
+        before: Vec<(String, Type)>,
+        star: (String, Type),
+        after: Vec<(String, Type)>,
         value: HirExpr,
     },
     /// Pass (no-op)
@@ -191,6 +208,20 @@ pub enum HirExpr {
         parts: Vec<HirFStringPart>,
         ty: Type,
     },
+    /// Slice: x[start:stop] or x[start:stop:step]
+    Slice {
+        object: Box<HirExpr>,
+        start: Option<Box<HirExpr>>,
+        stop: Option<Box<HirExpr>>,
+        step: Option<Box<HirExpr>>,
+        ty: Type,
+    },
+    /// Walrus (named expression): (n := expr)
+    WalrusExpr {
+        name: String,
+        value: Box<HirExpr>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -216,7 +247,9 @@ impl HirExpr {
             | Self::Index { ty, .. }
             | Self::MethodCall { ty, .. }
             | Self::ContainsOp { ty, .. }
-            | Self::FString { ty, .. } => ty,
+            | Self::FString { ty, .. }
+            | Self::Slice { ty, .. }
+            | Self::WalrusExpr { ty, .. } => ty,
         }
     }
 }

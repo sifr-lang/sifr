@@ -1,0 +1,14 @@
+# expect-stdout: in range
+# expect-stdout: out of range
+def main():
+    x: int = 5
+    if 1 < x < 10:
+        print("in range")
+    else:
+        print("out of range")
+
+    y: int = 15
+    if 1 < y < 10:
+        print("in range")
+    else:
+        print("out of range")
