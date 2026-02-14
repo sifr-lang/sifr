@@ -241,24 +241,49 @@ Union types, literal types, and type narrowing are **prerequisites** for clean e
 - M7's generics need type bounds with unions
 - Every milestone after M3 benefits from the advanced type system
 
+### Syntax Design Principles
+
+Sifr reuses familiar syntax from Python, TypeScript, and Rust rather than inventing new constructs:
+
+- **Python-first:** if Python has syntax for it, use that (`isinstance`, `is None`, `type` statement)
+- **TypeScript for types:** where Python's typing module is verbose, borrow TypeScript's cleaner syntax (values as types: `"GET" | "POST"` instead of `Literal["GET"] | Literal["POST"]`)
+- **No redundant sugar:** one way to do things. `str | None` for optionals, no `T?` shorthand
+- **No user-facing syntax for internal features:** intersection types are internal to the narrowing engine, not exposed as `A & B` syntax
+
 ### Language Features
 
-- **Union types:** `int | str`, `A | B | C` -- a value can be one of several types
-- **Intersection types:** `A & B` -- a value satisfies multiple type constraints (used internally for narrowing, exposed later for protocols)
-- **Literal types:** `Literal[42]`, `Literal["GET"]`, `Literal[True]` -- types that are specific values
-- **Type aliases:** `type HttpMethod = Literal["GET"] | Literal["POST"] | Literal["PUT"]`
-- **Optional sugar:** `T?` or `T | None` -- shorthand for optional types
+- **Union types:** `int | str`, `A | B | C` -- a value can be one of several types (Python 3.10+ syntax)
+- **Literal types:** values used directly as types in type position (TypeScript style):
+
+```python
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE"
+type StatusCode = 200 | 404 | 500
+type Toggle = True | False
+```
+
+- **Type aliases:** `type UserId = int`, `type HttpMethod = "GET" | "POST"` (Python 3.12 `type` statement)
+- **Optional types:** `str | None` -- no shorthand, just Python's union-with-None (Python 3.10+ syntax)
+- `**Unknown` type:** safe top type -- accepts any value but must be narrowed (via `isinstance`, equality, etc.) before use. Unlike `Any` which opts out of type checking, `Unknown` forces the programmer to prove the type before operating on it
 - **Type narrowing via control flow analysis:**
   - Truthiness checks: `if x:` narrows `x: str | None` to `x: str`
-  - `isinstance()` checks: `if isinstance(x, int):` narrows union
-  - Equality checks: `if x == "GET":` narrows `x: str` to `x: Literal["GET"]`
-  - `is None` / `is not None` checks
+  - `isinstance()` checks: `if isinstance(x, int):` narrows union (Python built-in)
+  - Equality checks: `if x == "GET":` narrows `x: str` to `x: "GET"` in the then-branch
+  - `is None` / `is not None` checks (Python idiom)
   - `not` negation: else branches get the complement type
-  - Nested attribute narrowing: `if obj.tag == "circle":` narrows `obj`
-- **Type predicates:** `def is_string(x: int | str) -> TypeGuard[str]:` -- user-defined narrowing functions
-- **Assertion functions:** `def assert_int(x: int | str) -> AssertType[int]:` -- narrow after call
-- `**reveal_type()` built-in:** for debugging type inference (prints inferred type at compile time)
+- **Type predicates:** user-defined narrowing via return type annotation (Python typing style):
+
+```python
+def is_string(x: int | str) -> TypeGuard[str]:
+    return isinstance(x, str)
+
+# Usage: if is_string(val): ... val is str here
+```
+
+- `**reveal_type()` built-in:** prints inferred type at compile time (same as mypy/pyright)
 - `**never` exhaustiveness:** matching all union variants leaves `never` -- compiler error if not exhaustive
+- **Intersection types:** internal to the narrowing engine only. No user-facing `A & B` syntax in M3. Exposed later when protocols land in M5
+
+Note: **Discriminated unions** (union of structs with a shared tag field) are deferred to M5 when classes exist. M3 focuses on unions of primitive/literal types with narrowing via isinstance and equality.
 
 ### Compiler Architecture Changes
 
@@ -286,6 +311,9 @@ enum Type {
 
     // Type alias reference (resolved during checking)
     Alias(String, Box<Type>),
+
+    // Safe top type: must be narrowed before use (unlike Any which opts out)
+    Unknown,
 }
 ```
 
@@ -295,6 +323,7 @@ Key design decisions:
 - Union types are **flattened** and **deduplicated** (no nested unions)
 - Literal types **widen** to their base type at mutable assignment (like TypeScript's fresh literal behavior)
 - `Union` maps to Rust `enum` in codegen (auto-generated discriminated enum)
+- `Unknown` vs `Any`: `Any` disables type checking (escape hatch). `Unknown` accepts any value but requires narrowing before any operation -- it is the safe alternative. `Unknown` maps to `Box<dyn Any>` in Rust codegen but the compiler enforces narrowing at every use site.
 
 #### Control Flow Graph (new module: `sifr_hir/src/cfg.rs`)
 
@@ -394,7 +423,7 @@ fn process(x: IntOrStr) {
 **Union types and narrowing:**
 
 ```python
-type Shape = Literal["circle"] | Literal["square"]
+type Shape = "circle" | "square"
 
 def area(shape: Shape, size: float) -> float:
     if shape == "circle":
@@ -423,16 +452,45 @@ def main():
         print("not found")
 ```
 
+**isinstance narrowing:**
+
+```python
+def describe(x: int | str) -> str:
+    if isinstance(x, int):
+        return f"number: {x + 1}"   # x is int here
+    else:
+        return f"text: {x.upper()}"  # x is str here
+
+def main():
+    print(describe(42))
+    print(describe("hello"))
+```
+
 **Type predicates:**
 
 ```python
-def is_positive(x: int) -> TypeGuard[int]:
-    return x > 0
+def is_nonempty(s: str | None) -> TypeGuard[str]:
+    return s is not None and len(s) > 0
 
 def main():
-    val: int = 42
-    if is_positive(val):
-        print("positive")  # val narrowed
+    name: str | None = "alice"
+    if is_nonempty(name):
+        print(name.upper())  # name narrowed to str
+```
+
+**Unknown type (safe top type):**
+
+```python
+def process(data: Unknown) -> str:
+    if isinstance(data, str):
+        return data.upper()       # narrowed to str
+    if isinstance(data, int):
+        return str(data)          # narrowed to int
+    return "unknown"
+
+def main():
+    print(process("hello"))
+    print(process(42))
 ```
 
 ### Files to Modify/Create for M3
@@ -494,17 +552,47 @@ This maps cleanly to Rust's `Result<T, E>` and `?` operator.
 
 **Goal:** Support class-based programming that compiles to Rust structs with impl blocks. Benefits from M3's discriminated unions and narrowing.
 
+### Design Decision: Nominal vs Structural Typing
+
+Sifr uses **nominal typing by default** (like Rust) with **structural matching via protocols** (like TypeScript's interfaces):
+
+- Two classes with identical fields are NOT automatically assignable to each other (nominal)
+- A `Protocol` defines a structural contract -- any class that has the required fields/methods satisfies it (structural)
+- This matches Rust's trait system: types are distinct, but traits provide shared interfaces
+
+This is a deliberate middle ground between TypeScript (fully structural) and Rust (fully nominal). Protocols give the flexibility of structural typing where needed, while nominal classes prevent accidental type confusion.
+
 ### Language Features
 
 - `**class` -> `struct` + `impl`:** class definitions become Rust structs
 - `**__init__` -> `new()`:** constructor mapping
 - **Methods:** `self` parameter maps to `&self` or `&mut self`
 - **Properties:** `@property` maps to getter methods
-- **Protocols/Interfaces:** `Protocol` classes map to Rust traits
+- **Protocols/Interfaces:** `Protocol` classes map to Rust traits (structural matching -- any class with the right shape satisfies the protocol)
 - `**isinstance` -> type narrowing:** compile-time type checking (leverages M3's narrowing)
 - **Inheritance:** single inheritance via trait delegation (not Rust inheritance, which doesn't exist)
 - **Operator overloading:** `__add__`, `__eq__`, etc. map to Rust trait impls (`Add`, `PartialEq`)
-- **Discriminated unions:** classes with a `.tag` field can be narrowed via M3's attribute narrowing
+- **Discriminated unions:** classes with a shared literal-typed tag field, narrowed via attribute equality (leverages M3's narrowing engine):
+
+```python
+class Circle:
+    tag: "circle" = "circle"
+    radius: float
+
+class Square:
+    tag: "square" = "square"
+    side: float
+
+type Shape = Circle | Square
+
+def area(shape: Shape) -> float:
+    if shape.tag == "circle":
+        return 3.14159 * shape.radius * shape.radius  # narrowed to Circle
+    else:
+        return shape.side * shape.side                  # narrowed to Square
+```
+
+- **Property existence narrowing (`in`):** `if "name" in obj:` narrows the type to one that has a `name` field (extends M3's narrowing to object properties)
 
 ### Example Program
 
@@ -607,12 +695,19 @@ def main():
 
 ### Language Features
 
-- **Generic functions:** `def first[T](items: list[T]) -> T`
-- **Generic classes:** `class Stack[T]:`
+- **Generic functions:** `def first[T](items: list[T]) -> T` (Python 3.12 syntax)
+- **Generic classes:** `class Stack[T]:` (Python 3.12 syntax)
 - **Type bounds:** `def sort[T: Comparable](items: list[T])`
 - **Closures / lambdas:** `lambda x: x + 1` maps to Rust closures
+- **Contextual typing for lambdas:** lambda parameter types inferred from call-site context (e.g., `map_list(numbers, lambda x: x * 2)` infers `x: int` from `list[int]`)
 - **Higher-order functions:** `map`, `filter`, `reduce` on collections
 - **Iterators:** `__iter__` / `__next__` protocol maps to Rust `Iterator` trait
+- **Utility types (TypeScript-inspired):** built-in type aliases for common transformations:
+  - `Partial[T]` -- all fields optional (maps to `Option<field>` for each field)
+  - `Readonly[T]` -- all fields immutable (maps to non-`mut` references)
+  - `Pick[T, "field1", "field2"]` -- subset of fields
+  - `Omit[T, "field1"]` -- all fields except specified
+  - `Record[K, V]` -- sugar for `dict[K, V]`
 - **Mapped/conditional types (stretch):** type-level programming
 
 ### Example Program
@@ -812,13 +907,12 @@ enum Type {
     LiteralStr(String),
     LiteralBool(bool),
 
-    // Union / Intersection / Optional (M3)
+    // Union / Intersection (M3)
     Union(Vec<Type>),           // int | str -- flattened, deduplicated
-    Intersection(Vec<Type>),    // A & B -- internal, for narrowing
-    Optional(Box<Type>),        // sugar for Union(T, None)
+    Intersection(Vec<Type>),    // internal only, for narrowing engine
 
     // Type alias (M3)
-    Alias(String, Box<Type>),   // type HttpMethod = Literal["GET"] | Literal["POST"]
+    Alias(String, Box<Type>),   // type HttpMethod = "GET" | "POST"
 
     // Function
     Function(FunctionType),
@@ -836,7 +930,10 @@ enum Type {
     // Range (M2)
     Range,
 
-    // Escape hatch
+    // Safe top type: must be narrowed before use (M3)
+    Unknown,
+
+    // Escape hatch: opts out of type checking
     Any,
 
     // Bottom
@@ -846,12 +943,20 @@ enum Type {
 
 ### Literal Type Behavior (TypeScript-inspired)
 
-Literal types represent specific values at the type level. Key behaviors:
+Literal types represent specific values at the type level. In sifr, values are used directly as types in type position (TypeScript style), avoiding Python's verbose `Literal[...]` wrapper:
 
-- **Fresh literals widen at mutable locations:** `x = 42` infers `x: int` (widened), but `x: Literal[42] = 42` preserves the literal type
-- **Literal types are subtypes of their base type:** `Literal[42]` is assignable to `int`
-- **Equality narrows to literals:** `if x == "GET":` narrows `x: str` to `x: Literal["GET"]` in the then-branch
-- **Union of literals:** `Literal["GET"] | Literal["POST"]` is a valid type representing exactly two string values
+```python
+type HttpMethod = "GET" | "POST" | "PUT"    # not Literal["GET"] | Literal["POST"] | ...
+type StatusCode = 200 | 404 | 500
+x: "hello" = "hello"                        # literal type annotation
+```
+
+Key behaviors:
+
+- **Fresh literals widen at mutable locations:** `x = 42` infers `x: int` (widened), but `x: 42 = 42` preserves the literal type
+- **Literal types are subtypes of their base type:** `42` is assignable to `int`, `"GET"` is assignable to `str`
+- **Equality narrows to literals:** `if x == "GET":` narrows `x: str` to `x: "GET"` in the then-branch
+- **Union of literals:** `"GET" | "POST"` is a valid type representing exactly two string values
 
 ### Union Type Behavior
 
@@ -887,10 +992,11 @@ Narrowing refines a variable's type within a control flow branch:
 
 ### Type Inference Strategy
 
-- **Initializer inference:** `x = 42` infers `x: int`
+- **Initializer inference:** `x = 42` infers `x: int` (literal widens to base type)
 - **Return type inference:** analyze all return paths
-- **Contextual typing:** lambda params inferred from call-site
+- **Contextual typing (M7):** lambda/callback parameter types inferred from call-site context. E.g., `map_list(numbers, lambda x: x * 2)` infers `x: int` from the `list[int]` argument. Inspired by TypeScript's contextual typing which looks upward in the tree for type annotations.
 - **Enforced annotations:** function parameters MUST have types (or be inferable from defaults)
+- **Literal preservation:** `x: "GET" = "GET"` preserves the literal type; `x = "GET"` widens to `str`
 
 ---
 
