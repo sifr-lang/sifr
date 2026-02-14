@@ -9,7 +9,7 @@ Do not commit changes, and stop execution if there are uncommitted changes.
 
 To get all project items from GitHub, use this command:
 ```
-gh project item-list 1 --owner yaseralnajjar --format json
+gh project item-list 2 --owner yaseralnajjar --format json
 ```
 
 ## Available field-id and single-selection-option-id

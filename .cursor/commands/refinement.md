@@ -6,7 +6,7 @@ Use the following guidelines to manage github project Backlog items.
 
 To get all project items from GitHub, use this command:
 ```
-gh project item-list 1 --owner yaseralnajjar
+gh project item-list 2 --owner yaseralnajjar
 ```
 
 ## Available field-id and single-selection-option-id
