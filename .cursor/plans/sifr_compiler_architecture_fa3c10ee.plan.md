@@ -102,24 +102,34 @@ flowchart TD
         M6["M6: Module System\nimport/from, multi-file,\nsifr.toml, packages"]
         M7["M7: Generics + Closures\nType params, lambdas,\nutility types, iterators"]
     end
+    subgraph stdlib [Standard Library]
+        M8["M8: Core Stdlib\nI/O, JSON, env, os,\ntoml, collections"]
+        M9["M9: Extended Stdlib\nmath, time, random, regex,\nhash, encoding, stream, log"]
+        M10["M10: Test Runner\nsifr test, assertions,\ndiscovery, parallel"]
+    end
     subgraph ecosystem [Ecosystem]
-        M8["M8: Core Stdlib + Test Runner\nI/O, JSON, streams, regex,\nsifr test, assertions"]
-        M9["M9: Async Runtime\nasync/await, tokio,\ntasks, streams"]
-        M10["M10: Web + Database\naxum, reqwest, sqlx,\nREST APIs, SQL"]
-        M11["M11: Data Processing\npolars DataFrames,\nCSV/Parquet, CLI"]
+        M11["M11: Async Runtime\nasync/await, tokio,\ntasks, streams"]
+        M12["M12: Web + Database\naxum, reqwest, sqlx,\nREST APIs, SQL"]
+        M13["M13: Data Processing\npolars DataFrames,\nCSV/Parquet, CLI"]
     end
     subgraph prod [Production]
-        M12["M12: Metaprogramming\nDecorators, dataclass,\ncompile-time eval"]
-        M13["M13: FFI + Interop\nRust FFI, C FFI,\nunsafe boundary"]
-        M14["M14: Developer Tooling\nLSP, formatter, linter,\ndoc generator"]
-        M15["M15: Package Ecosystem\nRegistry, incremental\ncompilation, REPL"]
+        M14["M14: Metaprogramming\nDecorators, dataclass,\ncompile-time eval"]
+        M15["M15: FFI + Interop\nRust FFI, C FFI,\nunsafe boundary"]
+        M16["M16: Developer Tooling\nLSP, formatter, linter,\ndoc generator"]
+        M17["M17: Package Ecosystem\nRegistry, incremental\ncompilation, REPL"]
     end
     M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
-    M7 --> M8 --> M9 --> M10
-    M7 --> M11
-    M10 --> M12 --> M13
-    M11 --> M13
-    M13 --> M14 --> M15
+    M7 --> M8
+    M8 --> M9
+    M8 --> M10
+    M9 --> M11
+    M10 --> M11
+    M11 --> M12
+    M7 --> M13
+    M12 --> M14
+    M13 --> M15
+    M14 --> M15
+    M15 --> M16 --> M17
 ```
 
 
@@ -127,12 +137,15 @@ flowchart TD
 **Rationale for milestone order:**
 
 - **M3 before M4:** Union types are prerequisites for `Result[T, E]` and `Option[T]`
-- **M7 before M8-M11:** Generics and closures are needed for stdlib APIs
-- **M9 before M10:** Async runtime is needed for web framework and database access
-- **M11 parallel to M10:** Data processing (polars) doesn't depend on web/async, only on generics and modules
-- **M12-M15 last:** Metaprogramming, FFI, tooling, and ecosystem polish come after the language and ecosystem are functional
-- **M13 before M14:** FFI unlocks access to the full Rust crate ecosystem; developer tooling benefits from a stable language surface
-- **M14 before M15:** LSP and formatter should exist before the package registry launches, so published packages have consistent quality
+- **M7 before M8-M13:** Generics and closures are needed for stdlib APIs
+- **M8 before M9/M10:** Core stdlib (I/O, JSON, env, os) establishes the stdlib pattern and provides foundations that the extended stdlib and test runner build on
+- **M9 parallel to M10:** Extended stdlib (math, time, regex, etc.) and the test runner both depend on M8 but not on each other -- they can be developed in parallel
+- **M9/M10 before M11:** Async runtime needs the full stdlib and test runner in place
+- **M11 before M12:** Async runtime is needed for web framework and database access
+- **M13 parallel to M12:** Data processing (polars) doesn't depend on web/async, only on generics and modules
+- **M14-M17 last:** Metaprogramming, FFI, tooling, and ecosystem polish come after the language and ecosystem are functional
+- **M15 before M16:** FFI unlocks access to the full Rust crate ecosystem; developer tooling benefits from a stable language surface
+- **M16 before M17:** LSP and formatter should exist before the package registry launches, so published packages have consistent quality
 
 ---
 
@@ -162,9 +175,9 @@ sifr/
 New crates added per milestone as needed:
 
 - M8: `sifr_std` (standard library wrappers)
-- M13: FFI codegen extensions in `sifr_codegen`
-- M14: `sifr_lsp` (language server), `sifr_fmt` (formatter), `sifr_lint` (linter)
-- M15: `sifr_registry` (package registry client)
+- M15: FFI codegen extensions in `sifr_codegen`
+- M16: `sifr_lsp` (language server), `sifr_fmt` (formatter), `sifr_lint` (linter)
+- M17: `sifr_registry` (package registry client)
 
 ---
 
@@ -618,7 +631,7 @@ class IOError(AppError):
 ### Panic vs Result Boundary
 
 - `**assert` statements:** generate `assert!()` or `panic!()` in Rust. These are unrecoverable and not catchable by `try`/`except`.
-- **Rust library panics (M13 FFI):** caught at FFI boundaries via `catch_unwind` and converted to `Result::Err`. Sifr code never sees a panic from wrapped Rust crates.
+- **Rust library panics (M15 FFI):** caught at FFI boundaries via `catch_unwind` and converted to `Result::Err`. Sifr code never sees a panic from wrapped Rust crates.
 - **Out-of-bounds indexing:** returns `Result` or `Option`, not a panic. `list[i]` returns `Option[T]`; `list.get(i)` is the safe accessor.
 
 ### Definition of Done (M4)
@@ -797,7 +810,7 @@ my_app/
 - `**sifr.toml`:** project manifest with `[dependencies]` section. Version ranges use semver (e.g., `requests = "^1.2"`).
 - `**sifr.lock`:** auto-generated lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Must be committed to version control for reproducible builds.
 - **Version solver:** PubGrub-based algorithm (same as Cargo and uv). Resolves the full dependency graph with conflict detection and clear error messages.
-- **Dependency sources (M6):** git repositories and local paths only. Registry support (`sifr.dev`) deferred to M15.
+- **Dependency sources (M6):** git repositories and local paths only. Registry support (`sifr.dev`) deferred to M17.
 - `**sifr add <package>`:** adds a dependency to `sifr.toml` and resolves the lockfile.
 
 ### Example
@@ -897,9 +910,9 @@ Closure captures are inferred from usage inside the closure body (see Cross-cutt
 
 ---
 
-## M8: Core Standard Library and Test Runner
+## M8: Core Standard Library
 
-**Goal:** Provide the essential built-in functionality every program needs, plus a built-in test runner. No async dependency -- these are synchronous building blocks. Every modern language (Go, Rust, Bun, Deno) ships with a test runner -- Sifr does too.
+**Goal:** Provide the foundational stdlib modules that almost every real program needs. This milestone establishes the pattern for how stdlib modules work: thin Sifr wrappers over battle-tested Rust crates, with auto-generated Cargo dependencies. No async dependency -- these are synchronous building blocks.
 
 ### Stdlib Modules
 
@@ -907,47 +920,10 @@ Closure captures are inferred from usage inside the closure body (see Cross-cutt
 - `**sifr.json`:** JSON serialization/deserialization -> wraps `serde` + `serde_json`
 - `**sifr.toml`:** TOML config parsing -> wraps `toml` crate
 - `**sifr.env`:** environment variables, dotenv loading -> wraps `std::env` + `dotenvy`
-- `**sifr.math`:** math functions (sqrt, pow, abs, min, max, floor, ceil, etc.) -> wraps `std::f64` + `num` traits
-- `**sifr.collections`:** `Set`, `OrderedDict`, `Deque` -> wraps `std::collections`
-- `**sifr.time`:** timestamps, durations, sleep, formatting -> wraps `std::time` + `chrono`
-- `**sifr.random`:** random number generation -> wraps `rand` crate
 - `**sifr.os`:** process spawning, signals, exit codes, argv, shell commands -> wraps `std::process` + `std::env`
-- `**sifr.re`:** regular expressions -> wraps `regex` crate
-- `**sifr.log`:** structured logging -> wraps `tracing` crate
-- `**sifr.hash`:** hashing (sha256, md5, etc.) -> wraps `sha2` + `md5` crates
-- `**sifr.encoding`:** base64, hex, url encoding -> wraps `base64` + `hex` + `percent-encoding`
-- `**sifr.stream`:** streaming read/write for large data -> wraps Rust's `Read`/`Write` traits with buffered readers/writers, line-by-line iteration, and pipe-style chaining
+- `**sifr.collections`:** `Set`, `OrderedDict`, `Deque` -> wraps `std::collections`
 
-### Built-in Test Runner (`sifr test`)
-
-Sifr ships with a built-in test runner, just like Go (`go test`), Rust (`cargo test`), and Bun (`bun test`). Tests are first-class citizens of the language.
-
-**Test syntax:**
-
-```python
-from sifr.test import test, assert_eq, assert_true, assert_raises
-
-def test_addition():
-    assert_eq(1 + 1, 2)
-
-def test_string_upper():
-    assert_eq("hello".upper(), "HELLO")
-
-def test_division_by_zero():
-    assert_raises(ValueError, lambda: 1 / 0)
-```
-
-**Features:**
-
-- **Test discovery:** `sifr test` finds all functions named `test_*` in files named `test_*.sifr` or `*_test.sifr`
-- **Assertions:** `assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_raises`, `assert_contains`
-- **Test filtering:** `sifr test -k "test_string"` runs only matching tests
-- **Parallel execution:** tests run in parallel by default (each test is independent)
-- **Setup/teardown:** `setup()` and `teardown()` functions in test files run before/after each test
-- **Test output:** clear pass/fail reporting with source locations for failures
-- **Exit code:** non-zero exit on any failure (CI-friendly)
-
-**Codegen:** `sifr test` compiles test files into a Rust test binary using `#[test]` attributes. Assertions map to Rust's `assert_eq!`, `assert!`, etc. The test binary is built and run via `cargo test`.
+**Why these first:** File I/O, JSON, config, and env vars are needed by virtually every non-trivial program. `sifr.os` enables process spawning (needed by the test runner in M10). `sifr.collections` extends the built-in types.
 
 ### Implementation Strategy
 
@@ -969,22 +945,104 @@ def main():
 - Each stdlib module has a working Sifr API that compiles to the underlying Rust crate
 - `sifr.io`: file read/write, path operations work end-to-end
 - `sifr.json`: serialize/deserialize dicts and lists
-- `sifr.env`: read environment variables
-- `sifr.math`: basic math functions work
-- `sifr.stream`: streaming read/write with line iteration and chaining
-- `sifr test` discovers and runs `test_*` functions
-- Assertions (`assert_eq`, `assert_true`, `assert_raises`) work correctly
-- Test filtering (`-k`) and parallel execution work
+- `sifr.toml`: parse TOML config files
+- `sifr.env`: read environment variables, dotenv loading
+- `sifr.os`: process spawning, argv, exit codes
+- `sifr.collections`: Set, OrderedDict, Deque operations
 - Each module has integration tests verifying the Sifr API against the Rust crate behavior
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
-- E2E pass tests: file_io, json_roundtrip, env_vars, math_ops, test_runner_basic
+- E2E pass tests: file_io, json_roundtrip, env_vars, os_process, collections_basic
 - Milestone demo in `./tmp/m8_demo.sifr`
 
 ---
 
-## M9: Async Runtime
+## M9: Extended Standard Library
 
-**Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that M10 (web, database) builds on.
+**Goal:** Fill out the remaining stdlib modules -- utilities that are commonly needed but don't block other milestones. Uses the same stdlib infrastructure pattern established in M8.
+
+### Stdlib Modules
+
+- `**sifr.math`:** math functions (sqrt, pow, abs, min, max, floor, ceil, etc.) -> wraps `std::f64` + `num` traits
+- `**sifr.time`:** timestamps, durations, sleep, formatting -> wraps `std::time` + `chrono`
+- `**sifr.random`:** random number generation -> wraps `rand` crate
+- `**sifr.re`:** regular expressions -> wraps `regex` crate
+- `**sifr.hash`:** hashing (sha256, md5, etc.) -> wraps `sha2` + `md5` crates
+- `**sifr.encoding`:** base64, hex, url encoding -> wraps `base64` + `hex` + `percent-encoding`
+- `**sifr.stream`:** streaming read/write for large data -> wraps Rust's `Read`/`Write` traits with buffered readers/writers, line-by-line iteration, and pipe-style chaining
+- `**sifr.log`:** structured logging -> wraps `tracing` crate
+
+### Definition of Done (M9)
+
+- `sifr.math`: basic math functions work (sqrt, pow, abs, min, max, floor, ceil)
+- `sifr.time`: timestamps, durations, sleep, formatting work
+- `sifr.random`: random number generation works
+- `sifr.re`: regex match, search, replace work
+- `sifr.hash`: sha256, md5 hashing works
+- `sifr.encoding`: base64, hex, url encoding/decoding works
+- `sifr.stream`: streaming read/write with line iteration and chaining
+- `sifr.log`: structured logging with levels (debug, info, warn, error)
+- Each module has integration tests verifying the Sifr API against the Rust crate behavior
+- Generated Cargo.toml includes correct dependencies for used stdlib modules
+- E2E pass tests: math_ops, time_basic, random_gen, regex_match, hash_sha256, encoding_base64, stream_lines, log_basic
+- Milestone demo in `./tmp/m9_demo.sifr`
+
+---
+
+## M10: Built-in Test Runner
+
+**Goal:** Ship a built-in test runner. Every modern language (Go, Rust, Bun, Deno) ships with a test runner -- Sifr does too. Tests are first-class citizens of the language.
+
+### Test Syntax
+
+```python
+from sifr.test import test, assert_eq, assert_true, assert_raises
+
+def test_addition():
+    assert_eq(1 + 1, 2)
+
+def test_string_upper():
+    assert_eq("hello".upper(), "HELLO")
+
+def test_division_by_zero():
+    assert_raises(ValueError, lambda: 1 / 0)
+```
+
+### Features
+
+- **Test discovery:** `sifr test` finds all functions named `test_*` in files named `test_*.sifr` or `*_test.sifr`
+- **Assertions:** `assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_raises`, `assert_contains`
+- **Test filtering:** `sifr test -k "test_string"` runs only matching tests
+- **Parallel execution:** tests run in parallel by default (each test is independent)
+- **Setup/teardown:** `setup()` and `teardown()` functions in test files run before/after each test
+- **Test output:** clear pass/fail reporting with source locations for failures
+- **Exit code:** non-zero exit on any failure (CI-friendly)
+
+### Codegen
+
+`sifr test` compiles test files into a Rust test binary using `#[test]` attributes. Assertions map to Rust's `assert_eq!`, `assert!`, etc. The test binary is built and run via `cargo test`.
+
+### Dependencies
+
+Depends on M8: needs `sifr.io` for test file discovery and `sifr.os` for process management. Does NOT depend on M9.
+
+### Definition of Done (M10)
+
+- `sifr test` discovers and runs `test_*` functions in `test_*.sifr` / `*_test.sifr` files
+- Assertions (`assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_raises`, `assert_contains`) work correctly
+- Test filtering (`-k`) works
+- Parallel execution works (tests run independently)
+- Setup/teardown functions execute before/after each test
+- Clear pass/fail reporting with source locations for failures
+- Non-zero exit code on any failure (CI-friendly)
+- Codegen emits `#[test]` attributes and maps assertions to Rust equivalents
+- E2E pass tests: test_runner_basic, test_filtering, test_assertions, test_setup_teardown
+- Milestone demo in `./tmp/m10_demo.sifr`
+
+---
+
+## M11: Async Runtime
+
+**Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that M12 (web, database) builds on.
 
 ### Language Features
 
@@ -1015,7 +1073,7 @@ async def main():
 
 The `?` operator works across `.await` points. Async functions returning `Result` propagate errors the same way as sync functions. Closures captured across `.await` points must be `Send + 'static` (the compiler enforces this and emits clear diagnostics if violated).
 
-### Definition of Done (M9)
+### Definition of Done (M11)
 
 - `async def` compiles to Rust `async fn`
 - `await` compiles to `.await`
@@ -1024,11 +1082,11 @@ The `?` operator works across `.await` points. Async functions returning `Result
 - Async closures captured across `.await` are checked for `Send + 'static`
 - `sifr.task.spawn` works for concurrent tasks
 - E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation
-- Milestone demo in `./tmp/m9_demo.sifr`
+- Milestone demo in `./tmp/m11_demo.sifr`
 
 ---
 
-## M10: Web and Database
+## M12: Web and Database
 
 **Goal:** Enable production web applications and database-backed services. This is the milestone that makes sifr useful for the most common Python use case: web APIs.
 
@@ -1134,7 +1192,7 @@ SQLx's compile-time SQL checking requires database metadata at build time. Sifr 
 
 The compiler emits a clear error if neither a database connection nor offline metadata is available, with instructions on how to set up either mode.
 
-### Definition of Done (M10)
+### Definition of Done (M12)
 
 - `sifr.web` routes compile to axum handlers
 - Decorator-based routing (`@app.get("/")`) works
@@ -1145,11 +1203,11 @@ The compiler emits a clear error if neither a database connection nor offline me
 - SQL queries are validated at compile time (online or offline mode)
 - `sifr db prepare` generates offline metadata
 - E2E pass tests: web_hello, http_get, sqlite_basic, db_query
-- Milestone demo in `./tmp/m10_demo.sifr` (simple REST API with embedded SQLite)
+- Milestone demo in `./tmp/m12_demo.sifr` (simple REST API with embedded SQLite)
 
 ---
 
-## M11: Data Processing
+## M13: Data Processing
 
 **Goal:** Enable data science and data engineering workflows. This is what makes sifr competitive with Python's pandas/polars ecosystem.
 
@@ -1200,18 +1258,18 @@ def main():
 - `sifr.csv` -> `csv`
 - `sifr.args` -> `clap`
 
-### Definition of Done (M11)
+### Definition of Done (M13)
 
 - `sifr.data.DataFrame` wraps polars DataFrame with Pythonic API
 - Lazy evaluation chain (filter, group_by, agg, sort) compiles correctly
 - CSV/Parquet read/write works end-to-end
 - `sifr.args` provides typed CLI argument parsing
 - E2E pass tests: dataframe_basic, csv_roundtrip, cli_args
-- Milestone demo in `./tmp/m11_demo.sifr` (data pipeline)
+- Milestone demo in `./tmp/m13_demo.sifr` (data pipeline)
 
 ---
 
-## M12: Metaprogramming
+## M14: Metaprogramming
 
 **Goal:** Support decorators and compile-time code generation.
 
@@ -1245,7 +1303,7 @@ Compile-time evaluation (`const` expressions, custom decorators) runs during com
 - **No arbitrary code execution:** custom decorators are limited to AST transformations (adding/removing/modifying fields and methods). They cannot execute arbitrary Rust code or shell commands.
 - **Deterministic:** compile-time evaluation must produce the same output for the same input, regardless of the host system.
 
-### Definition of Done (M12)
+### Definition of Done (M14)
 
 - `@dataclass` generates `__init__`, `__eq__`, `__repr__`, `clone` methods
 - `@property` generates getter/setter methods
@@ -1254,11 +1312,11 @@ Compile-time evaluation (`const` expressions, custom decorators) runs during com
 - `const` expressions evaluated at compile time
 - Compile-time sandbox enforced (no I/O, no side effects)
 - E2E pass tests: dataclass_basic, property_decorator, custom_decorator, const_eval
-- Milestone demo in `./tmp/m12_demo.sifr`
+- Milestone demo in `./tmp/m14_demo.sifr`
 
 ---
 
-## M13: FFI and Interop
+## M15: FFI and Interop
 
 **Goal:** Give Sifr access to the entire Rust and C ecosystem via foreign function interfaces. This is the escape hatch that makes Sifr practical before every Rust crate has a Sifr wrapper -- users can call any Rust crate directly.
 
@@ -1289,7 +1347,7 @@ FFI introduces unsafe code into the Sifr ecosystem. The following policies apply
 
 - `**unsafe` keyword required:** any FFI call must be wrapped in an `unsafe` block
 - **Panic boundary:** all FFI entry points are wrapped in `catch_unwind`. Panics from Rust/C libraries are converted to `Result::Err` rather than crashing the Sifr program
-- **No implicit `unsafe`:** stdlib wrappers (M8-M11) encapsulate all `unsafe` internally. User code never needs `unsafe` unless calling raw FFI
+- **No implicit `unsafe`:** stdlib wrappers (M8-M13) encapsulate all `unsafe` internally. User code never needs `unsafe` unless calling raw FFI
 - **Type mapping:** the compiler maps Sifr types to Rust types at FFI boundaries. Mismatches are compile-time errors
 
 ### Codegen
@@ -1299,7 +1357,7 @@ FFI introduces unsafe code into the Sifr ecosystem. The following policies apply
 - FFI function calls generate direct Rust function calls with type-mapped arguments
 - Return values from FFI are wrapped in `Result` when `catch_unwind` is applied
 
-### Definition of Done (M13)
+### Definition of Done (M15)
 
 - `extern crate` adds Rust crate dependencies to generated Cargo.toml
 - Rust FFI calls compile and execute correctly
@@ -1309,11 +1367,11 @@ FFI introduces unsafe code into the Sifr ecosystem. The following policies apply
 - Type mapping between Sifr and Rust types at FFI boundaries
 - E2E pass tests: ffi_rust_crate, ffi_c_function, unsafe_block
 - E2E fail tests: missing_unsafe, ffi_type_mismatch
-- Milestone demo in `./tmp/m13_demo.sifr` (calling a Rust crate from Sifr)
+- Milestone demo in `./tmp/m15_demo.sifr` (calling a Rust crate from Sifr)
 
 ---
 
-## M14: Developer Tooling
+## M16: Developer Tooling
 
 **Goal:** Provide the developer experience tools that make Sifr productive for daily use: IDE support, code formatting, linting, and documentation generation. These tools are what make a language feel "real" to developers.
 
@@ -1363,7 +1421,7 @@ Generate HTML documentation from docstrings:
 - **Cross-references:** link to other symbols in the documentation
 - **Type signatures:** automatically include type annotations in the docs
 
-### Definition of Done (M14)
+### Definition of Done (M16)
 
 - LSP server provides autocomplete, go-to-definition, hover types, and real-time diagnostics
 - LSP works with VS Code (via extension) and any LSP-compatible editor
@@ -1372,11 +1430,11 @@ Generate HTML documentation from docstrings:
 - `sifr doc` generates browsable HTML documentation from docstrings
 - E2E tests: LSP responds correctly to completion/hover/definition requests
 - Formatter round-trip test: `format(format(code)) == format(code)`
-- Milestone demo in `./tmp/m14_demo.sifr` (project with LSP, formatted code, and generated docs)
+- Milestone demo in `./tmp/m16_demo.sifr` (project with LSP, formatted code, and generated docs)
 
 ---
 
-## M15: Package Ecosystem
+## M17: Package Ecosystem
 
 **Goal:** Build the infrastructure for sharing and reusing Sifr code: a package registry, incremental compilation for fast iteration, and a REPL for interactive exploration. This is the milestone that turns Sifr from a language into an ecosystem.
 
@@ -1411,7 +1469,7 @@ An interactive mode for quick experimentation:
 
 **Implementation:** compile each REPL input as a small Sifr program, run it, and display the result. Use `rustyline` for line editing.
 
-### Definition of Done (M15)
+### Definition of Done (M17)
 
 - `sifr publish` uploads packages to `sifr.dev`
 - `sifr add <package>` resolves and installs from the registry
@@ -1435,17 +1493,19 @@ M4:  Error Handling             -> Result/Option, ? operator (uses M3 unions)
 M5:  Structs + Methods          -> OOP, protocols, discriminated unions (uses M3 narrowing)
 M6:  Module System              -> Multi-file projects, packages, sifr.toml
 M7:  Generics + Closures        -> Type params, lambdas, utility types, contextual typing
-M8:  Core Stdlib + Test Runner  -> I/O, JSON, time, regex, logging, streams, sifr test
-M9:  Async Runtime              -> async/await, tokio, tasks, async streams
-M10: Web + Database             -> axum web, reqwest HTTP, embedded SQLite, sqlx
-M11: Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
-M12: Metaprogramming            -> Decorators, @dataclass, compile-time eval
-M13: FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
-M14: Developer Tooling          -> LSP, formatter, linter, documentation generator
-M15: Package Ecosystem          -> Package registry, incremental compilation, REPL
+M8:  Core Stdlib                -> I/O, JSON, toml, env, os, collections
+M9:  Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
+M10: Test Runner                -> sifr test, assertions, discovery, parallel execution
+M11: Async Runtime              -> async/await, tokio, tasks, async streams
+M12: Web + Database             -> axum web, reqwest HTTP, embedded SQLite, sqlx
+M13: Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
+M14: Metaprogramming            -> Decorators, @dataclass, compile-time eval
+M15: FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
+M16: Developer Tooling          -> LSP, formatter, linter, documentation generator
+M17: Package Ecosystem          -> Package registry, incremental compilation, REPL
 ```
 
-After M10, Sifr can build production web applications. After M11, it can handle data pipelines. After M13, Sifr has access to the entire Rust crate ecosystem. After M14, developers have full IDE support. After M15, it is a complete language ecosystem with package sharing.
+After M10, Sifr has a complete standard library and test runner. After M12, Sifr can build production web applications. After M13, it can handle data pipelines. After M15, Sifr has access to the entire Rust crate ecosystem. After M16, developers have full IDE support. After M17, it is a complete language ecosystem with package sharing.
 
 ---
 
@@ -1471,7 +1531,7 @@ Union types, `Unknown`, and class instances all need a coherent runtime represen
 
 ### 2. Borrow and Lifetime Strategy
 
-Sifr uses move-by-default semantics (like Rust), but must define when the compiler auto-borrows to keep the language usable. Without this contract, M5 (methods), M7 (closures), and M9 (async) will produce user-hostile "use-after-move" errors.
+Sifr uses move-by-default semantics (like Rust), but must define when the compiler auto-borrows to keep the language usable. Without this contract, M5 (methods), M7 (closures), and M11 (async) will produce user-hostile "use-after-move" errors.
 
 **Contract:**
 
@@ -1493,7 +1553,7 @@ Sifr uses move-by-default semantics (like Rust), but must define when the compil
 
 - M5: implement method receiver inference (`&self` / `&mut self` / `self`)
 - M7: implement closure capture inference
-- M9: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
+- M11: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
 
 ### 3. Error Semantics Matrix
 
@@ -1505,9 +1565,9 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (M4).
 | Context              | Error mechanism                | Propagation                          | Codegen                                                    |
 | -------------------- | ------------------------------ | ------------------------------------ | ---------------------------------------------------------- |
 | Sync function        | `Result[T, E]` return          | `?` operator or explicit `match`     | `Result<T, E>`                                             |
-| Async function (M9)  | `Result[T, E]` return          | `?` operator (works across `.await`) | `Result<T, E>`                                             |
+| Async function (M11) | `Result[T, E]` return          | `?` operator (works across `.await`) | `Result<T, E>`                                             |
 | `try`/`except` block | Pattern match on `Result`      | `except` arms match error variants   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
-| FFI boundary (M13)   | Rust panics caught at boundary | `catch_unwind` at FFI entry points   | Panic -> `Result::Err` conversion                          |
+| FFI boundary (M15)   | Rust panics caught at boundary | `catch_unwind` at FFI entry points   | Panic -> `Result::Err` conversion                          |
 | `assert` statement   | Panic (unrecoverable)          | Not catchable                        | `assert!()` or `panic!()`                                  |
 | Main function        | `Result` printed as exit code  | Non-zero exit on `Err`               | `fn main() -> Result<(), Box<dyn Error>>`                  |
 
@@ -1544,7 +1604,7 @@ match parse_int(s) {
 - `**sifr.toml`:** project manifest with `[dependencies]` section specifying version ranges (semver)
 - `**sifr.lock`:** lockfile with exact resolved versions, content hashes (SHA-256), and source URLs. Committed to version control.
 - **Version solver:** PubGrub-based solver (same algorithm as Cargo and uv). Resolves dependency graph with conflict detection.
-- **Registry:** `sifr.dev` package registry (M15). Before M15, dependencies are git-only or path-only.
+- **Registry:** `sifr.dev` package registry (M17). Before M17, dependencies are git-only or path-only.
 - **Import cycle detection:** the compiler builds a dependency graph of modules during compilation. Cycles are a compile-time error with a clear diagnostic showing the cycle path.
 - `**__init__.sifr` semantics:** defines the public API of a package. Symbols not re-exported from `__init__.sifr` are private to the package. No side effects on import (unlike Python's `__init__.py`).
 - **Import caching:** each module is compiled exactly once per compilation. The driver maintains a module cache keyed by canonical path.
@@ -1563,15 +1623,15 @@ match parse_int(s) {
 
 - M7+: benchmark suite with regression thresholds (compile time, binary size)
 - M8+: stdlib wrapper tests (each module has integration tests against the underlying Rust crate)
-- M15: fuzz testing for parser and type checker (cargo-fuzz or afl)
+- M17: fuzz testing for parser and type checker (cargo-fuzz or afl)
 
 ### Ecosystem Strategy
 
 Sifr's standard library follows a **thin wrapper + FFI** strategy:
 
-- **Thin wrappers (M8-M11):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
-- **Rust FFI (M13):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives Sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
-- **Package ecosystem (M15):** A package registry (`sifr.dev`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
+- **Thin wrappers (M8-M13):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
+- **Rust FFI (M15):** For crates not yet wrapped, users can import Rust crates directly via FFI. This is the escape hatch that gives Sifr access to the entire Rust ecosystem (50,000+ crates on crates.io).
+- **Package ecosystem (M17):** A package registry (`sifr.dev`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
 - **No reinventing:** Sifr never reimplements what Rust already has. Every stdlib module wraps a proven Rust crate.
 
 ---
