@@ -9,7 +9,7 @@ Sprint-based workflow using GitHub Projects to manage tickets from creation thro
 
 ## Sprint Lifecycle
 
-Create Tickets --> Refine --> Work --> Review --> Done
+Create Tickets --> Refine --> Work --> Review --> Milestone Demo --> Done
 
 ## Ticket Types
 
@@ -25,13 +25,13 @@ A combined document covering product requirements (problem, goals, scope, accept
 
 ## Board Columns
 
-| Column | Description |
-|--------|-------------|
-| Backlog | Newly created tickets land here |
-| Ready | Refined and prioritized, ready for development |
-| In Progress | Currently being worked on |
-| Review | PR created, awaiting code review |
-| Done | Merged and complete |
+| Column      | Description                                    |
+| ----------- | ---------------------------------------------- |
+| Backlog     | Newly created tickets land here                |
+| Ready       | Refined and prioritized, ready for development |
+| In Progress | Currently being worked on                      |
+| Review      | PR created, awaiting code review               |
+| Done        | Merged and complete                            |
 
 ## Sprint Phases
 
@@ -55,20 +55,28 @@ Pick up the highest priority Ready ticket and create a PR with `/work-on-ticket`
 
 Review PRs in the Review column with `/review-pr`.
 
-### 6. Done
+### 6. Milestone Demo
+
+Before marking a milestone (Epic) as Done, create a demo in `./tmp` named `<milestone>_demo` (e.g., `m3_demo`). The demo should:
+
+- Showcase all major features delivered in that milestone
+- Include comments explaining each section
+- Works as expected
+
+### 7. Done
 
 Merged PRs move to Done.
 
 ## Available Commands
 
-| Command | When to Use |
-|---------|-------------|
-| `/create-prds` | Draft a PRDS document for an epic |
-| `/create-task` | Draft a task description |
-| `/add-ticket` | Add a drafted ticket to the GitHub project board |
-| `/refinement` | Prioritize backlog tickets and move them to Ready |
+| Command           | When to Use                                                |
+| ----------------- | ---------------------------------------------------------- |
+| `/create-prds`    | Draft a PRDS document for an epic                          |
+| `/create-task`    | Draft a task description                                   |
+| `/add-ticket`     | Add a drafted ticket to the GitHub project board           |
+| `/refinement`     | Prioritize backlog tickets and move them to Ready          |
 | `/work-on-ticket` | Pick up a Ready ticket, implement changes, and create a PR |
-| `/review-pr` | Review a PR in the Review column |
+| `/review-pr`      | Review a PR in the Review column                           |
 
 ## GitHub Project Constants
 
