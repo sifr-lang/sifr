@@ -103,7 +103,7 @@ flowchart TD
         M7["M7: Generics + Closures\nType params, lambdas,\nutility types, iterators"]
     end
     subgraph ecosystem [Ecosystem]
-        M8["M8: Core Stdlib\nI/O, JSON, time, regex,\nlogging, env, math"]
+        M8["M8: Core Stdlib + Test Runner\nI/O, JSON, streams, regex,\nsifr test, assertions"]
         M9["M9: Async Runtime\nasync/await, tokio,\ntasks, streams"]
         M10["M10: Web + Database\naxum, reqwest, sqlx,\nREST APIs, SQL"]
         M11["M11: Data Processing\npolars DataFrames,\nCSV/Parquet, CLI"]
@@ -897,11 +897,11 @@ Closure captures are inferred from usage inside the closure body (see Cross-cutt
 
 ---
 
-## M8: Core Standard Library
+## M8: Core Standard Library and Test Runner
 
-**Goal:** Provide the essential built-in functionality every program needs. No async dependency -- these are synchronous building blocks.
+**Goal:** Provide the essential built-in functionality every program needs, plus a built-in test runner. No async dependency -- these are synchronous building blocks. Every modern language (Go, Rust, Bun, Deno) ships with a test runner -- Sifr does too.
 
-### Modules
+### Stdlib Modules
 
 - `**sifr.io`:** file read/write, stdin/stdout, path operations -> wraps `std::fs` + `std::io` + `std::path`
 - `**sifr.json`:** JSON serialization/deserialization -> wraps `serde` + `serde_json`
@@ -911,11 +911,43 @@ Closure captures are inferred from usage inside the closure body (see Cross-cutt
 - `**sifr.collections`:** `Set`, `OrderedDict`, `Deque` -> wraps `std::collections`
 - `**sifr.time`:** timestamps, durations, sleep, formatting -> wraps `std::time` + `chrono`
 - `**sifr.random`:** random number generation -> wraps `rand` crate
-- `**sifr.os`:** process spawning, signals, exit codes, argv -> wraps `std::process` + `std::env`
+- `**sifr.os`:** process spawning, signals, exit codes, argv, shell commands -> wraps `std::process` + `std::env`
 - `**sifr.re`:** regular expressions -> wraps `regex` crate
 - `**sifr.log`:** structured logging -> wraps `tracing` crate
 - `**sifr.hash`:** hashing (sha256, md5, etc.) -> wraps `sha2` + `md5` crates
 - `**sifr.encoding`:** base64, hex, url encoding -> wraps `base64` + `hex` + `percent-encoding`
+- `**sifr.stream`:** streaming read/write for large data -> wraps Rust's `Read`/`Write` traits with buffered readers/writers, line-by-line iteration, and pipe-style chaining
+
+### Built-in Test Runner (`sifr test`)
+
+Sifr ships with a built-in test runner, just like Go (`go test`), Rust (`cargo test`), and Bun (`bun test`). Tests are first-class citizens of the language.
+
+**Test syntax:**
+
+```python
+from sifr.test import test, assert_eq, assert_true, assert_raises
+
+def test_addition():
+    assert_eq(1 + 1, 2)
+
+def test_string_upper():
+    assert_eq("hello".upper(), "HELLO")
+
+def test_division_by_zero():
+    assert_raises(ValueError, lambda: 1 / 0)
+```
+
+**Features:**
+
+- **Test discovery:** `sifr test` finds all functions named `test_*` in files named `test_*.sifr` or `*_test.sifr`
+- **Assertions:** `assert_eq`, `assert_ne`, `assert_true`, `assert_false`, `assert_raises`, `assert_contains`
+- **Test filtering:** `sifr test -k "test_string"` runs only matching tests
+- **Parallel execution:** tests run in parallel by default (each test is independent)
+- **Setup/teardown:** `setup()` and `teardown()` functions in test files run before/after each test
+- **Test output:** clear pass/fail reporting with source locations for failures
+- **Exit code:** non-zero exit on any failure (CI-friendly)
+
+**Codegen:** `sifr test` compiles test files into a Rust test binary using `#[test]` attributes. Assertions map to Rust's `assert_eq!`, `assert!`, etc. The test binary is built and run via `cargo test`.
 
 ### Implementation Strategy
 
@@ -939,9 +971,13 @@ def main():
 - `sifr.json`: serialize/deserialize dicts and lists
 - `sifr.env`: read environment variables
 - `sifr.math`: basic math functions work
+- `sifr.stream`: streaming read/write with line iteration and chaining
+- `sifr test` discovers and runs `test_*` functions
+- Assertions (`assert_eq`, `assert_true`, `assert_raises`) work correctly
+- Test filtering (`-k`) and parallel execution work
 - Each module has integration tests verifying the Sifr API against the Rust crate behavior
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
-- E2E pass tests: file_io, json_roundtrip, env_vars, math_ops
+- E2E pass tests: file_io, json_roundtrip, env_vars, math_ops, test_runner_basic
 - Milestone demo in `./tmp/m8_demo.sifr`
 
 ---
@@ -1043,7 +1079,26 @@ async def fetch_data() -> dict[str, str]:
 
 ### Database (`sifr.db`)
 
-Thin wrapper around `sqlx` (async, compile-time checked SQL):
+Two tiers of database support:
+
+**Embedded SQLite (`sifr.db.sqlite`)** -- zero-config, no external server needed. Wraps `rusqlite`:
+
+- **Synchronous API:** simple and fast for prototyping, CLI tools, and small apps
+- **In-memory or file-backed:** `Database.open(":memory:")` or `Database.open("app.db")`
+- **Prepared statements, transactions, typed parameters**
+
+```python
+from sifr.db.sqlite import Database
+
+db = Database.open("app.db")
+db.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)")
+db.execute("INSERT INTO users (name) VALUES (?)", "Alice")
+
+for row in db.query("SELECT * FROM users"):
+    print(f"{row.id}: {row.name}")
+```
+
+**Async databases (`sifr.db`)** -- production-grade, wraps `sqlx` (async, compile-time checked SQL):
 
 - **Connection pools:** PostgreSQL, MySQL, SQLite
 - **Typed queries:** compile-time SQL validation
@@ -1066,6 +1121,7 @@ async def get_user(id: int) -> dict[str, str] | None:
 
 - `sifr.web` -> `axum` + `tower` (middleware)
 - `sifr.http` -> `reqwest`
+- `sifr.db.sqlite` -> `rusqlite` (synchronous, embedded)
 - `sifr.db` -> `sqlx` (async, compile-time checked)
 - Generated Cargo.toml includes these as dependencies automatically
 
@@ -1084,11 +1140,12 @@ The compiler emits a clear error if neither a database connection nor offline me
 - Decorator-based routing (`@app.get("/")`) works
 - Request/Response types are correctly typed
 - `sifr.http` GET/POST requests work end-to-end
-- `sifr.db` connects to PostgreSQL/SQLite
+- `sifr.db.sqlite` embedded SQLite works (open, execute, query, transactions)
+- `sifr.db` connects to PostgreSQL/SQLite via sqlx
 - SQL queries are validated at compile time (online or offline mode)
 - `sifr db prepare` generates offline metadata
-- E2E pass tests: web_hello, http_get, db_query (with SQLite for testing)
-- Milestone demo in `./tmp/m10_demo.sifr` (simple REST API)
+- E2E pass tests: web_hello, http_get, sqlite_basic, db_query
+- Milestone demo in `./tmp/m10_demo.sifr` (simple REST API with embedded SQLite)
 
 ---
 
@@ -1378,9 +1435,9 @@ M4:  Error Handling             -> Result/Option, ? operator (uses M3 unions)
 M5:  Structs + Methods          -> OOP, protocols, discriminated unions (uses M3 narrowing)
 M6:  Module System              -> Multi-file projects, packages, sifr.toml
 M7:  Generics + Closures        -> Type params, lambdas, utility types, contextual typing
-M8:  Core Standard Library      -> I/O, JSON, time, regex, logging, env, math, os
+M8:  Core Stdlib + Test Runner  -> I/O, JSON, time, regex, logging, streams, sifr test
 M9:  Async Runtime              -> async/await, tokio, tasks, async streams
-M10: Web + Database             -> axum web framework, reqwest HTTP, sqlx database
+M10: Web + Database             -> axum web, reqwest HTTP, embedded SQLite, sqlx
 M11: Data Processing            -> polars DataFrames, CSV/Parquet, CLI args
 M12: Metaprogramming            -> Decorators, @dataclass, compile-time eval
 M13: FFI + Interop              -> Rust FFI, C FFI, unsafe boundary, type mapping
