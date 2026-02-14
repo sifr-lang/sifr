@@ -4,7 +4,7 @@
 
 use sifr_hir::*;
 use sifr_type_system::Type;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
@@ -49,10 +49,16 @@ struct RustEmitter {
     output: String,
     indent: usize,
     needs_hashmap: bool,
-    /// Track union enum types that need to be defined
-    union_enums: HashSet<String>,
+    /// Track union enum types that need to be defined (name -> member types)
+    union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated enum definitions to prepend
     enum_defs: String,
+    /// The return type of the function currently being emitted
+    current_return_type: Option<Type>,
+    /// Set of variable names currently narrowed via `if let Some(...)` unwrap
+    option_unwrapped_vars: HashSet<String>,
+    /// Function signatures: name -> (param_types, return_type)
+    func_signatures: HashMap<String, (Vec<Type>, Type)>,
 }
 
 impl RustEmitter {
@@ -61,14 +67,22 @@ impl RustEmitter {
             output: String::new(),
             indent: 0,
             needs_hashmap: false,
-            union_enums: HashSet::new(),
+            union_enums: HashMap::new(),
             enum_defs: String::new(),
+            current_return_type: None,
+            option_unwrapped_vars: HashSet::new(),
+            func_signatures: HashMap::new(),
         }
     }
 
-    /// Collect all union types from the module that need enum definitions.
+    /// Collect all union types from the module that need enum definitions,
+    /// and build a map of function signatures for call-site wrapping.
     fn collect_union_types(&mut self, module: &HirModule) {
         for func in &module.functions {
+            // Record function signature
+            let param_types: Vec<Type> = func.params.iter().map(|p| p.ty.clone()).collect();
+            self.func_signatures.insert(func.name.clone(), (param_types, func.return_type.clone()));
+
             // Check params
             for param in &func.params {
                 self.register_union_type(&param.ty);
@@ -109,18 +123,44 @@ impl RustEmitter {
             if has_none && non_none.len() == 1 {
                 return; // This maps to Option<T>, no enum needed
             }
-            // Register the enum name
+            // Register the enum name and its member types
             let enum_name = ty.union_enum_name();
-            self.union_enums.insert(enum_name);
+            self.union_enums.entry(enum_name).or_insert_with(|| members.clone());
         }
     }
 
     /// Generate Rust enum definitions for all collected union types.
     fn generate_enum_definitions(&mut self) {
-        // For now, we don't generate full enum definitions since M3 focuses on
-        // Option<T> (T | None) and narrowing patterns. Full enum codegen will
-        // be refined when we have comprehensive tests.
-        // The enum_defs field remains empty for Option patterns.
+        // Sort enum names for deterministic output
+        let mut enums: Vec<(String, Vec<Type>)> = self.union_enums.clone().into_iter().collect();
+        enums.sort_by(|a, b| a.0.cmp(&b.0));
+
+        for (enum_name, members) in &enums {
+            // Generate the enum definition
+            self.enum_defs.push_str(&format!("#[derive(Debug, Clone)]\n"));
+            self.enum_defs.push_str(&format!("enum {} {{\n", enum_name));
+            for member in members {
+                let variant = member.union_variant_name();
+                let rust_ty = member.rust_type();
+                self.enum_defs.push_str(&format!("    {}({}),\n", variant, rust_ty));
+            }
+            self.enum_defs.push_str("}\n\n");
+
+            // Generate Display impl so println!("{}", x) works
+            self.enum_defs.push_str(&format!("impl std::fmt::Display for {} {{\n", enum_name));
+            self.enum_defs.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+            self.enum_defs.push_str("        match self {\n");
+            for member in members {
+                let variant = member.union_variant_name();
+                self.enum_defs.push_str(&format!(
+                    "            {}::{}(v) => write!(f, \"{{}}\", v),\n",
+                    enum_name, variant
+                ));
+            }
+            self.enum_defs.push_str("        }\n");
+            self.enum_defs.push_str("    }\n");
+            self.enum_defs.push_str("}\n\n");
+        }
     }
 
     fn write(&mut self, s: &str) {
@@ -149,6 +189,9 @@ impl RustEmitter {
     }
 
     fn emit_function(&mut self, func: &HirFunction) {
+        // Track the current function's return type for Option wrapping
+        self.current_return_type = Some(func.return_type.clone());
+
         // Function signature
         self.write_indent();
         self.write("fn ");
@@ -184,6 +227,8 @@ impl RustEmitter {
 
         self.indent -= 1;
         self.writeln("}");
+
+        self.current_return_type = None;
     }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
@@ -199,14 +244,17 @@ impl RustEmitter {
                 self.write(": ");
                 self.write(&ty.rust_type());
                 self.write(" = ");
-                // Wrap value in Some() for Option types when value is not None
-                if is_option_type(ty) && !matches!(value, HirExpr::NoneLiteral) {
+                if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
+                    // `x: str | None = None` -> `let x: Option<String> = None`
+                    self.write("None");
+                } else if is_option_type(ty) && !is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
+                    // RHS is a plain value (not already Option) -> wrap in Some()
+                    // But if RHS is a function call returning Option, don't double-wrap
                     self.write("Some(");
                     self.emit_expr(value);
                     self.write(")");
-                } else if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
-                    self.write("None");
                 } else {
+                    // RHS already returns the right type (e.g., function returning Option<T>)
                     self.emit_expr(value);
                 }
                 self.write(";\n");
@@ -219,17 +267,30 @@ impl RustEmitter {
                 self.write(";\n");
             }
             HirStmt::Return { value } => {
+                let ret_is_option = self.current_return_type.as_ref().map_or(false, |t| is_option_type(t));
                 self.write_indent();
                 if let Some(val) = value {
                     self.write("return ");
-                    self.emit_expr(val);
+                    if ret_is_option && matches!(val, HirExpr::NoneLiteral) {
+                        // `return None` in Python -> `return None` in Rust Option
+                        self.write("None");
+                    } else if ret_is_option && !is_option_type(val.ty()) {
+                        // Returning a non-Option value from an Option function -> wrap in Some()
+                        self.write("Some(");
+                        self.emit_expr(val);
+                        self.write(")");
+                    } else {
+                        self.emit_expr(val);
+                    }
                     self.write(";\n");
                 } else {
-                    self.write("return;\n");
+                    if ret_is_option {
+                        self.write("return None;\n");
+                    } else {
+                        self.write("return;\n");
+                    }
                 }
             }
-            // Note: Return wrapping for Option types is handled by the function
-            // that constructs the return value -- the HIR already has the right types.
             HirStmt::Expr { expr } => {
                 self.write_indent();
                 self.emit_expr(expr);
@@ -241,42 +302,148 @@ impl RustEmitter {
                 elif_clauses,
                 else_body,
             } => {
-                // Detect Option narrowing patterns:
-                // `if x is not None:` -> `if let Some(x_val) = &x {`
-                // `if x is None:` -> `if x.is_none() {`
-                self.write_indent();
-                self.write("if ");
-                self.emit_expr(condition);
-                self.write(" {\n");
-                self.indent += 1;
-                for s in then_body {
-                    self.emit_stmt(s);
-                }
-                self.indent -= 1;
-
-                for (cond, body) in elif_clauses {
+                // Detect isinstance narrowing for union enums:
+                // `if isinstance(x, int):` -> `match x { IntOrStr::Int(x) => { ... }, IntOrStr::Str(x) => { ... } }`
+                if let Some((var_name, variant_name, enum_name, other_variants)) = detect_isinstance_union(condition) {
                     self.write_indent();
-                    self.write("} else if ");
-                    self.emit_expr(cond);
+                    self.write(&format!("match {} {{\n", var_name));
+                    self.indent += 1;
+
+                    // Then branch: the matched variant
+                    self.write_indent();
+                    self.write(&format!("{}::{}({}) => {{\n", enum_name, variant_name, var_name));
+                    self.indent += 1;
+                    for s in then_body {
+                        self.emit_stmt(s);
+                    }
+                    self.indent -= 1;
+                    self.writeln("}");
+
+                    // Else branch: the other variant(s)
+                    if let Some(else_stmts) = else_body {
+                        if other_variants.len() == 1 {
+                            let (other_variant, _) = &other_variants[0];
+                            self.write_indent();
+                            self.write(&format!("{}::{}({}) => {{\n", enum_name, other_variant, var_name));
+                        } else {
+                            self.write_indent();
+                            self.write("_ => {\n");
+                        }
+                        self.indent += 1;
+                        for s in else_stmts {
+                            self.emit_stmt(s);
+                        }
+                        self.indent -= 1;
+                        self.writeln("}");
+                    }
+
+                    self.indent -= 1;
+                    self.writeln("}");
+                }
+                // Detect truthiness on Option: `if x:` where x is Option -> `if let Some(x) = x {`
+                else if let Some(var_name) = detect_option_truthiness(condition) {
+                    self.write_indent();
+                    self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                    self.indent += 1;
+                    self.option_unwrapped_vars.insert(var_name.clone());
+                    for s in then_body {
+                        self.emit_stmt(s);
+                    }
+                    self.option_unwrapped_vars.remove(&var_name);
+                    self.indent -= 1;
+
+                    if let Some(else_stmts) = else_body {
+                        self.write_indent();
+                        self.write("} else {\n");
+                        self.indent += 1;
+                        for s in else_stmts {
+                            self.emit_stmt(s);
+                        }
+                        self.indent -= 1;
+                    }
+                    self.writeln("}");
+                }
+                // Detect Option narrowing: `if x is not None:` -> `if let Some(x) = x {`
+                else if let Some(var_name) = detect_is_not_none_var(condition) {
+                    self.write_indent();
+                    // Use `if let Some(var) = var` to unwrap and shadow the variable
+                    self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                    self.indent += 1;
+                    self.option_unwrapped_vars.insert(var_name.clone());
+                    for s in then_body {
+                        self.emit_stmt(s);
+                    }
+                    self.option_unwrapped_vars.remove(&var_name);
+                    self.indent -= 1;
+
+                    if let Some(else_stmts) = else_body {
+                        self.write_indent();
+                        self.write("} else {\n");
+                        self.indent += 1;
+                        for s in else_stmts {
+                            self.emit_stmt(s);
+                        }
+                        self.indent -= 1;
+                    }
+                    self.writeln("}");
+                } else if let Some(var_name) = detect_is_none_var(condition) {
+                    self.write_indent();
+                    self.write(&format!("if {}.is_none() {{\n", var_name));
+                    self.indent += 1;
+                    for s in then_body {
+                        self.emit_stmt(s);
+                    }
+                    self.indent -= 1;
+
+                    if let Some(else_stmts) = else_body {
+                        // In the else branch of `if x is None`, x is not None
+                        self.write_indent();
+                        self.write(&format!("}} else if let Some({}) = {} {{\n", var_name, var_name));
+                        self.indent += 1;
+                        self.option_unwrapped_vars.insert(var_name.clone());
+                        for s in else_stmts {
+                            self.emit_stmt(s);
+                        }
+                        self.option_unwrapped_vars.remove(&var_name);
+                        self.indent -= 1;
+                    }
+                    self.writeln("}");
+                } else {
+                    // Normal if/elif/else
+                    self.write_indent();
+                    self.write("if ");
+                    self.emit_expr(condition);
                     self.write(" {\n");
                     self.indent += 1;
-                    for s in body {
+                    for s in then_body {
                         self.emit_stmt(s);
                     }
                     self.indent -= 1;
-                }
 
-                if let Some(else_stmts) = else_body {
-                    self.write_indent();
-                    self.write("} else {\n");
-                    self.indent += 1;
-                    for s in else_stmts {
-                        self.emit_stmt(s);
+                    for (cond, body) in elif_clauses {
+                        self.write_indent();
+                        self.write("} else if ");
+                        self.emit_expr(cond);
+                        self.write(" {\n");
+                        self.indent += 1;
+                        for s in body {
+                            self.emit_stmt(s);
+                        }
+                        self.indent -= 1;
                     }
-                    self.indent -= 1;
-                }
 
-                self.writeln("}");
+                    if let Some(else_stmts) = else_body {
+                        self.write_indent();
+                        self.write("} else {\n");
+                        self.indent += 1;
+                        for s in else_stmts {
+                            self.emit_stmt(s);
+                        }
+                        self.indent -= 1;
+                    }
+
+                    self.writeln("}");
+                }
             }
             HirStmt::While { condition, body } => {
                 self.write_indent();
@@ -481,10 +648,9 @@ impl RustEmitter {
                 self.write(if *val { "true" } else { "false" });
             }
             HirExpr::NoneLiteral => {
-                // In Option context, None maps to Rust's None
-                // In non-Option context, None maps to ()
-                // The context is determined by the parent (Let statement handles wrapping)
-                self.write("()");
+                // None in sifr maps to Rust's None (for Option contexts)
+                // The parent (Let/Return) handles the wrapping context
+                self.write("None");
             }
             HirExpr::Name { name, .. } => {
                 self.write(name);
@@ -601,9 +767,36 @@ impl RustEmitter {
                 } else {
                     self.write(func);
                     self.write("(");
+                    // Look up param types to wrap union enum arguments
+                    let param_types: Option<Vec<Type>> = self.func_signatures.get(func).map(|(pts, _)| pts.clone());
                     for (i, arg) in args.iter().enumerate() {
                         if i > 0 {
                             self.write(", ");
+                        }
+                        // Wrap arguments to match parameter types
+                        if let Some(ref pts) = param_types {
+                            if i < pts.len() {
+                                // Option param with non-Option arg -> wrap in Some()
+                                if is_option_type(&pts[i]) && !is_option_type(arg.ty()) && !matches!(arg, HirExpr::NoneLiteral) {
+                                    self.write("Some(");
+                                    self.emit_expr(arg);
+                                    self.write(")");
+                                    continue;
+                                }
+                                // Non-Option union param -> wrap in enum variant
+                                if let Type::Union(members) = &pts[i] {
+                                    if !is_option_type(&pts[i]) {
+                                        let arg_ty = arg.ty();
+                                        if let Some(variant) = find_union_variant(members, arg_ty) {
+                                            let enum_name = pts[i].union_enum_name();
+                                            self.write(&format!("{}::{}(", enum_name, variant));
+                                            self.emit_expr(arg);
+                                            self.write(")");
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
                         }
                         self.emit_expr(arg);
                     }
@@ -763,6 +956,87 @@ fn is_option_type(ty: &Type) -> bool {
     } else {
         false
     }
+}
+
+/// Detect truthiness check on an Option variable: `if x:` where x has type T | None.
+fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
+    if let HirExpr::Name { name, ty } = expr {
+        if is_option_type(ty) {
+            return Some(name.clone());
+        }
+    }
+    None
+}
+
+/// Detect `x is not None` pattern in a Compare expression. Returns the variable name.
+fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
+    if let HirExpr::Compare { left, ops, comparators, .. } = expr {
+        if ops.len() == 1 && ops[0] == "is not" && matches!(comparators[0], HirExpr::NoneLiteral) {
+            if let HirExpr::Name { name, .. } = left.as_ref() {
+                return Some(name.clone());
+            }
+        }
+    }
+    None
+}
+
+/// Detect `isinstance(x, type)` where x is a non-Option union type.
+/// Returns (var_name, variant_name, enum_name, other_variants: Vec<(variant_name, type)>).
+fn detect_isinstance_union(expr: &HirExpr) -> Option<(String, String, String, Vec<(String, Type)>)> {
+    if let HirExpr::Call { func, args, .. } = expr {
+        if func == "isinstance" && args.len() == 2 {
+            if let HirExpr::Name { name, ty } = &args[0] {
+                if let Type::Union(members) = ty {
+                    if !is_option_type(ty) {
+                        // The second arg is a StringLiteral with the type name
+                        if let HirExpr::StringLiteral(type_name) = &args[1] {
+                            let target_ty = match type_name.as_str() {
+                                "int" => Type::Int,
+                                "str" => Type::Str,
+                                "float" => Type::Float,
+                                "bool" => Type::Bool,
+                                _ => return None,
+                            };
+                            // Check that this type is a member of the union
+                            if members.contains(&target_ty) {
+                                let variant = target_ty.union_variant_name();
+                                let enum_name = ty.union_enum_name();
+                                // Collect other variants for else branch destructuring
+                                let other_variants: Vec<(String, Type)> = members.iter()
+                                    .filter(|m| *m != &target_ty)
+                                    .map(|m| (m.union_variant_name(), m.clone()))
+                                    .collect();
+                                return Some((name.clone(), variant, enum_name, other_variants));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Find the matching union variant name for an argument type.
+fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<String> {
+    for member in members {
+        if arg_ty.is_assignable_to(member) {
+            return Some(member.union_variant_name());
+        }
+    }
+    None
+}
+
+/// Detect `x is None` pattern in a Compare expression. Returns the variable name.
+fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
+    if let HirExpr::Compare { left, ops, comparators, .. } = expr {
+        if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
+            if let HirExpr::Name { name, .. } = left.as_ref() {
+                return Some(name.clone());
+            }
+        }
+    }
+    None
 }
 
 #[cfg(test)]

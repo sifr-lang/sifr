@@ -1452,10 +1452,16 @@ fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    // Extract the type name as a string literal so codegen can use it for match arms
+    let type_name = match &call.arguments.args[1] {
+        Expr::Name(n) => n.id.to_string(),
+        _ => "unknown".to_string(),
+    };
     // isinstance() always returns bool -- the narrowing happens at the if-statement level
+    // We pass both the variable and the type name string to codegen
     Some(HirExpr::Call {
         func: "isinstance".to_string(),
-        args: vec![arg],
+        args: vec![arg, HirExpr::StringLiteral(type_name)],
         ty: Type::Bool,
     })
 }

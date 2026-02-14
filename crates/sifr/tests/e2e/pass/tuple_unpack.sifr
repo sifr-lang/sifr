@@ -1,5 +1,6 @@
 # Tuple unpacking
-# expect-stdout: 1\nhello
+# expect-stdout: 1
+# expect-stdout: hello
 def main():
     pair: tuple[int, str] = (1, "hello")
     x, y = pair
