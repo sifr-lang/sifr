@@ -170,6 +170,22 @@ pub enum HirStmt {
         value: HirExpr,
         object_ty: Type,
     },
+    /// Nested subscript assignment: matrix[i][j] = val
+    NestedSubscriptAssign {
+        object: String,
+        outer_index: HirExpr,
+        inner_index: HirExpr,
+        value: HirExpr,
+        object_ty: Type,
+    },
+    /// Subscript augmented assignment: list[i] += val
+    SubscriptAugAssign {
+        object: String,
+        index: HirExpr,
+        op: String,
+        value: HirExpr,
+        object_ty: Type,
+    },
     /// Augmented assignment on attribute: self.field += val
     AttributeAugAssign {
         object: String,
