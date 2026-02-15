@@ -1277,6 +1277,17 @@ impl RustEmitter {
             self.write("fn ");
         }
         self.write(&func.name);
+        // Emit generic type parameters if this is a generic function
+        if !func.type_params.is_empty() {
+            self.write("<");
+            for (i, tp) in func.type_params.iter().enumerate() {
+                if i > 0 {
+                    self.write(", ");
+                }
+                self.write(&format!("{}: Clone + std::fmt::Display", tp));
+            }
+            self.write(">");
+        }
         self.write("(");
 
         for (i, param) in func.params.iter().enumerate() {
@@ -1481,6 +1492,12 @@ impl RustEmitter {
                         } else {
                             self.emit_expr(val);
                         }
+                    } else if !ret_is_option && is_option_type(val.ty()) && !matches!(val.ty(), Type::None) {
+                        // Returning an Option value from a non-Option function -> unwrap
+                        // This happens with generic functions where T is inferred as a concrete type
+                        // but the body has safe-indexing that returns Option<T>
+                        self.emit_expr(val);
+                        self.write(".unwrap()");
                     } else {
                         self.emit_expr(val);
                     }
@@ -2594,6 +2611,10 @@ impl RustEmitter {
                 self.write(".push(");
                 if !args.is_empty() {
                     self.emit_expr(&args[0]);
+                    // Clone TypeVar arguments to avoid move issues in loops
+                    if matches!(args[0].ty(), Type::TypeVar(_)) {
+                        self.write(".clone()");
+                    }
                 }
                 self.write(")");
             }
@@ -5248,6 +5269,7 @@ mod tests {
                 }],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5279,6 +5301,7 @@ mod tests {
                 }],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5316,6 +5339,7 @@ mod tests {
                 ],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5348,6 +5372,7 @@ mod tests {
                 ],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5389,6 +5414,7 @@ mod tests {
                 ],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5416,6 +5442,7 @@ mod tests {
                 }],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5446,6 +5473,7 @@ mod tests {
                 }],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5493,6 +5521,7 @@ mod tests {
                 ],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5529,6 +5558,7 @@ mod tests {
                 }],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5572,6 +5602,7 @@ mod tests {
                 ],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -5598,6 +5629,7 @@ mod tests {
                 }],
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: vec![],
             }],
             classes: vec![],
             imports: vec![],

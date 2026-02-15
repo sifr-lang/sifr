@@ -64,6 +64,8 @@ pub struct HirFunction {
     pub method_kind: MethodKind,
     /// User-defined decorators (excluding classmethod/staticmethod)
     pub decorators: Vec<String>,
+    /// Generic type parameters (e.g., ["T", "K", "V"] for generic functions)
+    pub type_params: Vec<String>,
 }
 
 /// A function parameter with its type and optional default value.

@@ -1,0 +1,18 @@
+# Test: Callable type for higher-order functions
+# expect-stdout: 10
+# expect-stdout: 7
+
+from typing import Callable
+
+def apply(f: Callable[[int], int], x: int) -> int:
+    return f(x)
+
+def double(x: int) -> int:
+    return x * 2
+
+def add_one(x: int) -> int:
+    return x + 1
+
+def main():
+    print(apply(double, 5))
+    print(apply(add_one, 6))

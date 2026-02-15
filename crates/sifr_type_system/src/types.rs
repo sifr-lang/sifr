@@ -78,6 +78,15 @@ pub enum Type {
         name: String,
         inner: Box<Type>,
     },
+
+    // --- milestone_generics_impl: Generics ---
+
+    /// Type variable: a generic type parameter (e.g., `T` in `def first[T](items: list[T]) -> T`)
+    TypeVar(String),
+
+    /// Callable type: `Callable[[int, str], bool]` -> `fn(i64, String) -> bool`
+    /// First vec is parameter types, second is return type.
+    Callable(Vec<Type>, Box<Type>),
 }
 
 /// Represents a function's type signature.
@@ -119,6 +128,8 @@ impl Type {
             Self::Result(_, _) => OwnershipKind::Move,
             Self::Protocol { .. } => OwnershipKind::Move,
             Self::Newtype { inner, .. } => inner.ownership(),
+            Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
+            Self::Callable(_, _) => OwnershipKind::Copy, // function pointers are Copy
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -170,6 +181,11 @@ impl Type {
             Self::Result(ok, err) => format!("Result[{}, {}]", ok.display_name(), err.display_name()),
             Self::Protocol { name, .. } => name.clone(),
             Self::Newtype { name, .. } => name.clone(),
+            Self::TypeVar(name) => name.clone(),
+            Self::Callable(params, ret) => {
+                let parts: Vec<String> = params.iter().map(Self::display_name).collect();
+                format!("Callable[[{}], {}]", parts.join(", "), ret.display_name())
+            }
         }
     }
 
@@ -222,6 +238,16 @@ impl Type {
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
             Self::Protocol { name, .. } => format!("Box<dyn {}>", name),
             Self::Newtype { name, .. } => name.clone(),
+            Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
+            Self::Callable(params, ret) => {
+                let param_types: Vec<String> = params.iter().map(Self::rust_type).collect();
+                let ret_type = ret.rust_type();
+                if ret_type == "()" {
+                    format!("impl Fn({})", param_types.join(", "))
+                } else {
+                    format!("impl Fn({}) -> {}", param_types.join(", "), ret_type)
+                }
+            }
         }
     }
 
@@ -273,6 +299,8 @@ impl Type {
             Type::Result(_, _) => "Result".to_string(),
             Type::Protocol { name, .. } => name.clone(),
             Type::Newtype { name, .. } => name.clone(),
+            Type::TypeVar(name) => name.clone(),
+            Type::Callable(_, _) => "Fn".to_string(),
         }
     }
 
@@ -457,6 +485,20 @@ impl Type {
             (Self::Protocol { name: a, .. }, Self::Protocol { name: b, .. }) => a == b,
             // Newtype: same name means same newtype (nominal)
             (Self::Newtype { name: a, .. }, Self::Newtype { name: b, .. }) => a == b,
+            // TypeVar: a type variable is compatible with any type (for generic instantiation)
+            (Self::TypeVar(_), _) | (_, Self::TypeVar(_)) => true,
+            // Callable: compatible if param and return types match
+            (Self::Callable(params_a, ret_a), Self::Callable(params_b, ret_b)) => {
+                params_a.len() == params_b.len()
+                    && params_a.iter().zip(params_b.iter()).all(|(a, b)| a.is_assignable_to(b))
+                    && ret_a.is_assignable_to(ret_b)
+            }
+            // A Function type is assignable to a Callable if signatures match
+            (Self::Function(ft), Self::Callable(params, ret)) => {
+                ft.params.len() == params.len()
+                    && ft.params.iter().zip(params.iter()).all(|((_, pt), ct)| pt.is_assignable_to(ct))
+                    && ft.return_type.is_assignable_to(ret)
+            }
             _ => false,
         }
     }
