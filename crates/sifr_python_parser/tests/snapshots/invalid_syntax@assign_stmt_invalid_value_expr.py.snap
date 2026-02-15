@@ -149,6 +149,7 @@ Module(
                                                             range: 56..57,
                                                         },
                                                         annotation: None,
+                                                        convention: Default,
                                                     },
                                                     default: None,
                                                 },

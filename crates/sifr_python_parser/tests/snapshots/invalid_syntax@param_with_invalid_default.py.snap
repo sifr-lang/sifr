@@ -32,6 +32,7 @@ Module(
                                         range: 8..9,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: Some(
                                     Starred(
@@ -92,6 +93,7 @@ Module(
                                         range: 29..30,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: Some(
                                     Starred(
@@ -152,6 +154,7 @@ Module(
                                         range: 52..53,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: Some(
                                     Yield(

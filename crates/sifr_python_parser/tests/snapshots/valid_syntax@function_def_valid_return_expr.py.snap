@@ -99,6 +99,7 @@ Module(
                                                         range: 48..49,
                                                     },
                                                     annotation: None,
+                                                    convention: Default,
                                                 },
                                                 default: None,
                                             },

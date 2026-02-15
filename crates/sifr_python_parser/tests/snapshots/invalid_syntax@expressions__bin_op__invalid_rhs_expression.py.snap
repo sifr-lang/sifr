@@ -40,6 +40,7 @@ Module(
                                                             range: 11..12,
                                                         },
                                                         annotation: None,
+                                                        convention: Default,
                                                     },
                                                     default: None,
                                                 },

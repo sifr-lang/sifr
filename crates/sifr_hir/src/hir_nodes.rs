@@ -1,6 +1,6 @@
 //! HIR node definitions -- typed versions of AST nodes.
 
-use sifr_type_system::Type;
+use sifr_type_system::{Type, ParamConvention};
 
 /// A complete HIR module (the top-level compilation unit).
 #[derive(Debug, Clone)]
@@ -72,13 +72,15 @@ pub struct HirFunction {
     pub type_params: Vec<String>,
 }
 
-/// A function parameter with its type and optional default value.
+/// A function parameter with its type, convention, and optional default value.
 #[derive(Debug, Clone)]
 pub struct HirParam {
     pub name: String,
     pub ty: Type,
     pub default: Option<HirExpr>,
     pub keyword_only: bool,
+    /// How this parameter receives its value (borrow, mut borrow, or own).
+    pub convention: ParamConvention,
 }
 
 /// A typed statement.

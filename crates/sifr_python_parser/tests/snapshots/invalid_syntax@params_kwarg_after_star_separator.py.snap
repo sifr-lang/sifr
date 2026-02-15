@@ -33,6 +33,7 @@ Module(
                                     range: 13..19,
                                 },
                                 annotation: None,
+                                convention: Default,
                             },
                         ),
                     },

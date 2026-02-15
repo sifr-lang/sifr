@@ -2,7 +2,7 @@
 
 use sifr_python_ast::*;
 use sifr_type_system::{
-    Type, FunctionType,
+    Type, FunctionType, OwnershipKind, ParamConvention,
     type_check_binary_op, type_check_unary_op, type_check_comparison, type_check_bool_op,
     make_union, NarrowingCondition, narrow_type,
 };
@@ -117,7 +117,7 @@ fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
                 collect_type_vars(m, vars);
             }
         }
-        Type::Callable(params, ret) => {
+        Type::Callable(params, _, ret) => {
             for p in params {
                 collect_type_vars(p, vars);
             }
@@ -145,8 +145,9 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
         Type::Union(members) => make_union(
             members.iter().map(|m| substitute_type_vars(m, bindings)).collect(),
         ),
-        Type::Callable(params, ret) => Type::Callable(
+        Type::Callable(params, conventions, ret) => Type::Callable(
             params.iter().map(|p| substitute_type_vars(p, bindings)).collect(),
+            conventions.clone(),
             Box::new(substitute_type_vars(ret, bindings)),
         ),
         _ => ty.clone(),
@@ -283,7 +284,7 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
             if let Some(ft) = extract_function_type(func, &mut ctx) {
                 // Track which type variables this function uses (makes it generic)
                 let mut func_type_vars = Vec::new();
-                for (_, ty) in &ft.params {
+                for (_, ty, _) in &ft.params {
                     collect_type_vars(ty, &mut func_type_vars);
                 }
                 collect_type_vars(&ft.return_type, &mut func_type_vars);
@@ -404,10 +405,7 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                             // Also register the constructor
                             if let Type::Class { fields, .. } = class_ty {
                                 let params: Vec<(String, Type)> = fields.clone();
-                                let ft = FunctionType {
-                                    params,
-                                    return_type: Box::new(class_ty.clone()),
-                                };
+                                let ft = FunctionType::new(params, class_ty.clone());
                                 ctx.functions.insert(local, ft);
                             }
                         }
@@ -596,10 +594,10 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         ctx.class_types.insert(class_name.clone(), newtype_ty.clone());
 
         // Register constructor: ClassName(value) -> ClassName
-        let ft = FunctionType {
-            params: vec![("value".to_string(), inner.clone())],
-            return_type: Box::new(newtype_ty),
-        };
+        let ft = FunctionType::new(
+            vec![("value".to_string(), inner.clone())],
+            newtype_ty,
+        );
         ctx.functions.insert(class_name.clone(), ft);
         return;
     }
@@ -626,10 +624,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 } else {
                     Type::None
                 };
-                methods.push((method_name, FunctionType {
-                    params,
-                    return_type: Box::new(return_ty),
-                }));
+                methods.push((method_name, FunctionType::new(params, return_ty)));
             }
         }
         let proto_ty = Type::Protocol {
@@ -700,10 +695,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                     }
                     // Constructor returns the class type (registered below)
                     // We store it as a function for call resolution
-                    let constructor_ft = FunctionType {
-                        params: params.clone(),
-                        return_type: Box::new(Type::None), // placeholder, updated below
-                    };
+                    let constructor_ft = FunctionType::new(params.clone(), Type::None); // placeholder, updated below
                     ctx.functions.insert(class_name.clone(), constructor_ft);
 
                     // Collect defaults for constructor
@@ -743,10 +735,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                     } else {
                         Type::None
                     };
-                    methods.push((method_name, FunctionType {
-                        params,
-                        return_type: Box::new(return_ty),
-                    }));
+                    methods.push((method_name, FunctionType::new(params, return_ty)));
                 }
             }
             Stmt::Pass(_) => {} // Allow pass in class body
@@ -768,10 +757,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     } else {
         // No __init__ defined -- create a default constructor from fields
         let params: Vec<(String, Type)> = fields.clone();
-        let ft = FunctionType {
-            params,
-            return_type: Box::new(class_ty.clone()),
-        };
+        let ft = FunctionType::new(params, class_ty.clone());
         ctx.functions.insert(class_name.clone(), ft);
     }
 
@@ -799,11 +785,12 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         let hir_methods: Vec<HirFunction> = methods_sigs.iter().map(|(name, ft)| {
             HirFunction {
                 name: name.clone(),
-                params: ft.params.iter().map(|(pn, pt)| HirParam {
+                params: ft.params.iter().map(|(pn, pt, _)| HirParam {
                     name: pn.clone(),
                     ty: pt.clone(),
                     default: None,
                     keyword_only: false,
+                    convention: ParamConvention::default(),
                 }).collect(),
                 return_type: *ft.return_type.clone(),
                 body: vec![], // Protocol methods have no body
@@ -846,15 +833,15 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                         resolve_annotation_expr(ann, ctx)
                     } else { Type::Any };
                     ctx.scope.define(param_name.clone(), param_ty.clone());
-                    params.push(HirParam { name: param_name, ty: param_ty, default: None, keyword_only: false });
+                    params.push(HirParam { name: param_name, ty: param_ty, default: None, keyword_only: false, convention: ParamConvention::default() });
                 }
                 let return_ty = if let Some(ref ret_ann) = func.returns {
                     resolve_annotation_expr(ret_ann, ctx)
                 } else { Type::None };
-                let method_ft = FunctionType {
-                    params: params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
-                    return_type: Box::new(return_ty.clone()),
-                };
+                let method_ft = FunctionType::new(
+                    params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
+                    return_ty.clone(),
+                );
                 let body = lower_stmts(&func.body, &method_ft, ctx);
                 ctx.scope.pop();
                 ctx.current_class = None;
@@ -952,6 +939,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                     ty: param_ty,
                     default: None,
                     keyword_only: false,
+                    convention: ParamConvention::default(),
                 });
             }
 
@@ -964,10 +952,10 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             };
 
             // Create a dummy function type for lower_stmts
-            let method_ft = FunctionType {
-                params: params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
-                return_type: Box::new(return_ty.clone()),
-            };
+            let method_ft = FunctionType::new(
+                params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
+                return_ty.clone(),
+            );
 
             // Lower method body
             let body = lower_stmts(&func.body, &method_ft, ctx);
@@ -1107,15 +1095,29 @@ fn register_builtins(ctx: &mut LowerCtx) {
     // print() accepts any single argument and returns None
     ctx.functions.insert(
         "print".to_string(),
-        FunctionType {
-            params: vec![("value".to_string(), Type::Any)],
-            return_type: Box::new(Type::None),
-        },
+        FunctionType::all_borrow(vec![("value".to_string(), Type::Any)], Type::None),
     );
 }
 
+fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
+    match conv {
+        AstParamConvention::Mut => ParamConvention::MutBorrow,
+        AstParamConvention::Own => ParamConvention::Own,
+        AstParamConvention::Default => {
+            // TypeVars (generics) default to Own since the concrete type is unknown
+            if matches!(ty, Type::TypeVar(_)) {
+                ParamConvention::Own
+            } else if ty.ownership() == OwnershipKind::Copy {
+                ParamConvention::Own
+            } else {
+                ParamConvention::Borrow
+            }
+        }
+    }
+}
+
 fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<FunctionType> {
-    let mut params = Vec::new();
+    let mut params: Vec<(String, Type, ParamConvention)> = Vec::new();
 
     for param in &func.parameters.args {
         let name = param.parameter.name.to_string();
@@ -1128,7 +1130,8 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
             ));
             Type::Any
         };
-        params.push((name, ty));
+        let conv = ast_convention_to_param(param.parameter.convention, &ty);
+        params.push((name, ty, conv));
     }
 
     // Vararg parameter (*args) -- becomes Vec<T>
@@ -1143,7 +1146,9 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
             ));
             Type::Any
         };
-        params.push((name, Type::List(Box::new(elem_ty))));
+        let list_ty = Type::List(Box::new(elem_ty));
+        let conv = ast_convention_to_param(vararg.convention, &list_ty);
+        params.push((name, list_ty, conv));
     }
 
     // Also include keyword-only parameters
@@ -1158,7 +1163,8 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
             ));
             Type::Any
         };
-        params.push((name, ty));
+        let conv = ast_convention_to_param(param.parameter.convention, &ty);
+        params.push((name, ty, conv));
     }
 
     let return_type = if let Some(returns) = &func.returns {
@@ -1329,7 +1335,14 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                                 }
                             };
                             let return_type = resolve_annotation_expr(&tuple.elts[1], ctx);
-                            Type::Callable(param_types, Box::new(return_type))
+                            let conventions = param_types.iter().map(|ty| {
+                                if ty.ownership() == OwnershipKind::Copy {
+                                    ParamConvention::Own
+                                } else {
+                                    ParamConvention::Borrow
+                                }
+                            }).collect();
+                            Type::Callable(param_types, conventions, Box::new(return_type))
                         }
                         _ => {
                             ctx.error("Callable type requires [[param_types], return_type] syntax".to_string());
@@ -1368,16 +1381,19 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     // Regular args
     for (i, param_def) in func.parameters.args.iter().enumerate() {
         let name = param_def.parameter.name.to_string();
-        let ty = ft.params.get(i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+        let ty = ft.params.get(i).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
         ctx.scope.define(name.clone(), ty.clone());
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
 
         params.push(HirParam {
             name,
             ty,
             default,
             keyword_only: false,
+            convention,
         });
     }
 
@@ -1385,14 +1401,16 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     if let Some(ref vararg) = func.parameters.vararg {
         let name = vararg.name.to_string();
         let regular_count = func.parameters.args.len();
-        let ty = ft.params.get(regular_count).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+        let ty = ft.params.get(regular_count).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
         ctx.scope.define(name.clone(), ty.clone());
 
+        let convention = ast_convention_to_param(vararg.convention, &ty);
         params.push(HirParam {
             name,
             ty,
             default: None,
             keyword_only: false,
+            convention,
         });
     }
 
@@ -1400,16 +1418,19 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     let regular_count = func.parameters.args.len() + if func.parameters.vararg.is_some() { 1 } else { 0 };
     for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
         let name = param_def.parameter.name.to_string();
-        let ty = ft.params.get(regular_count + i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+        let ty = ft.params.get(regular_count + i).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
         ctx.scope.define(name.clone(), ty.clone());
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
 
         params.push(HirParam {
             name,
             ty,
             default,
             keyword_only: true,
+            convention,
         });
     }
 
@@ -1662,7 +1683,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             let mut params = Vec::new();
             for (i, param_def) in func.parameters.args.iter().enumerate() {
                 let name = param_def.parameter.name.to_string();
-                let ty = ft.params.get(i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+                let ty = ft.params.get(i).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
                 ctx.scope.define(name.clone(), ty.clone());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
@@ -1670,6 +1691,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                     ty,
                     default,
                     keyword_only: false,
+                    convention: ParamConvention::default(),
                 });
             }
 
@@ -1677,13 +1699,14 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             if let Some(ref vararg) = func.parameters.vararg {
                 let name = vararg.name.to_string();
                 let regular_count = func.parameters.args.len();
-                let ty = ft.params.get(regular_count).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+                let ty = ft.params.get(regular_count).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
                 ctx.scope.define(name.clone(), ty.clone());
                 params.push(HirParam {
                     name,
                     ty,
                     default: None,
                     keyword_only: false,
+                    convention: ParamConvention::default(),
                 });
             }
 
@@ -1691,7 +1714,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             let regular_count = func.parameters.args.len() + if func.parameters.vararg.is_some() { 1 } else { 0 };
             for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
                 let name = param_def.parameter.name.to_string();
-                let ty = ft.params.get(regular_count + i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+                let ty = ft.params.get(regular_count + i).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
                 ctx.scope.define(name.clone(), ty.clone());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
@@ -1699,6 +1722,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                     ty,
                     default,
                     keyword_only: true,
+                    convention: ParamConvention::default(),
                 });
             }
 
@@ -3459,7 +3483,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
 
     // Check if this is a Callable-typed variable being called
     let callable_info = ctx.scope.lookup(&func_name).and_then(|info| {
-        if let Type::Callable(ref param_types, ref ret_type) = info.ty {
+        if let Type::Callable(ref param_types, _, ref ret_type) = info.ty {
             Some((param_types.clone(), *ret_type.clone()))
         } else {
             None
@@ -3600,7 +3624,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let defaults = ctx.function_defaults.get(&func_name).cloned();
 
         // Check: no positional args after keyword args (already enforced by parser)
-        for (i, (param_name, _param_ty)) in ft.params.iter().enumerate() {
+        for (i, (param_name, _param_ty, _)) in ft.params.iter().enumerate() {
             if i < positional_args.len() {
                 // Check no duplicate keyword for this position
                 if keyword_args.iter().any(|(k, _)| k == param_name) {
@@ -3638,7 +3662,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
 
         // Check for unknown keyword arguments
         for (kw_name, _) in &keyword_args {
-            if !ft.params.iter().any(|(p, _)| p == kw_name) {
+            if !ft.params.iter().any(|(p, _, _)| p == kw_name) {
                 ctx.error(format!(
                     "function '{}': unexpected keyword argument '{}'",
                     func_name, kw_name
@@ -3652,7 +3676,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
 
     // Check argument types (skip for print)
     if func_name != "print" {
-        for (i, (arg, (param_name, param_ty))) in args.iter().zip(ft.params.iter()).enumerate() {
+        for (i, (arg, (param_name, param_ty, _))) in args.iter().zip(ft.params.iter()).enumerate() {
             if !arg.ty().is_assignable_to(param_ty) {
                 ctx.error(format!(
                     "argument {} ('{}') of function '{}': expected '{}', got '{}'",
@@ -3666,17 +3690,13 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     }
 
-    // Track ownership: move arguments of move types
-    // Skip for built-in functions that borrow their arguments (print, len, bool, etc.)
-    let borrows_args = matches!(func_name.as_str(),
-        "print" | "len" | "bool" | "str" | "int" | "float" | "isinstance" |
-        "type" | "id" | "hash" | "repr" | "sorted" | "reversed" | "enumerate" |
-        "zip" | "any" | "all" | "sum" | "min" | "max" | "abs" | "round" | "pow"
-    );
-    if !borrows_args {
-        for arg in &args {
-            if let HirExpr::Name { name, ty } = arg {
-                if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+    // Track ownership: only mark arguments as moved when the parameter convention is Own
+    // and the argument type is Move. Borrow and MutBorrow do not consume the value.
+    for (i, arg) in args.iter().enumerate() {
+        if let HirExpr::Name { name, ty } = arg {
+            if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+                let convention = ft.params.get(i).map(|(_, _, c)| *c).unwrap_or(ParamConvention::Borrow);
+                if convention == ParamConvention::Own {
                     ctx.scope.mark_moved(name);
                 }
             }
@@ -3686,7 +3706,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // If this is a generic function, infer type variable bindings and substitute
     let return_type = if ctx.generic_functions.contains_key(&func_name) {
         let mut bindings = HashMap::new();
-        for (arg, (_, param_ty)) in args.iter().zip(ft.params.iter()) {
+        for (arg, (_, param_ty, _)) in args.iter().zip(ft.params.iter()) {
             infer_type_var_bindings(param_ty, arg.ty(), &mut bindings);
         }
         if bindings.is_empty() {
@@ -4533,7 +4553,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     return None;
                 }
                 // Check argument types
-                for (i, (arg, (param_name, param_ty))) in args.iter().zip(ft.params.iter()).enumerate() {
+                for (i, (arg, (param_name, param_ty, _))) in args.iter().zip(ft.params.iter()).enumerate() {
                     if !arg.ty().is_assignable_to(param_ty) {
                         ctx.error(format!(
                             "argument {} ('{}') of {}.{}(): expected '{}', got '{}'",
@@ -4783,6 +4803,7 @@ fn lower_lambda_with_context(expr: &Expr, context_types: &[Type], ctx: &mut Lowe
                     ty: param_ty,
                     default: None,
                     keyword_only: false,
+                    convention: ParamConvention::default(),
                 });
             }
         }
@@ -4793,10 +4814,7 @@ fn lower_lambda_with_context(expr: &Expr, context_types: &[Type], ctx: &mut Lowe
         ctx.scope.pop();
 
         let param_types: Vec<(String, Type)> = params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect();
-        let fn_ty = Type::Function(FunctionType {
-            params: param_types,
-            return_type: Box::new(body_ty),
-        });
+        let fn_ty = Type::Function(FunctionType::new(param_types, body_ty));
 
         Some(HirExpr::Lambda {
             params,
@@ -4829,6 +4847,7 @@ fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 ty: param_ty,
                 default: None,
                 keyword_only: false,
+                convention: ParamConvention::default(),
             });
         }
     }
@@ -4840,10 +4859,7 @@ fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
 
     // Build the function type for the lambda
     let param_types: Vec<(String, Type)> = params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect();
-    let fn_ty = Type::Function(FunctionType {
-        params: param_types,
-        return_type: Box::new(body_ty),
-    });
+    let fn_ty = Type::Function(FunctionType::new(param_types, body_ty));
 
     Some(HirExpr::Lambda {
         params,
@@ -5172,14 +5188,23 @@ mod tests {
 
     #[test]
     fn test_use_after_move() {
-        // print() borrows, so print(s); print(s) should NOT error.
-        // Use a user-defined consuming function to test move semantics.
+        // Under borrow-by-default, consume() needs `own` to move the argument.
+        // Without `own`, the argument is borrowed and no move error occurs.
         let result = lower_source(
-            "def consume(s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n"
+            "def consume(own s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n"
         );
         assert!(result.is_err());
         let errors = result.unwrap_err();
         assert!(errors.iter().any(|e| e.message.contains("moved value")));
+    }
+
+    #[test]
+    fn test_borrow_by_default_no_move() {
+        // Under borrow-by-default, passing to a function that borrows does NOT move.
+        let result = lower_source(
+            "def process(s: str) -> int:\n    return len(s)\ndef main():\n    s: str = \"hello\"\n    x: int = process(s)\n    print(s)\n"
+        );
+        assert!(result.is_ok(), "borrow-by-default should not cause use-after-move");
     }
 
     #[test]

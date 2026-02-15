@@ -688,6 +688,7 @@ Module(
                                                     range: 481..482,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },

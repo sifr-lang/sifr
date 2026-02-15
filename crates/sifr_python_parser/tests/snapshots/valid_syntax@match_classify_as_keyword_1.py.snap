@@ -527,6 +527,7 @@ Module(
                                                     range: 332..335,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },

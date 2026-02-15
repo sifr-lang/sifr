@@ -58,34 +58,40 @@ todos:
     status: completed
   - id: m11-nested-functions
     content: "milestone_nested_functions: Lower def-inside-def to Rust closures/inner fns, capture outer variables, recursive inner fns"
-    status: pending
+    status: completed
   - id: m12-forward-refs
     content: "milestone_forward_refs: Two-pass class registration for forward type references (ListNode, TreeNode, Node)"
-    status: pending
+    status: completed
   - id: m13-narrowing-v3
     content: "milestone_narrowing_v3: Fix equality narrowing (Never), field access on narrowed types, comparison on unions, not-collection truthiness"
-    status: pending
+    status: completed
   - id: m14-union-ops
     content: "milestone_union_ops: Arithmetic/indexing/len on T|None, dict.get(key,default), list.remove, list+list concat"
-    status: pending
+    status: completed
   - id: m15-subscript-v2
     content: "milestone_subscript_v2: Nested subscript assign, &mut self for methods, variable mutability, i64/usize casts"
-    status: pending
+    status: completed
   - id: m16-comprehension-v2
     content: "milestone_comprehension_v2: Range in comprehension, dict/set comprehension, tuple unpacking in for/comprehension"
-    status: pending
+    status: completed
   - id: m17-generics-impl
     content: "milestone_generics_impl: TypeVar, generic functions/classes, Callable type syntax, protocol bounds"
-    status: pending
+    status: completed
   - id: m18-phase-fixes
     content: "milestone_phase_fixes: Protocol dispatch, context manager scope, cls calls, import alias codegen, print(None), union return wrapping, stdlib gaps, module-level constants"
-    status: pending
+    status: completed
   - id: m19-audit-fixup
     content: "milestone_audit_fixup: PEP 695 inline generics, protocol method dispatch, multi-generator comprehensions, stdlib fixes (missing math fns, naming mismatches, type signature widening), Set[T] type (stretch)"
-    status: pending
+    status: completed
   - id: m20-ownership-v3
     content: "milestone_ownership_v3: Complete ownership tracking -- assignment-based move detection, move-in-loop detection, conditional move merging, set Display codegen fix. Foundation for fearless concurrency."
     status: completed
+  - id: m21-borrow-default
+    content: "milestone_borrow_default: Add ParamConvention enum (Borrow/MutBorrow/Own), extend FunctionType and Callable to carry conventions, parse mut/own soft keywords, update HIR lowering to propagate conventions across all call paths (regular/Callable/method), update codegen to emit &T/&mut T/T, update call-site emission, delete borrows_args hardcoded list, enforce no-silent-clone on borrowed param escape."
+    status: pending
+  - id: m22-borrow-hardening
+    content: "milestone_borrow_hardening: Add mutable borrow exclusivity checking, improve error messages for borrow violations, update 50 borrowing audit tests, add new E2E pass/fail tests, add parser snapshot tests for mut/own edge cases, add multi-module convention tests, update stdlib collections for mut params, update architecture docs."
+    status: pending
 isProject: false
 ---
 
@@ -93,7 +99,7 @@ isProject: false
 
 ## Vision
 
-Sifr is a compiled programming language that uses Python syntax with enforced static typing. It compiles Python-like source code to Rust source code, which is then compiled by `rustc` into native binaries. Ownership semantics follow Rust's move-by-default model. Types are strict with an opt-in `Any` escape hatch (like TypeScript's strict mode).
+Sifr is a compiled programming language that uses Python syntax with enforced static typing. It compiles Python-like source code to Rust source code, which is then compiled by `rustc` into native binaries. Assignment uses move semantics (like Rust), while function parameters are borrow-by-default with opt-in `mut` (mutable borrow) and `own` (ownership transfer). Types are strict with an opt-in `Any` escape hatch (like TypeScript's strict mode).
 
 The type system draws heavily from TypeScript's design: union and intersection types, literal types, and full control-flow-based type narrowing are first-class citizens. Unlike TypeScript (which erases types at runtime), sifr uses types to generate efficient Rust code -- union types become Rust enums, narrowing becomes `match` expressions, and literal types enable compile-time value checking.
 
@@ -257,6 +263,10 @@ flowchart TD
         milestone_generics_impl["milestone_generics_impl: Generics Impl\nTypeVar, generic fn/class,\nCallable, protocol bounds"]
         milestone_phase_fixes["milestone_phase_fixes: Phase Fixes\nProtocol dispatch, ctx mgr,\ncls calls, stdlib gaps"]
     end
+    subgraph phaseBorrow [Phase: Borrow-by-Default]
+        milestone_borrow_default["milestone_borrow_default: Borrow Default\nParamConvention enum,\nmut/own syntax, codegen"]
+        milestone_borrow_hardening["milestone_borrow_hardening: Borrow Hardening\nExclusivity checks,\nerror messages, tests"]
+    end
     subgraph phase4 [Phase 4: Ecosystem]
         milestone_async["milestone_async: Async Runtime\nasync/await, tokio,\ntasks, streams"]
         milestone_web_db["milestone_web_db: Web + Database\naxum, reqwest, sqlx,\ngraceful shutdown, health"]
@@ -288,7 +298,8 @@ flowchart TD
     milestone_stdlib_hardening --> milestone_nested_functions --> milestone_forward_refs --> milestone_narrowing_v3
     milestone_narrowing_v3 --> milestone_union_ops --> milestone_subscript_v2 --> milestone_comprehension_v2
     milestone_comprehension_v2 --> milestone_generics_impl --> milestone_phase_fixes
-    milestone_phase_fixes --> milestone_async --> milestone_web_db --> milestone_typed_serde
+    milestone_phase_fixes --> milestone_borrow_default --> milestone_borrow_hardening
+    milestone_borrow_hardening --> milestone_async --> milestone_web_db --> milestone_typed_serde
     milestone_typed_serde --> milestone_crypto_auth --> milestone_web_production --> milestone_redis
     milestone_redis --> milestone_storage --> milestone_email --> milestone_data_processing
     milestone_data_processing --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
@@ -331,8 +342,11 @@ flowchart TD
 - **milestone_comprehension_v2 after milestone_subscript_v2:** Comprehensions are syntactic sugar that benefit from all prior fixes. Range in comprehension, dict/set comprehension, tuple unpacking.
 - **milestone_generics_impl after milestone_comprehension_v2:** Generics is the largest new feature. Everything else should be stable before adding type parameters.
 - **milestone_phase_fixes last in Hardening Phase 2:** Catch-all for remaining bugs -- protocol dispatch, context managers, stdlib gaps, and codegen polish.
-- **milestone_phase_fixes before milestone_async:** The language must be fully hardened before building the async ecosystem on top.
-- **milestone_async after Language Hardening:** Async runtime needs both the full stdlib and a hardened core language in place
+- **milestone_phase_fixes before milestone_borrow_default:** The language must be fully hardened before changing the default parameter passing convention. Borrow-by-default is a semantic change that affects every user-defined function -- it must build on a stable foundation.
+- **milestone_borrow_default before milestone_async:** Borrow-by-default is a prerequisite for fearless concurrency. The `own` keyword makes ownership transfer explicit at task spawn boundaries. Without it, milestone_async would need to re-implement parameter convention logic.
+- **milestone_borrow_hardening after milestone_borrow_default:** Exclusivity checking and error messages build on the working borrow-by-default codegen. Tests validate the complete model.
+- **milestone_borrow_hardening before milestone_async:** The ownership model must be fully hardened (with exclusivity enforcement) before async/await, which depends on Send/Sync checking that requires knowing borrow vs own at every point.
+- **milestone_async after Borrow-by-Default:** Async runtime needs the full stdlib, a hardened core language, and a complete ownership model in place
 - **milestone_async before milestone_web_db:** Async runtime is needed for web framework and database access
 - **milestone_typed_serde after milestone_web_db:** The web framework must exist before we can add typed extractors (`Json[T]`, `Form[T]`). Typed serde also enhances `sifr.json` from milestone_core_stdlib with class serialization.
 - **milestone_crypto_auth after milestone_typed_serde:** JWT payloads are classes that need auto-serde. Password hashing and encryption are independent but benefit from the typed patterns established in milestone_typed_serde.
@@ -2680,6 +2694,236 @@ This milestone is the prerequisite for fearless concurrency:
 
 ---
 
+## milestone_borrow_default: Borrow-by-Default Parameter Passing
+
+**Goal:** Change Sifr's function parameter passing from move-by-default to borrow-by-default. Function arguments are immutably borrowed by default (`&T`), with opt-in `mut` (mutable borrow, `&mut T`) and `own` (ownership transfer, `T`) keywords. Copy types (`int`, `float`, `bool`) always pass by value. This unifies the existing two-tier system where built-in functions borrow (via a hardcoded `borrows_args` list) and user-defined functions move.
+
+### 1. ParamConvention Enum and Signature Propagation
+
+Add a `ParamConvention` enum to the type system with three variants:
+
+- `Borrow` -- immutable borrow (default for Move types). Codegen: `&T`
+- `MutBorrow` -- mutable borrow (`mut` keyword). Codegen: `&mut T`
+- `Own` -- ownership transfer (`own` keyword). Codegen: `T`
+
+Extend `FunctionType` to carry conventions alongside parameter types:
+
+- `FunctionType.params`: change from `Vec<(String, Type)>` to `Vec<(String, Type, ParamConvention)>`
+- `Callable` type variant: extend from `Callable(Vec<Type>, Box<Type>)` to `Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>)`
+
+This ensures conventions are available at every call site -- including cross-module imports, stdlib lookups, and `Callable`-typed variable calls. Without this, the codegen cannot determine whether to emit `&arg`, `&mut arg`, or `arg` for calls to functions defined outside the current compilation unit.
+
+**Key files:** `crates/sifr_type_system/src/types.rs` (ParamConvention, FunctionType, Callable), all callers that construct FunctionType/Callable
+
+### 2. Parser: `mut` and `own` Soft Keywords
+
+Parse `mut` and `own` as soft keywords before parameter names in function definitions. These are not Python keywords, so they appear as identifiers and can be detected by peeking at the token before the parameter name.
+
+```python
+def process(items: list[int]) -> int:       # borrows items (default)
+    return len(items)
+
+def sort_it(mut items: list[int]):           # mutably borrows items
+    items.sort()
+
+def consume(own items: list[int]) -> int:    # takes ownership
+    return len(items)
+```
+
+Add a `convention` field to the `Parameter` AST node.
+
+**Key files:** `crates/sifr_python_parser/src/parser/statement.rs` (parse_parameter), `crates/sifr_python_ast/src/nodes.rs` (Parameter struct)
+
+### 3. HIR: Convention on HirParam
+
+Add a `convention: ParamConvention` field to `HirParam`. In `lower_function`, propagate the convention from each AST `Parameter` to the corresponding `HirParam`. Default convention: `Borrow` for Move types, `Own` for Copy types (Copy types are always passed by value regardless).
+
+**Key files:** `crates/sifr_hir/src/hir_nodes.rs` (HirParam), `crates/sifr_hir/src/lower.rs` (lower_function)
+
+### 4. HIR: Delete `borrows_args` and Update All Call Paths
+
+Delete the `borrows_args` match block in `lower.rs` that special-cases 25 built-in function names. Replace with convention-aware logic:
+
+- Look up the called function's parameter conventions
+- Only call `mark_moved(name)` if the corresponding parameter has `convention == Own` AND the argument type is `Move`
+- For `MutBorrow` parameters: track that the variable is mutably borrowed (no move)
+- For `Borrow` parameters: no move tracking needed
+
+Apply this convention-aware logic to **all call paths** in `lower.rs`:
+
+- Regular function calls (the main path)
+- `Callable`-typed variable calls (extract conventions from the `Callable` type variant)
+- Method calls (non-self parameters propagate conventions through `HirParam`)
+
+**Note:** Constructor calls do not need convention changes -- constructors always take ownership of their arguments. Method `self` receivers continue to use auto-inference (`&self`/`&mut self` from body analysis).
+
+**Key files:** `crates/sifr_hir/src/lower.rs` (function call lowering, callable_info path, lower_method_call)
+
+### 5. Codegen: Extend `func_signatures`, Register Class Methods, Emit `&T` / `&mut T` / `T`
+
+Change the codegen-internal `func_signatures` map from `HashMap<String, (Vec<Type>, Type)>` to `HashMap<String, (Vec<(Type, ParamConvention)>, Type)>` so conventions are available at every call site. Register both top-level functions and class/static methods (under the `ClassName::method` key) during `collect_union_types`.
+
+Update `emit_function` to emit parameter types based on convention:
+
+- `Borrow` + Move type: emit `&T` (e.g., `&Vec<i64>`, `&String`)
+- `Borrow` + Copy type: emit `T` (e.g., `i64`, `f64`, `bool`)
+- `MutBorrow`: emit `&mut T`
+- `Own`: emit `T` (current behavior)
+
+Update call-site emission for `HirExpr::Call` to prepend `&` or `&mut` for Move-type arguments based on the callee's parameter conventions (looked up from `func_signatures`).
+
+Update call-site emission for `HirExpr::MethodCall` (`obj.method(arg)`) to use convention-aware argument emission. The current codegen uses a hardcoded heuristic (`if matches!(arg.ty(), Type::Class { .. }) { write("&") }`). Replace this with convention lookup: resolve the method's `HirParam` conventions from the object's class type, then emit `&arg`/`&mut arg`/`arg` per convention. This applies to the `Type::Class` match arm and the fallback arm in the `MethodCall` handler.
+
+**Key files:** `crates/sifr_codegen/src/lib.rs` (func_signatures type, collect_union_types, HirExpr::Call emission, HirExpr::MethodCall emission)
+
+### 6. Codegen: Handle Borrowed Parameter Usage in Function Bodies
+
+When a parameter is borrowed (`&T`), code inside the function body needs adjustment:
+
+- Read access: works naturally via Rust auto-deref
+- Passing to another function that also borrows: re-borrow via Rust deref coercion (automatic)
+- Passing to a function that takes `own`: compiler error -- "cannot move borrowed parameter -- use `own` or `.clone()`"
+- Returning the parameter: compiler error -- "cannot return borrowed parameter -- use `own` or `.clone()`"
+- Storing into a struct field or collection: compiler error -- same diagnostic as returning
+
+**Important:** The compiler does NOT silently emit `.clone()`. Per the Borrow and Lifetime Strategy contract, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: add `own` to the parameter, call `.clone()` explicitly, or restructure to avoid the escape.
+
+**Key files:** `crates/sifr_codegen/src/lib.rs`, `crates/sifr_hir/src/lower.rs` (escape detection)
+
+### Definition of Done (milestone_borrow_default)
+
+- `ParamConvention` enum exists in the type system
+- `FunctionType.params` carries conventions; `Callable` type variant carries conventions
+- `mut`/`own` keywords parse correctly on function parameters
+- Convention propagates from AST through HIR to codegen
+- User-defined functions emit `&T` by default for Move-type params
+- `borrows_args` hardcoded list is deleted
+- All call paths (regular, Callable, method) use convention-aware move tracking
+- Call sites emit `&arg`/`&mut arg`/`arg` based on callee conventions
+- Borrowed parameter escape (return/store) produces a compiler error, not silent `.clone()`
+- Existing E2E tests pass (with necessary adjustments for new semantics)
+- Basic borrow-by-default programs compile and run correctly
+
+---
+
+## milestone_borrow_hardening: Borrow Exclusivity and Diagnostics
+
+**Goal:** Harden the borrow-by-default model with exclusivity enforcement, clear error messages, comprehensive tests, and stdlib updates. This milestone ensures the ownership model is production-ready and documented before async/concurrency features are built on top.
+
+### 1. Mutable Borrow Exclusivity Tracking
+
+Add `is_mut_borrowed` tracking to `VarInfo` in scope. Implement:
+
+- `mark_mut_borrowed(name)` -- marks a variable as mutably borrowed
+- `is_mut_borrowed(name)` -- checks if mutably borrowed
+- `clear_mut_borrow(name)` -- clears after the borrowing call returns
+
+Enforce exclusivity rules:
+
+- Cannot pass the same variable as `mut` twice in the same call
+- Cannot pass a variable as both `mut` and immutable borrow in the same call
+- Error: "cannot borrow `x` as mutable because it is already borrowed"
+
+**Key files:** `crates/sifr_hir/src/scope.rs` (VarInfo), `crates/sifr_hir/src/lower.rs` (function call lowering)
+
+### 2. Error Messages
+
+Add clear, actionable diagnostic messages:
+
+- "use of moved value: 'x'" -- only for `own` parameters now
+- "cannot mutate borrowed parameter 'x' -- add `mut` to the parameter"
+- "cannot return borrowed parameter 'x' -- use `own` or `.clone()`"
+- "cannot borrow 'x' as mutable because it is already borrowed"
+
+**Key files:** `crates/sifr_hir/src/lower.rs`, `crates/sifr_driver/src/lib.rs`
+
+### 3. Update Borrowing Audit Tests
+
+Update the 50 tests in `audit/borrowing/` to reflect borrow-by-default semantics:
+
+- Tests 08, 23 (function move): change to borrow-by-default behavior (pass succeeds, variable still usable)
+- Tests 09, 24, 31 (use-after-move via function): update to use `own` keyword, verify they still fail correctly
+- Tests 16 (move-in-loop): update to use `own` keyword
+- Tests 01-07, 11-15, 17-22, 25-30, 32-50: verify unchanged behavior
+
+Update `audit/borrowing/POST_HARDENING_REPORT.md` to document the new ownership model.
+
+**Key files:** `audit/borrowing/*.sifr`, `audit/borrowing/POST_HARDENING_REPORT.md`
+
+### 4. New E2E Tests
+
+Create pass tests in `crates/sifr/tests/e2e/pass/`:
+
+- `borrow_default.sifr` -- function args borrowed by default, usable after call
+- `mut_param.sifr` -- `mut` parameter allows in-place mutation
+- `own_param.sifr` -- `own` parameter moves, caller loses access
+- `borrow_in_loop.sifr` -- borrowed args in loops work without issues
+- `mut_exclusivity.sifr` -- valid uses of `mut` with different variables
+
+Create fail tests in `crates/sifr/tests/e2e/fail/`:
+
+- `mutate_borrowed_param.sifr` -- cannot mutate a default-borrowed param
+- `return_borrowed_param.sifr` -- cannot return a borrowed param without clone
+- `double_mut_borrow.sifr` -- cannot mut-borrow same variable twice
+
+**Key files:** `crates/sifr/tests/e2e/pass/`, `crates/sifr/tests/e2e/fail/`
+
+### 4b. Parser Snapshot Tests
+
+Add parser snapshot tests for `mut`/`own` soft keyword edge cases:
+
+- `mut` and `own` used as parameter names (not keywords) -- `def f(mut: int)` parses as parameter named `mut`
+- `mut`/`own` before typed parameters -- `def f(mut x: int)` parses as convention + name
+- `mut`/`own` before untyped parameters -- `def f(mut x)` parses correctly
+- Nested function parameters with conventions -- `def f(mut x: list[int], own y: str)`
+
+**Key files:** `crates/sifr_python_parser/tests/`
+
+### 4c. Multi-Module Convention Tests
+
+Add tests that verify conventions survive across module boundaries:
+
+- Import a function with `mut`/`own` params from another module, call it, verify correct borrow/move behavior
+- Verify that `FunctionType` carries conventions through the import/export pipeline
+- Test `Callable`-typed variables with conventions passed across function boundaries
+
+**Key files:** `crates/sifr/tests/e2e/pass/`, `crates/sifr_driver/`
+
+### 5. Stdlib Updates
+
+- `sifr.collections` mutating functions (`set_add`, `set_remove`, `defaultdict_set`) get `mut` on their first parameter
+- `str.join(items)` codegen adjusted to borrow the list parameter instead of moving it
+
+**Key files:** `crates/sifr_hir/src/stdlib.rs`, `crates/sifr_codegen/src/lib.rs`
+
+### Concurrency Enablement
+
+This milestone completes the foundation for fearless concurrency in `milestone_async`:
+
+- **Spawning tasks requires `own`**: `asyncio.spawn(process(own data))` -- ownership transfer is explicit and visible at the call site
+- **Borrowed values cannot cross task boundaries**: the compiler rejects `&T` in spawned closures because borrows are not `'static`
+- **`mut` borrows enforce exclusivity**: prevents data races at compile time (same as Rust's `&mut` aliasing rule)
+- **Channel ownership**: `sifr.sync.Channel.send(own value)` makes it clear that sending through a channel transfers ownership
+
+### Impact on Standard Library
+
+- **95% of stdlib functions already borrow** in the codegen (using `.iter()`, `&expr`, etc.) -- borrow-by-default matches existing behavior
+- The hardcoded `borrows_args` list of 25 built-in names is eliminated
+- Future stdlib additions (functools, itertools, heapq, etc.) naturally use borrow-by-default with explicit `mut`/`own` where needed
+
+### Definition of Done (milestone_borrow_hardening)
+
+- Exclusivity errors caught by `sifr check` with clear error messages
+- All 50 borrowing audit tests updated and passing/failing correctly
+- New E2E pass/fail tests for borrow_default, mut_param, own_param, exclusivity
+- Parser snapshot tests cover `mut`/`own` soft keyword edge cases
+- Multi-module convention tests verify `FunctionType`/`Callable` convention propagation across imports
+- Stdlib works correctly with borrow-by-default
+- Architecture documentation updated (Borrow and Lifetime Strategy, Ownership Model)
+- `audit/borrowing/POST_HARDENING_REPORT.md` reflects new model
+
+---
+
 ## milestone_async: Async Runtime
 
 **Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that milestone_web_db (web, database) builds on.
@@ -3902,6 +4146,10 @@ PHASE: LANGUAGE HARDENING:
   milestone_phase_fixes:        Phase Fixes               -> Protocol dispatch, context manager scope, cls calls, import alias codegen, stdlib gaps, module-level constants
   milestone_ownership_v3:       Ownership v3              -> Assignment-based move detection, move-in-loop, conditional move merging, set Display fix. Foundation for fearless concurrency.
 
+PHASE: Borrow-by-Default (after Language Hardening, before Ecosystem):
+  milestone_borrow_default:    Borrow Default          -> ParamConvention enum (Borrow/MutBorrow/Own), extend FunctionType/Callable with conventions, parse mut/own keywords, HIR convention propagation across all call paths, codegen &T/&mut T/T emission, call-site borrow emission, delete borrows_args list, no-silent-clone enforcement
+  milestone_borrow_hardening:  Borrow Hardening        -> Mutable borrow exclusivity checking, error messages, borrowing audit test updates, new E2E tests, parser snapshot tests, multi-module convention tests, stdlib mut param annotations, architecture doc updates
+
 PHASE 4 - Ecosystem:
   milestone_async:           Async Runtime           -> async/await, tokio, tasks, async streams
   milestone_web_db:          Web + Database           -> axum web, reqwest HTTP, SQLite, sqlx, graceful shutdown, health check
@@ -3921,7 +4169,7 @@ PHASE 5 - Polish:
   milestone_ecosystem:  Package Ecosystem          -> Registry, incremental compilation, REPL
 ```
 
-After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_stdlib_hardening (end of Hardening Phase 1), the core language compiles 80%+ of real-world Python programs -- codegen bugs are fixed, narrowing/ownership/mutation work correctly, iteration and builtins match Python semantics, recursive types are supported, and the stdlib is production-ready. After milestone_phase_fixes (end of Language Hardening), the language is fully hardened -- nested functions, forward references, generics, comprehensions, union operations, and all Phase 2/3 bugs are fixed, enabling ~50-60% of LeetCode problems to compile. After milestone_web_db, Sifr can build basic web applications with databases. After milestone_typed_serde, Sifr has automatic typed serialization and typed web request/response handling. After milestone_crypto_auth, Sifr has password hashing, JWT, encryption, and secure random -- the auth building blocks. After milestone_web_production, Sifr has production-grade logging, request tracing, rate limiting, and CORS. After milestone_redis, Sifr has native caching, session storage, and pub/sub. After milestone_storage, Sifr can upload/download files to S3-compatible object storage. After milestone_email, Sifr can send transactional emails. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
+After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_stdlib_hardening (end of Hardening Phase 1), the core language compiles 80%+ of real-world Python programs -- codegen bugs are fixed, narrowing/ownership/mutation work correctly, iteration and builtins match Python semantics, recursive types are supported, and the stdlib is production-ready. After milestone_phase_fixes (end of Language Hardening), the language is fully hardened -- nested functions, forward references, generics, comprehensions, union operations, and all Phase 2/3 bugs are fixed, enabling ~50-60% of LeetCode problems to compile. After milestone_borrow_hardening (end of Borrow-by-Default), Sifr uses borrow-by-default for function parameters with explicit `mut`/`own` opt-in -- matching how 95% of stdlib functions already work internally. The ownership model is unified, exclusivity is enforced, and the foundation for fearless concurrency is complete. After milestone_web_db, Sifr can build basic web applications with databases. After milestone_typed_serde, Sifr has automatic typed serialization and typed web request/response handling. After milestone_crypto_auth, Sifr has password hashing, JWT, encryption, and secure random -- the auth building blocks. After milestone_web_production, Sifr has production-grade logging, request tracing, rate limiting, and CORS. After milestone_redis, Sifr has native caching, session storage, and pub/sub. After milestone_storage, Sifr can upload/download files to S3-compatible object storage. After milestone_email, Sifr can send transactional emails. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
 
 ---
 
@@ -3947,16 +4195,16 @@ Union types, `Unknown`, and class instances all need a coherent runtime represen
 
 ### 2. Borrow and Lifetime Strategy
 
-Sifr uses move-by-default semantics (like Rust), but must define when the compiler auto-borrows to keep the language usable. Without this contract, milestone_classes (methods), milestone_generics (closures), and milestone_async (async) will produce user-hostile "use-after-move" errors.
+Sifr uses **borrow-by-default** semantics for function parameters. Move-type arguments are immutably borrowed (`&T`) unless the programmer opts in to mutable borrowing (`mut`) or ownership transfer (`own`). Copy types (`int`, `float`, `bool`) always pass by value. This eliminates "use-after-move" friction for the common case while keeping ownership explicit where it matters.
 
 **Contract:**
 
-- **Function arguments:** move by default. Use `ref` keyword for explicit borrowing (`ref x: str` generates `x: &String`). Use `mut ref` for mutable borrowing.
+- **Function arguments:** borrow by default (immutable). The compiler emits `&T` for Move-type parameters. Use `mut` keyword for mutable borrowing (`mut x: list[int]` generates `x: &mut Vec<i64>`). Use `own` keyword for ownership transfer (`own x: list[int]` generates `x: Vec<i64>`). Copy types (`int`, `float`, `bool`) always pass by value regardless of annotation.
 - **Method receivers:** auto-borrow based on method body analysis:
   - If the method only reads `self` fields: `&self`
   - If the method mutates `self` fields: `&mut self`
   - If the method consumes `self` (e.g., builder pattern): `self` (move)
-  - The programmer can override with explicit `ref self` or `mut ref self` annotations
+  - Self inference is unchanged by borrow-by-default (it already uses body analysis)
 - **Closure captures (milestone_generics):** inferred from usage inside the closure body:
   - Read-only access: capture by `&T`
   - Mutation: capture by `&mut T`
@@ -3964,11 +4212,13 @@ Sifr uses move-by-default semantics (like Rust), but must define when the compil
 - **Temporary lifetimes:** temporaries created in expressions live until the end of the enclosing statement. Method chains like `x.upper().split(",")` work without explicit borrows.
 - **Escape analysis:** the compiler tracks whether a reference escapes its scope. If it does, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: clone explicitly, or restructure to avoid the escape.
 - **No lifetime annotations in user code:** Sifr does not expose Rust's `'a` lifetime syntax. The compiler infers lifetimes using the rules above. If inference fails, the compiler emits a clear error suggesting `.clone()` or restructuring.
-- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-milestone_protocols). Default behavior is move-by-default with explicit `ref`/`mut ref` for borrowing. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
+- **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-milestone_protocols). Default behavior is borrow-by-default with explicit `mut`/`own` for mutable borrowing and ownership transfer. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
 
 **Milestone responsibilities:**
 
 - milestone_classes: implement method receiver inference (`&self` / `&mut self` / `self`)
+- milestone_borrow_default: implement ParamConvention and borrow-by-default codegen
+- milestone_borrow_hardening: implement exclusivity checking and error diagnostics
 - milestone_generics: implement closure capture inference
 - milestone_async: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
 - Post-milestone_protocols: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
@@ -4107,7 +4357,7 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This contract
 **Contract:**
 
 - **Scope-end destruction:** values are dropped at the end of their enclosing scope, in reverse declaration order. This matches Rust's `Drop` semantics and is deterministic (unlike Python's GC).
-- **Move invalidates source:** when a value is moved (assigned to another variable, passed to a function), the source is invalidated. Accessing it after move is a compile-time error.
+- **Move invalidates source:** when a value is moved (assigned to another variable, or passed to a function via `own` parameter), the source is invalidated. Accessing it after move is a compile-time error. Note: default function parameters borrow (`&T`), so passing a value to a function does NOT move it unless the parameter is marked `own`.
 - **Partial moves:** when a struct field is moved out, the entire struct becomes partially invalid. The compiler tracks which fields are still valid.
 - **User-defined destructors deferred:** Sifr does NOT expose `__del__` or custom destructors in MVP. The compiler auto-generates `Drop` for types that hold resources (file handles, connections) via stdlib wrappers.
 - **Explicit cleanup via `with`:** for resource management (files, connections), use `with` blocks that map to Rust's scoped resource patterns. The resource is cleaned up when the `with` block exits.
@@ -4299,13 +4549,14 @@ Narrowing refines a variable's type within a control flow branch:
 
 ### Ownership Model
 
-- All types are **move by default** (like Rust)
+- All types are **move by default** for assignment (like Rust)
 - Primitive types (`int`, `float`, `bool`) are `Copy` -- assignment copies
 - Compound types (`str`, `list`, `dict`, classes) **move** on assignment
 - Explicit `.clone()` for deep copy
-- References via `ref` keyword (maps to `&T`)
-- Mutable references via `mut ref` (maps to `&mut T`)
-- Function arguments: move by default, use `ref` for borrowing
+- Function arguments: **borrow by default** (maps to `&T` for Move types)
+- Mutable borrow via `mut` keyword on parameters (maps to `&mut T`)
+- Ownership transfer via `own` keyword on parameters (maps to `T`)
+- Explicit `.clone()` for deep copy when returning or storing borrowed values
 
 ### Type Inference Strategy
 
@@ -4839,7 +5090,7 @@ This ensures every feature is tested at every layer of the compiler, and any age
 Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a reference. Key findings:
 
 - **No Rust code to reuse.** Mojo's compiler is proprietary, built on MLIR/LLVM (C++). The open-source repo only contains the stdlib, docs, and design proposals.
-- **Ownership model difference:** Mojo chose **borrow-by-default** for function arguments. Sifr uses **move-by-default** (like Rust). This is a deliberate tradeoff -- Sifr prioritizes Rust-like safety and explicitness.
+- **Ownership model alignment:** Both Mojo and Sifr use **borrow-by-default** for function arguments. Sifr uses `mut` for mutable borrows and `own` for ownership transfer (Mojo uses `mut`/`owned`). Assignment still moves for heap types (preventing aliasing). This gives Python-like ergonomics with Rust-like safety.
 - **Useful design references:** `proposals/value-ownership.md` and `proposals/lifetimes-and-provenance.md` document tradeoffs between move/borrow defaults, ASAP destruction, and lifecycle methods.
 - `**def` vs `fn` split:** Mojo uses `def` for dynamic and `fn` for strict. Sifr does not need this split since all code is strictly typed.
 

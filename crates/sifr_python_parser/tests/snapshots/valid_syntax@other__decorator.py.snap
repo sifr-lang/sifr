@@ -425,6 +425,7 @@ Module(
                                                             range: 222..223,
                                                         },
                                                         annotation: None,
+                                                        convention: Default,
                                                     },
                                                     default: None,
                                                 },

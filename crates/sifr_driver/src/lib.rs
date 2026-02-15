@@ -6,7 +6,7 @@
 use sifr_python_parser::parse_module;
 use sifr_hir::{lower_module, lower_module_with_externals, ExternalDefs, HirModule};
 use sifr_codegen::{generate_rust_with_metadata, generate_rust_test, generate_rust_multi, generate_project, generate_project_with_deps};
-use sifr_type_system::{Type, FunctionType};
+use sifr_type_system::{Type, FunctionType, ParamConvention};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -226,8 +226,8 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
 
         for func in &result.module.functions {
             if !func.name.starts_with('_') {
-                let params: Vec<(String, Type)> = func.params.iter()
-                    .map(|p| (p.name.clone(), p.ty.clone()))
+                let params: Vec<(String, Type, ParamConvention)> = func.params.iter()
+                    .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
                     .collect();
                 fn_exports.insert(func.name.clone(), FunctionType {
                     params,
@@ -242,8 +242,8 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
                 let methods: Vec<(String, FunctionType)> = class.methods.iter()
                     .filter(|m| m.name != "new") // Skip constructor
                     .map(|m| {
-                        let params: Vec<(String, Type)> = m.params.iter()
-                            .map(|p| (p.name.clone(), p.ty.clone()))
+                        let params: Vec<(String, Type, ParamConvention)> = m.params.iter()
+                            .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
                             .collect();
                         (m.name.clone(), FunctionType {
                             params,

@@ -1,7 +1,7 @@
 # isinstance-based type narrowing
 # expect-stdout: number: 43
 
-def describe(x: int | str) -> str:
+def describe(own x: int | str) -> str:
     if isinstance(x, int):
         return f"number: {x + 1}"
     else:

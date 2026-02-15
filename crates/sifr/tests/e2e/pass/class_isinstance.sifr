@@ -9,7 +9,7 @@ class Point:
         self.x = x
         self.y = y
 
-def check(val: int | Point):
+def check(own val: int | Point):
     if isinstance(val, Point):
         print("is a point")
     else:

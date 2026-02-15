@@ -2630,6 +2630,28 @@ impl<'src> Parser<'src> {
         function_kind: FunctionKind,
         allow_star_annotation: AllowStarAnnotation,
     ) -> ast::Parameter {
+        // Sifr extension: check for `mut` or `own` convention prefix.
+        // Disambiguation rule: if current token is `mut`/`own` AND the next token
+        // is a Name (identifier), then it's a convention prefix. Otherwise, treat
+        // `mut`/`own` as the parameter name itself (e.g., `def f(mut: int)`).
+        let convention = if self.at(TokenKind::Name) {
+            let text = self.src_text(self.current_token_range());
+            if (text == "mut" || text == "own") && self.peek() == TokenKind::Name {
+                let conv = if text == "mut" {
+                    ast::AstParamConvention::Mut
+                } else {
+                    ast::AstParamConvention::Own
+                };
+                // Consume the convention keyword
+                self.bump_any();
+                conv
+            } else {
+                ast::AstParamConvention::Default
+            }
+        } else {
+            ast::AstParamConvention::Default
+        };
+
         let name = self.parse_identifier();
 
         // Annotations are only allowed for function definition. For lambda expression,
@@ -2686,6 +2708,7 @@ impl<'src> Parser<'src> {
             range: self.node_range(start),
             name,
             annotation,
+            convention,
         }
     }
 

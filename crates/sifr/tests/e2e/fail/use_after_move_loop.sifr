@@ -1,5 +1,5 @@
 # expect-error: moved inside loop body
-def consume(s: str) -> int:
+def consume(own s: str) -> int:
     return len(s)
 
 def main():

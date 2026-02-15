@@ -17,7 +17,7 @@ class Robot:
     def greet(self) -> str:
         return f"Beep boop #{self.id}"
 
-def say_hello(entity: Greetable) -> None:
+def say_hello(own entity: Greetable) -> None:
     print(entity.greet())
 
 def main():

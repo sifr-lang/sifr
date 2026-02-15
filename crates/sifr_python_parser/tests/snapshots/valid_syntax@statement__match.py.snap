@@ -7624,6 +7624,7 @@ Module(
                                                     range: 5704..5709,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },

@@ -3,7 +3,7 @@
 //! Translates the typed HIR into Rust source code.
 
 use sifr_hir::*;
-use sifr_type_system::Type;
+use sifr_type_system::{Type, ParamConvention};
 use std::collections::{HashMap, HashSet};
 
 /// Result of code generation, including the Rust source and metadata.
@@ -216,8 +216,8 @@ struct RustEmitter {
     current_return_type: Option<Type>,
     /// Set of variable names currently narrowed via `if let Some(...)` unwrap
     option_unwrapped_vars: HashSet<String>,
-    /// Function signatures: name -> (param_types, return_type)
-    func_signatures: HashMap<String, (Vec<Type>, Type)>,
+    /// Function signatures: name -> (param_types_with_conventions, return_type)
+    func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
     /// Whether we're inside a loop that has an else clause
     in_loop_with_else: bool,
     /// Whether to emit `pub` on all top-level items (for module exports)
@@ -301,9 +301,11 @@ impl RustEmitter {
     /// and build a map of function signatures for call-site wrapping.
     fn collect_union_types(&mut self, module: &HirModule) {
         for func in &module.functions {
-            // Record function signature
-            let param_types: Vec<Type> = func.params.iter().map(|p| p.ty.clone()).collect();
-            self.func_signatures.insert(func.name.clone(), (param_types, func.return_type.clone()));
+            // Record function signature with conventions
+            let param_info: Vec<(Type, ParamConvention)> = func.params.iter()
+                .map(|p| (p.ty.clone(), p.convention))
+                .collect();
+            self.func_signatures.insert(func.name.clone(), (param_info, func.return_type.clone()));
 
             // Check params
             for param in &func.params {
@@ -314,9 +316,18 @@ impl RustEmitter {
             // Check body statements
             self.collect_union_types_in_stmts(&func.body);
         }
-        // Also scan class method bodies
+        // Also scan class method bodies and register their signatures
         for class in &module.classes {
             for method in &class.methods {
+                // Register method signature under ClassName::method_name
+                let param_info: Vec<(Type, ParamConvention)> = method.params.iter()
+                    .map(|p| (p.ty.clone(), p.convention))
+                    .collect();
+                self.func_signatures.insert(
+                    format!("{}::{}", class.name, method.name),
+                    (param_info, method.return_type.clone()),
+                );
+
                 for param in &method.params {
                     self.register_union_type(&param.ty);
                 }
@@ -1280,11 +1291,23 @@ impl RustEmitter {
                         self.write(", ");
                         self.write(&param.name);
                         self.write(": ");
-                        // Pass class types by reference
-                        if matches!(param.ty, Type::Class { .. }) {
-                            self.write("&");
+                        // Emit parameter type based on convention
+                        let rust_ty = param.ty.rust_type();
+                        match param.convention {
+                            ParamConvention::Borrow => {
+                                if param.ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+                                    self.write(&rust_ty);
+                                } else {
+                                    self.write(&format!("&{}", rust_ty));
+                                }
+                            }
+                            ParamConvention::MutBorrow => {
+                                self.write(&format!("&mut {}", rust_ty));
+                            }
+                            ParamConvention::Own => {
+                                self.write(&rust_ty);
+                            }
                         }
-                        self.write(&param.ty.rust_type());
                     }
                     self.write(")");
 
@@ -1363,12 +1386,30 @@ impl RustEmitter {
                 self.write(", ");
             }
             // Emit `mut` for parameters that are mutated in the body
-            if self.mutated_vars.contains(&param.name) {
+            // (only for Own params; borrowed params use &mut convention instead)
+            if param.convention == ParamConvention::Own && self.mutated_vars.contains(&param.name) {
                 self.write("mut ");
             }
             self.write(&param.name);
             self.write(": ");
-            self.write(&param.ty.rust_type());
+            // Emit parameter type based on convention
+            let rust_ty = param.ty.rust_type();
+            match param.convention {
+                ParamConvention::Borrow => {
+                    if param.ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+                        // Copy types are always passed by value
+                        self.write(&rust_ty);
+                    } else {
+                        self.write(&format!("&{}", rust_ty));
+                    }
+                }
+                ParamConvention::MutBorrow => {
+                    self.write(&format!("&mut {}", rust_ty));
+                }
+                ParamConvention::Own => {
+                    self.write(&rust_ty);
+                }
+            }
         }
 
         self.write(")");
@@ -2974,18 +3015,27 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".len() as i64");
             }
-            (Type::Class { .. }, _) => {
-                // Class instance method call
+            (Type::Class { name: ref class_name, .. }, _) => {
+                // Class instance method call -- use convention-aware argument emission
                 self.emit_expr(object);
                 self.write(&format!(".{}(", method));
+                // Look up method conventions from func_signatures
+                let method_key = format!("{}::{}", class_name, method);
+                let method_info = self.func_signatures.get(&method_key).cloned();
                 for (i, arg) in args.iter().enumerate() {
                     if i > 0 {
                         self.write(", ");
                     }
-                    // Pass class instances by reference
-                    if matches!(arg.ty(), Type::Class { .. }) {
-                        self.write("&");
+                    if let Some((ref params, _)) = method_info {
+                        // Method params skip self, so param index i corresponds to params[i]
+                        // (self is not in func_signatures params)
+                        if let Some((_, convention)) = params.get(i) {
+                            self.emit_borrow_prefix(*convention, arg.ty());
+                            self.emit_expr(arg);
+                            continue;
+                        }
                     }
+                    // Fallback: emit as-is
                     self.emit_expr(arg);
                 }
                 self.write(")");
@@ -3002,6 +3052,20 @@ impl RustEmitter {
                 }
                 self.write(")");
             }
+        }
+    }
+
+    /// Emit `&` or `&mut` prefix for a function argument based on parameter convention.
+    /// Copy types never get a borrow prefix (they're passed by value).
+    fn emit_borrow_prefix(&mut self, convention: ParamConvention, arg_ty: &Type) {
+        // Copy types are always passed by value regardless of convention
+        if arg_ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+            return;
+        }
+        match convention {
+            ParamConvention::Borrow => self.write("&"),
+            ParamConvention::MutBorrow => self.write("&mut "),
+            ParamConvention::Own => {} // no prefix -- pass by value (move)
         }
     }
 
@@ -3558,28 +3622,31 @@ impl RustEmitter {
                 } else {
                     self.write(func);
                     self.write("(");
-                    // Look up param types to wrap union enum arguments
-                    let param_types: Option<Vec<Type>> = self.func_signatures.get(func).map(|(pts, _)| pts.clone());
+                    // Look up param types and conventions to wrap union enum arguments
+                    let param_info: Option<Vec<(Type, ParamConvention)>> = self.func_signatures.get(func).map(|(pts, _)| pts.clone());
                     for (i, arg) in args.iter().enumerate() {
                         if i > 0 {
                             self.write(", ");
                         }
                         // Wrap arguments to match parameter types
-                        if let Some(ref pts) = param_types {
+                        if let Some(ref pts) = param_info {
                             if i < pts.len() {
+                                let (ref param_ty, convention) = pts[i];
                                 // Option param with non-Option arg -> wrap in Some()
-                                if is_option_type(&pts[i]) && !is_option_type(arg.ty()) && !matches!(arg, HirExpr::NoneLiteral) {
+                                if is_option_type(param_ty) && !is_option_type(arg.ty()) && !matches!(arg, HirExpr::NoneLiteral) {
+                                    self.emit_borrow_prefix(convention, arg.ty());
                                     self.write("Some(");
                                     self.emit_expr(arg);
                                     self.write(")");
                                     continue;
                                 }
                                 // Non-Option union param -> wrap in enum variant
-                                if let Type::Union(members) = &pts[i] {
-                                    if !is_option_type(&pts[i]) {
+                                if let Type::Union(members) = param_ty {
+                                    if !is_option_type(param_ty) {
                                         let arg_ty = arg.ty();
                                         if let Some(variant) = find_union_variant(members, arg_ty) {
-                                            let enum_name = pts[i].union_enum_name();
+                                            let enum_name = param_ty.union_enum_name();
+                                            self.emit_borrow_prefix(convention, arg.ty());
                                             self.write(&format!("{}::{}(", enum_name, variant));
                                             self.emit_expr(arg);
                                             self.write(")");
@@ -3588,12 +3655,16 @@ impl RustEmitter {
                                     }
                                 }
                                 // Protocol param with concrete class arg -> wrap in Box::new()
-                                if matches!(&pts[i], Type::Protocol { .. }) && !matches!(arg.ty(), Type::Protocol { .. }) {
+                                if matches!(param_ty, Type::Protocol { .. }) && !matches!(arg.ty(), Type::Protocol { .. }) {
                                     self.write("Box::new(");
                                     self.emit_expr(arg);
                                     self.write(")");
                                     continue;
                                 }
+                                // Convention-aware borrow prefix for regular arguments
+                                self.emit_borrow_prefix(convention, arg.ty());
+                                self.emit_expr(arg);
+                                continue;
                             }
                         }
                         self.emit_expr(arg);
@@ -5471,7 +5542,7 @@ fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
 mod tests {
     use super::*;
     use sifr_hir::*;
-    use sifr_type_system::Type;
+    use sifr_type_system::{Type, ParamConvention};
 
     #[test]
     fn test_simple_function_codegen() {
@@ -5508,8 +5579,8 @@ mod tests {
             functions: vec![HirFunction {
                 name: "add".to_string(),
                 params: vec![
-                    HirParam { name: "a".to_string(), ty: Type::Int, default: None, keyword_only: false },
-                    HirParam { name: "b".to_string(), ty: Type::Int, default: None, keyword_only: false },
+                    HirParam { name: "a".to_string(), ty: Type::Int, default: None, keyword_only: false, convention: ParamConvention::Own },
+                    HirParam { name: "b".to_string(), ty: Type::Int, default: None, keyword_only: false, convention: ParamConvention::Own },
                 ],
                 return_type: Type::Int,
                 body: vec![HirStmt::Return {
