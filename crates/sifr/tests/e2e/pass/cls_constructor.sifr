@@ -1,0 +1,19 @@
+# Test: @classmethod cls() constructor call
+# expect-stdout: 100
+# expect-stdout: 100
+
+class Temperature:
+    celsius: float
+
+    def __init__(self, celsius: float):
+        self.celsius = celsius
+
+    @classmethod
+    def from_fahrenheit(cls, f: float) -> Temperature:
+        return cls((f - 32.0) * 5.0 / 9.0)
+
+def main():
+    t: Temperature = Temperature(100.0)
+    print(t.celsius)
+    t2: Temperature = Temperature.from_fahrenheit(212.0)
+    print(t2.celsius)
