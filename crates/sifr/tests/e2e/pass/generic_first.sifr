@@ -1,0 +1,16 @@
+# Test: generic function operating on list[T]
+# expect-stdout: 10
+# expect-stdout: hello
+
+from typing import TypeVar
+
+T = TypeVar("T")
+
+def first(items: list[T]) -> T:
+    return items[0]
+
+def main():
+    nums: list[int] = [10, 20, 30]
+    print(first(nums))
+    words: list[str] = ["hello", "world"]
+    print(first(words))

@@ -55,6 +55,10 @@ struct LowerCtx {
     error_types: std::collections::HashSet<String>,
     /// Set of function names that have *args (vararg) parameters
     vararg_functions: std::collections::HashSet<String>,
+    /// Set of registered type variable names (e.g., T, K, V from TypeVar declarations)
+    type_vars: std::collections::HashSet<String>,
+    /// Map of generic function names to their type variable names
+    generic_functions: HashMap<String, Vec<String>>,
 }
 
 impl LowerCtx {
@@ -72,6 +76,8 @@ impl LowerCtx {
             in_try_block: false,
             error_types: std::collections::HashSet::new(),
             vararg_functions: std::collections::HashSet::new(),
+            type_vars: std::collections::HashSet::new(),
+            generic_functions: HashMap::new(),
         }
     }
 
@@ -85,6 +91,92 @@ impl LowerCtx {
 
     fn in_loop(&self) -> bool {
         self.loop_depth > 0
+    }
+}
+
+/// Collect all TypeVar names used in a type.
+fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
+    match ty {
+        Type::TypeVar(name) => {
+            if !vars.contains(name) {
+                vars.push(name.clone());
+            }
+        }
+        Type::List(elem) | Type::Set(elem) => collect_type_vars(elem, vars),
+        Type::Dict(k, v) => {
+            collect_type_vars(k, vars);
+            collect_type_vars(v, vars);
+        }
+        Type::Tuple(elems) => {
+            for e in elems {
+                collect_type_vars(e, vars);
+            }
+        }
+        Type::Union(members) => {
+            for m in members {
+                collect_type_vars(m, vars);
+            }
+        }
+        Type::Callable(params, ret) => {
+            for p in params {
+                collect_type_vars(p, vars);
+            }
+            collect_type_vars(ret, vars);
+        }
+        _ => {}
+    }
+}
+
+/// Substitute type variables in a type with concrete types.
+fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
+    match ty {
+        Type::TypeVar(name) => {
+            bindings.get(name).cloned().unwrap_or_else(|| ty.clone())
+        }
+        Type::List(elem) => Type::List(Box::new(substitute_type_vars(elem, bindings))),
+        Type::Set(elem) => Type::Set(Box::new(substitute_type_vars(elem, bindings))),
+        Type::Dict(k, v) => Type::Dict(
+            Box::new(substitute_type_vars(k, bindings)),
+            Box::new(substitute_type_vars(v, bindings)),
+        ),
+        Type::Tuple(elems) => Type::Tuple(
+            elems.iter().map(|e| substitute_type_vars(e, bindings)).collect(),
+        ),
+        Type::Union(members) => make_union(
+            members.iter().map(|m| substitute_type_vars(m, bindings)).collect(),
+        ),
+        Type::Callable(params, ret) => Type::Callable(
+            params.iter().map(|p| substitute_type_vars(p, bindings)).collect(),
+            Box::new(substitute_type_vars(ret, bindings)),
+        ),
+        _ => ty.clone(),
+    }
+}
+
+/// Try to infer type variable bindings from a concrete argument type and a parameterized type.
+fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMap<String, Type>) {
+    match (param_ty, arg_ty) {
+        (Type::TypeVar(name), concrete) => {
+            if !bindings.contains_key(name) {
+                bindings.insert(name.clone(), concrete.clone());
+            }
+        }
+        (Type::List(p_elem), Type::List(a_elem)) => {
+            infer_type_var_bindings(p_elem, a_elem, bindings);
+        }
+        (Type::Set(p_elem), Type::Set(a_elem)) => {
+            infer_type_var_bindings(p_elem, a_elem, bindings);
+        }
+        (Type::Dict(pk, pv), Type::Dict(ak, av)) => {
+            infer_type_var_bindings(pk, ak, bindings);
+            infer_type_var_bindings(pv, av, bindings);
+        }
+        (Type::Tuple(p_elems), Type::Tuple(a_elems)) if p_elems.len() == a_elems.len() => {
+            for (p, a) in p_elems.iter().zip(a_elems.iter()) {
+                infer_type_var_bindings(p, a, bindings);
+            }
+        }
+        _ => {}
     }
 }
 
@@ -132,6 +224,25 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
         }
     }
 
+    // Pass 0.5: Recognize TypeVar declarations: T = TypeVar("T")
+    // These must be processed before type aliases and function signatures.
+    for stmt in stmts {
+        if let Stmt::Assign(assign) = stmt {
+            if assign.targets.len() == 1 {
+                if let Expr::Name(name) = &assign.targets[0] {
+                    if let Expr::Call(call) = assign.value.as_ref() {
+                        if let Expr::Name(func_name) = call.func.as_ref() {
+                            if func_name.id.as_str() == "TypeVar" {
+                                // Register this name as a type variable
+                                ctx.type_vars.insert(name.id.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // First pass: collect class definitions first (so function signatures can reference them),
     // then type aliases, then function signatures.
     for stmt in stmts {
@@ -158,6 +269,18 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
             if let Some(ft) = extract_function_type(func, &mut ctx) {
+                // Track which type variables this function uses (makes it generic)
+                let mut func_type_vars = Vec::new();
+                for (_, ty) in &ft.params {
+                    collect_type_vars(ty, &mut func_type_vars);
+                }
+                collect_type_vars(&ft.return_type, &mut func_type_vars);
+                func_type_vars.sort();
+                func_type_vars.dedup();
+                if !func_type_vars.is_empty() {
+                    ctx.generic_functions.insert(func.name.to_string(), func_type_vars);
+                }
+
                 // Collect default values for parameters
                 let mut defaults = Vec::new();
                 for (i, param) in func.parameters.args.iter().enumerate() {
@@ -213,6 +336,11 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                         .map(|(_, alias)| alias.clone())
                         .unwrap_or_else(|| original.to_string())
                 };
+
+                // Skip typing imports (TypeVar, Callable, etc.) - they are handled at the type level
+                if module_name == "typing" {
+                    continue;
+                }
 
                 // Check if this is a stdlib import (sifr.*)
                 if let Some(stdlib_module) = crate::stdlib::get_stdlib_module(&module_name) {
@@ -620,6 +748,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 body: vec![], // Protocol methods have no body
                 method_kind: MethodKind::Regular,
                 decorators: vec![],
+                type_params: Vec::new(),
             }
         }).collect();
 
@@ -667,7 +796,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 let body = lower_stmts(&func.body, &method_ft, ctx);
                 ctx.scope.pop();
                 ctx.current_class = None;
-                hir_methods.push(HirFunction { name: method_name, params, return_type: return_ty, body, method_kind: MethodKind::Regular, decorators: vec![] });
+                hir_methods.push(HirFunction { name: method_name, params, return_type: return_ty, body, method_kind: MethodKind::Regular, decorators: vec![], type_params: Vec::new() });
             }
         }
 
@@ -808,6 +937,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 body,
                 method_kind,
                 decorators: method_decorators,
+                type_params: Vec::new(),
             };
 
             // Separate operator dunders from regular methods
@@ -969,6 +1099,10 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
 fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
+            // Check type variables first (e.g., T from TypeVar)
+            if ctx.type_vars.contains(name.id.as_str()) {
+                return Type::TypeVar(name.id.to_string());
+            }
             // Check type aliases first
             if let Some(alias_ty) = ctx.scope.lookup_type_alias(&name.id) {
                 return alias_ty.clone();
@@ -1096,9 +1230,46 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     // will recognize TypeGuard and mark it as a type predicate
                     inner_ty
                 }
+                "Callable" => {
+                    // Callable[[param_types], return_type]
+                    // The slice is a Tuple of [List[param_types], return_type]
+                    match sub.slice.as_ref() {
+                        Expr::Tuple(tuple) => {
+                            if tuple.elts.len() != 2 {
+                                ctx.error("Callable type requires exactly 2 type parameters: [[param_types], return_type]".to_string());
+                                return Type::Any;
+                            }
+                            // First element should be a list of parameter types
+                            let param_types = match &tuple.elts[0] {
+                                Expr::List(list) => {
+                                    list.elts.iter()
+                                        .map(|e| resolve_annotation_expr(e, ctx))
+                                        .collect::<Vec<_>>()
+                                }
+                                _ => {
+                                    ctx.error("Callable parameter types must be a list: Callable[[int, str], bool]".to_string());
+                                    return Type::Any;
+                                }
+                            };
+                            let return_type = resolve_annotation_expr(&tuple.elts[1], ctx);
+                            Type::Callable(param_types, Box::new(return_type))
+                        }
+                        _ => {
+                            ctx.error("Callable type requires [[param_types], return_type] syntax".to_string());
+                            Type::Any
+                        }
+                    }
+                }
                 _ => {
-                    ctx.error(format!("unknown generic type: '{}'", base_name));
-                    Type::Any
+                    // Check if it's a generic class instantiation (e.g., Stack[int])
+                    if ctx.class_types.contains_key(&base_name) {
+                        // For now, just return the class type (ignore type parameters)
+                        // Full generic class support would substitute type parameters
+                        ctx.class_types.get(&base_name).cloned().unwrap_or(Type::Any)
+                    } else {
+                        ctx.error(format!("unknown generic type: '{}'", base_name));
+                        Type::Any
+                    }
                 }
             }
         }
@@ -1206,6 +1377,9 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
         }
     }).collect();
 
+    // Collect type parameters for generic functions
+    let type_params = ctx.generic_functions.get(&func.name.to_string()).cloned().unwrap_or_default();
+
     Some(HirFunction {
         name: func.name.to_string(),
         params,
@@ -1213,6 +1387,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
         body,
         method_kind: MethodKind::Regular,
         decorators,
+        type_params,
     })
 }
 
@@ -1496,6 +1671,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                     body,
                     method_kind: MethodKind::Regular,
                     decorators,
+                    type_params: Vec::new(),
                 },
             })
         }
@@ -3118,6 +3294,44 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         });
     }
 
+    // Check if this is a Callable-typed variable being called
+    let callable_info = ctx.scope.lookup(&func_name).and_then(|info| {
+        if let Type::Callable(ref param_types, ref ret_type) = info.ty {
+            Some((param_types.clone(), *ret_type.clone()))
+        } else {
+            None
+        }
+    });
+    if let Some((param_types, ret_type)) = callable_info {
+        // Lower arguments
+        let mut args = Vec::new();
+        for arg in &call.arguments.args {
+            let expr = lower_expr(arg, ctx)?;
+            args.push(expr);
+        }
+        if args.len() != param_types.len() {
+            ctx.error(format!(
+                "callable '{}' expects {} argument(s), got {}",
+                func_name, param_types.len(), args.len()
+            ));
+            return None;
+        }
+        // Type check arguments
+        for (i, (arg, param_ty)) in args.iter().zip(param_types.iter()).enumerate() {
+            if !arg.ty().is_assignable_to(param_ty) {
+                ctx.error(format!(
+                    "argument {} of callable '{}': expected '{}', got '{}'",
+                    i + 1, func_name, param_ty.display_name(), arg.ty().display_name()
+                ));
+            }
+        }
+        return Some(HirExpr::Call {
+            func: func_name,
+            args,
+            ty: ret_type,
+        });
+    }
+
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
         ctx.error(format!("undefined function: '{}'", func_name));
         None
@@ -3306,18 +3520,33 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     }
 
+    // If this is a generic function, infer type variable bindings and substitute
+    let return_type = if ctx.generic_functions.contains_key(&func_name) {
+        let mut bindings = HashMap::new();
+        for (arg, (_, param_ty)) in args.iter().zip(ft.params.iter()) {
+            infer_type_var_bindings(param_ty, arg.ty(), &mut bindings);
+        }
+        if bindings.is_empty() {
+            *ft.return_type
+        } else {
+            substitute_type_vars(&ft.return_type, &bindings)
+        }
+    } else {
+        *ft.return_type
+    };
+
     // If this is a class constructor call, emit ConstructorCall
     if ctx.class_types.contains_key(&func_name) {
         Some(HirExpr::ConstructorCall {
             class_name: func_name,
             args,
-            ty: *ft.return_type,
+            ty: return_type,
         })
     } else {
         Some(HirExpr::Call {
             func: func_name,
             args,
-            ty: *ft.return_type,
+            ty: return_type,
         })
     }
 }

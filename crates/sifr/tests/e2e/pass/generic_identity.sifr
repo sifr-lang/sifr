@@ -1,0 +1,16 @@
+# Test: generic identity function with TypeVar
+# expect-stdout: 42
+# expect-stdout: hello
+
+from typing import TypeVar
+
+T = TypeVar("T")
+
+def identity(x: T) -> T:
+    return x
+
+def main():
+    a: int = identity(42)
+    print(a)
+    b: str = identity("hello")
+    print(b)
