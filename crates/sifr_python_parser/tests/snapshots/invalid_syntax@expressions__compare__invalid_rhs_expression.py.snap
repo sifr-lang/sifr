@@ -43,6 +43,7 @@ Module(
                                                                 range: 16..17,
                                                             },
                                                             annotation: None,
+                                                            convention: Default,
                                                         },
                                                         default: None,
                                                     },

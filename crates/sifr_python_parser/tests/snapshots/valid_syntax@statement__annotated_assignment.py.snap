@@ -236,6 +236,7 @@ Module(
                                                     range: 94..95,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },

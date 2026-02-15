@@ -32,6 +32,7 @@ Module(
                                         range: 8..9,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: None,
                             },
@@ -44,6 +45,7 @@ Module(
                                         range: 11..12,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: Some(
                                     NumberLiteral(
@@ -65,6 +67,7 @@ Module(
                                     range: 18..19,
                                 },
                                 annotation: None,
+                                convention: Default,
                             },
                         ),
                         kwonlyargs: [
@@ -77,6 +80,7 @@ Module(
                                         range: 21..22,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: None,
                             },
@@ -97,6 +101,7 @@ Module(
                                             },
                                         ),
                                     ),
+                                    convention: Default,
                                 },
                                 default: None,
                             },
@@ -109,6 +114,7 @@ Module(
                                     range: 34..35,
                                 },
                                 annotation: None,
+                                convention: Default,
                             },
                         ),
                     },

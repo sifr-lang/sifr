@@ -340,6 +340,7 @@ Module(
                                                     range: 211..212,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },

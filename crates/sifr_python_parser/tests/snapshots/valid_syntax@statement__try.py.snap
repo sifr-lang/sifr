@@ -1432,6 +1432,7 @@ Module(
                                                                     range: 1027..1028,
                                                                 },
                                                                 annotation: None,
+                                                                convention: Default,
                                                             },
                                                             default: None,
                                                         },

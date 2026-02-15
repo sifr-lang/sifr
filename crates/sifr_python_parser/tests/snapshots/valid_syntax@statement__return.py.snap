@@ -355,6 +355,7 @@ Module(
                                                         range: 186..187,
                                                     },
                                                     annotation: None,
+                                                    convention: Default,
                                                 },
                                                 default: None,
                                             },

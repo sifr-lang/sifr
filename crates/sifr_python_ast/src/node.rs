@@ -4269,6 +4269,7 @@ impl AstNode for Parameter {
             range: _,
             name: _,
             annotation,
+            convention: _,
         } = self;
 
         if let Some(expr) = annotation {

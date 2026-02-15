@@ -29,6 +29,7 @@ Module(
                                                     range: 7..8,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },
@@ -41,6 +42,7 @@ Module(
                                                     range: 10..11,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: Some(
                                                 NumberLiteral(
@@ -62,6 +64,7 @@ Module(
                                                     range: 16..17,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },

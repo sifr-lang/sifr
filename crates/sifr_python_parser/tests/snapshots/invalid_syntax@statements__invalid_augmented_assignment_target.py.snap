@@ -160,6 +160,7 @@ Module(
                                                     range: 154..155,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },

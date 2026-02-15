@@ -1362,12 +1362,26 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
 
+        // Map AST convention to type system convention
+        let convention = match param_def.parameter.convention {
+            AstParamConvention::Mut => ParamConvention::MutBorrow,
+            AstParamConvention::Own => ParamConvention::Own,
+            AstParamConvention::Default => {
+                // Default: Borrow for Move types, Own for Copy types
+                if ty.ownership() == OwnershipKind::Copy {
+                    ParamConvention::Own
+                } else {
+                    ParamConvention::Borrow
+                }
+            }
+        };
+
         params.push(HirParam {
             name,
             ty,
             default,
             keyword_only: false,
-            convention: ParamConvention::default(),
+            convention,
         });
     }
 
@@ -1396,12 +1410,25 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
 
+        // Map AST convention to type system convention
+        let convention = match param_def.parameter.convention {
+            AstParamConvention::Mut => ParamConvention::MutBorrow,
+            AstParamConvention::Own => ParamConvention::Own,
+            AstParamConvention::Default => {
+                if ty.ownership() == OwnershipKind::Copy {
+                    ParamConvention::Own
+                } else {
+                    ParamConvention::Borrow
+                }
+            }
+        };
+
         params.push(HirParam {
             name,
             ty,
             default,
             keyword_only: true,
-            convention: ParamConvention::default(),
+            convention,
         });
     }
 

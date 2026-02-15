@@ -2966,12 +2966,26 @@ impl From<ExceptHandlerExceptHandler> for ExceptHandler {
     }
 }
 
+/// How a function parameter receives its value (Sifr extension).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum AstParamConvention {
+    /// Immutable borrow (default -- no keyword)
+    #[default]
+    Default,
+    /// Mutable borrow (`mut` keyword)
+    Mut,
+    /// Ownership transfer (`own` keyword)
+    Own,
+}
+
 /// See also [arg](https://docs.python.org/3/library/ast.html#ast.arg)
 #[derive(Clone, Debug, PartialEq)]
 pub struct Parameter {
     pub range: TextRange,
     pub name: Identifier,
     pub annotation: Option<Box<Expr>>,
+    /// Sifr parameter convention: `mut` or `own` prefix (default = borrow)
+    pub convention: AstParamConvention,
 }
 
 /// See also [keyword](https://docs.python.org/3/library/ast.html#ast.keyword)

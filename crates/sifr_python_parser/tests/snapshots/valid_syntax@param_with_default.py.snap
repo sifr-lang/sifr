@@ -32,6 +32,7 @@ Module(
                                         range: 8..9,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: Some(
                                     Lambda(
@@ -51,6 +52,7 @@ Module(
                                                                     range: 17..18,
                                                                 },
                                                                 annotation: None,
+                                                                convention: Default,
                                                             },
                                                             default: None,
                                                         },
@@ -114,6 +116,7 @@ Module(
                                         range: 36..37,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: Some(
                                     If(
@@ -188,6 +191,7 @@ Module(
                                         range: 69..70,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: Some(
                                     Await(
@@ -247,6 +251,7 @@ Module(
                                         range: 93..94,
                                     },
                                     annotation: None,
+                                    convention: Default,
                                 },
                                 default: Some(
                                     Yield(

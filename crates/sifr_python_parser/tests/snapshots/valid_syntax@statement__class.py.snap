@@ -73,6 +73,7 @@ Module(
                                                     range: 57..61,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },
@@ -296,6 +297,7 @@ Module(
                                                     range: 206..210,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },
@@ -337,6 +339,7 @@ Module(
                                                     range: 255..259,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: None,
                                         },
@@ -349,6 +352,7 @@ Module(
                                                     range: 261..264,
                                                 },
                                                 annotation: None,
+                                                convention: Default,
                                             },
                                             default: Some(
                                                 StringLiteral(
