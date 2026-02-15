@@ -1099,8 +1099,22 @@ fn register_builtins(ctx: &mut LowerCtx) {
     );
 }
 
+fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
+    match conv {
+        AstParamConvention::Mut => ParamConvention::MutBorrow,
+        AstParamConvention::Own => ParamConvention::Own,
+        AstParamConvention::Default => {
+            if ty.ownership() == OwnershipKind::Copy {
+                ParamConvention::Own
+            } else {
+                ParamConvention::Borrow
+            }
+        }
+    }
+}
+
 fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<FunctionType> {
-    let mut params = Vec::new();
+    let mut params: Vec<(String, Type, ParamConvention)> = Vec::new();
 
     for param in &func.parameters.args {
         let name = param.parameter.name.to_string();
@@ -1113,7 +1127,8 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
             ));
             Type::Any
         };
-        params.push((name, ty));
+        let conv = ast_convention_to_param(param.parameter.convention, &ty);
+        params.push((name, ty, conv));
     }
 
     // Vararg parameter (*args) -- becomes Vec<T>
@@ -1128,7 +1143,9 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
             ));
             Type::Any
         };
-        params.push((name, Type::List(Box::new(elem_ty))));
+        let list_ty = Type::List(Box::new(elem_ty));
+        let conv = ast_convention_to_param(vararg.convention, &list_ty);
+        params.push((name, list_ty, conv));
     }
 
     // Also include keyword-only parameters
@@ -1143,7 +1160,8 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
             ));
             Type::Any
         };
-        params.push((name, ty));
+        let conv = ast_convention_to_param(param.parameter.convention, &ty);
+        params.push((name, ty, conv));
     }
 
     let return_type = if let Some(returns) = &func.returns {
@@ -1152,7 +1170,10 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
         Type::Any // marker for "needs inference" -- will be inferred from body
     };
 
-    Some(FunctionType::new(params, return_type))
+    Some(FunctionType {
+        params,
+        return_type: Box::new(return_type),
+    })
 }
 
 fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
@@ -3688,17 +3709,13 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     }
 
-    // Track ownership: move arguments of move types
-    // Skip for built-in functions that borrow their arguments (print, len, bool, etc.)
-    let borrows_args = matches!(func_name.as_str(),
-        "print" | "len" | "bool" | "str" | "int" | "float" | "isinstance" |
-        "type" | "id" | "hash" | "repr" | "sorted" | "reversed" | "enumerate" |
-        "zip" | "any" | "all" | "sum" | "min" | "max" | "abs" | "round" | "pow"
-    );
-    if !borrows_args {
-        for arg in &args {
-            if let HirExpr::Name { name, ty } = arg {
-                if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+    // Track ownership: only mark arguments as moved when the parameter convention is Own
+    // and the argument type is Move. Borrow and MutBorrow do not consume the value.
+    for (i, arg) in args.iter().enumerate() {
+        if let HirExpr::Name { name, ty } = arg {
+            if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+                let convention = ft.params.get(i).map(|(_, _, c)| *c).unwrap_or(ParamConvention::Borrow);
+                if convention == ParamConvention::Own {
                     ctx.scope.mark_moved(name);
                 }
             }
