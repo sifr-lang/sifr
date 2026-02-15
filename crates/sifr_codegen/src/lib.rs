@@ -25,6 +25,9 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
 
+    // Detect recursive (self-referential) class fields that need Box<T>
+    emitter.detect_recursive_fields(module);
+
     // Generate enum definitions for non-Option union types
     emitter.generate_enum_definitions();
 
@@ -53,6 +56,9 @@ pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
+
+    // Detect recursive (self-referential) class fields that need Box<T>
+    emitter.detect_recursive_fields(module);
 
     // Generate enum definitions for non-Option union types
     emitter.generate_enum_definitions();
@@ -209,6 +215,10 @@ struct RustEmitter {
     stdlib_functions: HashSet<String>,
     /// Whether to emit in test mode (#[test] on test_* functions, no main)
     test_mode: bool,
+    /// Set of (class_name, field_name) pairs that are self-referential and need Box<T>
+    recursive_fields: HashSet<(String, String)>,
+    /// Map from class name -> ordered list of field names (for constructor arg mapping)
+    class_field_order: HashMap<String, Vec<String>>,
 }
 
 impl RustEmitter {
@@ -231,6 +241,22 @@ impl RustEmitter {
             used_stdlib_modules: HashSet::new(),
             stdlib_functions: HashSet::new(),
             test_mode: false,
+            recursive_fields: HashSet::new(),
+            class_field_order: HashMap::new(),
+        }
+    }
+
+    /// Detect self-referential class fields that need Box<T> wrapping.
+    /// A field is recursive if its type directly or indirectly references the class being defined.
+    fn detect_recursive_fields(&mut self, module: &HirModule) {
+        for class in &module.classes {
+            let field_names: Vec<String> = class.fields.iter().map(|(n, _)| n.clone()).collect();
+            self.class_field_order.insert(class.name.clone(), field_names);
+            for (field_name, field_ty) in &class.fields {
+                if type_references_class(field_ty, &class.name) {
+                    self.recursive_fields.insert((class.name.clone(), field_name.clone()));
+                }
+            }
         }
     }
 
@@ -475,7 +501,12 @@ impl RustEmitter {
             }
             self.write(field_name);
             self.write(": ");
-            self.write(&field_ty.rust_type());
+            let is_recursive = self.recursive_fields.contains(&(class.name.clone(), field_name.clone()));
+            if is_recursive {
+                self.write(&recursive_field_rust_type(field_ty, &class.name));
+            } else {
+                self.write(&field_ty.rust_type());
+            }
             self.write(",\n");
         }
         self.indent -= 1;
@@ -504,7 +535,12 @@ impl RustEmitter {
                 }
                 self.write(field_name);
                 self.write(": ");
-                self.write(&field_ty.rust_type());
+                let is_recursive = self.recursive_fields.contains(&(class.name.clone(), field_name.clone()));
+                if is_recursive {
+                    self.write(&recursive_field_rust_type(field_ty, &class.name));
+                } else {
+                    self.write(&field_ty.rust_type());
+                }
             }
             self.write(") -> Self {\n");
             self.indent += 1;
@@ -1012,7 +1048,13 @@ impl RustEmitter {
                         }
                         self.write(&param.name);
                         self.write(": ");
-                        self.write(&param.ty.rust_type());
+                        // Check if this parameter corresponds to a recursive field
+                        let is_recursive = self.recursive_fields.contains(&(class.name.clone(), param.name.clone()));
+                        if is_recursive {
+                            self.write(&recursive_field_rust_type(&param.ty, &class.name));
+                        } else {
+                            self.write(&param.ty.rust_type());
+                        }
                     }
                     self.write(") -> Self {\n");
                     self.indent += 1;
@@ -1070,7 +1112,7 @@ impl RustEmitter {
                         }
                         self.write("),\n");
 
-                        // Emit own field inits
+                        // Emit own field inits (recursive fields already have correct Box type from params)
                         for (field_name, value) in &field_inits {
                             self.write_indent();
                             self.write(field_name);
@@ -3232,11 +3274,31 @@ impl RustEmitter {
             HirExpr::ConstructorCall { class_name, args, .. } => {
                 self.write(class_name);
                 self.write("::new(");
+                let field_names = self.class_field_order.get(class_name).cloned();
                 for (i, arg) in args.iter().enumerate() {
                     if i > 0 {
                         self.write(", ");
                     }
-                    self.emit_expr(arg);
+                    // Check if this argument corresponds to a recursive field
+                    let is_recursive = field_names.as_ref().map_or(false, |names| {
+                        names.get(i).map_or(false, |fname| {
+                            self.recursive_fields.contains(&(class_name.clone(), fname.clone()))
+                        })
+                    });
+                    if is_recursive {
+                        if matches!(arg, HirExpr::NoneLiteral) {
+                            // None stays as None for Option<Box<T>> fields
+                            self.write("None");
+                        } else {
+                            // Wrap in Some(Box::new(...)) for Option<Box<T>> fields
+                            // or Box::new(...) for direct recursive fields
+                            self.write("Some(Box::new(");
+                            self.emit_expr(arg);
+                            self.write("))");
+                        }
+                    } else {
+                        self.emit_expr(arg);
+                    }
                 }
                 self.write(")");
             }
@@ -4014,6 +4076,46 @@ fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExp
 /// Check if a method body contains any field assignments (self.field = ...).
 fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
     stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
+}
+
+/// Check if a type references a specific class name (directly or via union/option).
+fn type_references_class(ty: &Type, class_name: &str) -> bool {
+    match ty {
+        Type::Class { name, .. } => name == class_name,
+        Type::Union(members) => members.iter().any(|m| type_references_class(m, class_name)),
+        Type::List(inner) => type_references_class(inner, class_name),
+        Type::Dict(key, val) => type_references_class(key, class_name) || type_references_class(val, class_name),
+        Type::Tuple(elems) => elems.iter().any(|e| type_references_class(e, class_name)),
+        Type::Result(ok, err) => type_references_class(ok, class_name) || type_references_class(err, class_name),
+        _ => false,
+    }
+}
+
+/// Generate the Rust type string for a recursive field.
+/// For `ClassName | None` -> `Option<Box<ClassName>>`
+/// For `ClassName` directly -> `Box<ClassName>`
+fn recursive_field_rust_type(ty: &Type, class_name: &str) -> String {
+    match ty {
+        Type::Union(members) => {
+            let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+            let has_none = members.iter().any(|m| matches!(m, Type::None));
+            if has_none && non_none.len() == 1 {
+                // T | None where T references the class -> Option<Box<T>>
+                if type_references_class(non_none[0], class_name) {
+                    format!("Option<Box<{}>>", non_none[0].rust_type())
+                } else {
+                    ty.rust_type()
+                }
+            } else {
+                // General union with recursive member - wrap the whole thing in Box
+                format!("Box<{}>", ty.rust_type())
+            }
+        }
+        Type::Class { name, .. } if name == class_name => {
+            format!("Box<{}>", name)
+        }
+        _ => format!("Box<{}>", ty.rust_type()),
+    }
 }
 
 /// Check if a variable name is referenced anywhere in a list of statements.
