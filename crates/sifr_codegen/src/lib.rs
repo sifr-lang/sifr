@@ -790,7 +790,7 @@ impl RustEmitter {
             self.write(&format!("impl {} for {} {{\n", proto_name, class.name));
             self.indent += 1;
 
-            // Only emit methods that are part of the protocol
+            // Delegate to inherent methods instead of duplicating the body
             for method in &class.methods {
                 if !proto_method_names.contains(&method.name) { continue; }
 
@@ -811,9 +811,18 @@ impl RustEmitter {
                 }
                 self.write(" {\n");
                 self.indent += 1;
-                for stmt in &method.body {
-                    self.emit_stmt(stmt);
+                // Delegate to the inherent impl method
+                self.write_indent();
+                if method.return_type != Type::None {
+                    self.write(&format!("{}::{}(self", class.name, method.name));
+                } else {
+                    self.write(&format!("{}::{}(self", class.name, method.name));
                 }
+                for param in &method.params {
+                    self.write(", ");
+                    self.write(&param.name);
+                }
+                self.write(")\n");
                 self.indent -= 1;
                 self.write_indent();
                 self.write("}\n");
@@ -1666,8 +1675,14 @@ impl RustEmitter {
                 self.write("{\n");
                 self.indent += 1;
                 self.write_indent();
-                self.write("let ");
-                self.write(var);
+                // Prefix unused variables with _ to suppress Rust warnings
+                if stmts_reference_var(body, var) {
+                    self.write("let ");
+                    self.write(var);
+                } else {
+                    self.write("let _");
+                    self.write(var);
+                }
                 self.write(" = ");
                 self.emit_expr(value);
                 self.write(";\n");
@@ -2211,16 +2226,32 @@ impl RustEmitter {
                 // Special handling for string concatenation
                 if op == "+" && *ty == Type::Str {
                     // Flatten chained string concatenation into a single format! call
+                    // Fold string literals directly into the format string
                     let mut parts: Vec<&HirExpr> = Vec::new();
                     collect_string_concat_parts(left, &mut parts);
                     collect_string_concat_parts(right, &mut parts);
-                    let placeholders: String = parts.iter().map(|_| "{}").collect::<Vec<_>>().join("");
-                    self.write(&format!("format!(\"{}\"", placeholders));
+                    let mut format_str = String::new();
+                    let mut format_args: Vec<&HirExpr> = Vec::new();
                     for part in &parts {
-                        self.write(", ");
-                        self.emit_expr(part);
+                        if let HirExpr::StringLiteral(val) = part {
+                            // Fold literal directly into format string
+                            format_str.push_str(val);
+                        } else {
+                            format_str.push_str("{}");
+                            format_args.push(part);
+                        }
                     }
-                    self.write(")");
+                    if format_args.is_empty() {
+                        // All parts are literals, just emit a string literal
+                        self.write(&format!("\"{}\".to_string()", format_str));
+                    } else {
+                        self.write(&format!("format!(\"{}\"", format_str));
+                        for arg in &format_args {
+                            self.write(", ");
+                            self.emit_expr(arg);
+                        }
+                        self.write(")");
+                    }
                 } else if op == "//" {
                     // Floor division
                     self.emit_expr(left);
@@ -2339,6 +2370,9 @@ impl RustEmitter {
                     // Map print() to println!
                     if args.is_empty() {
                         self.write("println!()");
+                    } else if let HirExpr::StringLiteral(val) = &args[0] {
+                        // Inline string literal directly: println!("hello") instead of println!("{}", "hello")
+                        self.write(&format!("println!(\"{}\")", val));
                     } else if let HirExpr::FString { parts, .. } = &args[0] {
                         // Inline f-string directly into println! to avoid double-format
                         self.emit_fstring_macro("println!", parts);
@@ -2476,19 +2510,25 @@ impl RustEmitter {
                     }
                 } else if func == "min" {
                     // min(list) -> *list.iter().min().unwrap()
-                    self.emit_expr(&args[0]);
                     if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                        self.emit_expr(&args[0]);
                         self.write(".iter().cloned().reduce(f64::min).unwrap()");
                     } else {
-                        self.write(".iter().min().unwrap().clone()");
+                        // .iter().min() returns &T, dereference with * instead of .clone()
+                        self.write("*");
+                        self.emit_expr(&args[0]);
+                        self.write(".iter().min().unwrap()");
                     }
                 } else if func == "max" {
                     // max(list) -> *list.iter().max().unwrap()
-                    self.emit_expr(&args[0]);
                     if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                        self.emit_expr(&args[0]);
                         self.write(".iter().cloned().reduce(f64::max).unwrap()");
                     } else {
-                        self.write(".iter().max().unwrap().clone()");
+                        // .iter().max() returns &T, dereference with * instead of .clone()
+                        self.write("*");
+                        self.emit_expr(&args[0]);
+                        self.write(".iter().max().unwrap()");
                     }
                 } else if func == "sum" {
                     // sum(list) -> list.iter().sum()
@@ -2535,11 +2575,20 @@ impl RustEmitter {
                     self.emit_lambda_untyped(&args[0]);
                     self.write(").collect::<Vec<_>>()");
                 } else if func == "filter" {
-                    // filter(func, list) -> list.clone().into_iter().filter(func).collect()
+                    // filter(func, list) -> list.clone().into_iter().filter(|&x| body).collect()
+                    // Inline the lambda body directly instead of closure-within-closure
                     self.emit_expr(&args[1]);
-                    self.write(".clone().into_iter().filter(|x| { let x = *x; (");
-                    self.emit_lambda_untyped(&args[0]);
-                    self.write(")(x) }).collect::<Vec<_>>()");
+                    if let HirExpr::Lambda { params, body, .. } = &args[0] {
+                        let param_name = if !params.is_empty() { &params[0].name } else { "x" };
+                        // Use .clone().into_iter() for owned values, then filter with |&var| destructuring
+                        self.write(&format!(".clone().into_iter().filter(|&{}| ", param_name));
+                        self.emit_expr(body);
+                        self.write(").collect::<Vec<_>>()");
+                    } else {
+                        self.write(".clone().into_iter().filter(|x| (");
+                        self.emit_lambda_untyped(&args[0]);
+                        self.write(")(x)).collect::<Vec<_>>()");
+                    }
                 } else {
                     self.write(func);
                     self.write("(");
@@ -2857,43 +2906,34 @@ impl RustEmitter {
                 self.emit_expr(body);
             }
             HirExpr::ListComp { expr, var, iter, filter, ty } => {
-                // [expr for var in iter] -> iter.iter().map(|&var| expr).collect::<Vec<_>>()
-                // [expr for var in iter if cond] -> iter.iter().filter(|&&var| cond).map(|&var| expr).collect::<Vec<_>>()
-                // Use .into_iter() for owned values to avoid reference issues
+                // [expr for var in iter] -> iter.clone().into_iter().map(|var| expr).collect()
+                // [expr for var in iter if cond] -> iter.clone().into_iter().filter(|var| cond).map(|var| expr).collect()
                 self.emit_expr(iter);
-                if filter.is_some() {
-                    // With filter: use .iter().filter().map().cloned().collect()
-                    // to avoid ownership issues
-                    self.write(".iter()");
-                    if let Some(ref cond) = filter {
+                self.write(".clone().into_iter()");
+                if let Some(ref cond) = filter {
+                    // .filter() passes &T; check if element is Copy to use |&var| destructuring
+                    let elem_is_copy = if let Type::List(ref elem) = iter.ty() {
+                        !needs_clone_for_type(elem)
+                    } else {
+                        false
+                    };
+                    if elem_is_copy {
+                        // Copy types: use |&var| pattern to bind as owned value
+                        self.write(".filter(|&");
+                    } else {
+                        // Non-Copy types: use |var| and access via reference
                         self.write(".filter(|");
-                        self.write(var);
-                        self.write("| { let ");
-                        self.write(var);
-                        self.write(" = **");
-                        self.write(var);
-                        self.write("; ");
-                        self.emit_expr(cond);
-                        self.write(" })");
                     }
-                    self.write(".map(|");
-                    self.write(var);
-                    self.write("| { let ");
-                    self.write(var);
-                    self.write(" = *");
-                    self.write(var);
-                    self.write("; ");
-                    self.emit_expr(expr);
-                    self.write(" })");
-                } else {
-                    // Without filter: use .clone().into_iter().map()
-                    self.write(".clone().into_iter()");
-                    self.write(".map(|");
                     self.write(var);
                     self.write("| ");
-                    self.emit_expr(expr);
+                    self.emit_expr(cond);
                     self.write(")");
                 }
+                self.write(".map(|");
+                self.write(var);
+                self.write("| ");
+                self.emit_expr(expr);
+                self.write(")");
                 // Determine the collect type
                 if let Type::List(ref elem) = ty {
                     self.write(&format!(".collect::<Vec<{}>>()", elem.rust_type()));
@@ -3161,6 +3201,91 @@ fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExp
 /// Check if a method body contains any field assignments (self.field = ...).
 fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
     stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
+}
+
+/// Check if a variable name is referenced anywhere in a list of statements.
+fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Expr { expr } => {
+                if expr_references_var(expr, var_name) { return true; }
+            }
+            HirStmt::Return { value } => {
+                if let Some(expr) = value {
+                    if expr_references_var(expr, var_name) { return true; }
+                }
+            }
+            HirStmt::Yield { value } => {
+                if expr_references_var(value, var_name) { return true; }
+            }
+            HirStmt::Assign { value, .. } => {
+                if expr_references_var(value, var_name) { return true; }
+            }
+            HirStmt::FieldAssign { value, .. } => {
+                if expr_references_var(value, var_name) { return true; }
+            }
+            HirStmt::If { condition, then_body, elif_clauses, else_body } => {
+                if expr_references_var(condition, var_name) { return true; }
+                if stmts_reference_var(then_body, var_name) { return true; }
+                for (cond, body) in elif_clauses {
+                    if expr_references_var(cond, var_name) { return true; }
+                    if stmts_reference_var(body, var_name) { return true; }
+                }
+                if let Some(eb) = else_body {
+                    if stmts_reference_var(eb, var_name) { return true; }
+                }
+            }
+            HirStmt::While { condition, body, .. } => {
+                if expr_references_var(condition, var_name) { return true; }
+                if stmts_reference_var(body, var_name) { return true; }
+            }
+            HirStmt::For { iter, body, .. } => {
+                if expr_references_var(iter, var_name) { return true; }
+                if stmts_reference_var(body, var_name) { return true; }
+            }
+            HirStmt::With { value, body, .. } => {
+                if expr_references_var(value, var_name) { return true; }
+                if stmts_reference_var(body, var_name) { return true; }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+/// Check if an expression references a variable name.
+fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
+    match expr {
+        HirExpr::Name { name, .. } => name == var_name,
+        HirExpr::BinOp { left, right, .. } => {
+            expr_references_var(left, var_name) || expr_references_var(right, var_name)
+        }
+        HirExpr::BoolOp { values, .. } => {
+            values.iter().any(|v| expr_references_var(v, var_name))
+        }
+        HirExpr::UnaryOp { operand, .. } => expr_references_var(operand, var_name),
+        HirExpr::Call { args, .. } => args.iter().any(|a| expr_references_var(a, var_name)),
+        HirExpr::MethodCall { object, args, .. } => {
+            expr_references_var(object, var_name) || args.iter().any(|a| expr_references_var(a, var_name))
+        }
+        HirExpr::FieldAccess { object, .. } => expr_references_var(object, var_name),
+        HirExpr::Index { object, index, .. } => {
+            expr_references_var(object, var_name) || expr_references_var(index, var_name)
+        }
+        HirExpr::ListLiteral { elements, .. } => elements.iter().any(|e| expr_references_var(e, var_name)),
+        HirExpr::TupleLiteral { elements, .. } => elements.iter().any(|e| expr_references_var(e, var_name)),
+        HirExpr::Compare { left, comparators, .. } => {
+            expr_references_var(left, var_name) || comparators.iter().any(|c| expr_references_var(c, var_name))
+        }
+        HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
+            expr_references_var(condition, var_name) || expr_references_var(then_expr, var_name) || expr_references_var(else_expr, var_name)
+        }
+        HirExpr::Lambda { body, .. } => expr_references_var(body, var_name),
+        HirExpr::ListComp { expr: e, iter, filter, .. } => {
+            expr_references_var(e, var_name) || expr_references_var(iter, var_name) || filter.as_ref().map_or(false, |f| expr_references_var(f, var_name))
+        }
+        _ => false,
+    }
 }
 
 /// Check if a function body contains any yield statements (making it a generator).
@@ -3549,7 +3674,7 @@ mod tests {
         };
 
         let rust_code = generate_rust(&module);
-        assert!(rust_code.contains("println!(\"{}\", \"hello\")"), "should emit string literal without .to_string()");
+        assert!(rust_code.contains("println!(\"hello\")"), "should inline string literal directly into println!");
         assert!(!rust_code.contains("\"hello\".to_string()"), "should NOT have .to_string() in println context");
     }
 
@@ -3662,8 +3787,9 @@ mod tests {
         };
 
         let rust_code = generate_rust(&module);
-        assert!(rust_code.contains("format!(\"{}{}{}\","), "should flatten into single format! with 3 placeholders");
-        assert_eq!(rust_code.matches("format!").count(), 1, "should have exactly one format! call");
+        // All parts are string literals, so they should be folded into a single string
+        assert!(rust_code.contains("\"abc\".to_string()"), "should fold all string literals into a single string");
+        assert!(!rust_code.contains("format!"), "should NOT use format! when all parts are literals");
     }
 
     #[test]
