@@ -1,0 +1,9 @@
+# expect-stdout: 2
+# Tests dict subscript assignment: dict[key] = val
+
+def main():
+    d: dict[str, int] = {"a": 1}
+    d["b"] = 2
+    val: int | None = d["b"]
+    if val is not None:
+        print(val)

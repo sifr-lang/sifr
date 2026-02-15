@@ -1873,6 +1873,47 @@ impl RustEmitter {
                 self.emit_expr(value);
                 self.write(";\n");
             }
+            HirStmt::SubscriptAssign { object, index, value, object_ty } => {
+                self.write_indent();
+                match object_ty {
+                    Type::List(_) => {
+                        // list[i] = val -> list[i as usize] = val
+                        self.write(object);
+                        self.write("[");
+                        self.emit_expr(index);
+                        self.write(" as usize] = ");
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
+                    Type::Dict(_, _) => {
+                        // dict[key] = val -> dict.insert(key, val)
+                        self.write(object);
+                        self.write(".insert(");
+                        self.emit_expr(index);
+                        self.write(", ");
+                        self.emit_expr(value);
+                        self.write(");\n");
+                    }
+                    _ => {
+                        // Fallback: direct subscript
+                        self.write(object);
+                        self.write("[");
+                        self.emit_expr(index);
+                        self.write("] = ");
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
+                }
+            }
+            HirStmt::AttributeAugAssign { object, field, op, value } => {
+                self.write_indent();
+                self.write(object);
+                self.write(".");
+                self.write(field);
+                self.write(&format!(" {} ", op));
+                self.emit_expr(value);
+                self.write(";\n");
+            }
             HirStmt::Delete { object, index } => {
                 let obj_ty = object.ty();
                 self.write_indent();
@@ -3936,6 +3977,13 @@ fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
             HirStmt::FieldAssign { value, .. } => {
                 if expr_references_var(value, var_name) { return true; }
             }
+            HirStmt::SubscriptAssign { index, value, .. } => {
+                if expr_references_var(index, var_name) { return true; }
+                if expr_references_var(value, var_name) { return true; }
+            }
+            HirStmt::AttributeAugAssign { value, .. } => {
+                if expr_references_var(value, var_name) { return true; }
+            }
             HirStmt::If { condition, then_body, elif_clauses, else_body } => {
                 if expr_references_var(condition, var_name) { return true; }
                 if stmts_reference_var(then_body, var_name) { return true; }
@@ -4115,6 +4163,12 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) 
                 for handler in handlers {
                     collect_mutated_vars_inner(&handler.body, mutated);
                 }
+            }
+            HirStmt::SubscriptAssign { object, .. } => {
+                mutated.insert(object.clone());
+            }
+            HirStmt::AttributeAugAssign { object, .. } => {
+                mutated.insert(object.clone());
             }
             HirStmt::Delete { object, .. } => {
                 if let HirExpr::Name { name, .. } = object {
