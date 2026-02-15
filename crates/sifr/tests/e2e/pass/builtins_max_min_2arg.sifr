@@ -1,0 +1,9 @@
+# expect-stdout: 10
+# expect-stdout: 3
+# Tests max(a, b) and min(a, b) with 2 arguments
+
+def main():
+    a: int = 10
+    b: int = 3
+    print(max(a, b))
+    print(min(a, b))
