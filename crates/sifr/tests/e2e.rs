@@ -7,6 +7,7 @@
 //!
 //! Tests in `tests/e2e/fail/` must fail to compile with expected error messages.
 
+use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -35,7 +36,7 @@ fn extract_expect_errors(source: &str) -> Vec<String> {
     errors
 }
 
-/// Compile source and return the generated Rust code or errors.
+/// Compile source and return the generated Rust code and stdlib modules, or errors.
 fn compile_source(source: &str) -> Result<String, Vec<String>> {
     match sifr_driver::compile(source) {
         sifr_driver::CompileResult::Success { rust_source } => Ok(rust_source),
@@ -45,19 +46,53 @@ fn compile_source(source: &str) -> Result<String, Vec<String>> {
     }
 }
 
-/// Build the generated Rust source into a binary and optionally run it.
-/// Returns the stdout output of the binary.
-fn build_and_run(rust_source: &str, test_name: &str) -> Result<String, String> {
+/// Compile source and return the generated Rust code with stdlib metadata.
+fn compile_source_with_metadata(source: &str) -> Result<(String, HashSet<String>), Vec<String>> {
+    match sifr_driver::compile_with_metadata(source) {
+        sifr_driver::CompileResultFull::Success { rust_source, used_stdlib_modules } => {
+            Ok((rust_source, used_stdlib_modules))
+        }
+        sifr_driver::CompileResultFull::Errors { errors } => {
+            Err(errors.iter().map(|e| e.message.clone()).collect())
+        }
+    }
+}
+
+/// Generate Cargo.toml content with optional stdlib dependencies.
+fn generate_cargo_toml(stdlib_modules: &HashSet<String>) -> String {
+    let mut cargo_toml = r#"[package]
+name = "sifr_output"
+version = "0.1.0"
+edition = "2021"
+"#.to_string();
+
+    let mut deps = Vec::new();
+    for module_name in stdlib_modules {
+        match module_name.as_str() {
+            "sifr.json" => deps.push("serde_json = \"1\""),
+            _ => {}
+        }
+    }
+
+    if !deps.is_empty() {
+        cargo_toml.push_str("\n[dependencies]\n");
+        for dep in &deps {
+            cargo_toml.push_str(dep);
+            cargo_toml.push('\n');
+        }
+    }
+
+    cargo_toml
+}
+
+/// Build the generated Rust source with stdlib dependencies into a binary and run it.
+fn build_and_run_with_deps(rust_source: &str, test_name: &str, stdlib_modules: &HashSet<String>) -> Result<String, String> {
     let tmp_dir = std::env::temp_dir().join("sifr_e2e_tests").join(test_name);
     let src_dir = tmp_dir.join("src");
     fs::create_dir_all(&src_dir).map_err(|e| format!("failed to create dir: {}", e))?;
 
-    // Write Cargo.toml
-    let cargo_toml = r#"[package]
-name = "sifr_output"
-version = "0.1.0"
-edition = "2021"
-"#;
+    // Write Cargo.toml with stdlib dependencies
+    let cargo_toml = generate_cargo_toml(stdlib_modules);
     fs::write(tmp_dir.join("Cargo.toml"), cargo_toml)
         .map_err(|e| format!("failed to write Cargo.toml: {}", e))?;
 
@@ -125,8 +160,8 @@ fn test_e2e_pass() {
         let expected_stdout = extract_expect_stdout(&source);
 
         // Step 1: Sifr compilation (parse + type-check + codegen)
-        let rust_source = match compile_source(&source) {
-            Ok(rs) => rs,
+        let (rust_source, used_stdlib_modules) = match compile_source_with_metadata(&source) {
+            Ok(result) => result,
             Err(errors) => {
                 failures.push(format!(
                     "FAIL [{}]: sifr compilation failed:\n  {}",
@@ -147,7 +182,7 @@ fn test_e2e_pass() {
         }
 
         // Step 2: Compile generated Rust with rustc and run it
-        match build_and_run(&rust_source, &test_name) {
+        match build_and_run_with_deps(&rust_source, &test_name, &used_stdlib_modules) {
             Ok(stdout) => {
                 // Step 3: Verify stdout if expected
                 if let Some(expected) = &expected_stdout {

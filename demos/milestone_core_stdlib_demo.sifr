@@ -1,0 +1,80 @@
+# ============================================================
+# Milestone: Core Standard Library Demo
+# ============================================================
+# Demonstrates the stdlib infrastructure and all 5 core modules:
+#   sifr.io    — File I/O
+#   sifr.json  — JSON parsing
+#   sifr.env   — Environment variables
+#   sifr.os    — OS operations
+#   sifr.math  — Math functions and constants
+# ============================================================
+
+from sifr.io import read_file, write_file, file_exists, read_lines
+from sifr.json import json_loads
+from sifr.env import get_env, set_env
+from sifr.os import run_command
+from sifr.math import sqrt, floor, ceil, pi, e
+
+def main():
+    # ----------------------------------------------------------
+    # 1. sifr.io — File I/O operations
+    # ----------------------------------------------------------
+    print("=== sifr.io ===")
+
+    # Write a file
+    write_file("/tmp/sifr_demo.txt", "Hello from Sifr!\nLine 2")
+
+    # Check it exists
+    exists: bool = file_exists("/tmp/sifr_demo.txt")
+    print(f"File exists: {exists}")
+
+    # Read it back
+    content: str = read_file("/tmp/sifr_demo.txt")
+    print(f"Content: {content}")
+
+    # Read as lines
+    lines: list[str] = read_lines("/tmp/sifr_demo.txt")
+    print(f"Line count: {len(lines)}")
+
+    # ----------------------------------------------------------
+    # 2. sifr.json — JSON parsing
+    # ----------------------------------------------------------
+    print("=== sifr.json ===")
+
+    data: str = json_loads("{\"language\":\"sifr\",\"version\":1}")
+    print(f"Parsed JSON: {data}")
+
+    # ----------------------------------------------------------
+    # 3. sifr.env — Environment variables
+    # ----------------------------------------------------------
+    print("=== sifr.env ===")
+
+    set_env("SIFR_DEMO", "active")
+    val: str | None = get_env("SIFR_DEMO")
+    if val is not None:
+        print(f"SIFR_DEMO = {val}")
+
+    missing: str | None = get_env("SIFR_NONEXISTENT")
+    if missing is None:
+        print("SIFR_NONEXISTENT not set")
+
+    # ----------------------------------------------------------
+    # 4. sifr.os — OS operations
+    # ----------------------------------------------------------
+    print("=== sifr.os ===")
+
+    output: str = run_command("echo Sifr OS module works")
+    print(output)
+
+    # ----------------------------------------------------------
+    # 5. sifr.math — Math functions and constants
+    # ----------------------------------------------------------
+    print("=== sifr.math ===")
+
+    print(f"sqrt(25.0) = {sqrt(25.0)}")
+    print(f"floor(3.7) = {floor(3.7)}")
+    print(f"ceil(3.2) = {ceil(3.2)}")
+    print(f"pi = {pi}")
+    print(f"e = {e}")
+
+    print("=== Demo complete ===")

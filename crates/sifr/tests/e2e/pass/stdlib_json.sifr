@@ -1,0 +1,14 @@
+# Test sifr.json stdlib module
+from sifr.json import json_loads, json_dumps
+
+def main():
+    # Parse a JSON string
+    data: str = json_loads("{\"name\":\"sifr\"}")
+    print(data)
+
+    # Dumps (for now, just returns the string)
+    output: str = json_dumps("hello")
+    print(output)
+
+# expect-stdout: {"name":"sifr"}
+# expect-stdout: hello

@@ -6,8 +6,19 @@ use sifr_hir::*;
 use sifr_type_system::Type;
 use std::collections::{HashMap, HashSet};
 
+/// Result of code generation, including the Rust source and metadata.
+pub struct CodegenResult {
+    pub rust_source: String,
+    pub used_stdlib_modules: HashSet<String>,
+}
+
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
+    generate_rust_with_metadata(module).rust_source
+}
+
+/// Generate Rust source code from a HIR module, returning metadata about stdlib usage.
+pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
     let mut emitter = RustEmitter::new();
 
     // First pass: collect all union types used in the module
@@ -28,7 +39,11 @@ pub fn generate_rust(module: &HirModule) -> String {
         result.push('\n');
     }
     result.push_str(&emitter.output);
-    result
+
+    CodegenResult {
+        rust_source: result,
+        used_stdlib_modules: emitter.used_stdlib_modules,
+    }
 }
 
 /// Generate Rust source code for a multi-module project.
@@ -76,13 +91,38 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
 
 /// Generate a complete Rust project (Cargo.toml + main.rs content).
 pub fn generate_project(module: &HirModule, project_name: &str) -> (String, String) {
-    let cargo_toml = format!(
+    generate_project_with_deps(module, project_name, &HashSet::new())
+}
+
+/// Generate a complete Rust project with stdlib dependencies.
+pub fn generate_project_with_deps(module: &HirModule, project_name: &str, stdlib_modules: &HashSet<String>) -> (String, String) {
+    let mut cargo_toml = format!(
         r#"[package]
 name = "{project_name}"
 version = "0.1.0"
 edition = "2021"
 "#
     );
+
+    // Add dependencies based on used stdlib modules
+    let mut deps = Vec::new();
+    for module_name in stdlib_modules {
+        match module_name.as_str() {
+            "sifr.json" => {
+                deps.push("serde_json = \"1\"".to_string());
+            }
+            // sifr.io, sifr.env, sifr.os, sifr.math use only std library — no extra deps
+            _ => {}
+        }
+    }
+
+    if !deps.is_empty() {
+        cargo_toml.push_str("\n[dependencies]\n");
+        for dep in &deps {
+            cargo_toml.push_str(dep);
+            cargo_toml.push('\n');
+        }
+    }
 
     let main_rs = generate_rust(module);
     (cargo_toml, main_rs)
@@ -114,6 +154,10 @@ struct RustEmitter {
     parent_fields: HashMap<String, (String, HashSet<String>)>,
     /// The class currently being emitted (for field access resolution)
     current_class_name: Option<String>,
+    /// Set of stdlib modules used (for Cargo dependency injection)
+    pub used_stdlib_modules: HashSet<String>,
+    /// Set of stdlib function names (for codegen dispatch)
+    stdlib_functions: HashSet<String>,
 }
 
 impl RustEmitter {
@@ -133,6 +177,8 @@ impl RustEmitter {
             display_classes: HashSet::new(),
             parent_fields: HashMap::new(),
             current_class_name: None,
+            used_stdlib_modules: HashSet::new(),
+            stdlib_functions: HashSet::new(),
         }
     }
 
@@ -262,6 +308,16 @@ impl RustEmitter {
     }
 
     fn emit_module(&mut self, module: &HirModule) {
+        // Pre-scan: collect stdlib imports and register stdlib function names
+        for import in &module.imports {
+            if import.module.starts_with("sifr.") {
+                self.used_stdlib_modules.insert(import.module.clone());
+                for name in &import.names {
+                    self.stdlib_functions.insert(name.clone());
+                }
+            }
+        }
+
         // Pre-scan: collect classes that have Display impls
         for class in &module.classes {
             if class.is_error_type
@@ -2220,7 +2276,12 @@ impl RustEmitter {
                 self.write("None");
             }
             HirExpr::Name { name, .. } => {
-                self.write(name);
+                // Check for stdlib constants
+                if self.stdlib_functions.contains(name.as_str()) || self.is_stdlib_constant(name) {
+                    self.emit_stdlib_constant(name);
+                } else {
+                    self.write(name);
+                }
             }
             HirExpr::BinOp { left, op, right, ty } => {
                 // Special handling for string concatenation
@@ -2589,6 +2650,9 @@ impl RustEmitter {
                         self.emit_lambda_untyped(&args[0]);
                         self.write(")(x)).collect::<Vec<_>>()");
                     }
+                } else if self.stdlib_functions.contains(func.as_str()) {
+                    // Stdlib function call — emit the correct Rust code
+                    self.emit_stdlib_call(func, args);
                 } else {
                     self.write(func);
                     self.write("(");
@@ -2984,6 +3048,115 @@ impl RustEmitter {
     /// This avoids the double-format pattern `println!("{}", format!(...))`.
     /// Emit a lambda expression without type annotations on parameters.
     /// Used when the lambda is passed to .map()/.filter() where Rust can infer types.
+    /// Check if a name is a stdlib constant.
+    fn is_stdlib_constant(&self, name: &str) -> bool {
+        matches!(name, "pi" | "e") && self.stdlib_functions.contains(name)
+    }
+
+    /// Emit a stdlib constant value.
+    fn emit_stdlib_constant(&mut self, name: &str) {
+        match name {
+            "pi" => self.write("std::f64::consts::PI"),
+            "e" => self.write("std::f64::consts::E"),
+            _ => self.write(name),
+        }
+    }
+
+    /// Emit a stdlib function call with the correct Rust code.
+    fn emit_stdlib_call(&mut self, func: &str, args: &[HirExpr]) {
+        match func {
+            // sifr.io
+            "read_file" => {
+                self.write("std::fs::read_to_string(");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap()");
+            }
+            "write_file" => {
+                self.write("std::fs::write(");
+                self.emit_expr(&args[0]);
+                self.write(", ");
+                self.emit_expr(&args[1]);
+                self.write(").unwrap()");
+            }
+            "file_exists" => {
+                self.write("std::path::Path::new(&");
+                self.emit_expr(&args[0]);
+                self.write(").exists()");
+            }
+            "read_lines" => {
+                self.write("std::fs::read_to_string(");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap().lines().map(|s| s.to_string()).collect::<Vec<String>>()");
+            }
+            // sifr.json
+            "json_loads" => {
+                self.write("serde_json::from_str::<serde_json::Value>(&");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap().to_string()");
+            }
+            "json_dumps" => {
+                // For now, json_dumps just returns the string as-is (it's already a string)
+                self.emit_expr(&args[0]);
+                self.write(".clone()");
+            }
+            // sifr.env
+            "get_env" => {
+                self.write("std::env::var(");
+                self.emit_expr(&args[0]);
+                self.write(").ok()");
+            }
+            "set_env" => {
+                self.write("std::env::set_var(");
+                self.emit_expr(&args[0]);
+                self.write(", ");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            // sifr.os
+            "run_command" => {
+                self.write("String::from_utf8(std::process::Command::new(\"sh\").args([\"-c\", &");
+                self.emit_expr(&args[0]);
+                self.write("]).output().unwrap().stdout).unwrap().trim().to_string()");
+            }
+            "get_args" => {
+                self.write("std::env::args().collect::<Vec<String>>()");
+            }
+            // sifr.math
+            "sqrt" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").sqrt()");
+            }
+            "floor" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").floor() as i64");
+            }
+            "ceil" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").ceil() as i64");
+            }
+            "fabs" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").abs()");
+            }
+            _ => {
+                // Unknown stdlib function — emit as regular call
+                self.write(func);
+                self.write("(");
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.emit_expr(arg);
+                }
+                self.write(")");
+            }
+        }
+    }
+
     fn emit_lambda_untyped(&mut self, expr: &HirExpr) {
         if let HirExpr::Lambda { params, body, .. } = expr {
             self.write("|");

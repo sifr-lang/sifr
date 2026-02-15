@@ -1,0 +1,32 @@
+# Test sifr.io stdlib module
+from sifr.io import read_file, write_file, file_exists, read_lines
+
+def main():
+    # Write a file
+    write_file("/tmp/sifr_test_io.txt", "hello\nworld")
+
+    # Check it exists
+    exists: bool = file_exists("/tmp/sifr_test_io.txt")
+    print(exists)
+
+    # Read it back
+    content: str = read_file("/tmp/sifr_test_io.txt")
+    print(content)
+
+    # Read lines
+    lines: list[str] = read_lines("/tmp/sifr_test_io.txt")
+    print(len(lines))
+    print(lines[0])
+    print(lines[1])
+
+    # Check non-existent file
+    missing: bool = file_exists("/tmp/sifr_test_nonexistent_xyz.txt")
+    print(missing)
+
+# expect-stdout: true
+# expect-stdout: hello
+# expect-stdout: world
+# expect-stdout: 2
+# expect-stdout: hello
+# expect-stdout: world
+# expect-stdout: false

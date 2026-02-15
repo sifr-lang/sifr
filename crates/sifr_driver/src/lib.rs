@@ -5,9 +5,9 @@
 
 use sifr_python_parser::parse_module;
 use sifr_hir::{lower_module, lower_module_with_externals, ExternalDefs, HirModule};
-use sifr_codegen::{generate_rust, generate_rust_multi, generate_project};
+use sifr_codegen::{generate_rust_with_metadata, generate_rust_multi, generate_project, generate_project_with_deps};
 use sifr_type_system::{Type, FunctionType};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -53,6 +53,26 @@ impl std::fmt::Display for CompileError {
 
 /// Compile Sifr source code to Rust source code.
 pub fn compile(source: &str) -> CompileResult {
+    let result = compile_with_metadata(source);
+    match result {
+        CompileResultFull::Success { rust_source, .. } => CompileResult::Success { rust_source },
+        CompileResultFull::Errors { errors } => CompileResult::Errors { errors },
+    }
+}
+
+/// Full compilation result including stdlib metadata.
+pub enum CompileResultFull {
+    Success {
+        rust_source: String,
+        used_stdlib_modules: HashSet<String>,
+    },
+    Errors {
+        errors: Vec<CompileError>,
+    },
+}
+
+/// Compile Sifr source code to Rust source code, returning stdlib metadata.
+pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     // Phase 1: Parse
     let parsed = match parse_module(source) {
         Ok(parsed) => {
@@ -65,12 +85,12 @@ pub fn compile(source: &str) -> CompileResult {
                         phase: CompilePhase::Parse,
                     })
                     .collect();
-                return CompileResult::Errors { errors };
+                return CompileResultFull::Errors { errors };
             }
             parsed
         }
         Err(e) => {
-            return CompileResult::Errors {
+            return CompileResultFull::Errors {
                 errors: vec![CompileError {
                     message: format!("failed to parse: {}", e),
                     phase: CompilePhase::Parse,
@@ -90,7 +110,7 @@ pub fn compile(source: &str) -> CompileResult {
                     phase: CompilePhase::TypeCheck,
                 })
                 .collect();
-            return CompileResult::Errors {
+            return CompileResultFull::Errors {
                 errors: compile_errors,
             };
         }
@@ -101,10 +121,13 @@ pub fn compile(source: &str) -> CompileResult {
         eprintln!("{}", diag);
     }
 
-    // Phase 3: Generate Rust code
-    let rust_source = generate_rust(&lowering_result.module);
+    // Phase 3: Generate Rust code with metadata
+    let codegen_result = generate_rust_with_metadata(&lowering_result.module);
 
-    CompileResult::Success { rust_source }
+    CompileResultFull::Success {
+        rust_source: codegen_result.rust_source,
+        used_stdlib_modules: codegen_result.used_stdlib_modules,
+    }
 }
 
 /// Type-check only (no code generation).
@@ -360,9 +383,9 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
 
 /// Compile and build a native binary.
 pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
-    let rust_source = match compile(source) {
-        CompileResult::Success { rust_source } => rust_source,
-        CompileResult::Errors { errors } => return Err(errors),
+    let (rust_source, used_stdlib_modules) = match compile_with_metadata(source) {
+        CompileResultFull::Success { rust_source, used_stdlib_modules } => (rust_source, used_stdlib_modules),
+        CompileResultFull::Errors { errors } => return Err(errors),
     };
 
     // Create a temporary Rust project
@@ -375,10 +398,11 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
         }]
     })?;
 
-    // Write Cargo.toml
-    let (cargo_toml, _) = generate_project(
+    // Write Cargo.toml with stdlib dependencies
+    let (cargo_toml, _) = generate_project_with_deps(
         &sifr_hir::HirModule { functions: vec![], classes: vec![], imports: vec![] },
         "sifr_output",
+        &used_stdlib_modules,
     );
     std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
         vec![CompileError {
