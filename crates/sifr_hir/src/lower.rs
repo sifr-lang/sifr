@@ -2284,6 +2284,26 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     }
 
+    // pow(base, exp) -> base ** exp
+    if func_name == "pow" {
+        if call.arguments.args.len() != 2 {
+            ctx.error("pow() takes exactly 2 arguments".to_string());
+            return None;
+        }
+        let base = lower_expr(&call.arguments.args[0], ctx)?;
+        let exp = lower_expr(&call.arguments.args[1], ctx)?;
+        let result_ty = if base.ty() == &Type::Int && exp.ty() == &Type::Int {
+            Type::Int
+        } else {
+            Type::Float
+        };
+        return Some(HirExpr::Call {
+            func: "pow".to_string(),
+            args: vec![base, exp],
+            ty: result_ty,
+        });
+    }
+
     // Special handling for abs() built-in
     if func_name == "abs" {
         if call.arguments.args.len() != 1 {
@@ -2426,46 +2446,68 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
 
     // --- Built-in generic functions ---
 
-    // min(iterable) -> element type
+    // min(iterable) or min(a, b) -> element type
     if func_name == "min" {
-        if call.arguments.args.len() != 1 {
-            ctx.error("min() takes exactly 1 argument".to_string());
+        if call.arguments.args.len() == 2 {
+            // min(a, b) -> std::cmp::min(a, b)
+            let a = lower_expr(&call.arguments.args[0], ctx)?;
+            let b = lower_expr(&call.arguments.args[1], ctx)?;
+            let result_ty = a.ty().clone();
+            return Some(HirExpr::Call {
+                func: "min".to_string(),
+                args: vec![a, b],
+                ty: result_ty,
+            });
+        } else if call.arguments.args.len() == 1 {
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let elem_ty = match arg.ty() {
+                Type::List(elem) => *elem.clone(),
+                _ => {
+                    ctx.error(format!("min() argument must be a list, got '{}'", arg.ty().display_name()));
+                    return None;
+                }
+            };
+            return Some(HirExpr::Call {
+                func: "min".to_string(),
+                args: vec![arg],
+                ty: elem_ty,
+            });
+        } else {
+            ctx.error("min() takes 1 or 2 arguments".to_string());
             return None;
         }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let elem_ty = match arg.ty() {
-            Type::List(elem) => *elem.clone(),
-            _ => {
-                ctx.error(format!("min() argument must be a list, got '{}'", arg.ty().display_name()));
-                return None;
-            }
-        };
-        return Some(HirExpr::Call {
-            func: "min".to_string(),
-            args: vec![arg],
-            ty: elem_ty,
-        });
     }
 
-    // max(iterable) -> element type
+    // max(iterable) or max(a, b) -> element type
     if func_name == "max" {
-        if call.arguments.args.len() != 1 {
-            ctx.error("max() takes exactly 1 argument".to_string());
+        if call.arguments.args.len() == 2 {
+            // max(a, b) -> std::cmp::max(a, b)
+            let a = lower_expr(&call.arguments.args[0], ctx)?;
+            let b = lower_expr(&call.arguments.args[1], ctx)?;
+            let result_ty = a.ty().clone();
+            return Some(HirExpr::Call {
+                func: "max".to_string(),
+                args: vec![a, b],
+                ty: result_ty,
+            });
+        } else if call.arguments.args.len() == 1 {
+            let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            let elem_ty = match arg.ty() {
+                Type::List(elem) => *elem.clone(),
+                _ => {
+                    ctx.error(format!("max() argument must be a list, got '{}'", arg.ty().display_name()));
+                    return None;
+                }
+            };
+            return Some(HirExpr::Call {
+                func: "max".to_string(),
+                args: vec![arg],
+                ty: elem_ty,
+            });
+        } else {
+            ctx.error("max() takes 1 or 2 arguments".to_string());
             return None;
         }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let elem_ty = match arg.ty() {
-            Type::List(elem) => *elem.clone(),
-            _ => {
-                ctx.error(format!("max() argument must be a list, got '{}'", arg.ty().display_name()));
-                return None;
-            }
-        };
-        return Some(HirExpr::Call {
-            func: "max".to_string(),
-            args: vec![arg],
-            ty: elem_ty,
-        });
     }
 
     // sum(iterable) -> element type (int or float)
@@ -2838,7 +2880,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let borrows_args = matches!(func_name.as_str(),
         "print" | "len" | "bool" | "str" | "int" | "float" | "isinstance" |
         "type" | "id" | "hash" | "repr" | "sorted" | "reversed" | "enumerate" |
-        "zip" | "any" | "all" | "sum" | "min" | "max" | "abs" | "round"
+        "zip" | "any" | "all" | "sum" | "min" | "max" | "abs" | "round" | "pow"
     );
     if !borrows_args {
         for arg in &args {
@@ -3691,6 +3733,7 @@ fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             Some(HirExpr::RangeLiteral {
                 start: Box::new(HirExpr::IntLiteral(0)),
                 end: Box::new(end),
+                step: None,
                 ty: Type::Range,
             })
         }
@@ -3715,12 +3758,25 @@ fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             Some(HirExpr::RangeLiteral {
                 start: Box::new(start),
                 end: Box::new(end),
+                step: None,
+                ty: Type::Range,
+            })
+        }
+        3 => {
+            // range(start, end, step) -> (start..end).step_by(step)
+            let start = lower_expr(args[0], ctx)?;
+            let end = lower_expr(args[1], ctx)?;
+            let step = lower_expr(args[2], ctx)?;
+            Some(HirExpr::RangeLiteral {
+                start: Box::new(start),
+                end: Box::new(end),
+                step: Some(Box::new(step)),
                 ty: Type::Range,
             })
         }
         _ => {
             ctx.error(format!(
-                "range() takes 1 or 2 arguments, got {}",
+                "range() takes 1, 2, or 3 arguments, got {}",
                 args.len()
             ));
             None

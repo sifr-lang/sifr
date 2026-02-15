@@ -2726,6 +2726,22 @@ impl RustEmitter {
                     } else {
                         self.write("String::new()");
                     }
+                } else if func == "pow" {
+                    // pow(base, exp)
+                    if args.len() == 2 {
+                        if args[0].ty() == &Type::Int && args[1].ty() == &Type::Int {
+                            self.emit_expr(&args[0]);
+                            self.write(".pow(");
+                            self.emit_expr(&args[1]);
+                            self.write(" as u32)");
+                        } else {
+                            self.write("(");
+                            self.emit_expr(&args[0]);
+                            self.write(" as f64).powf(");
+                            self.emit_expr(&args[1]);
+                            self.write(" as f64)");
+                        }
+                    }
                 } else if func == "abs" {
                     if !args.is_empty() {
                         self.write("(");
@@ -2834,8 +2850,21 @@ impl RustEmitter {
                         }
                     }
                 } else if func == "min" {
-                    // min(list) -> *list.iter().min().unwrap()
-                    if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                    if args.len() == 2 {
+                        // min(a, b) -> std::cmp::min(a, b) or a.min(b) for floats
+                        if matches!(args[0].ty(), Type::Float) {
+                            self.emit_expr(&args[0]);
+                            self.write(".min(");
+                            self.emit_expr(&args[1]);
+                            self.write(")");
+                        } else {
+                            self.write("std::cmp::min(");
+                            self.emit_expr(&args[0]);
+                            self.write(", ");
+                            self.emit_expr(&args[1]);
+                            self.write(")");
+                        }
+                    } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
                         self.emit_expr(&args[0]);
                         self.write(".iter().cloned().reduce(f64::min).unwrap()");
                     } else {
@@ -2845,8 +2874,21 @@ impl RustEmitter {
                         self.write(".iter().min().unwrap()");
                     }
                 } else if func == "max" {
-                    // max(list) -> *list.iter().max().unwrap()
-                    if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                    if args.len() == 2 {
+                        // max(a, b) -> std::cmp::max(a, b) or a.max(b) for floats
+                        if matches!(args[0].ty(), Type::Float) {
+                            self.emit_expr(&args[0]);
+                            self.write(".max(");
+                            self.emit_expr(&args[1]);
+                            self.write(")");
+                        } else {
+                            self.write("std::cmp::max(");
+                            self.emit_expr(&args[0]);
+                            self.write(", ");
+                            self.emit_expr(&args[1]);
+                            self.write(")");
+                        }
+                    } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
                         self.emit_expr(&args[0]);
                         self.write(".iter().cloned().reduce(f64::max).unwrap()");
                     } else {
@@ -2970,10 +3012,20 @@ impl RustEmitter {
                 self.emit_expr(else_expr);
                 self.write(" }");
             }
-            HirExpr::RangeLiteral { start, end, .. } => {
-                self.emit_expr(start);
-                self.write("..");
-                self.emit_expr(end);
+            HirExpr::RangeLiteral { start, end, step, .. } => {
+                if let Some(step) = step {
+                    self.write("(");
+                    self.emit_expr(start);
+                    self.write("..");
+                    self.emit_expr(end);
+                    self.write(").step_by(");
+                    self.emit_expr(step);
+                    self.write(" as usize)");
+                } else {
+                    self.emit_expr(start);
+                    self.write("..");
+                    self.emit_expr(end);
+                }
             }
             HirExpr::ListLiteral { elements, .. } => {
                 self.write("vec![");

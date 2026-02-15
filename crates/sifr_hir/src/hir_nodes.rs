@@ -275,6 +275,7 @@ pub enum HirExpr {
     RangeLiteral {
         start: Box<HirExpr>,
         end: Box<HirExpr>,
+        step: Option<Box<HirExpr>>,
         ty: Type,
     },
     /// List literal: [1, 2, 3]

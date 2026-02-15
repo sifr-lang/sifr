@@ -1,0 +1,10 @@
+# expect-stdout: 0
+# expect-stdout: 2
+# expect-stdout: 4
+# expect-stdout: 6
+# expect-stdout: 8
+# Tests range(start, stop, step) with 3 arguments
+
+def main():
+    for i in range(0, 10, 2):
+        print(i)

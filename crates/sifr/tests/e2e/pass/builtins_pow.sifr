@@ -1,0 +1,7 @@
+# expect-stdout: 8
+# expect-stdout: 27
+# Tests pow(base, exp) builtin
+
+def main():
+    print(pow(2, 3))
+    print(pow(3, 3))
