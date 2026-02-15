@@ -19,6 +19,8 @@ pub enum Type {
     List(Box<Type>),
     /// Dictionary type (`dict[K, V]` in Sifr, `HashMap<K, V>` in Rust)
     Dict(Box<Type>, Box<Type>),
+    /// Set type (`set[T]` in Sifr, `HashSet<T>` in Rust)
+    Set(Box<Type>),
     /// Tuple type (`tuple[A, B, ...]` in Sifr, `(A, B, ...)` in Rust)
     Tuple(Vec<Type>),
     /// Range type (maps to `std::ops::Range<i64>` in Rust)
@@ -110,7 +112,7 @@ impl Type {
             Self::Int | Self::Float | Self::Bool | Self::None | Self::Never | Self::Range => OwnershipKind::Copy,
             Self::LiteralInt(_) | Self::LiteralBool(_) => OwnershipKind::Copy,
             Self::Function(_) => OwnershipKind::Copy,
-            Self::Str | Self::Any | Self::List(_) | Self::Dict(_, _) | Self::Tuple(_) => OwnershipKind::Move,
+            Self::Str | Self::Any | Self::List(_) | Self::Dict(_, _) | Self::Set(_) | Self::Tuple(_) => OwnershipKind::Move,
             Self::LiteralStr(_) => OwnershipKind::Move,
             Self::Unknown => OwnershipKind::Move,
             Self::Class { .. } => OwnershipKind::Move,
@@ -141,6 +143,7 @@ impl Type {
             Self::Function(_) => "function".to_string(),
             Self::List(elem) => format!("list[{}]", elem.display_name()),
             Self::Dict(key, val) => format!("dict[{}, {}]", key.display_name(), val.display_name()),
+            Self::Set(elem) => format!("set[{}]", elem.display_name()),
             Self::Tuple(elems) => {
                 let parts: Vec<String> = elems.iter().map(Self::display_name).collect();
                 format!("tuple[{}]", parts.join(", "))
@@ -183,6 +186,7 @@ impl Type {
             Self::None => "()".to_string(),
             Self::List(elem) => format!("Vec<{}>", elem.rust_type()),
             Self::Dict(key, val) => format!("HashMap<{}, {}>", key.rust_type(), val.rust_type()),
+            Self::Set(elem) => format!("HashSet<{}>", elem.rust_type()),
             Self::Tuple(elems) => {
                 let parts: Vec<String> = elems.iter().map(Self::rust_type).collect();
                 format!("({})", parts.join(", "))
@@ -255,6 +259,7 @@ impl Type {
             Type::LiteralBool(v) => format!("Lit{}", if *v { "True" } else { "False" }),
             Type::List(_) => "List".to_string(),
             Type::Dict(_, _) => "Dict".to_string(),
+            Type::Set(_) => "Set".to_string(),
             Type::Tuple(_) => "Tuple".to_string(),
             Type::Range => "Range".to_string(),
             Type::Function(_) => "Fn".to_string(),
@@ -315,6 +320,7 @@ impl Type {
         match self {
             Self::Range => Some(Type::Int),
             Self::List(elem) => Some(*elem.clone()),
+            Self::Set(elem) => Some(*elem.clone()),
             Self::Str => Some(Type::Str),
             Self::Dict(key, _) => Some(*key.clone()),
             _ => None,
@@ -416,6 +422,7 @@ impl Type {
         // Structural subtyping for collections
         match (source, target_resolved) {
             (Self::List(a), Self::List(b)) => a.is_assignable_to(b),
+            (Self::Set(a), Self::Set(b)) => a.is_assignable_to(b),
             (Self::Dict(ak, av), Self::Dict(bk, bv)) => ak.is_assignable_to(bk) && av.is_assignable_to(bv),
             (Self::Tuple(a), Self::Tuple(b)) => {
                 a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))

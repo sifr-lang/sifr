@@ -178,16 +178,33 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                 let names: Vec<String> = import_from.names.iter()
                     .map(|alias| alias.name.to_string())
                     .collect();
+                // Collect aliases: (original_name, local_alias)
+                let aliases: Vec<(String, String)> = import_from.names.iter()
+                    .filter_map(|alias| {
+                        alias.asname.as_ref().map(|asname| {
+                            (alias.name.to_string(), asname.to_string())
+                        })
+                    })
+                    .collect();
+
+                // Build a mapping from original name -> local name (alias or original)
+                let local_name_for = |original: &str| -> String {
+                    aliases.iter()
+                        .find(|(orig, _)| orig == original)
+                        .map(|(_, alias)| alias.clone())
+                        .unwrap_or_else(|| original.to_string())
+                };
 
                 // Check if this is a stdlib import (sifr.*)
                 if let Some(stdlib_module) = crate::stdlib::get_stdlib_module(&module_name) {
                     // Register stdlib function/constant types
                     for name in &names {
+                        let local = local_name_for(name);
                         if let Some(ft) = stdlib_module.functions.get(name) {
-                            ctx.functions.insert(name.clone(), ft.clone());
+                            ctx.functions.insert(local, ft.clone());
                         } else if let Some(const_ty) = stdlib_module.constants.get(name) {
                             // Register constants as variables in scope
-                            ctx.scope.define(name.clone(), const_ty.clone());
+                            ctx.scope.define(local, const_ty.clone());
                         } else {
                             ctx.error(format!("module '{}' has no member '{}'", module_name, name));
                         }
@@ -195,12 +212,14 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                     imports.push(HirImport {
                         module: module_name,
                         names,
+                        aliases,
                     });
                     continue;
                 }
 
                 // Resolve imported names from external definitions (local modules)
                 for name in &names {
+                    let local = local_name_for(name);
                     // Check if it's a private name
                     if name.starts_with('_') {
                         ctx.error(format!("cannot import private name '{}' from module '{}'", name, module_name));
@@ -210,13 +229,13 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                     // Look up in external functions
                     if let Some(module_fns) = externals.functions.get(&module_name) {
                         if let Some(ft) = module_fns.get(name) {
-                            ctx.functions.insert(name.clone(), ft.clone());
+                            ctx.functions.insert(local.clone(), ft.clone());
                         }
                     }
                     // Look up in external classes
                     if let Some(module_classes) = externals.classes.get(&module_name) {
                         if let Some(class_ty) = module_classes.get(name) {
-                            ctx.class_types.insert(name.clone(), class_ty.clone());
+                            ctx.class_types.insert(local.clone(), class_ty.clone());
                             // Also register the constructor
                             if let Type::Class { fields, .. } = class_ty {
                                 let params: Vec<(String, Type)> = fields.clone();
@@ -224,7 +243,7 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                                     params,
                                     return_type: Box::new(class_ty.clone()),
                                 };
-                                ctx.functions.insert(name.clone(), ft);
+                                ctx.functions.insert(local, ft);
                             }
                         }
                     }
@@ -233,6 +252,7 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                 imports.push(HirImport {
                     module: module_name,
                     names,
+                    aliases,
                 });
             }
         }
@@ -988,6 +1008,10 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                 "list" => {
                     let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::List(Box::new(elem_ty))
+                }
+                "set" => {
+                    let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::Set(Box::new(elem_ty))
                 }
                 "dict" => {
                     // dict[K, V] -- the slice is a Tuple expression
@@ -2092,6 +2116,7 @@ fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Call(call) => lower_call(call, ctx),
         Expr::If(if_expr) => lower_if_expr(if_expr, ctx),
         Expr::List(list) => lower_list_literal(list, ctx),
+        Expr::Set(set) => lower_set_literal(set, ctx),
         Expr::Dict(dict) => lower_dict_literal(dict, ctx),
         Expr::Tuple(tuple) => lower_tuple_literal(tuple, ctx),
         Expr::Subscript(sub) => lower_subscript(sub, ctx),
@@ -3237,6 +3262,36 @@ fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<HirExpr> {
     })
 }
 
+fn lower_set_literal(set: &ExprSet, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let mut elements = Vec::new();
+    let mut elem_ty: Option<Type> = None;
+
+    for elt in &set.elts {
+        let expr = lower_expr(elt, ctx)?;
+        let ty = expr.ty().clone();
+        if let Some(ref expected) = elem_ty {
+            if !ty.is_assignable_to(expected) {
+                ctx.error(format!(
+                    "set element type mismatch: expected '{}', got '{}'",
+                    expected.display_name(),
+                    ty.display_name()
+                ));
+            }
+        } else {
+            elem_ty = Some(ty);
+        }
+        elements.push(expr);
+    }
+
+    let final_elem_ty = elem_ty.unwrap_or(Type::Any);
+    let set_ty = Type::Set(Box::new(final_elem_ty));
+
+    Some(HirExpr::SetLiteral {
+        elements,
+        ty: set_ty,
+    })
+}
+
 fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut keys = Vec::new();
     let mut values = Vec::new();
@@ -3670,6 +3725,75 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             _ => {
                 ctx.error(format!("dict has no method '{}'", method));
+                None
+            }
+        },
+        Type::Set(elem_ty) => match method {
+            "len" => {
+                if !args.is_empty() {
+                    ctx.error("set.len() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::Int)
+            }
+            "add" => {
+                if args.len() != 1 {
+                    ctx.error(format!("set.add() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "remove" | "discard" => {
+                if args.len() != 1 {
+                    ctx.error(format!("set.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "contains" => {
+                if args.len() != 1 {
+                    ctx.error(format!("set.contains() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Bool)
+            }
+            "clear" => {
+                if !args.is_empty() {
+                    ctx.error("set.clear() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "copy" => {
+                if !args.is_empty() {
+                    ctx.error("set.copy() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::Set(elem_ty.clone()))
+            }
+            "union" | "intersection" | "difference" | "symmetric_difference" => {
+                if args.len() != 1 {
+                    ctx.error(format!("set.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    return None;
+                }
+                Some(Type::Set(elem_ty.clone()))
+            }
+            "issubset" | "issuperset" | "isdisjoint" => {
+                if args.len() != 1 {
+                    ctx.error(format!("set.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    return None;
+                }
+                Some(Type::Bool)
+            }
+            "pop" => {
+                if !args.is_empty() {
+                    ctx.error("set.pop() takes no arguments".to_string());
+                    return None;
+                }
+                Some(*elem_ty.clone())
+            }
+            _ => {
+                ctx.error(format!("set has no method '{}'", method));
                 None
             }
         },

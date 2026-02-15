@@ -15,8 +15,10 @@ pub struct HirModule {
 pub struct HirImport {
     /// The module to import from (e.g., "utils" for `from utils import helper`)
     pub module: String,
-    /// The names to import
+    /// The names to import (original names from the module)
     pub names: Vec<String>,
+    /// Optional aliases: maps original name -> local alias (only present when `as` is used)
+    pub aliases: Vec<(String, String)>,
 }
 
 /// A class definition with resolved types.
@@ -283,6 +285,11 @@ pub enum HirExpr {
         elements: Vec<HirExpr>,
         ty: Type,
     },
+    /// Set literal: {1, 2, 3}
+    SetLiteral {
+        elements: Vec<HirExpr>,
+        ty: Type,
+    },
     /// Dict literal: {"a": 1, "b": 2}
     DictLiteral {
         keys: Vec<HirExpr>,
@@ -408,6 +415,7 @@ impl HirExpr {
             | Self::IfExpr { ty, .. }
             | Self::RangeLiteral { ty, .. }
             | Self::ListLiteral { ty, .. }
+            | Self::SetLiteral { ty, .. }
             | Self::DictLiteral { ty, .. }
             | Self::TupleLiteral { ty, .. }
             | Self::Index { ty, .. }
