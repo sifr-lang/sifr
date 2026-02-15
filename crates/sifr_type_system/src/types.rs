@@ -365,6 +365,15 @@ impl Type {
                     None
                 }
             }
+            // Union type: if T|None where T is indexable, unwrap and delegate
+            Self::Union(members) => {
+                let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+                if non_none.len() == 1 {
+                    non_none[0].index_result_type(index_ty)
+                } else {
+                    None
+                }
+            }
             _ => None,
         }
     }

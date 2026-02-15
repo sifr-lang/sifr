@@ -1998,6 +1998,49 @@ impl RustEmitter {
                     }
                 }
             }
+            HirStmt::NestedSubscriptAssign { object, outer_index, inner_index, value, object_ty: _ } => {
+                self.write_indent();
+                // matrix[i][j] = val -> matrix[i as usize][j as usize] = val
+                self.write(object);
+                self.write("[");
+                self.emit_expr(outer_index);
+                self.write(" as usize][");
+                self.emit_expr(inner_index);
+                self.write(" as usize] = ");
+                self.emit_expr(value);
+                self.write(";\n");
+            }
+            HirStmt::SubscriptAugAssign { object, index, op, value, object_ty: _ } => {
+                self.write_indent();
+                // list[i] += val -> list[i as usize] += val
+                self.write(object);
+                self.write("[");
+                self.emit_expr(index);
+                self.write(" as usize] ");
+                // Convert **= to .pow() pattern
+                if op == "**=" {
+                    self.write("= ");
+                    self.write(object);
+                    self.write("[");
+                    self.emit_expr(index);
+                    self.write(" as usize].pow(");
+                    self.emit_expr(value);
+                    self.write(" as u32);\n");
+                } else if op == "//=" {
+                    self.write("= ");
+                    self.write(object);
+                    self.write("[");
+                    self.emit_expr(index);
+                    self.write(" as usize] / ");
+                    self.emit_expr(value);
+                    self.write(";\n");
+                } else {
+                    self.write(op);
+                    self.write(" ");
+                    self.emit_expr(value);
+                    self.write(";\n");
+                }
+            }
             HirStmt::AttributeAugAssign { object, field, op, value } => {
                 self.write_indent();
                 self.write(object);
@@ -3569,6 +3612,14 @@ impl RustEmitter {
                         self.emit_expr(index);
                         self.write("; let _idx = if _i < 0 { (_s.chars().count() as i64 + _i) as usize } else { _i as usize }; _s.chars().nth(_idx).map(|c| c.to_string()) }");
                     }
+                    // Union/Optional type indexing: unwrap the Option first
+                    ty if is_option_type(ty) => {
+                        self.write("{ let __opt = ");
+                        self.emit_expr(object);
+                        self.write("; let _v = __opt.as_ref().unwrap(); let _i = ");
+                        self.emit_expr(index);
+                        self.write("; let _idx = if _i < 0 { (_v.len() as i64 + _i) as usize } else { _i as usize }; _v.get(_idx).cloned() }");
+                    }
                     _ => {
                         // Safe list indexing: returns Option<T>
                         // Handle negative indices
@@ -4488,9 +4539,22 @@ fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExp
     parts.push(expr);
 }
 
-/// Check if a method body contains any field assignments (self.field = ...).
+/// Check if a method body contains any field assignments or attribute augmented assignments (self.field = ... or self.field += ...).
 fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
-    stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
+    stmts.iter().any(|s| {
+        match s {
+            HirStmt::FieldAssign { .. } | HirStmt::AttributeAugAssign { .. } => true,
+            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+                body_contains_field_assign_codegen(then_body)
+                    || elif_clauses.iter().any(|(_, body)| body_contains_field_assign_codegen(body))
+                    || else_body.as_ref().map_or(false, |b| body_contains_field_assign_codegen(b))
+            }
+            HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
+                body_contains_field_assign_codegen(body)
+            }
+            _ => false,
+        }
+    })
 }
 
 /// Check if a type references a specific class name (directly or via union/option).
@@ -4745,6 +4809,12 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) 
             HirStmt::SubscriptAssign { object, .. } => {
                 mutated.insert(object.clone());
             }
+            HirStmt::NestedSubscriptAssign { object, .. } => {
+                mutated.insert(object.clone());
+            }
+            HirStmt::SubscriptAugAssign { object, .. } => {
+                mutated.insert(object.clone());
+            }
             HirStmt::AttributeAugAssign { object, .. } => {
                 mutated.insert(object.clone());
             }
@@ -4769,6 +4839,12 @@ fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>) {
     match expr {
         HirExpr::MethodCall { object, method, args, .. } => {
             if MUTATING_METHODS.contains(&method.as_str()) {
+                if let HirExpr::Name { name, .. } = object.as_ref() {
+                    mutated.insert(name.clone());
+                }
+            }
+            // Class method calls may mutate the object (conservative)
+            if matches!(object.ty(), Type::Class { .. }) {
                 if let HirExpr::Name { name, .. } = object.as_ref() {
                     mutated.insert(name.clone());
                 }

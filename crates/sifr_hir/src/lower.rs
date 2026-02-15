@@ -1662,6 +1662,29 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
 
     // Handle subscript assignment: list[i] = val or dict[key] = val
     if let Expr::Subscript(sub) = &assign.targets[0] {
+        // Handle nested subscript: matrix[i][j] = val
+        if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
+            let obj_name = match inner_sub.value.as_ref() {
+                Expr::Name(n) => n.id.to_string(),
+                _ => {
+                    ctx.error("nested subscript assignment target must be a simple name".to_string());
+                    return None;
+                }
+            };
+            let obj_ty = ctx.scope.lookup(&obj_name)
+                .map(|info| info.effective_type().clone())
+                .unwrap_or(Type::Unknown);
+            let outer_index = lower_expr(&inner_sub.slice, ctx)?;
+            let inner_index = lower_expr(&sub.slice, ctx)?;
+            let value = lower_expr(&assign.value, ctx)?;
+            return Some(HirStmt::NestedSubscriptAssign {
+                object: obj_name,
+                outer_index,
+                inner_index,
+                value,
+                object_ty: obj_ty,
+            });
+        }
         let obj_name = match sub.value.as_ref() {
             Expr::Name(n) => n.id.to_string(),
             _ => {
@@ -1766,6 +1789,47 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
             field: field_name,
             op: op_str.to_string(),
             value,
+        });
+    }
+
+    // Handle augmented assignment on subscript: list[i] += val
+    if let Expr::Subscript(sub) = aug.target.as_ref() {
+        let obj_name = match sub.value.as_ref() {
+            Expr::Name(n) => n.id.to_string(),
+            _ => {
+                ctx.error("augmented subscript assignment target must be a simple name".to_string());
+                return None;
+            }
+        };
+        let obj_ty = ctx.scope.lookup(&obj_name)
+            .map(|info| info.effective_type().clone())
+            .unwrap_or(Type::Unknown);
+        let index = lower_expr(&sub.slice, ctx)?;
+        let value = lower_expr(&aug.value, ctx)?;
+        let op_str = match aug.op {
+            Operator::Add => "+=",
+            Operator::Sub => "-=",
+            Operator::Mult => "*=",
+            Operator::Div => "/=",
+            Operator::Mod => "%=",
+            Operator::Pow => "**=",
+            Operator::BitAnd => "&=",
+            Operator::BitOr => "|=",
+            Operator::BitXor => "^=",
+            Operator::LShift => "<<=",
+            Operator::RShift => ">>=",
+            Operator::FloorDiv => "//=",
+            Operator::MatMult => {
+                ctx.error("matrix multiplication operator (@) is not supported".to_string());
+                return None;
+            }
+        };
+        return Some(HirStmt::SubscriptAugAssign {
+            object: obj_name,
+            index,
+            op: op_str.to_string(),
+            value,
+            object_ty: obj_ty,
         });
     }
 
