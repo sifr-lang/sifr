@@ -15,6 +15,8 @@ pub struct VarInfo {
     pub narrowed_type: Option<Type>,
     /// Whether the variable has been moved.
     pub is_moved: bool,
+    /// Whether the variable is currently mutably borrowed.
+    pub is_mut_borrowed: bool,
 }
 
 impl VarInfo {
@@ -62,7 +64,7 @@ impl Scope {
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
         if let Some(frame) = self.frames.last_mut() {
-            frame.insert(name, VarInfo { ty, narrowed_type: None, is_moved: false });
+            frame.insert(name, VarInfo { ty, narrowed_type: None, is_moved: false, is_mut_borrowed: false });
         }
     }
 
@@ -105,6 +107,38 @@ impl Scope {
         for frame in self.frames.iter_mut().rev() {
             if let Some(info) = frame.get_mut(name) {
                 info.is_moved = false;
+                return;
+            }
+        }
+    }
+
+    // --- Mutable borrow tracking ---
+
+    /// Mark a variable as mutably borrowed.
+    pub fn mark_mut_borrowed(&mut self, name: &str) {
+        for frame in self.frames.iter_mut().rev() {
+            if let Some(info) = frame.get_mut(name) {
+                info.is_mut_borrowed = true;
+                return;
+            }
+        }
+    }
+
+    /// Check if a variable is currently mutably borrowed.
+    pub fn is_mut_borrowed(&self, name: &str) -> bool {
+        for frame in self.frames.iter().rev() {
+            if let Some(info) = frame.get(name) {
+                return info.is_mut_borrowed;
+            }
+        }
+        false
+    }
+
+    /// Clear the mutable borrow on a variable (after the borrowing call returns).
+    pub fn clear_mut_borrow(&mut self, name: &str) {
+        for frame in self.frames.iter_mut().rev() {
+            if let Some(info) = frame.get_mut(name) {
+                info.is_mut_borrowed = false;
                 return;
             }
         }

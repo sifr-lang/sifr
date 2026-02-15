@@ -3690,6 +3690,46 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
     }
 
+    // Exclusivity check: enforce that the same variable is not passed as mut twice,
+    // or as both mut and immutable borrow in the same call.
+    {
+        let mut mut_borrowed: Vec<String> = Vec::new();
+        let mut immut_borrowed: Vec<String> = Vec::new();
+        for (i, arg) in args.iter().enumerate() {
+            if let HirExpr::Name { name, ty } = arg {
+                if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+                    let convention = ft.params.get(i).map(|(_, _, c)| *c).unwrap_or(ParamConvention::Borrow);
+                    match convention {
+                        ParamConvention::MutBorrow => {
+                            if mut_borrowed.contains(name) {
+                                ctx.error(format!(
+                                    "cannot borrow '{}' as mutable more than once in the same call to '{}'",
+                                    name, func_name
+                                ));
+                            } else if immut_borrowed.contains(name) {
+                                ctx.error(format!(
+                                    "cannot borrow '{}' as mutable because it is already borrowed as immutable in the same call to '{}'",
+                                    name, func_name
+                                ));
+                            }
+                            mut_borrowed.push(name.clone());
+                        }
+                        ParamConvention::Borrow => {
+                            if mut_borrowed.contains(name) {
+                                ctx.error(format!(
+                                    "cannot borrow '{}' as immutable because it is already borrowed as mutable in the same call to '{}'",
+                                    name, func_name
+                                ));
+                            }
+                            immut_borrowed.push(name.clone());
+                        }
+                        ParamConvention::Own => {} // ownership transfer, no borrow conflict
+                    }
+                }
+            }
+        }
+    }
+
     // Track ownership: only mark arguments as moved when the parameter convention is Own
     // and the argument type is Move. Borrow and MutBorrow do not consume the value.
     for (i, arg) in args.iter().enumerate() {
