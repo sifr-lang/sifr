@@ -57,7 +57,7 @@ Review PRs in the Review column with `/review-pr`.
 
 ### 6. Milestone Demo
 
-Before marking a milestone (Epic) as Done, create a demo in `./tmp` named `<milestone>_demo` (e.g., `m3_demo`). The demo should:
+Before marking a milestone (Epic) as Done, create a demo in `./demos` named `<milestone>_demo` (e.g., `m3_demo`). The demo should:
 
 - Showcase all major features delivered in that milestone
 - Include comments explaining each section
