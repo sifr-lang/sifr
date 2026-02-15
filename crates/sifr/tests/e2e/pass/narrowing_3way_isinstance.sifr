@@ -1,0 +1,26 @@
+# Test: 3-way isinstance narrowing with field access
+# expect-stdout: A: 1
+# expect-stdout: B: hi
+# expect-stdout: C: 3.14
+
+class A:
+    x: int
+
+class B:
+    y: str
+
+class C:
+    z: float
+
+def check(val: A | B | C) -> str:
+    if isinstance(val, A):
+        return f"A: {val.x}"
+    elif isinstance(val, B):
+        return f"B: {val.y}"
+    else:
+        return f"C: {val.z}"
+
+def main():
+    print(check(A(1)))
+    print(check(B("hi")))
+    print(check(C(3.14)))

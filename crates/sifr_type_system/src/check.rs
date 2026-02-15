@@ -1,6 +1,7 @@
 //! Type checking rules for Sifr operators and expressions.
 
 use crate::types::Type;
+use crate::union::{remove_none_from_union, union_contains_none};
 use crate::TypeError;
 
 /// Type-check a binary operation (e.g., `a + b`, `a - b`).
@@ -179,6 +180,30 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
             if left == right || left == &Type::Any || right == &Type::Any {
                 return Ok(Type::Bool);
             }
+            // Allow T|None vs T comparisons (and T vs T|None)
+            if let Type::Union(_) = left {
+                let non_none = remove_none_from_union(left);
+                if non_none == *right || type_check_comparison(&non_none, op, right).is_ok() {
+                    return Ok(Type::Bool);
+                }
+            }
+            if let Type::Union(_) = right {
+                let non_none = remove_none_from_union(right);
+                if non_none == *left || type_check_comparison(left, op, &non_none).is_ok() {
+                    return Ok(Type::Bool);
+                }
+            }
+            // Allow comparing union members with each other
+            if let (Type::Union(left_members), _) = (left, right) {
+                if left_members.iter().any(|m| m == right) {
+                    return Ok(Type::Bool);
+                }
+            }
+            if let (_, Type::Union(right_members)) = (left, right) {
+                if right_members.iter().any(|m| m == left) {
+                    return Ok(Type::Bool);
+                }
+            }
             Err(TypeError {
                 message: format!(
                     "cannot compare '{}' and '{}' with {op}",
@@ -198,6 +223,19 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
             }
             if left == &Type::Str && right == &Type::Str {
                 return Ok(Type::Bool);
+            }
+            // Allow T|None vs T ordering comparisons (unwrap the union)
+            if union_contains_none(left) {
+                let non_none = remove_none_from_union(left);
+                if type_check_comparison(&non_none, op, right).is_ok() {
+                    return Ok(Type::Bool);
+                }
+            }
+            if union_contains_none(right) {
+                let non_none = remove_none_from_union(right);
+                if type_check_comparison(left, op, &non_none).is_ok() {
+                    return Ok(Type::Bool);
+                }
             }
             Err(TypeError {
                 message: format!(
@@ -242,6 +280,17 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
         "not" => {
             if operand == &Type::Bool {
                 return Ok(Type::Bool);
+            }
+            // Collection truthiness: `not list_var`, `not dict_var`, etc.
+            match operand {
+                Type::List(_) | Type::Dict(_, _) | Type::Set(_) | Type::Tuple(_) | Type::Str => {
+                    return Ok(Type::Bool);
+                }
+                // Allow `not x` where x is Optional (T | None)
+                Type::Union(_) if union_contains_none(operand) => {
+                    return Ok(Type::Bool);
+                }
+                _ => {}
             }
             Err(TypeError {
                 message: format!(

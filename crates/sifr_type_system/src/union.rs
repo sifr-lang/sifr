@@ -46,18 +46,48 @@ pub fn subtract_from_union(union: &Type, to_remove: &Type) -> Type {
         Type::Union(members) => {
             let remaining: Vec<Type> = members
                 .iter()
-                .filter(|m| !types_overlap(m, to_remove))
+                .filter(|m| !should_subtract(m, to_remove))
                 .cloned()
                 .collect();
             make_union(remaining)
         }
         other => {
-            if types_overlap(other, to_remove) {
+            if should_subtract(other, to_remove) {
                 Type::Never
             } else {
                 other.clone()
             }
         }
+    }
+}
+
+/// Determine if type `a` should be removed when subtracting `to_remove`.
+/// Unlike `types_overlap`, this does NOT remove a base type when subtracting a literal.
+/// e.g., subtracting LiteralStr("+") from str should NOT remove str,
+/// because str is broader than any single literal.
+fn should_subtract(a: &Type, to_remove: &Type) -> bool {
+    if a == to_remove {
+        return true;
+    }
+    match (a, to_remove) {
+        // Subtracting a literal from its base type: DON'T subtract
+        // str - LiteralStr("x") = str (str has infinitely many values)
+        // int - LiteralInt(42) = int
+        // bool - LiteralBool(true) = bool (well, bool is finite, but keep it simple)
+        (Type::Str, Type::LiteralStr(_)) => false,
+        (Type::Int, Type::LiteralInt(_)) => false,
+        (Type::Bool, Type::LiteralBool(_)) => false,
+        // Subtracting a base type from a literal: DO subtract (literal is a subset)
+        (Type::LiteralStr(_), Type::Str) => true,
+        (Type::LiteralInt(_), Type::Int) => true,
+        (Type::LiteralBool(_), Type::Bool) => true,
+        // Any overlaps with everything
+        (Type::Any, _) | (_, Type::Any) => true,
+        // Union: overlap if any member overlaps
+        (Type::Union(members), other) | (other, Type::Union(members)) => {
+            members.iter().any(|m| should_subtract(m, other))
+        }
+        _ => false,
     }
 }
 
