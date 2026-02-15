@@ -1,0 +1,13 @@
+# Test: Recursive nested function that captures outer variable
+# expect-stdout: 55
+
+def sum_up_to(n: int) -> int:
+    target: int = n
+    def helper(i: int, acc: int) -> int:
+        if i > target:
+            return acc
+        return helper(i + 1, acc + i)
+    return helper(1, 0)
+
+def main():
+    print(sum_up_to(10))

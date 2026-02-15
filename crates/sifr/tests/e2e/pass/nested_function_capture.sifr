@@ -1,0 +1,11 @@
+# Test: Nested function capturing outer variable
+# expect-stdout: 15
+
+def outer() -> int:
+    x: int = 10
+    def inner() -> int:
+        return x + 5
+    return inner()
+
+def main():
+    print(outer())
