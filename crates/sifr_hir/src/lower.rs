@@ -3783,6 +3783,20 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 // pop() returns Option[T] = T | None
                 Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
             }
+            "remove" => {
+                if args.len() != 1 {
+                    ctx.error(format!("list.remove() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::None)
+            }
+            "index" => {
+                if args.len() != 1 {
+                    ctx.error(format!("list.index() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::Int)
+            }
             _ => {
                 ctx.error(format!("list has no method '{}'", method));
                 None
@@ -3846,12 +3860,17 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 Some(Type::Bool)
             }
             "get" => {
-                if args.len() != 1 {
-                    ctx.error(format!("dict.get() takes exactly 1 argument, got {}", args.len()));
+                if args.is_empty() || args.len() > 2 {
+                    ctx.error(format!("dict.get() takes 1 or 2 arguments, got {}", args.len()));
                     return None;
                 }
-                // get() returns Option[V] = V | None
-                Some(Type::Union(vec![*val_ty.clone(), Type::None]))
+                if args.len() == 2 {
+                    // dict.get(key, default) -> V (returns default if key not found)
+                    Some(*val_ty.clone())
+                } else {
+                    // dict.get(key) -> V | None
+                    Some(Type::Union(vec![*val_ty.clone(), Type::None]))
+                }
             }
             "pop" => {
                 if args.len() != 1 {
@@ -4072,9 +4091,20 @@ fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     let arg_ty = arg.ty().clone();
 
-    // len() works on str, list, dict, tuple
-    match &arg_ty {
-        Type::Str | Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) => {
+    // len() works on str, list, dict, tuple, set
+    // Also works on T|None where T is a valid len() argument (auto-unwrap)
+    let effective_ty = if let Type::Union(members) = &arg_ty {
+        let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+        if non_none.len() == 1 {
+            non_none[0].clone()
+        } else {
+            arg_ty.clone()
+        }
+    } else {
+        arg_ty.clone()
+    };
+    match &effective_ty {
+        Type::Str | Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_) => {
             Some(HirExpr::MethodCall {
                 object: Box::new(arg),
                 method: "len".to_string(),

@@ -1,0 +1,14 @@
+# Test: list + list concatenation
+# expect-stdout: 4
+# expect-stdout: 1
+# expect-stdout: 2
+# expect-stdout: 3
+# expect-stdout: 4
+
+def main():
+    a: list[int] = [1, 2]
+    b: list[int] = [3, 4]
+    c: list[int] = a + b
+    print(len(c))
+    for x in c:
+        print(x)

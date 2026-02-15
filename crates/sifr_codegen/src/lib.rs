@@ -2598,6 +2598,27 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".pop()");
             }
+            (Type::List(_), "remove") => {
+                // list.remove(val) -> { let pos = list.iter().position(|x| *x == val).unwrap(); list.remove(pos); }
+                self.write("{ let __pos = ");
+                self.emit_expr(object);
+                self.write(".iter().position(|__x| *__x == ");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(").unwrap(); ");
+                self.emit_expr(object);
+                self.write(".remove(__pos); }");
+            }
+            (Type::List(_), "index") => {
+                // list.index(val) -> list.iter().position(|x| *x == val).unwrap() as i64
+                self.emit_expr(object);
+                self.write(".iter().position(|__x| *__x == ");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(").unwrap() as i64");
+            }
             // Dict methods
             (Type::Dict(_, _), "keys") => {
                 self.emit_expr(object);
@@ -2636,13 +2657,23 @@ impl RustEmitter {
                 self.write(")");
             }
             (Type::Dict(_, _), "get") => {
-                // Returns Option<V> = V | None
-                self.emit_expr(object);
-                self.write(".get(");
-                if !args.is_empty() {
+                if args.len() == 2 {
+                    // dict.get(key, default) -> d.get(&key).cloned().unwrap_or(default)
+                    self.emit_expr(object);
+                    self.write(".get(");
                     self.emit_key_ref_expr(&args[0]);
+                    self.write(").cloned().unwrap_or(");
+                    self.emit_expr(&args[1]);
+                    self.write(")");
+                } else {
+                    // dict.get(key) -> d.get(&key).cloned() (returns Option<V>)
+                    self.emit_expr(object);
+                    self.write(".get(");
+                    if !args.is_empty() {
+                        self.emit_key_ref_expr(&args[0]);
+                    }
+                    self.write(").cloned()");
                 }
-                self.write(").cloned()");
             }
             (Type::Dict(_, _), "pop") => {
                 // Returns Option<V> = V | None
@@ -2782,6 +2813,11 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".chars().count() as i64");
             }
+            // len() on Option types (T|None) - unwrap first
+            (ty, "len") if is_option_type(ty) => {
+                self.emit_expr(object);
+                self.write(".as_ref().unwrap().len() as i64");
+            }
             // Generic len() for all types
             (_, "len") => {
                 self.emit_expr(object);
@@ -2881,6 +2917,13 @@ impl RustEmitter {
                         }
                         self.write(")");
                     }
+                } else if op == "+" && matches!(ty, Type::List(_)) {
+                    // List concatenation: a + b -> { let mut tmp = a.clone(); tmp.extend(b.iter().cloned()); tmp }
+                    self.write("{ let mut __tmp = ");
+                    self.emit_expr(left);
+                    self.write(".clone(); __tmp.extend(");
+                    self.emit_expr(right);
+                    self.write(".iter().cloned()); __tmp }");
                 } else if op == "//" {
                     // Floor division
                     self.emit_expr(left);
@@ -2933,6 +2976,21 @@ impl RustEmitter {
                     self.write(&format!(" {} ", op));
                     self.write("&");
                     self.emit_expr(right);
+                } else if is_option_type(left.ty()) || is_option_type(right.ty()) {
+                    // Union/optional arithmetic: unwrap Option with .unwrap()
+                    if is_option_type(left.ty()) {
+                        self.emit_expr(left);
+                        self.write(".unwrap()");
+                    } else {
+                        self.emit_expr(left);
+                    }
+                    self.write(&format!(" {} ", op));
+                    if is_option_type(right.ty()) {
+                        self.emit_expr(right);
+                        self.write(".unwrap()");
+                    } else {
+                        self.emit_expr(right);
+                    }
                 } else {
                     // Handle mixed int/float arithmetic: cast int side to f64
                     let left_is_int = left.ty() == &Type::Int;

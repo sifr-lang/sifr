@@ -21,6 +21,16 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             if left == &Type::Str && right == &Type::Str {
                 return Ok(Type::Str);
             }
+            // List concatenation: list[T] + list[T] -> list[T]
+            if let (Type::List(l_elem), Type::List(r_elem)) = (left, right) {
+                if l_elem == r_elem {
+                    return Ok(Type::List(l_elem.clone()));
+                }
+            }
+            // Union type unwrapping: T|None + T -> T (auto-unwrap)
+            if let Some(result) = try_unwrap_union_binary(left, op, right) {
+                return Ok(result);
+            }
             Err(TypeError {
                 message: format!(
                     "unsupported operand type(s) for +: '{}' and '{}'",
@@ -55,6 +65,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                     }
                 }
             }
+            // Union type unwrapping
+            if let Some(result) = try_unwrap_union_binary(left, op, right) {
+                return Ok(result);
+            }
             Err(TypeError {
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
@@ -71,6 +85,9 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             // Division always returns float in Sifr (like Python 3)
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
+            }
+            if let Some(result) = try_unwrap_union_binary(left, op, right) {
+                return Ok(result);
             }
             Err(TypeError {
                 message: format!(
@@ -92,6 +109,9 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
             }
+            if let Some(result) = try_unwrap_union_binary(left, op, right) {
+                return Ok(result);
+            }
             Err(TypeError {
                 message: format!(
                     "unsupported operand type(s) for {op}: '{}' and '{}'",
@@ -111,6 +131,9 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             }
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
+            }
+            if let Some(result) = try_unwrap_union_binary(left, op, right) {
+                return Ok(result);
             }
             Err(TypeError {
                 message: format!(
@@ -355,6 +378,28 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
                 ty: left.clone(),
             },
         }),
+    }
+}
+
+/// Try to unwrap union types (T|None) for binary operations.
+/// If either side is a union containing None, unwrap to the non-None type and retry.
+fn try_unwrap_union_binary(left: &Type, op: &str, right: &Type) -> Option<Type> {
+    let left_unwrapped = if union_contains_none(left) {
+        Some(remove_none_from_union(left))
+    } else {
+        None
+    };
+    let right_unwrapped = if union_contains_none(right) {
+        Some(remove_none_from_union(right))
+    } else {
+        None
+    };
+    let l = left_unwrapped.as_ref().unwrap_or(left);
+    let r = right_unwrapped.as_ref().unwrap_or(right);
+    if left_unwrapped.is_some() || right_unwrapped.is_some() {
+        type_check_binary_op(l, op, r).ok()
+    } else {
+        None
     }
 }
 

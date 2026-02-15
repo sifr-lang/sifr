@@ -1,0 +1,14 @@
+# Test: arithmetic on T|None
+# expect-stdout: 6
+# expect-stdout: 4
+
+def add_one(x: int | None) -> int:
+    return x + 1
+
+def sub_one(x: int | None) -> int:
+    return x - 1
+
+def main():
+    v: int | None = 5
+    print(add_one(v))
+    print(sub_one(v))
