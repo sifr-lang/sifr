@@ -167,10 +167,11 @@ This ensures conventions survive across module boundaries, stdlib lookups, and `
 In [crates/sifr_python_parser/src/parser/statement.rs](crates/sifr_python_parser/src/parser/statement.rs) (lines 2630-2690, `parse_parameter`):
 
 - Before parsing the parameter name, check if the current token is `mut` or `own` (as identifiers, not hard keywords)
-- If found, consume the token and store the convention
+- **Disambiguation rule:** if the current token is `mut`/`own` AND the next token is an identifier (not `:`, `,`, `)`, or `=`), then it is a convention prefix -- consume it and parse the next token as the parameter name. Otherwise, treat `mut`/`own` as the parameter name itself. This handles `def f(mut x: int)` (convention) vs `def f(mut: int)` (parameter named `mut`).
+- If found as convention, consume the token and store the convention
 - Add a `convention` field to the `Parameter` AST node in [crates/sifr_python_ast/src/nodes.rs](crates/sifr_python_ast/src/nodes.rs) (line 2971-2975)
 
-The parser change is minimal since `mut` and `own` are not Python keywords -- they appear as identifiers before the parameter name and can be detected by peeking.
+The parser change is minimal since `mut` and `own` are not Python keywords -- they appear as identifiers before the parameter name and can be disambiguated with a single-token lookahead.
 
 ## Phase 2: Update HIR Lowering
 
@@ -209,10 +210,10 @@ In [crates/sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) (lines 3460-3487
 
 ### 2d. Register built-in function conventions
 
-Built-in functions (print, len, sorted, etc.) need their parameter conventions registered. Since they are not parsed from `.sifr` source, their conventions must be set when registering them in the type system.
+Built-in functions (print, len, sorted, etc.) need their parameter conventions registered. Since they are not parsed from `.sifr` source, their conventions must be explicitly set when constructing `FunctionType` entries (which now require a `ParamConvention` per parameter).
 
-- All existing built-in functions get `Borrow` convention (matching current behavior)
-- This is already implicit since `Borrow` is the new default
+- All existing built-in functions get explicit `ParamConvention::Borrow` (matching current behavior)
+- Use a helper function (e.g., `FunctionType::all_borrow(params, return_type)`) to construct signatures with `Borrow` as the default convention, reducing boilerplate across the ~25 built-in registrations
 
 ## Phase 3: Update Codegen
 
@@ -249,23 +250,88 @@ match param.convention {
 }
 ```
 
-### 3b. Emit borrow/mut-borrow at call sites
+### 3b. Extend `func_signatures` to carry conventions and register class methods
 
-When emitting function call arguments, the codegen must prepend `&` or `&mut` for Move-type arguments passed to Borrow/MutBorrow parameters:
+The codegen-internal `func_signatures` map (line 220) currently stores only types:
 
-- Look up the called function's parameter conventions
+```rust
+func_signatures: HashMap<String, (Vec<Type>, Type)>,
+```
+
+Change it to carry per-parameter conventions:
+
+```rust
+func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
+```
+
+Update the registration in `collect_union_types` (line 302) for top-level functions:
+
+```rust
+for func in &module.functions {
+    let param_info: Vec<(Type, ParamConvention)> = func.params.iter()
+        .map(|p| (p.ty.clone(), p.convention))
+        .collect();
+    self.func_signatures.insert(func.name.clone(), (param_info, func.return_type.clone()));
+}
+```
+
+Also register class/static methods under the `ClassName::method` key (currently missing entirely):
+
+```rust
+for class in &module.classes {
+    for method in &class.methods {
+        let param_info: Vec<(Type, ParamConvention)> = method.params.iter()
+            .map(|p| (p.ty.clone(), p.convention))
+            .collect();
+        self.func_signatures.insert(
+            format!("{}::{}", class.name, method.name),
+            (param_info, method.return_type.clone()),
+        );
+    }
+}
+```
+
+Without this, call-site emission cannot determine whether to emit `&arg`, `&mut arg`, or `arg`.
+
+**Key files:** `crates/sifr_codegen/src/lib.rs` (func_signatures type, collect_union_types)
+
+### 3c. Emit borrow/mut-borrow at `HirExpr::Call` call sites
+
+When emitting function call arguments for `HirExpr::Call`, the codegen must prepend `&` or `&mut` for Move-type arguments passed to Borrow/MutBorrow parameters:
+
+- Look up the called function's parameter conventions from `func_signatures` (which now carries `ParamConvention` per parameter and includes class methods)
 - For `Borrow` params with Move-type args: emit `&arg`
 - For `MutBorrow` params: emit `&mut arg`
 - For `Own` params: emit `arg` (current behavior)
 - For Copy-type args: always emit `arg` (no borrow needed)
 
-This logic goes in the function call emission code in `emit_function_call` / `emit_expr` where `HirExpr::Call` is handled.
+This logic goes in the function call emission code in `emit_expr` where `HirExpr::Call` is handled.
 
-### 3c. Update method parameter emission
+### 3d. Emit borrow/mut-borrow at `HirExpr::MethodCall` call sites
+
+Instance method calls (`obj.method(arg)`) go through a separate codegen path -- the `MethodCall` handler in [crates/sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs) (line ~2977). The current `Type::Class` match arm uses a hardcoded heuristic:
+
+```rust
+if matches!(arg.ty(), Type::Class { .. }) {
+    self.write("&");
+}
+```
+
+Replace this with convention-aware logic:
+
+- Resolve the method's parameter conventions from the object's class type (look up the method in `Type::Class { methods, .. }` to get its `FunctionType`, which now carries `ParamConvention` per parameter)
+- Emit `&arg`/`&mut arg`/`arg` based on each parameter's convention, using the same rules as `HirExpr::Call`
+- Apply the same logic to the fallback `_` match arm
+
+Without this, `obj.method(x)` where the method borrows `x` would still emit `x` instead of `&x`.
+
+**Key files:** `crates/sifr_codegen/src/lib.rs` (MethodCall handler, Type::Class arm, fallback arm)
+
+### 3e. Update method parameter definition emission
 
 In [crates/sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs) (lines 1279-1288), method parameters already have special handling for class types (line 1284 adds `&`). Extend this to use `ParamConvention` consistently.
 
-### 3d. Handle body code that uses borrowed parameters
+### 3f. Handle body code that uses borrowed parameters
 
 When a parameter is borrowed (`&T`), code inside the function that uses it needs adjustment:
 

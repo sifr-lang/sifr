@@ -2759,7 +2759,9 @@ Apply this convention-aware logic to **all call paths** in `lower.rs`:
 
 **Key files:** `crates/sifr_hir/src/lower.rs` (function call lowering, callable_info path, lower_method_call)
 
-### 5. Codegen: Emit `&T` / `&mut T` / `T`
+### 5. Codegen: Extend `func_signatures`, Register Class Methods, Emit `&T` / `&mut T` / `T`
+
+Change the codegen-internal `func_signatures` map from `HashMap<String, (Vec<Type>, Type)>` to `HashMap<String, (Vec<(Type, ParamConvention)>, Type)>` so conventions are available at every call site. Register both top-level functions and class/static methods (under the `ClassName::method` key) during `collect_union_types`.
 
 Update `emit_function` to emit parameter types based on convention:
 
@@ -2768,9 +2770,11 @@ Update `emit_function` to emit parameter types based on convention:
 - `MutBorrow`: emit `&mut T`
 - `Own`: emit `T` (current behavior)
 
-Update call-site emission to prepend `&` or `&mut` for Move-type arguments based on the callee's parameter conventions.
+Update call-site emission for `HirExpr::Call` to prepend `&` or `&mut` for Move-type arguments based on the callee's parameter conventions (looked up from `func_signatures`).
 
-**Key files:** `crates/sifr_codegen/src/lib.rs` (emit_function, function call emission)
+Update call-site emission for `HirExpr::MethodCall` (`obj.method(arg)`) to use convention-aware argument emission. The current codegen uses a hardcoded heuristic (`if matches!(arg.ty(), Type::Class { .. }) { write("&") }`). Replace this with convention lookup: resolve the method's `HirParam` conventions from the object's class type, then emit `&arg`/`&mut arg`/`arg` per convention. This applies to the `Type::Class` match arm and the fallback arm in the `MethodCall` handler.
+
+**Key files:** `crates/sifr_codegen/src/lib.rs` (func_signatures type, collect_union_types, HirExpr::Call emission, HirExpr::MethodCall emission)
 
 ### 6. Codegen: Handle Borrowed Parameter Usage in Function Bodies
 
