@@ -36,7 +36,13 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
 
     let mut result = String::new();
     if emitter.needs_hashmap {
-        result.push_str("use std::collections::HashMap;\n\n");
+        result.push_str("use std::collections::HashMap;\n");
+    }
+    if emitter.needs_hashset {
+        result.push_str("use std::collections::HashSet;\n");
+    }
+    if emitter.needs_hashmap || emitter.needs_hashset {
+        result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
         result.push_str(&emitter.enum_defs);
@@ -68,7 +74,13 @@ pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
 
     let mut result = String::new();
     if emitter.needs_hashmap {
-        result.push_str("use std::collections::HashMap;\n\n");
+        result.push_str("use std::collections::HashMap;\n");
+    }
+    if emitter.needs_hashset {
+        result.push_str("use std::collections::HashSet;\n");
+    }
+    if emitter.needs_hashmap || emitter.needs_hashset {
+        result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
         result.push_str(&emitter.enum_defs);
@@ -102,12 +114,20 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         // For non-main modules, add imports as `use` statements
         for import in &module.imports {
             for name in &import.names {
-                result.push_str(&format!("use crate::{}::{};\n", import.module, name));
+                // Check if this name has an alias
+                if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
+                    result.push_str(&format!("use crate::{}::{} as {};\n", import.module, name, alias));
+                } else {
+                    result.push_str(&format!("use crate::{}::{};\n", import.module, name));
+                }
             }
         }
 
         if emitter.needs_hashmap {
             result.push_str("use std::collections::HashMap;\n");
+        }
+        if emitter.needs_hashset {
+            result.push_str("use std::collections::HashSet;\n");
         }
         if !result.is_empty() {
             result.push('\n');
@@ -187,6 +207,7 @@ struct RustEmitter {
     output: String,
     indent: usize,
     needs_hashmap: bool,
+    needs_hashset: bool,
     /// Track union enum types that need to be defined (name -> member types)
     union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated enum definitions to prepend
@@ -227,6 +248,7 @@ impl RustEmitter {
             output: String::new(),
             indent: 0,
             needs_hashmap: false,
+            needs_hashset: false,
             union_enums: HashMap::new(),
             enum_defs: String::new(),
             current_return_type: None,
@@ -2463,6 +2485,120 @@ impl RustEmitter {
                 }
                 self.write(")");
             }
+            // Set methods
+            (Type::Set(_), "add") => {
+                self.emit_expr(object);
+                self.write(".insert(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::Set(_), "remove") => {
+                self.emit_expr(object);
+                self.write(".remove(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::Set(_), "discard") => {
+                self.emit_expr(object);
+                self.write(".remove(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::Set(_), "contains") => {
+                self.emit_expr(object);
+                self.write(".contains(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::Set(_), "clear") => {
+                self.emit_expr(object);
+                self.write(".clear()");
+            }
+            (Type::Set(_), "copy") => {
+                self.emit_expr(object);
+                self.write(".clone()");
+            }
+            (Type::Set(_), "union") => {
+                self.emit_expr(object);
+                self.write(".union(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(").cloned().collect::<HashSet<_>>()");
+                self.needs_hashset = true;
+            }
+            (Type::Set(_), "intersection") => {
+                self.emit_expr(object);
+                self.write(".intersection(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(").cloned().collect::<HashSet<_>>()");
+                self.needs_hashset = true;
+            }
+            (Type::Set(_), "difference") => {
+                self.emit_expr(object);
+                self.write(".difference(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(").cloned().collect::<HashSet<_>>()");
+                self.needs_hashset = true;
+            }
+            (Type::Set(_), "symmetric_difference") => {
+                self.emit_expr(object);
+                self.write(".symmetric_difference(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(").cloned().collect::<HashSet<_>>()");
+                self.needs_hashset = true;
+            }
+            (Type::Set(_), "issubset") => {
+                self.emit_expr(object);
+                self.write(".is_subset(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::Set(_), "issuperset") => {
+                self.emit_expr(object);
+                self.write(".is_superset(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::Set(_), "isdisjoint") => {
+                self.emit_expr(object);
+                self.write(".is_disjoint(&");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                }
+                self.write(")");
+            }
+            (Type::Set(_), "pop") => {
+                // HashSet doesn't have pop() directly, use iter().next().cloned() + remove
+                // For simplicity, emit a helper pattern
+                self.write("{ let __v = ");
+                self.emit_expr(object);
+                self.write(".iter().next().cloned().unwrap(); ");
+                self.emit_expr(object);
+                self.write(".remove(&__v); __v }");
+            }
+            (Type::Set(_), "len") => {
+                self.emit_expr(object);
+                self.write(".len() as i64");
+            }
             // Tuple count()
             (Type::Tuple(_), "count") => {
                 // For tuples, count is tricky - we need to check each element
@@ -3083,6 +3219,17 @@ impl RustEmitter {
                     self.emit_expr(elem);
                 }
                 self.write("]");
+            }
+            HirExpr::SetLiteral { elements, .. } => {
+                self.needs_hashset = true;
+                self.write("HashSet::from([");
+                for (i, elem) in elements.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.emit_expr(elem);
+                }
+                self.write("])");
             }
             HirExpr::DictLiteral { keys, values, .. } => {
                 self.needs_hashmap = true;
@@ -4195,6 +4342,7 @@ fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
             expr_references_var(object, var_name) || expr_references_var(index, var_name)
         }
         HirExpr::ListLiteral { elements, .. } => elements.iter().any(|e| expr_references_var(e, var_name)),
+        HirExpr::SetLiteral { elements, .. } => elements.iter().any(|e| expr_references_var(e, var_name)),
         HirExpr::TupleLiteral { elements, .. } => elements.iter().any(|e| expr_references_var(e, var_name)),
         HirExpr::Compare { left, comparators, .. } => {
             expr_references_var(left, var_name) || comparators.iter().any(|c| expr_references_var(c, var_name))
@@ -4262,7 +4410,7 @@ fn needs_clone_for_type(ty: &Type) -> bool {
 /// Mutating methods that require the receiver variable to be `mut`.
 const MUTATING_METHODS: &[&str] = &[
     "append", "extend", "insert", "clear", "reverse", "sort", "pop", "remove",
-    "push_str", "update",
+    "push_str", "update", "add", "discard",
 ];
 
 /// Collect the set of variable names that are mutated in a function body.
