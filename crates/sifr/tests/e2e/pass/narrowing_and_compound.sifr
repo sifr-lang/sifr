@@ -1,0 +1,11 @@
+# expect-stdout: 30
+# Tests and-based compound narrowing: if a is not None and b is not None
+
+def multiply(a: int | None, b: int | None) -> int:
+    if a is not None and b is not None:
+        return a * b
+    return 0
+
+def main():
+    result: int = multiply(5, 6)
+    print(result)

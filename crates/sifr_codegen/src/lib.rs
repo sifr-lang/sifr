@@ -1502,6 +1502,41 @@ impl RustEmitter {
                     }
                     self.writeln("}");
                 }
+                // Detect compound `a is not None and b is not None` -> nested if let Some
+                else if let Some(vars) = detect_and_not_none_vars(condition) {
+                    // Emit nested if-let-Some for each variable
+                    for (i, var_name) in vars.iter().enumerate() {
+                        self.write_indent();
+                        self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                        self.indent += 1;
+                        self.option_unwrapped_vars.insert(var_name.clone());
+                        if i < vars.len() - 1 {
+                            // More variables to unwrap, continue nesting
+                        }
+                    }
+                    // Emit the then-body inside the innermost block
+                    for s in then_body {
+                        self.emit_stmt(s);
+                    }
+                    // Close all nested blocks
+                    for var_name in vars.iter().rev() {
+                        self.option_unwrapped_vars.remove(var_name);
+                        self.indent -= 1;
+                        if let Some(else_stmts) = else_body {
+                            if var_name == vars.first().unwrap() {
+                                // Only emit else on the outermost block
+                                self.write_indent();
+                                self.write("} else {\n");
+                                self.indent += 1;
+                                for s in else_stmts {
+                                    self.emit_stmt(s);
+                                }
+                                self.indent -= 1;
+                            }
+                        }
+                        self.writeln("}");
+                    }
+                }
                 // Detect Option narrowing: `if x is not None:` -> `if let Some(x) = x {`
                 else if let Some(var_name) = detect_is_not_none_var(condition) {
                     self.write_indent();
@@ -1563,6 +1598,7 @@ impl RustEmitter {
                     self.write_indent();
                     self.write(&format!("if {}.is_none() {{\n", var_name));
                     self.indent += 1;
+                    let then_exits = codegen_body_always_exits(then_body);
                     for s in then_body {
                         self.emit_stmt(s);
                     }
@@ -1581,6 +1617,14 @@ impl RustEmitter {
                         self.indent -= 1;
                     }
                     self.writeln("}");
+
+                    // Early-return narrowing: if the then-body always exits (return/break),
+                    // unwrap the variable after the if block so subsequent code can use it directly
+                    if then_exits && else_body.is_none() {
+                        self.write_indent();
+                        self.write(&format!("let {} = {}.unwrap();\n", var_name, var_name));
+                        self.option_unwrapped_vars.insert(var_name.clone());
+                    }
                 } else {
                     // Normal if/elif/else
                     // Hoist any walrus expressions before the if
@@ -3707,8 +3751,30 @@ fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
 fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
     if let HirExpr::Compare { left, ops, comparators, .. } = expr {
         if ops.len() == 1 && ops[0] == "is not" && matches!(comparators[0], HirExpr::NoneLiteral) {
-            if let HirExpr::Name { name, .. } = left.as_ref() {
-                return Some(name.clone());
+            if let HirExpr::Name { name, ty } = left.as_ref() {
+                // Only match for Option types (2-member unions with None)
+                if is_option_type(ty) {
+                    return Some(name.clone());
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Detect compound `a is not None and b is not None` pattern.
+/// Returns list of variable names that are checked for not-None.
+fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
+    if let HirExpr::BoolOp { op, values, .. } = expr {
+        if op == "and" {
+            let mut vars = Vec::new();
+            for val in values {
+                if let Some(var_name) = detect_is_not_none_var(val) {
+                    vars.push(var_name);
+                }
+            }
+            if vars.len() >= 2 {
+                return Some(vars);
             }
         }
     }
@@ -3772,6 +3838,16 @@ fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<String> {
 }
 
 /// Detect `x is None` pattern in a Compare expression. Returns the variable name.
+/// Check if a block of HIR statements always exits (return, break, continue).
+/// Used for early-return narrowing in codegen.
+fn codegen_body_always_exits(stmts: &[HirStmt]) -> bool {
+    if let Some(last) = stmts.last() {
+        matches!(last, HirStmt::Return { .. })
+    } else {
+        false
+    }
+}
+
 /// Detect `x is None` pattern. Returns the variable name.
 /// Only matches when the variable type is an Option (T | None with exactly 2 members).
 fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
