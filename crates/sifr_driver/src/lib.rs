@@ -5,7 +5,7 @@
 
 use sifr_python_parser::parse_module;
 use sifr_hir::{lower_module, lower_module_with_externals, ExternalDefs, HirModule};
-use sifr_codegen::{generate_rust_with_metadata, generate_rust_multi, generate_project, generate_project_with_deps};
+use sifr_codegen::{generate_rust_with_metadata, generate_rust_test, generate_rust_multi, generate_project, generate_project_with_deps};
 use sifr_type_system::{Type, FunctionType};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -451,6 +451,165 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
         .join(binary_name);
 
     Ok(binary_path)
+}
+
+/// Discover and run tests in a directory.
+/// Finds all `test_*.sifr` and `*_test.sifr` files, compiles them with
+/// `#[test]` attributes, and runs `cargo test`.
+pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
+    // Discover test files
+    let mut test_files: Vec<PathBuf> = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(test_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |ext| ext == "sifr") {
+                let stem = path.file_stem().unwrap().to_string_lossy().to_string();
+                if stem.starts_with("test_") || stem.ends_with("_test") {
+                    test_files.push(path);
+                }
+            }
+        }
+    }
+    test_files.sort();
+
+    if test_files.is_empty() {
+        eprintln!("No test files found in {}", test_dir.display());
+        return Ok(true);
+    }
+
+    eprintln!("Found {} test file(s)", test_files.len());
+
+    // Compile each test file and combine into a single Rust test binary
+    let mut all_rust_code = String::new();
+    let mut all_stdlib_modules = HashSet::new();
+
+    for test_file in &test_files {
+        let source = std::fs::read_to_string(test_file).map_err(|e| {
+            vec![CompileError {
+                message: format!("failed to read '{}': {}", test_file.display(), e),
+                phase: CompilePhase::Build,
+            }]
+        })?;
+
+        // Parse
+        let parsed = match parse_module(&source) {
+            Ok(parsed) => {
+                if !parsed.is_valid() {
+                    let errors: Vec<CompileError> = parsed
+                        .errors()
+                        .iter()
+                        .map(|e| CompileError {
+                            message: format!("[{}] {}", test_file.display(), e),
+                            phase: CompilePhase::Parse,
+                        })
+                        .collect();
+                    return Err(errors);
+                }
+                parsed
+            }
+            Err(e) => {
+                return Err(vec![CompileError {
+                    message: format!("[{}] failed to parse: {}", test_file.display(), e),
+                    phase: CompilePhase::Parse,
+                }]);
+            }
+        };
+
+        // Lower to HIR
+        let lowering_result = match lower_module(parsed.suite()) {
+            Ok(result) => result,
+            Err(errors) => {
+                let compile_errors: Vec<CompileError> = errors
+                    .into_iter()
+                    .map(|e| CompileError {
+                        message: format!("[{}] {}", test_file.display(), e.message),
+                        phase: CompilePhase::TypeCheck,
+                    })
+                    .collect();
+                return Err(compile_errors);
+            }
+        };
+
+        // Generate Rust code in test mode
+        let codegen_result = generate_rust_test(&lowering_result.module);
+        all_rust_code.push_str(&format!("// Tests from: {}\n", test_file.file_name().unwrap().to_string_lossy()));
+        all_rust_code.push_str(&codegen_result.rust_source);
+        all_rust_code.push('\n');
+        all_stdlib_modules.extend(codegen_result.used_stdlib_modules);
+    }
+
+    // Build and run with cargo test
+    let project_dir = std::env::temp_dir().join("sifr_test_runner");
+    let src_dir = project_dir.join("src");
+    std::fs::create_dir_all(&src_dir).map_err(|e| {
+        vec![CompileError {
+            message: format!("failed to create test directory: {}", e),
+            phase: CompilePhase::Build,
+        }]
+    })?;
+
+    // Write Cargo.toml with dependencies
+    let mut cargo_toml = format!(
+        r#"[package]
+name = "sifr_tests"
+version = "0.1.0"
+edition = "2021"
+"#
+    );
+
+    let mut deps = Vec::new();
+    for module_name in &all_stdlib_modules {
+        match module_name.as_str() {
+            "sifr.json" => deps.push("serde_json = \"1\"".to_string()),
+            _ => {}
+        }
+    }
+    if !deps.is_empty() {
+        cargo_toml.push_str("\n[dependencies]\n");
+        for dep in &deps {
+            cargo_toml.push_str(dep);
+            cargo_toml.push('\n');
+        }
+    }
+
+    std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
+        vec![CompileError {
+            message: format!("failed to write Cargo.toml: {}", e),
+            phase: CompilePhase::Build,
+        }]
+    })?;
+
+    // Write the test source file as lib.rs (so cargo test finds #[test] functions)
+    std::fs::write(src_dir.join("lib.rs"), &all_rust_code).map_err(|e| {
+        vec![CompileError {
+            message: format!("failed to write lib.rs: {}", e),
+            phase: CompilePhase::Build,
+        }]
+    })?;
+
+    // Run cargo test
+    let output = Command::new("cargo")
+        .args(["test"])
+        .current_dir(&project_dir)
+        .output()
+        .map_err(|e| {
+            vec![CompileError {
+                message: format!("failed to run cargo test: {}", e),
+                phase: CompilePhase::Build,
+            }]
+        })?;
+
+    // Forward stdout and stderr
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if !stdout.is_empty() {
+        eprint!("{}", stdout);
+    }
+    if !stderr.is_empty() {
+        eprint!("{}", stderr);
+    }
+
+    Ok(output.status.success())
 }
 
 #[cfg(test)]
