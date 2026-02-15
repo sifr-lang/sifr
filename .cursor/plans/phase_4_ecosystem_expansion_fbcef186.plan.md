@@ -4,28 +4,28 @@ overview: Expand Phase 4 (Ecosystem) with new milestones covering typed serializ
 todos:
   - id: enhance-web-db
     content: "Enhance milestone_web_db (Phase 4): add graceful shutdown (axum with_graceful_shutdown + tokio::signal), shutdown hooks, and health check endpoint"
-    status: pending
+    status: completed
   - id: milestone-typed-serde
     content: "Add milestone_typed_serde: auto serde derives on classes, typed JSON dumps/loads, Json[T]/Path[T]/Query[T]/Form[T] web extractors, UploadFile/Multipart file uploads"
-    status: pending
+    status: completed
   - id: milestone-crypto-auth
     content: "Add milestone_crypto_auth: password hashing (argon2/bcrypt), JWT encode/decode (jsonwebtoken), AES-256-GCM encryption (aes-gcm), HMAC-SHA256 (hmac+sha2), secure random tokens"
-    status: pending
+    status: completed
   - id: milestone-web-production
     content: "Add milestone_web_production: JSON logging mode, structured context fields, request tracing middleware, rate limiting (global + per-route), CORS configuration"
-    status: pending
+    status: completed
   - id: milestone-redis
     content: "Add milestone_redis: async Redis client (redis-rs), key-value, hashes, lists, sets, pub/sub, typed JSON get/set, connection pooling"
-    status: pending
+    status: completed
   - id: milestone-storage
     content: "Add milestone_storage: S3-compatible object storage (rust-s3), put/get/delete/list, presigned URLs, multi-provider (S3/R2/MinIO/Spaces), web upload integration"
-    status: pending
+    status: completed
   - id: milestone-email
     content: "Add milestone_email: async SMTP client (lettre), plain text/HTML email, attachments, multiple recipients, env-based config"
-    status: pending
+    status: completed
   - id: update-roadmap
     content: Update the milestone roadmap diagram, dependency chain, phase summary, and rationale section in the plan document
-    status: pending
+    status: completed
 isProject: false
 ---
 
