@@ -1,0 +1,21 @@
+# ============================================================
+# Test 18: Multiple For Loops Over Same Collection
+# Python: iterating multiple times over a list is fine
+# Rust: for item in &vec can be done multiple times
+# Sifr should: allow multiple iterations (borrow semantics)
+# ============================================================
+
+def main():
+    nums: list[int] = [10, 20, 30]
+
+    # First iteration
+    total: int = 0
+    for n in nums:
+        total = total + n
+    print(total)
+
+    # Second iteration over same collection
+    count: int = 0
+    for n in nums:
+        count = count + 1
+    print(count)

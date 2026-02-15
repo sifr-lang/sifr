@@ -1,0 +1,13 @@
+# ============================================================
+# Test 35: enumerate() Borrows the Collection
+# Python: enumerate() returns iterator; original unchanged
+# Rust: enumerate borrows the iterator
+# Sifr should: enumerate borrows — original reusable
+# ============================================================
+
+def main():
+    names: list[str] = ["alice", "bob", "charlie"]
+    for i, name in enumerate(names):
+        print(i)
+        print(name)
+    print(len(names))  # Should work: enumerate borrows

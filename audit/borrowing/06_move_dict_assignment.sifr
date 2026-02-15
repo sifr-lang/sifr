@@ -1,0 +1,11 @@
+# ============================================================
+# Test 6: Dict Moves on Assignment
+# Python: d2 = d1 makes both point to same dict (aliasing)
+# Rust: d2 = d1 moves d1; d1 is no longer usable
+# Sifr should: behave like Rust — dict is Move type
+# ============================================================
+
+def main():
+    d1: dict[str, int] = {"a": 1, "b": 2}
+    d2: dict[str, int] = d1
+    print(d2)

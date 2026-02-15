@@ -1,0 +1,16 @@
+# ============================================================
+# Test 15: Move Inside a Loop
+# Python: variables in loops are always reusable
+# Rust: moving a variable in a loop body is an error on 2nd iteration
+# Sifr should: detect move-in-loop as error or handle correctly
+# ============================================================
+
+def consume(s: str) -> int:
+    return len(s)
+
+def main():
+    s: str = "hello"
+    total: int = 0
+    for i in range(3):
+        total = total + len(s)  # len borrows, should be fine
+    print(total)

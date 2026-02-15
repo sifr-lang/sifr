@@ -1,0 +1,11 @@
+# ============================================================
+# Test 50: Augmented Assignment on String (+=)
+# Python: s += " world" creates new string, rebinds s
+# Rust: s += " world" is s.push_str(" world"), mutates in place
+# Sifr should: handle += on strings correctly
+# ============================================================
+
+def main():
+    s: str = "hello"
+    s = s + " world"
+    print(s)

@@ -1,0 +1,16 @@
+# ============================================================
+# Test 29: Return a Local List from Function
+# Python: returning a local list is fine (reference counted)
+# Rust: returning a local Vec is fine (moved out)
+# Sifr should: allow returning local move types (moved out)
+# ============================================================
+
+def make_list(n: int) -> list[int]:
+    result: list[int] = []
+    for i in range(n):
+        result.append(i)
+    return result
+
+def main():
+    nums: list[int] = make_list(5)
+    print(nums)

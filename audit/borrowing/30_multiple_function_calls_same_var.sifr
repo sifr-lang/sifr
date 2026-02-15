@@ -1,0 +1,20 @@
+# ============================================================
+# Test 30: Multiple Function Calls with Same Copy Variable
+# Python: passing int to multiple functions is fine
+# Rust: i64 is Copy, so it can be passed multiple times
+# Sifr should: allow — int is Copy type
+# ============================================================
+
+def double(x: int) -> int:
+    return x * 2
+
+def triple(x: int) -> int:
+    return x * 3
+
+def main():
+    n: int = 10
+    a: int = double(n)
+    b: int = triple(n)  # Should work: int is Copy
+    print(a)
+    print(b)
+    print(n)  # Should work: int is Copy

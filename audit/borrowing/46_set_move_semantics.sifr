@@ -1,0 +1,11 @@
+# ============================================================
+# Test 46: Set Move Semantics
+# Python: s2 = s1 makes both point to same set
+# Rust: HashSet is Move; s2 = s1 moves s1
+# Sifr should: set is Move type
+# ============================================================
+
+def main():
+    s1: set[int] = {1, 2, 3}
+    s2: set[int] = s1
+    print(s2)

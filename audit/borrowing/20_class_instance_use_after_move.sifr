@@ -1,0 +1,15 @@
+# ============================================================
+# Test 20: Use Class Instance After Move (should fail)
+# Python: both p1 and p2 are usable (shared reference)
+# Rust: p1 is moved into p2; using p1 is a compile error
+# Sifr should: reject this — use-after-move
+# ============================================================
+
+class Point:
+    x: int
+    y: int
+
+def main():
+    p1: Point = Point(1, 2)
+    p2: Point = p1
+    print(p1.x)  # Should error: p1 was moved

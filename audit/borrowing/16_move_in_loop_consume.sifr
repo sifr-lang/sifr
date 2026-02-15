@@ -1,0 +1,15 @@
+# ============================================================
+# Test 16: Consuming Move Inside a Loop (should fail)
+# Python: passing s to a function in a loop works every iteration
+# Rust: moving s into a function in a loop fails on 2nd iteration
+# Sifr should: reject this — move inside loop body
+# ============================================================
+
+def consume(s: str) -> int:
+    return len(s)
+
+def main():
+    s: str = "hello"
+    for i in range(3):
+        result: int = consume(s)  # Should error: s moved on first iteration
+        print(result)

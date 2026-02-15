@@ -1,0 +1,11 @@
+# ============================================================
+# Test 26: Use Tuple After Move (should fail)
+# Python: both t1 and t2 are usable (reference semantics)
+# Rust: depends on contents — (i64, i64) is Copy, (String, i64) is Move
+# Sifr should: reject this — tuples are Move type
+# ============================================================
+
+def main():
+    t1: tuple[int, int] = (1, 2)
+    t2: tuple[int, int] = t1
+    print(t1)  # Should error: t1 was moved (Sifr treats tuples as Move)

@@ -1,0 +1,11 @@
+# ============================================================
+# Test 7: Use Dict After Move via Assignment (should fail)
+# Python: both d1 and d2 are usable (shared reference)
+# Rust: d1 is moved into d2; using d1 is a compile error
+# Sifr should: reject this — use-after-move
+# ============================================================
+
+def main():
+    d1: dict[str, int] = {"a": 1, "b": 2}
+    d2: dict[str, int] = d1
+    print(d1)  # Should error: d1 was moved

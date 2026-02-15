@@ -1,0 +1,14 @@
+# ============================================================
+# Test 8: Move Type Passed to Function (consumed)
+# Python: passing a list to a function doesn't affect caller
+# Rust: passing a Vec to a function moves it; caller can't use it
+# Sifr should: behave like Rust — function args move by default
+# ============================================================
+
+def consume(items: list[int]) -> int:
+    return len(items)
+
+def main():
+    nums: list[int] = [1, 2, 3]
+    result: int = consume(nums)
+    print(result)

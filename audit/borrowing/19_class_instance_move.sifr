@@ -1,0 +1,16 @@
+# ============================================================
+# Test 19: Class Instance Moves on Assignment
+# Python: p2 = p1 makes both point to same object (aliasing)
+# Rust: p2 = p1 moves p1; p1 is no longer usable
+# Sifr should: behave like Rust — class instances are Move
+# ============================================================
+
+class Point:
+    x: int
+    y: int
+
+def main():
+    p1: Point = Point(1, 2)
+    p2: Point = p1
+    print(p2.x)
+    print(p2.y)

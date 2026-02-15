@@ -1,0 +1,13 @@
+# ============================================================
+# Test 2: String Moves on Assignment
+# Python: s2 = s1 makes both point to same object; both usable
+# Rust: s2 = s1 moves s1; using s1 after is a compile error
+# Sifr should: behave like Rust — str is Move type
+# ============================================================
+
+def main():
+    s1: str = "hello"
+    s2: str = s1
+    # In Python, both s1 and s2 are usable here
+    # In Rust/Sifr, s1 is moved — using it should error
+    print(s2)

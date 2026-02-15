@@ -1,0 +1,17 @@
+# ============================================================
+# Test 45: Multiple Immutable Borrows in Same Scope
+# Python: N/A (no borrow concept)
+# Rust: multiple &T borrows are allowed simultaneously
+# Sifr should: allow multiple read-only uses in same scope
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+    a: int = len(nums)
+    b: int = len(nums)
+    print(a)
+    print(b)
+    print(nums)
+    for n in nums:
+        print(n)
+    print(len(nums))  # All should work: multiple borrows OK

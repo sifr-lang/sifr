@@ -1,0 +1,14 @@
+# ============================================================
+# Test 9: Use After Move Into Function (should fail)
+# Python: nums is still usable after passing to a function
+# Rust: nums is moved into consume(); using it after is error
+# Sifr should: reject this — use-after-move
+# ============================================================
+
+def consume(items: list[int]) -> int:
+    return len(items)
+
+def main():
+    nums: list[int] = [1, 2, 3]
+    result: int = consume(nums)
+    print(nums)  # Should error: nums was moved into consume()

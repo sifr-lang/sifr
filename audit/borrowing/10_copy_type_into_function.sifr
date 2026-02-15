@@ -1,0 +1,15 @@
+# ============================================================
+# Test 10: Copy Type Passed to Function (not consumed)
+# Python: int is passed by value (immutable), always reusable
+# Rust: i64 is Copy, so it's copied into the function
+# Sifr should: behave like Rust — int is Copy, reusable after call
+# ============================================================
+
+def double(x: int) -> int:
+    return x * 2
+
+def main():
+    n: int = 21
+    result: int = double(n)
+    print(n)       # Should work: int is Copy
+    print(result)

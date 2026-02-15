@@ -1,0 +1,15 @@
+# ============================================================
+# Test 11: print() Borrows, Does Not Move
+# Python: print() never affects the variable
+# Rust: println!() borrows via reference, doesn't move
+# Sifr should: print borrows — variable reusable after print
+# ============================================================
+
+def main():
+    s: str = "hello"
+    print(s)
+    print(s)  # Should work: print borrows, not moves
+
+    nums: list[int] = [1, 2, 3]
+    print(nums)
+    print(len(nums))  # Should work: nums still usable

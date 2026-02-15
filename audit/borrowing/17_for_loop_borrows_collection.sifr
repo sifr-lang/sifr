@@ -1,0 +1,14 @@
+# ============================================================
+# Test 17: For Loop Borrows the Collection
+# Python: for item in list iterates; list is still usable
+# Rust: for item in &vec borrows; vec is still usable
+# Sifr should: for loop borrows collection (per architecture)
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+    total: int = 0
+    for n in nums:
+        total = total + n
+    print(total)
+    print(len(nums))  # Should work: for loop borrows, not moves

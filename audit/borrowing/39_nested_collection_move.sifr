@@ -1,0 +1,11 @@
+# ============================================================
+# Test 39: Nested Collection Move
+# Python: nested = outer makes both point to same structure
+# Rust: nested collections move the entire structure
+# Sifr should: move the entire nested structure
+# ============================================================
+
+def main():
+    outer: list[list[int]] = [[1, 2], [3, 4]]
+    inner: list[list[int]] = outer
+    print(inner)

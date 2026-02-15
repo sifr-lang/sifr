@@ -1,0 +1,14 @@
+# ============================================================
+# Test 49: String Concatenation Creates New String
+# Python: + creates new string; originals unchanged
+# Rust: String + &str creates new String; first is moved
+# Sifr should: + on strings should handle ownership correctly
+# ============================================================
+
+def main():
+    a: str = "hello"
+    b: str = " world"
+    c: str = a + b
+    print(c)
+    # In Rust, a is moved by +; in Python, a is still usable
+    # Sifr behavior depends on implementation

@@ -1,0 +1,11 @@
+# ============================================================
+# Test 40: Use Nested Collection After Move (should fail)
+# Python: both outer and inner are usable (shared reference)
+# Rust: outer is moved; using it is a compile error
+# Sifr should: reject this — use-after-move
+# ============================================================
+
+def main():
+    outer: list[list[int]] = [[1, 2], [3, 4]]
+    inner: list[list[int]] = outer
+    print(outer)  # Should error: outer was moved

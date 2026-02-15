@@ -1,0 +1,21 @@
+# ============================================================
+# Test 32: Conditional Move (move in one branch)
+# Python: variables are always usable regardless of branches
+# Rust: if a variable is moved in one branch, it may be
+#        unusable after the if/else (depends on all branches)
+# Sifr should: handle conditional moves correctly
+# ============================================================
+
+def consume(s: str) -> str:
+    return s
+
+def main():
+    s: str = "hello"
+    flag: bool = True
+    if flag:
+        x: str = consume(s)
+        print(x)
+    else:
+        print("no move")
+    # s may or may not be moved here depending on branch taken
+    # Rust would reject using s here because it's moved in one branch

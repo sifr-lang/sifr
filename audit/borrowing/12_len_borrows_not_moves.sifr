@@ -1,0 +1,17 @@
+# ============================================================
+# Test 12: len() Borrows, Does Not Move
+# Python: len() never affects the variable
+# Rust: .len() borrows via &self
+# Sifr should: len borrows — variable reusable after len
+# ============================================================
+
+def main():
+    s: str = "hello"
+    n: int = len(s)
+    print(s)  # Should work: len borrows
+    print(n)
+
+    nums: list[int] = [1, 2, 3]
+    count: int = len(nums)
+    print(nums)  # Should work: len borrows
+    print(count)

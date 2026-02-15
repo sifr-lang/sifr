@@ -1,0 +1,12 @@
+# ============================================================
+# Test 37: List Comprehension Borrows Source
+# Python: comprehension doesn't affect source list
+# Rust: iter() borrows the source
+# Sifr should: comprehension borrows — source reusable
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+    doubled: list[int] = [x * 2 for x in nums]
+    print(doubled)
+    print(nums)  # Should work: comprehension borrows

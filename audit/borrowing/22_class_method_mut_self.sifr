@@ -1,0 +1,19 @@
+# ============================================================
+# Test 22: Class Method Mutates Self (&mut self)
+# Python: methods can freely mutate self
+# Rust: &mut self methods require exclusive mutable borrow
+# Sifr should: auto-detect mutation and use &mut self
+# ============================================================
+
+class Counter:
+    count: int
+
+    def increment(self):
+        self.count = self.count + 1
+
+def main():
+    c: Counter = Counter(0)
+    c.increment()
+    c.increment()
+    c.increment()
+    print(c.count)  # Should print 3

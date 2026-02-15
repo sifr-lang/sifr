@@ -1,0 +1,11 @@
+# ============================================================
+# Test 5: Use List After Move via Assignment (should fail)
+# Python: both l1 and l2 are usable (shared reference)
+# Rust: l1 is moved into l2; using l1 is a compile error
+# Sifr should: reject this — use-after-move
+# ============================================================
+
+def main():
+    l1: list[int] = [1, 2, 3]
+    l2: list[int] = l1
+    print(l1)  # Should error: l1 was moved

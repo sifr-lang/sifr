@@ -1,0 +1,11 @@
+# ============================================================
+# Test 3: Use String After Move via Assignment (should fail)
+# Python: both s1 and s2 are usable after s2 = s1
+# Rust: s1 is moved into s2; using s1 is a compile error
+# Sifr should: reject this — use-after-move
+# ============================================================
+
+def main():
+    s1: str = "hello"
+    s2: str = s1
+    print(s1)  # Should error: s1 was moved

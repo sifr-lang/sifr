@@ -1,0 +1,11 @@
+# ============================================================
+# Test 47: Use Set After Move (should fail)
+# Python: both s1 and s2 are usable
+# Rust: s1 is moved; using it is a compile error
+# Sifr should: reject this — use-after-move
+# ============================================================
+
+def main():
+    s1: set[int] = {1, 2, 3}
+    s2: set[int] = s1
+    print(s1)  # Should error: s1 was moved

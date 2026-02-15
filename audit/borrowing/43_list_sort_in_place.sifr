@@ -1,0 +1,11 @@
+# ============================================================
+# Test 43: List sort() Mutates In-Place
+# Python: .sort() mutates the list in place
+# Rust: .sort() requires &mut self
+# Sifr should: allow in-place sort (auto &mut self)
+# ============================================================
+
+def main():
+    nums: list[int] = [5, 3, 1, 4, 2]
+    nums.sort()
+    print(nums)

@@ -1,0 +1,14 @@
+# ============================================================
+# Test 27: Mutating a List After Using It
+# Python: lists are mutable; append after print is fine
+# Rust: need &mut to append; borrow checker ensures no aliasing
+# Sifr should: allow mutation after use (no outstanding borrows)
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3]
+    print(len(nums))
+    nums.append(4)
+    print(len(nums))
+    nums.append(5)
+    print(nums)

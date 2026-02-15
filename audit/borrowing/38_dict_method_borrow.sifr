@@ -1,0 +1,12 @@
+# ============================================================
+# Test 38: Dict Methods Borrow (keys, values, items)
+# Python: .keys()/.values() return views; dict is still usable
+# Rust: .keys()/.values() borrow &self
+# Sifr should: dict methods borrow — dict reusable
+# ============================================================
+
+def main():
+    d: dict[str, int] = {"a": 1, "b": 2, "c": 3}
+    for k in d.keys():
+        print(k)
+    print(len(d))  # Should work: .keys() borrows

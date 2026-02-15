@@ -1,0 +1,12 @@
+# ============================================================
+# Test 25: Tuple Ownership Depends on Contents
+# Python: tuples are immutable but always reusable (reference)
+# Rust: tuple of Copy types is Copy; tuple with String is Move
+# Sifr should: tuple is Move type (conservative)
+# ============================================================
+
+def main():
+    # Tuple of ints — in Rust this would be Copy, but Sifr treats all tuples as Move
+    t1: tuple[int, int] = (1, 2)
+    t2: tuple[int, int] = t1
+    print(t2)

@@ -1,0 +1,16 @@
+# ============================================================
+# Test 13: String Methods Borrow (Don't Consume)
+# Python: s.upper() returns new string; s is still usable
+# Rust: s.to_uppercase() borrows &self; s is still usable
+# Sifr should: string methods borrow — original reusable
+# ============================================================
+
+def main():
+    s: str = "hello"
+    upper: str = s.upper()
+    print(s)      # Should work: .upper() borrows
+    print(upper)
+
+    lower: str = s.lower()
+    print(s)      # Should work: .lower() borrows
+    print(lower)

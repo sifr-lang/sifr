@@ -1,0 +1,19 @@
+# ============================================================
+# Test 21: Class Method Borrows Self (read-only)
+# Python: calling a method never affects the object
+# Rust: &self methods borrow; object is still usable
+# Sifr should: auto-borrow &self for read-only methods
+# ============================================================
+
+class Rectangle:
+    width: int
+    height: int
+
+    def area(self) -> int:
+        return self.width * self.height
+
+def main():
+    r: Rectangle = Rectangle(10, 5)
+    a: int = r.area()
+    print(a)
+    print(r.width)  # Should work: area() borrows &self

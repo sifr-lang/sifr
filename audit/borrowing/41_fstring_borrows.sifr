@@ -1,0 +1,14 @@
+# ============================================================
+# Test 41: F-string Borrows Variables
+# Python: f-strings don't affect variables
+# Rust: format!() borrows via &
+# Sifr should: f-string borrows — variables reusable
+# ============================================================
+
+def main():
+    name: str = "Alice"
+    age: int = 30
+    msg: str = f"{name} is {age} years old"
+    print(msg)
+    print(name)  # Should work: f-string borrows
+    print(age)   # Should work: int is Copy anyway

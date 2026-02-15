@@ -1,0 +1,12 @@
+# ============================================================
+# Test 44: List pop() Mutates In-Place
+# Python: .pop() removes and returns last element
+# Rust: .pop() requires &mut self, returns Option<T>
+# Sifr should: allow pop (auto &mut self)
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+    last: int = nums.pop()
+    print(last)
+    print(nums)

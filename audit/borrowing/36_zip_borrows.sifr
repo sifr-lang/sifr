@@ -1,0 +1,15 @@
+# ============================================================
+# Test 36: zip() Borrows Both Collections
+# Python: zip() returns iterator; originals unchanged
+# Rust: zip borrows both iterators
+# Sifr should: zip borrows — both collections reusable
+# ============================================================
+
+def main():
+    keys: list[str] = ["a", "b", "c"]
+    vals: list[int] = [1, 2, 3]
+    for k, v in zip(keys, vals):
+        print(k)
+        print(v)
+    print(len(keys))  # Should work: zip borrows
+    print(len(vals))  # Should work: zip borrows

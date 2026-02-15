@@ -1,0 +1,14 @@
+# ============================================================
+# Test 28: Return a Local String from Function
+# Python: returning a local string is fine (reference counted)
+# Rust: returning a local String is fine (moved out)
+# Sifr should: allow returning local move types (moved out)
+# ============================================================
+
+def greet(name: str) -> str:
+    result: str = "Hello, " + name + "!"
+    return result
+
+def main():
+    msg: str = greet("World")
+    print(msg)

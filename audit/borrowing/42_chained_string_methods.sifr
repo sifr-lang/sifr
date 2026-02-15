@@ -1,0 +1,12 @@
+# ============================================================
+# Test 42: Chained String Methods (temporary lifetimes)
+# Python: method chains work naturally
+# Rust: temporaries live until end of statement
+# Sifr should: allow method chains on temporaries
+# ============================================================
+
+def main():
+    s: str = "  Hello, World!  "
+    result: str = s.strip().upper()
+    print(result)
+    print(s)  # Should work: methods create new strings

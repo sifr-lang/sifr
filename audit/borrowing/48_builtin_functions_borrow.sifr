@@ -1,0 +1,23 @@
+# ============================================================
+# Test 48: Built-in Functions Borrow (min, max, sum, any, all)
+# Python: built-ins don't affect the collection
+# Rust: these iterate via borrowing
+# Sifr should: built-in functions borrow — collection reusable
+# ============================================================
+
+def main():
+    nums: list[int] = [3, 1, 4, 1, 5, 9]
+    smallest: int = min(nums)
+    largest: int = max(nums)
+    total: int = sum(nums)
+    print(smallest)
+    print(largest)
+    print(total)
+    print(nums)  # Should work: all built-ins borrow
+
+    bools: list[bool] = [True, True, False]
+    a: bool = any(bools)
+    b: bool = all(bools)
+    print(a)
+    print(b)
+    print(bools)  # Should work: any/all borrow

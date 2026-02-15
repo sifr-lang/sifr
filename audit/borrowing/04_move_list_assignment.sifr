@@ -1,0 +1,11 @@
+# ============================================================
+# Test 4: List Moves on Assignment
+# Python: l2 = l1 makes both point to same list (aliasing)
+# Rust: l2 = l1 moves l1; l1 is no longer usable
+# Sifr should: behave like Rust — list is Move type
+# ============================================================
+
+def main():
+    l1: list[int] = [1, 2, 3]
+    l2: list[int] = l1
+    print(l2)

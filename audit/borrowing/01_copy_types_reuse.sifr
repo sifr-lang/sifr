@@ -1,0 +1,25 @@
+# ============================================================
+# Test 1: Copy Types Can Be Reused After Assignment
+# Python: all types can be reused (reference semantics)
+# Rust: Copy types (i64, f64, bool) can be reused after assignment
+# Sifr should: behave like Rust — int, float, bool are Copy
+# ============================================================
+
+def main():
+    # int is Copy — reuse after assignment
+    x: int = 42
+    y: int = x
+    print(x)
+    print(y)
+
+    # float is Copy — reuse after assignment
+    a: float = 3.14
+    b: float = a
+    print(a)
+    print(b)
+
+    # bool is Copy — reuse after assignment
+    p: bool = True
+    q: bool = p
+    print(p)
+    print(q)

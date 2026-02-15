@@ -1,0 +1,17 @@
+# ============================================================
+# Test 14: Reassignment Resets Moved State
+# Python: N/A (no move concept)
+# Rust: reassigning a moved variable makes it usable again
+# Sifr should: behave like Rust — reassignment resets move
+# ============================================================
+
+def consume(s: str) -> str:
+    return s
+
+def main():
+    s: str = "hello"
+    x: str = consume(s)
+    # s is now moved
+    s = "world"  # Reassignment resets moved state
+    print(s)     # Should work: s was reassigned
+    print(x)
