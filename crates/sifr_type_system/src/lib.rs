@@ -9,7 +9,7 @@ pub mod infer;
 pub mod union;
 pub mod literal;
 
-pub use types::{Type, FunctionType, OwnershipKind};
+pub use types::{Type, FunctionType, OwnershipKind, ParamConvention};
 pub use check::{type_check_binary_op, type_check_unary_op, type_check_comparison, type_check_bool_op};
 pub use infer::infer_literal_type;
 pub mod narrow;

@@ -43,31 +43,22 @@ fn stdlib_io() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // read_text(path: str) -> str
-    functions.insert("read_text".to_string(), FunctionType {
-        params: vec![("path".to_string(), Type::Str)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("read_text".to_string(), FunctionType::all_borrow(
+        vec![("path".to_string(), Type::Str)],
+        Type::Str,
+    ));
 
     // write_text(path: str, content: str) -> None
-    functions.insert("write_text".to_string(), FunctionType {
-        params: vec![
+    functions.insert("write_text".to_string(), FunctionType::all_borrow(vec![
             ("path".to_string(), Type::Str),
             ("content".to_string(), Type::Str),
-        ],
-        return_type: Box::new(Type::None),
-    });
+        ], Type::None));
 
     // exists(path: str) -> bool
-    functions.insert("exists".to_string(), FunctionType {
-        params: vec![("path".to_string(), Type::Str)],
-        return_type: Box::new(Type::Bool),
-    });
+    functions.insert("exists".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
 
     // read_lines(path: str) -> list[str]
-    functions.insert("read_lines".to_string(), FunctionType {
-        params: vec![("path".to_string(), Type::Str)],
-        return_type: Box::new(Type::List(Box::new(Type::Str))),
-    });
+    functions.insert("read_lines".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
 
     StdlibModule {
         functions,
@@ -80,16 +71,10 @@ fn stdlib_json() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // json_loads(s: str) -> str  (returns JSON as string for now)
-    functions.insert("json_loads".to_string(), FunctionType {
-        params: vec![("s".to_string(), Type::Str)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("json_loads".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
     // json_dumps(obj: Any) -> str
-    functions.insert("json_dumps".to_string(), FunctionType {
-        params: vec![("obj".to_string(), Type::Any)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("json_dumps".to_string(), FunctionType::all_borrow(vec![("obj".to_string(), Type::Any)], Type::Str));
 
     StdlibModule {
         functions,
@@ -102,19 +87,13 @@ fn stdlib_env() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // env_get(key: str) -> str | None
-    functions.insert("env_get".to_string(), FunctionType {
-        params: vec![("key".to_string(), Type::Str)],
-        return_type: Box::new(Type::Union(vec![Type::Str, Type::None])),
-    });
+    functions.insert("env_get".to_string(), FunctionType::all_borrow(vec![("key".to_string(), Type::Str)], Type::Union(vec![Type::Str, Type::None])));
 
     // env_set(key: str, value: str) -> None
-    functions.insert("env_set".to_string(), FunctionType {
-        params: vec![
+    functions.insert("env_set".to_string(), FunctionType::all_borrow(vec![
             ("key".to_string(), Type::Str),
             ("value".to_string(), Type::Str),
-        ],
-        return_type: Box::new(Type::None),
-    });
+        ], Type::None));
 
     StdlibModule {
         functions,
@@ -127,16 +106,10 @@ fn stdlib_os() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // run_command(cmd: str) -> str
-    functions.insert("run_command".to_string(), FunctionType {
-        params: vec![("cmd".to_string(), Type::Str)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("run_command".to_string(), FunctionType::all_borrow(vec![("cmd".to_string(), Type::Str)], Type::Str));
 
     // get_args() -> list[str]
-    functions.insert("get_args".to_string(), FunctionType {
-        params: vec![],
-        return_type: Box::new(Type::List(Box::new(Type::Str))),
-    });
+    functions.insert("get_args".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))));
 
     StdlibModule {
         functions,
@@ -150,76 +123,40 @@ fn stdlib_math() -> StdlibModule {
     let mut constants = HashMap::new();
 
     // sqrt(x: float) -> float
-    functions.insert("sqrt".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("sqrt".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
 
     // floor(x: float) -> int
-    functions.insert("floor".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Int),
-    });
+    functions.insert("floor".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Int));
 
     // ceil(x: float) -> int
-    functions.insert("ceil".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Int),
-    });
+    functions.insert("ceil".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Int));
 
     // abs_val(x: float) -> float
-    functions.insert("abs_val".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("abs_val".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
 
     // log(x: float) -> float
-    functions.insert("log".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("log".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
 
     // sin(x: float) -> float
-    functions.insert("sin".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("sin".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
 
     // cos(x: float) -> float
-    functions.insert("cos".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("cos".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
 
     // tan(x: float) -> float
-    functions.insert("tan".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("tan".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
 
     // pow_val(x: float, y: float) -> float
-    functions.insert("pow_val".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("pow_val".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
 
     // min_val(a: float, b: float) -> float
-    functions.insert("min_val".to_string(), FunctionType {
-        params: vec![("a".to_string(), Type::Float), ("b".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("min_val".to_string(), FunctionType::all_borrow(vec![("a".to_string(), Type::Float), ("b".to_string(), Type::Float)], Type::Float));
 
     // max_val(a: float, b: float) -> float
-    functions.insert("max_val".to_string(), FunctionType {
-        params: vec![("a".to_string(), Type::Float), ("b".to_string(), Type::Float)],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("max_val".to_string(), FunctionType::all_borrow(vec![("a".to_string(), Type::Float), ("b".to_string(), Type::Float)], Type::Float));
 
     // round_val(x: float) -> int
-    functions.insert("round_val".to_string(), FunctionType {
-        params: vec![("x".to_string(), Type::Float)],
-        return_type: Box::new(Type::Int),
-    });
+    functions.insert("round_val".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Int));
 
     // Constants
     constants.insert("pi".to_string(), Type::Float);
@@ -236,34 +173,22 @@ fn stdlib_test() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // assert_eq(actual: Any, expected: Any) -> None
-    functions.insert("assert_eq".to_string(), FunctionType {
-        params: vec![
+    functions.insert("assert_eq".to_string(), FunctionType::all_borrow(vec![
             ("actual".to_string(), Type::Any),
             ("expected".to_string(), Type::Any),
-        ],
-        return_type: Box::new(Type::None),
-    });
+        ], Type::None));
 
     // assert_ne(actual: Any, expected: Any) -> None
-    functions.insert("assert_ne".to_string(), FunctionType {
-        params: vec![
+    functions.insert("assert_ne".to_string(), FunctionType::all_borrow(vec![
             ("actual".to_string(), Type::Any),
             ("expected".to_string(), Type::Any),
-        ],
-        return_type: Box::new(Type::None),
-    });
+        ], Type::None));
 
     // assert_true(value: bool) -> None
-    functions.insert("assert_true".to_string(), FunctionType {
-        params: vec![("value".to_string(), Type::Bool)],
-        return_type: Box::new(Type::None),
-    });
+    functions.insert("assert_true".to_string(), FunctionType::all_borrow(vec![("value".to_string(), Type::Bool)], Type::None));
 
     // assert_false(value: bool) -> None
-    functions.insert("assert_false".to_string(), FunctionType {
-        params: vec![("value".to_string(), Type::Bool)],
-        return_type: Box::new(Type::None),
-    });
+    functions.insert("assert_false".to_string(), FunctionType::all_borrow(vec![("value".to_string(), Type::Bool)], Type::None));
 
     StdlibModule {
         functions,
@@ -280,120 +205,78 @@ fn stdlib_collections() -> StdlibModule {
     // --- Set operations (backed by list[int] with dedup) ---
 
     // new_set() -> list[int]
-    functions.insert("new_set".to_string(), FunctionType {
-        params: vec![],
-        return_type: Box::new(Type::List(Box::new(Type::Int))),
-    });
+    functions.insert("new_set".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Int))));
 
     // set_from_list(items: list[int]) -> list[int]
-    functions.insert("set_from_list".to_string(), FunctionType {
-        params: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
-        return_type: Box::new(Type::List(Box::new(Type::Int))),
-    });
+    functions.insert("set_from_list".to_string(), FunctionType::all_borrow(vec![("items".to_string(), Type::List(Box::new(Type::Int)))], Type::List(Box::new(Type::Int))));
 
     // set_add(s: list[int], item: int) -> list[int]
-    functions.insert("set_add".to_string(), FunctionType {
-        params: vec![
+    functions.insert("set_add".to_string(), FunctionType::all_borrow(vec![
             ("s".to_string(), Type::List(Box::new(Type::Int))),
             ("item".to_string(), Type::Int),
-        ],
-        return_type: Box::new(Type::List(Box::new(Type::Int))),
-    });
+        ], Type::List(Box::new(Type::Int))));
 
     // set_contains(s: list[int], item: int) -> bool
-    functions.insert("set_contains".to_string(), FunctionType {
-        params: vec![
+    functions.insert("set_contains".to_string(), FunctionType::all_borrow(vec![
             ("s".to_string(), Type::List(Box::new(Type::Int))),
             ("item".to_string(), Type::Int),
-        ],
-        return_type: Box::new(Type::Bool),
-    });
+        ], Type::Bool));
 
     // set_remove(s: list[int], item: int) -> list[int]
-    functions.insert("set_remove".to_string(), FunctionType {
-        params: vec![
+    functions.insert("set_remove".to_string(), FunctionType::all_borrow(vec![
             ("s".to_string(), Type::List(Box::new(Type::Int))),
             ("item".to_string(), Type::Int),
-        ],
-        return_type: Box::new(Type::List(Box::new(Type::Int))),
-    });
+        ], Type::List(Box::new(Type::Int))));
 
     // set_len(s: list[int]) -> int
-    functions.insert("set_len".to_string(), FunctionType {
-        params: vec![("s".to_string(), Type::List(Box::new(Type::Int)))],
-        return_type: Box::new(Type::Int),
-    });
+    functions.insert("set_len".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::List(Box::new(Type::Int)))], Type::Int));
 
     // set_union(a: list[int], b: list[int]) -> list[int]
-    functions.insert("set_union".to_string(), FunctionType {
-        params: vec![
+    functions.insert("set_union".to_string(), FunctionType::all_borrow(vec![
             ("a".to_string(), Type::List(Box::new(Type::Int))),
             ("b".to_string(), Type::List(Box::new(Type::Int))),
-        ],
-        return_type: Box::new(Type::List(Box::new(Type::Int))),
-    });
+        ], Type::List(Box::new(Type::Int))));
 
     // set_intersection(a: list[int], b: list[int]) -> list[int]
-    functions.insert("set_intersection".to_string(), FunctionType {
-        params: vec![
+    functions.insert("set_intersection".to_string(), FunctionType::all_borrow(vec![
             ("a".to_string(), Type::List(Box::new(Type::Int))),
             ("b".to_string(), Type::List(Box::new(Type::Int))),
-        ],
-        return_type: Box::new(Type::List(Box::new(Type::Int))),
-    });
+        ], Type::List(Box::new(Type::Int))));
 
     // --- Counter (backed by dict[str, int] via HashMap) ---
 
     // counter_from_list(items: list[str]) -> str (JSON-encoded counts)
-    functions.insert("counter_from_list".to_string(), FunctionType {
-        params: vec![("items".to_string(), Type::List(Box::new(Type::Str)))],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("counter_from_list".to_string(), FunctionType::all_borrow(vec![("items".to_string(), Type::List(Box::new(Type::Str)))], Type::Str));
 
     // counter_get(counter: str, key: str) -> int
-    functions.insert("counter_get".to_string(), FunctionType {
-        params: vec![
+    functions.insert("counter_get".to_string(), FunctionType::all_borrow(vec![
             ("counter".to_string(), Type::Str),
             ("key".to_string(), Type::Str),
-        ],
-        return_type: Box::new(Type::Int),
-    });
+        ], Type::Int));
 
     // counter_most_common(counter: str, n: int) -> str (JSON-encoded list of pairs)
-    functions.insert("counter_most_common".to_string(), FunctionType {
-        params: vec![
+    functions.insert("counter_most_common".to_string(), FunctionType::all_borrow(vec![
             ("counter".to_string(), Type::Str),
             ("n".to_string(), Type::Int),
-        ],
-        return_type: Box::new(Type::Str),
-    });
+        ], Type::Str));
 
     // --- DefaultDict ---
 
     // defaultdict_new(default_value: int) -> str (JSON-encoded empty dict with default)
-    functions.insert("defaultdict_new".to_string(), FunctionType {
-        params: vec![("default_value".to_string(), Type::Int)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("defaultdict_new".to_string(), FunctionType::all_borrow(vec![("default_value".to_string(), Type::Int)], Type::Str));
 
     // defaultdict_get(dd: str, key: str) -> int
-    functions.insert("defaultdict_get".to_string(), FunctionType {
-        params: vec![
+    functions.insert("defaultdict_get".to_string(), FunctionType::all_borrow(vec![
             ("dd".to_string(), Type::Str),
             ("key".to_string(), Type::Str),
-        ],
-        return_type: Box::new(Type::Int),
-    });
+        ], Type::Int));
 
     // defaultdict_set(dd: str, key: str, value: int) -> str
-    functions.insert("defaultdict_set".to_string(), FunctionType {
-        params: vec![
+    functions.insert("defaultdict_set".to_string(), FunctionType::all_borrow(vec![
             ("dd".to_string(), Type::Str),
             ("key".to_string(), Type::Str),
             ("value".to_string(), Type::Int),
-        ],
-        return_type: Box::new(Type::Str),
-    });
+        ], Type::Str));
 
     StdlibModule {
         functions,
@@ -406,28 +289,16 @@ fn stdlib_bytes() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // encode_utf8(s: str) -> list[int]
-    functions.insert("encode_utf8".to_string(), FunctionType {
-        params: vec![("s".to_string(), Type::Str)],
-        return_type: Box::new(Type::List(Box::new(Type::Int))),
-    });
+    functions.insert("encode_utf8".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
 
     // decode_utf8(bytes: list[int]) -> str
-    functions.insert("decode_utf8".to_string(), FunctionType {
-        params: vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("decode_utf8".to_string(), FunctionType::all_borrow(vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))], Type::Str));
 
     // bytes_to_hex(bytes: list[int]) -> str
-    functions.insert("bytes_to_hex".to_string(), FunctionType {
-        params: vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("bytes_to_hex".to_string(), FunctionType::all_borrow(vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))], Type::Str));
 
     // bytes_from_hex(s: str) -> list[int]
-    functions.insert("bytes_from_hex".to_string(), FunctionType {
-        params: vec![("s".to_string(), Type::Str)],
-        return_type: Box::new(Type::List(Box::new(Type::Int))),
-    });
+    functions.insert("bytes_from_hex".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
 
     StdlibModule {
         functions,
@@ -440,25 +311,16 @@ fn stdlib_time() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // time_now() -> float (epoch seconds)
-    functions.insert("time_now".to_string(), FunctionType {
-        params: vec![],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("time_now".to_string(), FunctionType::all_borrow(vec![], Type::Float));
 
     // sleep(seconds: float) -> None
-    functions.insert("sleep".to_string(), FunctionType {
-        params: vec![("seconds".to_string(), Type::Float)],
-        return_type: Box::new(Type::None),
-    });
+    functions.insert("sleep".to_string(), FunctionType::all_borrow(vec![("seconds".to_string(), Type::Float)], Type::None));
 
     // time_format(epoch: float, fmt: str) -> str
-    functions.insert("time_format".to_string(), FunctionType {
-        params: vec![
+    functions.insert("time_format".to_string(), FunctionType::all_borrow(vec![
             ("epoch".to_string(), Type::Float),
             ("fmt".to_string(), Type::Str),
-        ],
-        return_type: Box::new(Type::Str),
-    });
+        ], Type::Str));
 
     StdlibModule {
         functions,
@@ -471,25 +333,16 @@ fn stdlib_random() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // random_int(min: int, max: int) -> int
-    functions.insert("random_int".to_string(), FunctionType {
-        params: vec![
+    functions.insert("random_int".to_string(), FunctionType::all_borrow(vec![
             ("min".to_string(), Type::Int),
             ("max".to_string(), Type::Int),
-        ],
-        return_type: Box::new(Type::Int),
-    });
+        ], Type::Int));
 
     // random_float() -> float
-    functions.insert("random_float".to_string(), FunctionType {
-        params: vec![],
-        return_type: Box::new(Type::Float),
-    });
+    functions.insert("random_float".to_string(), FunctionType::all_borrow(vec![], Type::Float));
 
     // random_choice(items: list[Any]) -> Any
-    functions.insert("random_choice".to_string(), FunctionType {
-        params: vec![("items".to_string(), Type::List(Box::new(Type::Any)))],
-        return_type: Box::new(Type::Any),
-    });
+    functions.insert("random_choice".to_string(), FunctionType::all_borrow(vec![("items".to_string(), Type::List(Box::new(Type::Any)))], Type::Any));
 
     StdlibModule {
         functions,
@@ -502,32 +355,23 @@ fn stdlib_re() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // re_match(pattern: str, text: str) -> bool
-    functions.insert("re_match".to_string(), FunctionType {
-        params: vec![
+    functions.insert("re_match".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ],
-        return_type: Box::new(Type::Bool),
-    });
+        ], Type::Bool));
 
     // re_find(pattern: str, text: str) -> str | None
-    functions.insert("re_find".to_string(), FunctionType {
-        params: vec![
+    functions.insert("re_find".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ],
-        return_type: Box::new(Type::Union(vec![Type::Str, Type::None])),
-    });
+        ], Type::Union(vec![Type::Str, Type::None])));
 
     // re_replace(pattern: str, replacement: str, text: str) -> str
-    functions.insert("re_replace".to_string(), FunctionType {
-        params: vec![
+    functions.insert("re_replace".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("replacement".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ],
-        return_type: Box::new(Type::Str),
-    });
+        ], Type::Str));
 
     StdlibModule {
         functions,
@@ -540,16 +384,10 @@ fn stdlib_hash() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // sha256(s: str) -> str (hex digest)
-    functions.insert("sha256".to_string(), FunctionType {
-        params: vec![("s".to_string(), Type::Str)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("sha256".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
     // md5(s: str) -> str (hex digest)
-    functions.insert("md5".to_string(), FunctionType {
-        params: vec![("s".to_string(), Type::Str)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("md5".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
     StdlibModule {
         functions,
@@ -562,16 +400,10 @@ fn stdlib_encoding() -> StdlibModule {
     let mut functions = HashMap::new();
 
     // base64_encode(s: str) -> str
-    functions.insert("base64_encode".to_string(), FunctionType {
-        params: vec![("s".to_string(), Type::Str)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("base64_encode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
     // base64_decode(s: str) -> str
-    functions.insert("base64_decode".to_string(), FunctionType {
-        params: vec![("s".to_string(), Type::Str)],
-        return_type: Box::new(Type::Str),
-    });
+    functions.insert("base64_decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
     StdlibModule {
         functions,

@@ -5471,7 +5471,7 @@ fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
 mod tests {
     use super::*;
     use sifr_hir::*;
-    use sifr_type_system::Type;
+    use sifr_type_system::{Type, ParamConvention};
 
     #[test]
     fn test_simple_function_codegen() {
@@ -5508,8 +5508,8 @@ mod tests {
             functions: vec![HirFunction {
                 name: "add".to_string(),
                 params: vec![
-                    HirParam { name: "a".to_string(), ty: Type::Int, default: None, keyword_only: false },
-                    HirParam { name: "b".to_string(), ty: Type::Int, default: None, keyword_only: false },
+                    HirParam { name: "a".to_string(), ty: Type::Int, default: None, keyword_only: false, convention: ParamConvention::Own },
+                    HirParam { name: "b".to_string(), ty: Type::Int, default: None, keyword_only: false, convention: ParamConvention::Own },
                 ],
                 return_type: Type::Int,
                 body: vec![HirStmt::Return {

@@ -197,7 +197,7 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Protocol { name, .. } => (21, name.clone()),
         Type::Newtype { name, .. } => (22, name.clone()),
         Type::TypeVar(name) => (23, name.clone()),
-        Type::Callable(_, _) => (24, String::new()),
+        Type::Callable(..) => (24, String::new()),
     }
 }
 

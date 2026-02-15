@@ -85,17 +85,64 @@ pub enum Type {
     TypeVar(String),
 
     /// Callable type: `Callable[[int, str], bool]` -> `fn(i64, String) -> bool`
-    /// First vec is parameter types, second is return type.
-    Callable(Vec<Type>, Box<Type>),
+    /// Fields: (parameter_types, parameter_conventions, return_type).
+    Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>),
 }
 
 /// Represents a function's type signature.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FunctionType {
-    /// Parameter names and types
-    pub params: Vec<(String, Type)>,
+    /// Parameter names, types, and conventions
+    pub params: Vec<(String, Type, ParamConvention)>,
     /// Return type
     pub return_type: Box<Type>,
+}
+
+impl FunctionType {
+    /// Create a FunctionType where all parameters use the default convention
+    /// (Borrow for Move types, Own for Copy types).
+    pub fn new(params: Vec<(String, Type)>, return_type: Type) -> Self {
+        let params = params.into_iter().map(|(name, ty)| {
+            let conv = if ty.ownership() == OwnershipKind::Copy {
+                ParamConvention::Own
+            } else {
+                ParamConvention::Borrow
+            };
+            (name, ty, conv)
+        }).collect();
+        FunctionType {
+            params,
+            return_type: Box::new(return_type),
+        }
+    }
+
+    /// Create a FunctionType where all parameters borrow (for built-in functions).
+    pub fn all_borrow(params: Vec<(String, Type)>, return_type: Type) -> Self {
+        let params = params.into_iter().map(|(name, ty)| {
+            (name, ty, ParamConvention::Borrow)
+        }).collect();
+        FunctionType {
+            params,
+            return_type: Box::new(return_type),
+        }
+    }
+}
+
+/// How a function parameter receives its value.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ParamConvention {
+    /// Immutable borrow (default for Move types). Codegen: &T
+    Borrow,
+    /// Mutable borrow (mut keyword). Codegen: &mut T
+    MutBorrow,
+    /// Ownership transfer (own keyword, or default for Copy types). Codegen: T
+    Own,
+}
+
+impl Default for ParamConvention {
+    fn default() -> Self {
+        ParamConvention::Borrow
+    }
 }
 
 /// Describes how a type behaves with respect to ownership.
@@ -129,7 +176,7 @@ impl Type {
             Self::Protocol { .. } => OwnershipKind::Move,
             Self::Newtype { inner, .. } => inner.ownership(),
             Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
-            Self::Callable(_, _) => OwnershipKind::Copy, // function pointers are Copy
+            Self::Callable(..) => OwnershipKind::Copy, // function pointers are Copy
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -182,7 +229,7 @@ impl Type {
             Self::Protocol { name, .. } => name.clone(),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(),
-            Self::Callable(params, ret) => {
+            Self::Callable(params, _, ret) => {
                 let parts: Vec<String> = params.iter().map(Self::display_name).collect();
                 format!("Callable[[{}], {}]", parts.join(", "), ret.display_name())
             }
@@ -211,7 +258,7 @@ impl Type {
             Self::Any => "Box<dyn std::any::Any>".to_string(),
             Self::Never => "!".to_string(),
             Self::Function(ft) => {
-                let params: Vec<String> = ft.params.iter().map(|(_, t)| t.rust_type()).collect();
+                let params: Vec<String> = ft.params.iter().map(|(_, t, _)| t.rust_type()).collect();
                 let ret = ft.return_type.rust_type();
                 format!("fn({}) -> {}", params.join(", "), ret)
             }
@@ -239,7 +286,7 @@ impl Type {
             Self::Protocol { name, .. } => format!("Box<dyn {}>", name),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
-            Self::Callable(params, ret) => {
+            Self::Callable(params, _, ret) => {
                 let param_types: Vec<String> = params.iter().map(Self::rust_type).collect();
                 let ret_type = ret.rust_type();
                 if ret_type == "()" {
@@ -300,7 +347,7 @@ impl Type {
             Type::Protocol { name, .. } => name.clone(),
             Type::Newtype { name, .. } => name.clone(),
             Type::TypeVar(name) => name.clone(),
-            Type::Callable(_, _) => "Fn".to_string(),
+            Type::Callable(..) => "Fn".to_string(),
         }
     }
 
@@ -476,7 +523,7 @@ impl Type {
                     class_methods.iter().any(|(cname, cft)| {
                         cname == pname
                             && cft.params.len() == pft.params.len()
-                            && cft.params.iter().zip(pft.params.iter()).all(|((_, ct), (_, pt))| ct.is_assignable_to(pt))
+                            && cft.params.iter().zip(pft.params.iter()).all(|((_, ct, _), (_, pt, _))| ct.is_assignable_to(pt))
                             && cft.return_type.is_assignable_to(&pft.return_type)
                     })
                 })
@@ -488,15 +535,15 @@ impl Type {
             // TypeVar: a type variable is compatible with any type (for generic instantiation)
             (Self::TypeVar(_), _) | (_, Self::TypeVar(_)) => true,
             // Callable: compatible if param and return types match
-            (Self::Callable(params_a, ret_a), Self::Callable(params_b, ret_b)) => {
+            (Self::Callable(params_a, _, ret_a), Self::Callable(params_b, _, ret_b)) => {
                 params_a.len() == params_b.len()
                     && params_a.iter().zip(params_b.iter()).all(|(a, b)| a.is_assignable_to(b))
                     && ret_a.is_assignable_to(ret_b)
             }
             // A Function type is assignable to a Callable if signatures match
-            (Self::Function(ft), Self::Callable(params, ret)) => {
+            (Self::Function(ft), Self::Callable(params, _, ret)) => {
                 ft.params.len() == params.len()
-                    && ft.params.iter().zip(params.iter()).all(|((_, pt), ct)| pt.is_assignable_to(ct))
+                    && ft.params.iter().zip(params.iter()).all(|((_, pt, _), ct)| pt.is_assignable_to(ct))
                     && ft.return_type.is_assignable_to(ret)
             }
             _ => false,
