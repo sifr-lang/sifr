@@ -1,0 +1,59 @@
+# ============================================================
+# Milestone: Extended Collections Demo
+# ============================================================
+# Demonstrates extended collection types and binary data:
+#   sifr.collections — Set, Counter, DefaultDict
+#   sifr.bytes       — encode/decode, hex conversion
+# ============================================================
+
+from sifr.collections import set_from_list, set_add, set_contains, set_len, set_union, set_intersection
+from sifr.collections import counter_from_list, counter_get
+from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
+
+def main():
+    # ----------------------------------------------------------
+    # 1. Set operations
+    # ----------------------------------------------------------
+    print("=== Set Operations ===")
+
+    # Create a set from a list (deduplicates)
+    print(f"Set from [1,2,2,3,3]: length = {set_len(set_from_list([1, 2, 2, 3, 3]))}")
+
+    # Add element
+    print(f"After adding 4: length = {set_len(set_add(set_from_list([1, 2, 3]), 4))}")
+
+    # Contains
+    print(f"Contains 2: {set_contains(set_from_list([1, 2, 3]), 2)}")
+    print(f"Contains 5: {set_contains(set_from_list([1, 2, 3]), 5)}")
+
+    # Union and intersection
+    print(f"Union [1,2,3] | [3,4,5]: length = {set_len(set_union(set_from_list([1, 2, 3]), set_from_list([3, 4, 5])))}")
+    print(f"Intersection [1,2,3] & [3,4,5]: length = {set_len(set_intersection(set_from_list([1, 2, 3]), set_from_list([3, 4, 5])))}")
+
+    # ----------------------------------------------------------
+    # 2. Counter
+    # ----------------------------------------------------------
+    print("=== Counter ===")
+
+    print(f"apple count: {counter_get(counter_from_list(['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']), 'apple')}")
+    print(f"banana count: {counter_get(counter_from_list(['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']), 'banana')}")
+    print(f"cherry count: {counter_get(counter_from_list(['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']), 'cherry')}")
+
+    # ----------------------------------------------------------
+    # 3. Bytes / Binary Data
+    # ----------------------------------------------------------
+    print("=== Bytes ===")
+
+    # Encode string to bytes
+    print(f"'hello' encoded: {len(encode_utf8('hello'))} bytes")
+
+    # Roundtrip: encode then decode
+    print(f"Roundtrip: {decode_utf8(encode_utf8('Sifr'))}")
+
+    # Hex encoding
+    print(f"'hello' as hex: {bytes_to_hex(encode_utf8('hello'))}")
+
+    # Hex decoding
+    print(f"Hex '536966' decoded: {decode_utf8(bytes_from_hex('536966'))}")
+
+    print("=== Demo complete ===")

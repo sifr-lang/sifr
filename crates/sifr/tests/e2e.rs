@@ -69,7 +69,12 @@ edition = "2021"
     let mut deps = Vec::new();
     for module_name in stdlib_modules {
         match module_name.as_str() {
-            "sifr.json" => deps.push("serde_json = \"1\""),
+            "sifr.json" | "sifr.collections" => {
+                if !deps.contains(&"serde_json = \"1\"") {
+                    deps.push("serde_json = \"1\"");
+                    deps.push("serde = { version = \"1\", features = [\"derive\"] }");
+                }
+            }
             _ => {}
         }
     }

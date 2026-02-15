@@ -1,0 +1,37 @@
+# Test sifr.collections Set operations
+from sifr.collections import new_set, set_add, set_contains, set_remove, set_len, set_union, set_intersection, set_from_list
+
+def main():
+    # Create from list with dedup
+    print(set_len(set_from_list([1, 2, 2, 3, 3, 3])))
+
+    # Contains - true
+    print(set_contains(set_from_list([1, 2, 3]), 2))
+    # Contains - false
+    print(set_contains(set_from_list([1, 2, 3]), 5))
+
+    # Add element
+    print(set_len(set_add(set_from_list([1, 2]), 3)))
+
+    # Add duplicate (should not increase size)
+    print(set_len(set_add(set_from_list([1, 2, 3]), 2)))
+
+    # Remove
+    print(set_contains(set_remove(set_from_list([1, 2, 3]), 2), 2))
+    print(set_len(set_remove(set_from_list([1, 2, 3]), 2)))
+
+    # Union
+    print(set_len(set_union(set_from_list([1, 2, 3]), set_from_list([3, 4, 5]))))
+
+    # Intersection
+    print(set_len(set_intersection(set_from_list([1, 2, 3]), set_from_list([3, 4, 5]))))
+
+# expect-stdout: 3
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: 3
+# expect-stdout: 3
+# expect-stdout: false
+# expect-stdout: 2
+# expect-stdout: 5
+# expect-stdout: 1

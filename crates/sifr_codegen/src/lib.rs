@@ -138,10 +138,13 @@ edition = "2021"
     let mut deps = Vec::new();
     for module_name in stdlib_modules {
         match module_name.as_str() {
-            "sifr.json" => {
-                deps.push("serde_json = \"1\"".to_string());
+            "sifr.json" | "sifr.collections" => {
+                if !deps.contains(&"serde_json = \"1\"".to_string()) {
+                    deps.push("serde_json = \"1\"".to_string());
+                    deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
+                }
             }
-            // sifr.io, sifr.env, sifr.os, sifr.math use only std library — no extra deps
+            // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes use only std library
             _ => {}
         }
     }
@@ -3210,6 +3213,119 @@ impl RustEmitter {
                 self.write("assert!(!(");
                 self.emit_expr(&args[0]);
                 self.write("))");
+            }
+            // sifr.collections — Set operations
+            "new_set" => {
+                self.write("Vec::<i64>::new()");
+            }
+            "set_from_list" => {
+                self.write("{ let mut s = ");
+                self.emit_expr(&args[0]);
+                self.write(".clone(); s.sort(); s.dedup(); s }");
+            }
+            "set_add" => {
+                self.write("{ let mut s = ");
+                self.emit_expr(&args[0]);
+                self.write(".clone(); let v = ");
+                self.emit_expr(&args[1]);
+                self.write("; if !s.contains(&v) { s.push(v); } s }");
+            }
+            "set_contains" => {
+                self.emit_expr(&args[0]);
+                self.write(".contains(&");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "set_remove" => {
+                self.write("{ let mut s = ");
+                self.emit_expr(&args[0]);
+                self.write(".clone(); s.retain(|x| *x != ");
+                self.emit_expr(&args[1]);
+                self.write("); s }");
+            }
+            "set_len" => {
+                self.emit_expr(&args[0]);
+                self.write(".len() as i64");
+            }
+            "set_union" => {
+                self.write("{ let mut s = ");
+                self.emit_expr(&args[0]);
+                self.write(".clone(); for v in ");
+                self.emit_expr(&args[1]);
+                self.write(".iter() { if !s.contains(v) { s.push(*v); } } s.sort(); s }");
+            }
+            "set_intersection" => {
+                self.emit_expr(&args[0]);
+                self.write(".iter().filter(|x| ");
+                self.emit_expr(&args[1]);
+                self.write(".contains(x)).cloned().collect::<Vec<i64>>()");
+            }
+            // sifr.collections — Counter
+            "counter_from_list" => {
+                self.write("{ let mut counts = std::collections::HashMap::<String, i64>::new(); for item in ");
+                self.emit_expr(&args[0]);
+                self.write(".iter() { *counts.entry(item.clone()).or_insert(0) += 1; } ");
+                self.write("let pairs: Vec<String> = counts.iter().map(|(k, v)| format!(\"\\\"{}\\\":{}\", k, v)).collect(); ");
+                self.write("format!(\"{{{}}}\", pairs.join(\",\")) }");
+            }
+            "counter_get" => {
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(&");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap_or_default(); *data.get(&");
+                self.emit_expr(&args[1]);
+                self.write(").unwrap_or(&0) }");
+            }
+            "counter_most_common" => {
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(&");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap_or_default(); let mut pairs: Vec<(String, i64)> = data.into_iter().collect(); ");
+                self.write("pairs.sort_by(|a, b| b.1.cmp(&a.1)); pairs.truncate(");
+                self.emit_expr(&args[1]);
+                self.write(" as usize); ");
+                self.write("let items: Vec<String> = pairs.iter().map(|(k, v)| format!(\"[\\\"{}\\\"]\", format!(\"{},{}\", k, v))).collect(); ");
+                self.write("format!(\"[{}]\", items.join(\",\")) }");
+            }
+            // sifr.collections — DefaultDict
+            "defaultdict_new" => {
+                self.write("format!(\"{{\\\"__default__\\\":{}}}\", ");
+                self.emit_expr(&args[0]);
+                self.write(")");
+            }
+            "defaultdict_get" => {
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(&");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap_or_default(); let def = data.get(\"__default__\").cloned().unwrap_or(0); ");
+                self.write("*data.get(&");
+                self.emit_expr(&args[1]);
+                self.write(").unwrap_or(&def) }");
+            }
+            "defaultdict_set" => {
+                self.write("{ let mut data: std::collections::HashMap<String, serde_json::Value> = serde_json::from_str(&");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap_or_default(); data.insert(");
+                self.emit_expr(&args[1]);
+                self.write(".to_string(), serde_json::json!(");
+                self.emit_expr(&args[2]);
+                self.write(")); serde_json::to_string(&data).unwrap() }");
+            }
+            // sifr.bytes
+            "encode_utf8" => {
+                self.emit_expr(&args[0]);
+                self.write(".as_bytes().iter().map(|b| *b as i64).collect::<Vec<i64>>()");
+            }
+            "decode_utf8" => {
+                self.write("String::from_utf8(");
+                self.emit_expr(&args[0]);
+                self.write(".iter().map(|b| *b as u8).collect::<Vec<u8>>()).unwrap()");
+            }
+            "bytes_to_hex" => {
+                self.emit_expr(&args[0]);
+                self.write(".iter().map(|b| format!(\"{:02x}\", *b as u8)).collect::<Vec<String>>().join(\"\")");
+            }
+            "bytes_from_hex" => {
+                self.write("{ let s = ");
+                self.emit_expr(&args[0]);
+                self.write("; (0..s.len()).step_by(2).map(|i| i64::from_str_radix(&s[i..i+2], 16).unwrap()).collect::<Vec<i64>>() }");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call
