@@ -1793,7 +1793,18 @@ impl RustEmitter {
                 self.in_loop_with_else = has_else;
                 self.write_indent();
                 self.write("for ");
-                self.write(target);
+                // Handle tuple unpacking: "i,v" -> "(i, v)"
+                if target.contains(',') {
+                    let names: Vec<&str> = target.split(',').collect();
+                    self.write("(");
+                    for (i, name) in names.iter().enumerate() {
+                        if i > 0 { self.write(", "); }
+                        self.write(name);
+                    }
+                    self.write(")");
+                } else {
+                    self.write(target);
+                }
                 self.write(" in ");
                 // For lists, iterate with .iter() to borrow and clone elements
                 // But not for generator expressions which are already iterators
@@ -3821,30 +3832,39 @@ impl RustEmitter {
             }
             HirExpr::ListComp { expr, var, iter, filter, ty } => {
                 // [expr for var in iter] -> iter.clone().into_iter().map(|var| expr).collect()
-                // [expr for var in iter if cond] -> iter.clone().into_iter().filter(|var| cond).map(|var| expr).collect()
-                self.emit_expr(iter);
-                self.write(".clone().into_iter()");
+                let is_range = matches!(iter.ty(), Type::Range);
+                let var_pattern = if var.contains(',') {
+                    let names: Vec<&str> = var.split(',').collect();
+                    format!("({})", names.join(", "))
+                } else {
+                    var.clone()
+                };
+                if is_range {
+                    self.write("(");
+                    self.emit_expr(iter);
+                    self.write(")");
+                } else {
+                    self.emit_expr(iter);
+                    self.write(".clone().into_iter()");
+                }
                 if let Some(ref cond) = filter {
-                    // .filter() passes &T; check if element is Copy to use |&var| destructuring
                     let elem_is_copy = if let Type::List(ref elem) = iter.ty() {
                         !needs_clone_for_type(elem)
                     } else {
-                        false
+                        is_range
                     };
-                    if elem_is_copy {
-                        // Copy types: use |&var| pattern to bind as owned value
+                    if elem_is_copy && !var.contains(',') {
                         self.write(".filter(|&");
                     } else {
-                        // Non-Copy types: use |var| and access via reference
                         self.write(".filter(|");
                     }
-                    self.write(var);
+                    self.write(&var_pattern);
                     self.write("| ");
                     self.emit_expr(cond);
                     self.write(")");
                 }
                 self.write(".map(|");
-                self.write(var);
+                self.write(&var_pattern);
                 self.write("| ");
                 self.emit_expr(expr);
                 self.write(")");
@@ -3853,6 +3873,78 @@ impl RustEmitter {
                     self.write(&format!(".collect::<Vec<{}>>()", elem.rust_type()));
                 } else {
                     self.write(".collect::<Vec<_>>()");
+                }
+            }
+            HirExpr::SetComp { expr, var, iter, filter, ty } => {
+                let is_range = matches!(iter.ty(), Type::Range);
+                let var_pattern = if var.contains(',') {
+                    let names: Vec<&str> = var.split(',').collect();
+                    format!("({})", names.join(", "))
+                } else {
+                    var.clone()
+                };
+                self.needs_hashset = true;
+                if is_range {
+                    self.write("(");
+                    self.emit_expr(iter);
+                    self.write(")");
+                } else {
+                    self.emit_expr(iter);
+                    self.write(".clone().into_iter()");
+                }
+                if let Some(ref cond) = filter {
+                    self.write(".filter(|");
+                    self.write(&var_pattern);
+                    self.write("| ");
+                    self.emit_expr(cond);
+                    self.write(")");
+                }
+                self.write(".map(|");
+                self.write(&var_pattern);
+                self.write("| ");
+                self.emit_expr(expr);
+                self.write(")");
+                if let Type::Set(ref elem) = ty {
+                    self.write(&format!(".collect::<HashSet<{}>>()", elem.rust_type()));
+                } else {
+                    self.write(".collect::<HashSet<_>>()");
+                }
+            }
+            HirExpr::DictComp { key_expr, val_expr, var, iter, filter, ty } => {
+                let is_range = matches!(iter.ty(), Type::Range);
+                let var_pattern = if var.contains(',') {
+                    let names: Vec<&str> = var.split(',').collect();
+                    format!("({})", names.join(", "))
+                } else {
+                    var.clone()
+                };
+                self.needs_hashmap = true;
+                if is_range {
+                    self.write("(");
+                    self.emit_expr(iter);
+                    self.write(")");
+                } else {
+                    self.emit_expr(iter);
+                    self.write(".clone().into_iter()");
+                }
+                if let Some(ref cond) = filter {
+                    self.write(".filter(|");
+                    self.write(&var_pattern);
+                    self.write("| ");
+                    self.emit_expr(cond);
+                    self.write(")");
+                }
+                self.write(".map(|");
+                self.write(&var_pattern);
+                self.write("| (");
+                self.emit_expr(key_expr);
+                self.write(", ");
+                self.emit_expr(val_expr);
+                self.write("))");
+                if let Type::Dict(ref k, ref v) = ty {
+                    self.write(&format!(".collect::<HashMap<{}, {}>>()", k.rust_type(), v.rust_type()));
+                } else {
+                    self.write(".collect::<HashMap<_, _>>()");
                 }
             }
             HirExpr::GeneratorExpr { expr, var, iter, filter, .. } => {

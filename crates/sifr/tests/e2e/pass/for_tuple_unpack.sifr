@@ -1,0 +1,8 @@
+# Test: tuple unpacking in for loop
+# expect-stdout: 1
+# expect-stdout: 2
+
+def main():
+    pairs: list[tuple[int, str]] = [(1, "a"), (2, "b")]
+    for i, s in pairs:
+        print(i)
