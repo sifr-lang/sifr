@@ -3131,54 +3131,54 @@ impl RustEmitter {
             // sifr.io
             "read_file" => {
                 self.write("std::fs::read_to_string(");
-                self.emit_expr(&args[0]);
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap()");
             }
             "write_file" => {
                 self.write("std::fs::write(");
-                self.emit_expr(&args[0]);
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
-                self.emit_expr(&args[1]);
+                self.emit_expr_as_str_ref(&args[1]);
                 self.write(").unwrap()");
             }
             "file_exists" => {
-                self.write("std::path::Path::new(&");
-                self.emit_expr(&args[0]);
+                self.write("std::path::Path::new(");
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(").exists()");
             }
             "read_lines" => {
                 self.write("std::fs::read_to_string(");
-                self.emit_expr(&args[0]);
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap().lines().map(|s| s.to_string()).collect::<Vec<String>>()");
             }
             // sifr.json
             "json_loads" => {
-                self.write("serde_json::from_str::<serde_json::Value>(&");
-                self.emit_expr(&args[0]);
+                self.write("serde_json::from_str::<serde_json::Value>(");
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap().to_string()");
             }
             "json_dumps" => {
-                // For now, json_dumps just returns the string as-is (it's already a string)
+                self.write("serde_json::to_string(&");
                 self.emit_expr(&args[0]);
-                self.write(".clone()");
+                self.write(").unwrap()");
             }
             // sifr.env
             "get_env" => {
                 self.write("std::env::var(");
-                self.emit_expr(&args[0]);
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(").ok()");
             }
             "set_env" => {
                 self.write("std::env::set_var(");
-                self.emit_expr(&args[0]);
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
-                self.emit_expr(&args[1]);
+                self.emit_expr_as_str_ref(&args[1]);
                 self.write(")");
             }
             // sifr.os
             "run_command" => {
-                self.write("String::from_utf8(std::process::Command::new(\"sh\").args([\"-c\", &");
-                self.emit_expr(&args[0]);
+                self.write("String::from_utf8(std::process::Command::new(\"sh\").args([\"-c\", ");
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write("]).output().unwrap().stdout).unwrap().trim().to_string()");
             }
             "get_args" => {
@@ -3236,13 +3236,13 @@ impl RustEmitter {
             }
             "set_from_list" => {
                 self.write("{ let mut s = ");
-                self.emit_expr(&args[0]);
-                self.write(".clone(); s.sort(); s.dedup(); s }");
+                self.emit_collection_expr(&args[0]);
+                self.write("; s.sort(); s.dedup(); s }");
             }
             "set_add" => {
                 self.write("{ let mut s = ");
-                self.emit_expr(&args[0]);
-                self.write(".clone(); let v = ");
+                self.emit_collection_expr(&args[0]);
+                self.write("; let v = ");
                 self.emit_expr(&args[1]);
                 self.write("; if !s.contains(&v) { s.push(v); } s }");
             }
@@ -3254,8 +3254,8 @@ impl RustEmitter {
             }
             "set_remove" => {
                 self.write("{ let mut s = ");
-                self.emit_expr(&args[0]);
-                self.write(".clone(); s.retain(|x| *x != ");
+                self.emit_collection_expr(&args[0]);
+                self.write("; s.retain(|x| *x != ");
                 self.emit_expr(&args[1]);
                 self.write("); s }");
             }
@@ -3265,16 +3265,17 @@ impl RustEmitter {
             }
             "set_union" => {
                 self.write("{ let mut s = ");
-                self.emit_expr(&args[0]);
-                self.write(".clone(); for v in ");
+                self.emit_collection_expr(&args[0]);
+                self.write("; for v in ");
                 self.emit_expr(&args[1]);
                 self.write(".iter() { if !s.contains(v) { s.push(*v); } } s.sort(); s }");
             }
             "set_intersection" => {
-                self.emit_expr(&args[0]);
-                self.write(".iter().filter(|x| ");
-                self.emit_expr(&args[1]);
-                self.write(".contains(x)).cloned().collect::<Vec<i64>>()");
+                self.write("{ let __a = ");
+                self.emit_collection_expr(&args[0]);
+                self.write("; let __b = ");
+                self.emit_collection_expr(&args[1]);
+                self.write("; __a.iter().filter(|x| __b.contains(x)).cloned().collect::<Vec<i64>>() }");
             }
             // sifr.collections — Counter
             "counter_from_list" => {
@@ -3285,15 +3286,15 @@ impl RustEmitter {
                 self.write("format!(\"{{{}}}\", pairs.join(\",\")) }");
             }
             "counter_get" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(&");
-                self.emit_expr(&args[0]);
-                self.write(").unwrap_or_default(); *data.get(&");
-                self.emit_expr(&args[1]);
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap_or_default(); *data.get(");
+                self.emit_expr_as_str_ref(&args[1]);
                 self.write(").unwrap_or(&0) }");
             }
             "counter_most_common" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(&");
-                self.emit_expr(&args[0]);
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap_or_default(); let mut pairs: Vec<(String, i64)> = data.into_iter().collect(); ");
                 self.write("pairs.sort_by(|a, b| b.1.cmp(&a.1)); pairs.truncate(");
                 self.emit_expr(&args[1]);
@@ -3308,16 +3309,16 @@ impl RustEmitter {
                 self.write(")");
             }
             "defaultdict_get" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(&");
-                self.emit_expr(&args[0]);
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap_or_default(); let def = data.get(\"__default__\").cloned().unwrap_or(0); ");
-                self.write("*data.get(&");
-                self.emit_expr(&args[1]);
+                self.write("*data.get(");
+                self.emit_expr_as_str_ref(&args[1]);
                 self.write(").unwrap_or(&def) }");
             }
             "defaultdict_set" => {
-                self.write("{ let mut data: std::collections::HashMap<String, serde_json::Value> = serde_json::from_str(&");
-                self.emit_expr(&args[0]);
+                self.write("{ let mut data: std::collections::HashMap<String, serde_json::Value> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap_or_default(); data.insert(");
                 self.emit_expr(&args[1]);
                 self.write(".to_string(), serde_json::json!(");
@@ -3326,8 +3327,8 @@ impl RustEmitter {
             }
             // sifr.bytes
             "encode_utf8" => {
-                self.emit_expr(&args[0]);
-                self.write(".as_bytes().iter().map(|b| *b as i64).collect::<Vec<i64>>()");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write(".iter().map(|b| *b as i64).collect::<Vec<i64>>()");
             }
             "decode_utf8" => {
                 self.write("String::from_utf8(");
@@ -3355,8 +3356,8 @@ impl RustEmitter {
             "time_format" => {
                 self.write("{ let secs = ");
                 self.emit_expr(&args[0]);
-                self.write(" as i64; let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap(); dt.format(&");
-                self.emit_expr(&args[1]);
+                self.write(" as i64; let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap(); dt.format(");
+                self.emit_expr_as_str_ref(&args[1]);
                 self.write(").to_string() }");
             }
             // sifr.random
@@ -3377,49 +3378,49 @@ impl RustEmitter {
             }
             // sifr.re
             "re_match" => {
-                self.write("regex::Regex::new(&");
-                self.emit_expr(&args[0]);
-                self.write(").unwrap().is_match(&");
-                self.emit_expr(&args[1]);
+                self.write("regex::Regex::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap().is_match(");
+                self.emit_expr_as_str_ref(&args[1]);
                 self.write(")");
             }
             "re_find" => {
-                self.write("regex::Regex::new(&");
-                self.emit_expr(&args[0]);
-                self.write(").unwrap().find(&");
-                self.emit_expr(&args[1]);
+                self.write("regex::Regex::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap().find(");
+                self.emit_expr_as_str_ref(&args[1]);
                 self.write(").map(|m| m.as_str().to_string())");
             }
             "re_replace" => {
-                self.write("regex::Regex::new(&");
-                self.emit_expr(&args[0]);
-                self.write(").unwrap().replace_all(&");
-                self.emit_expr(&args[2]);
+                self.write("regex::Regex::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap().replace_all(");
+                self.emit_expr_as_str_ref(&args[2]);
                 self.write(", ");
-                self.emit_expr(&args[1]);
-                self.write(".as_str()).to_string()");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").to_string()");
             }
             // sifr.hash
             "sha256" => {
                 self.write("{ use sha2::Digest; format!(\"{:x}\", sha2::Sha256::digest(");
-                self.emit_expr(&args[0]);
-                self.write(".as_bytes())) }");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write(")) }");
             }
             "md5_hash" => {
                 self.write("format!(\"{:x}\", md5::compute(");
-                self.emit_expr(&args[0]);
-                self.write(".as_bytes()))");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write("))");
             }
             // sifr.encoding
             "base64_encode" => {
                 self.write("{ use base64::Engine; base64::engine::general_purpose::STANDARD.encode(");
-                self.emit_expr(&args[0]);
-                self.write(".as_bytes()) }");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write(") }");
             }
             "base64_decode" => {
                 self.write("{ use base64::Engine; String::from_utf8(base64::engine::general_purpose::STANDARD.decode(");
-                self.emit_expr(&args[0]);
-                self.write(".as_bytes()).unwrap()).unwrap() }");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write(").unwrap()).unwrap() }");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call
@@ -3506,6 +3507,46 @@ impl RustEmitter {
         } else {
             self.emit_expr(expr);
             self.write(".as_str()");
+        }
+    }
+
+    /// Emit an expression as a `&str` for stdlib call sites.
+    /// String literals are emitted as bare `"literal"` (no `.to_string()`).
+    /// Other expressions are emitted as `&expr` (borrow the String, deref-coerces to `&str`).
+    /// Use this for Rust APIs that accept `&str`, `AsRef<str>`, `AsRef<Path>`, `AsRef<OsStr>`, etc.
+    fn emit_expr_as_str_ref(&mut self, expr: &HirExpr) {
+        if let HirExpr::StringLiteral(val) = expr {
+            self.write(&format!("{:?}", val));
+        } else {
+            self.write("&");
+            self.emit_expr(expr);
+        }
+    }
+
+    /// Emit an expression as bytes for stdlib call sites (hash, encoding).
+    /// String literals are emitted as `"literal".as_bytes()` (no `.to_string()`).
+    /// Other expressions are emitted as `expr.as_bytes()` (String has `.as_bytes()`).
+    fn emit_expr_as_bytes(&mut self, expr: &HirExpr) {
+        if let HirExpr::StringLiteral(val) = expr {
+            self.write(&format!("{:?}.as_bytes()", val));
+        } else {
+            self.emit_expr(expr);
+            self.write(".as_bytes()");
+        }
+    }
+
+    /// Check if an expression is a list literal (HirExpr::ListLiteral).
+    fn is_list_literal(expr: &HirExpr) -> bool {
+        matches!(expr, HirExpr::ListLiteral { .. })
+    }
+
+    /// Emit a collection expression for set operations.
+    /// List literals are emitted directly (no `.clone()`).
+    /// Other expressions are emitted with `.clone()`.
+    fn emit_collection_expr(&mut self, expr: &HirExpr) {
+        self.emit_expr(expr);
+        if !Self::is_list_literal(expr) {
+            self.write(".clone()");
         }
     }
 
