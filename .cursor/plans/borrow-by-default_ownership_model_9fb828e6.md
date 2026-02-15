@@ -5,11 +5,17 @@ todos:
   - id: param-convention-enum
     content: Add ParamConvention enum (Borrow/MutBorrow/Own) to sifr_type_system/src/types.rs and add convention field to HirParam in sifr_hir/src/hir_nodes.rs
     status: pending
+  - id: functiontype-callable-conventions
+    content: "Add ParamConvention to FunctionType.params (Vec<(String, Type, ParamConvention)>) and Callable type variant so conventions survive cross-module, stdlib, and Callable-typed variable calls"
+    status: pending
   - id: parser-mut-own
     content: Parse mut/own soft keywords before parameter names in sifr_python_parser/src/parser/statement.rs and add convention field to Parameter AST node
     status: pending
   - id: hir-lower-conventions
     content: Update lower_function in lower.rs to propagate ParamConvention from AST to HirParam, defaulting to Borrow for Move types and Own for Copy types
+    status: pending
+  - id: callable-call-path
+    content: "Update Callable-typed variable call path in lower.rs to extract and use ParamConvention from the Callable type variant for move tracking"
     status: pending
   - id: delete-borrows-args
     content: Delete the hardcoded borrows_args match list (lower.rs lines 3671-3684) and replace with convention-aware move tracking that only marks moved for Own params
@@ -24,13 +30,19 @@ todos:
     content: Add is_mut_borrowed tracking to VarInfo in scope.rs and implement exclusivity checking (no double mut borrow, no mut+immut overlap)
     status: pending
   - id: error-messages
-    content: "Add new diagnostic messages: cannot mutate borrowed param, cannot return borrowed param, suggest mut/own/.clone()"
+    content: "Add new diagnostic messages: cannot mutate borrowed param, cannot return borrowed param, suggest mut/own/.clone(). No silent cloning -- always emit error and suggest explicit .clone()"
     status: pending
   - id: update-borrow-tests
     content: Update the 50 audit/borrowing/ tests and POST_HARDENING_REPORT.md to reflect borrow-by-default semantics
     status: pending
   - id: new-e2e-tests
     content: Add E2E pass/fail tests for borrow_default, mut_param, own_param, mut_exclusivity, mutate_borrowed_param, return_borrowed_param
+    status: pending
+  - id: parser-snapshot-tests
+    content: "Add parser snapshot tests for mut/own soft keyword edge cases: mut/own as param names, typed/untyped params, lambda params, nested functions"
+    status: pending
+  - id: multi-module-tests
+    content: "Add multi-module convention tests: import functions with mut/own params, verify FunctionType carries conventions through import/export, test Callable-typed variables"
     status: pending
   - id: update-arch-docs
     content: Update Borrow and Lifetime Strategy section and Ownership Model section in the architecture plan to document borrow-by-default with mut/own keywords
@@ -123,7 +135,34 @@ pub struct HirParam {
 }
 ```
 
-### 1c. Parse `mut` and `own` as soft keywords on parameters
+### 1c. Add `ParamConvention` to `FunctionType` and `Callable`
+
+The `FunctionType` struct (used for cross-module function resolution, stdlib registration, and import/export) must carry conventions so that call-site emission can look up the callee's conventions for any function, not just the one currently being compiled.
+
+In [crates/sifr_type_system/src/types.rs](crates/sifr_type_system/src/types.rs) (line 94-99), extend `FunctionType`:
+
+```rust
+pub struct FunctionType {
+    /// Parameter names, types, and conventions
+    pub params: Vec<(String, Type, ParamConvention)>,
+    /// Return type
+    pub return_type: Box<Type>,
+}
+```
+
+Also extend the `Callable` type variant to carry conventions:
+
+```rust
+/// Callable type: `Callable[[int, str], bool]`
+/// Tuple is (param_types, param_conventions, return_type)
+Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>),
+```
+
+This ensures conventions survive across module boundaries, stdlib lookups, and `Callable`-typed variable calls. All existing code that constructs `FunctionType` or `Callable` must be updated to supply conventions (defaulting to `Borrow` for Move types, `Own` for Copy types).
+
+**Key files:** `crates/sifr_type_system/src/types.rs` (FunctionType, Callable variant), all callers that construct FunctionType/Callable
+
+### 1d. Parse `mut` and `own` as soft keywords on parameters
 
 In [crates/sifr_python_parser/src/parser/statement.rs](crates/sifr_python_parser/src/parser/statement.rs) (lines 2630-2690, `parse_parameter`):
 
@@ -156,7 +195,19 @@ In [crates/sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) (lines 3669-3684
 
 This eliminates the hardcoded list of 25 built-in function names.
 
-### 2c. Register built-in function conventions
+### 2c. Update `Callable`-typed variable call path
+
+In [crates/sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) (lines 3460-3487), the `callable_info` path handles calls to variables typed as `Callable[[int, str], bool]`. This path must also use conventions:
+
+- Extract `ParamConvention` from the `Callable` type variant (now carrying conventions per 1c)
+- Apply the same convention-aware move tracking as regular function calls
+- If a `Callable` has no convention info (e.g., from legacy code), default to `Borrow` for Move types
+
+**Note:** Constructor calls (`HirExpr::ConstructorCall`) do not need convention changes -- constructors always take ownership of their arguments. Method calls already have special `self` handling; non-self method parameters propagate conventions through `HirParam` like regular functions.
+
+**Key files:** `crates/sifr_hir/src/lower.rs` (callable_info path)
+
+### 2d. Register built-in function conventions
 
 Built-in functions (print, len, sorted, etc.) need their parameter conventions registered. Since they are not parsed from `.sifr` source, their conventions must be set when registering them in the type system.
 
@@ -219,9 +270,12 @@ In [crates/sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs) (lines 1279-
 When a parameter is borrowed (`&T`), code inside the function that uses it needs adjustment:
 
 - Read access: works naturally (Rust auto-derefs)
-- Passing to another function: may need explicit `&*param` or cloning
-- Returning the parameter: not allowed for borrowed params (compiler error: "cannot return borrowed value")
-- The codegen should emit `.clone()` when a borrowed parameter needs to be returned or stored
+- Passing to another function that also borrows: re-borrow (`&*param`) -- automatic via Rust deref coercion
+- Passing to another function that takes `own`: compiler error -- "cannot move borrowed parameter 'x' -- use `own` on the parameter or `.clone()`"
+- Returning the parameter: compiler error -- "cannot return borrowed parameter 'x' -- use `own` or `.clone()`"
+- Storing into a struct field or collection: compiler error -- same diagnostic as returning
+
+**Important:** The compiler does NOT silently emit `.clone()`. This matches the architecture contract on escape analysis: "the compiler emits a diagnostic rather than silently cloning. The programmer must choose: clone explicitly, or restructure to avoid the escape." The error messages guide the user to add `own` to the parameter or call `.clone()` explicitly at the call site.
 
 ## Phase 4: Update Scope and Error Reporting
 
@@ -287,7 +341,29 @@ Create fail tests in [crates/sifr/tests/e2e/fail/](crates/sifr/tests/e2e/fail/):
 - `return_borrowed_param.sifr` -- cannot return a borrowed param without clone
 - `double_mut_borrow.sifr` -- cannot mut-borrow same variable twice
 
-### 5c. Update POST_HARDENING_REPORT.md
+### 5c. Parser snapshot tests
+
+Add parser snapshot tests to verify `mut`/`own` soft keyword parsing in edge cases:
+
+- `mut` and `own` as parameter names (not keywords) -- `def f(mut: int)` should still parse as parameter named `mut`
+- `mut`/`own` before typed parameters -- `def f(mut x: int)` parses as convention + name
+- `mut`/`own` before untyped parameters -- `def f(mut x)` parses correctly
+- `mut`/`own` in lambda parameters -- `lambda mut x: x` (if supported)
+- Nested function parameters with conventions -- `def f(mut x: list[int], own y: str)`
+
+**Key files:** `crates/sifr_python_parser/tests/` (parser snapshot tests)
+
+### 5d. Multi-module convention tests
+
+Add tests that verify conventions survive across module boundaries:
+
+- Import a function with `mut`/`own` params from another module, call it, verify correct borrow/move behavior
+- Verify that `FunctionType` carries conventions through the import/export pipeline
+- Test `Callable`-typed variables with conventions
+
+**Key files:** `crates/sifr/tests/e2e/pass/`, `crates/sifr_driver/`
+
+### 5e. Update POST_HARDENING_REPORT.md
 
 Update [audit/borrowing/POST_HARDENING_REPORT.md](audit/borrowing/POST_HARDENING_REPORT.md) to reflect the new ownership model.
 

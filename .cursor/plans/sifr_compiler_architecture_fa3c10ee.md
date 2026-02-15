@@ -87,10 +87,10 @@ todos:
     content: "milestone_ownership_v3: Complete ownership tracking -- assignment-based move detection, move-in-loop detection, conditional move merging, set Display codegen fix. Foundation for fearless concurrency."
     status: completed
   - id: m21-borrow-default
-    content: "milestone_borrow_default: Add ParamConvention enum (Borrow/MutBorrow/Own), parse mut/own soft keywords, update HIR lowering to propagate conventions, update codegen to emit &T/&mut T/T, update call-site emission, delete borrows_args hardcoded list."
+    content: "milestone_borrow_default: Add ParamConvention enum (Borrow/MutBorrow/Own), extend FunctionType and Callable to carry conventions, parse mut/own soft keywords, update HIR lowering to propagate conventions across all call paths (regular/Callable/method), update codegen to emit &T/&mut T/T, update call-site emission, delete borrows_args hardcoded list, enforce no-silent-clone on borrowed param escape."
     status: pending
   - id: m22-borrow-hardening
-    content: "milestone_borrow_hardening: Add mutable borrow exclusivity checking, improve error messages for borrow violations, update 50 borrowing audit tests, add new E2E pass/fail tests, update stdlib collections for mut params, update architecture docs."
+    content: "milestone_borrow_hardening: Add mutable borrow exclusivity checking, improve error messages for borrow violations, update 50 borrowing audit tests, add new E2E pass/fail tests, add parser snapshot tests for mut/own edge cases, add multi-module convention tests, update stdlib collections for mut params, update architecture docs."
     status: pending
 isProject: false
 ---
@@ -2698,7 +2698,7 @@ This milestone is the prerequisite for fearless concurrency:
 
 **Goal:** Change Sifr's function parameter passing from move-by-default to borrow-by-default. Function arguments are immutably borrowed by default (`&T`), with opt-in `mut` (mutable borrow, `&mut T`) and `own` (ownership transfer, `T`) keywords. Copy types (`int`, `float`, `bool`) always pass by value. This unifies the existing two-tier system where built-in functions borrow (via a hardcoded `borrows_args` list) and user-defined functions move.
 
-### 1. ParamConvention Enum
+### 1. ParamConvention Enum and Signature Propagation
 
 Add a `ParamConvention` enum to the type system with three variants:
 
@@ -2706,7 +2706,14 @@ Add a `ParamConvention` enum to the type system with three variants:
 - `MutBorrow` -- mutable borrow (`mut` keyword). Codegen: `&mut T`
 - `Own` -- ownership transfer (`own` keyword). Codegen: `T`
 
-**Key files:** `crates/sifr_type_system/src/types.rs`
+Extend `FunctionType` to carry conventions alongside parameter types:
+
+- `FunctionType.params`: change from `Vec<(String, Type)>` to `Vec<(String, Type, ParamConvention)>`
+- `Callable` type variant: extend from `Callable(Vec<Type>, Box<Type>)` to `Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>)`
+
+This ensures conventions are available at every call site -- including cross-module imports, stdlib lookups, and `Callable`-typed variable calls. Without this, the codegen cannot determine whether to emit `&arg`, `&mut arg`, or `arg` for calls to functions defined outside the current compilation unit.
+
+**Key files:** `crates/sifr_type_system/src/types.rs` (ParamConvention, FunctionType, Callable), all callers that construct FunctionType/Callable
 
 ### 2. Parser: `mut` and `own` Soft Keywords
 
@@ -2733,7 +2740,7 @@ Add a `convention: ParamConvention` field to `HirParam`. In `lower_function`, pr
 
 **Key files:** `crates/sifr_hir/src/hir_nodes.rs` (HirParam), `crates/sifr_hir/src/lower.rs` (lower_function)
 
-### 4. HIR: Delete `borrows_args` Hardcoded List
+### 4. HIR: Delete `borrows_args` and Update All Call Paths
 
 Delete the `borrows_args` match block in `lower.rs` that special-cases 25 built-in function names. Replace with convention-aware logic:
 
@@ -2742,7 +2749,15 @@ Delete the `borrows_args` match block in `lower.rs` that special-cases 25 built-
 - For `MutBorrow` parameters: track that the variable is mutably borrowed (no move)
 - For `Borrow` parameters: no move tracking needed
 
-**Key files:** `crates/sifr_hir/src/lower.rs` (function call lowering)
+Apply this convention-aware logic to **all call paths** in `lower.rs`:
+
+- Regular function calls (the main path)
+- `Callable`-typed variable calls (extract conventions from the `Callable` type variant)
+- Method calls (non-self parameters propagate conventions through `HirParam`)
+
+**Note:** Constructor calls do not need convention changes -- constructors always take ownership of their arguments. Method `self` receivers continue to use auto-inference (`&self`/`&mut self` from body analysis).
+
+**Key files:** `crates/sifr_hir/src/lower.rs` (function call lowering, callable_info path, lower_method_call)
 
 ### 5. Codegen: Emit `&T` / `&mut T` / `T`
 
@@ -2762,20 +2777,26 @@ Update call-site emission to prepend `&` or `&mut` for Move-type arguments based
 When a parameter is borrowed (`&T`), code inside the function body needs adjustment:
 
 - Read access: works naturally via Rust auto-deref
-- Passing to another function: may need explicit `&*param` or cloning
-- Returning the parameter: not allowed for borrowed params (compiler error)
-- The codegen should emit `.clone()` when a borrowed parameter needs to be returned or stored
+- Passing to another function that also borrows: re-borrow via Rust deref coercion (automatic)
+- Passing to a function that takes `own`: compiler error -- "cannot move borrowed parameter -- use `own` or `.clone()`"
+- Returning the parameter: compiler error -- "cannot return borrowed parameter -- use `own` or `.clone()`"
+- Storing into a struct field or collection: compiler error -- same diagnostic as returning
 
-**Key files:** `crates/sifr_codegen/src/lib.rs`
+**Important:** The compiler does NOT silently emit `.clone()`. Per the Borrow and Lifetime Strategy contract, the compiler emits a diagnostic rather than silently cloning. The programmer must choose: add `own` to the parameter, call `.clone()` explicitly, or restructure to avoid the escape.
+
+**Key files:** `crates/sifr_codegen/src/lib.rs`, `crates/sifr_hir/src/lower.rs` (escape detection)
 
 ### Definition of Done (milestone_borrow_default)
 
 - `ParamConvention` enum exists in the type system
+- `FunctionType.params` carries conventions; `Callable` type variant carries conventions
 - `mut`/`own` keywords parse correctly on function parameters
 - Convention propagates from AST through HIR to codegen
 - User-defined functions emit `&T` by default for Move-type params
 - `borrows_args` hardcoded list is deleted
+- All call paths (regular, Callable, method) use convention-aware move tracking
 - Call sites emit `&arg`/`&mut arg`/`arg` based on callee conventions
+- Borrowed parameter escape (return/store) produces a compiler error, not silent `.clone()`
 - Existing E2E tests pass (with necessary adjustments for new semantics)
 - Basic borrow-by-default programs compile and run correctly
 
@@ -2843,6 +2864,27 @@ Create fail tests in `crates/sifr/tests/e2e/fail/`:
 
 **Key files:** `crates/sifr/tests/e2e/pass/`, `crates/sifr/tests/e2e/fail/`
 
+### 4b. Parser Snapshot Tests
+
+Add parser snapshot tests for `mut`/`own` soft keyword edge cases:
+
+- `mut` and `own` used as parameter names (not keywords) -- `def f(mut: int)` parses as parameter named `mut`
+- `mut`/`own` before typed parameters -- `def f(mut x: int)` parses as convention + name
+- `mut`/`own` before untyped parameters -- `def f(mut x)` parses correctly
+- Nested function parameters with conventions -- `def f(mut x: list[int], own y: str)`
+
+**Key files:** `crates/sifr_python_parser/tests/`
+
+### 4c. Multi-Module Convention Tests
+
+Add tests that verify conventions survive across module boundaries:
+
+- Import a function with `mut`/`own` params from another module, call it, verify correct borrow/move behavior
+- Verify that `FunctionType` carries conventions through the import/export pipeline
+- Test `Callable`-typed variables with conventions passed across function boundaries
+
+**Key files:** `crates/sifr/tests/e2e/pass/`, `crates/sifr_driver/`
+
 ### 5. Stdlib Updates
 
 - `sifr.collections` mutating functions (`set_add`, `set_remove`, `defaultdict_set`) get `mut` on their first parameter
@@ -2870,6 +2912,8 @@ This milestone completes the foundation for fearless concurrency in `milestone_a
 - Exclusivity errors caught by `sifr check` with clear error messages
 - All 50 borrowing audit tests updated and passing/failing correctly
 - New E2E pass/fail tests for borrow_default, mut_param, own_param, exclusivity
+- Parser snapshot tests cover `mut`/`own` soft keyword edge cases
+- Multi-module convention tests verify `FunctionType`/`Callable` convention propagation across imports
 - Stdlib works correctly with borrow-by-default
 - Architecture documentation updated (Borrow and Lifetime Strategy, Ownership Model)
 - `audit/borrowing/POST_HARDENING_REPORT.md` reflects new model
@@ -4099,8 +4143,8 @@ PHASE: LANGUAGE HARDENING:
   milestone_ownership_v3:       Ownership v3              -> Assignment-based move detection, move-in-loop, conditional move merging, set Display fix. Foundation for fearless concurrency.
 
 PHASE: Borrow-by-Default (after Language Hardening, before Ecosystem):
-  milestone_borrow_default:    Borrow Default          -> ParamConvention enum (Borrow/MutBorrow/Own), parse mut/own keywords, HIR convention propagation, codegen &T/&mut T/T emission, call-site borrow emission, delete borrows_args list
-  milestone_borrow_hardening:  Borrow Hardening        -> Mutable borrow exclusivity checking, error messages, borrowing audit test updates, new E2E tests, stdlib mut param annotations, architecture doc updates
+  milestone_borrow_default:    Borrow Default          -> ParamConvention enum (Borrow/MutBorrow/Own), extend FunctionType/Callable with conventions, parse mut/own keywords, HIR convention propagation across all call paths, codegen &T/&mut T/T emission, call-site borrow emission, delete borrows_args list, no-silent-clone enforcement
+  milestone_borrow_hardening:  Borrow Hardening        -> Mutable borrow exclusivity checking, error messages, borrowing audit test updates, new E2E tests, parser snapshot tests, multi-module convention tests, stdlib mut param annotations, architecture doc updates
 
 PHASE 4 - Ecosystem:
   milestone_async:           Async Runtime           -> async/await, tokio, tasks, async streams
