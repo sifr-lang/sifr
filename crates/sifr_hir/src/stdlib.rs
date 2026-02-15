@@ -21,6 +21,7 @@ pub fn get_stdlib_module(module_name: &str) -> Option<StdlibModule> {
         "sifr.env" => Some(stdlib_env()),
         "sifr.os" => Some(stdlib_os()),
         "sifr.math" => Some(stdlib_math()),
+        "sifr.test" => Some(stdlib_test()),
         _ => None,
     }
 }
@@ -172,5 +173,45 @@ fn stdlib_math() -> StdlibModule {
     StdlibModule {
         functions,
         constants,
+    }
+}
+
+/// sifr.test — Test assertions
+fn stdlib_test() -> StdlibModule {
+    let mut functions = HashMap::new();
+
+    // assert_eq(actual: Any, expected: Any) -> None
+    functions.insert("assert_eq".to_string(), FunctionType {
+        params: vec![
+            ("actual".to_string(), Type::Any),
+            ("expected".to_string(), Type::Any),
+        ],
+        return_type: Box::new(Type::None),
+    });
+
+    // assert_ne(actual: Any, expected: Any) -> None
+    functions.insert("assert_ne".to_string(), FunctionType {
+        params: vec![
+            ("actual".to_string(), Type::Any),
+            ("expected".to_string(), Type::Any),
+        ],
+        return_type: Box::new(Type::None),
+    });
+
+    // assert_true(value: bool) -> None
+    functions.insert("assert_true".to_string(), FunctionType {
+        params: vec![("value".to_string(), Type::Bool)],
+        return_type: Box::new(Type::None),
+    });
+
+    // assert_false(value: bool) -> None
+    functions.insert("assert_false".to_string(), FunctionType {
+        params: vec![("value".to_string(), Type::Bool)],
+        return_type: Box::new(Type::None),
+    });
+
+    StdlibModule {
+        functions,
+        constants: HashMap::new(),
     }
 }

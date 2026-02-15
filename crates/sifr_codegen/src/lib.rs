@@ -17,6 +17,36 @@ pub fn generate_rust(module: &HirModule) -> String {
     generate_rust_with_metadata(module).rust_source
 }
 
+/// Generate Rust source code for a test module (with #[test] attributes).
+pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
+    let mut emitter = RustEmitter::new();
+    emitter.test_mode = true;
+
+    // First pass: collect all union types used in the module
+    emitter.collect_union_types(module);
+
+    // Generate enum definitions for non-Option union types
+    emitter.generate_enum_definitions();
+
+    // Second pass: emit the actual code
+    emitter.emit_module(module);
+
+    let mut result = String::new();
+    if emitter.needs_hashmap {
+        result.push_str("use std::collections::HashMap;\n\n");
+    }
+    if !emitter.enum_defs.is_empty() {
+        result.push_str(&emitter.enum_defs);
+        result.push('\n');
+    }
+    result.push_str(&emitter.output);
+
+    CodegenResult {
+        rust_source: result,
+        used_stdlib_modules: emitter.used_stdlib_modules,
+    }
+}
+
 /// Generate Rust source code from a HIR module, returning metadata about stdlib usage.
 pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
     let mut emitter = RustEmitter::new();
@@ -158,6 +188,8 @@ struct RustEmitter {
     pub used_stdlib_modules: HashSet<String>,
     /// Set of stdlib function names (for codegen dispatch)
     stdlib_functions: HashSet<String>,
+    /// Whether to emit in test mode (#[test] on test_* functions, no main)
+    test_mode: bool,
 }
 
 impl RustEmitter {
@@ -179,6 +211,7 @@ impl RustEmitter {
             current_class_name: None,
             used_stdlib_modules: HashSet::new(),
             stdlib_functions: HashSet::new(),
+            test_mode: false,
         }
     }
 
@@ -1124,6 +1157,11 @@ impl RustEmitter {
     }
 
     fn emit_function(&mut self, func: &HirFunction) {
+        // In test mode, skip the main function
+        if self.test_mode && func.name == "main" {
+            return;
+        }
+
         // Track the current function's return type for Option wrapping
         self.current_return_type = Some(func.return_type.clone());
 
@@ -1134,6 +1172,12 @@ impl RustEmitter {
         for decorator in &func.decorators {
             self.write_indent();
             self.write(&format!("// @{}\n", decorator));
+        }
+
+        // In test mode, add #[test] attribute for test_* functions
+        if self.test_mode && func.name.starts_with("test_") {
+            self.write_indent();
+            self.write("#[test]\n");
         }
 
         // Function signature -- only emit params without defaults, or all params
@@ -3141,6 +3185,31 @@ impl RustEmitter {
                 self.write("(");
                 self.emit_expr(&args[0]);
                 self.write(").abs()");
+            }
+            // sifr.test
+            "assert_eq" => {
+                self.write("assert_eq!(");
+                self.emit_expr(&args[0]);
+                self.write(", ");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "assert_ne" => {
+                self.write("assert_ne!(");
+                self.emit_expr(&args[0]);
+                self.write(", ");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "assert_true" => {
+                self.write("assert!(");
+                self.emit_expr(&args[0]);
+                self.write(")");
+            }
+            "assert_false" => {
+                self.write("assert!(!(");
+                self.emit_expr(&args[0]);
+                self.write("))");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call

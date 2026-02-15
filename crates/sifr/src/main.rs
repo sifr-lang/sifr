@@ -7,7 +7,7 @@
 //!   sifr emit <file.sifr>     Show generated Rust code
 
 use clap::{Parser, Subcommand};
-use sifr_driver::{compile, check, build, build_project, CompileResult};
+use sifr_driver::{compile, check, build, build_project, run_tests, CompileResult};
 use std::path::PathBuf;
 use std::process;
 
@@ -43,6 +43,12 @@ enum Commands {
         /// Input .sifr file
         file: PathBuf,
     },
+    /// Run tests in a directory
+    Test {
+        /// Directory containing test files (default: current directory)
+        #[arg(default_value = ".")]
+        dir: PathBuf,
+    },
 }
 
 fn main() {
@@ -53,6 +59,7 @@ fn main() {
         Commands::Run { file } => cmd_run(&file),
         Commands::Check { file } => cmd_check(&file),
         Commands::Emit { file } => cmd_emit(&file),
+        Commands::Test { dir } => cmd_test(&dir),
     }
 }
 
@@ -146,6 +153,22 @@ fn cmd_check(file: &PathBuf) {
             eprintln!("{}", error);
         }
         process::exit(1);
+    }
+}
+
+fn cmd_test(dir: &PathBuf) {
+    match run_tests(dir) {
+        Ok(success) => {
+            if !success {
+                process::exit(1);
+            }
+        }
+        Err(errors) => {
+            for error in &errors {
+                eprintln!("{}", error);
+            }
+            process::exit(1);
+        }
     }
 }
 

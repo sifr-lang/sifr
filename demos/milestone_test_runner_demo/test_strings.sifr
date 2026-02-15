@@ -1,0 +1,27 @@
+# ============================================================
+# Test Runner Demo: String Tests
+# ============================================================
+# Demonstrates sifr.test assertions with string operations
+# ============================================================
+
+from sifr.test import assert_eq, assert_ne, assert_true, assert_false
+
+def test_string_length():
+    s: str = "hello"
+    assert_eq(len(s), 5)
+
+def test_string_upper():
+    s: str = "hello"
+    assert_eq(s.upper(), "HELLO")
+
+def test_string_lower():
+    s: str = "WORLD"
+    assert_eq(s.lower(), "world")
+
+def test_string_not_equal():
+    assert_ne("hello", "world")
+
+def test_string_contains():
+    s: str = "hello world"
+    assert_true(s.startswith("hello"))
+    assert_false(s.startswith("world"))
