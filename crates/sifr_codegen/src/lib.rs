@@ -1710,6 +1710,7 @@ impl RustEmitter {
                 let is_generator = matches!(iter, HirExpr::GeneratorExpr { .. });
                 let is_list = matches!(iter.ty(), Type::List(_));
                 let is_dict = matches!(iter.ty(), Type::Dict(_, _));
+                let is_str = matches!(iter.ty(), Type::Str);
                 self.emit_expr(iter);
                 if is_generator {
                     // Generator expressions are already iterators, no .iter() needed
@@ -1717,6 +1718,8 @@ impl RustEmitter {
                     self.write(".iter().cloned()");
                 } else if is_dict {
                     self.write(".keys().cloned()");
+                } else if is_str {
+                    self.write(".chars().map(|c| c.to_string())");
                 }
                 self.write(" {\n");
                 self.indent += 1;
