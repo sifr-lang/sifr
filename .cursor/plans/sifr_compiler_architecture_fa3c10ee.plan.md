@@ -207,6 +207,18 @@ flowchart TD
         milestone_ext_collections["milestone_ext_collections: Extended Collections\nfrozenset, Counter,\ndefaultdict, bytes"]
         milestone_ext_stdlib["milestone_ext_stdlib: Extended Stdlib\nmath, time, random, regex,\nhash, encoding, stream, log"]
     end
+    subgraph phaseHardening [Phase: Language Hardening]
+        milestone_codegen_fixes["milestone_codegen_fixes: Codegen Fixes\nTuple indexing, union returns,\nint/int, print None, escapes"]
+        milestone_narrowing_v2["milestone_narrowing_v2: Narrowing v2\nElif chains, early-return,\nand-narrowing, 3+ unions"]
+        milestone_ownership_v2["milestone_ownership_v2: Ownership v2\nAuto-borrow for print,\nstop consuming values"]
+        milestone_subscript_mutation["milestone_subscript_mutation: Subscript Mutation\nlist[i]=val, dict[key]=val,\nself.field += 1"]
+        milestone_iteration_v2["milestone_iteration_v2: Iteration v2\nString/dict iteration,\ntuple unpack in for, dict comp"]
+        milestone_builtins_v2["milestone_builtins_v2: Builtins v2\nmax/min 2-arg, range 3-arg,\nmixed arithmetic, module vars"]
+        milestone_syntax_expansion["milestone_syntax_expansion: Syntax Expansion\nNested functions, closures,\nbitwise ops, multi-assign"]
+        milestone_recursive_types["milestone_recursive_types: Recursive Types\nListNode, TreeNode,\nBox for self-referential"]
+        milestone_inference_v2["milestone_inference_v2: Inference v2\nReturn type inference,\nparam inference, Result unwrap"]
+        milestone_stdlib_hardening["milestone_stdlib_hardening: Stdlib Hardening\nset type, import aliases,\nmath/json/io/env gaps"]
+    end
     subgraph phase4 [Phase 4: Ecosystem]
         milestone_async["milestone_async: Async Runtime\nasync/await, tokio,\ntasks, streams"]
         milestone_web_db["milestone_web_db: Web + Database\naxum, reqwest, sqlx,\ngraceful shutdown, health"]
@@ -231,7 +243,11 @@ flowchart TD
     milestone_protocols --> milestone_inheritance --> milestone_generics
     milestone_generics --> milestone_generators --> milestone_decorators --> milestone_core_stdlib
     milestone_core_stdlib --> milestone_test_runner --> milestone_ext_collections --> milestone_ext_stdlib
-    milestone_ext_stdlib --> milestone_codegen_quality_v3 --> milestone_async --> milestone_web_db --> milestone_typed_serde
+    milestone_ext_stdlib --> milestone_codegen_quality_v3 --> milestone_codegen_fixes
+    milestone_codegen_fixes --> milestone_narrowing_v2 --> milestone_ownership_v2 --> milestone_subscript_mutation
+    milestone_subscript_mutation --> milestone_iteration_v2 --> milestone_builtins_v2 --> milestone_syntax_expansion
+    milestone_syntax_expansion --> milestone_recursive_types --> milestone_inference_v2 --> milestone_stdlib_hardening
+    milestone_stdlib_hardening --> milestone_async --> milestone_web_db --> milestone_typed_serde
     milestone_typed_serde --> milestone_crypto_auth --> milestone_web_production --> milestone_redis
     milestone_redis --> milestone_storage --> milestone_email --> milestone_data_processing
     milestone_data_processing --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
@@ -255,7 +271,18 @@ flowchart TD
 - **milestone_core_stdlib after milestone_decorators:** Core stdlib benefits from decorators for API design patterns (e.g., `@contextmanager`)
 - **milestone_test_runner after milestone_core_stdlib:** Test runner lands early so subsequent stdlib work can be tested using Sifr's own test runner (dogfooding)
 - **milestone_ext_collections and milestone_ext_stdlib after milestone_test_runner:** Both depend on core stdlib; in flat order ext_collections comes first since extended stdlib modules may use extended collection types
-- **milestone_async after milestone_ext_stdlib:** Async runtime needs the full stdlib in place
+- **Language Hardening after milestone_codegen_quality_v3:** Phase 3 is complete but audit of 396 LeetCode problems + 8 feature audits revealed systemic gaps. Hardening fixes these before building the ecosystem on a shaky foundation.
+- **milestone_codegen_fixes first in Hardening:** Bugs in already-implemented features must be fixed before adding new ones — all subsequent milestones build on correct codegen.
+- **milestone_narrowing_v2 before milestone_ownership_v2:** Many ownership workarounds depend on narrowing patterns (`if x is not None:`). Fixing narrowing first unblocks 36+ LeetCode problems.
+- **milestone_ownership_v2 before milestone_subscript_mutation:** Subscript assignment requires `&mut` references, which depend on correct ownership tracking.
+- **milestone_subscript_mutation before milestone_iteration_v2:** Dict comprehension and `for k, v in d.items()` patterns often combine with `d[k] = v`.
+- **milestone_iteration_v2 before milestone_builtins_v2:** `sorted(key=...)` depends on lambda iteration patterns; builtins benefit from working iteration.
+- **milestone_builtins_v2 before milestone_syntax_expansion:** Module-level variables and mixed arithmetic are prerequisites for many real-world programs that also use nested functions.
+- **milestone_syntax_expansion before milestone_recursive_types:** Tree/graph algorithms heavily use nested functions (DFS/BFS helpers) and closures, which must work before recursive types are useful.
+- **milestone_recursive_types before milestone_inference_v2:** Inference for recursive types (e.g., `def build_tree(nums)` returning `TreeNode | None`) requires the type system to already support those types.
+- **milestone_inference_v2 before milestone_stdlib_hardening:** Stdlib hardening is the least blocking — programs can work around missing stdlib functions but not missing syntax or broken codegen.
+- **milestone_stdlib_hardening before milestone_async:** The stdlib must be complete and the core language hardened before building the async ecosystem on top.
+- **milestone_async after Language Hardening:** Async runtime needs both the full stdlib and a hardened core language in place
 - **milestone_async before milestone_web_db:** Async runtime is needed for web framework and database access
 - **milestone_typed_serde after milestone_web_db:** The web framework must exist before we can add typed extractors (`Json[T]`, `Form[T]`). Typed serde also enhances `sifr.json` from milestone_core_stdlib with class serialization.
 - **milestone_crypto_auth after milestone_typed_serde:** JWT payloads are classes that need auto-serde. Password hashing and encryption are independent but benefit from the typed patterns established in milestone_typed_serde.
@@ -3466,6 +3493,18 @@ PHASE 3 - Standard Library:
   milestone_ext_stdlib:  Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
   milestone_codegen_quality_v3:  Phase 3 Codegen Polish  -> Remove redundant .to_string() on literals, .clone() on vec literals, fix json_dumps, hoist set_intersection args, clean re_replace/hash/encoding codegen
 
+PHASE: LANGUAGE HARDENING:
+  milestone_codegen_fixes:      Codegen Fixes            -> Tuple indexing, union return wrapping, int/int codegen, print(None), escaped quotes, narrowed reassignment
+  milestone_narrowing_v2:       Narrowing v2             -> Elif chains, early-return narrowing, and-narrowing, 3+ union isinstance, sequential narrowing
+  milestone_ownership_v2:       Ownership v2             -> Auto-borrow for print, stop consuming values, clone for collections, dunder operator fix
+  milestone_subscript_mutation:  Subscript Mutation       -> list[i]=val, dict[key]=val, self.field+=1, augmented subscript assignment
+  milestone_iteration_v2:       Iteration v2             -> String/dict iteration, tuple unpack in for, comprehension over range, dict comprehension
+  milestone_builtins_v2:        Builtins v2              -> max/min 2-arg, range 3-arg, sorted(key=), mixed int/float, module-level vars, pow(), list.pop(i)
+  milestone_syntax_expansion:   Syntax Expansion         -> Nested functions/closures, bitwise operators, multiple assignment, chained assignment, @classmethod
+  milestone_recursive_types:    Recursive Types          -> ListNode/TreeNode self-referential classes, Box<T> for recursive fields
+  milestone_inference_v2:       Inference v2             -> Return type inference, parameter inference for nested functions, Result unwrap in try
+  milestone_stdlib_hardening:   Stdlib Hardening         -> set() type, import aliases, math/json/io/env gaps, defaultdict, Counter
+
 PHASE 4 - Ecosystem:
   milestone_async:           Async Runtime           -> async/await, tokio, tasks, async streams
   milestone_web_db:          Web + Database           -> axum web, reqwest HTTP, SQLite, sqlx, graceful shutdown, health check
@@ -3485,7 +3524,7 @@ PHASE 5 - Polish:
   milestone_ecosystem:  Package Ecosystem          -> Registry, incremental compilation, REPL
 ```
 
-After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_web_db, Sifr can build basic web applications with databases. After milestone_typed_serde, Sifr has automatic typed serialization and typed web request/response handling. After milestone_crypto_auth, Sifr has password hashing, JWT, encryption, and secure random -- the auth building blocks. After milestone_web_production, Sifr has production-grade logging, request tracing, rate limiting, and CORS. After milestone_redis, Sifr has native caching, session storage, and pub/sub. After milestone_storage, Sifr can upload/download files to S3-compatible object storage. After milestone_email, Sifr can send transactional emails. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
+After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_stdlib_hardening (end of Language Hardening), the core language compiles 80%+ of real-world Python programs — codegen bugs are fixed, narrowing/ownership/mutation work correctly, iteration and builtins match Python semantics, nested functions and recursive types are supported, and the stdlib is production-ready. After milestone_web_db, Sifr can build basic web applications with databases. After milestone_typed_serde, Sifr has automatic typed serialization and typed web request/response handling. After milestone_crypto_auth, Sifr has password hashing, JWT, encryption, and secure random -- the auth building blocks. After milestone_web_production, Sifr has production-grade logging, request tracing, rate limiting, and CORS. After milestone_redis, Sifr has native caching, session storage, and pub/sub. After milestone_storage, Sifr can upload/download files to S3-compatible object storage. After milestone_email, Sifr can send transactional emails. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
 
 ---
 
