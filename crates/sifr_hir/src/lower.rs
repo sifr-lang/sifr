@@ -116,40 +116,31 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
     // Register built-in functions
     register_builtins(&mut ctx);
 
-    // First pass: collect all function signatures, type aliases, and class definitions
+    // Pass 0: Pre-register all class names as forward-reference placeholders.
+    // This allows function signatures and other classes to reference classes
+    // defined later in the file (e.g., ListNode, TreeNode, Node).
+    for stmt in stmts {
+        if let Stmt::ClassDef(class_def) = stmt {
+            let class_name = class_def.name.to_string();
+            if !ctx.class_types.contains_key(&class_name) {
+                ctx.class_types.insert(class_name.clone(), Type::Class {
+                    name: class_name,
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                });
+            }
+        }
+    }
+
+    // First pass: collect class definitions first (so function signatures can reference them),
+    // then type aliases, then function signatures.
+    for stmt in stmts {
+        if let Stmt::ClassDef(class_def) = stmt {
+            collect_class_type(class_def, &mut ctx);
+        }
+    }
     for stmt in stmts {
         match stmt {
-            Stmt::FunctionDef(func) => {
-                if let Some(ft) = extract_function_type(func, &mut ctx) {
-                    // Collect default values for parameters
-                    let mut defaults = Vec::new();
-                    for (i, param) in func.parameters.args.iter().enumerate() {
-                        if let Some(ref default_expr) = param.default {
-                            if let Some(hir_default) = lower_expr_simple(default_expr) {
-                                defaults.push((i, hir_default));
-                            }
-                        }
-                    }
-                    // Also collect defaults for keyword-only args
-                    let regular_count = func.parameters.args.len();
-                    for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
-                        if let Some(ref default_expr) = param.default {
-                            if let Some(hir_default) = lower_expr_simple(default_expr) {
-                                defaults.push((regular_count + i, hir_default));
-                            }
-                        }
-                    }
-                    if !defaults.is_empty() {
-                        ctx.function_defaults.insert(func.name.to_string(), defaults);
-                    }
-                    ctx.functions.insert(func.name.to_string(), ft);
-                    // Track vararg functions
-                    if func.parameters.vararg.is_some() {
-                        ctx.vararg_functions.insert(func.name.to_string());
-                    }
-                }
-            }
-            // Handle `type X = ...` statement (Python 3.12 type alias)
             Stmt::TypeAlias(type_alias) => {
                 let name = match type_alias.name.as_ref() {
                     Expr::Name(n) => n.id.to_string(),
@@ -161,11 +152,39 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                 let ty = resolve_annotation_expr(&type_alias.value, &mut ctx);
                 ctx.scope.define_type_alias(name, ty);
             }
-            // First pass for classes: collect fields and method signatures
-            Stmt::ClassDef(class_def) => {
-                collect_class_type(class_def, &mut ctx);
-            }
             _ => {}
+        }
+    }
+    for stmt in stmts {
+        if let Stmt::FunctionDef(func) = stmt {
+            if let Some(ft) = extract_function_type(func, &mut ctx) {
+                // Collect default values for parameters
+                let mut defaults = Vec::new();
+                for (i, param) in func.parameters.args.iter().enumerate() {
+                    if let Some(ref default_expr) = param.default {
+                        if let Some(hir_default) = lower_expr_simple(default_expr) {
+                            defaults.push((i, hir_default));
+                        }
+                    }
+                }
+                // Also collect defaults for keyword-only args
+                let regular_count = func.parameters.args.len();
+                for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
+                    if let Some(ref default_expr) = param.default {
+                        if let Some(hir_default) = lower_expr_simple(default_expr) {
+                            defaults.push((regular_count + i, hir_default));
+                        }
+                    }
+                }
+                if !defaults.is_empty() {
+                    ctx.function_defaults.insert(func.name.to_string(), defaults);
+                }
+                ctx.functions.insert(func.name.to_string(), ft);
+                // Track vararg functions
+                if func.parameters.vararg.is_some() {
+                    ctx.vararg_functions.insert(func.name.to_string());
+                }
+            }
         }
     }
 
