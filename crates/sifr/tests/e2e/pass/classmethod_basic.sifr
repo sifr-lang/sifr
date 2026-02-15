@@ -1,0 +1,20 @@
+# expect-stdout: 0
+# expect-stdout: 0
+# Tests: @classmethod as associated function
+
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    @classmethod
+    def origin(cls) -> Point:
+        return Point(0.0, 0.0)
+
+def main():
+    p: Point = Point.origin()
+    print(p.x)
+    print(p.y)

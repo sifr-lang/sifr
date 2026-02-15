@@ -39,6 +39,16 @@ pub struct HirClass {
     pub newtype_inner: Option<Type>,
     /// List of protocols this class implements (protocol names)
     pub implements_protocols: Vec<String>,
+    /// Parent class name for single inheritance
+    pub parent_class: Option<String>,
+}
+
+/// Method kind: regular, classmethod, or staticmethod
+#[derive(Debug, Clone, PartialEq)]
+pub enum MethodKind {
+    Regular,
+    ClassMethod,
+    StaticMethod,
 }
 
 /// A function definition with resolved types.
@@ -48,6 +58,8 @@ pub struct HirFunction {
     pub params: Vec<HirParam>,
     pub return_type: Type,
     pub body: Vec<HirStmt>,
+    /// Method kind: Regular, ClassMethod, or StaticMethod
+    pub method_kind: MethodKind,
 }
 
 /// A function parameter with its type and optional default value.
@@ -320,6 +332,13 @@ pub enum HirExpr {
         value: Box<HirExpr>,
         ty: Type,
     },
+    /// Super call: super().__init__(args) -> ParentType::new(args)
+    SuperCall {
+        parent_class: String,
+        method: String,
+        args: Vec<HirExpr>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -352,7 +371,8 @@ impl HirExpr {
             | Self::ConstructorCall { ty, .. }
             | Self::QuestionMark { ty, .. }
             | Self::OkWrap { ty, .. }
-            | Self::ErrWrap { ty, .. } => ty,
+            | Self::ErrWrap { ty, .. }
+            | Self::SuperCall { ty, .. } => ty,
         }
     }
 }

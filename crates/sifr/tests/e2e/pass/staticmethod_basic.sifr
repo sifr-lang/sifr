@@ -1,0 +1,11 @@
+# expect-stdout: 5
+# Tests: @staticmethod as associated function
+
+class MathUtils:
+    @staticmethod
+    def add(a: int, b: int) -> int:
+        return a + b
+
+def main():
+    result: int = MathUtils.add(2, 3)
+    print(result)

@@ -1,0 +1,25 @@
+# expect-stdout: Dog says: Woof!
+# Tests: single inheritance with super().__init__()
+
+class Animal:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def speak(self) -> str:
+        return self.name
+
+class Dog(Animal):
+    breed: str
+
+    def __init__(self, name: str, breed: str):
+        super().__init__(name)
+        self.breed = breed
+
+    def speak(self) -> str:
+        return self.name + " says: Woof!"
+
+def main():
+    d: Dog = Dog("Dog", "Labrador")
+    print(d.speak())
