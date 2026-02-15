@@ -1,0 +1,9 @@
+# expect-error: moved inside loop body
+def consume(s: str) -> int:
+    return len(s)
+
+def main():
+    s: str = "hello"
+    for i in range(3):
+        result: int = consume(s)
+        print(result)

@@ -28,6 +28,10 @@ impl VarInfo {
 /// Used to save/restore narrowing at branch points.
 pub type NarrowingSnapshot = Vec<(String, Option<Type>)>;
 
+/// A snapshot of the moved state for all variables in scope.
+/// Used to save/restore moved state at branch points and loop boundaries.
+pub type MovedSnapshot = Vec<(String, bool)>;
+
 /// A scope for name resolution.
 #[derive(Debug, Clone)]
 pub struct Scope {
@@ -158,6 +162,45 @@ impl Scope {
         self.lookup(name).map(|info| info.effective_type())
     }
 
+    // --- Moved state snapshot support ---
+
+    /// Save the current moved state for all variables in scope.
+    /// Used before entering a branch or loop body.
+    pub fn save_moved_state(&self) -> MovedSnapshot {
+        let mut snapshot = Vec::new();
+        for frame in &self.frames {
+            for (name, info) in frame {
+                snapshot.push((name.clone(), info.is_moved));
+            }
+        }
+        snapshot
+    }
+
+    /// Restore moved state from a snapshot.
+    /// Used after exiting a branch to restore the state before the branch.
+    pub fn restore_moved_state(&mut self, snapshot: &MovedSnapshot) {
+        for (name, was_moved) in snapshot {
+            for frame in self.frames.iter_mut().rev() {
+                if let Some(info) = frame.get_mut(name) {
+                    info.is_moved = *was_moved;
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Return the names of variables that were newly moved since the snapshot.
+    /// A variable is "newly moved" if it was not moved in the snapshot but is moved now.
+    pub fn moved_since(&self, snapshot: &MovedSnapshot) -> Vec<String> {
+        let mut newly_moved = Vec::new();
+        for (name, was_moved) in snapshot {
+            if !was_moved && self.is_moved(name) {
+                newly_moved.push(name.clone());
+            }
+        }
+        newly_moved
+    }
+
     // --- Type alias support ---
 
     /// Register a type alias.
@@ -265,5 +308,35 @@ mod tests {
         scope.define_type_alias("UserId".to_string(), Type::Int);
         assert_eq!(scope.lookup_type_alias("UserId"), Some(&Type::Int));
         assert_eq!(scope.lookup_type_alias("Unknown"), None);
+    }
+
+    // --- Moved state snapshot tests ---
+
+    #[test]
+    fn test_save_restore_moved_state() {
+        let mut scope = Scope::new();
+        scope.define("s".to_string(), Type::Str);
+        assert!(!scope.is_moved("s"));
+
+        let snapshot = scope.save_moved_state();
+        scope.mark_moved("s");
+        assert!(scope.is_moved("s"));
+
+        scope.restore_moved_state(&snapshot);
+        assert!(!scope.is_moved("s"));
+    }
+
+    #[test]
+    fn test_moved_since() {
+        let mut scope = Scope::new();
+        scope.define("s".to_string(), Type::Str);
+        scope.define("x".to_string(), Type::Int);
+
+        let snapshot = scope.save_moved_state();
+        scope.mark_moved("s"); // Move type — should appear in moved_since
+        scope.mark_moved("x"); // Copy type — should NOT appear
+
+        let newly = scope.moved_since(&snapshot);
+        assert_eq!(newly, vec!["s".to_string()]);
     }
 }
