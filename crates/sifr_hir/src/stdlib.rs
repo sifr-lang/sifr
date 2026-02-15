@@ -24,6 +24,11 @@ pub fn get_stdlib_module(module_name: &str) -> Option<StdlibModule> {
         "sifr.test" => Some(stdlib_test()),
         "sifr.collections" => Some(stdlib_collections()),
         "sifr.bytes" => Some(stdlib_bytes()),
+        "sifr.time" => Some(stdlib_time()),
+        "sifr.random" => Some(stdlib_random()),
+        "sifr.re" => Some(stdlib_re()),
+        "sifr.hash" => Some(stdlib_hash()),
+        "sifr.encoding" => Some(stdlib_encoding()),
         _ => None,
     }
 }
@@ -374,6 +379,150 @@ fn stdlib_bytes() -> StdlibModule {
     functions.insert("bytes_from_hex".to_string(), FunctionType {
         params: vec![("s".to_string(), Type::Str)],
         return_type: Box::new(Type::List(Box::new(Type::Int))),
+    });
+
+    StdlibModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// sifr.time — Time operations
+fn stdlib_time() -> StdlibModule {
+    let mut functions = HashMap::new();
+
+    // time_now() -> float (epoch seconds)
+    functions.insert("time_now".to_string(), FunctionType {
+        params: vec![],
+        return_type: Box::new(Type::Float),
+    });
+
+    // sleep(seconds: float) -> None
+    functions.insert("sleep".to_string(), FunctionType {
+        params: vec![("seconds".to_string(), Type::Float)],
+        return_type: Box::new(Type::None),
+    });
+
+    // time_format(epoch: float, fmt: str) -> str
+    functions.insert("time_format".to_string(), FunctionType {
+        params: vec![
+            ("epoch".to_string(), Type::Float),
+            ("fmt".to_string(), Type::Str),
+        ],
+        return_type: Box::new(Type::Str),
+    });
+
+    StdlibModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// sifr.random — Random number generation
+fn stdlib_random() -> StdlibModule {
+    let mut functions = HashMap::new();
+
+    // random_int(min: int, max: int) -> int
+    functions.insert("random_int".to_string(), FunctionType {
+        params: vec![
+            ("min".to_string(), Type::Int),
+            ("max".to_string(), Type::Int),
+        ],
+        return_type: Box::new(Type::Int),
+    });
+
+    // random_float() -> float
+    functions.insert("random_float".to_string(), FunctionType {
+        params: vec![],
+        return_type: Box::new(Type::Float),
+    });
+
+    // random_choice(items: list[int]) -> int
+    functions.insert("random_choice".to_string(), FunctionType {
+        params: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
+        return_type: Box::new(Type::Int),
+    });
+
+    StdlibModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// sifr.re — Regular expressions
+fn stdlib_re() -> StdlibModule {
+    let mut functions = HashMap::new();
+
+    // re_match(pattern: str, text: str) -> bool
+    functions.insert("re_match".to_string(), FunctionType {
+        params: vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ],
+        return_type: Box::new(Type::Bool),
+    });
+
+    // re_find(pattern: str, text: str) -> str | None
+    functions.insert("re_find".to_string(), FunctionType {
+        params: vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ],
+        return_type: Box::new(Type::Union(vec![Type::Str, Type::None])),
+    });
+
+    // re_replace(pattern: str, replacement: str, text: str) -> str
+    functions.insert("re_replace".to_string(), FunctionType {
+        params: vec![
+            ("pattern".to_string(), Type::Str),
+            ("replacement".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ],
+        return_type: Box::new(Type::Str),
+    });
+
+    StdlibModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// sifr.hash — Hashing functions
+fn stdlib_hash() -> StdlibModule {
+    let mut functions = HashMap::new();
+
+    // sha256(s: str) -> str (hex digest)
+    functions.insert("sha256".to_string(), FunctionType {
+        params: vec![("s".to_string(), Type::Str)],
+        return_type: Box::new(Type::Str),
+    });
+
+    // md5_hash(s: str) -> str (hex digest)
+    functions.insert("md5_hash".to_string(), FunctionType {
+        params: vec![("s".to_string(), Type::Str)],
+        return_type: Box::new(Type::Str),
+    });
+
+    StdlibModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// sifr.encoding — Encoding/decoding utilities
+fn stdlib_encoding() -> StdlibModule {
+    let mut functions = HashMap::new();
+
+    // base64_encode(s: str) -> str
+    functions.insert("base64_encode".to_string(), FunctionType {
+        params: vec![("s".to_string(), Type::Str)],
+        return_type: Box::new(Type::Str),
+    });
+
+    // base64_decode(s: str) -> str
+    functions.insert("base64_decode".to_string(), FunctionType {
+        params: vec![("s".to_string(), Type::Str)],
+        return_type: Box::new(Type::Str),
     });
 
     StdlibModule {

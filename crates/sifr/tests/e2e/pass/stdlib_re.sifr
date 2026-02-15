@@ -1,0 +1,21 @@
+# Test sifr.re stdlib module
+from sifr.re import re_match, re_find, re_replace
+
+def main():
+    # Match
+    print(re_match("[0-9]+", "hello 42 world"))
+    print(re_match("[0-9]+", "no numbers here"))
+
+    # Find
+    found: str | None = re_find("[0-9]+", "hello 42 world")
+    if found is not None:
+        print(found)
+
+    # Replace
+    result: str = re_replace("[0-9]+", "NUM", "hello 42 world 7")
+    print(result)
+
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: 42
+# expect-stdout: hello NUM world NUM

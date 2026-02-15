@@ -144,6 +144,22 @@ edition = "2021"
                     deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
                 }
             }
+            "sifr.time" => {
+                deps.push("chrono = \"0.4\"".to_string());
+            }
+            "sifr.random" => {
+                deps.push("rand = \"0.8\"".to_string());
+            }
+            "sifr.re" => {
+                deps.push("regex = \"1\"".to_string());
+            }
+            "sifr.hash" => {
+                deps.push("sha2 = \"0.10\"".to_string());
+                deps.push("md5 = \"0.7\"".to_string());
+            }
+            "sifr.encoding" => {
+                deps.push("base64 = \"0.22\"".to_string());
+            }
             // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes use only std library
             _ => {}
         }
@@ -3326,6 +3342,84 @@ impl RustEmitter {
                 self.write("{ let s = ");
                 self.emit_expr(&args[0]);
                 self.write("; (0..s.len()).step_by(2).map(|i| i64::from_str_radix(&s[i..i+2], 16).unwrap()).collect::<Vec<i64>>() }");
+            }
+            // sifr.time
+            "time_now" => {
+                self.write("std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64()");
+            }
+            "sleep" => {
+                self.write("std::thread::sleep(std::time::Duration::from_secs_f64(");
+                self.emit_expr(&args[0]);
+                self.write("))");
+            }
+            "time_format" => {
+                self.write("{ let secs = ");
+                self.emit_expr(&args[0]);
+                self.write(" as i64; let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap(); dt.format(&");
+                self.emit_expr(&args[1]);
+                self.write(").to_string() }");
+            }
+            // sifr.random
+            "random_int" => {
+                self.write("{ use rand::Rng; rand::thread_rng().gen_range(");
+                self.emit_expr(&args[0]);
+                self.write("..=");
+                self.emit_expr(&args[1]);
+                self.write(") }");
+            }
+            "random_float" => {
+                self.write("{ use rand::Rng; rand::thread_rng().gen::<f64>() }");
+            }
+            "random_choice" => {
+                self.write("{ use rand::Rng; let items = ");
+                self.emit_expr(&args[0]);
+                self.write("; items[rand::thread_rng().gen_range(0..items.len())] }");
+            }
+            // sifr.re
+            "re_match" => {
+                self.write("regex::Regex::new(&");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap().is_match(&");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "re_find" => {
+                self.write("regex::Regex::new(&");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap().find(&");
+                self.emit_expr(&args[1]);
+                self.write(").map(|m| m.as_str().to_string())");
+            }
+            "re_replace" => {
+                self.write("regex::Regex::new(&");
+                self.emit_expr(&args[0]);
+                self.write(").unwrap().replace_all(&");
+                self.emit_expr(&args[2]);
+                self.write(", ");
+                self.emit_expr(&args[1]);
+                self.write(".as_str()).to_string()");
+            }
+            // sifr.hash
+            "sha256" => {
+                self.write("{ use sha2::Digest; format!(\"{:x}\", sha2::Sha256::digest(");
+                self.emit_expr(&args[0]);
+                self.write(".as_bytes())) }");
+            }
+            "md5_hash" => {
+                self.write("format!(\"{:x}\", md5::compute(");
+                self.emit_expr(&args[0]);
+                self.write(".as_bytes()))");
+            }
+            // sifr.encoding
+            "base64_encode" => {
+                self.write("{ use base64::Engine; base64::engine::general_purpose::STANDARD.encode(");
+                self.emit_expr(&args[0]);
+                self.write(".as_bytes()) }");
+            }
+            "base64_decode" => {
+                self.write("{ use base64::Engine; String::from_utf8(base64::engine::general_purpose::STANDARD.decode(");
+                self.emit_expr(&args[0]);
+                self.write(".as_bytes()).unwrap()).unwrap() }");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call
