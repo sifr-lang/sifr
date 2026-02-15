@@ -1154,6 +1154,14 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 fn lower_stmts(stmts: &[Stmt], func_type: &FunctionType, ctx: &mut LowerCtx) -> Vec<HirStmt> {
     let mut result = Vec::new();
     for stmt in stmts {
+        // Handle chained assignment (x = y = z = 0) by expanding into multiple statements
+        if let Stmt::Assign(assign) = stmt {
+            if assign.targets.len() > 1 {
+                let expanded = lower_chained_assign(assign, ctx);
+                result.extend(expanded);
+                continue;
+            }
+        }
         if let Some(hir_stmt) = lower_stmt(stmt, func_type, ctx) {
             result.push(hir_stmt);
         }
@@ -1379,6 +1387,76 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
     })
 }
 
+/// Handle chained assignment: x = y = z = 0
+/// Expands into: z = 0; y = z; x = y (right-to-left, last target gets the value first)
+fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Vec<HirStmt> {
+    let mut result = Vec::new();
+
+    // Lower the value expression once
+    let value = match lower_expr(&assign.value, ctx) {
+        Some(v) => v,
+        None => return result,
+    };
+    let val_ty = value.ty().clone();
+
+    // Process targets in reverse order (rightmost gets the value first)
+    let targets: Vec<_> = assign.targets.iter().collect();
+    for (i, target) in targets.iter().rev().enumerate() {
+        if let Expr::Name(n) = target {
+            let name = n.id.to_string();
+            if i == 0 {
+                // First (rightmost) target gets the actual value
+                let existing = ctx.scope.lookup(&name);
+                if existing.is_some() {
+                    // Reassignment
+                    result.push(HirStmt::Assign {
+                        name: name.clone(),
+                        value: value.clone(),
+                    });
+                } else {
+                    // New variable
+                    ctx.scope.define(name.clone(), val_ty.clone());
+                    result.push(HirStmt::Let {
+                        name: name.clone(),
+                        ty: val_ty.clone(),
+                        value: value.clone(),
+                        is_mutable: true,
+                    });
+                }
+            } else {
+                // Subsequent targets get a reference to the previous target
+                let prev_target = match targets.get(targets.len() - i) {
+                    Some(Expr::Name(prev_n)) => prev_n.id.to_string(),
+                    _ => continue,
+                };
+                let name_expr = HirExpr::Name {
+                    name: prev_target,
+                    ty: val_ty.clone(),
+                };
+                let existing = ctx.scope.lookup(&name);
+                if existing.is_some() {
+                    result.push(HirStmt::Assign {
+                        name: name.clone(),
+                        value: name_expr,
+                    });
+                } else {
+                    ctx.scope.define(name.clone(), val_ty.clone());
+                    result.push(HirStmt::Let {
+                        name: name.clone(),
+                        ty: val_ty.clone(),
+                        value: name_expr,
+                        is_mutable: true,
+                    });
+                }
+            }
+        } else {
+            ctx.error("chained assignment targets must be simple names".to_string());
+        }
+    }
+
+    result
+}
+
 fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
         ctx.error("multiple assignment targets not supported yet".to_string());
@@ -1503,8 +1581,14 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
             Operator::Div => "/=",
             Operator::Mod => "%=",
             Operator::Pow => "**=",
-            _ => {
-                ctx.error("unsupported augmented assignment operator".to_string());
+            Operator::BitAnd => "&=",
+            Operator::BitOr => "|=",
+            Operator::BitXor => "^=",
+            Operator::LShift => "<<=",
+            Operator::RShift => ">>=",
+            Operator::FloorDiv => "//=",
+            Operator::MatMult => {
+                ctx.error("matrix multiplication operator (@) is not supported".to_string());
                 return None;
             }
         };
@@ -1534,8 +1618,13 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         Operator::FloorDiv => "//=",
         Operator::Mod => "%=",
         Operator::Pow => "**=",
-        _ => {
-            ctx.error("unsupported augmented assignment operator".to_string());
+        Operator::BitAnd => "&=",
+        Operator::BitOr => "|=",
+        Operator::BitXor => "^=",
+        Operator::LShift => "<<=",
+        Operator::RShift => ">>=",
+        Operator::MatMult => {
+            ctx.error("matrix multiplication operator (@) is not supported".to_string());
             return None;
         }
     };
@@ -2033,8 +2122,13 @@ fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Operator::FloorDiv => "//",
         Operator::Mod => "%",
         Operator::Pow => "**",
-        _ => {
-            ctx.error(format!("unsupported binary operator"));
+        Operator::BitAnd => "&",
+        Operator::BitOr => "|",
+        Operator::BitXor => "^",
+        Operator::LShift => "<<",
+        Operator::RShift => ">>",
+        Operator::MatMult => {
+            ctx.error("matrix multiplication operator (@) is not supported".to_string());
             return None;
         }
     };
@@ -2074,10 +2168,7 @@ fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
         UnaryOp::USub => "-",
         UnaryOp::UAdd => "+",
         UnaryOp::Not => "not",
-        _ => {
-            ctx.error("unsupported unary operator".to_string());
-            return None;
-        }
+        UnaryOp::Invert => "~",
     };
 
     match type_check_unary_op(op_str, operand.ty()) {
@@ -4117,8 +4208,10 @@ mod tests {
 
     #[test]
     fn test_use_after_move() {
+        // print() borrows, so print(s); print(s) should NOT error.
+        // Use a user-defined consuming function to test move semantics.
         let result = lower_source(
-            "def main():\n    s: str = \"hello\"\n    print(s)\n    print(s)\n"
+            "def consume(s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n"
         );
         assert!(result.is_err());
         let errors = result.unwrap_err();

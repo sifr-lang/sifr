@@ -123,6 +123,44 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 },
             })
         }
+        "&" | "|" | "^" => {
+            // Bitwise operators: int & int -> int, int | int -> int, int ^ int -> int
+            // Also bool & bool -> bool, bool | bool -> bool, bool ^ bool -> bool
+            if left == &Type::Int && right == &Type::Int {
+                return Ok(Type::Int);
+            }
+            if left == &Type::Bool && right == &Type::Bool {
+                return Ok(Type::Bool);
+            }
+            Err(TypeError {
+                message: format!(
+                    "unsupported operand type(s) for {op}: '{}' and '{}'",
+                    left.display_name(),
+                    right.display_name()
+                ),
+                kind: crate::TypeErrorKind::InvalidOperator {
+                    op: op.to_string(),
+                    ty: left.clone(),
+                },
+            })
+        }
+        "<<" | ">>" => {
+            // Shift operators: int << int -> int, int >> int -> int
+            if left == &Type::Int && right == &Type::Int {
+                return Ok(Type::Int);
+            }
+            Err(TypeError {
+                message: format!(
+                    "unsupported operand type(s) for {op}: '{}' and '{}'",
+                    left.display_name(),
+                    right.display_name()
+                ),
+                kind: crate::TypeErrorKind::InvalidOperator {
+                    op: op.to_string(),
+                    ty: left.clone(),
+                },
+            })
+        }
         _ => Err(TypeError {
             message: format!("unknown binary operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
@@ -208,6 +246,22 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
             Err(TypeError {
                 message: format!(
                     "bad operand type for unary not: '{}'",
+                    operand.display_name()
+                ),
+                kind: crate::TypeErrorKind::InvalidOperator {
+                    op: op.to_string(),
+                    ty: operand.clone(),
+                },
+            })
+        }
+        "~" => {
+            // Bitwise invert: ~int -> int, ~bool -> int
+            if operand == &Type::Int || operand == &Type::Bool {
+                return Ok(Type::Int);
+            }
+            Err(TypeError {
+                message: format!(
+                    "bad operand type for unary ~: '{}'",
                     operand.display_name()
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {

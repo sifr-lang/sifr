@@ -1,0 +1,9 @@
+# expect-stdout: 5
+# expect-stdout: -3
+# Tests unary + operator
+
+def main():
+    x: int = 5
+    print(+x)
+    y: int = -3
+    print(+y)

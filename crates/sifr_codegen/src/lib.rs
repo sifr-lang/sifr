@@ -2611,12 +2611,17 @@ impl RustEmitter {
                 }
             }
             HirExpr::UnaryOp { op, operand, .. } => {
-                if op == "not" {
+                if op == "not" || op == "~" {
+                    // Both `not` (logical) and `~` (bitwise invert) map to `!` in Rust
                     self.write("!");
+                    self.emit_expr(operand);
+                } else if op == "+" {
+                    // Unary + is a no-op in Python/Rust, just emit the operand
+                    self.emit_expr(operand);
                 } else {
                     self.write(op);
+                    self.emit_expr(operand);
                 }
-                self.emit_expr(operand);
             }
             HirExpr::Compare { left, ops, comparators, .. } => {
                 // For single comparison
