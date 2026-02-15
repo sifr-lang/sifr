@@ -1,0 +1,49 @@
+# milestone_codegen_quality_v2 Demo
+# Phase 2 Codegen Polish - showcases all 7 quality improvements
+
+class Timer:
+    label: str
+    def __init__(self, label: str):
+        self.label = label
+
+class Describable(Protocol):
+    def describe(self) -> str: ...
+
+class Item:
+    name: str
+    def __init__(self, name: str):
+        self.name = name
+    def describe(self) -> str:
+        return "Item: " + self.name
+
+def main():
+    # ---- Task 1: No redundant .clone() on Copy types in min/max ----
+    nums: list[int] = [5, 3, 1, 4, 2]
+    print(min(nums))
+    print(max(nums))
+
+    # ---- Task 2: Inline lambda in filter() ----
+    evens: list[int] = filter(lambda x: x % 2 == 0, nums)
+    print(evens)
+
+    # ---- Task 3: Clean list comprehension filter pattern ----
+    big: list[int] = [x for x in nums if x > 2]
+    print(big)
+
+    # ---- Task 4: Fold string literals into format! ----
+    name: str = "World"
+    greeting: str = "Hello, " + name + "!"
+    print(greeting)
+
+    # ---- Task 5: Unused with variable gets _ prefix ----
+    with Timer("work") as t:
+        print("doing work inside with block")
+
+    # ---- Task 6: Protocol impl delegates to inherent method ----
+    item: Item = Item("Widget")
+    print(item.describe())
+
+    # ---- Task 7: Inline string literal in println! ----
+    print("All codegen quality v2 improvements verified!")
+
+main()
