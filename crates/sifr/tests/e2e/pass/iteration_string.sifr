@@ -1,0 +1,8 @@
+# expect-stdout: h
+# expect-stdout: i
+# Tests string iteration: for c in s
+
+def main():
+    s: str = "hi"
+    for c in s:
+        print(c)
