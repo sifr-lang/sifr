@@ -1,0 +1,13 @@
+# expect-stdout: 42
+# expect-stdout: 42
+# expect-stdout: 42
+# Tests chained assignment: x = y = z = 42
+
+def main():
+    x: int = 0
+    y: int = 0
+    z: int = 0
+    x = y = z = 42
+    print(x)
+    print(y)
+    print(z)
