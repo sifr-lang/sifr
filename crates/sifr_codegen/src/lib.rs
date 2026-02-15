@@ -1103,9 +1103,28 @@ impl RustEmitter {
         self.write(" {\n");
         self.indent += 1;
 
+        // Detect if this is a generator function (contains yield statements)
+        let is_generator = body_contains_yield(&func.body);
+        if is_generator {
+            // Emit the yields accumulator at the start
+            let yield_ty = if let Type::List(ref elem) = func.return_type {
+                elem.rust_type()
+            } else {
+                "i64".to_string() // fallback
+            };
+            self.write_indent();
+            self.write(&format!("let mut _yields: Vec<{}> = Vec::new();\n", yield_ty));
+        }
+
         // Body
         for stmt in &func.body {
             self.emit_stmt(stmt);
+        }
+
+        // If generator, return the accumulated yields
+        if is_generator {
+            self.write_indent();
+            self.write("_yields\n");
         }
 
         self.indent -= 1;
@@ -1438,10 +1457,14 @@ impl RustEmitter {
                 self.write(target);
                 self.write(" in ");
                 // For lists, iterate with .iter() to borrow and clone elements
+                // But not for generator expressions which are already iterators
+                let is_generator = matches!(iter, HirExpr::GeneratorExpr { .. });
                 let is_list = matches!(iter.ty(), Type::List(_));
                 let is_dict = matches!(iter.ty(), Type::Dict(_, _));
                 self.emit_expr(iter);
-                if is_list {
+                if is_generator {
+                    // Generator expressions are already iterators, no .iter() needed
+                } else if is_list {
                     self.write(".iter().cloned()");
                 } else if is_dict {
                     self.write(".keys().cloned()");
@@ -1625,6 +1648,29 @@ impl RustEmitter {
                         self.write("/* unsupported del */\n");
                     }
                 }
+            }
+            HirStmt::Yield { value } => {
+                self.write_indent();
+                self.write("_yields.push(");
+                self.emit_expr(value);
+                self.write(");\n");
+            }
+            HirStmt::With { var, value, body } => {
+                self.write_indent();
+                self.write("{\n");
+                self.indent += 1;
+                self.write_indent();
+                self.write("let ");
+                self.write(var);
+                self.write(" = ");
+                self.emit_expr(value);
+                self.write(";\n");
+                for s in body {
+                    self.emit_stmt(s);
+                }
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
             }
         }
     }
@@ -2849,6 +2895,42 @@ impl RustEmitter {
                     self.write(".collect::<Vec<_>>()");
                 }
             }
+            HirExpr::GeneratorExpr { expr, var, iter, filter, .. } => {
+                // (expr for var in iter) -> iter.clone().into_iter().map(|var| expr)
+                // Lazy iterator - no .collect()
+                self.emit_expr(iter);
+                if filter.is_some() {
+                    self.write(".iter()");
+                    if let Some(ref cond) = filter {
+                        self.write(".filter(|");
+                        self.write(var);
+                        self.write("| { let ");
+                        self.write(var);
+                        self.write(" = **");
+                        self.write(var);
+                        self.write("; ");
+                        self.emit_expr(cond);
+                        self.write(" })");
+                    }
+                    self.write(".map(|");
+                    self.write(var);
+                    self.write("| { let ");
+                    self.write(var);
+                    self.write(" = *");
+                    self.write(var);
+                    self.write("; ");
+                    self.emit_expr(expr);
+                    self.write(" })");
+                } else {
+                    self.write(".clone().into_iter()");
+                    self.write(".map(|");
+                    self.write(var);
+                    self.write("| ");
+                    self.emit_expr(expr);
+                    self.write(")");
+                }
+                // No .collect() - lazy iterator
+            }
         }
     }
 
@@ -3075,6 +3157,41 @@ fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
     stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
 }
 
+/// Check if a function body contains any yield statements (making it a generator).
+fn body_contains_yield(stmts: &[HirStmt]) -> bool {
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Yield { .. } => return true,
+            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+                if body_contains_yield(then_body) { return true; }
+                for (_, body) in elif_clauses {
+                    if body_contains_yield(body) { return true; }
+                }
+                if let Some(eb) = else_body {
+                    if body_contains_yield(eb) { return true; }
+                }
+            }
+            HirStmt::While { body, else_body, .. } => {
+                if body_contains_yield(body) { return true; }
+                if let Some(eb) = else_body {
+                    if body_contains_yield(eb) { return true; }
+                }
+            }
+            HirStmt::For { body, else_body, .. } => {
+                if body_contains_yield(body) { return true; }
+                if let Some(eb) = else_body {
+                    if body_contains_yield(eb) { return true; }
+                }
+            }
+            HirStmt::With { body, .. } => {
+                if body_contains_yield(body) { return true; }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
 /// Check if a type needs .clone() when accessed from &self (non-Copy types).
 fn needs_clone_for_type(ty: &Type) -> bool {
     match ty {
@@ -3160,6 +3277,13 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) 
                 if let HirExpr::Name { name, .. } = object {
                     mutated.insert(name.clone());
                 }
+            }
+            HirStmt::Yield { value } => {
+                collect_mutated_vars_in_expr(value, mutated);
+            }
+            HirStmt::With { body, value, .. } => {
+                collect_mutated_vars_in_expr(value, mutated);
+                collect_mutated_vars_inner(body, mutated);
             }
             _ => {}
         }

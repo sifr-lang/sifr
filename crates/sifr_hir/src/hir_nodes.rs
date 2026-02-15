@@ -164,6 +164,16 @@ pub enum HirStmt {
         object: HirExpr,
         index: HirExpr,
     },
+    /// Yield statement: yield expr (in generator functions)
+    Yield {
+        value: HirExpr,
+    },
+    /// With statement: with expr as var: body
+    With {
+        var: String,
+        value: HirExpr,
+        body: Vec<HirStmt>,
+    },
 }
 
 /// An except handler in a try/except block.
@@ -353,6 +363,14 @@ pub enum HirExpr {
         filter: Option<Box<HirExpr>>,
         ty: Type,
     },
+    /// Generator expression: (expr for var in iter) -> lazy iterator
+    GeneratorExpr {
+        expr: Box<HirExpr>,
+        var: String,
+        iter: Box<HirExpr>,
+        filter: Option<Box<HirExpr>>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -388,7 +406,8 @@ impl HirExpr {
             | Self::ErrWrap { ty, .. }
             | Self::SuperCall { ty, .. }
             | Self::Lambda { ty, .. }
-            | Self::ListComp { ty, .. } => ty,
+            | Self::ListComp { ty, .. }
+            | Self::GeneratorExpr { ty, .. } => ty,
         }
     }
 }
