@@ -1,0 +1,10 @@
+# expect-stdout: 0
+# expect-stdout: 1
+# expect-stdout: 4
+# expect-stdout: 9
+# Tests: generator expression in for loop
+
+def main():
+    nums: list[int] = [0, 1, 2, 3]
+    for s in (x * x for x in nums):
+        print(s)

@@ -1,0 +1,53 @@
+# =============================================================
+# Sifr Milestone: Generators & Context Managers Demo
+# =============================================================
+# Features demonstrated:
+# 1. Generator functions with yield
+# 2. Generator expressions (lazy iterators)
+# 3. With statement (scoped blocks)
+# =============================================================
+
+# --- 1. Generator function: fibonacci sequence ---
+def fibonacci(n: int) -> list[int]:
+    a: int = 0
+    b: int = 1
+    i: int = 0
+    while i < n:
+        yield a
+        temp: int = a + b
+        a = b
+        b = temp
+        i = i + 1
+
+# --- 2. Generator function: even numbers ---
+def evens(limit: int) -> list[int]:
+    i: int = 0
+    while i < limit:
+        if i % 2 == 0:
+            yield i
+        i = i + 1
+
+# --- 3. Scoped resource ---
+class Timer:
+    label: str
+
+    def __init__(self, label: str):
+        self.label = label
+
+def main():
+    # Generator: fibonacci
+    fibs: list[int] = fibonacci(8)
+    print(fibs)
+
+    # Generator: even numbers
+    print(evens(10))
+
+    # Generator expression in for loop
+    nums: list[int] = [1, 2, 3, 4, 5]
+    for sq in (x * x for x in nums):
+        print(sq)
+
+    # With statement
+    with Timer("work") as t:
+        print("doing work")
+    print("done")

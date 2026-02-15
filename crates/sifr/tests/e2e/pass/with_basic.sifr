@@ -1,0 +1,14 @@
+# expect-stdout: inside with
+# expect-stdout: done
+# Tests: basic with statement (scoped block)
+
+class Resource:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+def main():
+    with Resource("test") as r:
+        print("inside with")
+    print("done")

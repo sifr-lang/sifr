@@ -1080,6 +1080,16 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
         Stmt::AugAssign(aug) => lower_aug_assign(aug, ctx),
         Stmt::Return(ret) => lower_return(ret, func_type, ctx),
         Stmt::Expr(expr_stmt) => {
+            // Check if this is a yield expression used as a statement
+            if let Expr::Yield(yield_expr) = expr_stmt.value.as_ref() {
+                if let Some(ref val) = yield_expr.value {
+                    let value = lower_expr(val, ctx)?;
+                    return Some(HirStmt::Yield { value });
+                } else {
+                    ctx.error("yield without a value is not supported".to_string());
+                    return None;
+                }
+            }
             let expr = lower_expr(&expr_stmt.value, ctx)?;
             // #[must_use] enforcement: Result values must not be silently discarded
             let expr_ty = expr.ty();
@@ -1143,6 +1153,32 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 ctx.error("bare 'raise' without an expression is not supported".to_string());
                 None
             }
+        }
+        Stmt::With(with_stmt) => {
+            if with_stmt.items.is_empty() {
+                ctx.error("with statement must have at least one item".to_string());
+                return None;
+            }
+            let item = &with_stmt.items[0];
+            let value = lower_expr(&item.context_expr, ctx)?;
+            let var_name = if let Some(ref vars) = item.optional_vars {
+                match vars.as_ref() {
+                    Expr::Name(n) => n.id.to_string(),
+                    _ => {
+                        ctx.error("with target must be a simple name".to_string());
+                        return None;
+                    }
+                }
+            } else {
+                "_with_val".to_string()
+            };
+            // Define the variable in scope
+            let val_ty = value.ty().clone();
+            ctx.scope.push();
+            ctx.scope.define(var_name.clone(), val_ty);
+            let body = lower_stmts(&with_stmt.body, func_type, ctx);
+            ctx.scope.pop();
+            Some(HirStmt::With { var: var_name, value, body })
         }
         Stmt::Try(try_stmt) => {
             let prev_in_try = ctx.in_try_block;
@@ -1716,6 +1752,7 @@ fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Named(named) => lower_named_expr(named, ctx),
         Expr::Lambda(lambda) => lower_lambda(lambda, ctx),
         Expr::ListComp(comp) => lower_list_comp(comp, ctx),
+        Expr::Generator(gen) => lower_generator_expr(gen, ctx),
         _ => {
             ctx.error("unsupported expression type".to_string());
             None
@@ -3640,6 +3677,80 @@ fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let result_ty = Type::List(Box::new(expr_ty));
 
     Some(HirExpr::ListComp {
+        expr: Box::new(expr),
+        var: var_name,
+        iter: Box::new(iter_expr),
+        filter,
+        ty: result_ty,
+    })
+}
+
+fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    // Only support single generator: (expr for var in iter) or (expr for var in iter if cond)
+    if gen.generators.len() != 1 {
+        ctx.error("only single-generator generator expressions are supported".to_string());
+        return None;
+    }
+
+    let comp = &gen.generators[0];
+
+    // Get the variable name
+    let var_name = match &comp.target {
+        Expr::Name(n) => n.id.to_string(),
+        _ => {
+            ctx.error("generator target must be a simple name".to_string());
+            return None;
+        }
+    };
+
+    // Lower the iterable
+    let iter_expr = lower_expr(&comp.iter, ctx)?;
+    let iter_ty = iter_expr.ty().clone();
+
+    // Determine element type from the iterable
+    let elem_ty = match &iter_ty {
+        Type::List(elem) => *elem.clone(),
+        Type::Str => Type::Str,
+        _ => {
+            ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name()));
+            return None;
+        }
+    };
+
+    // Push scope and define the loop variable
+    ctx.scope.push();
+    ctx.scope.define(var_name.clone(), elem_ty.clone());
+
+    // Lower the expression
+    let expr = lower_expr(&gen.elt, ctx)?;
+    let expr_ty = expr.ty().clone();
+
+    // Lower the filter condition if present
+    let filter = if !comp.ifs.is_empty() {
+        let first = lower_expr(&comp.ifs[0], ctx)?;
+        if comp.ifs.len() == 1 {
+            Some(Box::new(first))
+        } else {
+            let mut combined = first;
+            for cond in &comp.ifs[1..] {
+                let next = lower_expr(cond, ctx)?;
+                combined = HirExpr::BoolOp {
+                    op: "and".to_string(),
+                    values: vec![combined, next],
+                    ty: Type::Bool,
+                };
+            }
+            Some(Box::new(combined))
+        }
+    } else {
+        None
+    };
+
+    ctx.scope.pop();
+
+    let result_ty = Type::List(Box::new(expr_ty));
+
+    Some(HirExpr::GeneratorExpr {
         expr: Box::new(expr),
         var: var_name,
         iter: Box::new(iter_expr),
