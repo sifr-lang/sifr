@@ -1,0 +1,16 @@
+# Test PEP 695 inline generic function syntax: def f[T](x: T) -> T
+def identity[T](x: T) -> T:
+    return x
+
+def first[T](items: list[T]) -> T:
+    return items[0]
+
+def main():
+    print(identity(42))
+    print(identity("hello"))
+    nums: list[int] = [10, 20, 30]
+    print(first(nums))
+
+# expect-stdout: 42
+# expect-stdout: hello
+# expect-stdout: 10

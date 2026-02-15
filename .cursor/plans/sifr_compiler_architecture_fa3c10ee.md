@@ -80,6 +80,9 @@ todos:
   - id: m18-phase-fixes
     content: "milestone_phase_fixes: Protocol dispatch, context manager scope, cls calls, import alias codegen, print(None), union return wrapping, stdlib gaps, module-level constants"
     status: pending
+  - id: m19-audit-fixup
+    content: "milestone_audit_fixup: PEP 695 inline generics, protocol method dispatch, multi-generator comprehensions, stdlib fixes (missing math fns, naming mismatches, type signature widening), Set[T] type (stretch)"
+    status: pending
 isProject: false
 ---
 
@@ -2556,6 +2559,73 @@ Lambda closures work (from `milestone_generics`), but `def` inside `def` is not 
 - E2E pass tests for all fixes
 - All existing E2E tests pass (no regressions)
 - Milestone demo showcasing phase fixes
+
+---
+
+## milestone_audit_fixup: Audit Fix-Up
+
+**Goal:** Close out remaining fixable audit failures identified after Language Hardening Phase 2. Targets 13 audit tests across type_system, python_basics, and stdlib categories.
+
+### 1. PEP 695 Inline Generics
+
+Support `def f[T](x: T) -> T` and `class C[T]` syntax. The AST already parses `type_params` on `StmtFunctionDef` and `StmtClassDef` (`crates/sifr_python_ast/src/nodes.rs`); the lowering layer just needs to wire them through.
+
+- In `lower_function` / `extract_function_type`: check `func.type_params` from the AST; if present, register each `TypeParam` name in `ctx.type_vars` and store in `HirFunction.type_params`
+- In `collect_class_type`: check `class_def.type_params`; register type params for the class scope
+- `resolve_annotation_expr` already handles `Type::TypeVar` lookup -- no change needed
+
+**Fixes:** `audit/type_system/21_generic_functions_syntax.sifr`, `audit/type_system/22_generic_class_syntax.sifr`
+
+### 2. Protocol Method Dispatch
+
+Enable method calls on Protocol-typed function parameters. Currently Protocol types generate `Box<dyn ProtocolName>` in Rust, but method calls on Protocol-typed variables fail during lowering because method lookup doesn't check Protocol definitions.
+
+- In the method call resolution path in `lower.rs`: when the receiver type is `Type::Protocol(name)`, look up the protocol's method signatures and resolve the call
+- Codegen should emit correct trait method calls on `Box<dyn Protocol>` automatically once HIR is correct
+
+**Fixes:** `audit/type_system/23_interface_as_param.sifr`, `audit/type_system/34_protocol_param_dispatch.sifr`
+
+### 3. Multi-Generator Comprehensions
+
+Support `[x for row in matrix for x in row]` (multiple `for` clauses in a single comprehension).
+
+- Extend `HirExpr::ListComp` (and `SetComp`, `DictComp`) in `hir_nodes.rs` to support a `Vec` of generators instead of a single `var`/`iter`
+- Remove the `generators.len() != 1` guard in `lower.rs`; process generators in order, nesting scopes for each
+- Update codegen to emit nested `for` loops for multi-generator comprehensions
+
+**Fixes:** `audit/python_basics/15_list_comprehension.sifr`
+
+### 4. Stdlib Fixes
+
+All changes primarily in `crates/sifr_hir/src/stdlib.rs` (and codegen mappings where needed):
+
+- **Math**: Add `log`, `sin`, `cos`, `tan`, `pow_val`, `min_val`, `max_val`, `round_val`; rename `fabs` -> `abs_val`
+- **IO**: Rename `write_file` -> `write_text`, `read_file` -> `read_text`, `file_exists` -> `exists`
+- **Env**: Rename `get_env` -> `env_get`, `set_env` -> `env_set`
+- **Hash**: Rename `md5_hash` -> `md5`
+- **JSON**: Widen `json_dumps` parameter type from `str` to accept any serializable type
+- **Random**: Widen `random_choice` to accept generic `list[T]` instead of `list[int]`
+
+**Fixes:** `audit/stdlib/01_math.sifr`, `audit/stdlib/02_json.sifr`, `audit/stdlib/06_io.sifr`, `audit/stdlib/08_env.sifr`, `audit/stdlib/09_random.sifr`, `audit/stdlib/10_hash_encoding.sifr`
+
+### 5. Set[T] Type (Stretch Goal)
+
+Add `Set[T]` to the type system and collections stdlib, similar to how `list` and `dict` are handled. Includes constructor, `contains`, `add`, `remove` methods, and `len()` support.
+
+**Fixes:** `audit/stdlib/05_collections.sifr`
+
+**Key files:** `crates/sifr_hir/src/lower.rs`, `crates/sifr_hir/src/hir_nodes.rs`, `crates/sifr_hir/src/stdlib.rs`, `crates/sifr_codegen/src/lib.rs`, `crates/sifr_type_system/src/types.rs`
+
+### Definition of Done (milestone_audit_fixup)
+
+- PEP 695 `def f[T]` and `class C[T]` syntax works end-to-end
+- Protocol method dispatch works through protocol-typed params
+- Multi-generator comprehensions compile and run correctly
+- Stdlib naming and type signature fixes in place
+- E2E pass tests for all new features
+- All existing E2E tests pass (no regressions)
+- Audit pass rates improve for type_system, python_basics, and stdlib categories
+- Milestone demo showcasing fixes
 
 ---
 

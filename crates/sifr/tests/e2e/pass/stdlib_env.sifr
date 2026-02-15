@@ -1,17 +1,17 @@
 # Test sifr.env stdlib module
-from sifr.env import get_env, set_env
+from sifr.env import env_get, env_set
 
 def main():
     # Set an env var
-    set_env("SIFR_TEST_VAR", "hello_sifr")
+    env_set("SIFR_TEST_VAR", "hello_sifr")
 
     # Get it back
-    val: str | None = get_env("SIFR_TEST_VAR")
+    val: str | None = env_get("SIFR_TEST_VAR")
     if val is not None:
         print(val)
 
     # Get a non-existent var
-    missing: str | None = get_env("SIFR_NONEXISTENT_VAR_XYZ")
+    missing: str | None = env_get("SIFR_NONEXISTENT_VAR_XYZ")
     if missing is None:
         print("not found")
 

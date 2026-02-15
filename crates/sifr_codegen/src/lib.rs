@@ -247,6 +247,8 @@ struct RustEmitter {
     /// For primitives: rust_name is the UPPERCASE const name
     /// For strings/complex: rust_name is __const_name() function call
     module_constants: HashMap<String, (Type, String)>,
+    /// Set of class names that have generic type parameters
+    generic_classes: HashSet<String>,
 }
 
 impl RustEmitter {
@@ -274,6 +276,7 @@ impl RustEmitter {
             class_field_order: HashMap::new(),
             nested_fn_captures: HashMap::new(),
             module_constants: HashMap::new(),
+            generic_classes: HashSet::new(),
         }
     }
 
@@ -287,6 +290,9 @@ impl RustEmitter {
                 if type_references_class(field_ty, &class.name) {
                     self.recursive_fields.insert((class.name.clone(), field_name.clone()));
                 }
+            }
+            if !class.type_params.is_empty() {
+                self.generic_classes.insert(class.name.clone());
             }
         }
     }
@@ -535,6 +541,14 @@ impl RustEmitter {
             self.write("struct ");
         }
         self.write(&class.name);
+        if !class.type_params.is_empty() {
+            self.write("<");
+            for (i, tp) in class.type_params.iter().enumerate() {
+                if i > 0 { self.write(", "); }
+                self.write(&format!("{}: Clone + std::fmt::Display", tp));
+            }
+            self.write(">");
+        }
         self.write(" {\n");
         self.indent += 1;
 
@@ -578,8 +592,25 @@ impl RustEmitter {
 
         // Impl block
         self.write_indent();
-        self.write("impl ");
+        self.write("impl");
+        if !class.type_params.is_empty() {
+            self.write("<");
+            for (i, tp) in class.type_params.iter().enumerate() {
+                if i > 0 { self.write(", "); }
+                self.write(&format!("{}: Clone + std::fmt::Display", tp));
+            }
+            self.write(">");
+        }
+        self.write(" ");
         self.write(&class.name);
+        if !class.type_params.is_empty() {
+            self.write("<");
+            for (i, tp) in class.type_params.iter().enumerate() {
+                if i > 0 { self.write(", "); }
+                self.write(tp);
+            }
+            self.write(">");
+        }
         self.write(" {\n");
         self.indent += 1;
 
@@ -1395,8 +1426,12 @@ impl RustEmitter {
                     self.write("let ");
                 }
                 self.write(name);
-                self.write(": ");
-                self.write(&ty.rust_type());
+                // Skip explicit type annotation for generic class instances (let Rust infer)
+                let is_generic_class = matches!(ty, Type::Class { name: ref cn, .. } if self.generic_classes.contains(cn));
+                if !is_generic_class {
+                    self.write(": ");
+                    self.write(&ty.rust_type());
+                }
                 self.write(" = ");
                 if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
                     // `x: str | None = None` -> `let x: Option<String> = None`
@@ -1535,6 +1570,10 @@ impl RustEmitter {
                         // but the body has safe-indexing that returns Option<T>
                         self.emit_expr(val);
                         self.write(".unwrap()");
+                    } else if matches!(val.ty(), Type::TypeVar(_)) {
+                        // Returning a TypeVar-typed value needs .clone() to avoid move from &self
+                        self.emit_expr(val);
+                        self.write(".clone()");
                     } else {
                         self.emit_expr(val);
                     }
@@ -3548,6 +3587,13 @@ impl RustEmitter {
                                         }
                                     }
                                 }
+                                // Protocol param with concrete class arg -> wrap in Box::new()
+                                if matches!(&pts[i], Type::Protocol { .. }) && !matches!(arg.ty(), Type::Protocol { .. }) {
+                                    self.write("Box::new(");
+                                    self.emit_expr(arg);
+                                    self.write(")");
+                                    continue;
+                                }
                             }
                         }
                         self.emit_expr(arg);
@@ -3891,121 +3937,207 @@ impl RustEmitter {
                 self.write("| ");
                 self.emit_expr(body);
             }
-            HirExpr::ListComp { expr, var, iter, filter, ty } => {
-                // [expr for var in iter] -> iter.clone().into_iter().map(|var| expr).collect()
-                let is_range = matches!(iter.ty(), Type::Range);
-                let var_pattern = if var.contains(',') {
-                    let names: Vec<&str> = var.split(',').collect();
-                    format!("({})", names.join(", "))
-                } else {
-                    var.clone()
-                };
-                if is_range {
-                    self.write("(");
-                    self.emit_expr(iter);
-                    self.write(")");
-                } else {
-                    self.emit_expr(iter);
-                    self.write(".clone().into_iter()");
-                }
-                if let Some(ref cond) = filter {
-                    let elem_is_copy = if let Type::List(ref elem) = iter.ty() {
-                        !needs_clone_for_type(elem)
+            HirExpr::ListComp { expr, generators, ty } => {
+                if generators.len() == 1 {
+                    // Single generator: use functional style
+                    let (ref var, ref iter_e, ref filter) = generators[0];
+                    let is_range = matches!(iter_e.ty(), Type::Range);
+                    let var_pattern = if var.contains(',') {
+                        let names: Vec<&str> = var.split(',').collect();
+                        format!("({})", names.join(", "))
+                    } else { var.clone() };
+                    if is_range {
+                        self.write("(");
+                        self.emit_expr(iter_e);
+                        self.write(")");
                     } else {
-                        is_range
-                    };
-                    if elem_is_copy && !var.contains(',') {
-                        self.write(".filter(|&");
-                    } else {
-                        self.write(".filter(|");
+                        self.emit_expr(iter_e);
+                        self.write(".clone().into_iter()");
                     }
+                    if let Some(ref cond) = filter {
+                        let elem_is_copy = if let Type::List(ref elem) = iter_e.ty() {
+                            !needs_clone_for_type(elem)
+                        } else { is_range };
+                        if elem_is_copy && !var.contains(',') {
+                            self.write(".filter(|&");
+                        } else {
+                            self.write(".filter(|");
+                        }
+                        self.write(&var_pattern);
+                        self.write("| ");
+                        self.emit_expr(cond);
+                        self.write(")");
+                    }
+                    self.write(".map(|");
                     self.write(&var_pattern);
                     self.write("| ");
-                    self.emit_expr(cond);
+                    self.emit_expr(expr);
                     self.write(")");
-                }
-                self.write(".map(|");
-                self.write(&var_pattern);
-                self.write("| ");
-                self.emit_expr(expr);
-                self.write(")");
-                // Determine the collect type
-                if let Type::List(ref elem) = ty {
-                    self.write(&format!(".collect::<Vec<{}>>()", elem.rust_type()));
+                    if let Type::List(ref elem) = ty {
+                        self.write(&format!(".collect::<Vec<{}>>()", elem.rust_type()));
+                    } else {
+                        self.write(".collect::<Vec<_>>()");
+                    }
                 } else {
-                    self.write(".collect::<Vec<_>>()");
+                    // Multi-generator: use imperative style
+                    self.write("{ let mut _result = Vec::new(); ");
+                    for (var, iter_e, filter) in generators {
+                        let var_pattern = if var.contains(',') {
+                            let names: Vec<&str> = var.split(',').collect();
+                            format!("({})", names.join(", "))
+                        } else { var.clone() };
+                        let is_range = matches!(iter_e.ty(), Type::Range);
+                        self.write("for ");
+                        self.write(&var_pattern);
+                        self.write(" in ");
+                        if is_range {
+                            self.write("(");
+                            self.emit_expr(&iter_e);
+                            self.write(")");
+                        } else {
+                            self.emit_expr(&iter_e);
+                            self.write(".clone().into_iter()");
+                        }
+                        self.write(" { ");
+                        if let Some(ref cond) = filter {
+                            self.write("if ");
+                            self.emit_expr(cond);
+                            self.write(" { ");
+                        }
+                    }
+                    self.write("_result.push(");
+                    self.emit_expr(expr);
+                    self.write("); ");
+                    // Close filter ifs and for loops (in reverse)
+                    for (_, _, ref filter) in generators.iter().rev() {
+                        if filter.is_some() { self.write("} "); }
+                        self.write("} ");
+                    }
+                    self.write("_result }");
                 }
             }
-            HirExpr::SetComp { expr, var, iter, filter, ty } => {
-                let is_range = matches!(iter.ty(), Type::Range);
-                let var_pattern = if var.contains(',') {
-                    let names: Vec<&str> = var.split(',').collect();
-                    format!("({})", names.join(", "))
-                } else {
-                    var.clone()
-                };
+            HirExpr::SetComp { expr, generators, ty } => {
                 self.needs_hashset = true;
-                if is_range {
-                    self.write("(");
-                    self.emit_expr(iter);
-                    self.write(")");
-                } else {
-                    self.emit_expr(iter);
-                    self.write(".clone().into_iter()");
-                }
-                if let Some(ref cond) = filter {
-                    self.write(".filter(|");
+                if generators.len() == 1 {
+                    let (ref var, ref iter_e, ref filter) = generators[0];
+                    let is_range = matches!(iter_e.ty(), Type::Range);
+                    let var_pattern = if var.contains(',') {
+                        let names: Vec<&str> = var.split(',').collect();
+                        format!("({})", names.join(", "))
+                    } else { var.clone() };
+                    if is_range {
+                        self.write("(");
+                        self.emit_expr(iter_e);
+                        self.write(")");
+                    } else {
+                        self.emit_expr(iter_e);
+                        self.write(".clone().into_iter()");
+                    }
+                    if let Some(ref cond) = filter {
+                        self.write(".filter(|");
+                        self.write(&var_pattern);
+                        self.write("| ");
+                        self.emit_expr(cond);
+                        self.write(")");
+                    }
+                    self.write(".map(|");
                     self.write(&var_pattern);
                     self.write("| ");
-                    self.emit_expr(cond);
+                    self.emit_expr(expr);
                     self.write(")");
-                }
-                self.write(".map(|");
-                self.write(&var_pattern);
-                self.write("| ");
-                self.emit_expr(expr);
-                self.write(")");
-                if let Type::Set(ref elem) = ty {
-                    self.write(&format!(".collect::<HashSet<{}>>()", elem.rust_type()));
+                    if let Type::Set(ref elem) = ty {
+                        self.write(&format!(".collect::<HashSet<{}>>()", elem.rust_type()));
+                    } else {
+                        self.write(".collect::<HashSet<_>>()");
+                    }
                 } else {
-                    self.write(".collect::<HashSet<_>>()");
+                    self.write("{ let mut _result = HashSet::new(); ");
+                    for (var, iter_e, filter) in generators {
+                        self.write("for ");
+                        self.write(var);
+                        self.write(" in ");
+                        self.emit_expr(&iter_e);
+                        self.write(".clone().into_iter() { ");
+                        if let Some(ref cond) = filter {
+                            self.write("if ");
+                            self.emit_expr(cond);
+                            self.write(" { ");
+                        }
+                    }
+                    self.write("_result.insert(");
+                    self.emit_expr(expr);
+                    self.write("); ");
+                    for (_, _, ref filter) in generators.iter().rev() {
+                        if filter.is_some() { self.write("} "); }
+                        self.write("} ");
+                    }
+                    self.write("_result }");
                 }
             }
-            HirExpr::DictComp { key_expr, val_expr, var, iter, filter, ty } => {
-                let is_range = matches!(iter.ty(), Type::Range);
-                let var_pattern = if var.contains(',') {
-                    let names: Vec<&str> = var.split(',').collect();
-                    format!("({})", names.join(", "))
-                } else {
-                    var.clone()
-                };
+            HirExpr::DictComp { key_expr, val_expr, generators, ty } => {
                 self.needs_hashmap = true;
-                if is_range {
-                    self.write("(");
-                    self.emit_expr(iter);
-                    self.write(")");
-                } else {
-                    self.emit_expr(iter);
-                    self.write(".clone().into_iter()");
-                }
-                if let Some(ref cond) = filter {
-                    self.write(".filter(|");
+                if generators.len() == 1 {
+                    let (ref var, ref iter_e, ref filter) = generators[0];
+                    let is_range = matches!(iter_e.ty(), Type::Range);
+                    let var_pattern = if var.contains(',') {
+                        let names: Vec<&str> = var.split(',').collect();
+                        format!("({})", names.join(", "))
+                    } else { var.clone() };
+                    if is_range {
+                        self.write("(");
+                        self.emit_expr(iter_e);
+                        self.write(")");
+                    } else {
+                        self.emit_expr(iter_e);
+                        self.write(".clone().into_iter()");
+                    }
+                    if let Some(ref cond) = filter {
+                        self.write(".filter(|");
+                        self.write(&var_pattern);
+                        self.write("| ");
+                        self.emit_expr(cond);
+                        self.write(")");
+                    }
+                    self.write(".map(|");
                     self.write(&var_pattern);
-                    self.write("| ");
-                    self.emit_expr(cond);
-                    self.write(")");
-                }
-                self.write(".map(|");
-                self.write(&var_pattern);
-                self.write("| (");
-                self.emit_expr(key_expr);
-                self.write(", ");
-                self.emit_expr(val_expr);
-                self.write("))");
-                if let Type::Dict(ref k, ref v) = ty {
-                    self.write(&format!(".collect::<HashMap<{}, {}>>()", k.rust_type(), v.rust_type()));
+                    self.write("| (");
+                    self.emit_expr(key_expr);
+                    self.write(", ");
+                    self.emit_expr(val_expr);
+                    self.write("))");
+                    if let Type::Dict(ref k, ref v) = ty {
+                        self.write(&format!(".collect::<HashMap<{}, {}>>()", k.rust_type(), v.rust_type()));
+                    } else {
+                        self.write(".collect::<HashMap<_, _>>()");
+                    }
                 } else {
-                    self.write(".collect::<HashMap<_, _>>()");
+                    self.write("{ let mut _result = HashMap::new(); ");
+                    for (var, iter_e, filter) in generators {
+                        let var_pattern = if var.contains(',') {
+                            let names: Vec<&str> = var.split(',').collect();
+                            format!("({})", names.join(", "))
+                        } else { var.clone() };
+                        self.write("for ");
+                        self.write(&var_pattern);
+                        self.write(" in ");
+                        self.emit_expr(&iter_e);
+                        self.write(".clone().into_iter() { ");
+                        if let Some(ref cond) = filter {
+                            self.write("if ");
+                            self.emit_expr(cond);
+                            self.write(" { ");
+                        }
+                    }
+                    self.write("_result.insert(");
+                    self.emit_expr(key_expr);
+                    self.write(", ");
+                    self.emit_expr(val_expr);
+                    self.write("); ");
+                    for (_, _, ref filter) in generators.iter().rev() {
+                        if filter.is_some() { self.write("} "); }
+                        self.write("} ");
+                    }
+                    self.write("_result }");
                 }
             }
             HirExpr::GeneratorExpr { expr, var, iter, filter, .. } => {
@@ -4069,19 +4201,19 @@ impl RustEmitter {
     fn emit_stdlib_call(&mut self, func: &str, args: &[HirExpr]) {
         match func {
             // sifr.io
-            "read_file" => {
+            "read_text" => {
                 self.write("std::fs::read_to_string(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap()");
             }
-            "write_file" => {
+            "write_text" => {
                 self.write("std::fs::write(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
                 self.write(").unwrap()");
             }
-            "file_exists" => {
+            "exists" => {
                 self.write("std::path::Path::new(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").exists()");
@@ -4103,12 +4235,12 @@ impl RustEmitter {
                 self.write(").unwrap()");
             }
             // sifr.env
-            "get_env" => {
+            "env_get" => {
                 self.write("std::env::var(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").ok()");
             }
-            "set_env" => {
+            "env_set" => {
                 self.write("std::env::set_var(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
@@ -4140,10 +4272,56 @@ impl RustEmitter {
                 self.emit_expr(&args[0]);
                 self.write(").ceil() as i64");
             }
-            "fabs" => {
+            "abs_val" => {
                 self.write("(");
                 self.emit_expr(&args[0]);
                 self.write(").abs()");
+            }
+            "log" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").ln()");
+            }
+            "sin" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").sin()");
+            }
+            "cos" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").cos()");
+            }
+            "tan" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").tan()");
+            }
+            "pow_val" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").powf(");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "min_val" => {
+                self.write("{ let __a = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __b = ");
+                self.emit_expr(&args[1]);
+                self.write("; if __a < __b { __a } else { __b } }");
+            }
+            "max_val" => {
+                self.write("{ let __a = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __b = ");
+                self.emit_expr(&args[1]);
+                self.write("; if __a > __b { __a } else { __b } }");
+            }
+            "round_val" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").round() as i64");
             }
             // sifr.test
             "assert_eq" => {
@@ -4314,7 +4492,7 @@ impl RustEmitter {
             "random_choice" => {
                 self.write("{ use rand::Rng; let items = ");
                 self.emit_expr(&args[0]);
-                self.write("; items[rand::thread_rng().gen_range(0..items.len())] }");
+                self.write("; items[rand::thread_rng().gen_range(0..items.len())].clone() }");
             }
             // sifr.re
             "re_match" => {
@@ -4346,7 +4524,7 @@ impl RustEmitter {
                 self.emit_expr_as_bytes(&args[0]);
                 self.write(")) }");
             }
-            "md5_hash" => {
+            "md5" => {
                 self.write("format!(\"{:x}\", md5::compute(");
                 self.emit_expr_as_bytes(&args[0]);
                 self.write("))");
@@ -4836,8 +5014,10 @@ fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
             expr_references_var(condition, var_name) || expr_references_var(then_expr, var_name) || expr_references_var(else_expr, var_name)
         }
         HirExpr::Lambda { body, .. } => expr_references_var(body, var_name),
-        HirExpr::ListComp { expr: e, iter, filter, .. } => {
-            expr_references_var(e, var_name) || expr_references_var(iter, var_name) || filter.as_ref().map_or(false, |f| expr_references_var(f, var_name))
+        HirExpr::ListComp { expr: e, generators, .. } => {
+            expr_references_var(e, var_name) || generators.iter().any(|(_, iter, filter)| {
+                expr_references_var(iter, var_name) || filter.as_ref().map_or(false, |f| expr_references_var(f, var_name))
+            })
         }
         _ => false,
     }

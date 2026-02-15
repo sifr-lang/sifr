@@ -1,30 +1,30 @@
-# expect-stdout: 78.5
-# expect-stdout: 100
-
-class Drawable(Protocol):
-    def area(self) -> float:
+# Test protocol method dispatch through protocol-typed parameters
+class Greetable(Protocol):
+    def greet(self) -> str:
         pass
 
-class Circle:
-    radius: float
+class Person:
+    name: str
+    def __init__(self, name: str):
+        self.name = name
+    def greet(self) -> str:
+        return f"Hello, {self.name}!"
 
-    def __init__(self, radius: float):
-        self.radius = radius
+class Robot:
+    id: int
+    def __init__(self, id: int):
+        self.id = id
+    def greet(self) -> str:
+        return f"Beep boop #{self.id}"
 
-    def area(self) -> float:
-        return 3.14 * self.radius * self.radius
-
-class Square:
-    side: float
-
-    def __init__(self, side: float):
-        self.side = side
-
-    def area(self) -> float:
-        return self.side * self.side
+def say_hello(entity: Greetable) -> None:
+    print(entity.greet())
 
 def main():
-    c: Circle = Circle(5.0)
-    s: Square = Square(10.0)
-    print(c.area())
-    print(s.area())
+    p: Person = Person("Alice")
+    r: Robot = Robot(42)
+    say_hello(p)
+    say_hello(r)
+
+# expect-stdout: Hello, Alice!
+# expect-stdout: Beep boop #42

@@ -42,14 +42,14 @@ pub fn is_stdlib_module(module_name: &str) -> bool {
 fn stdlib_io() -> StdlibModule {
     let mut functions = HashMap::new();
 
-    // read_file(path: str) -> str
-    functions.insert("read_file".to_string(), FunctionType {
+    // read_text(path: str) -> str
+    functions.insert("read_text".to_string(), FunctionType {
         params: vec![("path".to_string(), Type::Str)],
         return_type: Box::new(Type::Str),
     });
 
-    // write_file(path: str, content: str) -> None
-    functions.insert("write_file".to_string(), FunctionType {
+    // write_text(path: str, content: str) -> None
+    functions.insert("write_text".to_string(), FunctionType {
         params: vec![
             ("path".to_string(), Type::Str),
             ("content".to_string(), Type::Str),
@@ -57,8 +57,8 @@ fn stdlib_io() -> StdlibModule {
         return_type: Box::new(Type::None),
     });
 
-    // file_exists(path: str) -> bool
-    functions.insert("file_exists".to_string(), FunctionType {
+    // exists(path: str) -> bool
+    functions.insert("exists".to_string(), FunctionType {
         params: vec![("path".to_string(), Type::Str)],
         return_type: Box::new(Type::Bool),
     });
@@ -85,9 +85,9 @@ fn stdlib_json() -> StdlibModule {
         return_type: Box::new(Type::Str),
     });
 
-    // json_dumps(obj: str) -> str
+    // json_dumps(obj: Any) -> str
     functions.insert("json_dumps".to_string(), FunctionType {
-        params: vec![("obj".to_string(), Type::Str)],
+        params: vec![("obj".to_string(), Type::Any)],
         return_type: Box::new(Type::Str),
     });
 
@@ -101,14 +101,14 @@ fn stdlib_json() -> StdlibModule {
 fn stdlib_env() -> StdlibModule {
     let mut functions = HashMap::new();
 
-    // get_env(key: str) -> str | None
-    functions.insert("get_env".to_string(), FunctionType {
+    // env_get(key: str) -> str | None
+    functions.insert("env_get".to_string(), FunctionType {
         params: vec![("key".to_string(), Type::Str)],
         return_type: Box::new(Type::Union(vec![Type::Str, Type::None])),
     });
 
-    // set_env(key: str, value: str) -> None
-    functions.insert("set_env".to_string(), FunctionType {
+    // env_set(key: str, value: str) -> None
+    functions.insert("env_set".to_string(), FunctionType {
         params: vec![
             ("key".to_string(), Type::Str),
             ("value".to_string(), Type::Str),
@@ -167,10 +167,58 @@ fn stdlib_math() -> StdlibModule {
         return_type: Box::new(Type::Int),
     });
 
-    // abs_float(x: float) -> float  (to avoid conflict with built-in abs for int)
-    functions.insert("fabs".to_string(), FunctionType {
+    // abs_val(x: float) -> float
+    functions.insert("abs_val".to_string(), FunctionType {
         params: vec![("x".to_string(), Type::Float)],
         return_type: Box::new(Type::Float),
+    });
+
+    // log(x: float) -> float
+    functions.insert("log".to_string(), FunctionType {
+        params: vec![("x".to_string(), Type::Float)],
+        return_type: Box::new(Type::Float),
+    });
+
+    // sin(x: float) -> float
+    functions.insert("sin".to_string(), FunctionType {
+        params: vec![("x".to_string(), Type::Float)],
+        return_type: Box::new(Type::Float),
+    });
+
+    // cos(x: float) -> float
+    functions.insert("cos".to_string(), FunctionType {
+        params: vec![("x".to_string(), Type::Float)],
+        return_type: Box::new(Type::Float),
+    });
+
+    // tan(x: float) -> float
+    functions.insert("tan".to_string(), FunctionType {
+        params: vec![("x".to_string(), Type::Float)],
+        return_type: Box::new(Type::Float),
+    });
+
+    // pow_val(x: float, y: float) -> float
+    functions.insert("pow_val".to_string(), FunctionType {
+        params: vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)],
+        return_type: Box::new(Type::Float),
+    });
+
+    // min_val(a: float, b: float) -> float
+    functions.insert("min_val".to_string(), FunctionType {
+        params: vec![("a".to_string(), Type::Float), ("b".to_string(), Type::Float)],
+        return_type: Box::new(Type::Float),
+    });
+
+    // max_val(a: float, b: float) -> float
+    functions.insert("max_val".to_string(), FunctionType {
+        params: vec![("a".to_string(), Type::Float), ("b".to_string(), Type::Float)],
+        return_type: Box::new(Type::Float),
+    });
+
+    // round_val(x: float) -> int
+    functions.insert("round_val".to_string(), FunctionType {
+        params: vec![("x".to_string(), Type::Float)],
+        return_type: Box::new(Type::Int),
     });
 
     // Constants
@@ -437,10 +485,10 @@ fn stdlib_random() -> StdlibModule {
         return_type: Box::new(Type::Float),
     });
 
-    // random_choice(items: list[int]) -> int
+    // random_choice(items: list[Any]) -> Any
     functions.insert("random_choice".to_string(), FunctionType {
-        params: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
-        return_type: Box::new(Type::Int),
+        params: vec![("items".to_string(), Type::List(Box::new(Type::Any)))],
+        return_type: Box::new(Type::Any),
     });
 
     StdlibModule {
@@ -497,8 +545,8 @@ fn stdlib_hash() -> StdlibModule {
         return_type: Box::new(Type::Str),
     });
 
-    // md5_hash(s: str) -> str (hex digest)
-    functions.insert("md5_hash".to_string(), FunctionType {
+    // md5(s: str) -> str (hex digest)
+    functions.insert("md5".to_string(), FunctionType {
         params: vec![("s".to_string(), Type::Str)],
         return_type: Box::new(Type::Str),
     });
