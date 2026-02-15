@@ -1,0 +1,63 @@
+# ============================================================
+# Milestone: Extended Standard Library Demo
+# ============================================================
+# Demonstrates all extended stdlib modules:
+#   sifr.time     — Time operations
+#   sifr.random   — Random number generation
+#   sifr.re       — Regular expressions
+#   sifr.hash     — Cryptographic hashing
+#   sifr.encoding — Base64 encoding/decoding
+# ============================================================
+
+from sifr.time import time_now, sleep
+from sifr.random import random_int, random_float
+from sifr.re import re_match, re_find, re_replace
+from sifr.hash import sha256, md5_hash
+from sifr.encoding import base64_encode, base64_decode
+
+def main():
+    # ----------------------------------------------------------
+    # 1. sifr.time — Time operations
+    # ----------------------------------------------------------
+    print("=== sifr.time ===")
+    t1: float = time_now()
+    print(f"Current epoch: {t1}")
+    sleep(0.01)
+    t2: float = time_now()
+    print(f"Time advanced: {t2 > t1}")
+
+    # ----------------------------------------------------------
+    # 2. sifr.random — Random numbers
+    # ----------------------------------------------------------
+    print("=== sifr.random ===")
+    r: int = random_int(1, 100)
+    print(f"Random int [1,100]: {r}")
+    f: float = random_float()
+    print(f"Random float [0,1): {f}")
+
+    # ----------------------------------------------------------
+    # 3. sifr.re — Regular expressions
+    # ----------------------------------------------------------
+    print("=== sifr.re ===")
+    print(f"Match digits in 'hello 42': {re_match('[0-9]+', 'hello 42')}")
+    found: str | None = re_find("[0-9]+", "price is $42.99")
+    if found is not None:
+        print(f"Found: {found}")
+    print(f"Replace: {re_replace('[0-9]+', 'N', 'a1b2c3')}")
+
+    # ----------------------------------------------------------
+    # 4. sifr.hash — Cryptographic hashing
+    # ----------------------------------------------------------
+    print("=== sifr.hash ===")
+    print(f"SHA-256('sifr'): {sha256('sifr')}")
+    print(f"MD5('sifr'): {md5_hash('sifr')}")
+
+    # ----------------------------------------------------------
+    # 5. sifr.encoding — Base64
+    # ----------------------------------------------------------
+    print("=== sifr.encoding ===")
+    encoded: str = base64_encode("Hello, Sifr!")
+    print(f"Base64 encode: {encoded}")
+    print(f"Base64 decode: {base64_decode(encoded)}")
+
+    print("=== Demo complete ===")

@@ -75,6 +75,14 @@ edition = "2021"
                     deps.push("serde = { version = \"1\", features = [\"derive\"] }");
                 }
             }
+            "sifr.time" => deps.push("chrono = \"0.4\""),
+            "sifr.random" => deps.push("rand = \"0.8\""),
+            "sifr.re" => deps.push("regex = \"1\""),
+            "sifr.hash" => {
+                deps.push("sha2 = \"0.10\"");
+                deps.push("md5 = \"0.7\"");
+            }
+            "sifr.encoding" => deps.push("base64 = \"0.22\""),
             _ => {}
         }
     }

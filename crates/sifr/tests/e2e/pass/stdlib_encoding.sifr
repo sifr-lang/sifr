@@ -1,0 +1,14 @@
+# Test sifr.encoding stdlib module
+from sifr.encoding import base64_encode, base64_decode
+
+def main():
+    # Encode
+    encoded: str = base64_encode("Hello, World!")
+    print(encoded)
+
+    # Decode
+    decoded: str = base64_decode("SGVsbG8sIFdvcmxkIQ==")
+    print(decoded)
+
+# expect-stdout: SGVsbG8sIFdvcmxkIQ==
+# expect-stdout: Hello, World!

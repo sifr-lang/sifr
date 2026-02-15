@@ -1,0 +1,18 @@
+# Test sifr.random stdlib module
+from sifr.random import random_int, random_float
+
+def main():
+    # Random int in range
+    r: int = random_int(1, 10)
+    print(r >= 1)
+    print(r <= 10)
+
+    # Random float between 0 and 1
+    f: float = random_float()
+    print(f >= 0.0)
+    print(f < 1.0)
+
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
