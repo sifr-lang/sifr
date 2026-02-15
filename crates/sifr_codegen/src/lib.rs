@@ -1291,11 +1291,23 @@ impl RustEmitter {
                         self.write(", ");
                         self.write(&param.name);
                         self.write(": ");
-                        // Pass class types by reference
-                        if matches!(param.ty, Type::Class { .. }) {
-                            self.write("&");
+                        // Emit parameter type based on convention
+                        let rust_ty = param.ty.rust_type();
+                        match param.convention {
+                            ParamConvention::Borrow => {
+                                if param.ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+                                    self.write(&rust_ty);
+                                } else {
+                                    self.write(&format!("&{}", rust_ty));
+                                }
+                            }
+                            ParamConvention::MutBorrow => {
+                                self.write(&format!("&mut {}", rust_ty));
+                            }
+                            ParamConvention::Own => {
+                                self.write(&rust_ty);
+                            }
                         }
-                        self.write(&param.ty.rust_type());
                     }
                     self.write(")");
 
@@ -3003,18 +3015,27 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".len() as i64");
             }
-            (Type::Class { .. }, _) => {
-                // Class instance method call
+            (Type::Class { name: ref class_name, .. }, _) => {
+                // Class instance method call -- use convention-aware argument emission
                 self.emit_expr(object);
                 self.write(&format!(".{}(", method));
+                // Look up method conventions from func_signatures
+                let method_key = format!("{}::{}", class_name, method);
+                let method_info = self.func_signatures.get(&method_key).cloned();
                 for (i, arg) in args.iter().enumerate() {
                     if i > 0 {
                         self.write(", ");
                     }
-                    // Pass class instances by reference
-                    if matches!(arg.ty(), Type::Class { .. }) {
-                        self.write("&");
+                    if let Some((ref params, _)) = method_info {
+                        // Method params skip self, so param index i corresponds to params[i]
+                        // (self is not in func_signatures params)
+                        if let Some((_, convention)) = params.get(i) {
+                            self.emit_borrow_prefix(*convention, arg.ty());
+                            self.emit_expr(arg);
+                            continue;
+                        }
                     }
+                    // Fallback: emit as-is
                     self.emit_expr(arg);
                 }
                 self.write(")");
