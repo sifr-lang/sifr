@@ -1,0 +1,13 @@
+# expect-stdout: 3.3333333333333335
+# expect-stdout: 2.5
+# Tests that int / int produces float (true division), not integer division
+
+def main():
+    a: int = 10
+    b: int = 3
+    result: float = a / b
+    print(result)
+    c: int = 5
+    d: int = 2
+    result2: float = c / d
+    print(result2)

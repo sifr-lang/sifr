@@ -1354,11 +1354,21 @@ impl RustEmitter {
                         self.write(";\n");
                     }
                     "**=" => {
-                        self.write(name);
-                        self.write(" = ");
-                        self.write(&format!("({} as f64).powf(", name));
-                        self.emit_expr(value);
-                        self.write(" as f64);\n");
+                        // Power assignment: x **= y
+                        // If the value (exponent) is int, use i64::pow for int targets
+                        if matches!(var_ty, Type::Int) {
+                            self.write(name);
+                            self.write(" = ");
+                            self.write(&format!("{}.pow(", name));
+                            self.emit_expr(value);
+                            self.write(" as u32);\n");
+                        } else {
+                            self.write(name);
+                            self.write(" = ");
+                            self.write(&format!("({} as f64).powf(", name));
+                            self.emit_expr(value);
+                            self.write(" as f64);\n");
+                        }
                     }
                     _ => {
                         self.write(name);
@@ -1370,6 +1380,9 @@ impl RustEmitter {
             }
             HirStmt::Return { value } => {
                 let ret_is_option = self.current_return_type.as_ref().map_or(false, |t| is_option_type(t));
+                let ret_is_non_option_union = self.current_return_type.as_ref().map_or(false, |t| {
+                    matches!(t, Type::Union(_)) && !is_option_type(t)
+                });
                 self.write_indent();
                 if let Some(val) = value {
                     self.write("return ");
@@ -1381,6 +1394,25 @@ impl RustEmitter {
                         self.write("Some(");
                         self.emit_expr(val);
                         self.write(")");
+                    } else if ret_is_non_option_union {
+                        // Returning a value from a non-Option union function -> wrap in enum variant
+                        if let Some(ret_ty) = &self.current_return_type.clone() {
+                            if let Type::Union(members) = ret_ty {
+                                let arg_ty = val.ty();
+                                if let Some(variant) = find_union_variant(members, arg_ty) {
+                                    let enum_name = ret_ty.union_enum_name();
+                                    self.write(&format!("{}::{}(", enum_name, variant));
+                                    self.emit_expr(val);
+                                    self.write(")");
+                                } else {
+                                    self.emit_expr(val);
+                                }
+                            } else {
+                                self.emit_expr(val);
+                            }
+                        } else {
+                            self.emit_expr(val);
+                        }
                     } else {
                         self.emit_expr(val);
                     }
@@ -1412,8 +1444,11 @@ impl RustEmitter {
                     self.indent += 1;
 
                     // Then branch: the matched variant
+                    // Check if the variable is mutated inside the then-body to emit `mut`
+                    let then_mutated = collect_mutated_vars(then_body);
+                    let var_mut = if then_mutated.contains(&var_name) { "mut " } else { "" };
                     self.write_indent();
-                    self.write(&format!("{}::{}({}) => {{\n", enum_name, variant_name, var_name));
+                    self.write(&format!("{}::{}({}{}) => {{\n", enum_name, variant_name, var_mut, var_name));
                     self.indent += 1;
                     for s in then_body {
                         self.emit_stmt(s);
@@ -1423,10 +1458,12 @@ impl RustEmitter {
 
                     // Else branch: the other variant(s)
                     if let Some(else_stmts) = else_body {
+                        let else_mutated = collect_mutated_vars(else_stmts);
+                        let else_var_mut = if else_mutated.contains(&var_name) { "mut " } else { "" };
                         if other_variants.len() == 1 {
                             let (other_variant, _) = &other_variants[0];
                             self.write_indent();
-                            self.write(&format!("{}::{}({}) => {{\n", enum_name, other_variant, var_name));
+                            self.write(&format!("{}::{}({}{}) => {{\n", enum_name, other_variant, else_var_mut, var_name));
                         } else {
                             self.write_indent();
                             self.write("_ => {\n");
@@ -1487,6 +1524,40 @@ impl RustEmitter {
                         }
                         self.indent -= 1;
                     }
+                    self.writeln("}");
+                } else if let Some((var_name, enum_name, _non_none_variants)) = detect_is_none_union_var(condition) {
+                    // 3+ member union `is None` check: use match with None variant
+                    self.write_indent();
+                    self.write(&format!("match {} {{\n", var_name));
+                    self.indent += 1;
+
+                    // None arm -> then_body
+                    self.write_indent();
+                    self.write(&format!("{}::None(()) => {{\n", enum_name));
+                    self.indent += 1;
+                    for s in then_body {
+                        self.emit_stmt(s);
+                    }
+                    self.indent -= 1;
+                    self.writeln("}");
+
+                    // Non-None arms -> else_body
+                    if let Some(else_stmts) = else_body {
+                        self.write_indent();
+                        self.write("_ => {\n");
+                        self.indent += 1;
+                        for s in else_stmts {
+                            self.emit_stmt(s);
+                        }
+                        self.indent -= 1;
+                        self.writeln("}");
+                    } else {
+                        // Need a catch-all arm even without else
+                        self.write_indent();
+                        self.write("_ => {}\n");
+                    }
+
+                    self.indent -= 1;
                     self.writeln("}");
                 } else if let Some(var_name) = detect_is_none_var(condition) {
                     self.write_indent();
@@ -2412,6 +2483,15 @@ impl RustEmitter {
                     self.write(".repeat(");
                     self.emit_expr(left);
                     self.write(" as usize)");
+                } else if op == "/" && left.ty() == &Type::Int && right.ty() == &Type::Int {
+                    // Python: int / int -> float (true division)
+                    // Rust: i64 / i64 -> i64 (integer division)
+                    // Fix: cast both to f64 for true division
+                    self.write("(");
+                    self.emit_expr(left);
+                    self.write(" as f64) / (");
+                    self.emit_expr(right);
+                    self.write(" as f64)");
                 } else if matches!(left.ty(), Type::Class { .. }) {
                     // Class type with operator overloading: use reference-based ops
                     self.write("&");
@@ -2420,16 +2500,26 @@ impl RustEmitter {
                     self.write("&");
                     self.emit_expr(right);
                 } else {
+                    // Handle mixed int/float arithmetic: cast int side to f64
+                    let left_is_int = left.ty() == &Type::Int;
+                    let right_is_int = right.ty() == &Type::Int;
+                    let left_is_float = left.ty() == &Type::Float;
+                    let right_is_float = right.ty() == &Type::Float;
+                    let needs_left_cast = left_is_int && right_is_float;
+                    let needs_right_cast = right_is_int && left_is_float;
+
                     // Wrap sub-expressions in parens if they are BinOps to preserve precedence
                     let needs_left_parens = matches!(left.as_ref(), HirExpr::BinOp { .. });
                     let needs_right_parens = matches!(right.as_ref(), HirExpr::BinOp { .. });
-                    if needs_left_parens { self.write("("); }
+                    if needs_left_parens || needs_left_cast { self.write("("); }
                     self.emit_expr(left);
-                    if needs_left_parens { self.write(")"); }
+                    if needs_left_parens || needs_left_cast { self.write(")"); }
+                    if needs_left_cast { self.write(" as f64"); }
                     self.write(&format!(" {} ", op));
-                    if needs_right_parens { self.write("("); }
+                    if needs_right_parens || needs_right_cast { self.write("("); }
                     self.emit_expr(right);
-                    if needs_right_parens { self.write(")"); }
+                    if needs_right_parens || needs_right_cast { self.write(")"); }
+                    if needs_right_cast { self.write(" as f64"); }
                 }
             }
             HirExpr::UnaryOp { op, operand, .. } => {
@@ -2494,9 +2584,14 @@ impl RustEmitter {
                     // Map print() to println!
                     if args.is_empty() {
                         self.write("println!()");
+                    } else if matches!(args[0], HirExpr::NoneLiteral) || matches!(args[0].ty(), Type::None) {
+                        // print(None) -> println!("None")
+                        self.write("println!(\"None\")");
                     } else if let HirExpr::StringLiteral(val) = &args[0] {
                         // Inline string literal directly: println!("hello") instead of println!("{}", "hello")
-                        self.write(&format!("println!(\"{}\")", val));
+                        // Escape backslashes and double quotes for valid Rust string
+                        let escaped = val.replace('\\', "\\\\").replace('"', "\\\"").replace('{', "{{").replace('}', "}}");
+                        self.write(&format!("println!(\"{}\")", escaped));
                     } else if let HirExpr::FString { parts, .. } = &args[0] {
                         // Inline f-string directly into println! to avoid double-format
                         self.emit_fstring_macro("println!", parts);
@@ -2622,10 +2717,28 @@ impl RustEmitter {
                                 self.emit_expr(&args[0]);
                                 self.write(" != 0");
                             }
-                            Type::Str => {
+                            Type::Float => {
+                                self.emit_expr(&args[0]);
+                                self.write(" != 0.0");
+                            }
+                            Type::Str | Type::List(_) | Type::Dict(_, _) => {
                                 self.write("!");
                                 self.emit_expr(&args[0]);
                                 self.write(".is_empty()");
+                            }
+                            Type::Tuple(elems) => {
+                                // Non-empty tuples are always truthy, empty tuples are falsy
+                                if elems.is_empty() {
+                                    self.write("false");
+                                } else {
+                                    self.write("true");
+                                }
+                            }
+                            Type::Bool => {
+                                self.emit_expr(&args[0]);
+                            }
+                            Type::None => {
+                                self.write("false");
                             }
                             _ => {
                                 self.emit_expr(&args[0]);
@@ -2834,11 +2947,12 @@ impl RustEmitter {
                                     self.write(&format!(".{}", resolved));
                                 }
                             } else {
+                                // Emit raw integer for tuple field access (e.g., .0 not .0_i64)
                                 self.emit_expr(object);
-                                self.write(".");
-                                self.emit_expr(index);
+                                self.write(&format!(".{}", val));
                             }
                         } else {
+                            // Non-literal index: emit as raw integer (tuples require compile-time indices)
                             self.emit_expr(object);
                             self.write(".");
                             self.emit_expr(index);
@@ -3658,11 +3772,40 @@ fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<String> {
 }
 
 /// Detect `x is None` pattern in a Compare expression. Returns the variable name.
+/// Detect `x is None` pattern. Returns the variable name.
+/// Only matches when the variable type is an Option (T | None with exactly 2 members).
 fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
     if let HirExpr::Compare { left, ops, comparators, .. } = expr {
         if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
-            if let HirExpr::Name { name, .. } = left.as_ref() {
-                return Some(name.clone());
+            if let HirExpr::Name { name, ty } = left.as_ref() {
+                // Only match for Option types (2-member unions with None)
+                if is_option_type(ty) {
+                    return Some(name.clone());
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Detect `x is None` pattern for 3+ member unions containing None.
+/// Returns (var_name, enum_name, non_none_variants).
+fn detect_is_none_union_var(expr: &HirExpr) -> Option<(String, String, Vec<(String, Type)>)> {
+    if let HirExpr::Compare { left, ops, comparators, .. } = expr {
+        if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
+            if let HirExpr::Name { name, ty } = left.as_ref() {
+                if let Type::Union(members) = ty {
+                    let has_none = members.iter().any(|m| matches!(m, Type::None));
+                    let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+                    // Only match for 3+ member unions (not simple Option)
+                    if has_none && non_none.len() >= 2 {
+                        let enum_name = ty.union_enum_name();
+                        let non_none_variants: Vec<(String, Type)> = non_none.iter()
+                            .map(|t| (t.union_variant_name(), (*t).clone()))
+                            .collect();
+                        return Some((name.clone(), enum_name, non_none_variants));
+                    }
+                }
             }
         }
     }
