@@ -1065,6 +1065,12 @@ impl RustEmitter {
         // Pre-scan: collect mutated variables so we know which need `mut`
         self.mutated_vars = collect_mutated_vars(&func.body);
 
+        // Emit decorator comments before the function
+        for decorator in &func.decorators {
+            self.write_indent();
+            self.write(&format!("// @{}\n", decorator));
+        }
+
         // Function signature -- only emit params without defaults, or all params
         // Since Rust doesn't have default params, we emit all params and handle
         // defaults at call site
@@ -3368,6 +3374,7 @@ mod tests {
                     },
                 }],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3398,6 +3405,7 @@ mod tests {
                     }),
                 }],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3434,6 +3442,7 @@ mod tests {
                     },
                 ],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3465,6 +3474,7 @@ mod tests {
                     },
                 ],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3505,6 +3515,7 @@ mod tests {
                     },
                 ],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3531,6 +3542,7 @@ mod tests {
                     },
                 }],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3560,6 +3572,7 @@ mod tests {
                     is_mutable: false,
                 }],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3606,6 +3619,7 @@ mod tests {
                     },
                 ],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3641,6 +3655,7 @@ mod tests {
                     is_mutable: false,
                 }],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3682,6 +3697,7 @@ mod tests {
                     },
                 ],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
@@ -3707,6 +3723,7 @@ mod tests {
                     },
                 }],
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }],
             classes: vec![],
             imports: vec![],
