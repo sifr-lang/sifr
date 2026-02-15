@@ -1,0 +1,17 @@
+# Test: isinstance narrowing on union type with field access
+# expect-stdout: Rex
+
+class Dog:
+    name: str
+
+class Cat:
+    name: str
+
+def get_name(pet: Dog | Cat) -> str:
+    if isinstance(pet, Dog):
+        return pet.name
+    return "unknown"
+
+def main():
+    d: Dog = Dog("Rex")
+    print(get_name(d))

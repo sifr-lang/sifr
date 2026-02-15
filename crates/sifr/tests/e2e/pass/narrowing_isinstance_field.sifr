@@ -1,0 +1,13 @@
+# Test: Field access after isinstance narrowing
+# expect-stdout: 42
+
+class Dog:
+    name: str
+    age: int
+
+def get_age(pet: Dog) -> int:
+    return pet.age
+
+def main():
+    d: Dog = Dog("Rex", 42)
+    print(get_age(d))

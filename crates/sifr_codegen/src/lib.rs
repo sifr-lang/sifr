@@ -1512,7 +1512,6 @@ impl RustEmitter {
                     self.indent += 1;
 
                     // Then branch: the matched variant
-                    // Check if the variable is mutated inside the then-body to emit `mut`
                     let then_mutated = collect_mutated_vars(then_body);
                     let var_mut = if then_mutated.contains(&var_name) { "mut " } else { "" };
                     self.write_indent();
@@ -1524,12 +1523,31 @@ impl RustEmitter {
                     self.indent -= 1;
                     self.writeln("}");
 
-                    // Else branch: the other variant(s)
+                    // Emit elif isinstance branches as additional match arms
+                    let mut remaining_variants = other_variants.clone();
+                    for (elif_cond, elif_body) in elif_clauses {
+                        if let Some((_, elif_variant, _, _)) = detect_isinstance_union(elif_cond) {
+                            let elif_mutated = collect_mutated_vars(elif_body);
+                            let elif_var_mut = if elif_mutated.contains(&var_name) { "mut " } else { "" };
+                            self.write_indent();
+                            self.write(&format!("{}::{}({}{}) => {{\n", enum_name, elif_variant, elif_var_mut, var_name));
+                            self.indent += 1;
+                            for s in elif_body {
+                                self.emit_stmt(s);
+                            }
+                            self.indent -= 1;
+                            self.writeln("}");
+                            // Remove this variant from remaining
+                            remaining_variants.retain(|(v, _)| v != &elif_variant);
+                        }
+                    }
+
+                    // Else branch: remaining variant(s)
                     if let Some(else_stmts) = else_body {
                         let else_mutated = collect_mutated_vars(else_stmts);
                         let else_var_mut = if else_mutated.contains(&var_name) { "mut " } else { "" };
-                        if other_variants.len() == 1 {
-                            let (other_variant, _) = &other_variants[0];
+                        if remaining_variants.len() == 1 {
+                            let (other_variant, _) = &remaining_variants[0];
                             self.write_indent();
                             self.write(&format!("{}::{}({}{}) => {{\n", enum_name, other_variant, else_var_mut, var_name));
                         } else {
@@ -1542,6 +1560,10 @@ impl RustEmitter {
                         }
                         self.indent -= 1;
                         self.writeln("}");
+                    } else {
+                        // No else body: add wildcard arm so match is exhaustive
+                        self.write_indent();
+                        self.write("_ => {}\n");
                     }
 
                     self.indent -= 1;
@@ -2935,8 +2957,25 @@ impl RustEmitter {
                 }
             }
             HirExpr::UnaryOp { op, operand, .. } => {
-                if op == "not" || op == "~" {
-                    // Both `not` (logical) and `~` (bitwise invert) map to `!` in Rust
+                if op == "not" {
+                    // Collection truthiness: `not list_var` -> `list_var.is_empty()`
+                    let is_collection = matches!(
+                        operand.ty(),
+                        Type::List(_) | Type::Dict(_, _) | Type::Set(_) | Type::Tuple(_) | Type::Str
+                    );
+                    if is_collection {
+                        self.emit_expr(operand);
+                        self.write(".is_empty()");
+                    } else if matches!(operand.ty(), Type::Union(_)) {
+                        // Optional truthiness: `not x` where x is T|None -> `x.is_none()`
+                        self.emit_expr(operand);
+                        self.write(".is_none()");
+                    } else {
+                        self.write("!");
+                        self.emit_expr(operand);
+                    }
+                } else if op == "~" {
+                    // Bitwise invert maps to `!` in Rust
                     self.write("!");
                     self.emit_expr(operand);
                 } else if op == "+" {
@@ -2968,9 +3007,25 @@ impl RustEmitter {
                         self.write(" != ");
                         self.emit_expr(&comparators[0]);
                     } else {
-                        self.emit_expr(left);
-                        self.write(&format!(" {} ", op));
-                        self.emit_expr(&comparators[0]);
+                        // Handle Option<T> vs T comparisons: wrap T in Some()
+                        let left_is_option = is_option_type(left.ty());
+                        let right_is_option = is_option_type(comparators[0].ty());
+                        if left_is_option && !right_is_option && !matches!(comparators[0], HirExpr::NoneLiteral) {
+                            self.emit_expr(left);
+                            self.write(&format!(" {} Some(", op));
+                            self.emit_expr(&comparators[0]);
+                            self.write(")");
+                        } else if !left_is_option && right_is_option && !matches!(left.as_ref(), HirExpr::NoneLiteral) {
+                            self.write("Some(");
+                            self.emit_expr(left);
+                            self.write(")");
+                            self.write(&format!(" {} ", op));
+                            self.emit_expr(&comparators[0]);
+                        } else {
+                            self.emit_expr(left);
+                            self.write(&format!(" {} ", op));
+                            self.emit_expr(&comparators[0]);
+                        }
                     }
                 } else {
                     // Chained comparisons: a < b < c -> a < b && b < c

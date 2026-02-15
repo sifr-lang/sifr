@@ -1,0 +1,22 @@
+# Test: collection truthiness with not
+# expect-stdout: empty
+# expect-stdout: not empty
+# expect-stdout: empty dict
+
+def check_list(items: list[int]) -> str:
+    if not items:
+        return "empty"
+    return "not empty"
+
+def check_dict(d: dict[str, int]) -> str:
+    if not d:
+        return "empty dict"
+    return "not empty dict"
+
+def main():
+    empty: list[int] = []
+    print(check_list(empty))
+    full: list[int] = [1, 2, 3]
+    print(check_list(full))
+    d: dict[str, int] = {}
+    print(check_dict(d))

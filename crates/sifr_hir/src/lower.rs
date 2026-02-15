@@ -1904,12 +1904,21 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
     // Restore state before processing elif/else
     ctx.scope.restore_narrowing_state(&saved_state);
 
+    // Collect all narrowing conditions (if + elifs) for cumulative negation
+    let mut all_conditions: Vec<NarrowingCondition> = Vec::new();
+    if let Some(ref cond) = narrowing_cond {
+        all_conditions.push(cond.clone());
+    }
+
     let mut elif_clauses = Vec::new();
     for clause in &if_stmt.elif_else_clauses {
         if let Some(test) = &clause.test {
-            // For elif, apply the negation of the original condition first
-            if let Some(ref cond) = narrowing_cond {
-                apply_narrowing(ctx, cond, false);
+            // For elif, apply the negation of ALL previous conditions
+            // This ensures cumulative narrowing: if A was Dog, elif B was Cat,
+            // then in elif C the type is narrowed by removing both Dog and Cat
+            ctx.scope.restore_narrowing_state(&saved_state);
+            for prev_cond in &all_conditions {
+                apply_narrowing(ctx, prev_cond, false);
             }
 
             let elif_narrowing = detect_narrowing_condition(test, ctx);
@@ -1926,13 +1935,19 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
             elif_clauses.push((cond, body));
 
             ctx.scope.restore_narrowing_state(&elif_saved);
+
+            // Track this elif's condition for subsequent branches
+            if let Some(elif_cond) = elif_narrowing {
+                all_conditions.push(elif_cond);
+            }
         }
     }
 
-    // For else-branch, apply narrowing with condition = false
+    // For else-branch, apply negation of ALL conditions (if + all elifs)
     let else_body = if_stmt.elif_else_clauses.iter().find(|c| c.test.is_none()).map(|clause| {
-        if let Some(ref cond) = narrowing_cond {
-            apply_narrowing(ctx, cond, false);
+        ctx.scope.restore_narrowing_state(&saved_state);
+        for prev_cond in &all_conditions {
+            apply_narrowing(ctx, prev_cond, false);
         }
         ctx.scope.push();
         let body = lower_stmts(&clause.body, func_type, ctx);
