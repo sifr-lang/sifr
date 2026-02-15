@@ -1,5 +1,8 @@
 # expect-error: moved value
+def consume(s: str) -> str:
+    return s
+
 def main():
     s: str = "hello"
-    print(s)
+    x: str = consume(s)
     print(s)
