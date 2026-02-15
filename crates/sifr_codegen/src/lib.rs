@@ -110,6 +110,10 @@ struct RustEmitter {
     mutated_vars: HashSet<String>,
     /// Set of class names that have Display impl (via __str__ or error type)
     display_classes: HashSet<String>,
+    /// Map from child class name -> (parent class name, set of parent field names)
+    parent_fields: HashMap<String, (String, HashSet<String>)>,
+    /// The class currently being emitted (for field access resolution)
+    current_class_name: Option<String>,
 }
 
 impl RustEmitter {
@@ -127,6 +131,8 @@ impl RustEmitter {
             pub_mode: false,
             mutated_vars: HashSet::new(),
             display_classes: HashSet::new(),
+            parent_fields: HashMap::new(),
+            current_class_name: None,
         }
     }
 
@@ -266,6 +272,22 @@ impl RustEmitter {
             }
         }
 
+        // Pre-scan: collect parent field info for inheritance
+        for class in &module.classes {
+            if let Some(ref parent_name) = class.parent_class {
+                // Find the parent class and collect its field names
+                if let Some(parent_class) = module.classes.iter().find(|c| c.name == *parent_name) {
+                    let parent_field_names: HashSet<String> = parent_class.fields.iter()
+                        .map(|(name, _)| name.clone())
+                        .collect();
+                    self.parent_fields.insert(
+                        class.name.clone(),
+                        (parent_name.clone(), parent_field_names),
+                    );
+                }
+            }
+        }
+
         // Emit class definitions first (structs + impls)
         for class in &module.classes {
             self.emit_class(class, module);
@@ -318,7 +340,27 @@ impl RustEmitter {
         self.write(&class.name);
         self.write(" {\n");
         self.indent += 1;
+
+        // If this class has a parent, embed the parent struct as a field
+        if let Some(ref parent) = class.parent_class {
+            self.write_indent();
+            if self.pub_mode {
+                self.write("pub ");
+            }
+            let parent_field = parent.to_lowercase();
+            self.write(&parent_field);
+            self.write(": ");
+            self.write(parent);
+            self.write(",\n");
+        }
+
+        // Emit own fields (skip fields that come from the parent)
         for (field_name, field_ty) in &class.fields {
+            // Skip parent-inherited fields (they're accessed via the embedded parent struct)
+            if class.parent_class.is_some() {
+                // We'll emit all fields listed in class.fields since the lowering
+                // should only put the child's own fields here
+            }
             self.write_indent();
             if self.pub_mode {
                 self.write("pub ");
@@ -374,10 +416,12 @@ impl RustEmitter {
             self.write("}\n\n");
         }
 
+        self.current_class_name = Some(class.name.clone());
         for method in &class.methods {
             self.emit_class_method(method, class);
             self.output.push('\n');
         }
+        self.current_class_name = None;
 
         self.indent -= 1;
         self.write_indent();
@@ -789,105 +833,225 @@ impl RustEmitter {
 
         self.write_indent();
         let pub_prefix = if self.pub_mode { "pub " } else { "" };
-        if method.name == "new" {
-            // Constructor: fn new(params) -> Self
-            self.write(&format!("{}fn new(", pub_prefix));
-            for (i, param) in method.params.iter().enumerate() {
-                if i > 0 {
-                    self.write(", ");
-                }
-                self.write(&param.name);
-                self.write(": ");
-                self.write(&param.ty.rust_type());
-            }
-            self.write(") -> Self {\n");
-            self.indent += 1;
 
-            // Emit constructor body -- collect field assignments and emit Self { ... }
-            // First emit any non-field-assign statements
-            let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
-            let mut other_stmts: Vec<&HirStmt> = Vec::new();
-            for stmt in &method.body {
-                if let HirStmt::FieldAssign { field, value, .. } = stmt {
-                    field_inits.push((field, value));
-                } else {
-                    other_stmts.push(stmt);
-                }
-            }
-
-            // Emit non-field statements first
-            for stmt in &other_stmts {
-                self.emit_stmt(stmt);
-            }
-
-            // Emit Self { field: value, ... }
-            self.write_indent();
-            self.write("Self {\n");
-            self.indent += 1;
-            for (field_name, value) in &field_inits {
-                self.write_indent();
-                self.write(field_name);
-                self.write(": ");
-                self.emit_expr(value);
-                self.write(",\n");
-            }
-            // For any fields not explicitly assigned, check if param name matches
-            for (field_name, _) in &class.fields {
-                if !field_inits.iter().any(|(f, _)| f == field_name) {
-                    // Check if there's a parameter with the same name
-                    if method.params.iter().any(|p| &p.name == field_name) {
-                        self.write_indent();
-                        self.write(field_name);
-                        self.write(",\n");
+        match method.method_kind {
+            MethodKind::ClassMethod => {
+                // @classmethod -> associated function (no self)
+                self.write(&format!("{}fn {}(", pub_prefix, method.name));
+                for (i, param) in method.params.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
                     }
+                    self.write(&param.name);
+                    self.write(": ");
+                    self.write(&param.ty.rust_type());
+                }
+                self.write(")");
+                if method.return_type != Type::None {
+                    self.write(" -> ");
+                    self.write(&method.return_type.rust_type());
+                }
+                self.write(" {\n");
+                self.indent += 1;
+                for stmt in &method.body {
+                    self.emit_stmt(stmt);
+                }
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
+            }
+            MethodKind::StaticMethod => {
+                // @staticmethod -> associated function (no self)
+                self.write(&format!("{}fn {}(", pub_prefix, method.name));
+                for (i, param) in method.params.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.write(&param.name);
+                    self.write(": ");
+                    self.write(&param.ty.rust_type());
+                }
+                self.write(")");
+                if method.return_type != Type::None {
+                    self.write(" -> ");
+                    self.write(&method.return_type.rust_type());
+                }
+                self.write(" {\n");
+                self.indent += 1;
+                for stmt in &method.body {
+                    self.emit_stmt(stmt);
+                }
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
+            }
+            MethodKind::Regular => {
+                if method.name == "new" {
+                    // Constructor: fn new(params) -> Self
+                    self.write(&format!("{}fn new(", pub_prefix));
+                    for (i, param) in method.params.iter().enumerate() {
+                        if i > 0 {
+                            self.write(", ");
+                        }
+                        self.write(&param.name);
+                        self.write(": ");
+                        self.write(&param.ty.rust_type());
+                    }
+                    self.write(") -> Self {\n");
+                    self.indent += 1;
+
+                    // Check if there's a super() call in the body
+                    let has_super = method.body.iter().any(|stmt| {
+                        if let HirStmt::Expr { expr } = stmt {
+                            matches!(expr, HirExpr::SuperCall { .. })
+                        } else {
+                            false
+                        }
+                    });
+
+                    if has_super && class.parent_class.is_some() {
+                        // Inheritance constructor: emit super call, then Self { parent: ..., own fields }
+                        let parent_name = class.parent_class.as_ref().unwrap();
+                        let mut super_args: Option<&Vec<HirExpr>> = None;
+                        let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
+                        let mut other_stmts: Vec<&HirStmt> = Vec::new();
+
+                        for stmt in &method.body {
+                            if let HirStmt::Expr { expr: HirExpr::SuperCall { args, .. } } = stmt {
+                                super_args = Some(args);
+                            } else if let HirStmt::FieldAssign { field, value, .. } = stmt {
+                                field_inits.push((field, value));
+                            } else {
+                                other_stmts.push(stmt);
+                            }
+                        }
+
+                        // Emit non-field, non-super statements first
+                        for stmt in &other_stmts {
+                            self.emit_stmt(stmt);
+                        }
+
+                        // Build Self { parent: ParentType::new(...), own_field: value, ... }
+                        self.write_indent();
+                        self.write("Self {\n");
+                        self.indent += 1;
+
+                        // Emit parent field
+                        self.write_indent();
+                        let parent_field = parent_name.to_lowercase();
+                        self.write(&parent_field);
+                        self.write(": ");
+                        self.write(parent_name);
+                        self.write("::new(");
+                        if let Some(args) = super_args {
+                            for (i, arg) in args.iter().enumerate() {
+                                if i > 0 {
+                                    self.write(", ");
+                                }
+                                self.emit_expr(arg);
+                            }
+                        }
+                        self.write("),\n");
+
+                        // Emit own field inits
+                        for (field_name, value) in &field_inits {
+                            self.write_indent();
+                            self.write(field_name);
+                            self.write(": ");
+                            self.emit_expr(value);
+                            self.write(",\n");
+                        }
+
+                        self.indent -= 1;
+                        self.write_indent();
+                        self.write("}\n");
+                    } else {
+                        // Regular constructor
+                        let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
+                        let mut other_stmts: Vec<&HirStmt> = Vec::new();
+                        for stmt in &method.body {
+                            if let HirStmt::FieldAssign { field, value, .. } = stmt {
+                                field_inits.push((field, value));
+                            } else {
+                                other_stmts.push(stmt);
+                            }
+                        }
+
+                        // Emit non-field statements first
+                        for stmt in &other_stmts {
+                            self.emit_stmt(stmt);
+                        }
+
+                        // Emit Self { field: value, ... }
+                        self.write_indent();
+                        self.write("Self {\n");
+                        self.indent += 1;
+                        for (field_name, value) in &field_inits {
+                            self.write_indent();
+                            self.write(field_name);
+                            self.write(": ");
+                            self.emit_expr(value);
+                            self.write(",\n");
+                        }
+                        // For any fields not explicitly assigned, check if param name matches
+                        for (field_name, _) in &class.fields {
+                            if !field_inits.iter().any(|(f, _)| f == field_name) {
+                                if method.params.iter().any(|p| &p.name == field_name) {
+                                    self.write_indent();
+                                    self.write(field_name);
+                                    self.write(",\n");
+                                }
+                            }
+                        }
+                        self.indent -= 1;
+                        self.write_indent();
+                        self.write("}\n");
+                    }
+
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
+                } else {
+                    // Regular method: determine &self vs &mut self
+                    let is_mutating = body_contains_field_assign_codegen(&method.body);
+                    if is_mutating {
+                        self.write(&format!("{}fn ", pub_prefix));
+                        self.write(&method.name);
+                        self.write("(&mut self");
+                    } else {
+                        self.write(&format!("{}fn ", pub_prefix));
+                        self.write(&method.name);
+                        self.write("(&self");
+                    }
+                    for param in &method.params {
+                        self.write(", ");
+                        self.write(&param.name);
+                        self.write(": ");
+                        // Pass class types by reference
+                        if matches!(param.ty, Type::Class { .. }) {
+                            self.write("&");
+                        }
+                        self.write(&param.ty.rust_type());
+                    }
+                    self.write(")");
+
+                    if method.return_type != Type::None {
+                        self.write(" -> ");
+                        self.write(&method.return_type.rust_type());
+                    }
+
+                    self.write(" {\n");
+                    self.indent += 1;
+
+                    for stmt in &method.body {
+                        self.emit_stmt(stmt);
+                    }
+
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
                 }
             }
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
-
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
-        } else {
-            // Regular method: determine &self vs &mut self
-            let is_mutating = body_contains_field_assign_codegen(&method.body);
-            if is_mutating {
-                self.write(&format!("{}fn ", pub_prefix));
-                self.write(&method.name);
-                self.write("(&mut self");
-            } else {
-                self.write(&format!("{}fn ", pub_prefix));
-                self.write(&method.name);
-                self.write("(&self");
-            }
-            for param in &method.params {
-                self.write(", ");
-                self.write(&param.name);
-                self.write(": ");
-                // Pass class types by reference
-                if matches!(param.ty, Type::Class { .. }) {
-                    self.write("&");
-                }
-                self.write(&param.ty.rust_type());
-            }
-            self.write(")");
-
-            if method.return_type != Type::None {
-                self.write(" -> ");
-                self.write(&method.return_type.rust_type());
-            }
-
-            self.write(" {\n");
-            self.indent += 1;
-
-            for stmt in &method.body {
-                self.emit_stmt(stmt);
-            }
-
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
         }
 
         self.current_return_type = None;
@@ -1414,6 +1578,22 @@ impl RustEmitter {
             }
             HirStmt::FieldAssign { object, field, value } => {
                 self.write_indent();
+                // Check if this is assigning to a parent field via inheritance
+                if let Some(ref class_name) = self.current_class_name.clone() {
+                    if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name).cloned() {
+                        if parent_field_names.contains(field.as_str()) {
+                            self.write(object);
+                            self.write(".");
+                            self.write(&parent_name.to_lowercase());
+                            self.write(".");
+                            self.write(field);
+                            self.write(" = ");
+                            self.emit_expr(value);
+                            self.write(";\n");
+                            return;
+                        }
+                    }
+                }
                 self.write(object);
                 self.write(".");
                 self.write(field);
@@ -2447,10 +2627,49 @@ impl RustEmitter {
                 // Just emit the variable name (the assignment was already emitted)
                 self.write(name);
             }
-            HirExpr::FieldAccess { object, field, .. } => {
+            HirExpr::FieldAccess { object, field, ty } => {
+                // Determine if we need .clone() (non-Copy field accessed on &self)
+                let is_self_access = matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
+                let needs_clone = is_self_access && needs_clone_for_type(ty);
+
+                // Determine the class name for parent field resolution
+                // Either from current_class_name (inside a method) or from the object's type
+                let class_name_for_parent = if let Some(ref cn) = self.current_class_name {
+                    if is_self_access { Some(cn.clone()) } else { None }
+                } else {
+                    None
+                }.or_else(|| {
+                    // For external access like obj.field, check the object's type
+                    if let Type::Class { name, .. } = object.ty() {
+                        Some(name.clone())
+                    } else {
+                        None
+                    }
+                });
+
+                // Check if this is accessing a parent field via inheritance
+                if let Some(ref class_name) = class_name_for_parent {
+                    if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name).cloned() {
+                        if parent_field_names.contains(field.as_str()) {
+                            // Access via embedded parent: obj.parent.field
+                            self.emit_expr(object);
+                            self.write(".");
+                            self.write(&parent_name.to_lowercase());
+                            self.write(".");
+                            self.write(field);
+                            if needs_clone {
+                                self.write(".clone()");
+                            }
+                            return;
+                        }
+                    }
+                }
                 self.emit_expr(object);
                 self.write(".");
                 self.write(field);
+                if needs_clone {
+                    self.write(".clone()");
+                }
             }
             HirExpr::ConstructorCall { class_name, args, .. } => {
                 self.write(class_name);
@@ -2479,6 +2698,20 @@ impl RustEmitter {
             }
             HirExpr::FString { parts, .. } => {
                 self.emit_fstring_macro("format!", parts);
+            }
+            HirExpr::SuperCall { parent_class, method, args, .. } => {
+                // super().__init__(args) -> ParentType::new(args)
+                self.write(parent_class);
+                self.write("::");
+                self.write(method);
+                self.write("(");
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.emit_expr(arg);
+                }
+                self.write(")");
             }
         }
     }
@@ -2687,6 +2920,20 @@ fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
     stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
 }
 
+/// Check if a type needs .clone() when accessed from &self (non-Copy types).
+fn needs_clone_for_type(ty: &Type) -> bool {
+    match ty {
+        Type::Int | Type::Float | Type::Bool | Type::None => false,
+        Type::LiteralInt(_) | Type::LiteralBool(_) => false,
+        Type::Str | Type::LiteralStr(_) => true, // String is not Copy
+        Type::List(_) | Type::Dict(_, _) => true,
+        Type::Tuple(_) => true, // tuples of non-Copy are non-Copy
+        Type::Class { .. } => true,
+        Type::Newtype { .. } => true,
+        _ => false,
+    }
+}
+
 /// Mutating methods that require the receiver variable to be `mut`.
 const MUTATING_METHODS: &[&str] = &[
     "append", "extend", "insert", "clear", "reverse", "sort", "pop", "remove",
@@ -2841,6 +3088,7 @@ mod tests {
                         ty: Type::None,
                     },
                 }],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -2870,6 +3118,7 @@ mod tests {
                         ty: Type::Int,
                     }),
                 }],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -2905,6 +3154,7 @@ mod tests {
                         },
                     },
                 ],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -2935,6 +3185,7 @@ mod tests {
                         value: HirExpr::IntLiteral(1),
                     },
                 ],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -2974,6 +3225,7 @@ mod tests {
                         },
                     },
                 ],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -2999,6 +3251,7 @@ mod tests {
                         ty: Type::None,
                     },
                 }],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -3027,6 +3280,7 @@ mod tests {
                     },
                     is_mutable: false,
                 }],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -3072,6 +3326,7 @@ mod tests {
                         is_mutable: false,
                     },
                 ],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -3106,6 +3361,7 @@ mod tests {
                     },
                     is_mutable: false,
                 }],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -3146,6 +3402,7 @@ mod tests {
                         },
                     },
                 ],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],
@@ -3170,6 +3427,7 @@ mod tests {
                         ty: Type::None,
                     },
                 }],
+                method_kind: MethodKind::Regular,
             }],
             classes: vec![],
             imports: vec![],

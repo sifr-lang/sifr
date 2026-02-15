@@ -47,6 +47,8 @@ struct LowerCtx {
     reveal_types: Vec<String>,
     /// Whether we're currently inside a class method (tracks `self` type)
     current_class: Option<String>,
+    /// The parent class name of the current class (for super() resolution)
+    current_parent_class: Option<String>,
     /// Whether we're inside a try block (auto-unwrap Result values)
     in_try_block: bool,
     /// Set of class names that are error types (class Foo(Error))
@@ -64,6 +66,7 @@ impl LowerCtx {
             loop_depth: 0,
             reveal_types: Vec::new(),
             current_class: None,
+            current_parent_class: None,
             in_try_block: false,
             error_types: std::collections::HashSet::new(),
         }
@@ -292,6 +295,34 @@ fn is_operator_dunder(name: &str) -> bool {
     OPERATOR_DUNDERS.contains(&name)
 }
 
+/// Get the parent class name for single inheritance.
+/// Returns None for Error, Protocol, and primitive base classes.
+fn get_parent_class(class_def: &StmtClassDef) -> Option<String> {
+    for base in class_def.bases() {
+        if let Expr::Name(n) = base {
+            let name = n.id.as_str();
+            // Skip special base classes
+            if matches!(name, "Error" | "Protocol" | "int" | "float" | "str" | "bool") {
+                return None;
+            }
+            return Some(name.to_string());
+        }
+    }
+    None
+}
+
+/// Check if a function definition has a specific decorator.
+fn has_decorator(func: &StmtFunctionDef, decorator_name: &str) -> bool {
+    for decorator in func.decorator_list.iter() {
+        if let Expr::Name(n) = &decorator.expression {
+            if n.id.as_str() == decorator_name {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// First pass: collect class fields and method signatures, register the class type.
 fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     let class_name = class_def.name.to_string();
@@ -357,6 +388,25 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     // For error types, ensure a 'message' field exists (add if not explicitly declared)
     // This will be checked after collecting all fields
 
+    // Inherit parent fields and methods for single inheritance
+    let parent_class_name = get_parent_class(class_def);
+    if let Some(ref parent_name) = parent_class_name {
+        if let Some(parent_ty) = ctx.class_types.get(parent_name).cloned() {
+            if let Type::Class { fields: parent_fields, methods: parent_methods, .. } = parent_ty {
+                // Inherit parent fields
+                for (fname, fty) in &parent_fields {
+                    fields.push((fname.clone(), fty.clone()));
+                }
+                // Inherit parent methods
+                for (mname, mft) in &parent_methods {
+                    methods.push((mname.clone(), mft.clone()));
+                }
+            }
+        } else {
+            ctx.error(format!("parent class '{}' not defined", parent_name));
+        }
+    }
+
     // Register a preliminary class type so self-referential annotations work
     // (e.g., `def distance(self, other: Point)` inside class Point)
     ctx.class_types.insert(class_name.clone(), Type::Class {
@@ -414,9 +464,13 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                         ctx.function_defaults.insert(class_name.clone(), defaults);
                     }
                 } else {
-                    // Regular method: extract params (skip `self`)
+                    // Regular/class/static method: extract params
+                    // For @staticmethod, don't skip any params
+                    // For @classmethod and regular methods, skip `self`/`cls`
+                    let is_static = has_decorator(func, "staticmethod");
+                    let skip_count = if is_static { 0 } else { 1 };
                     let mut params = Vec::new();
-                    for param in func.parameters.args.iter().skip(1) {
+                    for param in func.parameters.args.iter().skip(skip_count) {
                         let param_name = param.parameter.name.to_string();
                         let param_ty = if let Some(ref ann) = param.parameter.annotation {
                             resolve_annotation_expr(ann, ctx)
@@ -498,6 +552,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 }).collect(),
                 return_type: *ft.return_type.clone(),
                 body: vec![], // Protocol methods have no body
+                method_kind: MethodKind::Regular,
             }
         }).collect();
 
@@ -511,6 +566,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             operator_impls: Vec::new(),
             newtype_inner: None,
             implements_protocols: Vec::new(),
+            parent_class: None,
         });
     }
 
@@ -544,7 +600,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 let body = lower_stmts(&func.body, &method_ft, ctx);
                 ctx.scope.pop();
                 ctx.current_class = None;
-                hir_methods.push(HirFunction { name: method_name, params, return_type: return_ty, body });
+                hir_methods.push(HirFunction { name: method_name, params, return_type: return_ty, body, method_kind: MethodKind::Regular });
             }
         }
 
@@ -557,17 +613,35 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             is_protocol: false,
             operator_impls: Vec::new(),
             newtype_inner: Some(inner.clone()),
+            parent_class: None,
             implements_protocols: Vec::new(),
         });
     }
 
-    let (fields, _method_types) = match &class_ty {
+    let (all_fields, _method_types) = match &class_ty {
         Type::Class { fields, methods, .. } => (fields.clone(), methods.clone()),
         _ => return None,
     };
 
+    let parent_class_name = get_parent_class(class_def);
+
+    // Separate own fields from inherited fields
+    // For struct codegen, we only want the child's own fields (parent is embedded)
+    let parent_field_names: Vec<String> = if let Some(ref parent_name) = parent_class_name {
+        if let Some(parent_ty) = ctx.class_types.get(parent_name) {
+            if let Type::Class { fields: pf, .. } = parent_ty {
+                pf.iter().map(|(n, _)| n.clone()).collect()
+            } else { vec![] }
+        } else { vec![] }
+    } else { vec![] };
+
+    let own_fields: Vec<(String, Type)> = all_fields.iter()
+        .filter(|(name, _)| !parent_field_names.contains(name))
+        .cloned()
+        .collect();
+
     // Determine if all fields are hashable (primitives: int, float, bool, str)
-    let is_hashable = fields.iter().all(|(_, ty)| is_hashable_type(ty));
+    let is_hashable = all_fields.iter().all(|(_, ty)| is_hashable_type(ty));
 
     let mut hir_methods = Vec::new();
     let mut operator_impls = Vec::new();
@@ -576,18 +650,37 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         if let Stmt::FunctionDef(func) = stmt {
             let method_name = func.name.to_string();
 
+            // Detect @classmethod and @staticmethod decorators
+            let is_classmethod = has_decorator(func, "classmethod");
+            let is_staticmethod = has_decorator(func, "staticmethod");
+            let method_kind = if is_classmethod {
+                MethodKind::ClassMethod
+            } else if is_staticmethod {
+                MethodKind::StaticMethod
+            } else {
+                MethodKind::Regular
+            };
+
             // Set current class context for `self` resolution
             ctx.current_class = Some(class_name.clone());
+            ctx.current_parent_class = parent_class_name.clone();
 
             // Push a new scope for the method
             ctx.scope.push();
 
-            // Define `self` in scope
-            ctx.scope.define("self".to_string(), class_ty.clone());
+            // For static methods, don't skip any parameter (no self/cls)
+            // For class methods, skip `cls` parameter
+            // For regular methods, skip `self` parameter
+            let skip_count = if is_staticmethod { 0 } else { 1 }; // classmethod has cls, regular has self
 
-            // Define method parameters (skip `self`)
+            // Define `self` in scope (for regular methods)
+            if !is_staticmethod && !is_classmethod {
+                ctx.scope.define("self".to_string(), class_ty.clone());
+            }
+
+            // Define method parameters (skip `self`/`cls`)
             let mut params = Vec::new();
-            for param in func.parameters.args.iter().skip(1) {
+            for param in func.parameters.args.iter().skip(skip_count) {
                 let param_name = param.parameter.name.to_string();
                 let param_ty = if let Some(ref ann) = param.parameter.annotation {
                     resolve_annotation_expr(ann, ctx)
@@ -625,12 +718,14 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
 
             ctx.scope.pop();
             ctx.current_class = None;
+            ctx.current_parent_class = None;
 
             let hir_func = HirFunction {
                 name: if method_name == "__init__" { "new".to_string() } else { method_name.clone() },
                 params,
                 return_type: return_ty,
                 body,
+                method_kind,
             };
 
             // Separate operator dunders from regular methods
@@ -660,7 +755,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
 
     Some(HirClass {
         name: class_name,
-        fields,
+        fields: own_fields,
         methods: hir_methods,
         is_hashable,
         is_error_type: is_error,
@@ -668,6 +763,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         operator_impls,
         newtype_inner: None,
         implements_protocols,
+        parent_class: parent_class_name,
     })
 }
 
@@ -963,6 +1059,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
         params,
         return_type: *ft.return_type,
         body,
+        method_kind: MethodKind::Regular,
     })
 }
 
@@ -2616,6 +2713,61 @@ fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> 
 }
 
 fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    // Handle super().__init__() and super().method() calls
+    if let Expr::Call(super_call) = attr.value.as_ref() {
+        if let Expr::Name(name) = super_call.func.as_ref() {
+            if name.id.as_str() == "super" {
+                let method_name = attr.attr.to_string();
+                if let Some(parent_name) = ctx.current_parent_class.clone() {
+                    // Lower arguments
+                    let mut args = Vec::new();
+                    for arg in &call.arguments.args {
+                        let expr = lower_expr(arg, ctx)?;
+                        args.push(expr);
+                    }
+
+                    return Some(HirExpr::SuperCall {
+                        parent_class: parent_name,
+                        method: if method_name == "__init__" { "new".to_string() } else { method_name },
+                        args,
+                        ty: Type::None,
+                    });
+                }
+                ctx.error("super() used outside of a class with a parent".to_string());
+                return None;
+            }
+        }
+    }
+
+    // Handle ClassName.method() calls (classmethod/staticmethod)
+    if let Expr::Name(name) = attr.value.as_ref() {
+        let class_name = name.id.to_string();
+        if ctx.class_types.contains_key(&class_name) {
+            let method_name = attr.attr.to_string();
+            // Lower arguments
+            let mut args = Vec::new();
+            for arg in &call.arguments.args {
+                let expr = lower_expr(arg, ctx)?;
+                args.push(expr);
+            }
+            // Look up the method's return type from the class type
+            if let Some(class_ty) = ctx.class_types.get(&class_name) {
+                if let Type::Class { methods, .. } = class_ty {
+                    if let Some((_, ft)) = methods.iter().find(|(n, _)| n == &method_name) {
+                        let return_ty = *ft.return_type.clone();
+                        return Some(HirExpr::Call {
+                            func: format!("{}::{}", class_name, method_name),
+                            args,
+                            ty: return_ty,
+                        });
+                    }
+                }
+            }
+            ctx.error(format!("type '{}' has no class/static method '{}'", class_name, method_name));
+            return None;
+        }
+    }
+
     let object = lower_expr(&attr.value, ctx)?;
     let object_ty = object.ty().clone();
     let method_name = attr.attr.to_string();

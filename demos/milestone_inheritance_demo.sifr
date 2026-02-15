@@ -1,0 +1,113 @@
+# =============================================================
+# Sifr Milestone: Inheritance & Class Utilities Demo
+# =============================================================
+# Features demonstrated:
+# 1. Single inheritance with parent struct embedding
+# 2. super().__init__() for parent constructor delegation
+# 3. Method overriding
+# 4. @classmethod (associated function, no self)
+# 5. @staticmethod (associated function, no self)
+# 6. Accessing parent fields from child class
+# =============================================================
+
+# --- 1. Base class: Shape ---
+class Shape:
+    name: str
+    color: str
+
+    def __init__(self, name: str, color: str):
+        self.name = name
+        self.color = color
+
+    def describe(self) -> str:
+        return self.name + " (" + self.color + ")"
+
+# --- 2. Inheritance: Circle extends Shape ---
+class Circle(Shape):
+    radius: float
+
+    def __init__(self, color: str, radius: float):
+        super().__init__("Circle", color)
+        self.radius = radius
+
+    def area(self) -> float:
+        return 3.14159 * self.radius * self.radius
+
+    def describe(self) -> str:
+        return self.name + " r=" + str(self.radius)
+
+# --- 3. Inheritance: Rectangle extends Shape ---
+class Rectangle(Shape):
+    width: float
+    height: float
+
+    def __init__(self, color: str, width: float, height: float):
+        super().__init__("Rectangle", color)
+        self.width = width
+        self.height = height
+
+    def area(self) -> float:
+        return self.width * self.height
+
+    def describe(self) -> str:
+        return self.name + " " + str(self.width) + "x" + str(self.height)
+
+# --- 4. @classmethod: factory methods ---
+class Temperature:
+    celsius: float
+
+    def __init__(self, celsius: float):
+        self.celsius = celsius
+
+    @classmethod
+    def from_fahrenheit(cls, f: float) -> Temperature:
+        return Temperature((f - 32.0) * 5.0 / 9.0)
+
+    @classmethod
+    def freezing(cls) -> Temperature:
+        return Temperature(0.0)
+
+    def to_fahrenheit(self) -> float:
+        return self.celsius * 9.0 / 5.0 + 32.0
+
+# --- 5. @staticmethod: utility methods ---
+class MathHelper:
+    @staticmethod
+    def clamp(value: float, low: float, high: float) -> float:
+        if value < low:
+            return low
+        if value > high:
+            return high
+        return value
+
+    @staticmethod
+    def is_positive(x: float) -> bool:
+        return x > 0.0
+
+def main():
+    # --- Inheritance demo ---
+    c: Circle = Circle("red", 5.0)
+    r: Rectangle = Rectangle("blue", 3.0, 4.0)
+
+    print(c.describe())
+    print(c.area())
+    print(c.color)
+
+    print(r.describe())
+    print(r.area())
+    print(r.color)
+
+    # --- @classmethod demo ---
+    boiling: Temperature = Temperature(100.0)
+    print(boiling.to_fahrenheit())
+
+    body: Temperature = Temperature.from_fahrenheit(98.6)
+    print(body.celsius)
+
+    zero: Temperature = Temperature.freezing()
+    print(zero.celsius)
+
+    # --- @staticmethod demo ---
+    print(MathHelper.clamp(15.0, 0.0, 10.0))
+    print(MathHelper.clamp(-5.0, 0.0, 10.0))
+    print(MathHelper.is_positive(42.0))
