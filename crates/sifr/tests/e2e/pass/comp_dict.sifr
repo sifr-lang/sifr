@@ -1,0 +1,6 @@
+# Test: dict comprehension
+# expect-stdout: 3
+
+def main():
+    d: dict[int, int] = {x: x * x for x in range(3)}
+    print(len(d))

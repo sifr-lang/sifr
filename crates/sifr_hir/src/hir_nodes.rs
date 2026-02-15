@@ -407,6 +407,23 @@ pub enum HirExpr {
         filter: Option<Box<HirExpr>>,
         ty: Type,
     },
+    /// Dict comprehension: {key: val for var in iter}
+    DictComp {
+        key_expr: Box<HirExpr>,
+        val_expr: Box<HirExpr>,
+        var: String,
+        iter: Box<HirExpr>,
+        filter: Option<Box<HirExpr>>,
+        ty: Type,
+    },
+    /// Set comprehension: {expr for var in iter}
+    SetComp {
+        expr: Box<HirExpr>,
+        var: String,
+        iter: Box<HirExpr>,
+        filter: Option<Box<HirExpr>>,
+        ty: Type,
+    },
     /// Generator expression: (expr for var in iter) -> lazy iterator
     GeneratorExpr {
         expr: Box<HirExpr>,
@@ -452,6 +469,8 @@ impl HirExpr {
             | Self::SuperCall { ty, .. }
             | Self::Lambda { ty, .. }
             | Self::ListComp { ty, .. }
+            | Self::DictComp { ty, .. }
+            | Self::SetComp { ty, .. }
             | Self::GeneratorExpr { ty, .. } => ty,
         }
     }
