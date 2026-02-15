@@ -315,6 +315,8 @@ impl Type {
         match self {
             Self::Range => Some(Type::Int),
             Self::List(elem) => Some(*elem.clone()),
+            Self::Str => Some(Type::Str),
+            Self::Dict(key, _) => Some(*key.clone()),
             _ => None,
         }
     }
