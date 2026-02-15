@@ -1632,12 +1632,32 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
     // Restore original narrowing state after all branches
     ctx.scope.restore_narrowing_state(&saved_state);
 
+    // Early-return narrowing: if the then-body always exits (return/break/continue/raise),
+    // apply the inverse narrowing after the if block.
+    // e.g., `if x is None: return` -> after the if, x is not None
+    if let Some(ref cond) = narrowing_cond {
+        if then_body_always_exits(&then_body) && elif_clauses.is_empty() && else_body.is_none() {
+            apply_narrowing(ctx, cond, false);
+        }
+    }
+
     Some(HirStmt::If {
         condition,
         then_body,
         elif_clauses,
         else_body,
     })
+}
+
+/// Check if a block of statements always exits (return, break, continue, raise).
+/// Used for early-return narrowing: `if x is None: return` narrows x after the if.
+fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
+    if let Some(last) = stmts.last() {
+        matches!(last, HirStmt::Return { .. })
+            || matches!(last, HirStmt::Expr { expr: HirExpr::Call { func, .. } } if func == "raise")
+    } else {
+        false
+    }
 }
 
 /// Detect a narrowing condition from an if-test expression.
@@ -1715,6 +1735,19 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
             let inner = detect_narrowing_condition(&unary.operand, ctx)?;
             Some(NarrowingCondition::Not(Box::new(inner)))
         }
+        // a and b -> And narrowing (both conditions must be true)
+        Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::And) => {
+            let conditions: Vec<NarrowingCondition> = boolop.values.iter()
+                .filter_map(|v| detect_narrowing_condition(v, ctx))
+                .collect();
+            if conditions.is_empty() {
+                None
+            } else if conditions.len() == 1 {
+                Some(conditions.into_iter().next().unwrap())
+            } else {
+                Some(NarrowingCondition::And(conditions))
+            }
+        }
         _ => None,
     }
 }
@@ -1736,11 +1769,33 @@ fn expr_to_literal_value(expr: &Expr) -> Option<sifr_type_system::LiteralValue> 
 
 /// Apply narrowing to the scope based on a condition.
 fn apply_narrowing(ctx: &mut LowerCtx, condition: &NarrowingCondition, is_true: bool) {
-    if let Some(var_name) = condition.var_name() {
-        if let Some(info) = ctx.scope.lookup(var_name) {
-            let current_ty = info.effective_type().clone();
-            let narrowed = narrow_type(&current_ty, condition, is_true);
-            ctx.scope.narrow_var(var_name, narrowed);
+    match condition {
+        NarrowingCondition::And(conditions) => {
+            if is_true {
+                // All conditions are true: apply each narrowing
+                for cond in conditions {
+                    apply_narrowing(ctx, cond, true);
+                }
+            } else {
+                // At least one is false: can't narrow precisely, skip
+            }
+        }
+        NarrowingCondition::Or(conditions) => {
+            if !is_true {
+                // All conditions are false: apply each false-narrowing
+                for cond in conditions {
+                    apply_narrowing(ctx, cond, false);
+                }
+            }
+        }
+        _ => {
+            if let Some(var_name) = condition.var_name() {
+                if let Some(info) = ctx.scope.lookup(var_name) {
+                    let current_ty = info.effective_type().clone();
+                    let narrowed = narrow_type(&current_ty, condition, is_true);
+                    ctx.scope.narrow_var(var_name, narrowed);
+                }
+            }
         }
     }
 }
