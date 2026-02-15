@@ -1,0 +1,16 @@
+# ============================================================
+# Test 2: sifr.json -- Full Coverage
+# ============================================================
+
+from sifr.json import json_loads, json_dumps
+
+def main():
+    # Dumps various types
+    print(json_dumps("hello"))
+    print(json_dumps(42))
+    print(json_dumps(True))
+    print(json_dumps(3.14))
+
+    # Loads
+    data: str = json_loads("{\"key\":\"value\"}")
+    print(data)

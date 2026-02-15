@@ -1,0 +1,30 @@
+# ============================================================
+# Test 37: 3-way isinstance - no field access in else
+# ============================================================
+
+class A:
+    def __init__(self):
+        pass
+
+class B:
+    def __init__(self):
+        pass
+
+class C:
+    def __init__(self):
+        pass
+
+type ABC = A | B | C
+
+def check(val: ABC) -> str:
+    if isinstance(val, A):
+        return "A"
+    elif isinstance(val, B):
+        return "B"
+    else:
+        return "C"
+
+def main():
+    print(check(A()))
+    print(check(B()))
+    print(check(C()))

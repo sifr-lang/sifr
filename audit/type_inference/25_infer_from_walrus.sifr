@@ -1,0 +1,14 @@
+# ============================================================
+# Test 25: Inference from Walrus Operator (:=)
+# TypeScript: no direct equivalent
+# Python: if (n := len(items)) > 0:
+# ============================================================
+
+def main():
+    items: list[int] = [1, 2, 3]
+
+    # Infer int from walrus operator
+    if (n := len(items)) > 0:
+        print(f"has {n} items")
+    else:
+        print("empty")

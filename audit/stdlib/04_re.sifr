@@ -1,0 +1,19 @@
+# ============================================================
+# Test 4: sifr.re -- Full Coverage
+# ============================================================
+
+from sifr.re import re_match, re_find, re_replace
+
+def main():
+    # Match (returns bool)
+    print(re_match("[0-9]+", "hello 42 world"))
+    print(re_match("[0-9]+", "no numbers"))
+
+    # Find (returns str | None)
+    found: str | None = re_find("[0-9]+", "hello 42 world")
+    if found is not None:
+        print(f"found: {found}")
+
+    # Replace
+    result: str = re_replace("[0-9]+", "X", "a1b2c3")
+    print(result)

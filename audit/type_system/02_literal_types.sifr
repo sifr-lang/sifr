@@ -1,0 +1,43 @@
+# ============================================================
+# Test 2: Literal Types
+# TypeScript equivalent: type Direction = "north" | "south"
+# ============================================================
+
+# --- String literal union (like TS string literal types) ---
+type Direction = str
+
+def move_player(dir: Direction) -> str:
+    if dir == "north":
+        return "Moving north"
+    elif dir == "south":
+        return "Moving south"
+    elif dir == "east":
+        return "Moving east"
+    else:
+        return "Moving west"
+
+# --- Type alias for simple types ---
+type UserId = int
+type UserName = str
+
+def create_user(id: UserId, name: UserName) -> UserId:
+    return id
+
+# --- Type alias for union ---
+type StringOrInt = int | str
+
+def show(x: StringOrInt) -> str:
+    if isinstance(x, int):
+        return f"int: {x}"
+    else:
+        return f"str: {x}"
+
+def main():
+    print(move_player("north"))
+    print(move_player("south"))
+
+    uid: UserId = create_user(42, "alice")
+    print(uid)
+
+    print(show(10))
+    print(show("hello"))

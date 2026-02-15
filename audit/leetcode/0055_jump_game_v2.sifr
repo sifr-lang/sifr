@@ -1,0 +1,24 @@
+# LeetCode 55: Jump Game
+# v2: Sifr-idiomatic with safe indexing
+
+def canJump(nums: list[int]) -> bool:
+    max_reach: int = 0
+    for i in range(len(nums)):
+        if i > max_reach:
+            return False
+        val: int | None = nums[i]
+        if val is not None:
+            if i + val > max_reach:
+                max_reach = i + val
+    return True
+
+def main():
+    print(canJump([2, 3, 1, 1, 4]))
+    print(canJump([3, 2, 1, 0, 4]))
+    print(canJump([0]))
+    print(canJump([2, 0, 0]))
+
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: true
+# expect-stdout: true

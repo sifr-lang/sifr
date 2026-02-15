@@ -1,0 +1,57 @@
+# ============================================================
+# Test 3v2: Type Narrowing (fixed - avoid elif equality chains)
+# ============================================================
+
+# --- isinstance narrowing ---
+def isinstance_narrow(x: int | str) -> str:
+    if isinstance(x, int):
+        return f"int: {x + 1}"
+    else:
+        return f"str: {x.upper()}"
+
+# --- is None / is not None narrowing ---
+def none_narrow(x: str | None) -> str:
+    if x is not None:
+        return x.upper()
+    else:
+        return "nothing"
+
+# --- Simple equality narrowing (if/else only) ---
+def equality_narrow(cmd: str) -> str:
+    if cmd == "start":
+        return "starting"
+    else:
+        return "other"
+
+# --- Truthiness narrowing ---
+def truthiness_narrow(x: str | None) -> str:
+    if x:
+        return x.upper()
+    else:
+        return "empty or none"
+
+# --- Nested narrowing (isinstance chain) ---
+def nested_narrow(x: int | str | None) -> str:
+    if x is None:
+        return "none"
+    elif isinstance(x, int):
+        return f"int: {x}"
+    else:
+        return f"str: {x}"
+
+def main():
+    print(isinstance_narrow(42))
+    print(isinstance_narrow("hello"))
+
+    print(none_narrow("world"))
+    print(none_narrow(None))
+
+    print(equality_narrow("start"))
+    print(equality_narrow("stop"))
+
+    print(truthiness_narrow("hi"))
+    print(truthiness_narrow(None))
+
+    print(nested_narrow(None))
+    print(nested_narrow(42))
+    print(nested_narrow("text"))

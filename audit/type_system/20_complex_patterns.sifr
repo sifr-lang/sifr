@@ -1,0 +1,101 @@
+# ============================================================
+# Test 20: Complex Real-World Patterns
+# Testing how well the type system handles real application code
+# ============================================================
+
+# --- API-like pattern ---
+class ApiError:
+    code: int
+    message: str
+
+    def __init__(self, code: int, message: str):
+        self.code = code
+        self.message = message
+
+def fetch_user(id: int) -> Result[str, str]:
+    if id > 0:
+        return f"User_{id}"
+    raise "invalid user id"
+
+def fetch_profile(name: str) -> Result[str, str]:
+    if name != "":
+        return f"Profile of {name}"
+    raise "empty name"
+
+# --- Builder-like pattern ---
+class Config:
+    host: str
+    port: int
+    debug: bool
+
+    def __init__(self, host: str, port: int, debug: bool):
+        self.host = host
+        self.port = port
+        self.debug = debug
+
+    def __str__(self) -> str:
+        return f"{self.host}:{self.port} (debug={self.debug})"
+
+# --- State machine pattern ---
+class Idle:
+    def __init__(self):
+        pass
+
+class Loading:
+    url: str
+
+    def __init__(self, url: str):
+        self.url = url
+
+class Done:
+    data: str
+
+    def __init__(self, data: str):
+        self.data = data
+
+class Error:
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+
+type AppState = Idle | Loading | Done | Error
+
+def describe_state(state: AppState) -> str:
+    if isinstance(state, Idle):
+        return "Idle"
+    elif isinstance(state, Loading):
+        return f"Loading: {state.url}"
+    elif isinstance(state, Done):
+        return f"Done: {state.data}"
+    else:
+        return f"Error: {state.message}"
+
+def main():
+    # API pattern
+    try:
+        user: str = fetch_user(1)
+        print(user)
+    except str as e:
+        print(e)
+
+    try:
+        user2: str = fetch_user(-1)
+        print(user2)
+    except str as e:
+        print(e)
+
+    # Config
+    config: Config = Config("localhost", 8080, True)
+    print(config)
+
+    # State machine
+    s1: Idle = Idle()
+    s2: Loading = Loading("https://api.example.com")
+    s3: Done = Done("response data")
+    s4: Error = Error("timeout")
+
+    print(describe_state(s1))
+    print(describe_state(s2))
+    print(describe_state(s3))
+    print(describe_state(s4))

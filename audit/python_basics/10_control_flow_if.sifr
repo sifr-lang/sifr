@@ -1,0 +1,48 @@
+# ============================================================
+# Test 10: If / Elif / Else Chains
+# Python: if, elif, else, nested if
+# ============================================================
+
+def classify_number(n: int) -> str:
+    if n > 0:
+        return "positive"
+    elif n < 0:
+        return "negative"
+    else:
+        return "zero"
+
+def grade(score: int) -> str:
+    if score >= 90:
+        return "A"
+    elif score >= 80:
+        return "B"
+    elif score >= 70:
+        return "C"
+    elif score >= 60:
+        return "D"
+    else:
+        return "F"
+
+def nested_check(x: int, y: int) -> str:
+    if x > 0:
+        if y > 0:
+            return "both positive"
+        else:
+            return "x positive, y not"
+    else:
+        return "x not positive"
+
+def main():
+    print(classify_number(5))
+    print(classify_number(-3))
+    print(classify_number(0))
+
+    print(grade(95))
+    print(grade(85))
+    print(grade(75))
+    print(grade(65))
+    print(grade(50))
+
+    print(nested_check(1, 1))
+    print(nested_check(1, -1))
+    print(nested_check(-1, 1))

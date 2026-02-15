@@ -1,0 +1,42 @@
+# ============================================================
+# Test 17: Mapped and Conditional Types (TS Advanced)
+# TypeScript equivalent:
+#   type Partial<T> = { [K in keyof T]?: T[K] }
+#   type ReturnType<T> = T extends (...args: any) => infer R ? R : never
+#   type Readonly<T> = { readonly [K in keyof T]: T[K] }
+# ============================================================
+
+# Sifr does NOT have mapped/conditional types.
+# This test checks if there's any workaround.
+
+# --- Partial-like pattern (manual) ---
+class UserUpdate:
+    name: str | None
+    email: str | None
+
+    def __init__(self, name: str | None, email: str | None):
+        self.name = name
+        self.email = email
+
+class User:
+    name: str
+    email: str
+
+    def __init__(self, name: str, email: str):
+        self.name = name
+        self.email = email
+
+def apply_update(user: User, update: UserUpdate) -> User:
+    new_name: str = user.name
+    new_email: str = user.email
+    if update.name is not None:
+        new_name = update.name
+    if update.email is not None:
+        new_email = update.email
+    return User(new_name, new_email)
+
+def main():
+    user: User = User("Alice", "alice@old.com")
+    update: UserUpdate = UserUpdate(None, "alice@new.com")
+    updated: User = apply_update(user, update)
+    print(f"{updated.name}: {updated.email}")

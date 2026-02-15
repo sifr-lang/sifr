@@ -1,0 +1,18 @@
+# LeetCode 274: H Index
+# Python version
+
+def hIndex(citations: List[int]) -> int:
+    length = len(citations)
+    citations.sort()
+    for i in range(length):
+        if citations[i] >= length - i:
+            return length - i
+    return 0
+
+
+
+def main():
+    print(hIndex([3,0,6,1,5]))
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,24 @@
+# ============================================================
+# Test 40: Print object then access field
+# ============================================================
+
+class Pair:
+    a: int
+    b: int
+    def __init__(self, a: int, b: int):
+        self.a = a
+        self.b = b
+    def __str__(self) -> str:
+        return f"({self.a}, {self.b})"
+    def sum(self) -> int:
+        return self.a + self.b
+
+def main():
+    p: Pair = Pair(3, 4)
+    # Method call first (should borrow, not move)
+    s: int = p.sum()
+    print(s)
+    # Then print (uses __str__, should also borrow)
+    print(p)
+    # Then field access
+    print(p.a)

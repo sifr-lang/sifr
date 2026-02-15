@@ -1,0 +1,49 @@
+# ============================================================
+# Test 33: Various field name access
+# ============================================================
+
+class Config:
+    host: str
+    port: int
+    name: str
+    value: int
+    data: str
+    message: str
+    error: str
+    base: float
+    height: float
+    intensity: int
+    wingspan: float
+    breed: str
+    color: str
+
+    def __init__(self):
+        self.host = "localhost"
+        self.port = 8080
+        self.name = "test"
+        self.value = 42
+        self.data = "hello"
+        self.message = "msg"
+        self.error = "err"
+        self.base = 1.0
+        self.height = 2.0
+        self.intensity = 100
+        self.wingspan = 3.0
+        self.breed = "lab"
+        self.color = "red"
+
+def main():
+    c: Config = Config()
+    print(c.host)
+    print(c.port)
+    print(c.name)
+    print(c.value)
+    print(c.data)
+    print(c.message)
+    print(c.error)
+    print(c.base)
+    print(c.height)
+    print(c.intensity)
+    print(c.wingspan)
+    print(c.breed)
+    print(c.color)

@@ -1,0 +1,23 @@
+# ============================================================
+# Test 6: sifr.io -- File I/O
+# ============================================================
+
+from sifr.io import write_text, read_text, exists
+
+def main():
+    # Write
+    try:
+        write_text("/tmp/sifr_audit_test.txt", "hello sifr")
+        print("write ok")
+    except str as e:
+        print(f"write error: {e}")
+
+    # Read
+    try:
+        content: str = read_text("/tmp/sifr_audit_test.txt")
+        print(f"read: {content}")
+    except str as e:
+        print(f"read error: {e}")
+
+    # Exists
+    print(exists("/tmp/sifr_audit_test.txt"))

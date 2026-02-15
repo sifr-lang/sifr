@@ -1,0 +1,54 @@
+# ============================================================
+# Test 8: Dictionary Operations
+# Python: get, keys, values, items, update, pop, del,
+#         setdefault, in, len, clear, copy
+# ============================================================
+
+def main():
+    d: dict[str, int] = {"a": 1, "b": 2, "c": 3}
+
+    # Length
+    print(len(d))
+
+    # Access (safe -- returns Option)
+    val: int | None = d["a"]
+    if val is not None:
+        print(val)
+
+    # Get with default
+    got: int | None = d.get("z")
+    if got is None:
+        print("not found")
+
+    # Contains key
+    print(d.contains("a"))
+    print(d.contains("z"))
+
+    # Keys
+    keys: list[str] = d.keys()
+    print(keys)
+
+    # Values
+    values: list[int] = d.values()
+    print(values)
+
+    # Items
+    items: list[tuple[str, int]] = d.items()
+    print(items)
+
+    # Update / insert
+    d["d"] = 4
+    print(len(d))
+
+    # Delete key
+    del d["d"]
+    print(len(d))
+
+    # Pop
+    popped: int | None = d.pop("c")
+    if popped is not None:
+        print(f"popped: {popped}")
+
+    # Clear
+    d.clear()
+    print(len(d))

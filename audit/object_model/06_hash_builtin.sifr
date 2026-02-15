@@ -1,0 +1,21 @@
+# ============================================================
+# Test 6: Hash Built-in
+# Python: hash(x) for hashable types
+# ============================================================
+
+def main():
+    # Hash of int
+    h1: int = hash(42)
+    print(h1)
+
+    # Hash of str
+    h2: int = hash("hello")
+    print(h2)
+
+    # Hash of bool
+    h3: int = hash(True)
+    print(h3)
+
+    # Same value should produce same hash
+    print(hash(42) == hash(42))
+    print(hash("hello") == hash("hello"))

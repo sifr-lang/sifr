@@ -1,0 +1,35 @@
+# ============================================================
+# Test 11: For Loops
+# Python: for x in range, for x in list, for k,v in dict.items(),
+#         for i,v in enumerate, nested for
+# ============================================================
+
+def main():
+    # Range
+    for i in range(5):
+        print(i)
+
+    # Range with start/end
+    for i in range(2, 5):
+        print(i)
+
+    # Iterate list
+    fruits: list[str] = ["apple", "banana", "cherry"]
+    for fruit in fruits:
+        print(fruit)
+
+    # Enumerate
+    for pair in enumerate(fruits):
+        print(pair)
+
+    # Nested for
+    for i in range(3):
+        for j in range(3):
+            if i == j:
+                print(f"({i},{j})")
+
+    # For with accumulator
+    total: int = 0
+    for n in range(1, 11):
+        total += n
+    print(total)

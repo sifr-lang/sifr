@@ -1,0 +1,35 @@
+# ============================================================
+# Test 10: Inference from Class Constructor
+# TypeScript: let p = new Point(1, 2); // inferred as Point
+# ============================================================
+
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def __str__(self) -> str:
+        return f"Point({self.x}, {self.y})"
+
+class User:
+    name: str
+    age: int
+
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+    def __str__(self) -> str:
+        return f"User({self.name}, {self.age})"
+
+def main():
+    # Infer Point from constructor
+    p = Point(3.0, 4.0)
+    print(p)
+
+    # Infer User from constructor
+    u = User("Alice", 30)
+    print(u)

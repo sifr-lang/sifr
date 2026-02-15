@@ -1,0 +1,28 @@
+# ============================================================
+# Test 38: Multiline Expressions and Complex Expressions
+# Python: long expressions, parenthesized multiline
+# ============================================================
+
+def main():
+    # Long arithmetic
+    result: int = (1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10)
+    print(result)
+
+    # Parenthesized multiline (if supported)
+    total: int = (
+        1 + 2 + 3
+        + 4 + 5 + 6
+        + 7 + 8 + 9
+    )
+    print(total)
+
+    # Complex boolean
+    x: int = 5
+    y: int = 10
+    check: bool = (x > 0 and y > 0 and x < y and y < 100)
+    print(check)
+
+    # Nested function calls
+    nums: list[int] = [5, 3, 1, 4, 2]
+    print(sum(sorted(nums)))
+    print(len(sorted(nums)))

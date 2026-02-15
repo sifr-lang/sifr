@@ -1,0 +1,61 @@
+# ============================================================
+# Test 7: List Operations
+# Python: append, insert, pop, remove, extend, sort, reverse,
+#         index, count, copy, clear, slicing
+# ============================================================
+
+def main():
+    nums: list[int] = [3, 1, 4, 1, 5]
+
+    # Length
+    print(len(nums))
+
+    # Append
+    nums.append(9)
+    print(nums)
+
+    # Insert
+    nums.insert(0, 0)
+    print(nums)
+
+    # Pop (returns Option)
+    popped: int | None = nums.pop()
+    if popped is not None:
+        print(f"popped: {popped}")
+
+    # Remove by value
+    nums.remove(1)
+    print(nums)
+
+    # Sort
+    unsorted: list[int] = [5, 3, 1, 4, 2]
+    unsorted.sort()
+    print(unsorted)
+
+    # Reverse
+    unsorted.reverse()
+    print(unsorted)
+
+    # Count
+    data: list[int] = [1, 2, 1, 3, 1]
+    print(data.count(1))
+
+    # Contains
+    print(data.contains(2))
+    print(data.contains(9))
+
+    # Slicing
+    items: list[int] = [10, 20, 30, 40, 50]
+    print(items[1:3])
+    print(items[:2])
+    print(items[3:])
+
+    # Concatenation
+    a: list[int] = [1, 2]
+    b: list[int] = [3, 4]
+    c: list[int] = a + b
+    print(c)
+
+    # Clear
+    a.clear()
+    print(a)

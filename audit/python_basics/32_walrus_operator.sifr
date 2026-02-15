@@ -1,0 +1,22 @@
+# ============================================================
+# Test 32: Walrus Operator (:=)
+# Python: if (n := len(a)) > 10:
+# ============================================================
+
+def main():
+    items: list[int] = [1, 2, 3, 4, 5]
+
+    # In if condition
+    if (n := len(items)) > 3:
+        print(f"long list: {n} items")
+    else:
+        print("short list")
+
+    # In while loop
+    data: list[int] = [10, 20, 30, 0, 40]
+    i: int = 0
+    while (val := data[i]) is not None:
+        if val == 0:
+            break
+        print(val)
+        i += 1

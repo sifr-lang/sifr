@@ -1,0 +1,34 @@
+# LeetCode 81: Search In Rotated Sorted Array Ii
+# Python version
+
+def search(nums: List[int], target: int) -> bool:
+    left,right = 0,len(nums) - 1
+    while left <= right:
+        mid = left + (right - left) // 2
+        if nums[mid] == target:
+            return True
+
+        #Left sorted portion
+        if nums[left] < nums[mid]:
+            if nums[left] <= target < nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+        #Right sorted portion
+        elif nums[left] > nums[mid]:
+            if nums[mid] < target <= nums[right]:
+                left = mid + 1
+            else:
+                right = mid - 1
+        else:
+            left += 1
+    return False 
+
+
+
+def main():
+    print(search([2,5,6,0,0,1,2], 0))
+    print(search([2,5,6,0,0,1,2], 3))
+
+if __name__ == "__main__":
+    main()

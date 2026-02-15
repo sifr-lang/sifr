@@ -1,0 +1,26 @@
+# ============================================================
+# Test 1: Variable Type Inference from Literals
+# TypeScript: let x = 42; // inferred as number
+# ============================================================
+
+def main():
+    # Infer int
+    a = 42
+    print(a)
+    print(a + 1)
+
+    # Infer float
+    b = 3.14
+    print(b)
+
+    # Infer str
+    c = "hello"
+    print(c)
+
+    # Infer bool
+    d = True
+    print(d)
+
+    # Infer None
+    e = None
+    print(e)

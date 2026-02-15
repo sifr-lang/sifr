@@ -1,0 +1,39 @@
+# ============================================================
+# Test 12: Tuple Types
+# TypeScript equivalent: [string, number], readonly tuples
+# ============================================================
+
+# --- Basic tuple ---
+def get_pair() -> tuple[str, int]:
+    return ("alice", 42)
+
+# --- Tuple unpacking ---
+def swap(pair: tuple[int, int]) -> tuple[int, int]:
+    a, b = pair
+    return (b, a)
+
+# --- Tuple with different types ---
+def make_triple() -> tuple[str, int, bool]:
+    return ("hello", 42, True)
+
+# --- Nested tuple ---
+def nested() -> tuple[int, tuple[str, bool]]:
+    inner: tuple[str, bool] = ("hi", True)
+    return (1, inner)
+
+def main():
+    # Basic tuple
+    pair: tuple[str, int] = get_pair()
+    print(pair)
+
+    # Tuple unpacking
+    swapped: tuple[int, int] = swap((1, 2))
+    print(swapped)
+
+    # Triple
+    triple: tuple[str, int, bool] = make_triple()
+    print(triple)
+
+    # Nested
+    n: tuple[int, tuple[str, bool]] = nested()
+    print(n)

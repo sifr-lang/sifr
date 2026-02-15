@@ -1,0 +1,25 @@
+# ============================================================
+# Test 4: Collection Literal Type Inference
+# TypeScript: let nums = [1, 2, 3]; // inferred as number[]
+# ============================================================
+
+def main():
+    # Infer list[int] from literal
+    nums = [1, 2, 3]
+    print(nums)
+
+    # Infer list[str] from literal
+    names = ["alice", "bob", "charlie"]
+    print(names)
+
+    # Infer dict[str, int] from literal
+    ages = {"alice": 30, "bob": 25}
+    print(ages)
+
+    # Infer tuple from literal
+    pair = (42, "hello")
+    print(pair)
+
+    # Infer list[bool] from literal
+    flags = [True, False, True]
+    print(flags)

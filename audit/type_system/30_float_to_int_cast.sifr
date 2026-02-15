@@ -1,0 +1,20 @@
+# ============================================================
+# Test 30: Float to Int Conversion for Protocol Return
+# ============================================================
+
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+    def area(self) -> float:
+        return 3.14 * self.radius * self.radius
+
+def main():
+    c: Circle = Circle(5.0)
+    a: float = c.area()
+    print(a)
+    # Can we convert float to int?
+    i: int = int(a)
+    print(i)

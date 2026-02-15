@@ -1,0 +1,30 @@
+# ============================================================
+# Test 3: Variable Type Inference from Function Return
+# TypeScript: let result = getUser(); // inferred from return type
+# ============================================================
+
+def get_number() -> int:
+    return 42
+
+def get_name() -> str:
+    return "alice"
+
+def get_flag() -> bool:
+    return True
+
+def get_pair() -> tuple[int, str]:
+    return (1, "one")
+
+def main():
+    # Infer from function return type
+    n = get_number()
+    print(n)
+
+    name = get_name()
+    print(name)
+
+    flag = get_flag()
+    print(flag)
+
+    pair = get_pair()
+    print(pair)

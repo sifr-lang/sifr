@@ -1,0 +1,37 @@
+# ============================================================
+# Test 21: Inference from Built-in Function Return Types
+# TypeScript: let n = parseInt("42"); // inferred as number
+# ============================================================
+
+def main():
+    # len returns int
+    items: list[int] = [1, 2, 3]
+    count = len(items)
+    print(count)
+
+    # abs returns int (from int input)
+    negative = -5
+    positive = abs(negative)
+    print(positive)
+
+    # min/max return int (from list[int])
+    smallest = min(items)
+    print(smallest)
+
+    biggest = max(items)
+    print(biggest)
+
+    # sum returns int
+    total = sum(items)
+    print(total)
+
+    # str() returns str
+    text = str(42)
+    print(text)
+
+    # int() from str returns Result
+    # parsed = int("42")  -- this returns Result, tested separately
+
+    # bool() returns bool
+    truthy = bool(1)
+    print(truthy)

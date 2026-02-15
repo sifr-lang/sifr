@@ -1,0 +1,29 @@
+# ============================================================
+# Test 5: Expression Precedence
+# Python: **, unary -, *, /, //, %, +, -, comparisons,
+#         not, and, or
+# ============================================================
+
+def main():
+    # ** binds tighter than unary -
+    print(-(2 ** 3))    # should be -8
+    print((-2) ** 3)    # should be -8
+
+    # * before +
+    print(2 + 3 * 4)    # should be 14
+    print((2 + 3) * 4)  # should be 20
+
+    # // and % same precedence as * /
+    print(10 + 20 // 3)  # should be 16 (10 + 6)
+    print(10 % 3 + 1)    # should be 2 (1 + 1)
+
+    # Comparison chaining
+    x: int = 5
+    print(1 < x < 10)    # True
+    print(1 < x < 3)     # False
+
+    # Boolean precedence: not > and > or
+    print(True or False and False)   # True (and binds tighter)
+    print((True or False) and False) # False
+    print(not False and True)        # True
+    print(not (False and True))      # True

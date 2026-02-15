@@ -1,0 +1,25 @@
+# LeetCode 402: Remove K Digits
+# Python version
+
+def removeKdigits(num: str, k: int) -> str:
+    stack = []
+    for i in num:
+        while stack and stack[-1] > i and k > 0:
+            k -= 1
+            stack.pop()
+        if stack or i is not "0":
+            stack.append(i)
+    if k:
+        stack = stack[:-k]
+    return ''.join(stack) or '0'
+    
+
+
+
+def main():
+    print(removeKdigits("1432219", 3))
+    print(removeKdigits("10200", 1))
+    print(removeKdigits("10", 2))
+
+if __name__ == "__main__":
+    main()

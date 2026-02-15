@@ -1,0 +1,37 @@
+# ============================================================
+# Test 4: Dunder Methods
+# Python: __init__, __str__, __repr__, __eq__, __add__,
+#         __len__, __contains__, __getitem__, __bool__
+# ============================================================
+
+class Vector:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def __str__(self) -> str:
+        return f"Vector({self.x}, {self.y})"
+
+    def __add__(self, other: Vector) -> Vector:
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other: Vector) -> bool:
+        return self.x == other.x and self.y == other.y
+
+def main():
+    a: Vector = Vector(1.0, 2.0)
+    b: Vector = Vector(3.0, 4.0)
+
+    # __str__
+    print(a)
+
+    # __add__
+    c: Vector = a + b
+    print(c)
+
+    # __eq__
+    print(a == Vector(1.0, 2.0))
+    print(a == b)

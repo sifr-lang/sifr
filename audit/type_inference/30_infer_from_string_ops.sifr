@@ -1,0 +1,36 @@
+# ============================================================
+# Test 30: Inference from String Operations
+# TypeScript: let parts = "a,b,c".split(","); // inferred as string[]
+# ============================================================
+
+def main():
+    text = "hello world"
+
+    # Infer str from upper/lower
+    upper = text.upper()
+    print(upper)
+
+    # Infer list[str] from split
+    parts = text.split(" ")
+    print(parts)
+
+    # Infer str from join
+    joined = ", ".join(parts)
+    print(joined)
+
+    # Infer str from strip
+    padded = "  hello  "
+    trimmed = padded.strip()
+    print(trimmed)
+
+    # Infer bool from startswith/endswith
+    starts = text.startswith("hello")
+    print(starts)
+
+    # Infer str from replace
+    replaced = text.replace("world", "sifr")
+    print(replaced)
+
+    # Infer int from find
+    pos = text.find("world")
+    print(pos)

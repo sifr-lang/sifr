@@ -1,0 +1,22 @@
+# ============================================================
+# Test 17: Sets
+# Python: set(), {1, 2, 3}, add, remove, union, intersection
+# ============================================================
+
+def main():
+    # Set creation
+    from sifr.collections import Set
+    s: Set[int] = Set([1, 2, 3, 2, 1])
+    print(s)
+
+    # Add
+    s.add(4)
+    print(len(s))
+
+    # Contains
+    print(s.contains(3))
+    print(s.contains(5))
+
+    # Remove
+    s.remove(1)
+    print(s)

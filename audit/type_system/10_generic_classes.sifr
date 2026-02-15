@@ -1,0 +1,48 @@
+# ============================================================
+# Test 10: Generic Classes
+# TypeScript equivalent: class Box<T> { value: T }
+# ============================================================
+
+# --- What we WANT but may not work ---
+# class Box[T]:
+#     value: T
+#
+#     def __init__(self, value: T):
+#         self.value = value
+#
+#     def get(self) -> T:
+#         return self.value
+#
+# class Pair[A, B]:
+#     first: A
+#     second: B
+#
+#     def __init__(self, first: A, second: B):
+#         self.first = first
+#         self.second = second
+
+# --- Workaround: concrete types ---
+class IntBox:
+    value: int
+
+    def __init__(self, value: int):
+        self.value = value
+
+    def get(self) -> int:
+        return self.value
+
+class StrBox:
+    value: str
+
+    def __init__(self, value: str):
+        self.value = value
+
+    def get(self) -> str:
+        return self.value
+
+def main():
+    ib: IntBox = IntBox(42)
+    print(ib.get())
+
+    sb: StrBox = StrBox("hello")
+    print(sb.get())

@@ -1,0 +1,15 @@
+# LeetCode 206: Reverse Linked List
+
+def reverseList(head: ListNode) -> ListNode:
+    prev, curr = None, head
+
+    while curr:
+        temp = curr.next
+        curr.next = prev
+        prev = curr
+        curr = temp
+    return prev
+
+def main():
+    print("no test cases")
+

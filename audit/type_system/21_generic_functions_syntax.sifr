@@ -1,0 +1,11 @@
+# ============================================================
+# Test 21: Generic Function Syntax
+# TypeScript: function identity<T>(x: T): T { return x; }
+# ============================================================
+
+def identity[T](x: T) -> T:
+    return x
+
+def main():
+    print(identity(42))
+    print(identity("hello"))

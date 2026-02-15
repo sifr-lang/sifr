@@ -1,0 +1,16 @@
+# ============================================================
+# Test 9: sifr.random
+# ============================================================
+
+from sifr.random import random_float, random_int, random_choice
+
+def main():
+    r: float = random_float()
+    print(r >= 0.0)
+
+    n: int = random_int(1, 100)
+    print(n >= 1)
+
+    items: list[str] = ["a", "b", "c"]
+    choice: str = random_choice(items)
+    print(choice)

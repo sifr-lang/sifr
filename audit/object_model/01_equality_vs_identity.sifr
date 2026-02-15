@@ -1,0 +1,19 @@
+# ============================================================
+# Test 1: Equality vs Identity
+# Python: == vs is, hash consistency
+# ============================================================
+
+def main():
+    # Value equality
+    print(1 == 1)
+    print("hello" == "hello")
+    print([1, 2] == [1, 2])
+
+    # Identity (is) -- for None
+    x: int | None = None
+    print(x is None)
+    print(x is not None)
+
+    # bool/int equality (Python: True == 1, False == 0)
+    print(True == True)
+    print(False == False)

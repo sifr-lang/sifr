@@ -1,0 +1,20 @@
+# ============================================================
+# Test 24: elif Equality Chain Narrowing
+# TypeScript: if (x === "a") {} else if (x === "b") {}
+# ============================================================
+
+def route(method: str) -> str:
+    if method == "GET":
+        return "get handler"
+    elif method == "POST":
+        return "post handler"
+    elif method == "PUT":
+        return "put handler"
+    else:
+        return "unknown"
+
+def main():
+    print(route("GET"))
+    print(route("POST"))
+    print(route("PUT"))
+    print(route("DELETE"))

@@ -1,0 +1,36 @@
+# LeetCode 1768: Merge Strings Alternately
+# v2: Sifr-idiomatic with safe indexing
+
+def mergeAlternately(word1: str, word2: str) -> str:
+    i: int = 0
+    j: int = 0
+    result: str = ""
+    while i < len(word1) and j < len(word2):
+        ch1: str | None = word1[i]
+        ch2: str | None = word2[j]
+        if ch1 is not None:
+            result = result + ch1
+        if ch2 is not None:
+            result = result + ch2
+        i += 1
+        j += 1
+    while i < len(word1):
+        ch: str | None = word1[i]
+        if ch is not None:
+            result = result + ch
+        i += 1
+    while j < len(word2):
+        ch: str | None = word2[j]
+        if ch is not None:
+            result = result + ch
+        j += 1
+    return result
+
+def main():
+    print(mergeAlternately("abc", "pqr"))
+    print(mergeAlternately("ab", "pqrs"))
+    print(mergeAlternately("abcd", "pq"))
+
+# expect-stdout: apbqcr
+# expect-stdout: apbqrs
+# expect-stdout: apbqcd

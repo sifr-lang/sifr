@@ -1,0 +1,36 @@
+# ============================================================
+# Test 8: Newtype Pattern
+# TypeScript equivalent: branded types (type UserId = number & { __brand: 'UserId' })
+# ============================================================
+
+class Port(int):
+    pass
+
+class Email(str):
+    pass
+
+class UserId(int):
+    pass
+
+class Temperature(float):
+    pass
+
+def start_server(port: Port) -> str:
+    return f"Server on port {port}"
+
+def send_email(to: Email) -> str:
+    return f"Sending to {to}"
+
+def main():
+    p: Port = Port(8080)
+    print(p)
+    print(p.value())
+
+    email: Email = Email("user@example.com")
+    print(email)
+
+    uid: UserId = UserId(42)
+    print(uid)
+
+    print(start_server(p))
+    print(send_email(email))

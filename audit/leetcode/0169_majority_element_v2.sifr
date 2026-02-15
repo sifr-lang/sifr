@@ -1,0 +1,30 @@
+# LeetCode 169: Majority Element (Boyer-Moore Voting)
+# v2: Sifr-idiomatic with safe indexing
+
+def majorityElement(nums: list[int]) -> int:
+    candidate: int = 0
+    first: int | None = nums[0]
+    if first is not None:
+        candidate = first
+    count: int = 0
+    for i in range(len(nums)):
+        val: int | None = nums[i]
+        if val is not None:
+            if count == 0:
+                candidate = val
+            if val == candidate:
+                count += 1
+            else:
+                count -= 1
+    return candidate
+
+def main():
+    print(majorityElement([3, 2, 3]))
+    print(majorityElement([2, 2, 1, 1, 1, 2, 2]))
+    print(majorityElement([1]))
+    print(majorityElement([6, 5, 5]))
+
+# expect-stdout: 3
+# expect-stdout: 2
+# expect-stdout: 1
+# expect-stdout: 5

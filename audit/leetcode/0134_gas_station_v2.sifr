@@ -1,0 +1,29 @@
+# LeetCode 134: Gas Station
+# v2: Sifr-idiomatic with safe indexing + nested narrowing
+
+def canCompleteCircuit(gas: list[int], cost: list[int]) -> int:
+    total_tank: int = 0
+    current_tank: int = 0
+    start: int = 0
+    for i in range(len(gas)):
+        g: int | None = gas[i]
+        c: int | None = cost[i]
+        if g is not None:
+            if c is not None:
+                total_tank += g - c
+                current_tank += g - c
+                if current_tank < 0:
+                    start = i + 1
+                    current_tank = 0
+    if total_tank >= 0:
+        return start
+    return -1
+
+def main():
+    print(canCompleteCircuit([1, 2, 3, 4, 5], [3, 4, 5, 1, 2]))
+    print(canCompleteCircuit([2, 3, 4], [3, 4, 3]))
+    print(canCompleteCircuit([5, 1, 2, 3, 4], [4, 4, 1, 5, 1]))
+
+# expect-stdout: 3
+# expect-stdout: -1
+# expect-stdout: 4

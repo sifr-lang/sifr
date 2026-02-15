@@ -1,0 +1,39 @@
+# ============================================================
+# Test 21: Scope and Variable Shadowing
+# Python: local scope, nested scope, variable shadowing
+# ============================================================
+
+x: int = 10  # Module-level
+
+def get_x() -> int:
+    return x
+
+def shadow_x() -> int:
+    x: int = 99  # Shadows module-level x
+    return x
+
+def nested_scope() -> int:
+    outer: int = 10
+    def inner() -> int:
+        return outer + 5
+    return inner()
+
+def main():
+    # Module-level access
+    print(get_x())
+
+    # Shadowing
+    print(shadow_x())
+
+    # Nested scope
+    print(nested_scope())
+
+    # Local scope
+    local_var: int = 42
+    print(local_var)
+
+    # Variable shadowing in same scope
+    val: int = 1
+    print(val)
+    val = 2
+    print(val)

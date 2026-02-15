@@ -1,0 +1,21 @@
+# ============================================================
+# Test 36: Module-Level Constants and Variables
+# Python: PI = 3.14159, MAX_SIZE = 100
+# ============================================================
+
+PI: float = 3.14159
+MAX_RETRIES: int = 3
+APP_NAME: str = "sifr"
+DEBUG: bool = True
+
+def circle_area(r: float) -> float:
+    return PI * r * r
+
+def get_config() -> str:
+    return f"{APP_NAME} (debug={DEBUG}, retries={MAX_RETRIES})"
+
+def main():
+    print(circle_area(5.0))
+    print(get_config())
+    print(PI)
+    print(MAX_RETRIES)

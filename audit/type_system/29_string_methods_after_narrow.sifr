@@ -1,0 +1,21 @@
+# ============================================================
+# Test 29: String Methods After Narrowing
+# TypeScript: if (typeof x === "string") { x.toUpperCase() }
+# ============================================================
+
+def process(x: int | str) -> str:
+    if isinstance(x, str):
+        return x.upper()
+    else:
+        return f"{x}"
+
+def process_optional(x: str | None) -> str:
+    if x is not None:
+        return x.upper()
+    return "none"
+
+def main():
+    print(process("hello"))
+    print(process(42))
+    print(process_optional("world"))
+    print(process_optional(None))

@@ -1,0 +1,21 @@
+# ============================================================
+# Test 22: Inference of Nested Collection Types
+# TypeScript: let matrix = [[1,2],[3,4]]; // inferred as number[][]
+# ============================================================
+
+def main():
+    # Infer list[list[int]]
+    matrix = [[1, 2], [3, 4]]
+    print(matrix)
+
+    # Infer dict[str, list[int]]
+    groups = {"evens": [2, 4, 6], "odds": [1, 3, 5]}
+    print(groups)
+
+    # Infer list[tuple[str, int]]
+    entries = [("a", 1), ("b", 2)]
+    print(entries)
+
+    # Infer tuple[list[int], str]
+    combo = ([1, 2, 3], "numbers")
+    print(combo)

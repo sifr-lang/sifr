@@ -1,0 +1,18 @@
+# ============================================================
+# Test 41: Pass class to function then use again
+# ============================================================
+
+class Item:
+    name: str
+    def __init__(self, name: str):
+        self.name = name
+
+def show_name(item: Item) -> str:
+    return item.name
+
+def main():
+    item: Item = Item("widget")
+    n: str = show_name(item)
+    print(n)
+    # Can we use item again after passing to function?
+    print(item.name)

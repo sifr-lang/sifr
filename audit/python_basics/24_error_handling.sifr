@@ -1,0 +1,58 @@
+# ============================================================
+# Test 24: Error Handling
+# Python: try/except/finally, raise, custom exceptions
+# Sifr: Result[T, E], try/except, raise
+# ============================================================
+
+def parse_int(s: str) -> Result[int, str]:
+    return int(s)
+
+def validate(x: int) -> Result[str, str]:
+    if x > 0:
+        return "valid"
+    raise "must be positive"
+
+def divide(a: int, b: int) -> Result[float, str]:
+    if b == 0:
+        raise "division by zero"
+    return float(a) / float(b)
+
+def main():
+    # Basic try/except
+    try:
+        val: int = parse_int("42")
+        print(f"parsed: {val}")
+    except str as e:
+        print(f"error: {e}")
+
+    try:
+        val2: int = parse_int("abc")
+        print(f"parsed: {val2}")
+    except str as e:
+        print(f"error: {e}")
+
+    # Validate
+    try:
+        msg: str = validate(5)
+        print(msg)
+    except str as e:
+        print(e)
+
+    try:
+        msg2: str = validate(-1)
+        print(msg2)
+    except str as e:
+        print(e)
+
+    # Division
+    try:
+        result: float = divide(10, 3)
+        print(f"result: {result}")
+    except str as e:
+        print(e)
+
+    try:
+        result2: float = divide(10, 0)
+        print(f"result: {result2}")
+    except str as e:
+        print(e)

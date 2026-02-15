@@ -1,0 +1,43 @@
+# ============================================================
+# Test 11: Generic Constraints
+# TypeScript equivalent: function longest<T extends { length: number }>(a: T, b: T): T
+# ============================================================
+
+# --- What we WANT but may not work ---
+# class Comparable(Protocol):
+#     def compare(self, other: Self) -> int:
+#         pass
+#
+# def max_val[T: Comparable](a: T, b: T) -> T:
+#     if a.compare(b) > 0:
+#         return a
+#     return b
+
+# --- Workaround: use concrete protocol ---
+class Sizeable(Protocol):
+    def size(self) -> int:
+        pass
+
+class SmallBox:
+    items: int
+
+    def __init__(self, items: int):
+        self.items = items
+
+    def size(self) -> int:
+        return self.items
+
+class BigBox:
+    items: int
+
+    def __init__(self, items: int):
+        self.items = items
+
+    def size(self) -> int:
+        return self.items * 10
+
+def main():
+    s: SmallBox = SmallBox(5)
+    b: BigBox = BigBox(3)
+    print(s.size())
+    print(b.size())

@@ -1,0 +1,10 @@
+# ============================================================
+# Test 2: From Import
+# Python: from module import name
+# ============================================================
+
+from sifr.math import sqrt, pi
+
+def main():
+    print(sqrt(25.0))
+    print(pi)

@@ -1,0 +1,37 @@
+# ============================================================
+# Test 5: String Formatting
+# Python: f-strings, str(), repr(), string multiplication
+# ============================================================
+
+def main():
+    name: str = "Alice"
+    age: int = 30
+
+    # F-string basics
+    print(f"Name: {name}")
+    print(f"Age: {age}")
+    print(f"{name} is {age} years old")
+
+    # F-string with expressions
+    print(f"Next year: {age + 1}")
+    print(f"Double: {age * 2}")
+
+    # Nested f-string expressions
+    items: list[int] = [1, 2, 3]
+    print(f"Count: {len(items)}")
+
+    # String multiplication
+    print("ha" * 3)
+    print("-" * 20)
+
+    # str() conversion
+    num_str: str = str(42)
+    print(num_str)
+    float_str: str = str(3.14)
+    print(float_str)
+    bool_str: str = str(True)
+    print(bool_str)
+
+    # String concatenation
+    greeting: str = "Hello" + " " + "World"
+    print(greeting)

@@ -1,0 +1,18 @@
+# ============================================================
+# Test 31: Del Statement
+# Python: del x, del d["key"], del lst[i]
+# ============================================================
+
+def main():
+    # Del dict key
+    d: dict[str, int] = {"a": 1, "b": 2, "c": 3}
+    print(len(d))
+    del d["b"]
+    print(len(d))
+    print(d.contains("b"))
+
+    # Del variable
+    x: int = 42
+    print(x)
+    del x
+    # x should not be accessible after del

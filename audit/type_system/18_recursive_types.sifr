@@ -1,0 +1,31 @@
+# ============================================================
+# Test 18: Recursive Types
+# TypeScript equivalent: type TreeNode = { value: number, children: TreeNode[] }
+# ============================================================
+
+# --- Recursive class (tree) ---
+# Note: This may or may not work depending on how Sifr handles
+# self-referential types
+
+class IntNode:
+    value: int
+    left_val: int
+    right_val: int
+
+    def __init__(self, value: int, left_val: int, right_val: int):
+        self.value = value
+        self.left_val = left_val
+        self.right_val = right_val
+
+    def sum(self) -> int:
+        return self.value + self.left_val + self.right_val
+
+# --- Linked list (simplified) ---
+# True recursive types would be:
+# class Node:
+#     value: int
+#     next: Node | None
+
+def main():
+    node: IntNode = IntNode(1, 2, 3)
+    print(node.sum())

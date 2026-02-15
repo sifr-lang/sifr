@@ -1,0 +1,42 @@
+# ============================================================
+# Test 16: Exhaustive Pattern Matching
+# TypeScript equivalent: exhaustive switch with never type
+# ============================================================
+
+class Red:
+    intensity: int
+
+    def __init__(self, intensity: int):
+        self.intensity = intensity
+
+class Green:
+    intensity: int
+
+    def __init__(self, intensity: int):
+        self.intensity = intensity
+
+class Blue:
+    intensity: int
+
+    def __init__(self, intensity: int):
+        self.intensity = intensity
+
+type Color = Red | Green | Blue
+
+# This should handle ALL variants exhaustively
+def color_name(c: Color) -> str:
+    if isinstance(c, Red):
+        return f"red({c.intensity})"
+    elif isinstance(c, Green):
+        return f"green({c.intensity})"
+    else:
+        return f"blue({c.intensity})"
+
+def main():
+    r: Red = Red(255)
+    g: Green = Green(128)
+    b: Blue = Blue(64)
+
+    print(color_name(r))
+    print(color_name(g))
+    print(color_name(b))

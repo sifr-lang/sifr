@@ -1,0 +1,38 @@
+# ============================================================
+# Test 19: Custom Type Guards
+# TypeScript equivalent: function isString(x: unknown): x is string
+# ============================================================
+
+# --- isinstance as type guard ---
+def process_value(x: int | str | None) -> str:
+    if x is None:
+        return "nothing"
+    if isinstance(x, int):
+        return f"number: {x + 1}"
+    else:
+        return f"text: {x.upper()}"
+
+# --- Chained type guards ---
+def deep_check(x: int | str | bool | None) -> str:
+    if x is None:
+        return "null"
+    if isinstance(x, int):
+        return f"int({x})"
+    elif isinstance(x, str):
+        return f"str({x})"
+    else:
+        return f"bool({x})"
+
+# --- TypeScript has custom type predicates:
+# function isString(x: unknown): x is string { return typeof x === 'string' }
+# Sifr doesn't have custom type predicates yet
+
+def main():
+    print(process_value(42))
+    print(process_value("hello"))
+    print(process_value(None))
+
+    print(deep_check(10))
+    print(deep_check("hi"))
+    print(deep_check(True))
+    print(deep_check(None))

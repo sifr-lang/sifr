@@ -1,0 +1,12 @@
+# ============================================================
+# Test 20: Inference with Reassignment (Different Type)
+# TypeScript: let x: number | string = 1; x = "hello"; // OK with union
+#             let y = 1; y = "hello"; // ERROR in TS strict mode
+# ============================================================
+
+def main():
+    # Infer int, then try to reassign str -- should this fail?
+    x = 42
+    print(x)
+    x = "hello"
+    print(x)

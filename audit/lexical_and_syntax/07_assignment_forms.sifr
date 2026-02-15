@@ -1,0 +1,39 @@
+# ============================================================
+# Test 7: Assignment Forms
+# Python: simple, annotated, augmented, unpacking, chained
+# ============================================================
+
+def main():
+    # Simple
+    x = 42
+    print(x)
+
+    # Annotated
+    y: int = 10
+    print(y)
+
+    # Augmented
+    y += 5
+    print(y)
+    y -= 3
+    print(y)
+    y *= 2
+    print(y)
+
+    # Unpacking
+    a, b = 1, 2
+    print(a)
+    print(b)
+
+    # Star unpacking
+    first, *rest = [1, 2, 3, 4]
+    print(first)
+    print(rest)
+
+    # Swap
+    a, b = b, a
+    print(a)
+    print(b)
+
+    # Annotated without value (if supported)
+    # z: int  # declaration only

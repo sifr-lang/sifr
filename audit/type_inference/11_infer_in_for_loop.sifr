@@ -1,0 +1,23 @@
+# ============================================================
+# Test 11: Inference of Loop Variable
+# TypeScript: for (let x of [1, 2, 3]) { } // x inferred as number
+# ============================================================
+
+def main():
+    # Infer loop variable type from list[int]
+    nums: list[int] = [1, 2, 3]
+    for n in nums:
+        print(n + 10)
+
+    # Infer loop variable from list[str]
+    names: list[str] = ["alice", "bob"]
+    for name in names:
+        print(name.upper())
+
+    # Infer loop variable from range
+    for i in range(5):
+        print(i)
+
+    # Infer loop variable from enumerate
+    for pair in enumerate(names):
+        print(pair)

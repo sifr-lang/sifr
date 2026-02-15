@@ -1,0 +1,15 @@
+# LeetCode 136: Single Number
+
+def singleNumber(nums: list[int]) -> int:
+    res = 0
+    for n in nums:
+        res = n ^ res
+    return res
+
+def main():
+    print(singleNumber([2,2,1]))
+    print(singleNumber([4,1,2,1,2]))
+
+# expect-stdout: 1
+# expect-stdout: 4
+

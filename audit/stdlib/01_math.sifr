@@ -1,0 +1,16 @@
+# ============================================================
+# Test 1: sifr.math -- Full Coverage
+# ============================================================
+
+from sifr.math import sqrt, floor, ceil, pi, e, log, sin, cos, tan, abs_val, pow_val, min_val, max_val, round_val
+
+def main():
+    print(sqrt(16.0))
+    print(sqrt(2.0))
+    print(floor(3.7))
+    print(ceil(3.2))
+    print(pi > 3.14)
+    print(e > 2.71)
+    print(log(1.0))
+    print(sin(0.0))
+    print(cos(0.0))

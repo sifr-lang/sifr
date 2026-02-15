@@ -1,0 +1,23 @@
+# ============================================================
+# Test 27: Narrowing + Reassignment
+# TypeScript: let x: string | null = getValue(); if (x) { x = x.toUpperCase() }
+# ============================================================
+
+def process(x: str | None) -> str:
+    if x is not None:
+        result: str = x.upper()
+        return result
+    return "none"
+
+# Can we reassign a narrowed optional?
+def update(name: str | None) -> str:
+    if name is not None:
+        name = name.upper()
+        return name
+    return "default"
+
+def main():
+    print(process("hello"))
+    print(process(None))
+    print(update("world"))
+    print(update(None))

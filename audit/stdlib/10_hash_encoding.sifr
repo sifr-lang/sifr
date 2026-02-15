@@ -1,0 +1,19 @@
+# ============================================================
+# Test 10: sifr.hash and sifr.encoding
+# ============================================================
+
+from sifr.hash import sha256, md5
+from sifr.encoding import base64_encode, base64_decode
+
+def main():
+    h: str = sha256("hello")
+    print(len(h))  # 64 hex chars
+
+    m: str = md5("hello")
+    print(len(m))  # 32 hex chars
+
+    encoded: str = base64_encode("hello world")
+    print(encoded)
+
+    decoded: str = base64_decode(encoded)
+    print(decoded)

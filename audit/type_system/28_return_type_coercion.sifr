@@ -1,0 +1,13 @@
+# ============================================================
+# Test 28: Return Type Coercion (int -> float)
+# TypeScript: number covers both int and float
+# ============================================================
+
+def divide(a: int, b: int) -> float:
+    return a / b
+
+def int_to_float(x: int) -> float:
+    return float(x)
+
+def main():
+    print(int_to_float(42))

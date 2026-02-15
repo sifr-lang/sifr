@@ -1,0 +1,36 @@
+# ============================================================
+# Test 27: Static Methods and Class Methods
+# Python: @staticmethod, @classmethod
+# ============================================================
+
+class MathUtils:
+    @staticmethod
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    @staticmethod
+    def multiply(a: int, b: int) -> int:
+        return a * b
+
+class Temperature:
+    celsius: float
+
+    def __init__(self, celsius: float):
+        self.celsius = celsius
+
+    @classmethod
+    def from_fahrenheit(cls, f: float) -> Temperature:
+        return cls((f - 32.0) * 5.0 / 9.0)
+
+    def __str__(self) -> str:
+        return f"{self.celsius}°C"
+
+def main():
+    print(MathUtils.add(3, 4))
+    print(MathUtils.multiply(5, 6))
+
+    t: Temperature = Temperature(100.0)
+    print(t)
+
+    t2: Temperature = Temperature.from_fahrenheit(212.0)
+    print(t2)

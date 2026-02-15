@@ -1,0 +1,27 @@
+# LeetCode 19: Remove Nth Node From End Of List
+# Python version
+
+def removeNthFromEnd(head: ListNode, n: int) -> ListNode:
+    dummy = ListNode(0, head)
+    left = dummy
+    right = head
+
+    while n > 0:
+        right = right.next
+        n -= 1
+
+    while right:
+        left = left.next
+        right = right.next
+
+    # delete
+    left.next = left.next.next
+    return dummy.next
+
+
+
+def main():
+    print("no test cases")
+
+if __name__ == "__main__":
+    main()

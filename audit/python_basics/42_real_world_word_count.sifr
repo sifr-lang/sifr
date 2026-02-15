@@ -1,0 +1,20 @@
+# ============================================================
+# Test 42: Real-World -- Word Count
+# ============================================================
+
+def word_count(text: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    words: list[str] = text.split(" ")
+    for word in words:
+        existing: int | None = counts[word]
+        if existing is not None:
+            counts[word] = existing + 1
+        else:
+            counts[word] = 1
+    return counts
+
+def main():
+    text: str = "the cat sat on the mat the cat"
+    counts: dict[str, int] = word_count(text)
+    print(counts)
+    print(len(counts))

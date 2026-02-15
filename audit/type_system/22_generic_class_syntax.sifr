@@ -1,0 +1,17 @@
+# ============================================================
+# Test 22: Generic Class Syntax
+# TypeScript: class Box<T> { constructor(public value: T) {} }
+# ============================================================
+
+class Box[T]:
+    value: T
+
+    def __init__(self, value: T):
+        self.value = value
+
+    def get(self) -> T:
+        return self.value
+
+def main():
+    b: Box[int] = Box(42)
+    print(b.get())

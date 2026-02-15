@@ -1,0 +1,32 @@
+# ============================================================
+# Test 2: Truthiness
+# Python: bool(x) -- 0, "", [], {}, None are falsy
+# ============================================================
+
+def check_truthy(label: str, val: bool) -> None:
+    if val:
+        print(f"{label}: truthy")
+    else:
+        print(f"{label}: falsy")
+
+def main():
+    # Integers
+    check_truthy("0", bool(0))
+    check_truthy("1", bool(1))
+    check_truthy("-1", bool(-1))
+
+    # Strings
+    check_truthy("empty str", bool(""))
+    check_truthy("non-empty str", bool("hello"))
+
+    # None
+    x: str | None = None
+    if x:
+        print("truthy")
+    else:
+        print("None is falsy")
+
+    # Non-None
+    y: str | None = "hello"
+    if y:
+        print("non-None is truthy")

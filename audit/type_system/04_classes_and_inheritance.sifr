@@ -1,0 +1,86 @@
+# ============================================================
+# Test 4: Classes and Inheritance
+# TypeScript equivalent: class, extends
+# ============================================================
+
+# --- Basic class ---
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def __str__(self) -> str:
+        return f"Point({self.x}, {self.y})"
+
+    def distance_from_origin(self) -> float:
+        return (self.x * self.x + self.y * self.y)
+
+# --- Inheritance ---
+class Animal:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def speak(self) -> str:
+        return f"{self.name} makes a sound"
+
+class Dog(Animal):
+    breed: str
+
+    def __init__(self, name: str, breed: str):
+        super().__init__(name)
+        self.breed = breed
+
+    def speak(self) -> str:
+        return f"{self.name} barks!"
+
+class Cat(Animal):
+    indoor: bool
+
+    def __init__(self, name: str, indoor: bool):
+        super().__init__(name)
+        self.indoor = indoor
+
+    def speak(self) -> str:
+        return f"{self.name} meows!"
+
+# --- Operator overloading ---
+class Vec2:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def __add__(self, other: Vec2) -> Vec2:
+        return Vec2(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other: Vec2) -> bool:
+        return self.x == other.x and self.y == other.y
+
+    def __str__(self) -> str:
+        return f"Vec2({self.x}, {self.y})"
+
+def main():
+    # Basic class
+    p: Point = Point(3.0, 4.0)
+    print(p)
+    print(p.distance_from_origin())
+
+    # Inheritance
+    dog: Dog = Dog("Rex", "Labrador")
+    cat: Cat = Cat("Whiskers", True)
+    print(dog.speak())
+    print(cat.speak())
+
+    # Operator overloading
+    a: Vec2 = Vec2(1.0, 2.0)
+    b: Vec2 = Vec2(3.0, 4.0)
+    c: Vec2 = a + b
+    print(c)
+    print(a == Vec2(1.0, 2.0))

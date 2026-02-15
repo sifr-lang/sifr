@@ -1,0 +1,35 @@
+# ============================================================
+# Test 1: Full Arithmetic Operators
+# Python: +, -, *, /, //, %, **, unary -, unary +
+# ============================================================
+
+def main():
+    # Basic ops
+    print(10 + 3)
+    print(10 - 3)
+    print(10 * 3)
+
+    # Floor division
+    print(17 // 5)
+    print(-17 // 5)
+
+    # Modulo
+    print(17 % 5)
+    print(-17 % 5)
+
+    # Power
+    print(2 ** 10)
+    print(3 ** 3)
+
+    # Float arithmetic
+    print(10.0 / 3.0)
+    print(10.0 // 3.0)
+
+    # Unary
+    x: int = 5
+    print(-x)
+    print(+x)
+
+    # Mixed int/float
+    print(10 + 3.5)
+    print(2 * 3.14)

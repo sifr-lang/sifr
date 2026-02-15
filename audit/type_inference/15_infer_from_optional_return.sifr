@@ -1,0 +1,20 @@
+# ============================================================
+# Test 15: Inference from Function Returning Optional
+# TypeScript: function find(): string | null
+#             let result = find(); // inferred as string | null
+# ============================================================
+
+def find_user(name: str) -> str | None:
+    if name == "alice":
+        return "Alice Smith"
+    return None
+
+def main():
+    # Infer str | None from function return
+    result = find_user("alice")
+    if result is not None:
+        print(result)
+
+    missing = find_user("bob")
+    if missing is None:
+        print("not found")

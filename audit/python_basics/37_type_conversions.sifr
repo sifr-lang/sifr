@@ -1,0 +1,42 @@
+# ============================================================
+# Test 37: Type Conversions
+# Python: int(), float(), str(), bool(), list(), tuple()
+# ============================================================
+
+def main():
+    # int conversions
+    print(int(3.14))
+    print(int(3.99))
+    print(int(True))
+    print(int(False))
+
+    # float conversions
+    print(float(42))
+    print(float(0))
+
+    # str conversions
+    print(str(42))
+    print(str(3.14))
+    print(str(True))
+    print(str(False))
+
+    # bool conversions
+    print(bool(1))
+    print(bool(0))
+    print(bool("hello"))
+    print(bool(""))
+    print(bool([1, 2]))
+    print(bool([]))
+
+    # int from string (returns Result in Sifr)
+    try:
+        val: int = int("123")
+        print(val)
+    except str as e:
+        print(e)
+
+    try:
+        val2: int = int("abc")
+        print(val2)
+    except str as e:
+        print(f"error: {e}")

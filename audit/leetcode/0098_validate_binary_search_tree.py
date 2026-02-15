@@ -1,0 +1,23 @@
+# LeetCode 98: Validate Binary Search Tree
+# Python version
+
+def isValidBST(root: TreeNode) -> bool:
+    def valid(node, left, right):
+        if not node:
+            return True
+        if not (left < node.val < right):
+            return False
+
+        return valid(node.left, left, node.val) and valid(
+            node.right, node.val, right
+        )
+
+    return valid(root, float("-inf"), float("inf"))
+
+
+
+def main():
+    print("no test cases")
+
+if __name__ == "__main__":
+    main()

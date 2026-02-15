@@ -1,0 +1,27 @@
+# ============================================================
+# Test 23: Inference from Class Field Access
+# TypeScript: let name = user.name; // inferred as string
+# ============================================================
+
+class User:
+    name: str
+    age: int
+
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+def main():
+    u: User = User("Alice", 30)
+
+    # Infer str from field access
+    name = u.name
+    print(name)
+
+    # Infer int from field access
+    age = u.age
+    print(age)
+
+    # Infer from method return
+    desc = f"{name} is {age}"
+    print(desc)

@@ -1,0 +1,24 @@
+# ============================================================
+# Test 24: Inference from Index Access (Safe Indexing)
+# TypeScript: let first = arr[0]; // inferred as T (or T | undefined)
+# ============================================================
+
+def main():
+    nums: list[int] = [10, 20, 30]
+
+    # Infer int | None from safe list indexing
+    first = nums[0]
+    if first is not None:
+        print(first)
+
+    # Infer str | None from safe dict access
+    d: dict[str, int] = {"x": 1, "y": 2}
+    val = d["x"]
+    if val is not None:
+        print(val)
+
+    # Infer from tuple index
+    pair: tuple[str, int] = ("hello", 42)
+    # Tuple indexing with literal
+    a = pair[0]
+    print(a)

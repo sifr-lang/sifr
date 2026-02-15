@@ -1,0 +1,16 @@
+# LeetCode 746: Min Cost Climbing Stairs
+# Python version
+
+def minCostClimbingStairs(cost: List[int]) -> int:
+    for i in range(len(cost) - 3, -1, -1):
+        cost[i] += min(cost[i + 1], cost[i + 2])
+
+    return min(cost[0], cost[1])
+
+
+
+def main():
+    print(minCostClimbingStairs([10,15,20]))
+
+if __name__ == "__main__":
+    main()

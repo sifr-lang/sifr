@@ -1,0 +1,39 @@
+# LeetCode 198: House Robber
+# v2: Sifr-idiomatic with safe indexing
+
+def rob(nums: list[int]) -> int:
+    if len(nums) == 0:
+        return 0
+    first: int | None = nums[0]
+    if len(nums) == 1:
+        if first is not None:
+            return first
+        return 0
+    prev2: int = 0
+    if first is not None:
+        prev2 = first
+    prev1: int = prev2
+    second: int | None = nums[1]
+    if second is not None:
+        if second > prev2:
+            prev1 = second
+    for i in range(2, len(nums)):
+        val: int | None = nums[i]
+        if val is not None:
+            current: int = prev2 + val
+            if prev1 > current:
+                current = prev1
+            prev2 = prev1
+            prev1 = current
+    return prev1
+
+def main():
+    print(rob([1, 2, 3, 1]))
+    print(rob([2, 7, 9, 3, 1]))
+    print(rob([2, 1, 1, 2]))
+    print(rob([0]))
+
+# expect-stdout: 4
+# expect-stdout: 12
+# expect-stdout: 4
+# expect-stdout: 0

@@ -1,0 +1,40 @@
+# ============================================================
+# Test 13: Functions -- Parameters, Defaults, Returns
+# Python: positional args, default args, keyword args, *args
+# ============================================================
+
+# Positional args
+def add(a: int, b: int) -> int:
+    return a + b
+
+# Default args
+def greet(name: str, greeting: str = "Hello") -> str:
+    return f"{greeting}, {name}!"
+
+# Multiple return via tuple
+def divmod_fn(a: int, b: int) -> tuple[int, int]:
+    return (a // b, a % b)
+
+# No return value
+def say_hello(name: str) -> None:
+    print(f"Hello, {name}")
+
+# Nested function calls
+def double(x: int) -> int:
+    return x * 2
+
+def quadruple(x: int) -> int:
+    return double(double(x))
+
+def main():
+    print(add(3, 4))
+    print(greet("Alice"))
+    print(greet("Bob", "Hi"))
+
+    q, r = divmod_fn(17, 5)
+    print(q)
+    print(r)
+
+    say_hello("World")
+
+    print(quadruple(5))

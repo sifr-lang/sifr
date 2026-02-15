@@ -1,0 +1,18 @@
+# ============================================================
+# Test 7: Inference from Conditional / Ternary Expression
+# TypeScript: let x = cond ? "yes" : "no"; // inferred as string
+# ============================================================
+
+def main():
+    # Infer from ternary (same types)
+    label = "yes" if True else "no"
+    print(label)
+
+    # Infer from ternary (int)
+    value = 10 if True else 20
+    print(value)
+
+    # Infer from ternary with function call
+    flag = True
+    msg = "positive" if flag else "negative"
+    print(msg)

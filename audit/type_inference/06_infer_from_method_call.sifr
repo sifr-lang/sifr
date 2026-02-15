@@ -1,0 +1,25 @@
+# ============================================================
+# Test 6: Inference from Method Calls
+# TypeScript: let upper = "hello".toUpperCase(); // inferred as string
+# ============================================================
+
+def main():
+    # Infer from string method
+    upper = "hello".upper()
+    print(upper)
+
+    lower = "WORLD".lower()
+    print(lower)
+
+    # Infer from list method
+    nums: list[int] = [3, 1, 2]
+    length = len(nums)
+    print(length)
+
+    # Infer from sorted
+    sorted_nums = sorted(nums)
+    print(sorted_nums)
+
+    # Infer from reversed
+    rev = reversed(nums)
+    print(rev)

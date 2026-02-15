@@ -1,0 +1,25 @@
+# ============================================================
+# Test 3: Comments and Whitespace
+# Python: # comments, significant indentation
+# ============================================================
+
+# This is a comment
+def add(a: int, b: int) -> int:
+    # Indented comment
+    return a + b  # Inline comment
+
+def main():
+    # Comment before code
+    x: int = add(1, 2)
+    print(x)
+
+    # Blank lines should be fine
+
+    y: int = 10
+    print(y)
+
+    # Nested indentation
+    if True:
+        if True:
+            if True:
+                print("deeply nested")

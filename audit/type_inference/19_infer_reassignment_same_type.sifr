@@ -1,0 +1,17 @@
+# ============================================================
+# Test 19: Inference with Reassignment (Same Type)
+# TypeScript: let x = 1; x = 2; // fine, both number
+# ============================================================
+
+def main():
+    # Infer int, then reassign int
+    x = 1
+    print(x)
+    x = 2
+    print(x)
+
+    # Infer str, then reassign str
+    name = "alice"
+    print(name)
+    name = "bob"
+    print(name)

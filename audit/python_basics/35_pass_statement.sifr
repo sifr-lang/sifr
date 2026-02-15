@@ -1,0 +1,22 @@
+# ============================================================
+# Test 35: Pass Statement
+# Python: pass (no-op placeholder)
+# ============================================================
+
+def do_nothing() -> None:
+    pass
+
+class Empty:
+    pass
+
+def check(x: int) -> str:
+    if x > 0:
+        pass  # TODO: implement
+    return "done"
+
+def main():
+    do_nothing()
+    print("after do_nothing")
+
+    print(check(5))
+    print(check(-1))

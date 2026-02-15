@@ -1,0 +1,16 @@
+# LeetCode 268: Missing Number
+
+def missingNumber(nums: list[int]) -> int:
+    res = len(nums)
+
+    for i in range(len(nums)):
+        res += i - nums[i]
+    return res
+
+def main():
+    print(missingNumber([3,0,1]))
+    print(missingNumber([0,1]))
+
+# expect-stdout: 2
+# expect-stdout: 2
+

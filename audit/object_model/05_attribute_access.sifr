@@ -1,0 +1,41 @@
+# ============================================================
+# Test 5: Attribute Access Patterns
+# Python: obj.field, obj.method(), chained access
+# ============================================================
+
+class Address:
+    city: str
+    zip_code: str
+
+    def __init__(self, city: str, zip_code: str):
+        self.city = city
+        self.zip_code = zip_code
+
+class Person:
+    name: str
+    age: int
+
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+    def greet(self) -> str:
+        return f"Hi, I'm {self.name}"
+
+    def is_adult(self) -> bool:
+        return self.age >= 18
+
+def main():
+    p: Person = Person("Alice", 30)
+
+    # Field access
+    print(p.name)
+    print(p.age)
+
+    # Method call
+    print(p.greet())
+    print(p.is_adult())
+
+    # Chained method (string method on return)
+    upper_greeting: str = p.greet().upper()
+    print(upper_greeting)

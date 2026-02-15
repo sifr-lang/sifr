@@ -1,0 +1,47 @@
+# ============================================================
+# Test 4: String Methods
+# Python: upper, lower, strip, split, join, replace, find,
+#         startswith, endswith, count, isdigit, isalpha, etc.
+# ============================================================
+
+def main():
+    s: str = "  Hello, World!  "
+
+    # Case
+    print("hello".upper())
+    print("HELLO".lower())
+
+    # Strip
+    print(s.strip())
+    print(s.lstrip())
+    print(s.rstrip())
+
+    # Split / Join
+    parts: list[str] = "a,b,c".split(",")
+    print(parts)
+    joined: str = "-".join(parts)
+    print(joined)
+
+    # Replace
+    print("hello world".replace("world", "sifr"))
+
+    # Find (returns int, -1 if not found in Python)
+    print("hello".find("ell"))
+    print("hello".find("xyz"))
+
+    # Startswith / Endswith
+    print("hello".startswith("hel"))
+    print("hello".endswith("llo"))
+    print("hello".startswith("xyz"))
+
+    # Count
+    print("banana".count("a"))
+
+    # Boolean checks
+    print("123".isdigit())
+    print("abc".isalpha())
+    print("abc123".isalnum())
+    print("hello".isdigit())
+
+    # Contains (Python uses `in`, Sifr may differ)
+    print("ell" in "hello")

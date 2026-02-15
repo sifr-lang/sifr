@@ -1,0 +1,21 @@
+# ============================================================
+# Test 3: Unpacking in For Loops
+# Python: for k, v in dict.items()
+# ============================================================
+
+def main():
+    # Unpack tuple in for
+    pairs: list[tuple[str, int]] = [("a", 1), ("b", 2), ("c", 3)]
+    for name, val in pairs:
+        print(f"{name}={val}")
+
+    # Unpack enumerate
+    items: list[str] = ["x", "y", "z"]
+    for i, item in enumerate(items):
+        print(f"{i}: {item}")
+
+    # Unpack zip
+    names: list[str] = ["Alice", "Bob"]
+    ages: list[int] = [30, 25]
+    for name, age in zip(names, ages):
+        print(f"{name} is {age}")

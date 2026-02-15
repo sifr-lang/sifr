@@ -1,0 +1,46 @@
+# ============================================================
+# Test 25: Field Access After Narrowing in 3+ Union
+# TypeScript: if (shape.kind === "circle") { shape.radius }
+# ============================================================
+
+class Dog:
+    name: str
+    breed: str
+
+    def __init__(self, name: str, breed: str):
+        self.name = name
+        self.breed = breed
+
+class Cat:
+    name: str
+    color: str
+
+    def __init__(self, name: str, color: str):
+        self.name = name
+        self.color = color
+
+class Bird:
+    name: str
+    wingspan: float
+
+    def __init__(self, name: str, wingspan: float):
+        self.name = name
+        self.wingspan = wingspan
+
+type Pet = Dog | Cat | Bird
+
+def describe_pet(pet: Pet) -> str:
+    if isinstance(pet, Dog):
+        return f"{pet.name} is a {pet.breed}"
+    elif isinstance(pet, Cat):
+        return f"{pet.name} is {pet.color}"
+    else:
+        return f"{pet.name} has wingspan {pet.wingspan}"
+
+def main():
+    d: Dog = Dog("Rex", "Labrador")
+    c: Cat = Cat("Whiskers", "orange")
+    b: Bird = Bird("Tweety", 0.3)
+    print(describe_pet(d))
+    print(describe_pet(c))
+    print(describe_pet(b))

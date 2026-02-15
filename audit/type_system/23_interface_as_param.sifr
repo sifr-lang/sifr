@@ -1,0 +1,35 @@
+# ============================================================
+# Test 23: Protocol as Function Parameter Type
+# TypeScript: function printArea(shape: HasArea): void
+# ============================================================
+
+class HasArea(Protocol):
+    def area(self) -> float:
+        pass
+
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+    def area(self) -> float:
+        return 3.14 * self.radius * self.radius
+
+class Square:
+    side: float
+
+    def __init__(self, side: float):
+        self.side = side
+
+    def area(self) -> float:
+        return self.side * self.side
+
+def print_area(shape: HasArea) -> None:
+    print(shape.area())
+
+def main():
+    c: Circle = Circle(5.0)
+    s: Square = Square(4.0)
+    print_area(c)
+    print_area(s)

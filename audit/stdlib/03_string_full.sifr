@@ -1,0 +1,34 @@
+# ============================================================
+# Test 3: String Methods -- Full Coverage
+# (no imports needed, built-in)
+# ============================================================
+
+def main():
+    s: str = "Hello, World!"
+
+    # Case
+    print(s.upper())
+    print(s.lower())
+
+    # Search
+    print(s.find("World"))
+    print(s.find("xyz"))
+    print(s.count("l"))
+    print(s.startswith("Hello"))
+    print(s.endswith("!"))
+
+    # Transform
+    print(s.replace("World", "Sifr"))
+    print("  hello  ".strip())
+
+    # Split / Join
+    parts: list[str] = "a,b,c".split(",")
+    print(parts)
+
+    # Check methods
+    print("123".isdigit())
+    print("abc".isalpha())
+    print("abc123".isalnum())
+
+    # Length
+    print(len(s))

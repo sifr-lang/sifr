@@ -1,0 +1,38 @@
+# ============================================================
+# Test 2: Comparison Operators
+# Python: ==, !=, <, >, <=, >=, is, is not, in, not in
+# ============================================================
+
+def main():
+    # Equality
+    print(1 == 1)
+    print(1 == 2)
+    print(1 != 2)
+    print("hello" == "hello")
+    print("hello" != "world")
+
+    # Ordering
+    print(1 < 2)
+    print(2 > 1)
+    print(1 <= 1)
+    print(2 >= 3)
+
+    # Chained comparisons
+    x: int = 5
+    print(1 < x < 10)
+    print(1 < x < 3)
+
+    # is / is not (for None)
+    val: str | None = None
+    print(val is None)
+    print(val is not None)
+
+    # in / not in
+    nums: list[int] = [1, 2, 3]
+    print(1 in nums)
+    print(5 in nums)
+    print(5 not in nums)
+
+    # String containment
+    print("ell" in "hello")
+    print("xyz" in "hello")

@@ -1,0 +1,54 @@
+# ============================================================
+# Test 5: Protocols (Structural Typing)
+# TypeScript equivalent: interfaces
+# ============================================================
+
+# --- Protocol definition ---
+class Printable(Protocol):
+    def describe(self) -> str:
+        pass
+
+class Measurable(Protocol):
+    def size(self) -> int:
+        pass
+
+# --- Classes implementing protocols ---
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+    def describe(self) -> str:
+        return f"Circle(r={self.radius})"
+
+    def size(self) -> int:
+        return int(3.14 * self.radius * self.radius)
+
+class Rectangle:
+    width: float
+    height: float
+
+    def __init__(self, width: float, height: float):
+        self.width = width
+        self.height = height
+
+    def describe(self) -> str:
+        return f"Rect({self.width}x{self.height})"
+
+    def size(self) -> int:
+        return int(self.width * self.height)
+
+# --- Using protocol as parameter type ---
+# Note: In TypeScript, this would be: function show(p: Printable)
+# Sifr uses structural typing like TS interfaces
+
+def main():
+    c: Circle = Circle(5.0)
+    r: Rectangle = Rectangle(3.0, 4.0)
+
+    # Direct method calls
+    print(c.describe())
+    print(r.describe())
+    print(c.size())
+    print(r.size())

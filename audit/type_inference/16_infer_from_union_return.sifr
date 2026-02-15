@@ -1,0 +1,24 @@
+# ============================================================
+# Test 16: Inference from Function Returning Union
+# TypeScript: function parse(): number | string
+#             let val = parse(); // inferred as number | string
+# ============================================================
+
+def parse_input(s: str) -> int | str:
+    if s == "42":
+        return 42
+    return s
+
+def main():
+    # Infer int | str from function return
+    val = parse_input("42")
+    if isinstance(val, int):
+        print(f"number: {val}")
+    else:
+        print(f"string: {val}")
+
+    val2 = parse_input("hello")
+    if isinstance(val2, int):
+        print(f"number: {val2}")
+    else:
+        print(f"string: {val2}")

@@ -1,0 +1,60 @@
+# ============================================================
+# Test 25: Classes -- Basic OOP
+# Python: class, __init__, self, methods, __str__
+# ============================================================
+
+class Rectangle:
+    width: float
+    height: float
+
+    def __init__(self, width: float, height: float):
+        self.width = width
+        self.height = height
+
+    def area(self) -> float:
+        return self.width * self.height
+
+    def perimeter(self) -> float:
+        return 2.0 * (self.width + self.height)
+
+    def is_square(self) -> bool:
+        return self.width == self.height
+
+    def __str__(self) -> str:
+        return f"Rectangle({self.width}x{self.height})"
+
+class Counter:
+    count: int
+
+    def __init__(self):
+        self.count = 0
+
+    def increment(self) -> None:
+        self.count += 1
+
+    def decrement(self) -> None:
+        self.count -= 1
+
+    def get(self) -> int:
+        return self.count
+
+    def __str__(self) -> str:
+        return f"Counter({self.count})"
+
+def main():
+    r: Rectangle = Rectangle(3.0, 4.0)
+    print(r)
+    print(r.area())
+    print(r.perimeter())
+    print(r.is_square())
+
+    sq: Rectangle = Rectangle(5.0, 5.0)
+    print(sq.is_square())
+
+    c: Counter = Counter()
+    c.increment()
+    c.increment()
+    c.increment()
+    c.decrement()
+    print(c.get())
+    print(c)

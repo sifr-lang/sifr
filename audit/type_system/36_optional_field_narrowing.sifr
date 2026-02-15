@@ -1,0 +1,23 @@
+# ============================================================
+# Test 36: Optional field narrowing
+# TypeScript: if (user.email !== null) { user.email.toUpperCase() }
+# ============================================================
+
+class User:
+    name: str
+    email: str | None
+
+    def __init__(self, name: str, email: str | None):
+        self.name = name
+        self.email = email
+
+def greet(user: User) -> str:
+    if user.email is not None:
+        return f"Hello {user.name}, email: {user.email}"
+    return f"Hello {user.name}, no email"
+
+def main():
+    u1: User = User("Alice", "alice@example.com")
+    u2: User = User("Bob", None)
+    print(greet(u1))
+    print(greet(u2))

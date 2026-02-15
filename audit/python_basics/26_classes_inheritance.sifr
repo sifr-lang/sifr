@@ -1,0 +1,44 @@
+# ============================================================
+# Test 26: Classes -- Inheritance and Method Override
+# Python: class Dog(Animal), super().__init__(), method override
+# ============================================================
+
+class Vehicle:
+    make: str
+    year: int
+
+    def __init__(self, make: str, year: int):
+        self.make = make
+        self.year = year
+
+    def describe(self) -> str:
+        return f"{self.year} {self.make}"
+
+class Car(Vehicle):
+    doors: int
+
+    def __init__(self, make: str, year: int, doors: int):
+        super().__init__(make, year)
+        self.doors = doors
+
+    def describe(self) -> str:
+        return f"{self.year} {self.make} ({self.doors}-door)"
+
+class Truck(Vehicle):
+    payload: float
+
+    def __init__(self, make: str, year: int, payload: float):
+        super().__init__(make, year)
+        self.payload = payload
+
+    def describe(self) -> str:
+        return f"{self.year} {self.make} (payload: {self.payload}t)"
+
+def main():
+    car: Car = Car("Toyota", 2024, 4)
+    truck: Truck = Truck("Ford", 2023, 5.0)
+
+    print(car.describe())
+    print(truck.describe())
+    print(car.make)
+    print(truck.year)

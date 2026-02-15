@@ -1,0 +1,12 @@
+# LeetCode 190: Reverse Bits
+
+def reverseBits(n: int) -> int:
+    res = 0
+    for i in range(32):
+        bit = (n >> i) & 1
+        res += (bit << (31 - i))
+    return res
+
+def main():
+    print("no test cases")
+

@@ -1,0 +1,32 @@
+# ============================================================
+# Test 33: Ternary / Conditional Expression
+# Python: x if condition else y
+# ============================================================
+
+def main():
+    # Basic ternary
+    x: int = 10
+    label: str = "big" if x > 5 else "small"
+    print(label)
+
+    # Ternary with function call
+    abs_val: int = x if x >= 0 else -x
+    print(abs_val)
+
+    neg: int = -7
+    abs_neg: int = neg if neg >= 0 else -neg
+    print(abs_neg)
+
+    # Nested ternary
+    score: int = 85
+    grade: str = "A" if score >= 90 else "B" if score >= 80 else "C"
+    print(grade)
+
+    # Ternary in f-string
+    count: int = 1
+    msg: str = f"{count} item" if count == 1 else f"{count} items"
+    print(msg)
+
+    count = 5
+    msg2: str = f"{count} item" if count == 1 else f"{count} items"
+    print(msg2)

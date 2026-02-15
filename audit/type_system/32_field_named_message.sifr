@@ -1,0 +1,12 @@
+# ============================================================
+# Test 32: Field named 'message' access
+# ============================================================
+
+class MyError:
+    message: str
+    def __init__(self, message: str):
+        self.message = message
+
+def main():
+    e: MyError = MyError("something broke")
+    print(e.message)

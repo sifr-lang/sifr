@@ -1,0 +1,16 @@
+# ============================================================
+# Test 28: Inference from zip and enumerate
+# TypeScript: entries.map(([i, v]) => ...); // destructured types inferred
+# ============================================================
+
+def main():
+    names: list[str] = ["Alice", "Bob"]
+    ages: list[int] = [30, 25]
+
+    # Infer list[tuple[str, int]] from zip
+    pairs = zip(names, ages)
+    print(pairs)
+
+    # Infer list[tuple[int, str]] from enumerate
+    indexed = enumerate(names)
+    print(indexed)

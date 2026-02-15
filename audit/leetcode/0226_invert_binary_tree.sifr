@@ -1,0 +1,17 @@
+# LeetCode 226: Invert Binary Tree
+
+def invertTree(root: TreeNode | None) -> TreeNode | None:
+    if not root:
+        return None
+    
+    # swap the children
+    root.left, root.right = root.right, root.left
+    
+    # make 2 recursive calls
+    invertTree(root.left)
+    invertTree(root.right)
+    return root
+
+def main():
+    print("no test cases")
+

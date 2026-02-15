@@ -1,0 +1,28 @@
+# LeetCode 704: Binary Search
+# v2: Sifr-idiomatic with safe indexing
+
+def search(nums: list[int], target: int) -> int:
+    left: int = 0
+    right: int = len(nums) - 1
+    while left <= right:
+        mid: int = left + (right - left) // 2
+        val: int | None = nums[mid]
+        if val is not None:
+            if val == target:
+                return mid
+            elif val < target:
+                left = mid + 1
+            else:
+                right = mid - 1
+    return -1
+
+def main():
+    print(search([-1, 0, 3, 5, 9, 12], 9))
+    print(search([-1, 0, 3, 5, 9, 12], 2))
+    print(search([5], 5))
+    print(search([2, 5], 5))
+
+# expect-stdout: 4
+# expect-stdout: -1
+# expect-stdout: 0
+# expect-stdout: 1

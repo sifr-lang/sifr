@@ -1,0 +1,33 @@
+# ============================================================
+# Test 31: 3-way isinstance elif narrowing
+# ============================================================
+
+class A:
+    x: int
+    def __init__(self, x: int):
+        self.x = x
+
+class B:
+    y: str
+    def __init__(self, y: str):
+        self.y = y
+
+class C:
+    z: float
+    def __init__(self, z: float):
+        self.z = z
+
+type ABC = A | B | C
+
+def check(val: ABC) -> str:
+    if isinstance(val, A):
+        return f"A: {val.x}"
+    elif isinstance(val, B):
+        return f"B: {val.y}"
+    else:
+        return f"C: {val.z}"
+
+def main():
+    print(check(A(1)))
+    print(check(B("hi")))
+    print(check(C(3.14)))

@@ -1,0 +1,19 @@
+# ============================================================
+# Test 28: Decorators
+# Python: @decorator, @decorator(args), stacked decorators
+# ============================================================
+
+# Basic decorator (pass-through)
+@log
+def compute(x: int) -> int:
+    return x * 2
+
+# Multiple decorators
+@log
+@log
+def double(x: int) -> int:
+    return x * 2
+
+def main():
+    print(compute(21))
+    print(double(5))

@@ -1,0 +1,15 @@
+# ============================================================
+# Test 29: Inference from any/all
+# TypeScript: let hasPositive = nums.some(x => x > 0); // boolean
+# ============================================================
+
+def main():
+    nums: list[int] = [1, -2, 3]
+
+    # Infer bool from any
+    has_positive = any([x > 0 for x in nums])
+    print(has_positive)
+
+    # Infer bool from all
+    all_positive = all([x > 0 for x in nums])
+    print(all_positive)

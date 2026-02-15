@@ -1,0 +1,29 @@
+# LeetCode 112: Path Sum
+
+def hasPathSum(root, sum):
+    if not root:
+        return False
+    sum -= root.val
+    if not root.left and not root.right:
+        return sum == 0
+    return hasPathSum(root.left, sum) or hasPathSum(root.right, sum)
+  
+# Iterative Solution
+
+def hasPathSum(root, sum):
+    de = [
+        (root, sum - root.val),
+    ]
+    while de:
+        node, curr_sum = de.pop()
+        if not node.left and not node.right and curr_sum == 0:
+            return True
+        if node.right:
+            de.append((node.right, curr_sum - node.right.val))
+        if node.left:
+            de.append((node.left, curr_sum - node.left.val))
+    return False
+
+def main():
+    print("no test cases")
+

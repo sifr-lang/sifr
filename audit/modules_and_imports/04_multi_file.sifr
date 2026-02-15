@@ -1,0 +1,12 @@
+# ============================================================
+# Test 4: from import multiple names
+# Python: from module import a, b, c
+# ============================================================
+
+from sifr.math import sqrt, floor, ceil, pi
+
+def main():
+    print(sqrt(9.0))
+    print(floor(3.7))
+    print(ceil(3.2))
+    print(pi > 3.0)

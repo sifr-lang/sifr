@@ -1,0 +1,21 @@
+# ============================================================
+# Test 35: Class reuse after method call (ownership)
+# ============================================================
+
+class Counter:
+    count: int
+    def __init__(self, count: int):
+        self.count = count
+    def get(self) -> int:
+        return self.count
+    def __str__(self) -> str:
+        return f"Counter({self.count})"
+
+def main():
+    c: Counter = Counter(0)
+    # Can we call multiple methods on the same object?
+    x: int = c.get()
+    print(x)
+    y: int = c.get()
+    print(y)
+    print(c)

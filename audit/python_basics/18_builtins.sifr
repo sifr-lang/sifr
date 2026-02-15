@@ -1,0 +1,59 @@
+# ============================================================
+# Test 18: Built-in Functions
+# Python: len, abs, min, max, sum, sorted, reversed,
+#         enumerate, zip, any, all, range, print, type, int,
+#         float, str, bool, round, pow, divmod, hash, id, input
+# ============================================================
+
+def main():
+    nums: list[int] = [5, 3, 1, 4, 2]
+
+    # len
+    print(len(nums))
+    print(len("hello"))
+
+    # abs
+    print(abs(-42))
+    print(abs(42))
+
+    # min / max
+    print(min(nums))
+    print(max(nums))
+
+    # sum
+    print(sum(nums))
+
+    # sorted / reversed
+    print(sorted(nums))
+    print(reversed(nums))
+
+    # enumerate
+    names: list[str] = ["a", "b", "c"]
+    print(enumerate(names))
+
+    # zip
+    ages: list[int] = [1, 2, 3]
+    print(zip(names, ages))
+
+    # any / all
+    print(any([False, True, False]))
+    print(all([True, True, True]))
+    print(all([True, False, True]))
+
+    # range
+    r: list[int] = [x for x in range(5)]
+    print(r)
+
+    # Type conversions
+    print(int(3.14))
+    print(float(42))
+    print(str(123))
+    print(bool(1))
+    print(bool(0))
+
+    # round
+    print(round(3.7))
+    print(round(3.2))
+
+    # pow
+    print(pow(2, 10))

@@ -1,0 +1,55 @@
+# ============================================================
+# Test 43: Real-World -- Todo List (Class-Based)
+# ============================================================
+
+class Todo:
+    title: str
+    done: bool
+
+    def __init__(self, title: str):
+        self.title = title
+        self.done = False
+
+    def complete(self) -> None:
+        self.done = True
+
+    def __str__(self) -> str:
+        status: str = "x" if self.done else " "
+        return f"[{status}] {self.title}"
+
+class TodoList:
+    items: list[Todo]
+
+    def __init__(self):
+        self.items = []
+
+    def add(self, title: str) -> None:
+        self.items.append(Todo(title))
+
+    def complete_item(self, index: int) -> None:
+        item: Todo | None = self.items[index]
+        if item is not None:
+            item.complete()
+
+    def count_done(self) -> int:
+        count: int = 0
+        for item in self.items:
+            if item.done:
+                count += 1
+        return count
+
+    def show(self) -> None:
+        for item in self.items:
+            print(item)
+
+def main():
+    todos: TodoList = TodoList()
+    todos.add("Buy groceries")
+    todos.add("Write code")
+    todos.add("Read book")
+
+    todos.complete_item(0)
+    todos.complete_item(2)
+
+    todos.show()
+    print(f"Done: {todos.count_done()}/{len(todos.items)}")

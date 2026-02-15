@@ -1,0 +1,20 @@
+# ============================================================
+# Test 39: Class with optional field in __init__
+# ============================================================
+
+class User:
+    name: str
+    age: int | None
+
+    def __init__(self, name: str, age: int | None):
+        self.name = name
+        self.age = age
+
+    def __str__(self) -> str:
+        return f"User({self.name})"
+
+def main():
+    u1: User = User("Alice", 30)
+    u2: User = User("Bob", None)
+    print(u1)
+    print(u2)

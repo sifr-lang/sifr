@@ -1,0 +1,20 @@
+# LeetCode 187: Repeated Dna Sequences
+# Python version
+
+def findRepeatedDnaSequences(s: str) -> list[str]:
+    result = set()
+    previous_sequences = set()
+    for i in range(len(s) - 9):
+        current = s[i:i+10]
+        if current in previous_sequences:
+            result.add(current)
+        previous_sequences.add(current)
+    return list(result)
+
+
+
+def main():
+    print("no test cases")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,63 @@
+# ============================================================
+# Test 3: Type Narrowing (Control-Flow Based)
+# TypeScript equivalent: type guards, control flow analysis
+# ============================================================
+
+# --- isinstance narrowing ---
+def isinstance_narrow(x: int | str) -> str:
+    if isinstance(x, int):
+        # x is narrowed to int here
+        return f"int: {x + 1}"
+    else:
+        # x is narrowed to str here
+        return f"str: {x.upper()}"
+
+# --- is None / is not None narrowing ---
+def none_narrow(x: str | None) -> str:
+    if x is not None:
+        return x.upper()
+    else:
+        return "nothing"
+
+# --- Equality narrowing ---
+def equality_narrow(cmd: str) -> str:
+    if cmd == "start":
+        return "starting"
+    elif cmd == "stop":
+        return "stopping"
+    else:
+        return "unknown"
+
+# --- Truthiness narrowing ---
+def truthiness_narrow(x: str | None) -> str:
+    if x:
+        return x.upper()
+    else:
+        return "empty or none"
+
+# --- Nested narrowing ---
+def nested_narrow(x: int | str | None) -> str:
+    if x is None:
+        return "none"
+    elif isinstance(x, int):
+        return f"int: {x}"
+    else:
+        return f"str: {x}"
+
+def main():
+    print(isinstance_narrow(42))
+    print(isinstance_narrow("hello"))
+
+    print(none_narrow("world"))
+    print(none_narrow(None))
+
+    print(equality_narrow("start"))
+    print(equality_narrow("stop"))
+    print(equality_narrow("other"))
+
+    print(truthiness_narrow("hi"))
+    print(truthiness_narrow(None))
+
+    print(nested_narrow(None))
+    print(nested_narrow(42))
+    print(nested_narrow("text"))

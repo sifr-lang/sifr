@@ -1,0 +1,40 @@
+# ============================================================
+# Test 19: Augmented Assignment
+# Python: +=, -=, *=, /=, //=, %=, **=
+# ============================================================
+
+def main():
+    x: int = 10
+
+    x += 5
+    print(x)
+
+    x -= 3
+    print(x)
+
+    x *= 2
+    print(x)
+
+    x //= 3
+    print(x)
+
+    x %= 5
+    print(x)
+
+    x **= 3
+    print(x)
+
+    # Float augmented
+    y: float = 10.0
+    y /= 3.0
+    print(y)
+
+    # String augmented
+    s: str = "hello"
+    s += " world"
+    print(s)
+
+    # List augmented
+    items: list[int] = [1, 2]
+    items += [3, 4]
+    print(items)

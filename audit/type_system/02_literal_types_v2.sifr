@@ -1,0 +1,34 @@
+# ============================================================
+# Test 2v2: Literal Types (fixed)
+# ============================================================
+
+type UserId = int
+type UserName = str
+
+def create_user(id: UserId, name: UserName) -> UserId:
+    return id
+
+type StringOrInt = int | str
+
+def show(x: StringOrInt) -> str:
+    if isinstance(x, int):
+        return f"int: {x}"
+    else:
+        return f"str: {x}"
+
+# Simple equality narrowing (no elif chain)
+def check_dir(dir: str) -> str:
+    if dir == "north":
+        return "Moving north"
+    else:
+        return "Moving other"
+
+def main():
+    uid: UserId = create_user(42, "alice")
+    print(uid)
+
+    print(show(10))
+    print(show("hello"))
+
+    print(check_dir("north"))
+    print(check_dir("south"))

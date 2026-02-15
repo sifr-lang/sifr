@@ -1,0 +1,27 @@
+# ============================================================
+# Test 14: Higher-Order Functions and Callbacks
+# TypeScript equivalent: (x: number) => number
+# ============================================================
+
+# --- Function as parameter ---
+def apply(f: lambda(int) -> int, x: int) -> int:
+    return f(x)
+
+# --- Lambda expressions ---
+def main():
+    # Lambda with map
+    nums: list[int] = [1, 2, 3, 4, 5]
+    doubled: list[int] = map(lambda x: x * 2, nums)
+    print(doubled)
+
+    # Lambda with filter
+    evens: list[int] = filter(lambda x: x % 2 == 0, nums)
+    print(evens)
+
+    # Higher-order function
+    result: int = apply(lambda x: x * x, 5)
+    print(result)
+
+    # Chained operations
+    processed: list[int] = map(lambda x: x + 10, filter(lambda x: x > 2, nums))
+    print(processed)

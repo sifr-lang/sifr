@@ -1,0 +1,36 @@
+# ============================================================
+# Test 2: String Literal Forms
+# Python: 'single', "double", '''triple''', """triple""",
+#         r"raw", f"formatted", b"bytes", escape sequences
+# ============================================================
+
+def main():
+    # Double quotes
+    s1: str = "hello world"
+    print(s1)
+
+    # Single quotes (if supported)
+    s2: str = 'hello world'
+    print(s2)
+
+    # Escape sequences
+    print("tab:\there")
+    print("newline:\nhere")
+    print("backslash: \\")
+    print("quote: \"")
+
+    # Triple-quoted strings
+    multi: str = """line one
+line two
+line three"""
+    print(multi)
+
+    # Raw strings (no escape processing)
+    raw: str = r"no\nescape\there"
+    print(raw)
+
+    # F-string with various expressions
+    name: str = "Alice"
+    print(f"Hello, {name}!")
+    print(f"2 + 2 = {2 + 2}")
+    print(f"upper: {name.upper()}")

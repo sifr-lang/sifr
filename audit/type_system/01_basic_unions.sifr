@@ -1,0 +1,56 @@
+# ============================================================
+# Test 1: Basic Union Types
+# TypeScript equivalent: string | number
+# ============================================================
+
+# --- Simple union ---
+def process(x: int | str) -> str:
+    if isinstance(x, int):
+        return f"number: {x}"
+    else:
+        return f"string: {x}"
+
+# --- Optional types (T | None) ---
+def find(name: str) -> str | None:
+    if name == "alice":
+        return "found"
+    return None
+
+# --- Union with 3+ types ---
+def classify(x: int | str | bool) -> str:
+    if isinstance(x, int):
+        return "int"
+    elif isinstance(x, str):
+        return "str"
+    else:
+        return "bool"
+
+# --- Nested optional ---
+def maybe_int(flag: bool) -> int | None:
+    if flag:
+        return 42
+    return None
+
+def main():
+    # Simple union
+    print(process(42))
+    print(process("hello"))
+
+    # Optional
+    result: str | None = find("alice")
+    if result is not None:
+        print(result)
+
+    missing: str | None = find("bob")
+    if missing is None:
+        print("not found")
+
+    # 3-way union
+    print(classify(1))
+    print(classify("hi"))
+    print(classify(True))
+
+    # Optional int
+    val: int | None = maybe_int(True)
+    if val is not None:
+        print(val)

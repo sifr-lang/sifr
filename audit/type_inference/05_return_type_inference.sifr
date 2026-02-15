@@ -1,0 +1,31 @@
+# ============================================================
+# Test 5: Return Type Inference (no annotation)
+# TypeScript: function add(a: number, b: number) { return a + b; }
+#             // return type inferred as number
+# ============================================================
+
+# No return type annotation -- should infer from return statement
+def add(a: int, b: int):
+    return a + b
+
+def greet(name: str):
+    return f"Hello, {name}!"
+
+def is_positive(x: int):
+    return x > 0
+
+def make_pair(a: int, b: str):
+    return (a, b)
+
+def main():
+    result = add(3, 4)
+    print(result)
+
+    msg = greet("world")
+    print(msg)
+
+    flag = is_positive(5)
+    print(flag)
+
+    pair = make_pair(1, "one")
+    print(pair)

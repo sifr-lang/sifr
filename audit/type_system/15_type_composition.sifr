@@ -1,0 +1,63 @@
+# ============================================================
+# Test 15: Type Composition and Complex Types
+# TypeScript equivalent: intersection types, utility types
+# ============================================================
+
+# --- Type alias for complex union ---
+type HttpMethod = str
+type StatusCode = int
+
+class Request:
+    method: str
+    path: str
+
+    def __init__(self, method: str, path: str):
+        self.method = method
+        self.path = path
+
+class Response:
+    status: int
+    body: str
+
+    def __init__(self, status: int, body: str):
+        self.status = status
+        self.body = body
+
+# --- Union of classes ---
+type HttpMessage = Request | Response
+
+def describe_message(msg: HttpMessage) -> str:
+    if isinstance(msg, Request):
+        return f"{msg.method} {msg.path}"
+    else:
+        return f"{msg.status}: {msg.body}"
+
+# --- Nested class composition ---
+class User:
+    name: str
+    email: str
+
+    def __init__(self, name: str, email: str):
+        self.name = name
+        self.email = email
+
+class ApiResponse:
+    success: bool
+    message: str
+
+    def __init__(self, success: bool, message: str):
+        self.success = success
+        self.message = message
+
+def main():
+    req: Request = Request("GET", "/api/users")
+    res: Response = Response(200, "OK")
+
+    print(describe_message(req))
+    print(describe_message(res))
+
+    user: User = User("Alice", "alice@example.com")
+    print(f"{user.name}: {user.email}")
+
+    api_res: ApiResponse = ApiResponse(True, "User created")
+    print(f"success={api_res.success}, msg={api_res.message}")

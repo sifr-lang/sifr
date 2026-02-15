@@ -1,0 +1,19 @@
+# ============================================================
+# Test 16: Dict Comprehensions
+# Python: {k: v for k, v in iterable}
+# ============================================================
+
+def main():
+    # Basic dict comprehension
+    squares: dict[int, int] = {x: x * x for x in range(5)}
+    print(squares)
+
+    # From list of tuples
+    names: list[str] = ["alice", "bob"]
+    name_lengths: dict[str, int] = {n: len(n) for n in names}
+    print(name_lengths)
+
+    # With filter
+    nums: list[int] = [1, 2, 3, 4, 5, 6]
+    even_squares: dict[int, int] = {x: x * x for x in nums if x % 2 == 0}
+    print(even_squares)

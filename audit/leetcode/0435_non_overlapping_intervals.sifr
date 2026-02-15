@@ -1,0 +1,21 @@
+# LeetCode 435: Non Overlapping Intervals
+
+def eraseOverlapIntervals(intervals: list[list[int]]) -> int:
+    intervals.sort()
+    res = 0
+    prevEnd = intervals[0][1]
+    for start, end in intervals[1:]:
+        if start >= prevEnd:
+            prevEnd = end
+        else:
+            res += 1
+            prevEnd = min(end, prevEnd)
+    return res
+
+def main():
+    print(eraseOverlapIntervals([[1,2],[2,3],[3,4],[1,3]]))
+    print(eraseOverlapIntervals([[1,2],[1,2],[1,2]]))
+
+# expect-stdout: 1
+# expect-stdout: 2
+

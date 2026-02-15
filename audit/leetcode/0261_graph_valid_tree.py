@@ -1,0 +1,86 @@
+# LeetCode 261: Graph Valid Tree
+# Python version
+
+"""
+@param n: An integer
+@param edges: a list of undirected edges
+@return: true if it's a valid tree, or false
+"""
+
+
+def validTree(n, edges):
+    if not n:
+        return True
+    adj = {i: [] for i in range(n)}
+    for n1, n2 in edges:
+        adj[n1].append(n2)
+        adj[n2].append(n1)
+
+    visit = set()
+
+    def dfs(i, prev):
+        if i in visit:
+            return False
+
+        visit.add(i)
+        for j in adj[i]:
+            if j == prev:
+                continue
+            if not dfs(j, i):
+                return False
+        return True
+
+    return dfs(0, -1) and n == len(visit)
+
+
+
+# alternative solution via DSU O(ElogV) time complexity and 
+# save some space as we don't recreate graph\tree into adjacency list prior dfs and loop over the edge list directly
+class Solution:
+"""
+@param n: An integer
+@param edges: a list of undirected edges
+@return: true if it's a valid tree, or false
+"""
+
+def __find(n: int) -> int:
+    while n != parents.get(n, n):
+        n = parents.get(n, n)
+    return n
+
+
+def __connect(n: int, m: int) -> None:
+    pn = __find(n)
+    pm = __find(m)
+    if pn == pm:
+        return
+    if heights.get(pn, 1) > heights.get(pm, 1):
+        parents[pn] = pm
+    else:
+        parents[pm] = pn
+        heights[pm] = heights.get(pn, 1) + 1
+    components -= 1
+
+
+def valid_tree(n: int, edges: List[List[int]]) -> bool:
+    # init here as not sure that ctor will be re-invoked in different tests
+    parents = {}
+    heights = {}
+    components = n
+
+    for e1, e2 in edges:
+        if __find(e1) == __find(e2):  # 'redundant' edge
+            return False
+        __connect(e1, e2)
+
+    return components == 1  # forest contains one tree
+
+
+
+
+
+def main():
+    print("no test cases")
+
+if __name__ == "__main__":
+    main()

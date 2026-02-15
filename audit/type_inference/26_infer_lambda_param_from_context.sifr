@@ -1,0 +1,17 @@
+# ============================================================
+# Test 26: Lambda Parameter Type Inference from Context
+# TypeScript: [1,2,3].map(x => x * 2); // x inferred as number
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3]
+
+    # Lambda param should be inferred as int from list[int]
+    doubled = map(lambda x: x * 2, nums)
+    print(doubled)
+
+    names: list[str] = ["alice", "bob"]
+
+    # Lambda param should be inferred as str from list[str]
+    upper = map(lambda s: s.upper(), names)
+    print(upper)

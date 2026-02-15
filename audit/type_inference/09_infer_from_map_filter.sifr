@@ -1,0 +1,15 @@
+# ============================================================
+# Test 9: Inference from map/filter with Lambda
+# TypeScript: let doubled = nums.map(x => x * 2); // inferred as number[]
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+
+    # Infer list[int] from map result
+    doubled = map(lambda x: x * 2, nums)
+    print(doubled)
+
+    # Infer list[int] from filter result
+    evens = filter(lambda x: x % 2 == 0, nums)
+    print(evens)

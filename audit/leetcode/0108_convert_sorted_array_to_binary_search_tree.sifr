@@ -1,0 +1,14 @@
+# LeetCode 108: Convert Sorted Array To Binary Search Tree
+
+def sortedArrayToBST(nums: list[int]) -> TreeNode | None:
+    if not nums:
+        return None
+    mid = len(nums)//2
+    root = TreeNode(nums[mid])
+    root.left = sortedArrayToBST(nums[:mid])
+    root.right = sortedArrayToBST(nums[mid+1:])
+    return root
+
+def main():
+    print("no test cases")
+

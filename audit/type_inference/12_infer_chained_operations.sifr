@@ -1,0 +1,23 @@
+# ============================================================
+# Test 12: Inference Through Chained Operations
+# TypeScript: let result = arr.filter(x => x > 0).map(x => x * 2).length;
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+
+    # Infer through chained: filter then map
+    big = filter(lambda x: x > 2, nums)
+    doubled = map(lambda x: x * 2, big)
+    print(doubled)
+
+    # Infer through len of result
+    count = len(doubled)
+    print(count)
+
+    # Infer through sorted
+    data: list[int] = [5, 3, 1, 4, 2]
+    ordered = sorted(data)
+    first = ordered[0]
+    if first is not None:
+        print(first)

@@ -1,0 +1,77 @@
+# ============================================================
+# Test 7: Result and Option Types
+# TypeScript equivalent: no direct equivalent (TS uses exceptions)
+# This is more like Rust's Result<T, E> and Option<T>
+# ============================================================
+
+# --- Result type ---
+def parse_number(s: str) -> Result[int, str]:
+    return int(s)
+
+def validate_positive(x: int) -> Result[int, str]:
+    if x > 0:
+        return x
+    raise "value must be positive"
+
+# --- Option via T | None ---
+def find_item(items: list[str], target: str) -> str | None:
+    for item in items:
+        if item == target:
+            return item
+    return None
+
+# --- Chained error handling ---
+def safe_divide(a: int, b: int) -> Result[int, str]:
+    if b == 0:
+        raise "division by zero"
+    return a / b
+
+def main():
+    # Result with try/except
+    try:
+        val: int = parse_number("42")
+        print(f"parsed: {val}")
+    except str as e:
+        print(f"error: {e}")
+
+    try:
+        val2: int = parse_number("not_a_number")
+        print(f"parsed: {val2}")
+    except str as e:
+        print(f"error: {e}")
+
+    # Validate
+    try:
+        v: int = validate_positive(10)
+        print(f"valid: {v}")
+    except str as e:
+        print(f"invalid: {e}")
+
+    try:
+        v2: int = validate_positive(-5)
+        print(f"valid: {v2}")
+    except str as e:
+        print(f"invalid: {e}")
+
+    # Option via T | None
+    items: list[str] = ["apple", "banana", "cherry"]
+    found: str | None = find_item(items, "banana")
+    if found is not None:
+        print(f"found: {found}")
+
+    missing: str | None = find_item(items, "grape")
+    if missing is None:
+        print("not found")
+
+    # Safe divide
+    try:
+        r: int = safe_divide(10, 3)
+        print(f"result: {r}")
+    except str as e:
+        print(f"error: {e}")
+
+    try:
+        r2: int = safe_divide(10, 0)
+        print(f"result: {r2}")
+    except str as e:
+        print(f"error: {e}")

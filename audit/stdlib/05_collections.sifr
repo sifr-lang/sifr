@@ -1,0 +1,14 @@
+# ============================================================
+# Test 5: sifr.collections -- Set
+# ============================================================
+
+from sifr.collections import Set
+
+def main():
+    s: Set[int] = Set([1, 2, 3, 2, 1])
+    print(len(s))
+    print(s.contains(2))
+    s.add(4)
+    print(len(s))
+    s.remove(1)
+    print(s.contains(1))

@@ -1,0 +1,29 @@
+# ============================================================
+# Test 13: Full Program with Zero Type Annotations on Variables
+# TypeScript: entire programs can be written with no type annotations
+#             on local variables
+# ============================================================
+
+def double(x: int) -> int:
+    return x * 2
+
+def greet(name: str) -> str:
+    return f"Hello, {name}"
+
+def main():
+    # All variable types should be inferred
+    a = 10
+    b = double(a)
+    c = b + 5
+    print(c)
+
+    name = "world"
+    msg = greet(name)
+    print(msg)
+
+    items = [1, 2, 3]
+    total = sum(items)
+    print(total)
+
+    flag = total > 5
+    print(flag)

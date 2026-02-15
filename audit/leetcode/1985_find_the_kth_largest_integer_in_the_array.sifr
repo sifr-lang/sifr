@@ -1,0 +1,13 @@
+# LeetCode 1985: Find The Kth Largest Integer In The Array
+
+def kthLargestNumber(nums: list[str], k: int) -> str:
+    maxHeap = [-int(n) for n in nums]
+    heapq.heapify(maxHeap)
+    while k>1:
+        heapq.heappop(maxHeap)
+        k-=1
+    return str(-maxHeap[0])
+
+def main():
+    print("no test cases")
+

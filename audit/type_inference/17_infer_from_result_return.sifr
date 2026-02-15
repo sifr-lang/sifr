@@ -1,0 +1,15 @@
+# ============================================================
+# Test 17: Inference from Function Returning Result
+# No direct TS equivalent (TS uses exceptions)
+# ============================================================
+
+def parse_int(s: str) -> Result[int, str]:
+    return int(s)
+
+def main():
+    # Infer Result[int, str] and use with try/except
+    try:
+        val = parse_int("42")
+        print(val)
+    except str as e:
+        print(e)

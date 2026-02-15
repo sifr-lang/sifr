@@ -1,0 +1,31 @@
+# ============================================================
+# Test 4: Generator Protocol
+# Python: yield, yield from, generator as iterator
+# ============================================================
+
+def count_to(n: int) -> list[int]:
+    i: int = 0
+    while i < n:
+        yield i
+        i += 1
+
+def squares(n: int) -> list[int]:
+    for i in range(n):
+        yield i * i
+
+def fibonacci(limit: int) -> list[int]:
+    a: int = 0
+    b: int = 1
+    while a < limit:
+        yield a
+        a, b = b, a + b
+
+def main():
+    # Basic generator
+    print(count_to(5))
+
+    # Generator with expression
+    print(squares(5))
+
+    # Fibonacci generator
+    print(fibonacci(50))

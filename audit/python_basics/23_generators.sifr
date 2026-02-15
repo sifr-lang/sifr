@@ -1,0 +1,37 @@
+# ============================================================
+# Test 23: Generators
+# Python: yield, generator functions, generator expressions
+# ============================================================
+
+def count_up(n: int) -> list[int]:
+    i: int = 0
+    while i < n:
+        yield i
+        i += 1
+
+def evens_up_to(n: int) -> list[int]:
+    for i in range(n):
+        if i % 2 == 0:
+            yield i
+
+def fibonacci_gen(n: int) -> list[int]:
+    a: int = 0
+    b: int = 1
+    count: int = 0
+    while count < n:
+        yield a
+        a, b = b, a + b
+        count += 1
+
+def main():
+    # Basic generator
+    nums: list[int] = count_up(5)
+    print(nums)
+
+    # Generator with filter
+    evens: list[int] = evens_up_to(10)
+    print(evens)
+
+    # Fibonacci generator
+    fibs: list[int] = fibonacci_gen(8)
+    print(fibs)

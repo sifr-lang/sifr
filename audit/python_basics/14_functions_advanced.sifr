@@ -1,0 +1,38 @@
+# ============================================================
+# Test 14: Functions -- Keyword Args, Recursion, Closures
+# Python: keyword arguments, recursive functions
+# ============================================================
+
+# Keyword arguments
+def create_tag(tag: str, content: str, cls: str = "") -> str:
+    if cls == "":
+        return f"<{tag}>{content}</{tag}>"
+    return f"<{tag} class='{cls}'>{content}</{tag}>"
+
+# Recursion
+def factorial(n: int) -> int:
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+def fibonacci(n: int) -> int:
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+# Recursive with accumulator
+def sum_to(n: int, acc: int = 0) -> int:
+    if n == 0:
+        return acc
+    return sum_to(n - 1, acc + n)
+
+def main():
+    print(create_tag("p", "Hello"))
+    print(create_tag("div", "World", "container"))
+
+    print(factorial(5))
+    print(factorial(10))
+
+    print(fibonacci(10))
+
+    print(sum_to(100))

@@ -1,0 +1,20 @@
+# ============================================================
+# Test 14: Inference from F-String
+# TypeScript: let msg = `Hello ${name}`; // inferred as string
+# ============================================================
+
+def main():
+    name = "Alice"
+    age = 30
+
+    # Infer str from f-string
+    msg = f"Name: {name}, Age: {age}"
+    print(msg)
+
+    # Infer str from f-string with expression
+    label = f"double: {age * 2}"
+    print(label)
+
+    # Use inferred str variable in further operations
+    upper_msg = msg.upper()
+    print(upper_msg)

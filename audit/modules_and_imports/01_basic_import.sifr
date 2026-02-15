@@ -1,0 +1,11 @@
+# ============================================================
+# Test 1: import module (dotted)
+# Python: import sifr.math
+# ============================================================
+
+import sifr.math
+
+def main():
+    # This tests whether `import X.Y` syntax works
+    # (vs `from X.Y import Z` which is known to work)
+    print("import parsed")

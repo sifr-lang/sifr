@@ -1,0 +1,26 @@
+# ============================================================
+# Test 27: Multi-line Computation with No Variable Annotations
+# TypeScript: entire programs work without variable annotations
+# ============================================================
+
+def compute(x: int, y: int) -> int:
+    return x * y + 1
+
+def format_result(value: int) -> str:
+    return f"Result: {value}"
+
+def main():
+    # No annotations anywhere in main
+    a = 5
+    b = 10
+    c = compute(a, b)
+    d = c * 2
+    e = d > 100
+    msg = format_result(d)
+    print(msg)
+    print(e)
+
+    items = [a, b, c, d]
+    total = sum(items)
+    avg = total / len(items)
+    print(f"avg: {avg}")

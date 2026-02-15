@@ -1,0 +1,22 @@
+# ============================================================
+# Test 26: Ownership - Multiple Uses After Print
+# TypeScript: no ownership concept, values freely reusable
+# ============================================================
+
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def __str__(self) -> str:
+        return f"Point({self.x}, {self.y})"
+
+def main():
+    p: Point = Point(3.0, 4.0)
+    print(p)
+    # Can we use p again after print?
+    print(p.x)
+    print(p.y)

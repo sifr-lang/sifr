@@ -1,0 +1,31 @@
+# ============================================================
+# Test 20: Unpacking
+# Python: a, b = (1, 2); first, *rest = [1,2,3]; a, b = b, a
+# ============================================================
+
+def main():
+    # Tuple unpacking
+    a, b = (1, 2)
+    print(a)
+    print(b)
+
+    # Swap
+    a, b = b, a
+    print(a)
+    print(b)
+
+    # Star unpacking
+    first, *rest = [1, 2, 3, 4, 5]
+    print(first)
+    print(rest)
+
+    # From function return
+    x, y = (10, 20)
+    print(x + y)
+
+    # Triple unpacking
+    r, g, b = (255, 128, 0)
+    print(f"rgb({r}, {g}, {b})")
+
+    # Nested unpacking (if supported)
+    # (a, (b, c)) = (1, (2, 3))

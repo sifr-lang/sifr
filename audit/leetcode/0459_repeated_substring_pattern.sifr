@@ -1,0 +1,12 @@
+# LeetCode 459: Repeated Substring Pattern
+
+def repeatedSubstringPattern(s: str) -> bool:
+    return s in (s + s)[1:-1]
+
+def main():
+    print(repeatedSubstringPattern("abab"))
+    print(repeatedSubstringPattern("aba"))
+
+# expect-stdout: true
+# expect-stdout: false
+

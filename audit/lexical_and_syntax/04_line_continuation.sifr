@@ -1,0 +1,37 @@
+# ============================================================
+# Test 4: Line Continuation
+# Python: \ for explicit, implicit in (), [], {}
+# ============================================================
+
+def main():
+    # Implicit continuation in parentheses
+    result: int = (
+        1 + 2 + 3
+        + 4 + 5
+    )
+    print(result)
+
+    # Implicit continuation in brackets
+    items: list[int] = [
+        1, 2, 3,
+        4, 5, 6,
+    ]
+    print(items)
+
+    # Implicit continuation in braces
+    d: dict[str, int] = {
+        "a": 1,
+        "b": 2,
+        "c": 3,
+    }
+    print(d)
+
+    # Explicit line continuation with backslash
+    total: int = 1 + 2 + 3 \
+        + 4 + 5
+    print(total)
+
+    # Long function call
+    print(
+        "hello"
+    )

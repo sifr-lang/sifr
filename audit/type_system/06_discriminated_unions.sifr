@@ -1,0 +1,82 @@
+# ============================================================
+# Test 6: Discriminated Unions
+# TypeScript equivalent: tagged unions / discriminated unions
+# ============================================================
+
+# --- Shape discriminated union ---
+class Circle:
+    radius: float
+
+    def __init__(self, radius: float):
+        self.radius = radius
+
+class Square:
+    side: float
+
+    def __init__(self, side: float):
+        self.side = side
+
+class Triangle:
+    base: float
+    height: float
+
+    def __init__(self, base: float, height: float):
+        self.base = base
+        self.height = height
+
+type Shape = Circle | Square | Triangle
+
+def area(shape: Shape) -> float:
+    if isinstance(shape, Circle):
+        return 3.14 * shape.radius * shape.radius
+    elif isinstance(shape, Square):
+        return shape.side * shape.side
+    else:
+        return 0.5 * shape.base * shape.height
+
+def describe_shape(shape: Shape) -> str:
+    if isinstance(shape, Circle):
+        return f"Circle with radius {shape.radius}"
+    elif isinstance(shape, Square):
+        return f"Square with side {shape.side}"
+    else:
+        return f"Triangle with base {shape.base}"
+
+# --- Result-like discriminated union ---
+class Success:
+    value: str
+
+    def __init__(self, value: str):
+        self.value = value
+
+class Failure:
+    error: str
+
+    def __init__(self, error: str):
+        self.error = error
+
+type Outcome = Success | Failure
+
+def handle_outcome(outcome: Outcome) -> str:
+    if isinstance(outcome, Success):
+        return f"OK: {outcome.value}"
+    else:
+        return f"ERR: {outcome.error}"
+
+def main():
+    c: Circle = Circle(5.0)
+    s: Square = Square(4.0)
+    t: Triangle = Triangle(6.0, 3.0)
+
+    print(area(c))
+    print(area(s))
+    print(area(t))
+
+    print(describe_shape(c))
+    print(describe_shape(s))
+    print(describe_shape(t))
+
+    ok: Success = Success("data loaded")
+    err: Failure = Failure("network error")
+    print(handle_outcome(ok))
+    print(handle_outcome(err))

@@ -1,0 +1,26 @@
+# ============================================================
+# Test 29: Context Managers (with statement)
+# Python: with open("file") as f:, with Resource() as r:
+# ============================================================
+
+class Connection:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def query(self) -> str:
+        return f"result from {self.name}"
+
+def main():
+    with Connection("db") as conn:
+        result: str = conn.query()
+        print(result)
+    print("connection closed")
+
+    # Nested with
+    with Connection("primary") as c1:
+        with Connection("secondary") as c2:
+            print(c1.query())
+            print(c2.query())
+    print("both closed")

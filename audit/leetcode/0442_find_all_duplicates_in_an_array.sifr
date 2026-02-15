@@ -1,0 +1,16 @@
+# LeetCode 442: Find All Duplicates In An Array
+
+def findDuplicates(nums: list[int]) -> list[int]:
+    res = []
+
+    for n in nums:
+        n = abs(n)
+        if nums[n - 1] < 0:
+            res.append(n)
+        nums[n - 1] = -nums[n - 1]
+    
+    return res
+
+def main():
+    print("no test cases")
+

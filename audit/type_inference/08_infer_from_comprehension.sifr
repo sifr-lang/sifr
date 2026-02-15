@@ -1,0 +1,23 @@
+# ============================================================
+# Test 8: Inference from List Comprehension
+# TypeScript: let squares = nums.map(x => x * x); // inferred as number[]
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+
+    # Infer list[int] from comprehension
+    squares = [x * x for x in nums]
+    print(squares)
+
+    # Infer list[str] from comprehension
+    labels = [f"item_{x}" for x in nums]
+    print(labels)
+
+    # Infer list[bool] from comprehension
+    flags = [x > 3 for x in nums]
+    print(flags)
+
+    # Infer from filtered comprehension
+    big = [x for x in nums if x > 2]
+    print(big)

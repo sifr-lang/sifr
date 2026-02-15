@@ -1,0 +1,31 @@
+# LeetCode 2348: Number Of Zero Filled Subarrays
+# Python version
+
+def zeroFilledSubarray(nums):
+    # check if there are any Zeros in the list
+    res = nums.count(0)
+    if res == 0:
+        return 0
+         
+    r = 0
+    l = len(nums)
+    while r < l:
+        Temp_Subarray=[]
+        while r < l and nums[r] == 0:
+            Temp_Subarray.append(nums[r])
+            r += 1
+        if len(Temp_Subarray) > 1:
+            Temp_Count =  len(Temp_Subarray) * ( len(Temp_Subarray) - 1 ) / 2 
+            res += int(Temp_Count)
+
+        r += 1
+    return res
+
+
+
+def main():
+    print(zeroFilledSubarray([1,3,0,0,2,0,0,4]))
+    print(zeroFilledSubarray([0,0,0,2,0,0]))
+
+if __name__ == "__main__":
+    main()

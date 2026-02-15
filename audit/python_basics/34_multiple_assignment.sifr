@@ -1,0 +1,22 @@
+# ============================================================
+# Test 34: Multiple Assignment and Chained Assignment
+# Python: a = b = c = 0; a, b, c = 1, 2, 3
+# ============================================================
+
+def main():
+    # Multiple assignment from tuple
+    a, b, c = 1, 2, 3
+    print(a)
+    print(b)
+    print(c)
+
+    # Swap
+    a, b = b, a
+    print(a)
+    print(b)
+
+    # Chained assignment
+    x = y = z = 0
+    print(x)
+    print(y)
+    print(z)

@@ -1,0 +1,33 @@
+# ============================================================
+# Test 2: Variable Type Inference from Expressions
+# TypeScript: let sum = 1 + 2; // inferred as number
+# ============================================================
+
+def main():
+    # Infer from arithmetic
+    sum = 1 + 2
+    print(sum)
+
+    # Infer from float arithmetic
+    product = 2.5 * 4.0
+    print(product)
+
+    # Infer from string concatenation
+    greeting = "hello" + " " + "world"
+    print(greeting)
+
+    # Infer from comparison
+    flag = 10 > 5
+    print(flag)
+
+    # Infer from boolean logic
+    both = True and False
+    print(both)
+
+    # Infer from negation
+    neg = -42
+    print(neg)
+
+    # Infer from modulo
+    remainder = 10 % 3
+    print(remainder)

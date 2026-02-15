@@ -1,0 +1,31 @@
+# ============================================================
+# Test 3: Boolean Logic
+# Python: and, or, not, short-circuit evaluation
+# ============================================================
+
+def main():
+    # Basic logic
+    print(True and True)
+    print(True and False)
+    print(False or True)
+    print(False or False)
+    print(not True)
+    print(not False)
+
+    # Compound
+    print(True and True and True)
+    print(True and False or True)
+    print(not (True and False))
+
+    # With comparisons
+    x: int = 5
+    print(x > 0 and x < 10)
+    print(x > 10 or x < 3)
+    print(not (x == 5))
+
+    # Short-circuit: second operand should not be evaluated
+    # (hard to test without side effects, but syntax should work)
+    flag: bool = True or False
+    print(flag)
+    flag2: bool = False and True
+    print(flag2)

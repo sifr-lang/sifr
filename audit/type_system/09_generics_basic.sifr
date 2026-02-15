@@ -1,0 +1,39 @@
+# ============================================================
+# Test 9: Generics - Basic
+# TypeScript equivalent: function identity<T>(x: T): T
+# ============================================================
+
+# --- Generic function ---
+def first(items: list[int]) -> int | None:
+    if len(items) > 0:
+        return items[0]
+    return None
+
+# --- Generic-like with different types ---
+def first_str(items: list[str]) -> str | None:
+    if len(items) > 0:
+        return items[0]
+    return None
+
+# --- What we WANT (true generics) but may not work ---
+# def identity[T](x: T) -> T:
+#     return x
+#
+# def first_generic[T](items: list[T]) -> T | None:
+#     if len(items) > 0:
+#         return items[0]
+#     return None
+#
+# def pair[A, B](a: A, b: B) -> tuple[A, B]:
+#     return (a, b)
+
+def main():
+    nums: list[int] = [1, 2, 3]
+    result: int | None = first(nums)
+    if result is not None:
+        print(result)
+
+    names: list[str] = ["alice", "bob"]
+    name: str | None = first_str(names)
+    if name is not None:
+        print(name)

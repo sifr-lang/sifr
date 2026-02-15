@@ -1,0 +1,25 @@
+# ============================================================
+# Test 2: enumerate, zip, reversed
+# ============================================================
+
+def main():
+    names: list[str] = ["Alice", "Bob", "Charlie"]
+    ages: list[int] = [30, 25, 35]
+
+    # enumerate
+    for pair in enumerate(names):
+        print(pair)
+
+    # zip
+    for pair in zip(names, ages):
+        print(pair)
+
+    # reversed
+    nums: list[int] = [1, 2, 3, 4, 5]
+    rev: list[int] = reversed(nums)
+    print(rev)
+
+    # sorted
+    unsorted: list[int] = [5, 3, 1, 4, 2]
+    s: list[int] = sorted(unsorted)
+    print(s)

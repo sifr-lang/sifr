@@ -1,0 +1,50 @@
+# ============================================================
+# Test 13: Typed Collections
+# TypeScript equivalent: Array<number>, Map<string, number>
+# ============================================================
+
+# --- Typed list ---
+def sum_list(nums: list[int]) -> int:
+    total: int = 0
+    for n in nums:
+        total = total + n
+    return total
+
+# --- Typed dict ---
+def get_value(d: dict[str, int], key: str) -> int | None:
+    return d[key]
+
+# --- List of tuples ---
+def entries() -> list[tuple[str, int]]:
+    result: list[tuple[str, int]] = [("a", 1), ("b", 2)]
+    return result
+
+# --- Dict with string values ---
+def build_config() -> dict[str, str]:
+    config: dict[str, str] = {"host": "localhost", "port": "8080"}
+    return config
+
+# --- Nested collections ---
+def matrix() -> list[list[int]]:
+    row1: list[int] = [1, 2, 3]
+    row2: list[int] = [4, 5, 6]
+    result: list[list[int]] = [row1, row2]
+    return result
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+    print(sum_list(nums))
+
+    d: dict[str, int] = {"x": 10, "y": 20}
+    val: int | None = get_value(d, "x")
+    if val is not None:
+        print(val)
+
+    e: list[tuple[str, int]] = entries()
+    print(e)
+
+    config: dict[str, str] = build_config()
+    print(config)
+
+    m: list[list[int]] = matrix()
+    print(m)

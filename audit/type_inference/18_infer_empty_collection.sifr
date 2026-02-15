@@ -1,0 +1,18 @@
+# ============================================================
+# Test 18: Inference from Empty Collection
+# TypeScript: let arr: number[] = []; // needs annotation
+#             let arr = []; // inferred as any[] (or never[])
+# ============================================================
+
+def main():
+    # Empty list -- what type is inferred?
+    empty_list = []
+    print(empty_list)
+
+    # Empty dict -- what type is inferred?
+    empty_dict = {}
+    print(empty_dict)
+
+    # Can we append to inferred empty list?
+    empty_list.append(42)
+    print(empty_list)

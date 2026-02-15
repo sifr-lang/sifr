@@ -1,0 +1,10 @@
+# ============================================================
+# Test 3: Import As (Alias)
+# Python: from module import name as alias
+# ============================================================
+
+from sifr.math import sqrt as square_root
+
+def main():
+    result: float = square_root(25.0)
+    print(result)

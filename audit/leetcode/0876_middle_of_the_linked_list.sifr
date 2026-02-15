@@ -1,0 +1,15 @@
+# LeetCode 876: Middle Of The Linked List
+
+def middleNode(head: ListNode | None) -> ListNode | None:
+    if not head or not head.next:
+        return head
+
+    slow = fast = head
+    while fast and fast.next:
+        slow, fast = slow.next, fast.next.next
+
+    return slow
+
+def main():
+    print("no test cases")
+

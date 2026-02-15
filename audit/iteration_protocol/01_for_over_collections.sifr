@@ -1,0 +1,25 @@
+# ============================================================
+# Test 1: For Loop Over All Collection Types
+# ============================================================
+
+def main():
+    # List
+    for x in [1, 2, 3]:
+        print(x)
+
+    # Range
+    for i in range(3):
+        print(i)
+
+    # String (iterate chars)
+    for ch in "abc":
+        print(ch)
+
+    # Dict (iterate keys)
+    d: dict[str, int] = {"a": 1, "b": 2}
+    for key in d:
+        print(key)
+
+    # Tuple (iterate elements -- if supported)
+    # for x in (1, 2, 3):
+    #     print(x)

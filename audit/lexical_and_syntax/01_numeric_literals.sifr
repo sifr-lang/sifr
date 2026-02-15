@@ -1,0 +1,35 @@
+# ============================================================
+# Test 1: Numeric Literal Forms
+# Python: 0xFF, 0o77, 0b1010, 1_000_000, 1e10, .5, 5.
+# ============================================================
+
+def main():
+    # Decimal
+    print(42)
+    print(1000000)
+
+    # Underscores in literals
+    big = 1_000_000
+    print(big)
+
+    # Hex
+    hex_val = 0xFF
+    print(hex_val)
+
+    # Octal
+    oct_val = 0o77
+    print(oct_val)
+
+    # Binary
+    bin_val = 0b1010
+    print(bin_val)
+
+    # Float forms
+    print(3.14)
+    print(1e10)
+    print(2.5e3)
+    print(1_000.50)
+
+    # Negative literals
+    print(-42)
+    print(-3.14)

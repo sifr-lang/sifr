@@ -1,0 +1,20 @@
+# ============================================================
+# Test 30: Assert Statement
+# Python: assert condition, assert condition, "message"
+# ============================================================
+
+def main():
+    # Basic assert (should pass)
+    assert True
+    assert 1 + 1 == 2
+    assert len([1, 2, 3]) == 3
+
+    x: int = 42
+    assert x > 0
+    assert x == 42
+
+    print("all assertions passed")
+
+    # Assert with message (if supported)
+    assert 1 < 2, "one should be less than two"
+    print("message assert passed")

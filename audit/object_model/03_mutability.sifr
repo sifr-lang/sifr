@@ -1,0 +1,26 @@
+# ============================================================
+# Test 3: Mutability Semantics
+# Python: lists/dicts mutable, tuples/strings immutable
+# ============================================================
+
+def main():
+    # List is mutable
+    nums: list[int] = [1, 2, 3]
+    nums.append(4)
+    print(nums)
+
+    # Dict is mutable
+    d: dict[str, int] = {"a": 1}
+    # d["b"] = 2  # tested in python_basics (Issue 5)
+    print(d)
+
+    # Tuple is immutable (should not be assignable)
+    t: tuple[int, int] = (1, 2)
+    print(t)
+    # t[0] = 99  # should be compile-time error
+
+    # String is immutable (methods return new strings)
+    s: str = "hello"
+    upper: str = s.upper()
+    print(s)       # original unchanged
+    print(upper)   # new string

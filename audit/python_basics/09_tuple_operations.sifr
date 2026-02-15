@@ -1,0 +1,39 @@
+# ============================================================
+# Test 9: Tuple Operations
+# Python: indexing, unpacking, len, nested, multiple return
+# ============================================================
+
+def get_coords() -> tuple[float, float]:
+    return (3.14, 2.71)
+
+def get_triple() -> tuple[str, int, bool]:
+    return ("hello", 42, True)
+
+def swap(a: int, b: int) -> tuple[int, int]:
+    return (b, a)
+
+def main():
+    # Basic tuple
+    pair: tuple[int, str] = (42, "hello")
+    print(pair)
+    print(len(pair))
+
+    # Unpacking
+    x, y = get_coords()
+    print(x)
+    print(y)
+
+    # Triple unpacking
+    s, n, b = get_triple()
+    print(s)
+    print(n)
+    print(b)
+
+    # Swap
+    a, b = swap(1, 2)
+    print(a)
+    print(b)
+
+    # Nested tuple
+    nested: tuple[int, tuple[str, bool]] = (1, ("hi", True))
+    print(nested)

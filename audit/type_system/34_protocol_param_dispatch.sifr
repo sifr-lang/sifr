@@ -1,0 +1,30 @@
+# ============================================================
+# Test 34: Protocol as parameter with dynamic dispatch
+# ============================================================
+
+class Describable(Protocol):
+    def describe(self) -> str:
+        pass
+
+class Dog:
+    name: str
+    def __init__(self, name: str):
+        self.name = name
+    def describe(self) -> str:
+        return f"Dog: {self.name}"
+
+class Cat:
+    name: str
+    def __init__(self, name: str):
+        self.name = name
+    def describe(self) -> str:
+        return f"Cat: {self.name}"
+
+def show(item: Describable) -> None:
+    print(item.describe())
+
+def main():
+    d: Dog = Dog("Rex")
+    c: Cat = Cat("Whiskers")
+    show(d)
+    show(c)

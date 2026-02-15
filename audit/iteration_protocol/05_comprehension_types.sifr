@@ -1,0 +1,27 @@
+# ============================================================
+# Test 5: All Comprehension Types
+# Python: list comp, dict comp, set comp, generator expr
+# ============================================================
+
+def main():
+    nums: list[int] = [1, 2, 3, 4, 5]
+
+    # List comprehension (from list)
+    doubled: list[int] = [x * 2 for x in nums]
+    print(doubled)
+
+    # List comprehension with filter
+    evens: list[int] = [x for x in nums if x % 2 == 0]
+    print(evens)
+
+    # List comprehension from range
+    squares: list[int] = [x * x for x in range(5)]
+    print(squares)
+
+    # Dict comprehension
+    sq_dict: dict[int, int] = {x: x * x for x in nums}
+    print(sq_dict)
+
+    # Generator expression (if supported)
+    # total = sum(x * x for x in nums)
+    # print(total)
