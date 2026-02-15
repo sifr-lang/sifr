@@ -1104,7 +1104,10 @@ fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConventi
         AstParamConvention::Mut => ParamConvention::MutBorrow,
         AstParamConvention::Own => ParamConvention::Own,
         AstParamConvention::Default => {
-            if ty.ownership() == OwnershipKind::Copy {
+            // TypeVars (generics) default to Own since the concrete type is unknown
+            if matches!(ty, Type::TypeVar(_)) {
+                ParamConvention::Own
+            } else if ty.ownership() == OwnershipKind::Copy {
                 ParamConvention::Own
             } else {
                 ParamConvention::Borrow
@@ -1383,19 +1386,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
 
-        // Map AST convention to type system convention
-        let convention = match param_def.parameter.convention {
-            AstParamConvention::Mut => ParamConvention::MutBorrow,
-            AstParamConvention::Own => ParamConvention::Own,
-            AstParamConvention::Default => {
-                // Default: Borrow for Move types, Own for Copy types
-                if ty.ownership() == OwnershipKind::Copy {
-                    ParamConvention::Own
-                } else {
-                    ParamConvention::Borrow
-                }
-            }
-        };
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
 
         params.push(HirParam {
             name,
@@ -1413,12 +1404,13 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
         let ty = ft.params.get(regular_count).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
         ctx.scope.define(name.clone(), ty.clone());
 
+        let convention = ast_convention_to_param(vararg.convention, &ty);
         params.push(HirParam {
             name,
             ty,
             default: None,
             keyword_only: false,
-            convention: ParamConvention::default(),
+            convention,
         });
     }
 
@@ -1431,18 +1423,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
 
-        // Map AST convention to type system convention
-        let convention = match param_def.parameter.convention {
-            AstParamConvention::Mut => ParamConvention::MutBorrow,
-            AstParamConvention::Own => ParamConvention::Own,
-            AstParamConvention::Default => {
-                if ty.ownership() == OwnershipKind::Copy {
-                    ParamConvention::Own
-                } else {
-                    ParamConvention::Borrow
-                }
-            }
-        };
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
 
         params.push(HirParam {
             name,
@@ -5207,14 +5188,23 @@ mod tests {
 
     #[test]
     fn test_use_after_move() {
-        // print() borrows, so print(s); print(s) should NOT error.
-        // Use a user-defined consuming function to test move semantics.
+        // Under borrow-by-default, consume() needs `own` to move the argument.
+        // Without `own`, the argument is borrowed and no move error occurs.
         let result = lower_source(
-            "def consume(s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n"
+            "def consume(own s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n"
         );
         assert!(result.is_err());
         let errors = result.unwrap_err();
         assert!(errors.iter().any(|e| e.message.contains("moved value")));
+    }
+
+    #[test]
+    fn test_borrow_by_default_no_move() {
+        // Under borrow-by-default, passing to a function that borrows does NOT move.
+        let result = lower_source(
+            "def process(s: str) -> int:\n    return len(s)\ndef main():\n    s: str = \"hello\"\n    x: int = process(s)\n    print(s)\n"
+        );
+        assert!(result.is_ok(), "borrow-by-default should not cause use-after-move");
     }
 
     #[test]

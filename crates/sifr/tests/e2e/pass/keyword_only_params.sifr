@@ -1,6 +1,6 @@
 # expect-stdout: Alice
 # expect-stdout: Name: Bob
-def display(name: str, *, verbose: bool = False) -> str:
+def display(own name: str, *, verbose: bool = False) -> str:
     if verbose:
         return f"Name: {name}"
     return name

@@ -100,10 +100,10 @@ pub struct FunctionType {
 
 impl FunctionType {
     /// Create a FunctionType where all parameters use the default convention
-    /// (Borrow for Move types, Own for Copy types).
+    /// (Borrow for Move types, Own for Copy/TypeVar types).
     pub fn new(params: Vec<(String, Type)>, return_type: Type) -> Self {
         let params = params.into_iter().map(|(name, ty)| {
-            let conv = if ty.ownership() == OwnershipKind::Copy {
+            let conv = if matches!(ty, Type::TypeVar(_)) || ty.ownership() == OwnershipKind::Copy {
                 ParamConvention::Own
             } else {
                 ParamConvention::Borrow

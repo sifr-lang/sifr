@@ -7,7 +7,7 @@ class Dog:
 class Cat:
     name: str
 
-def get_name(pet: Dog | Cat) -> str:
+def get_name(own pet: Dog | Cat) -> str:
     if isinstance(pet, Dog):
         return pet.name
     return "unknown"

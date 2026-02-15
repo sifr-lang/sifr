@@ -1,7 +1,7 @@
 # Equality-based narrowing for literal types
 # expect-stdout: circle area
 
-def describe_shape(shape: str) -> str:
+def describe_shape(own shape: str) -> str:
     if shape == "circle":
         return "circle area"
     else:
