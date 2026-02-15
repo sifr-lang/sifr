@@ -83,6 +83,9 @@ todos:
   - id: m19-audit-fixup
     content: "milestone_audit_fixup: PEP 695 inline generics, protocol method dispatch, multi-generator comprehensions, stdlib fixes (missing math fns, naming mismatches, type signature widening), Set[T] type (stretch)"
     status: pending
+  - id: m20-ownership-v3
+    content: "milestone_ownership_v3: Complete ownership tracking -- assignment-based move detection, move-in-loop detection, conditional move merging, set Display codegen fix. Foundation for fearless concurrency."
+    status: completed
 isProject: false
 ---
 
@@ -2629,6 +2632,54 @@ Add `Set[T]` to the type system and collections stdlib, similar to how `list` an
 
 ---
 
+## milestone_ownership_v3: Ownership Hardening
+
+**Goal:** Close all ownership/borrowing detection gaps in Sifr's HIR checker so that use-after-move errors are caught by Sifr's own diagnostics (not deferred to rustc). This milestone is the foundation for fearless concurrency -- without complete ownership tracking at the Sifr level, future Send/Sync/async inference cannot work.
+
+### 1. Assignment-Based Move Detection
+
+Track moves through variable assignment (`s2 = s1`). When the RHS of an assignment is a `Name` expression referencing a Move-type variable, mark the source variable as moved. Applies to both `lower_assign()` (untyped assignment) and `lower_ann_assign()` (annotated assignment).
+
+**Key files:** `crates/sifr_hir/src/lower.rs` (lower_assign, lower_ann_assign)
+
+### 2. Move-in-Loop Detection
+
+Detect outer-scope variables consumed inside loop bodies. Before lowering a loop body, snapshot the moved state. After lowering, check which outer-scope variables were newly moved -- these would be unavailable on subsequent iterations.
+
+**Key files:** `crates/sifr_hir/src/scope.rs` (save_moved_state, moved_since), `crates/sifr_hir/src/lower.rs` (lower_for, lower_while)
+
+### 3. Conditional Move Tracking
+
+Save/restore/merge moved state across if/elif/else branches, matching the existing narrowing snapshot pattern. If a variable is moved in any branch, it is conservatively marked as moved after the if/else block.
+
+**Key files:** `crates/sifr_hir/src/lower.rs` (lower_if)
+
+### 4. Set Display Codegen Fix
+
+Add `Type::Set(_)` to the Debug-format pattern in print codegen so `print(set)` emits `println!("{:?}", ...)` instead of `println!("{}", ...)`.
+
+**Key files:** `crates/sifr_codegen/src/lib.rs`
+
+### Concurrency Enablement
+
+This milestone is the prerequisite for fearless concurrency:
+
+- **Closure capture inference** (needed for `tokio::spawn`) requires knowing which variables are moved vs borrowed at every point
+- **Send + Sync checking** requires tracking that no `&mut` aliases exist across `.await` points
+- **Channel ownership** (`tx.send(value)`) requires the compiler to mark `value` as moved
+
+### Definition of Done (milestone_ownership_v3)
+
+- All assignment-based move errors caught by `sifr check` with Sifr-level error messages
+- Loop move errors caught by `sifr check`
+- Conditional move tracking works correctly across branches
+- `print(set)` works
+- All existing E2E tests pass (no regressions)
+- `audit/borrowing/` shows 0 "Fail (Rust compile)" results
+- Borrowing audit: 38 pass, 12 correct Sifr rejections, 0 Rust failures
+
+---
+
 ## milestone_async: Async Runtime
 
 **Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that milestone_web_db (web, database) builds on.
@@ -3849,6 +3900,7 @@ PHASE: LANGUAGE HARDENING:
   milestone_comprehension_v2:   Comprehension v2          -> Range in comprehension, dict/set comprehension, tuple unpacking in for/comprehension
   milestone_generics_impl:      Generics Impl             -> TypeVar, generic functions/classes, Callable type syntax, protocol bounds
   milestone_phase_fixes:        Phase Fixes               -> Protocol dispatch, context manager scope, cls calls, import alias codegen, stdlib gaps, module-level constants
+  milestone_ownership_v3:       Ownership v3              -> Assignment-based move detection, move-in-loop, conditional move merging, set Display fix. Foundation for fearless concurrency.
 
 PHASE 4 - Ecosystem:
   milestone_async:           Async Runtime           -> async/await, tokio, tasks, async streams

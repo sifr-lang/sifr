@@ -1799,6 +1799,13 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         return None;
     };
 
+    // Track move: if RHS is a variable name with Move ownership, mark it as moved
+    if let HirExpr::Name { name: ref src_name, ref ty } = value {
+        if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+            ctx.scope.mark_moved(src_name);
+        }
+    }
+
     ctx.scope.define(name.clone(), declared_type.clone());
 
     Some(HirStmt::Let {
@@ -1980,6 +1987,13 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
 
     let value = lower_expr(&assign.value, ctx)?;
     let value_ty = value.ty().clone();
+
+    // Track move: if RHS is a variable name with Move ownership, mark it as moved
+    if let HirExpr::Name { name: ref src_name, ref ty } = value {
+        if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+            ctx.scope.mark_moved(src_name);
+        }
+    }
 
     // Check if variable already exists
     if let Some(info) = ctx.scope.lookup(&name) {
@@ -2208,6 +2222,8 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
 
     // Save narrowing state before branches
     let saved_state = ctx.scope.save_narrowing_state();
+    // Save moved state before branches
+    let saved_moved = ctx.scope.save_moved_state();
 
     // Apply narrowing for then-branch (condition is true)
     if let Some(ref cond) = narrowing_cond {
@@ -2218,14 +2234,21 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
     let then_body = lower_stmts(&if_stmt.body, func_type, ctx);
     ctx.scope.pop();
 
+    // Record which vars were moved in then-branch
+    let then_moved = ctx.scope.save_moved_state();
+
     // Restore state before processing elif/else
     ctx.scope.restore_narrowing_state(&saved_state);
+    ctx.scope.restore_moved_state(&saved_moved);
 
     // Collect all narrowing conditions (if + elifs) for cumulative negation
     let mut all_conditions: Vec<NarrowingCondition> = Vec::new();
     if let Some(ref cond) = narrowing_cond {
         all_conditions.push(cond.clone());
     }
+
+    // Track moved state from each branch for merging
+    let mut branch_moved_states: Vec<_> = vec![then_moved];
 
     let mut elif_clauses = Vec::new();
     for clause in &if_stmt.elif_else_clauses {
@@ -2234,6 +2257,7 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
             // This ensures cumulative narrowing: if A was Dog, elif B was Cat,
             // then in elif C the type is narrowed by removing both Dog and Cat
             ctx.scope.restore_narrowing_state(&saved_state);
+            ctx.scope.restore_moved_state(&saved_moved);
             for prev_cond in &all_conditions {
                 apply_narrowing(ctx, prev_cond, false);
             }
@@ -2251,7 +2275,11 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
             ctx.scope.pop();
             elif_clauses.push((cond, body));
 
+            // Record moved state from this elif branch
+            branch_moved_states.push(ctx.scope.save_moved_state());
+
             ctx.scope.restore_narrowing_state(&elif_saved);
+            ctx.scope.restore_moved_state(&saved_moved);
 
             // Track this elif's condition for subsequent branches
             if let Some(elif_cond) = elif_narrowing {
@@ -2263,17 +2291,31 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
     // For else-branch, apply negation of ALL conditions (if + all elifs)
     let else_body = if_stmt.elif_else_clauses.iter().find(|c| c.test.is_none()).map(|clause| {
         ctx.scope.restore_narrowing_state(&saved_state);
+        ctx.scope.restore_moved_state(&saved_moved);
         for prev_cond in &all_conditions {
             apply_narrowing(ctx, prev_cond, false);
         }
         ctx.scope.push();
         let body = lower_stmts(&clause.body, func_type, ctx);
         ctx.scope.pop();
+        // Record moved state from else branch
+        branch_moved_states.push(ctx.scope.save_moved_state());
         body
     });
 
     // Restore original narrowing state after all branches
     ctx.scope.restore_narrowing_state(&saved_state);
+    ctx.scope.restore_moved_state(&saved_moved);
+
+    // Merge moved state: if a variable was moved in ANY branch, mark it as moved
+    // after the if/else (conservative, matches Rust behavior for partial moves)
+    for branch_state in &branch_moved_states {
+        for (name, was_moved) in branch_state {
+            if *was_moved {
+                ctx.scope.mark_moved(name);
+            }
+        }
+    }
 
     // Early-return narrowing: if the then-body always exits (return/break/continue/raise),
     // apply the inverse narrowing after the if block.
@@ -2487,11 +2529,23 @@ fn apply_narrowing(ctx: &mut LowerCtx, condition: &NarrowingCondition, is_true: 
 fn lower_while(while_stmt: &StmtWhile, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
     let condition = lower_expr(&while_stmt.test, ctx)?;
 
+    // Snapshot moved state before loop to detect moves inside the body
+    let moved_before_loop = ctx.scope.save_moved_state();
+
     ctx.scope.push();
     ctx.loop_depth += 1;
     let body = lower_stmts(&while_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
+
+    // Check for outer-scope variables moved inside the loop body
+    let newly_moved = ctx.scope.moved_since(&moved_before_loop);
+    for var_name in &newly_moved {
+        ctx.error(format!(
+            "value '{}' is moved inside loop body; it would be unavailable on subsequent iterations",
+            var_name
+        ));
+    }
 
     let else_body = if !while_stmt.orelse.is_empty() {
         ctx.scope.push();
@@ -2543,6 +2597,9 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
         }
     };
 
+    // Snapshot moved state before loop to detect moves inside the body
+    let moved_before_loop = ctx.scope.save_moved_state();
+
     // Create a new scope for the loop body, define the loop variable(s)
     ctx.scope.push();
     if target_name.contains(',') {
@@ -2566,6 +2623,15 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
     let body = lower_stmts(&for_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
+
+    // Check for outer-scope variables moved inside the loop body
+    let newly_moved = ctx.scope.moved_since(&moved_before_loop);
+    for var_name in &newly_moved {
+        ctx.error(format!(
+            "value '{}' is moved inside loop body; it would be unavailable on subsequent iterations",
+            var_name
+        ));
+    }
 
     let else_body = if !for_stmt.orelse.is_empty() {
         ctx.scope.push();

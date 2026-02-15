@@ -3292,7 +3292,7 @@ impl RustEmitter {
                         }
                         self.emit_expr(&args[0]);
                         self.write(")");
-                    } else if matches!(args[0].ty(), Type::List(_) | Type::Dict(_, _) | Type::Tuple(_)) {
+                    } else if matches!(args[0].ty(), Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_)) {
                         // Collections use Debug format
                         self.write("println!(\"{:?}\", ");
                         self.emit_expr(&args[0]);
