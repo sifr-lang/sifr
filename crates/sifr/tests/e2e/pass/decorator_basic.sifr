@@ -1,0 +1,9 @@
+# expect-stdout: 42
+# Tests: basic decorator recognition (pass-through)
+
+@log
+def compute(x: int) -> int:
+    return x * 2
+
+def main():
+    print(compute(21))

@@ -60,6 +60,8 @@ pub struct HirFunction {
     pub body: Vec<HirStmt>,
     /// Method kind: Regular, ClassMethod, or StaticMethod
     pub method_kind: MethodKind,
+    /// User-defined decorators (excluding classmethod/staticmethod)
+    pub decorators: Vec<String>,
 }
 
 /// A function parameter with its type and optional default value.

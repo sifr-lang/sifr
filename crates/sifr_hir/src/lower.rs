@@ -53,6 +53,8 @@ struct LowerCtx {
     in_try_block: bool,
     /// Set of class names that are error types (class Foo(Error))
     error_types: std::collections::HashSet<String>,
+    /// Set of function names that have *args (vararg) parameters
+    vararg_functions: std::collections::HashSet<String>,
 }
 
 impl LowerCtx {
@@ -69,6 +71,7 @@ impl LowerCtx {
             current_parent_class: None,
             in_try_block: false,
             error_types: std::collections::HashSet::new(),
+            vararg_functions: std::collections::HashSet::new(),
         }
     }
 
@@ -140,6 +143,10 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                         ctx.function_defaults.insert(func.name.to_string(), defaults);
                     }
                     ctx.functions.insert(func.name.to_string(), ft);
+                    // Track vararg functions
+                    if func.parameters.vararg.is_some() {
+                        ctx.vararg_functions.insert(func.name.to_string());
+                    }
                 }
             }
             // Handle `type X = ...` statement (Python 3.12 type alias)
@@ -553,6 +560,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 return_type: *ft.return_type.clone(),
                 body: vec![], // Protocol methods have no body
                 method_kind: MethodKind::Regular,
+                decorators: vec![],
             }
         }).collect();
 
@@ -600,7 +608,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 let body = lower_stmts(&func.body, &method_ft, ctx);
                 ctx.scope.pop();
                 ctx.current_class = None;
-                hir_methods.push(HirFunction { name: method_name, params, return_type: return_ty, body, method_kind: MethodKind::Regular });
+                hir_methods.push(HirFunction { name: method_name, params, return_type: return_ty, body, method_kind: MethodKind::Regular, decorators: vec![] });
             }
         }
 
@@ -720,12 +728,27 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             ctx.current_class = None;
             ctx.current_parent_class = None;
 
+            // Collect user-defined decorators (excluding classmethod/staticmethod)
+            let method_decorators: Vec<String> = func.decorator_list.iter().filter_map(|d| {
+                if let Expr::Name(n) = &d.expression {
+                    let name = n.id.to_string();
+                    if name != "classmethod" && name != "staticmethod" {
+                        Some(name)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }).collect();
+
             let hir_func = HirFunction {
                 name: if method_name == "__init__" { "new".to_string() } else { method_name.clone() },
                 params,
                 return_type: return_ty,
                 body,
                 method_kind,
+                decorators: method_decorators,
             };
 
             // Separate operator dunders from regular methods
@@ -840,6 +863,21 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
             Type::Any
         };
         params.push((name, ty));
+    }
+
+    // Vararg parameter (*args) -- becomes Vec<T>
+    if let Some(ref vararg) = func.parameters.vararg {
+        let name = vararg.name.to_string();
+        let elem_ty = if let Some(ref annotation) = vararg.annotation {
+            resolve_annotation_expr(annotation, ctx)
+        } else {
+            ctx.error(format!(
+                "vararg parameter '{}' in function '{}' is missing a type annotation",
+                name, func.name
+            ));
+            Type::Any
+        };
+        params.push((name, Type::List(Box::new(elem_ty))));
     }
 
     // Also include keyword-only parameters
@@ -1032,8 +1070,23 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
         });
     }
 
+    // Vararg parameter (*args) -- becomes Vec<T>
+    if let Some(ref vararg) = func.parameters.vararg {
+        let name = vararg.name.to_string();
+        let regular_count = func.parameters.args.len();
+        let ty = ft.params.get(regular_count).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+        ctx.scope.define(name.clone(), ty.clone());
+
+        params.push(HirParam {
+            name,
+            ty,
+            default: None,
+            keyword_only: false,
+        });
+    }
+
     // Keyword-only args (after * separator)
-    let regular_count = func.parameters.args.len();
+    let regular_count = func.parameters.args.len() + if func.parameters.vararg.is_some() { 1 } else { 0 };
     for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
         let name = param_def.parameter.name.to_string();
         let ty = ft.params.get(regular_count + i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
@@ -1054,12 +1107,27 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 
     ctx.scope.pop();
 
+    // Collect user-defined decorators (excluding classmethod/staticmethod)
+    let decorators: Vec<String> = func.decorator_list.iter().filter_map(|d| {
+        if let Expr::Name(n) = &d.expression {
+            let name = n.id.to_string();
+            if name != "classmethod" && name != "staticmethod" {
+                Some(name)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }).collect();
+
     Some(HirFunction {
         name: func.name.to_string(),
         params,
         return_type: *ft.return_type,
         body,
         method_kind: MethodKind::Regular,
+        decorators,
     })
 }
 
@@ -2494,7 +2562,41 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     } else if keyword_args.is_empty() {
         // No keyword args - check count and use positional directly
         // Allow fewer args if there are defaults
-        if positional_args.len() > ft.params.len() {
+        let is_vararg = ctx.vararg_functions.contains(&func_name);
+        if is_vararg && positional_args.len() >= ft.params.len() - 1 {
+            // Vararg function: collect extra args into a list for the last param
+            let regular_count = ft.params.len() - 1; // all params except the vararg
+            let mut args = Vec::new();
+            for i in 0..regular_count {
+                args.push(positional_args[i].clone());
+            }
+            // Collect remaining args into a list literal
+            let vararg_elements: Vec<HirExpr> = positional_args[regular_count..].to_vec();
+            let elem_ty = if let Type::List(ref elem) = ft.params[regular_count].1 {
+                *elem.clone()
+            } else {
+                Type::Any
+            };
+            args.push(HirExpr::ListLiteral {
+                elements: vararg_elements,
+                ty: Type::List(Box::new(elem_ty)),
+            });
+            // Skip the normal argument handling below
+            let is_constructor = ctx.class_types.contains_key(&func_name);
+            if is_constructor {
+                let ty = ctx.class_types.get(&func_name).unwrap().clone();
+                return Some(HirExpr::ConstructorCall {
+                    class_name: func_name,
+                    args,
+                    ty,
+                });
+            }
+            return Some(HirExpr::Call {
+                func: func_name,
+                args,
+                ty: *ft.return_type.clone(),
+            });
+        } else if positional_args.len() > ft.params.len() {
             ctx.error(format!(
                 "function '{}' expects at most {} argument(s), got {}",
                 func_name,

@@ -1,0 +1,52 @@
+# =============================================================
+# Sifr Milestone: Decorators & Variadics Demo
+# =============================================================
+# Features demonstrated:
+# 1. User-defined decorators (pass-through with metadata)
+# 2. *args variadic positional arguments
+# 3. Stacked decorators
+# =============================================================
+
+# --- 1. Decorator recognition ---
+@log
+def greet(name: str) -> str:
+    return "Hello, " + name + "!"
+
+# --- 2. Stacked decorators ---
+@validate
+@log
+def process(x: int) -> int:
+    return x * 2
+
+# --- 3. *args variadic arguments ---
+def sum_all(*nums: int) -> int:
+    total: int = 0
+    for n in nums:
+        total = total + n
+    return total
+
+def max_of(*values: int) -> int:
+    return max(values)
+
+def join_strings(sep: str, *parts: str) -> str:
+    result: str = ""
+    i: int = 0
+    for p in parts:
+        if i > 0:
+            result = result + sep
+        result = result + p
+        i = i + 1
+    return result
+
+def main():
+    # Decorated functions work normally
+    print(greet("World"))
+    print(process(21))
+
+    # *args: variable number of arguments
+    print(sum_all(1, 2, 3, 4, 5))
+    print(sum_all(10, 20))
+    print(max_of(3, 7, 2, 9, 1))
+
+    # Mixed regular + *args
+    print(join_strings(", ", "Alice", "Bob", "Charlie"))

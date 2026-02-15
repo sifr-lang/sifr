@@ -1,0 +1,12 @@
+# expect-stdout: 15
+# Tests: *args variadic arguments
+
+def sum_all(*nums: int) -> int:
+    total: int = 0
+    for n in nums:
+        total = total + n
+    return total
+
+def main():
+    result: int = sum_all(1, 2, 3, 4, 5)
+    print(result)
