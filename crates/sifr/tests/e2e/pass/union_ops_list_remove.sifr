@@ -1,0 +1,12 @@
+# Test: list.remove
+# expect-stdout: 3
+# expect-stdout: 1
+# expect-stdout: 3
+# expect-stdout: 2
+
+def main():
+    items: list[int] = [1, 2, 3, 2]
+    items.remove(2)
+    print(len(items))
+    for x in items:
+        print(x)

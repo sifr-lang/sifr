@@ -1,0 +1,9 @@
+# Test: len() on union/optional types
+# expect-stdout: 3
+
+def get_len(x: list[int] | None) -> int:
+    return len(x)
+
+def main():
+    v: list[int] | None = [1, 2, 3]
+    print(get_len(v))
