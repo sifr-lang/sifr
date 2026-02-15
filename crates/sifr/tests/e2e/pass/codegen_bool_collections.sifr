@@ -1,0 +1,15 @@
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: true
+# expect-stdout: false
+# Tests that bool() works on collections (list, dict)
+
+def main():
+    nums: list[int] = [1, 2, 3]
+    empty: list[int] = []
+    print(bool(nums))
+    print(bool(empty))
+    d: dict[str, int] = {"a": 1}
+    empty_d: dict[str, int] = {}
+    print(bool(d))
+    print(bool(empty_d))
