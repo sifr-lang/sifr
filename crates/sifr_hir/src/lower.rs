@@ -405,6 +405,40 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
         }
     }
 
+    // Collect module-level constants (annotated assignments at top level)
+    let mut constants = Vec::new();
+    for stmt in stmts {
+        if let Stmt::AnnAssign(ann) = stmt {
+            if let Expr::Name(name) = ann.target.as_ref() {
+                let var_name = name.id.to_string();
+                let ty = resolve_annotation_expr(&ann.annotation, &mut ctx);
+                if let Some(ref value_expr) = ann.value {
+                    if let Some(hir_value) = lower_expr_simple(value_expr) {
+                        ctx.scope.define(var_name.clone(), ty.clone());
+                        constants.push((var_name, ty, hir_value));
+                    }
+                }
+            }
+        }
+        // Also handle bare assignments: PI = 3.14 (without annotation)
+        if let Stmt::Assign(assign) = stmt {
+            if assign.targets.len() == 1 {
+                if let Expr::Name(name) = &assign.targets[0] {
+                    let var_name = name.id.to_string();
+                    // Skip TypeVar declarations (already handled)
+                    if ctx.type_vars.contains(&var_name) {
+                        continue;
+                    }
+                    if let Some(hir_value) = lower_expr_simple(&assign.value) {
+                        let ty = hir_value.ty().clone();
+                        ctx.scope.define(var_name.clone(), ty.clone());
+                        constants.push((var_name, ty, hir_value));
+                    }
+                }
+            }
+        }
+    }
+
     // Second pass: lower function bodies and class method bodies
     let mut functions = Vec::new();
     let mut classes = Vec::new();
@@ -426,7 +460,7 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
 
     if ctx.errors.is_empty() {
         Ok(LoweringResult {
-            module: HirModule { functions, classes, imports },
+            module: HirModule { functions, classes, imports, constants },
             reveal_types: ctx.reveal_types,
         })
     } else {
@@ -2841,6 +2875,26 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             return None;
         }
     };
+
+    // Handle `cls(...)` in @classmethod as constructor call for the current class
+    if func_name == "cls" {
+        if let Some(ref class_name) = ctx.current_class {
+            let class_name = class_name.clone();
+            if let Some(class_ty) = ctx.class_types.get(&class_name).cloned() {
+                // Lower arguments
+                let mut args = Vec::new();
+                for arg in &call.arguments.args {
+                    let expr = lower_expr(arg, ctx)?;
+                    args.push(expr);
+                }
+                return Some(HirExpr::ConstructorCall {
+                    class_name,
+                    args,
+                    ty: class_ty,
+                });
+            }
+        }
+    }
 
     // Special handling for range() built-in
     if func_name == "range" {

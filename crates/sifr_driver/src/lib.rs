@@ -301,7 +301,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
 
     // Write Cargo.toml
     let (cargo_toml, _) = generate_project(
-        &HirModule { functions: vec![], classes: vec![], imports: vec![] },
+        &HirModule { functions: vec![], classes: vec![], imports: vec![], constants: vec![] },
         "sifr_output",
     );
     std::fs::write(project_path.join("Cargo.toml"), cargo_toml).map_err(|e| {
@@ -400,7 +400,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
 
     // Write Cargo.toml with stdlib dependencies
     let (cargo_toml, _) = generate_project_with_deps(
-        &sifr_hir::HirModule { functions: vec![], classes: vec![], imports: vec![] },
+        &sifr_hir::HirModule { functions: vec![], classes: vec![], imports: vec![], constants: vec![] },
         "sifr_output",
         &used_stdlib_modules,
     );

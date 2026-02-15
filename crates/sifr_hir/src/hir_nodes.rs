@@ -8,6 +8,8 @@ pub struct HirModule {
     pub functions: Vec<HirFunction>,
     pub classes: Vec<HirClass>,
     pub imports: Vec<HirImport>,
+    /// Module-level constants (name, type, value)
+    pub constants: Vec<(String, Type, HirExpr)>,
 }
 
 /// An import statement.

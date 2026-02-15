@@ -243,6 +243,10 @@ struct RustEmitter {
     /// Map from nested function name -> list of captured variable (name, type) pairs
     /// Used to pass extra args at call sites for recursive+capturing nested functions
     nested_fn_captures: HashMap<String, Vec<(String, Type)>>,
+    /// Map from module-level constant name -> (type, rust_name)
+    /// For primitives: rust_name is the UPPERCASE const name
+    /// For strings/complex: rust_name is __const_name() function call
+    module_constants: HashMap<String, (Type, String)>,
 }
 
 impl RustEmitter {
@@ -269,6 +273,7 @@ impl RustEmitter {
             recursive_fields: HashSet::new(),
             class_field_order: HashMap::new(),
             nested_fn_captures: HashMap::new(),
+            module_constants: HashMap::new(),
         }
     }
 
@@ -446,6 +451,38 @@ impl RustEmitter {
                     );
                 }
             }
+        }
+
+        // Emit module-level constants and register them for name resolution
+        for (name, ty, value) in &module.constants {
+            self.write_indent();
+            // Use const for primitives, static for strings
+            match ty {
+                Type::Int | Type::Float | Type::Bool => {
+                    let rust_name = name.to_uppercase();
+                    self.write(&format!("const {}: {} = ", rust_name, ty.rust_type()));
+                    self.emit_expr(value);
+                    self.write(";\n");
+                    self.module_constants.insert(name.clone(), (ty.clone(), rust_name));
+                }
+                Type::Str => {
+                    let rust_name = format!("__const_{}", name);
+                    self.write(&format!("fn {}() -> String {{ ", rust_name));
+                    self.emit_expr(value);
+                    self.write(".to_string() }\n");
+                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{}()", rust_name)));
+                }
+                _ => {
+                    let rust_name = format!("__const_{}", name);
+                    self.write(&format!("fn {}() -> {} {{ ", rust_name, ty.rust_type()));
+                    self.emit_expr(value);
+                    self.write(" }\n");
+                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{}()", rust_name)));
+                }
+            }
+        }
+        if !module.constants.is_empty() {
+            self.output.push('\n');
         }
 
         // Emit class definitions first (structs + impls)
@@ -2958,6 +2995,9 @@ impl RustEmitter {
                 // Check for stdlib constants
                 if self.stdlib_functions.contains(name.as_str()) || self.is_stdlib_constant(name) {
                     self.emit_stdlib_constant(name);
+                } else if let Some((_ty, rust_name)) = self.module_constants.get(name).cloned() {
+                    // Module-level constant
+                    self.write(&rust_name);
                 } else {
                     self.write(name);
                 }
@@ -5273,6 +5313,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5305,6 +5346,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5343,6 +5385,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5376,6 +5419,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5418,6 +5462,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5446,6 +5491,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5477,6 +5523,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5525,6 +5572,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5562,6 +5610,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5606,6 +5655,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
@@ -5633,6 +5683,7 @@ mod tests {
             }],
             classes: vec![],
             imports: vec![],
+            constants: vec![],
         };
 
         let rust_code = generate_rust(&module);
