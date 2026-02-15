@@ -1,0 +1,13 @@
+# expect-stdout: 13.5
+# expect-stdout: 7.5
+# Tests that mixed int/float arithmetic auto-promotes int to float
+
+def main():
+    a: int = 10
+    b: float = 3.5
+    result: float = a + b
+    print(result)
+    c: float = 2.5
+    d: int = 3
+    result2: float = c * d
+    print(result2)

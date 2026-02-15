@@ -1,0 +1,11 @@
+# expect-stdout: 8
+# expect-stdout: 27
+# Tests that **= on int variables produces int result (not float)
+
+def main():
+    x: int = 2
+    x **= 3
+    print(x)
+    y: int = 3
+    y **= 3
+    print(y)
