@@ -1,0 +1,14 @@
+# Test sifr.os stdlib module
+from sifr.os import run_command, get_args
+
+def main():
+    # Run a simple command
+    result: str = run_command("echo hello_from_shell")
+    print(result)
+
+    # Get args (will just be the binary name)
+    args: list[str] = get_args()
+    print(len(args) > 0)
+
+# expect-stdout: hello_from_shell
+# expect-stdout: true

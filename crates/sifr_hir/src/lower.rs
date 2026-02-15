@@ -179,7 +179,27 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                     .map(|alias| alias.name.to_string())
                     .collect();
 
-                // Resolve imported names from external definitions
+                // Check if this is a stdlib import (sifr.*)
+                if let Some(stdlib_module) = crate::stdlib::get_stdlib_module(&module_name) {
+                    // Register stdlib function/constant types
+                    for name in &names {
+                        if let Some(ft) = stdlib_module.functions.get(name) {
+                            ctx.functions.insert(name.clone(), ft.clone());
+                        } else if let Some(const_ty) = stdlib_module.constants.get(name) {
+                            // Register constants as variables in scope
+                            ctx.scope.define(name.clone(), const_ty.clone());
+                        } else {
+                            ctx.error(format!("module '{}' has no member '{}'", module_name, name));
+                        }
+                    }
+                    imports.push(HirImport {
+                        module: module_name,
+                        names,
+                    });
+                    continue;
+                }
+
+                // Resolve imported names from external definitions (local modules)
                 for name in &names {
                     // Check if it's a private name
                     if name.starts_with('_') {

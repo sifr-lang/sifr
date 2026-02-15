@@ -9,6 +9,7 @@ mod hir_nodes;
 mod lower;
 mod scope;
 pub mod cfg;
+pub mod stdlib;
 
 pub use hir_nodes::*;
 pub use lower::{lower_module, lower_module_with_externals, ExternalDefs, LoweringError, LoweringResult};
