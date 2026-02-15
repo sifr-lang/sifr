@@ -339,6 +339,20 @@ pub enum HirExpr {
         args: Vec<HirExpr>,
         ty: Type,
     },
+    /// Lambda expression: lambda x: x + 1
+    Lambda {
+        params: Vec<HirParam>,
+        body: Box<HirExpr>,
+        ty: Type,
+    },
+    /// List comprehension: [expr for var in iter] or [expr for var in iter if cond]
+    ListComp {
+        expr: Box<HirExpr>,
+        var: String,
+        iter: Box<HirExpr>,
+        filter: Option<Box<HirExpr>>,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -372,7 +386,9 @@ impl HirExpr {
             | Self::QuestionMark { ty, .. }
             | Self::OkWrap { ty, .. }
             | Self::ErrWrap { ty, .. }
-            | Self::SuperCall { ty, .. } => ty,
+            | Self::SuperCall { ty, .. }
+            | Self::Lambda { ty, .. }
+            | Self::ListComp { ty, .. } => ty,
         }
     }
 }

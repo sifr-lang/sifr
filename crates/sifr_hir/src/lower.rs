@@ -1714,6 +1714,8 @@ fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
         Expr::Attribute(attr) => lower_attribute(attr, ctx),
         Expr::FString(fstring) => lower_fstring(fstring, ctx),
         Expr::Named(named) => lower_named_expr(named, ctx),
+        Expr::Lambda(lambda) => lower_lambda(lambda, ctx),
+        Expr::ListComp(comp) => lower_list_comp(comp, ctx),
         _ => {
             ctx.error("unsupported expression type".to_string());
             None
@@ -2186,6 +2188,244 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             func: "bool".to_string(),
             args: vec![arg],
             ty: Type::Bool,
+        });
+    }
+
+    // --- Built-in generic functions ---
+
+    // min(iterable) -> element type
+    if func_name == "min" {
+        if call.arguments.args.len() != 1 {
+            ctx.error("min() takes exactly 1 argument".to_string());
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let elem_ty = match arg.ty() {
+            Type::List(elem) => *elem.clone(),
+            _ => {
+                ctx.error(format!("min() argument must be a list, got '{}'", arg.ty().display_name()));
+                return None;
+            }
+        };
+        return Some(HirExpr::Call {
+            func: "min".to_string(),
+            args: vec![arg],
+            ty: elem_ty,
+        });
+    }
+
+    // max(iterable) -> element type
+    if func_name == "max" {
+        if call.arguments.args.len() != 1 {
+            ctx.error("max() takes exactly 1 argument".to_string());
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let elem_ty = match arg.ty() {
+            Type::List(elem) => *elem.clone(),
+            _ => {
+                ctx.error(format!("max() argument must be a list, got '{}'", arg.ty().display_name()));
+                return None;
+            }
+        };
+        return Some(HirExpr::Call {
+            func: "max".to_string(),
+            args: vec![arg],
+            ty: elem_ty,
+        });
+    }
+
+    // sum(iterable) -> element type (int or float)
+    if func_name == "sum" {
+        if call.arguments.args.len() != 1 {
+            ctx.error("sum() takes exactly 1 argument".to_string());
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let elem_ty = match arg.ty() {
+            Type::List(elem) => *elem.clone(),
+            _ => {
+                ctx.error(format!("sum() argument must be a list, got '{}'", arg.ty().display_name()));
+                return None;
+            }
+        };
+        return Some(HirExpr::Call {
+            func: "sum".to_string(),
+            args: vec![arg],
+            ty: elem_ty,
+        });
+    }
+
+    // sorted(iterable) -> list of element type
+    if func_name == "sorted" {
+        if call.arguments.args.len() != 1 {
+            ctx.error("sorted() takes exactly 1 argument".to_string());
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let list_ty = match arg.ty() {
+            Type::List(_) => arg.ty().clone(),
+            _ => {
+                ctx.error(format!("sorted() argument must be a list, got '{}'", arg.ty().display_name()));
+                return None;
+            }
+        };
+        return Some(HirExpr::Call {
+            func: "sorted".to_string(),
+            args: vec![arg],
+            ty: list_ty,
+        });
+    }
+
+    // reversed(iterable) -> list of element type
+    if func_name == "reversed" {
+        if call.arguments.args.len() != 1 {
+            ctx.error("reversed() takes exactly 1 argument".to_string());
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let list_ty = match arg.ty() {
+            Type::List(_) => arg.ty().clone(),
+            _ => {
+                ctx.error(format!("reversed() argument must be a list, got '{}'", arg.ty().display_name()));
+                return None;
+            }
+        };
+        return Some(HirExpr::Call {
+            func: "reversed".to_string(),
+            args: vec![arg],
+            ty: list_ty,
+        });
+    }
+
+    // enumerate(iterable) -> list of (int, element) tuples
+    if func_name == "enumerate" {
+        if call.arguments.args.len() != 1 {
+            ctx.error("enumerate() takes exactly 1 argument".to_string());
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let elem_ty = match arg.ty() {
+            Type::List(elem) => *elem.clone(),
+            _ => {
+                ctx.error(format!("enumerate() argument must be a list, got '{}'", arg.ty().display_name()));
+                return None;
+            }
+        };
+        let tuple_ty = Type::Tuple(vec![Type::Int, elem_ty]);
+        let result_ty = Type::List(Box::new(tuple_ty));
+        return Some(HirExpr::Call {
+            func: "enumerate".to_string(),
+            args: vec![arg],
+            ty: result_ty,
+        });
+    }
+
+    // zip(iter1, iter2) -> list of (elem1, elem2) tuples
+    if func_name == "zip" {
+        if call.arguments.args.len() != 2 {
+            ctx.error("zip() takes exactly 2 arguments".to_string());
+            return None;
+        }
+        let arg1 = lower_expr(&call.arguments.args[0], ctx)?;
+        let arg2 = lower_expr(&call.arguments.args[1], ctx)?;
+        let elem1 = match arg1.ty() {
+            Type::List(elem) => *elem.clone(),
+            _ => {
+                ctx.error(format!("zip() argument 1 must be a list, got '{}'", arg1.ty().display_name()));
+                return None;
+            }
+        };
+        let elem2 = match arg2.ty() {
+            Type::List(elem) => *elem.clone(),
+            _ => {
+                ctx.error(format!("zip() argument 2 must be a list, got '{}'", arg2.ty().display_name()));
+                return None;
+            }
+        };
+        let tuple_ty = Type::Tuple(vec![elem1, elem2]);
+        let result_ty = Type::List(Box::new(tuple_ty));
+        return Some(HirExpr::Call {
+            func: "zip".to_string(),
+            args: vec![arg1, arg2],
+            ty: result_ty,
+        });
+    }
+
+    // any(iterable) -> bool
+    if func_name == "any" {
+        if call.arguments.args.len() != 1 {
+            ctx.error("any() takes exactly 1 argument".to_string());
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        return Some(HirExpr::Call {
+            func: "any".to_string(),
+            args: vec![arg],
+            ty: Type::Bool,
+        });
+    }
+
+    // all(iterable) -> bool
+    if func_name == "all" {
+        if call.arguments.args.len() != 1 {
+            ctx.error("all() takes exactly 1 argument".to_string());
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        return Some(HirExpr::Call {
+            func: "all".to_string(),
+            args: vec![arg],
+            ty: Type::Bool,
+        });
+    }
+
+    // map(func, iterable) -> list
+    if func_name == "map" {
+        if call.arguments.args.len() != 2 {
+            ctx.error("map() takes exactly 2 arguments (function, iterable)".to_string());
+            return None;
+        }
+        // Lower iterable first to get element type for contextual lambda typing
+        let iter_arg = lower_expr(&call.arguments.args[1], ctx)?;
+        let elem_ty = match iter_arg.ty() {
+            Type::List(elem) => *elem.clone(),
+            _ => Type::Any,
+        };
+        // Lower lambda with contextual typing
+        let func_arg = lower_lambda_with_context(&call.arguments.args[0], &[elem_ty], ctx)?;
+        // Determine result element type from the function's return type
+        let result_elem_ty = match func_arg.ty() {
+            Type::Function(ft) => *ft.return_type.clone(),
+            _ => Type::Any,
+        };
+        let result_ty = Type::List(Box::new(result_elem_ty));
+        return Some(HirExpr::Call {
+            func: "map".to_string(),
+            args: vec![func_arg, iter_arg],
+            ty: result_ty,
+        });
+    }
+
+    // filter(func, iterable) -> list (same element type)
+    if func_name == "filter" {
+        if call.arguments.args.len() != 2 {
+            ctx.error("filter() takes exactly 2 arguments (function, iterable)".to_string());
+            return None;
+        }
+        // Lower iterable first to get element type for contextual lambda typing
+        let iter_arg = lower_expr(&call.arguments.args[1], ctx)?;
+        let elem_ty = match iter_arg.ty() {
+            Type::List(elem) => *elem.clone(),
+            _ => Type::Any,
+        };
+        // Lower lambda with contextual typing
+        let func_arg = lower_lambda_with_context(&call.arguments.args[0], &[elem_ty], ctx)?;
+        let result_ty = iter_arg.ty().clone();
+        return Some(HirExpr::Call {
+            func: "filter".to_string(),
+            args: vec![func_arg, iter_arg],
+            ty: result_ty,
         });
     }
 
@@ -3235,6 +3475,176 @@ fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
         then_expr: Box::new(then_expr),
         else_expr: Box::new(else_expr),
         ty: then_ty,
+    })
+}
+
+/// Lower a lambda or regular expression with contextual type information for parameters.
+/// If the expression is a lambda, use `context_types` for untyped parameters.
+/// If it's not a lambda, just lower it normally.
+fn lower_lambda_with_context(expr: &Expr, context_types: &[Type], ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if let Expr::Lambda(lambda) = expr {
+        ctx.scope.push();
+
+        let mut params = Vec::new();
+        if let Some(ref parameters) = lambda.parameters {
+            for (i, param) in parameters.args.iter().enumerate() {
+                let param_name = param.parameter.name.to_string();
+                let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                    resolve_annotation_expr(ann, ctx)
+                } else if i < context_types.len() {
+                    // Use contextual type
+                    context_types[i].clone()
+                } else {
+                    Type::Any
+                };
+                ctx.scope.define(param_name.clone(), param_ty.clone());
+                params.push(HirParam {
+                    name: param_name,
+                    ty: param_ty,
+                    default: None,
+                    keyword_only: false,
+                });
+            }
+        }
+
+        let body = lower_expr(&lambda.body, ctx)?;
+        let body_ty = body.ty().clone();
+
+        ctx.scope.pop();
+
+        let param_types: Vec<(String, Type)> = params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect();
+        let fn_ty = Type::Function(FunctionType {
+            params: param_types,
+            return_type: Box::new(body_ty),
+        });
+
+        Some(HirExpr::Lambda {
+            params,
+            body: Box::new(body),
+            ty: fn_ty,
+        })
+    } else {
+        // Not a lambda, lower normally
+        lower_expr(expr, ctx)
+    }
+}
+
+fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    ctx.scope.push();
+
+    let mut params = Vec::new();
+    if let Some(ref parameters) = lambda.parameters {
+        for param in &parameters.args {
+            let param_name = param.parameter.name.to_string();
+            let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                resolve_annotation_expr(ann, ctx)
+            } else {
+                // Lambda params without annotations: infer as Any for now
+                // Contextual typing will refine this at call sites
+                Type::Any
+            };
+            ctx.scope.define(param_name.clone(), param_ty.clone());
+            params.push(HirParam {
+                name: param_name,
+                ty: param_ty,
+                default: None,
+                keyword_only: false,
+            });
+        }
+    }
+
+    let body = lower_expr(&lambda.body, ctx)?;
+    let body_ty = body.ty().clone();
+
+    ctx.scope.pop();
+
+    // Build the function type for the lambda
+    let param_types: Vec<(String, Type)> = params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect();
+    let fn_ty = Type::Function(FunctionType {
+        params: param_types,
+        return_type: Box::new(body_ty),
+    });
+
+    Some(HirExpr::Lambda {
+        params,
+        body: Box::new(body),
+        ty: fn_ty,
+    })
+}
+
+fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    // Only support single generator for now: [expr for var in iter] or [expr for var in iter if cond]
+    if comp.generators.len() != 1 {
+        ctx.error("only single-generator list comprehensions are supported".to_string());
+        return None;
+    }
+
+    let gen = &comp.generators[0];
+
+    // Get the variable name
+    let var_name = match &gen.target {
+        Expr::Name(n) => n.id.to_string(),
+        _ => {
+            ctx.error("comprehension target must be a simple name".to_string());
+            return None;
+        }
+    };
+
+    // Lower the iterable
+    let iter_expr = lower_expr(&gen.iter, ctx)?;
+    let iter_ty = iter_expr.ty().clone();
+
+    // Determine element type from the iterable
+    let elem_ty = match &iter_ty {
+        Type::List(elem) => *elem.clone(),
+        Type::Str => Type::Str, // iterating over str yields str (chars)
+        _ => {
+            ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name()));
+            return None;
+        }
+    };
+
+    // Push scope and define the loop variable
+    ctx.scope.push();
+    ctx.scope.define(var_name.clone(), elem_ty.clone());
+
+    // Lower the expression
+    let expr = lower_expr(&comp.elt, ctx)?;
+    let expr_ty = expr.ty().clone();
+
+    // Lower the filter condition if present
+    let filter = if !gen.ifs.is_empty() {
+        // Combine multiple ifs with `and`
+        let first = lower_expr(&gen.ifs[0], ctx)?;
+        if gen.ifs.len() == 1 {
+            Some(Box::new(first))
+        } else {
+            // Multiple ifs: combine with BoolOp And
+            let mut combined = first;
+            for cond in &gen.ifs[1..] {
+                let next = lower_expr(cond, ctx)?;
+                combined = HirExpr::BoolOp {
+                    op: "and".to_string(),
+                    values: vec![combined, next],
+                    ty: Type::Bool,
+                };
+            }
+            Some(Box::new(combined))
+        }
+    } else {
+        None
+    };
+
+    ctx.scope.pop();
+
+    let result_ty = Type::List(Box::new(expr_ty));
+
+    Some(HirExpr::ListComp {
+        expr: Box::new(expr),
+        var: var_name,
+        iter: Box::new(iter_expr),
+        filter,
+        ty: result_ty,
     })
 }
 

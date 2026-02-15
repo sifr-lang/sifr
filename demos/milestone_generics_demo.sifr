@@ -1,0 +1,50 @@
+# =============================================================
+# Sifr Milestone: Generics, Lambdas & Iterators Demo
+# =============================================================
+# Features demonstrated:
+# 1. Lambda expressions with map and filter
+# 2. List comprehensions (with and without filter)
+# 3. Built-in functions: min, max, sum, sorted, reversed
+# 4. Built-in functions: enumerate, zip, any, all
+# =============================================================
+
+def main():
+    # --- 1. Lambda with map/filter ---
+    nums: list[int] = [1, 2, 3, 4, 5]
+    doubled: list[int] = map(lambda x: x * 2, nums)
+    print(doubled)
+
+    evens: list[int] = filter(lambda x: x % 2 == 0, nums)
+    print(evens)
+
+    # --- 2. List comprehensions ---
+    squares: list[int] = [x * x for x in nums]
+    print(squares)
+
+    big_squares: list[int] = [x * x for x in nums if x > 2]
+    print(big_squares)
+
+    # --- 3. min, max, sum ---
+    print(min(nums))
+    print(max(nums))
+    print(sum(nums))
+
+    # --- 4. sorted, reversed ---
+    unsorted: list[int] = [5, 3, 1, 4, 2]
+    print(sorted(unsorted))
+    print(reversed(unsorted))
+
+    # --- 5. enumerate ---
+    letters: list[str] = ["a", "b", "c"]
+    print(enumerate(letters))
+
+    # --- 6. zip ---
+    names: list[str] = ["Alice", "Bob"]
+    ages: list[int] = [30, 25]
+    print(zip(names, ages))
+
+    # --- 7. any, all ---
+    bools: list[bool] = [True, False, True]
+    print(any(bools))
+    print(all(bools))
+    print(all([True, True, True]))

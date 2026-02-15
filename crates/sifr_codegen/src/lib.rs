@@ -2303,6 +2303,11 @@ impl RustEmitter {
                         }
                         self.emit_expr(&args[0]);
                         self.write(")");
+                    } else if matches!(args[0].ty(), Type::List(_) | Type::Dict(_, _) | Type::Tuple(_)) {
+                        // Collections use Debug format
+                        self.write("println!(\"{:?}\", ");
+                        self.emit_expr(&args[0]);
+                        self.write(")");
                     } else {
                         // Use emit_display_expr for all other cases:
                         // - Option<T> gets map_or wrapping
@@ -2417,6 +2422,72 @@ impl RustEmitter {
                             }
                         }
                     }
+                } else if func == "min" {
+                    // min(list) -> *list.iter().min().unwrap()
+                    self.emit_expr(&args[0]);
+                    if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                        self.write(".iter().cloned().reduce(f64::min).unwrap()");
+                    } else {
+                        self.write(".iter().min().unwrap().clone()");
+                    }
+                } else if func == "max" {
+                    // max(list) -> *list.iter().max().unwrap()
+                    self.emit_expr(&args[0]);
+                    if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                        self.write(".iter().cloned().reduce(f64::max).unwrap()");
+                    } else {
+                        self.write(".iter().max().unwrap().clone()");
+                    }
+                } else if func == "sum" {
+                    // sum(list) -> list.iter().sum()
+                    self.emit_expr(&args[0]);
+                    self.write(".iter().sum::<");
+                    if let Type::List(ref elem) = args[0].ty() {
+                        self.write(&elem.rust_type());
+                    } else {
+                        self.write("_");
+                    }
+                    self.write(">()");
+                } else if func == "sorted" {
+                    // sorted(list) -> { let mut v = list.clone(); v.sort(); v }
+                    self.write("{ let mut _sorted = ");
+                    self.emit_expr(&args[0]);
+                    self.write(".clone(); _sorted.sort(); _sorted }");
+                } else if func == "reversed" {
+                    // reversed(list) -> { let mut v = list.clone(); v.reverse(); v }
+                    self.write("{ let mut _rev = ");
+                    self.emit_expr(&args[0]);
+                    self.write(".clone(); _rev.reverse(); _rev }");
+                } else if func == "enumerate" {
+                    // enumerate(list) -> list.iter().enumerate().map(|(i, v)| (i as i64, v.clone())).collect()
+                    self.emit_expr(&args[0]);
+                    self.write(".iter().enumerate().map(|(i, v)| (i as i64, v.clone())).collect::<Vec<_>>()");
+                } else if func == "zip" {
+                    // zip(a, b) -> a.iter().zip(b.iter()).map(|(a, b)| (a.clone(), b.clone())).collect()
+                    self.emit_expr(&args[0]);
+                    self.write(".iter().zip(");
+                    self.emit_expr(&args[1]);
+                    self.write(".iter()).map(|(a, b)| (a.clone(), b.clone())).collect::<Vec<_>>()");
+                } else if func == "any" {
+                    // any(list) -> list.iter().any(|x| *x)
+                    self.emit_expr(&args[0]);
+                    self.write(".iter().any(|x| *x)");
+                } else if func == "all" {
+                    // all(list) -> list.iter().all(|x| *x)
+                    self.emit_expr(&args[0]);
+                    self.write(".iter().all(|x| *x)");
+                } else if func == "map" {
+                    // map(func, list) -> list.clone().into_iter().map(func).collect()
+                    self.emit_expr(&args[1]);
+                    self.write(".clone().into_iter().map(");
+                    self.emit_lambda_untyped(&args[0]);
+                    self.write(").collect::<Vec<_>>()");
+                } else if func == "filter" {
+                    // filter(func, list) -> list.clone().into_iter().filter(func).collect()
+                    self.emit_expr(&args[1]);
+                    self.write(".clone().into_iter().filter(|x| { let x = *x; (");
+                    self.emit_lambda_untyped(&args[0]);
+                    self.write(")(x) }).collect::<Vec<_>>()");
                 } else {
                     self.write(func);
                     self.write("(");
@@ -2713,11 +2784,95 @@ impl RustEmitter {
                 }
                 self.write(")");
             }
+            HirExpr::Lambda { params, body, .. } => {
+                self.write("|");
+                for (i, param) in params.iter().enumerate() {
+                    if i > 0 {
+                        self.write(", ");
+                    }
+                    self.write(&param.name);
+                    // Only emit type annotation if it's not Any
+                    if param.ty != Type::Any {
+                        self.write(": ");
+                        // For reference types, use &Type
+                        if matches!(param.ty, Type::Str | Type::Class { .. }) {
+                            self.write("&");
+                        }
+                        self.write(&param.ty.rust_type());
+                    }
+                }
+                self.write("| ");
+                self.emit_expr(body);
+            }
+            HirExpr::ListComp { expr, var, iter, filter, ty } => {
+                // [expr for var in iter] -> iter.iter().map(|&var| expr).collect::<Vec<_>>()
+                // [expr for var in iter if cond] -> iter.iter().filter(|&&var| cond).map(|&var| expr).collect::<Vec<_>>()
+                // Use .into_iter() for owned values to avoid reference issues
+                self.emit_expr(iter);
+                if filter.is_some() {
+                    // With filter: use .iter().filter().map().cloned().collect()
+                    // to avoid ownership issues
+                    self.write(".iter()");
+                    if let Some(ref cond) = filter {
+                        self.write(".filter(|");
+                        self.write(var);
+                        self.write("| { let ");
+                        self.write(var);
+                        self.write(" = **");
+                        self.write(var);
+                        self.write("; ");
+                        self.emit_expr(cond);
+                        self.write(" })");
+                    }
+                    self.write(".map(|");
+                    self.write(var);
+                    self.write("| { let ");
+                    self.write(var);
+                    self.write(" = *");
+                    self.write(var);
+                    self.write("; ");
+                    self.emit_expr(expr);
+                    self.write(" })");
+                } else {
+                    // Without filter: use .clone().into_iter().map()
+                    self.write(".clone().into_iter()");
+                    self.write(".map(|");
+                    self.write(var);
+                    self.write("| ");
+                    self.emit_expr(expr);
+                    self.write(")");
+                }
+                // Determine the collect type
+                if let Type::List(ref elem) = ty {
+                    self.write(&format!(".collect::<Vec<{}>>()", elem.rust_type()));
+                } else {
+                    self.write(".collect::<Vec<_>>()");
+                }
+            }
         }
     }
 
     /// Emit an f-string as a Rust format macro call (format!, println!, etc.).
     /// This avoids the double-format pattern `println!("{}", format!(...))`.
+    /// Emit a lambda expression without type annotations on parameters.
+    /// Used when the lambda is passed to .map()/.filter() where Rust can infer types.
+    fn emit_lambda_untyped(&mut self, expr: &HirExpr) {
+        if let HirExpr::Lambda { params, body, .. } = expr {
+            self.write("|");
+            for (i, param) in params.iter().enumerate() {
+                if i > 0 {
+                    self.write(", ");
+                }
+                self.write(&param.name);
+            }
+            self.write("| ");
+            self.emit_expr(body);
+        } else {
+            // Not a lambda, emit as-is
+            self.emit_expr(expr);
+        }
+    }
+
     fn emit_fstring_macro(&mut self, macro_name: &str, parts: &[HirFStringPart]) {
         let mut format_str = String::new();
         let mut exprs: Vec<&HirExpr> = Vec::new();

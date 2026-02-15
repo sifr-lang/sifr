@@ -1,0 +1,13 @@
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: false
+# expect-stdout: true
+# Tests: any() and all() built-in functions
+
+def main():
+    mixed: list[bool] = [True, False, True]
+    all_true: list[bool] = [True, True, True]
+    print(any(mixed))
+    print(all(mixed))
+    print(any([False, False]))
+    print(all(all_true))

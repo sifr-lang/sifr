@@ -1,0 +1,10 @@
+# expect-stdout: 1
+# expect-stdout: 5
+# expect-stdout: 14
+# Tests: min, max, sum built-in functions
+
+def main():
+    nums: list[int] = [3, 1, 4, 1, 5]
+    print(min(nums))
+    print(max(nums))
+    print(sum(nums))
