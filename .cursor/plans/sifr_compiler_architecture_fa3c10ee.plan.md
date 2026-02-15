@@ -2230,10 +2230,10 @@ Depends on milestone_core_stdlib: needs `sifr.io` for test file discovery and `s
 
 1. **Redundant `.to_string()` on string literal args** — stdlib functions that accept `&str` receive `"literal".to_string()` instead of `"literal"` directly
 2. **Redundant `.clone()` on `vec![...]` literals** — set operations clone freshly-created vecs
-3. **`json_dumps` emits `.clone()` instead of `serde_json::to_string`** — incorrect serialization
-4. **`set_intersection` re-creates second set inside filter closure** — O(n*m) allocation instead of O(n+m)
-5. **`re_replace` uses `.to_string().as_str()`** — unnecessary String allocation
-6. **Hash/encoding functions use `.to_string().as_bytes()`** — should use `.as_bytes()` directly on literals
+3. `**json_dumps` emits `.clone()` instead of `serde_json::to_string**` — incorrect serialization
+4. `**set_intersection` re-creates second set inside filter closure** — O(n*m) allocation instead of O(n+m)
+5. `**re_replace` uses `.to_string().as_str()**` — unnecessary String allocation
+6. **Hash/encoding functions use `.to_string().as_bytes()**` — should use `.as_bytes()` directly on literals
 
 ### Implementation
 
