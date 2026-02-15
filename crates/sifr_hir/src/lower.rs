@@ -2781,10 +2781,18 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     }
 
     // Track ownership: move arguments of move types
-    for arg in &args {
-        if let HirExpr::Name { name, ty } = arg {
-            if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-                ctx.scope.mark_moved(name);
+    // Skip for built-in functions that borrow their arguments (print, len, bool, etc.)
+    let borrows_args = matches!(func_name.as_str(),
+        "print" | "len" | "bool" | "str" | "int" | "float" | "isinstance" |
+        "type" | "id" | "hash" | "repr" | "sorted" | "reversed" | "enumerate" |
+        "zip" | "any" | "all" | "sum" | "min" | "max" | "abs" | "round"
+    );
+    if !borrows_args {
+        for arg in &args {
+            if let HirExpr::Name { name, ty } = arg {
+                if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+                    ctx.scope.mark_moved(name);
+                }
             }
         }
     }
