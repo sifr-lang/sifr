@@ -192,6 +192,10 @@ pub enum HirStmt {
         value: HirExpr,
         body: Vec<HirStmt>,
     },
+    /// Nested function definition: def inside def
+    NestedFunction {
+        func: HirFunction,
+    },
 }
 
 /// An except handler in a try/except block.

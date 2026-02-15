@@ -1376,6 +1376,110 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             }
             Some(HirStmt::TryExcept { body, handlers })
         }
+        Stmt::FunctionDef(func) => {
+            // Nested function definition (def inside def)
+            // Extract the function type (params + return type)
+            let ft = extract_function_type(func, ctx)?;
+
+            // Register the nested function in the current scope so it can be called
+            ctx.functions.insert(func.name.to_string(), ft.clone());
+
+            // Lower the nested function body
+            ctx.scope.push();
+
+            // Define parameters in scope
+            let mut params = Vec::new();
+            for (i, param_def) in func.parameters.args.iter().enumerate() {
+                let name = param_def.parameter.name.to_string();
+                let ty = ft.params.get(i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+                ctx.scope.define(name.clone(), ty.clone());
+                let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+                params.push(HirParam {
+                    name,
+                    ty,
+                    default,
+                    keyword_only: false,
+                });
+            }
+
+            // Vararg parameter (*args)
+            if let Some(ref vararg) = func.parameters.vararg {
+                let name = vararg.name.to_string();
+                let regular_count = func.parameters.args.len();
+                let ty = ft.params.get(regular_count).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+                ctx.scope.define(name.clone(), ty.clone());
+                params.push(HirParam {
+                    name,
+                    ty,
+                    default: None,
+                    keyword_only: false,
+                });
+            }
+
+            // Keyword-only args
+            let regular_count = func.parameters.args.len() + if func.parameters.vararg.is_some() { 1 } else { 0 };
+            for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
+                let name = param_def.parameter.name.to_string();
+                let ty = ft.params.get(regular_count + i).map(|(_, t)| t.clone()).unwrap_or(Type::Any);
+                ctx.scope.define(name.clone(), ty.clone());
+                let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+                params.push(HirParam {
+                    name,
+                    ty,
+                    default,
+                    keyword_only: true,
+                });
+            }
+
+            let body = lower_stmts(&func.body, &ft, ctx);
+            ctx.scope.pop();
+
+            // Infer return type if not explicitly annotated
+            let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {
+                let return_types = collect_return_types(&body);
+                if return_types.is_empty() {
+                    Type::None
+                } else if return_types.len() == 1 {
+                    return_types.into_iter().next().unwrap()
+                } else {
+                    let mut members: Vec<Type> = return_types.into_iter().collect();
+                    members.sort_by(|a, b| a.display_name().cmp(&b.display_name()));
+                    members.dedup();
+                    if members.len() == 1 {
+                        members.into_iter().next().unwrap()
+                    } else {
+                        Type::Union(members)
+                    }
+                }
+            } else {
+                *ft.return_type
+            };
+
+            // Collect user-defined decorators
+            let decorators: Vec<String> = func.decorator_list.iter().filter_map(|d| {
+                if let Expr::Name(n) = &d.expression {
+                    let name = n.id.to_string();
+                    if name != "classmethod" && name != "staticmethod" {
+                        Some(name)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }).collect();
+
+            Some(HirStmt::NestedFunction {
+                func: HirFunction {
+                    name: func.name.to_string(),
+                    params,
+                    return_type: inferred_return_type,
+                    body,
+                    method_kind: MethodKind::Regular,
+                    decorators,
+                },
+            })
+        }
         _ => {
             ctx.error("unsupported statement type".to_string());
             None

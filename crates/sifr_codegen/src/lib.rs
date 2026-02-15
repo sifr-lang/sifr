@@ -240,6 +240,9 @@ struct RustEmitter {
     recursive_fields: HashSet<(String, String)>,
     /// Map from class name -> ordered list of field names (for constructor arg mapping)
     class_field_order: HashMap<String, Vec<String>>,
+    /// Map from nested function name -> list of captured variable (name, type) pairs
+    /// Used to pass extra args at call sites for recursive+capturing nested functions
+    nested_fn_captures: HashMap<String, Vec<(String, Type)>>,
 }
 
 impl RustEmitter {
@@ -265,6 +268,7 @@ impl RustEmitter {
             test_mode: false,
             recursive_fields: HashSet::new(),
             class_field_order: HashMap::new(),
+            nested_fn_captures: HashMap::new(),
         }
     }
 
@@ -2035,6 +2039,148 @@ impl RustEmitter {
                 self.write_indent();
                 self.write("}\n");
             }
+            HirStmt::NestedFunction { func } => {
+                let saved_return_type = self.current_return_type.clone();
+                let saved_mutated = self.mutated_vars.clone();
+
+                self.current_return_type = Some(func.return_type.clone());
+                self.mutated_vars = collect_mutated_vars(&func.body);
+
+                // Collect the set of parameter names
+                let param_names: HashSet<String> = func.params.iter().map(|p| p.name.clone()).collect();
+
+                // Detect captured variables: variables referenced in body that are
+                // not parameters and not defined locally in the body
+                let referenced_with_types = collect_referenced_vars_with_types(&func.body);
+                let locally_defined = collect_locally_defined_vars(&func.body);
+                let captures: Vec<(String, Type)> = referenced_with_types.into_iter()
+                    .filter(|(v, _)| !param_names.contains(v) && !locally_defined.contains(v))
+                    .collect();
+
+                // Check if the nested function calls itself (recursive)
+                let is_recursive = body_calls_function(&func.body, &func.name);
+
+                if captures.is_empty() {
+                    // No captures: emit as a plain inner fn (works for both recursive and non-recursive)
+                    self.write_indent();
+                    self.write("fn ");
+                    self.write(&func.name);
+                    self.write("(");
+
+                    for (i, param) in func.params.iter().enumerate() {
+                        if i > 0 {
+                            self.write(", ");
+                        }
+                        if self.mutated_vars.contains(&param.name) {
+                            self.write("mut ");
+                        }
+                        self.write(&param.name);
+                        self.write(": ");
+                        self.write(&param.ty.rust_type());
+                    }
+
+                    self.write(")");
+
+                    if func.return_type != Type::None {
+                        self.write(" -> ");
+                        self.write(&func.return_type.rust_type());
+                    }
+
+                    self.write(" {\n");
+                    self.indent += 1;
+
+                    for s in &func.body {
+                        self.emit_stmt(s);
+                    }
+
+                    self.indent -= 1;
+                    self.writeln("}");
+                } else if !is_recursive {
+                    // Has captures but not recursive: emit as a closure
+                    self.write_indent();
+                    self.write("let ");
+                    self.write(&func.name);
+                    self.write(" = |");
+
+                    for (i, param) in func.params.iter().enumerate() {
+                        if i > 0 {
+                            self.write(", ");
+                        }
+                        if self.mutated_vars.contains(&param.name) {
+                            self.write("mut ");
+                        }
+                        self.write(&param.name);
+                        self.write(": ");
+                        self.write(&param.ty.rust_type());
+                    }
+
+                    self.write("|");
+
+                    if func.return_type != Type::None {
+                        self.write(" -> ");
+                        self.write(&func.return_type.rust_type());
+                    }
+
+                    self.write(" {\n");
+                    self.indent += 1;
+
+                    for s in &func.body {
+                        self.emit_stmt(s);
+                    }
+
+                    self.indent -= 1;
+                    self.writeln("};");
+                } else {
+                    // Recursive AND captures: emit as inner fn with captured vars as extra cloned params
+                    // Store the capture info so call sites can pass the extra args
+                    self.nested_fn_captures.insert(func.name.clone(), captures.clone());
+
+                    self.write_indent();
+                    self.write("fn ");
+                    self.write(&func.name);
+                    self.write("(");
+
+                    for (i, param) in func.params.iter().enumerate() {
+                        if i > 0 {
+                            self.write(", ");
+                        }
+                        if self.mutated_vars.contains(&param.name) {
+                            self.write("mut ");
+                        }
+                        self.write(&param.name);
+                        self.write(": ");
+                        self.write(&param.ty.rust_type());
+                    }
+
+                    // Add captured variables as extra parameters with types
+                    for (cap_name, cap_ty) in &captures {
+                        self.write(", ");
+                        self.write(cap_name);
+                        self.write(": ");
+                        self.write(&cap_ty.rust_type());
+                    }
+
+                    self.write(")");
+
+                    if func.return_type != Type::None {
+                        self.write(" -> ");
+                        self.write(&func.return_type.rust_type());
+                    }
+
+                    self.write(" {\n");
+                    self.indent += 1;
+
+                    for s in &func.body {
+                        self.emit_stmt(s);
+                    }
+
+                    self.indent -= 1;
+                    self.writeln("}");
+                }
+
+                self.current_return_type = saved_return_type;
+                self.mutated_vars = saved_mutated;
+            }
         }
     }
 
@@ -3177,6 +3323,15 @@ impl RustEmitter {
                             }
                         }
                         self.emit_expr(arg);
+                    }
+                    // For recursive nested functions with captures, pass captured vars as extra args
+                    if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
+                        for (idx, (cap_name, _)) in captures.iter().enumerate() {
+                            if !args.is_empty() || idx > 0 {
+                                self.write(", ");
+                            }
+                            self.write(cap_name);
+                        }
                     }
                     self.write(")");
                 }
@@ -4551,6 +4706,242 @@ fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>) {
             }
         }
         _ => {}
+    }
+}
+
+/// Collect all variable names and their types referenced in a list of statements.
+fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(String, Type)> {
+    let mut refs: HashMap<String, Type> = HashMap::new();
+    collect_referenced_vars_with_types_inner(stmts, &mut refs);
+    refs.into_iter().collect()
+}
+
+fn collect_referenced_vars_with_types_inner(stmts: &[HirStmt], refs: &mut HashMap<String, Type>) {
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Let { value, .. } => {
+                collect_typed_refs_in_expr(value, refs);
+            }
+            HirStmt::Assign { value, .. } => {
+                collect_typed_refs_in_expr(value, refs);
+            }
+            HirStmt::AugAssign { value, .. } => {
+                collect_typed_refs_in_expr(value, refs);
+            }
+            HirStmt::Return { value: Some(expr) } => {
+                collect_typed_refs_in_expr(expr, refs);
+            }
+            HirStmt::Expr { expr } => {
+                collect_typed_refs_in_expr(expr, refs);
+            }
+            HirStmt::If { condition, then_body, elif_clauses, else_body } => {
+                collect_typed_refs_in_expr(condition, refs);
+                collect_referenced_vars_with_types_inner(then_body, refs);
+                for (cond, body) in elif_clauses {
+                    collect_typed_refs_in_expr(cond, refs);
+                    collect_referenced_vars_with_types_inner(body, refs);
+                }
+                if let Some(body) = else_body {
+                    collect_referenced_vars_with_types_inner(body, refs);
+                }
+            }
+            HirStmt::While { condition, body, .. } => {
+                collect_typed_refs_in_expr(condition, refs);
+                collect_referenced_vars_with_types_inner(body, refs);
+            }
+            HirStmt::For { iter, body, .. } => {
+                collect_typed_refs_in_expr(iter, refs);
+                collect_referenced_vars_with_types_inner(body, refs);
+            }
+            HirStmt::FieldAssign { value, .. } => {
+                collect_typed_refs_in_expr(value, refs);
+            }
+            HirStmt::SubscriptAssign { index, value, .. } => {
+                collect_typed_refs_in_expr(index, refs);
+                collect_typed_refs_in_expr(value, refs);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
+    match expr {
+        HirExpr::Name { name, ty } => {
+            refs.entry(name.clone()).or_insert_with(|| ty.clone());
+        }
+        HirExpr::BinOp { left, right, .. } => {
+            collect_typed_refs_in_expr(left, refs);
+            collect_typed_refs_in_expr(right, refs);
+        }
+        HirExpr::BoolOp { values, .. } => {
+            for v in values {
+                collect_typed_refs_in_expr(v, refs);
+            }
+        }
+        HirExpr::UnaryOp { operand, .. } => {
+            collect_typed_refs_in_expr(operand, refs);
+        }
+        HirExpr::Compare { left, comparators, .. } => {
+            collect_typed_refs_in_expr(left, refs);
+            for c in comparators {
+                collect_typed_refs_in_expr(c, refs);
+            }
+        }
+        HirExpr::Call { args, .. } => {
+            for a in args {
+                collect_typed_refs_in_expr(a, refs);
+            }
+        }
+        HirExpr::MethodCall { object, args, .. } => {
+            collect_typed_refs_in_expr(object, refs);
+            for a in args {
+                collect_typed_refs_in_expr(a, refs);
+            }
+        }
+        HirExpr::Index { object, index, .. } => {
+            collect_typed_refs_in_expr(object, refs);
+            collect_typed_refs_in_expr(index, refs);
+        }
+        HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
+            collect_typed_refs_in_expr(condition, refs);
+            collect_typed_refs_in_expr(then_expr, refs);
+            collect_typed_refs_in_expr(else_expr, refs);
+        }
+        HirExpr::ListLiteral { elements, .. } | HirExpr::TupleLiteral { elements, .. } | HirExpr::SetLiteral { elements, .. } => {
+            for e in elements {
+                collect_typed_refs_in_expr(e, refs);
+            }
+        }
+        HirExpr::DictLiteral { keys, values, .. } => {
+            for k in keys { collect_typed_refs_in_expr(k, refs); }
+            for v in values { collect_typed_refs_in_expr(v, refs); }
+        }
+        HirExpr::Lambda { body, .. } => {
+            collect_typed_refs_in_expr(body, refs);
+        }
+        _ => {}
+    }
+}
+
+/// Collect all variable names defined (let-bound) in a list of statements.
+/// Does NOT recurse into nested functions.
+fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String> {
+    let mut defined = HashSet::new();
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Let { name, .. } => {
+                defined.insert(name.clone());
+            }
+            HirStmt::For { target, body, .. } => {
+                defined.insert(target.clone());
+                // Also collect from body
+                defined.extend(collect_locally_defined_vars(body));
+            }
+            HirStmt::TupleUnpack { targets, .. } => {
+                for (name, _) in targets {
+                    defined.insert(name.clone());
+                }
+            }
+            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+                defined.extend(collect_locally_defined_vars(then_body));
+                for (_, body) in elif_clauses {
+                    defined.extend(collect_locally_defined_vars(body));
+                }
+                if let Some(body) = else_body {
+                    defined.extend(collect_locally_defined_vars(body));
+                }
+            }
+            HirStmt::While { body, .. } => {
+                defined.extend(collect_locally_defined_vars(body));
+            }
+            HirStmt::NestedFunction { func } => {
+                // The nested function name itself is defined
+                defined.insert(func.name.clone());
+            }
+            _ => {}
+        }
+    }
+    defined
+}
+
+/// Check if a function body contains calls to a specific function name.
+fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Let { value, .. } => {
+                if expr_calls_function(value, func_name) { return true; }
+            }
+            HirStmt::Assign { value, .. } => {
+                if expr_calls_function(value, func_name) { return true; }
+            }
+            HirStmt::AugAssign { value, .. } => {
+                if expr_calls_function(value, func_name) { return true; }
+            }
+            HirStmt::Return { value: Some(expr) } => {
+                if expr_calls_function(expr, func_name) { return true; }
+            }
+            HirStmt::Expr { expr } => {
+                if expr_calls_function(expr, func_name) { return true; }
+            }
+            HirStmt::If { condition, then_body, elif_clauses, else_body } => {
+                if expr_calls_function(condition, func_name) { return true; }
+                if body_calls_function(then_body, func_name) { return true; }
+                for (cond, body) in elif_clauses {
+                    if expr_calls_function(cond, func_name) { return true; }
+                    if body_calls_function(body, func_name) { return true; }
+                }
+                if let Some(body) = else_body {
+                    if body_calls_function(body, func_name) { return true; }
+                }
+            }
+            HirStmt::While { condition, body, .. } => {
+                if expr_calls_function(condition, func_name) { return true; }
+                if body_calls_function(body, func_name) { return true; }
+            }
+            HirStmt::For { body, .. } => {
+                if body_calls_function(body, func_name) { return true; }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
+    match expr {
+        HirExpr::Call { func, args, .. } => {
+            if func == func_name { return true; }
+            args.iter().any(|a| expr_calls_function(a, func_name))
+        }
+        HirExpr::BinOp { left, right, .. } => {
+            expr_calls_function(left, func_name) || expr_calls_function(right, func_name)
+        }
+        HirExpr::BoolOp { values, .. } => {
+            values.iter().any(|v| expr_calls_function(v, func_name))
+        }
+        HirExpr::UnaryOp { operand, .. } => {
+            expr_calls_function(operand, func_name)
+        }
+        HirExpr::Compare { left, comparators, .. } => {
+            expr_calls_function(left, func_name) || comparators.iter().any(|c| expr_calls_function(c, func_name))
+        }
+        HirExpr::MethodCall { object, args, .. } => {
+            expr_calls_function(object, func_name) || args.iter().any(|a| expr_calls_function(a, func_name))
+        }
+        HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
+            expr_calls_function(condition, func_name) || expr_calls_function(then_expr, func_name) || expr_calls_function(else_expr, func_name)
+        }
+        HirExpr::Index { object, index, .. } => {
+            expr_calls_function(object, func_name) || expr_calls_function(index, func_name)
+        }
+        HirExpr::ListLiteral { elements, .. } | HirExpr::TupleLiteral { elements, .. } | HirExpr::SetLiteral { elements, .. } => {
+            elements.iter().any(|e| expr_calls_function(e, func_name))
+        }
+        HirExpr::Lambda { body, .. } => {
+            expr_calls_function(body, func_name)
+        }
+        _ => false,
     }
 }
 

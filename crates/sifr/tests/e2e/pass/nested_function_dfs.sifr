@@ -1,0 +1,31 @@
+# Test: Multiple nested functions and nested calls
+# expect-stdout: 15
+# expect-stdout: 20
+# expect-stdout: 6
+
+def compute() -> int:
+    base: int = 5
+    def double(x: int) -> int:
+        return x * 2
+    def add_base(x: int) -> int:
+        return x + base
+    return add_base(double(base))
+
+def sum_list(items: list[int]) -> int:
+    total: int = 0
+    for item in items:
+        total = total + item
+    return total
+
+def with_helper(n: int) -> int:
+    def step(x: int) -> int:
+        if x <= 0:
+            return 0
+        return x + step(x - 1)
+    return step(n)
+
+def main():
+    print(compute())
+    nums: list[int] = [2, 4, 6, 8]
+    print(sum_list(nums))
+    print(with_helper(3))

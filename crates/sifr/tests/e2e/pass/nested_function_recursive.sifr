@@ -1,0 +1,12 @@
+# Test: Recursive nested function (common DFS/backtracking pattern)
+# expect-stdout: 120
+
+def factorial_wrapper(n: int) -> int:
+    def helper(x: int) -> int:
+        if x <= 1:
+            return 1
+        return x * helper(x - 1)
+    return helper(n)
+
+def main():
+    print(factorial_wrapper(5))
