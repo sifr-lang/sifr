@@ -225,7 +225,7 @@ flowchart TD
     milestone_protocols --> milestone_inheritance --> milestone_generics
     milestone_generics --> milestone_generators --> milestone_decorators --> milestone_core_stdlib
     milestone_core_stdlib --> milestone_test_runner --> milestone_ext_collections --> milestone_ext_stdlib
-    milestone_ext_stdlib --> milestone_async --> milestone_web_db --> milestone_data_processing
+    milestone_ext_stdlib --> milestone_codegen_quality_v3 --> milestone_async --> milestone_web_db --> milestone_data_processing
     milestone_data_processing --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
 ```
 
@@ -2222,6 +2222,35 @@ Depends on milestone_core_stdlib: needs `sifr.io` for test file discovery and `s
 
 ---
 
+## milestone_codegen_quality_v3: Phase 3 Codegen Polish
+
+**Goal:** Clean up the emitted Rust code from Phase 3 stdlib modules. Eliminate redundant allocations, unnecessary clones, and improve the idiomatic quality of generated code for all stdlib function calls.
+
+### Quality Issues
+
+1. **Redundant `.to_string()` on string literal args** — stdlib functions that accept `&str` receive `"literal".to_string()` instead of `"literal"` directly
+2. **Redundant `.clone()` on `vec![...]` literals** — set operations clone freshly-created vecs
+3. **`json_dumps` emits `.clone()` instead of `serde_json::to_string`** — incorrect serialization
+4. **`set_intersection` re-creates second set inside filter closure** — O(n*m) allocation instead of O(n+m)
+5. **`re_replace` uses `.to_string().as_str()`** — unnecessary String allocation
+6. **Hash/encoding functions use `.to_string().as_bytes()`** — should use `.as_bytes()` directly on literals
+
+### Implementation
+
+Add `emit_expr_as_str_ref` helper to `RustEmitter` that emits bare `"literal"` for string literals and `&expr` for variables. Update all stdlib codegen call sites.
+
+### Definition of Done (milestone_codegen_quality_v3)
+
+- All stdlib function calls emit clean, idiomatic Rust without redundant allocations
+- String literals passed directly to Rust APIs that accept `&str` / `AsRef<str>`
+- Vec literals not cloned unnecessarily in set operations
+- `json_dumps` uses `serde_json::to_string`
+- `set_intersection` hoists second arg before filter
+- All existing E2E tests pass (no regressions)
+- All Phase 3 demos produce identical output with cleaner Rust
+
+---
+
 ## milestone_async: Async Runtime
 
 **Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that milestone_web_db (web, database) builds on.
@@ -2747,6 +2776,7 @@ PHASE 3 - Standard Library:
   milestone_test_runner:  Test Runner                -> sifr test, assertions, discovery, parallel
   milestone_ext_collections:  Extended Collections       -> frozenset, Counter, defaultdict, bytes, bytearray
   milestone_ext_stdlib:  Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
+  milestone_codegen_quality_v3:  Phase 3 Codegen Polish  -> Remove redundant .to_string() on literals, .clone() on vec literals, fix json_dumps, hoist set_intersection args, clean re_replace/hash/encoding codegen
 
 PHASE 4 - Ecosystem:
   milestone_async:  Async Runtime              -> async/await, tokio, tasks, async streams

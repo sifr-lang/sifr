@@ -6,9 +6,9 @@ def main():
     data: str = json_loads("{\"name\":\"sifr\"}")
     print(data)
 
-    # Dumps (for now, just returns the string)
+    # Dumps serializes to JSON (strings get quoted)
     output: str = json_dumps("hello")
     print(output)
 
 # expect-stdout: {"name":"sifr"}
-# expect-stdout: hello
+# expect-stdout: "hello"
