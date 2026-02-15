@@ -45,6 +45,8 @@ pub struct HirClass {
     pub implements_protocols: Vec<String>,
     /// Parent class name for single inheritance
     pub parent_class: Option<String>,
+    /// Generic type parameters (e.g., T, K, V from PEP 695 or TypeVar)
+    pub type_params: Vec<String>,
 }
 
 /// Method kind: regular, classmethod, or staticmethod
@@ -404,28 +406,23 @@ pub enum HirExpr {
         ty: Type,
     },
     /// List comprehension: [expr for var in iter] or [expr for var in iter if cond]
+    /// Supports multiple generators: [expr for v1 in iter1 for v2 in iter2 ...]
     ListComp {
         expr: Box<HirExpr>,
-        var: String,
-        iter: Box<HirExpr>,
-        filter: Option<Box<HirExpr>>,
+        generators: Vec<(String, HirExpr, Option<HirExpr>)>,
         ty: Type,
     },
     /// Dict comprehension: {key: val for var in iter}
     DictComp {
         key_expr: Box<HirExpr>,
         val_expr: Box<HirExpr>,
-        var: String,
-        iter: Box<HirExpr>,
-        filter: Option<Box<HirExpr>>,
+        generators: Vec<(String, HirExpr, Option<HirExpr>)>,
         ty: Type,
     },
     /// Set comprehension: {expr for var in iter}
     SetComp {
         expr: Box<HirExpr>,
-        var: String,
-        iter: Box<HirExpr>,
-        filter: Option<Box<HirExpr>>,
+        generators: Vec<(String, HirExpr, Option<HirExpr>)>,
         ty: Type,
     },
     /// Generator expression: (expr for var in iter) -> lazy iterator

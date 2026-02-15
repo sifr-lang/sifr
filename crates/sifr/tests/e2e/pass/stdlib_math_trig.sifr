@@ -1,0 +1,17 @@
+# Test new math stdlib functions
+from sifr.math import log, sin, cos, tan, abs_val, pow_val, round_val
+
+def main():
+    print(log(1.0))
+    print(sin(0.0))
+    print(cos(0.0))
+    print(abs_val(-5.0))
+    print(pow_val(2.0, 3.0))
+    print(round_val(3.7))
+
+# expect-stdout: 0
+# expect-stdout: 0
+# expect-stdout: 1
+# expect-stdout: 5
+# expect-stdout: 8
+# expect-stdout: 4

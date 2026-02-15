@@ -1,5 +1,5 @@
 # Test sifr.hash stdlib module
-from sifr.hash import sha256, md5_hash
+from sifr.hash import sha256, md5
 
 def main():
     # SHA-256 of empty string
@@ -7,7 +7,7 @@ def main():
     print(h)
 
     # MD5 of empty string
-    m: str = md5_hash("")
+    m: str = md5("")
     print(m)
 
 # expect-stdout: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855

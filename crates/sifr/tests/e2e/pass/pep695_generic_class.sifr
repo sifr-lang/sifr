@@ -1,0 +1,15 @@
+# Test PEP 695 inline generic class syntax: class C[T]
+class Wrapper[T]:
+    value: T
+
+    def __init__(self, value: T):
+        self.value = value
+
+    def get(self) -> T:
+        return self.value
+
+def main():
+    w = Wrapper(99)
+    print(w.get())
+
+# expect-stdout: 99

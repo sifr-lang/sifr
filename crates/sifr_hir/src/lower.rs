@@ -268,6 +268,18 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
     }
     for stmt in stmts {
         if let Stmt::FunctionDef(func) = stmt {
+            // PEP 695: register inline type params (def f[T](...)) as type variables
+            let mut pep695_type_vars = Vec::new();
+            if let Some(ref type_params) = func.type_params {
+                for tp in type_params.iter() {
+                    if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
+                        let name = tv.name.to_string();
+                        ctx.type_vars.insert(name.clone());
+                        pep695_type_vars.push(name);
+                    }
+                }
+            }
+
             if let Some(ft) = extract_function_type(func, &mut ctx) {
                 // Track which type variables this function uses (makes it generic)
                 let mut func_type_vars = Vec::new();
@@ -275,6 +287,12 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                     collect_type_vars(ty, &mut func_type_vars);
                 }
                 collect_type_vars(&ft.return_type, &mut func_type_vars);
+                // Also include PEP 695 type params
+                for tv in &pep695_type_vars {
+                    if !func_type_vars.contains(tv) {
+                        func_type_vars.push(tv.clone());
+                    }
+                }
                 func_type_vars.sort();
                 func_type_vars.dedup();
                 if !func_type_vars.is_empty() {
@@ -560,6 +578,15 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     let is_protocol = is_protocol_class(class_def);
     let newtype_inner = get_newtype_inner(class_def);
 
+    // PEP 695: register inline type params (class C[T]) as type variables
+    if let Some(ref type_params) = class_def.type_params {
+        for tp in type_params.iter() {
+            if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
+                ctx.type_vars.insert(tv.name.to_string());
+            }
+        }
+    }
+
     // For newtype declarations, register as a Newtype type
     if let Some(ref inner) = newtype_inner {
         let newtype_ty = Type::Newtype {
@@ -797,6 +824,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: None,
+            type_params: Vec::new(),
         });
     }
 
@@ -845,6 +873,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             newtype_inner: Some(inner.clone()),
             parent_class: None,
             implements_protocols: Vec::new(),
+            type_params: Vec::new(),
         });
     }
 
@@ -999,6 +1028,19 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         }
     }
 
+    // Collect PEP 695 type params for the class
+    let class_type_params: Vec<String> = if let Some(ref type_params) = class_def.type_params {
+        type_params.iter().filter_map(|tp| {
+            if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
+                Some(tv.name.to_string())
+            } else {
+                None
+            }
+        }).collect()
+    } else {
+        Vec::new()
+    };
+
     Some(HirClass {
         name: class_name,
         fields: own_fields,
@@ -1010,6 +1052,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         newtype_inner: None,
         implements_protocols,
         parent_class: parent_class_name,
+        type_params: class_type_params,
     })
 }
 
@@ -4439,6 +4482,20 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 None
             }
         }
+        Type::Protocol { name, methods, .. } => {
+            if let Some((_, ft)) = methods.iter().find(|(n, _)| n == method) {
+                if args.len() != ft.params.len() {
+                    ctx.error(format!(
+                        "{}.{}() takes {} argument(s), got {}",
+                        name, method, ft.params.len(), args.len()
+                    ));
+                }
+                Some(*ft.return_type.clone())
+            } else {
+                ctx.error(format!("protocol '{}' has no method '{}'", name, method));
+                None
+            }
+        }
         Type::Newtype { name, inner } => {
             // Newtype has a built-in `value()` method that returns the inner type
             if method == "value" {
@@ -4730,221 +4787,183 @@ fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
 }
 
 fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    // Only support single generator for now: [expr for var in iter] or [expr for var in iter if cond]
-    if comp.generators.len() != 1 {
-        ctx.error("only single-generator list comprehensions are supported".to_string());
+    if comp.generators.is_empty() {
+        ctx.error("list comprehension must have at least one generator".to_string());
         return None;
     }
 
-    let gen = &comp.generators[0];
+    let mut generators = Vec::new();
+    let num_gens = comp.generators.len();
 
-    // Get the variable name(s)
-    let var_name = match &gen.target {
-        Expr::Name(n) => n.id.to_string(),
-        Expr::Tuple(tup) => {
-            let names: Vec<String> = tup.elts.iter().filter_map(|e| {
-                if let Expr::Name(n) = e {
-                    Some(n.id.to_string())
-                } else {
-                    None
+    // Process each generator: push scope, define var, lower iter
+    for gen in &comp.generators {
+        let var_name = match &gen.target {
+            Expr::Name(n) => n.id.to_string(),
+            Expr::Tuple(tup) => {
+                let names: Vec<String> = tup.elts.iter().filter_map(|e| {
+                    if let Expr::Name(n) = e { Some(n.id.to_string()) } else { None }
+                }).collect();
+                if names.len() != tup.elts.len() {
+                    ctx.error("comprehension tuple target must contain only simple names".to_string());
+                    return None;
                 }
-            }).collect();
-            if names.len() != tup.elts.len() {
-                ctx.error("comprehension tuple target must contain only simple names".to_string());
+                names.join(",")
+            }
+            _ => {
+                ctx.error("comprehension target must be a simple name or tuple".to_string());
                 return None;
             }
-            names.join(",")
-        }
-        _ => {
-            ctx.error("comprehension target must be a simple name or tuple".to_string());
-            return None;
-        }
-    };
+        };
 
-    // Lower the iterable
-    let iter_expr = lower_expr(&gen.iter, ctx)?;
-    let iter_ty = iter_expr.ty().clone();
+        let iter_expr = lower_expr(&gen.iter, ctx)?;
+        let iter_ty = iter_expr.ty().clone();
+        let elem_ty = match &iter_ty {
+            Type::List(elem) => *elem.clone(),
+            Type::Set(elem) => *elem.clone(),
+            Type::Str => Type::Str,
+            Type::Range => Type::Int,
+            Type::Dict(key, _) => *key.clone(),
+            Type::Tuple(elems) if !elems.is_empty() => elems[0].clone(),
+            _ => {
+                ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name()));
+                return None;
+            }
+        };
 
-    // Determine element type from the iterable
-    let elem_ty = match &iter_ty {
-        Type::List(elem) => *elem.clone(),
-        Type::Set(elem) => *elem.clone(),
-        Type::Str => Type::Str,
-        Type::Range => Type::Int,
-        Type::Dict(key, _) => *key.clone(),
-        Type::Tuple(elems) if !elems.is_empty() => elems[0].clone(),
-        _ => {
-            ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name()));
-            return None;
-        }
-    };
-
-    // Push scope and define the loop variable(s)
-    ctx.scope.push();
-    if var_name.contains(',') {
-        let names: Vec<&str> = var_name.split(',').collect();
-        if let Type::Tuple(elem_types) = &elem_ty {
-            for (i, name) in names.iter().enumerate() {
-                let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
-                ctx.scope.define(name.to_string(), ty);
+        ctx.scope.push();
+        if var_name.contains(',') {
+            let names: Vec<&str> = var_name.split(',').collect();
+            if let Type::Tuple(elem_types) = &elem_ty {
+                for (i, name) in names.iter().enumerate() {
+                    let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
+                    ctx.scope.define(name.to_string(), ty);
+                }
+            } else {
+                for name in &names { ctx.scope.define(name.to_string(), Type::Any); }
             }
         } else {
-            for name in &names {
-                ctx.scope.define(name.to_string(), Type::Any);
-            }
+            ctx.scope.define(var_name.clone(), elem_ty.clone());
         }
-    } else {
-        ctx.scope.define(var_name.clone(), elem_ty.clone());
+
+        let filter = if !gen.ifs.is_empty() {
+            let first = lower_expr(&gen.ifs[0], ctx)?;
+            if gen.ifs.len() == 1 {
+                Some(first)
+            } else {
+                let mut combined = first;
+                for cond in &gen.ifs[1..] {
+                    let next = lower_expr(cond, ctx)?;
+                    combined = HirExpr::BoolOp {
+                        op: "and".to_string(),
+                        values: vec![combined, next],
+                        ty: Type::Bool,
+                    };
+                }
+                Some(combined)
+            }
+        } else {
+            None
+        };
+
+        generators.push((var_name, iter_expr, filter));
     }
 
-    // Lower the expression
+    // Lower the expression (all generator vars are in scope)
     let expr = lower_expr(&comp.elt, ctx)?;
     let expr_ty = expr.ty().clone();
 
-    // Lower the filter condition if present
-    let filter = if !gen.ifs.is_empty() {
-        // Combine multiple ifs with `and`
-        let first = lower_expr(&gen.ifs[0], ctx)?;
-        if gen.ifs.len() == 1 {
-            Some(Box::new(first))
-        } else {
-            // Multiple ifs: combine with BoolOp And
-            let mut combined = first;
-            for cond in &gen.ifs[1..] {
-                let next = lower_expr(cond, ctx)?;
-                combined = HirExpr::BoolOp {
-                    op: "and".to_string(),
-                    values: vec![combined, next],
-                    ty: Type::Bool,
-                };
-            }
-            Some(Box::new(combined))
-        }
-    } else {
-        None
-    };
-
-    ctx.scope.pop();
+    // Pop all scopes
+    for _ in 0..num_gens {
+        ctx.scope.pop();
+    }
 
     let result_ty = Type::List(Box::new(expr_ty));
 
     Some(HirExpr::ListComp {
         expr: Box::new(expr),
-        var: var_name,
-        iter: Box::new(iter_expr),
-        filter,
+        generators,
         ty: result_ty,
     })
 }
 
 fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    if comp.generators.len() != 1 {
-        ctx.error("only single-generator set comprehensions are supported".to_string());
-        return None;
+    let mut generators = Vec::new();
+    let num_gens = comp.generators.len();
+    for gen in &comp.generators {
+        let var_name = match &gen.target {
+            Expr::Name(n) => n.id.to_string(),
+            _ => { ctx.error("set comprehension target must be a simple name".to_string()); return None; }
+        };
+        let iter_expr = lower_expr(&gen.iter, ctx)?;
+        let iter_ty = iter_expr.ty().clone();
+        let elem_ty = match &iter_ty {
+            Type::List(elem) => *elem.clone(),
+            Type::Set(elem) => *elem.clone(),
+            Type::Range => Type::Int,
+            _ => { ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name())); return None; }
+        };
+        ctx.scope.push();
+        ctx.scope.define(var_name.clone(), elem_ty);
+        let filter = if !gen.ifs.is_empty() { Some(lower_expr(&gen.ifs[0], ctx)?) } else { None };
+        generators.push((var_name, iter_expr, filter));
     }
-    let gen = &comp.generators[0];
-    let var_name = match &gen.target {
-        Expr::Name(n) => n.id.to_string(),
-        _ => {
-            ctx.error("set comprehension target must be a simple name".to_string());
-            return None;
-        }
-    };
-    let iter_expr = lower_expr(&gen.iter, ctx)?;
-    let iter_ty = iter_expr.ty().clone();
-    let elem_ty = match &iter_ty {
-        Type::List(elem) => *elem.clone(),
-        Type::Set(elem) => *elem.clone(),
-        Type::Range => Type::Int,
-        _ => {
-            ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name()));
-            return None;
-        }
-    };
-    ctx.scope.push();
-    ctx.scope.define(var_name.clone(), elem_ty);
     let expr = lower_expr(&comp.elt, ctx)?;
     let expr_ty = expr.ty().clone();
-    let filter = if !gen.ifs.is_empty() {
-        Some(Box::new(lower_expr(&gen.ifs[0], ctx)?))
-    } else {
-        None
-    };
-    ctx.scope.pop();
+    for _ in 0..num_gens { ctx.scope.pop(); }
     let result_ty = Type::Set(Box::new(expr_ty));
-    Some(HirExpr::SetComp {
-        expr: Box::new(expr),
-        var: var_name,
-        iter: Box::new(iter_expr),
-        filter,
-        ty: result_ty,
-    })
+    Some(HirExpr::SetComp { expr: Box::new(expr), generators, ty: result_ty })
 }
 
 fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    if comp.generators.len() != 1 {
-        ctx.error("only single-generator dict comprehensions are supported".to_string());
-        return None;
-    }
-    let gen = &comp.generators[0];
-    let var_name = match &gen.target {
-        Expr::Name(n) => n.id.to_string(),
-        Expr::Tuple(tup) => {
-            let names: Vec<String> = tup.elts.iter().filter_map(|e| {
-                if let Expr::Name(n) = e { Some(n.id.to_string()) } else { None }
-            }).collect();
-            names.join(",")
-        }
-        _ => {
-            ctx.error("dict comprehension target must be a simple name or tuple".to_string());
-            return None;
-        }
-    };
-    let iter_expr = lower_expr(&gen.iter, ctx)?;
-    let iter_ty = iter_expr.ty().clone();
-    let elem_ty = match &iter_ty {
-        Type::List(elem) => *elem.clone(),
-        Type::Set(elem) => *elem.clone(),
-        Type::Range => Type::Int,
-        Type::Dict(key, _) => *key.clone(),
-        _ => {
-            ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name()));
-            return None;
-        }
-    };
-    ctx.scope.push();
-    if var_name.contains(',') {
-        let names: Vec<&str> = var_name.split(',').collect();
-        if let Type::Tuple(elem_types) = &elem_ty {
-            for (i, name) in names.iter().enumerate() {
-                let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
-                ctx.scope.define(name.to_string(), ty);
+    let mut generators = Vec::new();
+    let num_gens = comp.generators.len();
+    for gen in &comp.generators {
+        let var_name = match &gen.target {
+            Expr::Name(n) => n.id.to_string(),
+            Expr::Tuple(tup) => {
+                let names: Vec<String> = tup.elts.iter().filter_map(|e| {
+                    if let Expr::Name(n) = e { Some(n.id.to_string()) } else { None }
+                }).collect();
+                names.join(",")
+            }
+            _ => { ctx.error("dict comprehension target must be a simple name or tuple".to_string()); return None; }
+        };
+        let iter_expr = lower_expr(&gen.iter, ctx)?;
+        let iter_ty = iter_expr.ty().clone();
+        let elem_ty = match &iter_ty {
+            Type::List(elem) => *elem.clone(),
+            Type::Set(elem) => *elem.clone(),
+            Type::Range => Type::Int,
+            Type::Dict(key, _) => *key.clone(),
+            _ => { ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name())); return None; }
+        };
+        ctx.scope.push();
+        if var_name.contains(',') {
+            let names: Vec<&str> = var_name.split(',').collect();
+            if let Type::Tuple(elem_types) = &elem_ty {
+                for (i, name) in names.iter().enumerate() {
+                    let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
+                    ctx.scope.define(name.to_string(), ty);
+                }
+            } else {
+                for name in &names { ctx.scope.define(name.to_string(), Type::Any); }
             }
         } else {
-            for name in &names {
-                ctx.scope.define(name.to_string(), Type::Any);
-            }
+            ctx.scope.define(var_name.clone(), elem_ty);
         }
-    } else {
-        ctx.scope.define(var_name.clone(), elem_ty);
+        let filter = if !gen.ifs.is_empty() { Some(lower_expr(&gen.ifs[0], ctx)?) } else { None };
+        generators.push((var_name, iter_expr, filter));
     }
     let key_expr = lower_expr(&comp.key, ctx)?;
     let val_expr = lower_expr(&comp.value, ctx)?;
     let key_ty = key_expr.ty().clone();
     let val_ty = val_expr.ty().clone();
-    let filter = if !gen.ifs.is_empty() {
-        Some(Box::new(lower_expr(&gen.ifs[0], ctx)?))
-    } else {
-        None
-    };
-    ctx.scope.pop();
+    for _ in 0..num_gens { ctx.scope.pop(); }
     let result_ty = Type::Dict(Box::new(key_ty), Box::new(val_ty));
     Some(HirExpr::DictComp {
         key_expr: Box::new(key_expr),
         val_expr: Box::new(val_expr),
-        var: var_name,
-        iter: Box::new(iter_expr),
-        filter,
+        generators,
         ty: result_ty,
     })
 }
