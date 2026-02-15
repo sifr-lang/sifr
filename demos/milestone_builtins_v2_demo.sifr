@@ -1,0 +1,17 @@
+# milestone_builtins_v2 Demo
+# expect-stdout: max(3, 7) = 7
+# expect-stdout: min(3, 7) = 3
+# expect-stdout: pow(2, 10) = 1024
+# expect-stdout: 0 2 4 6 8
+
+def main():
+    print(f"max(3, 7) = {max(3, 7)}")
+    print(f"min(3, 7) = {min(3, 7)}")
+    print(f"pow(2, 10) = {pow(2, 10)}")
+
+    result: str = ""
+    for i in range(0, 10, 2):
+        if len(result) > 0:
+            result = result + " "
+        result = result + str(i)
+    print(result)

@@ -1,0 +1,12 @@
+# Borrowed args work in loops without issues
+def get_length(items: list[int]) -> int:
+    return len(items)
+
+def main():
+    my_list: list[int] = [1, 2, 3]
+    total: int = 0
+    for i in range(3):
+        total = total + get_length(my_list)
+    print(total)
+    # my_list is still usable after loop
+    print(my_list)

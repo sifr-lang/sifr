@@ -1,0 +1,41 @@
+# ============================================================
+# Milestone 12: Forward Type References Demo
+# ============================================================
+# Functions can now reference classes defined later in the file.
+# This is critical for LeetCode problems using ListNode, TreeNode, etc.
+
+# --- Functions using classes defined BELOW ---
+def get_node_val(node: Node) -> int:
+    return node.value
+
+def describe_person(p: Person) -> str:
+    return p.name
+
+# --- Classes defined after the functions that use them ---
+class Node:
+    value: int
+
+class Person:
+    name: str
+    age: int
+
+# --- Mutual reference pattern ---
+def process(item: Item) -> int:
+    return item.priority
+
+class Item:
+    priority: int
+    label: str
+
+def main():
+    # Forward ref: function defined before class
+    n: Node = Node(42)
+    print(get_node_val(n))  # 42
+
+    # Forward ref with multiple fields
+    p: Person = Person("Alice", 30)
+    print(describe_person(p))  # Alice
+
+    # Forward ref with class defined after function
+    it: Item = Item(5, "urgent")
+    print(process(it))  # 5

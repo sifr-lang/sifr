@@ -1,0 +1,9 @@
+# own keyword: explicit ownership transfer
+def consume(own items: list[int]) -> int:
+    return len(items)
+
+def main():
+    my_list: list[int] = [10, 20, 30]
+    count: int = consume(my_list)
+    # my_list is moved, cannot use after this
+    print(count)

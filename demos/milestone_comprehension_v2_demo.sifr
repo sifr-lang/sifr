@@ -1,0 +1,26 @@
+# ============================================================
+# Milestone 16: Comprehension V2 Demo
+# ============================================================
+# Demonstrates:
+# 1. Comprehension over range
+# 2. Dict comprehension
+# 3. Set comprehension
+# 4. Tuple unpacking in for loops
+
+# --- 1. Comprehension over range ---
+def main():
+    squares: list[int] = [x * x for x in range(6)]
+    print(len(squares))
+
+    # --- 2. Dict comprehension ---
+    square_map: dict[int, int] = {x: x * x for x in range(4)}
+    print(len(square_map))
+
+    # --- 3. Set comprehension ---
+    unique_mods: set[int] = {x % 3 for x in range(10)}
+    print(len(unique_mods))
+
+    # --- 4. Tuple unpacking in for loops ---
+    pairs: list[tuple[str, int]] = [("alice", 95), ("bob", 87)]
+    for name, score in pairs:
+        print(name)

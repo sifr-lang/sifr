@@ -1,0 +1,40 @@
+# ============================================================
+# Milestone 15: Subscript V2 Demo
+# ============================================================
+# Demonstrates:
+# 1. Nested subscript assignment (matrix[i][j] = val)
+# 2. Augmented subscript assignment (list[i] += val)
+# 3. &mut self for methods that mutate fields
+
+# --- 1. Nested subscript assignment ---
+def main():
+    # Matrix operations
+    matrix: list[list[int]] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    matrix[0][0] = 1
+    matrix[1][1] = 1
+    matrix[2][2] = 1
+    # Print identity matrix diagonal
+    print(matrix[0][0])
+    print(matrix[1][1])
+    print(matrix[2][2])
+
+    # --- 2. Augmented subscript assignment ---
+    scores: list[int] = [10, 20, 30]
+    scores[0] += 5
+    scores[1] -= 3
+    scores[2] *= 2
+    print(scores[0])
+    print(scores[1])
+    print(scores[2])
+
+    # --- 3. &mut self for methods ---
+    c: Counter = Counter(0)
+    c.increment()
+    c.increment()
+    c.increment()
+    print(c.count)
+
+class Counter:
+    count: int
+    def increment(self) -> None:
+        self.count += 1

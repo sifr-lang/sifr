@@ -1,0 +1,57 @@
+# ============================================================
+# Milestone 14: Union Type Operations Demo
+# ============================================================
+# Demonstrates:
+# 1. Arithmetic on T|None (auto-unwrap)
+# 2. len() on union/optional types
+# 3. list + list concatenation
+# 4. dict.get(key, default) 2-arg form
+# 5. list.remove(val) and list.index(val)
+
+# --- 1. Arithmetic on T|None ---
+def increment(x: int | None) -> int:
+    return x + 1
+
+def double(x: float | None) -> float:
+    return x * 2.0
+
+# --- 2. len() on union types ---
+def safe_len(items: list[str] | None) -> int:
+    return len(items)
+
+# --- 3. list + list concatenation ---
+def merge_lists(a: list[int], b: list[int]) -> list[int]:
+    return a + b
+
+# --- 4. dict.get with default ---
+def lookup(d: dict[str, int], key: str) -> int:
+    return d.get(key, -1)
+
+# --- 5. list.remove ---
+def remove_first(items: list[int], val: int) -> list[int]:
+    items.remove(val)
+    return items
+
+def main():
+    # 1. Arithmetic on T|None
+    v: int | None = 10
+    print(increment(v))
+    f: float | None = 3.14
+    print(double(f))
+
+    # 2. len() on union types
+    names: list[str] | None = ["alice", "bob", "charlie"]
+    print(safe_len(names))
+
+    # 3. list + list concatenation
+    merged: list[int] = merge_lists([1, 2, 3], [4, 5, 6])
+    print(len(merged))
+
+    # 4. dict.get with default
+    scores: dict[str, int] = {"alice": 95, "bob": 87}
+    print(lookup(scores, "alice"))
+
+    # 5. list.remove
+    nums: list[int] = [10, 20, 30, 20]
+    result: list[int] = remove_first(nums, 20)
+    print(len(result))

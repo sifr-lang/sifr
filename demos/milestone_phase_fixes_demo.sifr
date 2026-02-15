@@ -1,0 +1,44 @@
+# ============================================================
+# Milestone 18: Phase Bug Fixes and Polish Demo
+# ============================================================
+# This demo showcases:
+# 1. Module-level constants accessible from functions
+# 2. @classmethod cls() constructor calls
+# 3. Mixed f64 * i64 arithmetic
+# ============================================================
+
+# --- 1. Module-level constants ---
+PI: float = 3.14159
+MAX_RETRIES: int = 3
+APP_NAME: str = "sifr"
+DEBUG: bool = True
+
+def circle_area(r: float) -> float:
+    return PI * r * r
+
+def get_config() -> str:
+    return f"{APP_NAME} (debug={DEBUG}, retries={MAX_RETRIES})"
+
+# --- 2. @classmethod cls() constructor ---
+class Temperature:
+    celsius: float
+
+    def __init__(self, celsius: float):
+        self.celsius = celsius
+
+    @classmethod
+    def from_fahrenheit(cls, f: float) -> Temperature:
+        return cls((f - 32.0) * 5.0 / 9.0)
+
+def main():
+    # Module-level constants
+    print(circle_area(5.0))
+    print(get_config())
+    print(PI)
+    print(MAX_RETRIES)
+
+    # @classmethod cls() constructor
+    t: Temperature = Temperature(100.0)
+    print(t.celsius)
+    t2: Temperature = Temperature.from_fahrenheit(212.0)
+    print(t2.celsius)

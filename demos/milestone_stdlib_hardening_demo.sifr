@@ -1,0 +1,22 @@
+# Milestone 10: stdlib hardening demo
+# Demonstrates: set type, set methods, set iteration
+
+def main():
+    # Set literal
+    fruits: set[str] = {"apple", "banana", "cherry"}
+    print(fruits.len())
+
+    # Add and contains
+    fruits.add("date")
+    print(fruits.contains("date"))
+
+    # Remove
+    fruits.remove("banana")
+    print(fruits.len())
+
+    # Iteration over set
+    nums: set[int] = {10, 20, 30}
+    total: int = 0
+    for n in nums:
+        total = total + n
+    print(total)

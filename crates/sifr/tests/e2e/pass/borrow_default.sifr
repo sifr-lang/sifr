@@ -1,0 +1,19 @@
+# Borrow-by-default: function args are borrowed, caller retains ownership
+def get_length(items: list[int]) -> int:
+    return len(items)
+
+def process(s: str) -> int:
+    return len(s)
+
+def main():
+    my_list: list[int] = [1, 2, 3]
+    n: int = get_length(my_list)
+    # my_list is still usable after borrow
+    print(n)
+    print(my_list)
+
+    greeting: str = "hello"
+    length: int = process(greeting)
+    # greeting is still usable after borrow
+    print(length)
+    print(greeting)

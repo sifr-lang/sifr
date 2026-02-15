@@ -1,0 +1,98 @@
+# ============================================================
+# Milestone M19: Audit Fix-Up Demo
+# Showcases all features delivered in this milestone
+# ============================================================
+
+# --- 1. PEP 695 Inline Generic Functions ---
+# def f[T](...) syntax (no TypeVar declaration needed)
+
+def identity[T](x: T) -> T:
+    return x
+
+def repeat[T](x: T, n: int) -> list[T]:
+    result: list[T] = []
+    i: int = 0
+    while i < n:
+        result.append(x)
+        i = i + 1
+    return result
+
+# --- 2. PEP 695 Inline Generic Classes ---
+# class C[T] syntax
+
+class Container[T]:
+    value: T
+
+    def __init__(self, value: T):
+        self.value = value
+
+    def get(self) -> T:
+        return self.value
+
+# --- 3. Protocol Method Dispatch ---
+# Calling methods on protocol-typed parameters
+
+class Printable(Protocol):
+    def display(self) -> str:
+        pass
+
+class User:
+    name: str
+    def __init__(self, name: str):
+        self.name = name
+    def display(self) -> str:
+        return f"User({self.name})"
+
+class Product:
+    title: str
+    price: float
+    def __init__(self, title: str, price: float):
+        self.title = title
+        self.price = price
+    def display(self) -> str:
+        return f"Product({self.title}, ${self.price})"
+
+def show(item: Printable) -> None:
+    print(item.display())
+
+# --- 4. Multi-Generator Comprehensions ---
+# [expr for x in xs for y in ys]
+
+# --- 5. Stdlib Fixes ---
+from sifr.math import log, sin, cos, abs_val, pow_val, round_val
+
+def main():
+    # 1. PEP 695 generic functions
+    print("=== PEP 695 Generic Functions ===")
+    print(identity(42))
+    print(identity("hello"))
+    print(repeat("x", 3))
+
+    # 2. PEP 695 generic classes
+    print("=== PEP 695 Generic Classes ===")
+    c = Container(99)
+    print(c.get())
+    c2 = Container("wrapped")
+    print(c2.get())
+
+    # 3. Protocol dispatch
+    print("=== Protocol Method Dispatch ===")
+    u: User = User("Alice")
+    pr: Product = Product("Widget", 9.99)
+    show(u)
+    show(pr)
+
+    # 4. Multi-generator comprehensions
+    print("=== Multi-Generator Comprehensions ===")
+    matrix: list[list[int]] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    flat: list[int] = [x for row in matrix for x in row]
+    print(flat)
+
+    # 5. Stdlib math functions
+    print("=== Stdlib Math Functions ===")
+    print(log(1.0))
+    print(sin(0.0))
+    print(cos(0.0))
+    print(abs_val(-42.0))
+    print(pow_val(2.0, 10.0))
+    print(round_val(3.14))
