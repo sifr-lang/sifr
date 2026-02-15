@@ -1,0 +1,12 @@
+# expect-stdout: 5
+# Tests early-return narrowing: if x is None: return narrows x after the if
+
+def process(x: int | None) -> int:
+    if x is None:
+        return 0
+    # After the early return, x should be narrowed to int
+    return x + 1
+
+def main():
+    result: int = process(4)
+    print(result)
