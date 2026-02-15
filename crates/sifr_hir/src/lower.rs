@@ -918,7 +918,7 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
     let return_type = if let Some(returns) = &func.returns {
         resolve_annotation_expr(returns, ctx)
     } else {
-        Type::None // default return type
+        Type::Any // marker for "needs inference" -- will be inferred from body
     };
 
     Some(FunctionType {
@@ -1127,6 +1127,28 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 
     ctx.scope.pop();
 
+    // Infer return type if not explicitly annotated (marked as Type::Any)
+    let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {
+        let return_types = collect_return_types(&body);
+        if return_types.is_empty() {
+            Type::None // no return statements -> None
+        } else if return_types.len() == 1 {
+            return_types.into_iter().next().unwrap()
+        } else {
+            // Multiple return types -> union
+            let mut members: Vec<Type> = return_types.into_iter().collect();
+            members.sort_by(|a, b| a.display_name().cmp(&b.display_name()));
+            members.dedup();
+            if members.len() == 1 {
+                members.into_iter().next().unwrap()
+            } else {
+                Type::Union(members)
+            }
+        }
+    } else {
+        *ft.return_type
+    };
+
     // Collect user-defined decorators (excluding classmethod/staticmethod)
     let decorators: Vec<String> = func.decorator_list.iter().filter_map(|d| {
         if let Expr::Name(n) = &d.expression {
@@ -1144,7 +1166,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     Some(HirFunction {
         name: func.name.to_string(),
         params,
-        return_type: *ft.return_type,
+        return_type: inferred_return_type,
         body,
         method_kind: MethodKind::Regular,
         decorators,
@@ -1800,6 +1822,47 @@ fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
     } else {
         false
     }
+}
+
+/// Collect all return types from a list of HIR statements (recursively).
+fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
+    let mut types = Vec::new();
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Return { value: Some(expr) } => {
+                types.push(expr.ty().clone());
+            }
+            HirStmt::Return { value: None } => {
+                types.push(Type::None);
+            }
+            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+                types.extend(collect_return_types(then_body));
+                for (_, body) in elif_clauses {
+                    types.extend(collect_return_types(body));
+                }
+                if let Some(body) = else_body {
+                    types.extend(collect_return_types(body));
+                }
+            }
+            HirStmt::While { body, else_body, .. } => {
+                types.extend(collect_return_types(body));
+                if let Some(eb) = else_body {
+                    types.extend(collect_return_types(eb));
+                }
+            }
+            HirStmt::For { body, .. } => {
+                types.extend(collect_return_types(body));
+            }
+            HirStmt::TryExcept { body, handlers } => {
+                types.extend(collect_return_types(body));
+                for handler in handlers {
+                    types.extend(collect_return_types(&handler.body));
+                }
+            }
+            _ => {}
+        }
+    }
+    types
 }
 
 /// Detect a narrowing condition from an if-test expression.
