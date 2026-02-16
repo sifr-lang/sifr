@@ -30,6 +30,8 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.regex" => Some(intrinsic_regex()),
         "_sifr.uuid" => Some(intrinsic_uuid()),
         "_sifr.platform" => Some(intrinsic_platform()),
+        "_sifr.toml" => Some(intrinsic_toml()),
+        "_sifr.datetime" => Some(intrinsic_datetime()),
         _ => None,
     }
 }
@@ -533,5 +535,30 @@ fn intrinsic_platform() -> IntrinsicModule {
     functions.insert("platform_system".to_string(), FunctionType::all_borrow(vec![], Type::Str));
     // platform_arch() -> str (e.g., "x86_64", "aarch64")
     functions.insert("platform_arch".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    IntrinsicModule { functions, constants: HashMap::new() }
+}
+
+/// _sifr.toml — TOML parsing intrinsics
+fn intrinsic_toml() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+    // toml_parse(text: str) -> str (JSON-encoded TOML data)
+    functions.insert("toml_parse".to_string(), FunctionType::all_borrow(vec![("text".to_string(), Type::Str)], Type::Str));
+    IntrinsicModule { functions, constants: HashMap::new() }
+}
+
+/// _sifr.datetime — Date/time intrinsics
+fn intrinsic_datetime() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+    // datetime_now() -> str (ISO 8601 formatted current datetime)
+    functions.insert("datetime_now".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    // datetime_format(dt: str, fmt: str) -> str
+    functions.insert("datetime_format".to_string(), FunctionType::all_borrow(vec![
+        ("dt".to_string(), Type::Str),
+        ("fmt".to_string(), Type::Str),
+    ], Type::Str));
+    // datetime_from_timestamp(ts: float) -> str (ISO 8601 from epoch)
+    functions.insert("datetime_from_timestamp".to_string(), FunctionType::all_borrow(vec![
+        ("ts".to_string(), Type::Float),
+    ], Type::Str));
     IntrinsicModule { functions, constants: HashMap::new() }
 }

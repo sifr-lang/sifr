@@ -1,0 +1,8 @@
+# sifr.timeit — Execution timing (wraps _sifr.time)
+from _sifr.time import time_now
+
+def timer() -> float:
+    return time_now()
+
+def elapsed(start: float) -> float:
+    return time_now() - start

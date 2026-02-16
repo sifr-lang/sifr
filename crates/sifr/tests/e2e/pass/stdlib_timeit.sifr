@@ -1,0 +1,18 @@
+# Test sifr.timeit module
+from sifr.timeit import timer, elapsed
+
+def main():
+    start: float = timer()
+    # Do some work
+    total: int = 0
+    i: int = 0
+    while i < 1000:
+        total = total + i
+        i = i + 1
+    dt: float = elapsed(start)
+    # Elapsed time should be non-negative
+    print(dt >= 0.0)
+    print(total)
+
+# expect-stdout: true
+# expect-stdout: 499500
