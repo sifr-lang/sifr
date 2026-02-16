@@ -1,6 +1,6 @@
 ---
 name: Hybrid Stdlib Architecture
-overview: "Redesign Sifr's stdlib using a three-tier hybrid architecture: Rust intrinsics at the bottom, Sifr stdlib modules in the middle, and user code on top. This phase sits between the BorrowChecker phase and the Ecosystem phase, comprising 4 milestones that deliver ~43 stdlib modules covering the vast majority of what Python developers use day-to-day."
+overview: "Redesign Sifr's stdlib using a three-tier hybrid architecture: Rust intrinsics at the bottom, Sifr stdlib modules in the middle, and user code on top. This phase sits between the BorrowChecker phase and the Ecosystem phase, comprising 4 milestones that deliver ~37 stdlib modules covering the vast majority of what Python developers use day-to-day."
 todos:
   - id: m-intrinsics
     content: "milestone_intrinsics: Rewire stdlib plumbing -- _sifr.* intrinsics layer, stdlib .sifr file embedding, two-phase compilation pipeline, proof-of-concept with sifr.test"
@@ -9,10 +9,10 @@ todos:
     content: "milestone_stdlib_migration: Port all 13 existing stdlib modules from Rust codegen to .sifr files, delete emit_stdlib_call, zero regressions"
     status: pending
   - id: m-stdlib-expansion
-    content: "milestone_stdlib_expansion: Add ~17 new pure-Sifr and intrinsic-backed modules (statistics, bisect, heapq, textwrap, csv, functools, itertools, string, argparse, logging, shutil, tempfile, glob, fnmatch, secrets, pprint, contextlib)"
+    content: "milestone_stdlib_expansion: Add ~14 new pure-Sifr and intrinsic-backed modules (statistics, bisect, heapq, textwrap, csv, functools, itertools, string, argparse, shutil, tempfile, glob, fnmatch, secrets)"
     status: pending
   - id: m-stdlib-parity
-    content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, colorsys, graphlib, ipaddress, timeit, platform, configparser, tomllib, datetime, pathlib, uuid, copy, enum, logging), run comprehensive parity audit"
+    content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), run comprehensive parity audit"
     status: pending
 isProject: false
 ---
@@ -166,21 +166,15 @@ lib/sifr/
   glob.sifr          # glob, iglob
   fnmatch.sifr       # fnmatch, filter, translate
   secrets.sifr       # token_hex, token_urlsafe, token_bytes, choice
-  pprint.sifr        # pformat, pprint
-  contextlib.sifr    # suppress (context manager utilities)
   difflib.sifr       # unified_diff, get_close_matches, SequenceMatcher
-  colorsys.sifr      # rgb_to_hls, hls_to_rgb, rgb_to_hsv, hsv_to_rgb
   graphlib.sifr      # TopologicalSorter
   ipaddress.sifr     # ip_address, ip_network
   timeit.sifr        # timeit, repeat
   platform.sifr      # system, machine, architecture
-  configparser.sifr  # ConfigParser
   tomllib.sifr       # toml_loads, toml_load
   datetime.sifr      # date, datetime, timedelta, timezone
   pathlib.sifr       # Path class
   uuid.sifr          # uuid4
-  copy.sifr          # copy, deepcopy
-  enum.sifr          # Enum, IntEnum
 ```
 
 ---
@@ -206,11 +200,13 @@ Each `_sifr.*` intrinsic module maps to specific Rust crates or std modules. Whe
 
 ## Complete Module Inventory: What to Port, What to Skip
 
-### Modules to Port (43 total, across 4 milestones)
+**Reference:** CPython stdlib source is available at `/Users/yaseralnajjar/work/sifr/cpython` for comparing implementations and verifying API surfaces.
+
+### Modules to Port (37 total, across 4 milestones)
 
 Organized by implementation type:
 
-**Pure Sifr -- no intrinsics needed (20 modules):**
+**Pure Sifr -- no intrinsics needed (14 modules):**
 
 - `test` -- assert functions
 - `collections` -- Counter, DefaultDict, OrderedDict, deque, Set wrappers
@@ -223,15 +219,9 @@ Organized by implementation type:
 - `itertools` -- chain, zip_longest, groupby
 - `string` -- ascii_letters, digits, punctuation constants
 - `argparse` -- ArgumentParser class with add_argument, parse_args
-- `pprint` -- pretty-print data structures
-- `contextlib` -- suppress (note: uses `Result`-based error suppression, not exception catching)
 - `difflib` -- unified_diff, get_close_matches, SequenceMatcher
-- `colorsys` -- color space conversions (pure math, ~50 lines)
 - `graphlib` -- TopologicalSorter
 - `ipaddress` -- IPv4/IPv6 address parsing and manipulation
-- `configparser` -- INI file parsing
-- `copy` -- copy, deepcopy (note: `deepcopy` requires Clone trait support; may need compiler assistance)
-- `enum` -- Enum, IntEnum
 
 **Thin Sifr wrapper over intrinsics (23 modules):**
 
@@ -312,6 +302,10 @@ These exist because of Python's specific nature (interpreted, dynamic, REPL-orie
 - `weakref` -- Sifr's ownership model eliminates most use cases
 - `codecs`, `encodings` -- Rust is UTF-8 by default; minimal encode/decode in `sifr.bytes`
 - `dataclasses` -- not needed. In Python, `@dataclass` exists because classes are verbose (`self.x = x` boilerplate). Sifr classes have typed fields and the compiler should auto-derive `__init__`, `__repr__`, `__eq__` for all classes (like Rust's `#[derive(...)]`). This is a compiler feature, not a stdlib module.
+- `enum` -- not needed as a stdlib module. Sifr already models enums via union types + classes (`Circle | Square` compiles to a Rust enum). If explicit `enum` syntax is added, it will be compiler sugar over class unions, not a library.
+- `copy` -- not needed as a stdlib module. Sifr's type system already distinguishes Copy types (primitives) from Move types (classes, strings, collections). Deep copying should be a compiler-derived `.clone()` method on types (like Rust's `#[derive(Clone)]`), not a library function.
+- `pprint` -- not needed. The compiler auto-derives `Debug` (Rust's `{:#?}`) on all classes, which already pretty-prints nested structures with indentation. Better handled as a format specifier than a stdlib module.
+- `contextlib` -- not needed. Python's `contextlib.suppress` suppresses exceptions; Sifr uses `Result`-based error handling where errors are values, not thrown. The `with` statement is already a language feature for resource management. There's no meaningful `suppress` equivalent in a `Result`-based world.
 
 ### Modules to Revisit Later
 
@@ -322,7 +316,8 @@ These may become relevant as the language matures:
 - `decimal` / `fractions` -- if financial/scientific computing becomes a priority
 - `gzip` / `zipfile` / `tarfile` -- if compression is commonly requested
 - `xml` / `html` -- if web scraping becomes a use case before the web milestone
-- `contextlib` advanced features -- `redirect_stdout`, `ExitStack` (revisit as context managers mature)
+- `configparser` -- INI file parsing; TOML (`sifr.tomllib`) covers the config use case for a new language. INI is legacy.
+- `colorsys` -- color space conversions (~50 lines of pure math); very niche, better as a third-party package
 
 ---
 
@@ -400,30 +395,27 @@ Port all 13 existing stdlib modules from Rust codegen to `.sifr` files. Each mod
 
 **Size: Medium (comparable to milestone_ext_stdlib)**
 
-Add ~17 new modules. These are the most commonly needed modules that Python developers reach for daily. Ordered by dependency (modules that others depend on come first) and by implementation complexity (pure Sifr first, then intrinsic-backed).
+Add ~14 new modules. These are the most commonly needed modules that Python developers reach for daily. Ordered by dependency (modules that others depend on come first) and by implementation complexity (pure Sifr first, then intrinsic-backed).
 
 **Pure Sifr modules (no new intrinsics needed):**
 
 1. `lib/sifr/string.sifr` -- `ascii_letters`, `digits`, `punctuation`, `whitespace` constants (tiny, no deps)
-2. `lib/sifr/colorsys.sifr` -- `rgb_to_hls`, `hls_to_rgb`, `rgb_to_hsv`, `hsv_to_rgb` (pure math, ~50 lines)
-3. `lib/sifr/statistics.sifr` -- `mean`, `median`, `stdev`, `variance` (pure math over lists)
-4. `lib/sifr/bisect.sifr` -- `bisect_left`, `bisect_right`, `insort` (pure algorithms)
-5. `lib/sifr/heapq.sifr` -- `heappush`, `heappop`, `heapify`, `nlargest`, `nsmallest` (pure data structure)
-6. `lib/sifr/functools.sifr` -- `reduce` (pure higher-order function)
-7. `lib/sifr/itertools.sifr` -- `chain`, `zip_longest`, `groupby` (pure iteration)
-8. `lib/sifr/textwrap.sifr` -- `wrap`, `fill`, `dedent`, `indent` (pure string processing)
-9. `lib/sifr/csv.sifr` -- `reader`, `writer` (pure string parsing)
-10. `lib/sifr/pprint.sifr` -- `pformat`, `pprint` (pure string formatting)
-11. `lib/sifr/contextlib.sifr` -- `suppress` (context manager utility; note: Sifr uses `Result`-based error handling, so `suppress` catches specific error types from `Result`, not exceptions)
-12. `lib/sifr/argparse.sifr` -- `ArgumentParser` class with `add_argument`, `parse_args` (pure Sifr, uses `sifr.os.get_args`)
+2. `lib/sifr/statistics.sifr` -- `mean`, `median`, `stdev`, `variance` (pure math over lists)
+3. `lib/sifr/bisect.sifr` -- `bisect_left`, `bisect_right`, `insort` (pure algorithms)
+4. `lib/sifr/heapq.sifr` -- `heappush`, `heappop`, `heapify`, `nlargest`, `nsmallest` (pure data structure)
+5. `lib/sifr/functools.sifr` -- `reduce` (pure higher-order function)
+6. `lib/sifr/itertools.sifr` -- `chain`, `zip_longest`, `groupby` (pure iteration)
+7. `lib/sifr/textwrap.sifr` -- `wrap`, `fill`, `dedent`, `indent` (pure string processing)
+8. `lib/sifr/csv.sifr` -- `reader`, `writer` (pure string parsing)
+9. `lib/sifr/argparse.sifr` -- `ArgumentParser` class with `add_argument`, `parse_args` (pure Sifr, uses `sifr.os.get_args`)
 
 **Intrinsic-backed modules (need new `_sifr.*` primitives):**
 
-13. `lib/sifr/fnmatch.sifr` -- `fnmatch`, `filter`, `translate` (wraps `_sifr.regex` for pattern translation)
-14. `lib/sifr/glob.sifr` -- `glob`, `iglob` (wraps `_sifr.fs.list_dir` + fnmatch)
-15. `lib/sifr/shutil.sifr` -- `copy`, `copytree`, `rmtree`, `move` (wraps `_sifr.fs` -- needs new intrinsics: `copy_file`, `walk_dir`)
-16. `lib/sifr/tempfile.sifr` -- `mkstemp`, `mkdtemp` (wraps `_sifr.fs` + `_sifr.crypto.random_bytes` for random names)
-17. `lib/sifr/secrets.sifr` -- `token_hex`, `token_urlsafe`, `token_bytes`, `choice` (wraps `_sifr.crypto`)
+10. `lib/sifr/fnmatch.sifr` -- `fnmatch`, `filter`, `translate` (wraps `_sifr.regex` for pattern translation)
+11. `lib/sifr/glob.sifr` -- `glob`, `iglob` (wraps `_sifr.fs.list_dir` + fnmatch)
+12. `lib/sifr/shutil.sifr` -- `copy`, `copytree`, `rmtree`, `move` (wraps `_sifr.fs` -- needs new intrinsics: `copy_file`, `walk_dir`)
+13. `lib/sifr/tempfile.sifr` -- `mkstemp`, `mkdtemp` (wraps `_sifr.fs` + `_sifr.crypto.random_bytes` for random names)
+14. `lib/sifr/secrets.sifr` -- `token_hex`, `token_urlsafe`, `token_bytes`, `choice` (wraps `_sifr.crypto`)
 
 **New intrinsics needed:** `_sifr.fs.copy_file`, `_sifr.fs.walk_dir` (2 new primitives added to existing `_sifr.fs`)
 
@@ -458,14 +450,11 @@ Three parts: (A) close gaps in existing modules by adding missing functions, (B)
 3. `lib/sifr/ipaddress.sifr` -- `ip_address`, `ip_network` (pure Sifr, parsing + math)
 4. `lib/sifr/timeit.sifr` -- `timeit`, `repeat` (wraps `_sifr.time.perf_counter_ns`)
 5. `lib/sifr/platform.sifr` -- `system`, `machine`, `architecture` (wraps `_sifr.sys.platform_os`, `platform_arch`)
-6. `lib/sifr/configparser.sifr` -- `ConfigParser` class (pure Sifr, string parsing)
-7. `lib/sifr/tomllib.sifr` -- `loads`, `load` (wraps new `_sifr.toml` intrinsic)
-8. `lib/sifr/datetime.sifr` -- `date`, `datetime`, `timedelta`, `timezone` (wraps new `_sifr.datetime` intrinsic)
-9. `lib/sifr/pathlib.sifr` -- `Path` class with `/` operator, `exists`, `read_text`, `write_text`, `stem`, `suffix`, `parent` (wraps `_sifr.fs`)
-10. `lib/sifr/uuid.sifr` -- `uuid4` (wraps `_sifr.crypto.random_bytes`)
-11. `lib/sifr/copy.sifr` -- `copy`, `deepcopy` (pure Sifr; note: `deepcopy` requires Clone trait support, may need compiler assistance)
-12. `lib/sifr/enum.sifr` -- `Enum`, `IntEnum` (pure Sifr)
-13. `lib/sifr/logging.sifr` -- `Logger`, `getLogger`, `info`, `warning`, `error`, `debug` (wraps `_sifr.io` + `_sifr.time`)
+6. `lib/sifr/tomllib.sifr` -- `loads`, `load` (wraps new `_sifr.toml` intrinsic)
+7. `lib/sifr/datetime.sifr` -- `date`, `datetime`, `timedelta`, `timezone` (wraps new `_sifr.datetime` intrinsic)
+8. `lib/sifr/pathlib.sifr` -- `Path` class with `/` operator, `exists`, `read_text`, `write_text`, `stem`, `suffix`, `parent` (wraps `_sifr.fs`)
+9. `lib/sifr/uuid.sifr` -- `uuid4` (wraps `_sifr.crypto.random_bytes`)
+10. `lib/sifr/logging.sifr` -- `Logger`, `getLogger`, `info`, `warning`, `error`, `debug` (wraps `_sifr.io` + `_sifr.time`)
 
 **New intrinsics needed:** `_sifr.toml.toml_parse`, `_sifr.datetime.*` (4 primitives), `_sifr.sys.platform_os`, `_sifr.sys.platform_arch`, `_sifr.math` inverse trig/hyperbolic (~8 primitives)
 
