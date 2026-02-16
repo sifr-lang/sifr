@@ -1,0 +1,78 @@
+# Milestone: Borrow Hardening Demo
+# ==================================
+# This demo showcases the hardened borrow-by-default model:
+# - Exclusivity enforcement for mutable borrows
+# - Correct move tracking with own keyword
+# - Borrowed params in loops and branches
+# - Copy types always pass by value
+
+# --- Section 1: Borrow-by-default basics ---
+# Functions borrow by default, caller retains ownership
+
+def get_length(items: list[int]) -> int:
+    return len(items)
+
+def get_sum(items: list[int]) -> int:
+    total: int = 0
+    for item in items:
+        total = total + item
+    return total
+
+# --- Section 2: Own keyword for consuming functions ---
+
+def consume_and_reverse(own items: list[int]) -> list[int]:
+    return reversed(items)
+
+# --- Section 3: Multiple borrows of same variable ---
+# Immutable borrows of the same variable are allowed
+
+def add_lengths(a: list[int], b: list[int]) -> int:
+    return len(a) + len(b)
+
+# --- Section 4: Copy types always by value ---
+
+def double(x: int) -> int:
+    return x * 2
+
+def negate(x: float) -> float:
+    return -x
+
+def main():
+    # Section 1: Borrow by default
+    data: list[int] = [10, 20, 30, 40, 50]
+    length: int = get_length(data)
+    total: int = get_sum(data)
+    print(length)  # 5
+    print(total)   # 150
+    print(data)    # [10, 20, 30, 40, 50] -- still usable!
+
+    # Section 2: Own keyword
+    items: list[int] = [1, 2, 3]
+    result: list[int] = consume_and_reverse(items)
+    print(result)  # [3, 2, 1]
+    # items is now moved -- cannot use after this
+
+    # Section 3: Multiple immutable borrows
+    nums: list[int] = [1, 2, 3]
+    combined: int = add_lengths(nums, nums)
+    print(combined)  # 6 (3 + 3)
+    print(nums)      # [1, 2, 3] -- still usable!
+
+    # Section 4: Copy types
+    x: int = 42
+    d: int = double(x)
+    print(d)  # 84
+    print(x)  # 42 -- Copy type, always usable
+
+    pi: float = 3.14
+    neg: float = negate(pi)
+    print(neg)  # -3.14
+    print(pi)   # 3.14 -- still usable
+
+    # Section 5: Borrowed params in loops
+    loop_data: list[int] = [5, 10, 15]
+    loop_total: int = 0
+    for i in range(3):
+        loop_total = loop_total + get_sum(loop_data)
+    print(loop_total)  # 90 (30 * 3)
+    print(loop_data)   # [5, 10, 15] -- still usable after loop
