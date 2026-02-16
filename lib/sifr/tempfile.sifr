@@ -1,5 +1,5 @@
 # sifr.tempfile — Temporary file and directory creation (wraps _sifr.fs + _sifr.crypto)
-from _sifr.fs import mkdir, write_text
+from _sifr.fs import mkdir, write_text, gettempdir
 from _sifr.crypto import random_int
 
 def _random_suffix() -> str:

@@ -155,13 +155,33 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     // Prepend compiled stdlib Rust code for used modules
+    // Include transitive sifr.* dependencies in dependency order (deps first)
     let mut stdlib_preamble = String::new();
+    let mut emitted_modules: HashSet<String> = HashSet::new();
+    let mut all_needed: Vec<String> = Vec::new();
     for module_name in &emitter.used_stdlib_modules {
+        // Add transitive sifr.* deps before the module itself
+        if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
+            for dep in deps {
+                if dep.starts_with("sifr.") && !all_needed.contains(dep) {
+                    all_needed.push(dep.clone());
+                }
+            }
+        }
+        if !all_needed.contains(module_name) {
+            all_needed.push(module_name.clone());
+        }
+    }
+    for module_name in &all_needed {
+        if emitted_modules.contains(module_name) {
+            continue;
+        }
         if let Some(rust_code) = stdlib_code.module_rust_code.get(module_name) {
             if !rust_code.is_empty() {
                 stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
                 stdlib_preamble.push_str(rust_code);
                 stdlib_preamble.push('\n');
+                emitted_modules.insert(module_name.clone());
             }
         }
     }
@@ -287,6 +307,7 @@ edition = "2021"
                 if !deps.contains(&"sha2 = \"0.10\"".to_string()) {
                     deps.push("sha2 = \"0.10\"".to_string());
                     deps.push("md5 = \"0.7\"".to_string());
+                    deps.push("sha1 = \"0.10\"".to_string());
                 }
             }
             "sifr.encoding" | "sifr.base64" => {
@@ -711,7 +732,7 @@ impl RustEmitter {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
                 if i > 0 { self.write(", "); }
-                self.write(&format!("{}: Clone + std::fmt::Display", tp));
+                self.write(&format!("{}: Clone + std::fmt::Display + PartialOrd", tp));
             }
             self.write(">");
         }
@@ -763,7 +784,7 @@ impl RustEmitter {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
                 if i > 0 { self.write(", "); }
-                self.write(&format!("{}: Clone + std::fmt::Display", tp));
+                self.write(&format!("{}: Clone + std::fmt::Display + PartialOrd", tp));
             }
             self.write(">");
         }
@@ -1557,7 +1578,7 @@ impl RustEmitter {
                 if i > 0 {
                     self.write(", ");
                 }
-                self.write(&format!("{}: Clone + std::fmt::Display", tp));
+                self.write(&format!("{}: Clone + std::fmt::Display + PartialOrd", tp));
             }
             self.write(">");
         }
@@ -3284,8 +3305,8 @@ impl RustEmitter {
                     if let Some((ref params, _)) = method_info {
                         // Method params skip self, so param index i corresponds to params[i]
                         // (self is not in func_signatures params)
-                        if let Some((_, convention)) = params.get(i) {
-                            self.emit_borrow_prefix(*convention, arg.ty());
+                        if let Some((param_ty, convention)) = params.get(i) {
+                            self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
                             self.emit_expr(arg);
                             continue;
                         }
@@ -3311,10 +3332,15 @@ impl RustEmitter {
     }
 
     /// Emit `&` or `&mut` prefix for a function argument based on parameter convention.
-    /// Copy types never get a borrow prefix (they're passed by value).
-    fn emit_borrow_prefix(&mut self, convention: ParamConvention, arg_ty: &Type) {
-        // Copy types are always passed by value regardless of convention
-        if arg_ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+    /// Copy types never get a borrow prefix (they're passed by value),
+    /// unless the parameter type is a TypeVar (generic), in which case we always borrow.
+    fn emit_borrow_prefix(&mut self, convention: ParamConvention, arg_ty: &Type, param_ty: Option<&Type>) {
+        // If the parameter type is a TypeVar, always emit the borrow prefix
+        // because the generated Rust signature uses &T for borrowed TypeVar params
+        let is_generic_param = param_ty.map_or(false, |t| matches!(t, Type::TypeVar(_)));
+        // Copy types are always passed by value regardless of convention,
+        // unless the parameter is generic (TypeVar)
+        if !is_generic_param && arg_ty.ownership() == sifr_type_system::OwnershipKind::Copy {
             return;
         }
         match convention {
@@ -3639,9 +3665,13 @@ impl RustEmitter {
                     // branch to take.
                     self.write("true");
                 } else if func == "str" {
-                    // str() conversion -> format!("{}", arg)
+                    // str() conversion -> format!("{}", arg) or format!("{:?}", arg) for lists
                     if !args.is_empty() {
-                        self.write("format!(\"{}\", ");
+                        if matches!(args[0].ty(), Type::List(_)) {
+                            self.write("format!(\"{:?}\", ");
+                        } else {
+                            self.write("format!(\"{}\", ");
+                        }
                         self.emit_display_expr(&args[0]);
                         self.write(")");
                     } else {
@@ -3905,7 +3935,7 @@ impl RustEmitter {
                                 if is_option_type(param_ty) && !is_option_type(arg.ty()) && !matches!(arg, HirExpr::NoneLiteral) {
                                     // Use param_ty for ownership check: the wrapped Some(...) is Option<T> (Move),
                                     // not the inner arg type which may be Copy
-                                    self.emit_borrow_prefix(convention, param_ty);
+                                    self.emit_borrow_prefix(convention, param_ty, Some(param_ty));
                                     self.write("Some(");
                                     self.emit_expr(arg);
                                     self.write(")");
@@ -3913,7 +3943,7 @@ impl RustEmitter {
                                 }
                                 // None literal passed to Option param -> emit &None for borrowed params
                                 if is_option_type(param_ty) && matches!(arg, HirExpr::NoneLiteral) {
-                                    self.emit_borrow_prefix(convention, param_ty);
+                                    self.emit_borrow_prefix(convention, param_ty, Some(param_ty));
                                     self.emit_expr(arg);
                                     continue;
                                 }
@@ -3925,7 +3955,7 @@ impl RustEmitter {
                                             let enum_name = param_ty.union_enum_name();
                                             // Use param_ty for ownership check: the wrapped enum value is a Union (Move),
                                             // not the inner arg type which may be Copy (e.g., Int inside IntOrStr)
-                                            self.emit_borrow_prefix(convention, param_ty);
+                                            self.emit_borrow_prefix(convention, param_ty, Some(param_ty));
                                             self.write(&format!("{}::{}(", enum_name, variant));
                                             self.emit_expr(arg);
                                             self.write(")");
@@ -3941,7 +3971,7 @@ impl RustEmitter {
                                     continue;
                                 }
                                 // Convention-aware borrow prefix for regular arguments
-                                self.emit_borrow_prefix(convention, arg.ty());
+                                self.emit_borrow_prefix(convention, arg.ty(), Some(param_ty));
                                 self.emit_expr(arg);
                                 continue;
                             }
@@ -4640,6 +4670,14 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap()");
             }
+            "gettempdir" => {
+                self.write("std::env::temp_dir().display().to_string()");
+            }
+            "makedirs" => {
+                self.write("std::fs::create_dir_all(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap()");
+            }
             // sifr.json
             "json_loads" => {
                 self.write("serde_json::from_str::<serde_json::Value>(");
@@ -4832,6 +4870,31 @@ impl RustEmitter {
                 self.write(").hypot(");
                 self.emit_expr(&args[1]);
                 self.write(")");
+            }
+            "exp" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").exp()");
+            }
+            "expm1" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").exp_m1()");
+            }
+            "log1p" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").ln_1p()");
+            }
+            "fabs" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").abs()");
+            }
+            "isfinite" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").is_finite()");
             }
             // sifr.test
             "assert_eq" => {
@@ -5143,6 +5206,26 @@ impl RustEmitter {
                 self.emit_expr_as_bytes(&args[0]);
                 self.write(").unwrap()).unwrap() }");
             }
+            "sha1" => {
+                self.write("{ use sha1::Digest; format!(\"{:x}\", sha1::Sha1::digest(");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write(")) }");
+            }
+            "sha512" => {
+                self.write("{ use sha2::Digest; format!(\"{:x}\", sha2::Sha512::digest(");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write(")) }");
+            }
+            "urlsafe_b64encode" => {
+                self.write("{ use base64::Engine; base64::engine::general_purpose::URL_SAFE.encode(");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write(") }");
+            }
+            "urlsafe_b64decode" => {
+                self.write("{ use base64::Engine; String::from_utf8(base64::engine::general_purpose::URL_SAFE.decode(");
+                self.emit_expr_as_bytes(&args[0]);
+                self.write(").unwrap()).unwrap() }");
+            }
             // sifr.uuid
             "uuid4" => {
                 self.write("{ use rand::Rng; let mut rng = rand::thread_rng(); let bytes: [u8; 16] = rng.gen(); format!(\"{:08x}-{:04x}-4{:03x}-{:04x}-{:012x}\", u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]), u16::from_be_bytes([bytes[4], bytes[5]]), u16::from_be_bytes([bytes[6], bytes[7]]) & 0x0fff, (u16::from_be_bytes([bytes[8], bytes[9]]) & 0x3fff) | 0x8000, u64::from_be_bytes([0, 0, bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]])) }");
@@ -5153,6 +5236,9 @@ impl RustEmitter {
             }
             "platform_arch" => {
                 self.write("std::env::consts::ARCH.to_string()");
+            }
+            "platform_node" => {
+                self.write("std::process::Command::new(\"hostname\").output().map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default()");
             }
             // sifr.toml
             "toml_parse" => {
@@ -5283,7 +5369,7 @@ impl RustEmitter {
     /// This method emits `*name` for borrowed params so the comparison works.
     fn emit_expr_for_compare(&mut self, expr: &HirExpr) {
         if let HirExpr::Name { name, ty } = expr {
-            if self.borrowed_params.contains(name) && matches!(ty, Type::Str) {
+            if self.borrowed_params.contains(name) && (matches!(ty, Type::Str) || matches!(ty, Type::TypeVar(_))) {
                 self.write("*");
                 self.emit_expr(expr);
                 return;

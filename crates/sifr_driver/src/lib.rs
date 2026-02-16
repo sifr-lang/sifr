@@ -197,8 +197,16 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
         let has_pure_sifr_code = !result.module.functions.is_empty() || !result.module.constants.is_empty() || !result.module.classes.is_empty();
         if has_pure_sifr_code {
             // Use the existing codegen to compile the stdlib module's HIR to Rust
-            // Pass the current stdlib_code so that inter-stdlib intrinsic dispatch works correctly
-            let codegen_result = sifr_codegen::generate_rust_with_stdlib(&result.module, &stdlib_code);
+            // Pass a stdlib_code without module_rust_code to avoid embedding transitive deps
+            // (each module's code should only contain its own functions, not its deps')
+            let codegen_stdlib = StdlibCode {
+                module_rust_code: HashMap::new(),
+                intrinsic_names: stdlib_code.intrinsic_names.clone(),
+                module_constants: stdlib_code.module_constants.clone(),
+                func_signatures: stdlib_code.func_signatures.clone(),
+                transitive_deps: stdlib_code.transitive_deps.clone(),
+            };
+            let codegen_result = sifr_codegen::generate_rust_with_stdlib(&result.module, &codegen_stdlib);
             stdlib_code.module_rust_code.insert(module_name.to_string(), codegen_result.rust_source);
             // Store constant mappings so user code can reference them with correct Rust names
             if !codegen_result.constant_mappings.is_empty() {

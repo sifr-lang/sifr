@@ -1,2 +1,2 @@
 # sifr.platform — Platform information
-from _sifr.platform import platform_system, platform_arch
+from _sifr.platform import platform_system, platform_arch, platform_node

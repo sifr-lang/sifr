@@ -1,0 +1,8 @@
+# Test sifr.string capwords
+# expect-stdout: Hello World Test
+
+from sifr.string import capwords
+
+def main():
+    result: str = capwords("hello world test")
+    print(result)

@@ -45,3 +45,6 @@ def fnmatch_filter(names: list[str], pattern: str) -> list[str]:
         if fnmatch(name, pattern):
             result.append(name)
     return result
+
+def fnmatchcase(name: str, pattern: str) -> bool:
+    return _match(name, 0, pattern, 0)

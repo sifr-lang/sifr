@@ -1214,9 +1214,9 @@ fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConventi
         AstParamConvention::Mut => ParamConvention::MutBorrow,
         AstParamConvention::Own => ParamConvention::Own,
         AstParamConvention::Default => {
-            // TypeVars (generics) default to Own since the concrete type is unknown
+            // TypeVars (generics) default to Borrow since the concrete type is unknown
             if matches!(ty, Type::TypeVar(_)) {
-                ParamConvention::Own
+                ParamConvention::Borrow
             } else if ty.ownership() == OwnershipKind::Copy {
                 ParamConvention::Own
             } else {

@@ -182,6 +182,21 @@ fn intrinsic_math() -> IntrinsicModule {
     // hypot(x: float, y: float) -> float
     functions.insert("hypot".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
 
+    // exp(x: float) -> float
+    functions.insert("exp".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // expm1(x: float) -> float
+    functions.insert("expm1".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // log1p(x: float) -> float
+    functions.insert("log1p".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // fabs(x: float) -> float
+    functions.insert("fabs".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // isfinite(x: float) -> bool
+    functions.insert("isfinite".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Bool));
+
     // Constants
     constants.insert("pi".to_string(), Type::Float);
     constants.insert("e".to_string(), Type::Float);
@@ -488,6 +503,12 @@ fn intrinsic_fs() -> IntrinsicModule {
     // rmdir_all(path: str) -> None (recursive directory removal)
     functions.insert("rmdir_all".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
 
+    // gettempdir() -> str
+    functions.insert("gettempdir".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+
+    // makedirs(path: str) -> None
+    functions.insert("makedirs".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -527,6 +548,18 @@ fn intrinsic_crypto() -> IntrinsicModule {
             ("min".to_string(), Type::Float),
             ("max".to_string(), Type::Float),
         ], Type::Float));
+
+    // sha1(s: str) -> str (hex digest)
+    functions.insert("sha1".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // sha512(s: str) -> str (hex digest)
+    functions.insert("sha512".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // urlsafe_b64encode(s: str) -> str
+    functions.insert("urlsafe_b64encode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // urlsafe_b64decode(s: str) -> str
+    functions.insert("urlsafe_b64decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
     IntrinsicModule {
         functions,
@@ -590,6 +623,8 @@ fn intrinsic_platform() -> IntrinsicModule {
     functions.insert("platform_system".to_string(), FunctionType::all_borrow(vec![], Type::Str));
     // platform_arch() -> str (e.g., "x86_64", "aarch64")
     functions.insert("platform_arch".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    // platform_node() -> str (hostname)
+    functions.insert("platform_node".to_string(), FunctionType::all_borrow(vec![], Type::Str));
     IntrinsicModule { functions, constants: HashMap::new() }
 }
 

@@ -140,6 +140,28 @@ def heappop_rest(heap: list[int]) -> list[int]:
             pos = smallest
     return result2
 
+def heapreplace(heap: list[int], item: int) -> int:
+    if len(heap) == 0:
+        return item
+    top: int | None = heap[0]
+    result: int = 0
+    if top is not None:
+        result = top
+    rest: list[int] = heappop_rest(heap)
+    rest = heappush(rest, item)
+    return result
+
+def heappushpop(heap: list[int], item: int) -> int:
+    if len(heap) == 0:
+        return item
+    top: int | None = heap[0]
+    if top is not None:
+        if item <= top:
+            return item
+    pushed: list[int] = heappush(heap, item)
+    val: int = heappop(pushed)
+    return val
+
 def nsmallest(n: int, data: list[int]) -> list[int]:
     heap: list[int] = heapify(data)
     result: list[int] = []

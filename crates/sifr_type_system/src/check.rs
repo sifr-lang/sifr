@@ -247,6 +247,10 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
             if left == &Type::Str && right == &Type::Str {
                 return Ok(Type::Bool);
             }
+            // Allow TypeVar comparisons (generic code)
+            if matches!(left, Type::TypeVar(_)) || matches!(right, Type::TypeVar(_)) {
+                return Ok(Type::Bool);
+            }
             // Allow T|None vs T ordering comparisons (unwrap the union)
             if union_contains_none(left) {
                 let non_none = remove_none_from_union(left);

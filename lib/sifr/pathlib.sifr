@@ -40,3 +40,23 @@ def extension(path: str) -> str:
                 return ""
         i = i - 1
     return ""
+
+def stem(path: str) -> str:
+    base: str = basename(path)
+    i: int = len(base) - 1
+    while i > 0:
+        ch: str | None = base[i]
+        if ch is not None:
+            if ch == ".":
+                return base[:i]
+        i = i - 1
+    return base + ""
+
+def is_absolute(path: str) -> bool:
+    if len(path) == 0:
+        return False
+    first: str | None = path[0]
+    if first is not None:
+        if first == "/":
+            return True
+    return False

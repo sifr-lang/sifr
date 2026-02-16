@@ -79,3 +79,40 @@ def is_loopback(addr: str) -> bool:
             if first == "127":
                 return True
     return False
+
+def int_to_ip(val: int) -> str:
+    a: int = val // 16777216
+    rem: int = val % 16777216
+    b: int = rem // 65536
+    rem = rem % 65536
+    c: int = rem // 256
+    d: int = rem % 256
+    return str(a) + "." + str(b) + "." + str(c) + "." + str(d)
+
+def is_multicast(addr: str) -> bool:
+    parts: list[str] = addr.split(".")
+    if len(parts) == 4:
+        first: str | None = parts[0]
+        if first is not None:
+            val: int = _parse_int(first)
+            if val >= 224:
+                if val <= 239:
+                    return True
+    return False
+
+def is_global(addr: str) -> bool:
+    if is_private(addr):
+        return False
+    if is_loopback(addr):
+        return False
+    if is_multicast(addr):
+        return False
+    parts: list[str] = addr.split(".")
+    if len(parts) == 4:
+        first: str | None = parts[0]
+        if first is not None:
+            if first == "0":
+                return False
+            if first == "255":
+                return False
+    return True
