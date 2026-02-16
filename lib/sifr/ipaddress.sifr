@@ -1,0 +1,81 @@
+# sifr.ipaddress — IP address manipulation (pure Sifr)
+
+def is_valid_ipv4(addr: str) -> bool:
+    parts: list[str] = addr.split(".")
+    if len(parts) != 4:
+        return False
+    for part in parts:
+        if len(part) == 0:
+            return False
+        if len(part) > 3:
+            return False
+        val: int = _parse_int(part)
+        if val < 0:
+            return False
+        if val > 255:
+            return False
+    return True
+
+def _parse_int(s: str) -> int:
+    result: int = 0
+    i: int = 0
+    while i < len(s):
+        ch: str | None = s[i]
+        if ch is not None:
+            if ch == "0":
+                result = result * 10
+            elif ch == "1":
+                result = result * 10 + 1
+            elif ch == "2":
+                result = result * 10 + 2
+            elif ch == "3":
+                result = result * 10 + 3
+            elif ch == "4":
+                result = result * 10 + 4
+            elif ch == "5":
+                result = result * 10 + 5
+            elif ch == "6":
+                result = result * 10 + 6
+            elif ch == "7":
+                result = result * 10 + 7
+            elif ch == "8":
+                result = result * 10 + 8
+            elif ch == "9":
+                result = result * 10 + 9
+            else:
+                return -1
+        i = i + 1
+    return result
+
+def ip_to_int(addr: str) -> int:
+    parts: list[str] = addr.split(".")
+    result: int = 0
+    for part in parts:
+        val: int = _parse_int(part)
+        result = result * 256 + val
+    return result
+
+def is_private(addr: str) -> bool:
+    val: int = ip_to_int(addr)
+    # 10.0.0.0/8
+    if val >= 167772160:
+        if val <= 184549375:
+            return True
+    # 172.16.0.0/12
+    if val >= 2886729728:
+        if val <= 2887778303:
+            return True
+    # 192.168.0.0/16
+    if val >= 3232235520:
+        if val <= 3232301055:
+            return True
+    return False
+
+def is_loopback(addr: str) -> bool:
+    parts: list[str] = addr.split(".")
+    if len(parts) == 4:
+        first: str | None = parts[0]
+        if first is not None:
+            if first == "127":
+                return True
+    return False

@@ -1,0 +1,17 @@
+# Test sifr.difflib module
+from sifr.difflib import get_close_matches, unified_diff
+
+def main():
+    # get_close_matches
+    words: list[str] = ["apple", "ape", "application", "banana"]
+    matches: list[str] = get_close_matches("app", words, 2, 0.3)
+    print(len(matches))
+
+    # unified_diff
+    a: list[str] = ["hello", "world"]
+    b: list[str] = ["hello", "earth"]
+    diff: list[str] = unified_diff(a, b)
+    print(len(diff))
+
+# expect-stdout: 2
+# expect-stdout: 5

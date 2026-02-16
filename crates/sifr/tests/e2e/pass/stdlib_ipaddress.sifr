@@ -1,0 +1,24 @@
+# Test sifr.ipaddress module
+from sifr.ipaddress import is_valid_ipv4, is_private, is_loopback
+
+def main():
+    # valid IPv4
+    print(is_valid_ipv4("192.168.1.1"))
+    print(is_valid_ipv4("256.1.1.1"))
+    print(is_valid_ipv4("not.an.ip"))
+
+    # private addresses
+    print(is_private("192.168.1.1"))
+    print(is_private("8.8.8.8"))
+
+    # loopback
+    print(is_loopback("127.0.0.1"))
+    print(is_loopback("192.168.1.1"))
+
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: false
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: true
+# expect-stdout: false

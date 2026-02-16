@@ -1,0 +1,11 @@
+# sifr.datetime — Date and time (wraps _sifr.datetime)
+from _sifr.datetime import datetime_now, datetime_format, datetime_from_timestamp
+
+def now() -> str:
+    return datetime_now()
+
+def format_datetime(dt: str, fmt: str) -> str:
+    return datetime_format(dt, fmt)
+
+def from_timestamp(ts: float) -> str:
+    return datetime_from_timestamp(ts)
