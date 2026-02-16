@@ -1,0 +1,8 @@
+# Test sifr.uuid module
+from sifr.uuid import uuid4
+
+def main():
+    id: str = uuid4()
+    print(len(id) > 0)
+
+# expect-stdout: true

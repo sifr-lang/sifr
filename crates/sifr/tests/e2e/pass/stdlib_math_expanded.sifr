@@ -1,0 +1,30 @@
+# Test expanded sifr.math functions
+from sifr.math import asin, acos, atan, sinh, cosh, tanh, log10, log2, degrees, radians, isnan, isinf, trunc, hypot, tau, inf, nan
+
+def main():
+    # Trig inverses
+    print(trunc(degrees(asin(1.0))))
+    print(trunc(degrees(acos(0.0))))
+    
+    # Hyperbolic
+    print(trunc(sinh(0.0)))
+    
+    # Log variants
+    print(trunc(log10(100.0)))
+    
+    # Constants
+    print(isnan(nan))
+    print(isinf(inf))
+    
+    # Utility
+    print(trunc(3.7))
+    print(trunc(hypot(3.0, 4.0)))
+
+# expect-stdout: 90
+# expect-stdout: 90
+# expect-stdout: 0
+# expect-stdout: 2
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: 3
+# expect-stdout: 5

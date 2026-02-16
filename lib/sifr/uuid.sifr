@@ -1,0 +1,2 @@
+# sifr.uuid — UUID generation
+from _sifr.uuid import uuid4

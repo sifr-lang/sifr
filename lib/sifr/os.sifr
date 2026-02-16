@@ -1,2 +1,3 @@
 # sifr.os — OS operations
 from _sifr.sys import run_command, get_args
+from _sifr.fs import getcwd, listdir, mkdir, rmdir, remove_file, rename, is_file, is_dir

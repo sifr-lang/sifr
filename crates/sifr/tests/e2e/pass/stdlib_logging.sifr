@@ -1,0 +1,9 @@
+# Test sifr.logging module
+from sifr.logging import log_info, log_warn
+
+def main():
+    log_info("server started")
+    log_warn("disk space low")
+
+# expect-stdout: [INFO] server started
+# expect-stdout: [WARN] disk space low

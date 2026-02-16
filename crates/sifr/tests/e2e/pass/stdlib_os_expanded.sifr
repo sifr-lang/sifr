@@ -1,0 +1,8 @@
+# Test expanded sifr.os functions
+from sifr.os import getcwd
+
+def main():
+    cwd: str = getcwd()
+    print(len(cwd) > 0)
+
+# expect-stdout: true

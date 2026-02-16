@@ -1,0 +1,74 @@
+# milestone_stdlib_parity Demo
+#
+# Showcases expanded and new stdlib modules from this milestone.
+
+from sifr.math import asin, degrees, trunc, isnan, isinf, hypot, tau, inf, nan
+from sifr.os import getcwd
+from sifr.re import re_findall, re_split
+from sifr.statistics import mode
+from sifr.bisect import insort_left
+from sifr.graphlib import topological_sort
+from sifr.uuid import uuid4
+from sifr.platform import platform_system, platform_arch
+from sifr.pathlib import join_path, basename, extension
+from sifr.logging import log_info
+from sifr.test import assert_eq, assert_true
+
+def main():
+    # --- Part A: Expanded existing modules ---
+
+    # math: trig inverses, constants, utility
+    assert_eq(trunc(degrees(asin(1.0))), 90)
+    assert_true(isnan(nan))
+    assert_true(isinf(inf))
+    assert_eq(trunc(hypot(3.0, 4.0)), 5)
+
+    # os: filesystem operations
+    cwd: str = getcwd()
+    assert_true(len(cwd) > 0)
+
+    # re: findall, split
+    matches: list[str] = re_findall("[0-9]+", "abc123def456")
+    assert_eq(len(matches), 2)
+    parts: list[str] = re_split(",", "a,b,c")
+    assert_eq(len(parts), 3)
+
+    # statistics: mode
+    data: list[int] = [1, 2, 2, 3, 3, 3]
+    assert_eq(mode(data), 3)
+
+    # bisect: insort_left
+    sorted_list: list[int] = [10, 20, 30]
+    result: list[int] = insort_left(sorted_list, 25)
+    assert_eq(len(result), 4)
+
+    # --- Part B: New modules ---
+
+    # graphlib: topological sort
+    from_nodes: list[int] = [0, 0, 1, 2]
+    to_nodes: list[int] = [1, 2, 3, 3]
+    order: list[int] = topological_sort(4, from_nodes, to_nodes)
+    assert_eq(len(order), 4)
+
+    # uuid: random UUID generation
+    id: str = uuid4()
+    assert_true(len(id) > 0)
+
+    # platform: system info
+    os_name: str = platform_system()
+    arch: str = platform_arch()
+    assert_true(len(os_name) > 0)
+    assert_true(len(arch) > 0)
+
+    # pathlib: path manipulation
+    assert_eq(join_path("/home", "user"), "/home/user")
+    assert_eq(basename("/home/user/file.txt"), "file.txt")
+    assert_eq(extension("report.pdf"), ".pdf")
+
+    # logging: structured output
+    log_info("parity demo complete")
+
+    print("milestone_stdlib_parity demo: all checks passed!")
+
+# expect-stdout: [INFO] parity demo complete
+# expect-stdout: milestone_stdlib_parity demo: all checks passed!
