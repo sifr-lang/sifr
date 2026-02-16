@@ -1,0 +1,46 @@
+# milestone_lazy_iterators demo
+# Demonstrates lazy iterator support for generator functions
+
+# expect-stdout: Fibonacci: 0
+# expect-stdout: Fibonacci: 1
+# expect-stdout: Fibonacci: 1
+# expect-stdout: Fibonacci: 2
+# expect-stdout: Fibonacci: 3
+# expect-stdout: Fibonacci: 5
+# expect-stdout: Fibonacci: 8
+# expect-stdout: Fibonacci: 13
+# expect-stdout: Collected: [0, 1, 4, 9, 16]
+
+# ============================================================
+# Part 1: Lazy generator consumed by for loop
+# ============================================================
+
+def fibonacci(n: int) -> list[int]:
+    a: int = 0
+    b: int = 1
+    count: int = 0
+    while count < n:
+        yield a
+        temp: int = a + b
+        a = b
+        b = temp
+        count = count + 1
+
+# ============================================================
+# Part 2: Generator collected into a list
+# ============================================================
+
+def squares(n: int) -> list[int]:
+    i: int = 0
+    while i < n:
+        yield i * i
+        i = i + 1
+
+def main():
+    # Part 1: Lazy iteration — for loop consumes the iterator
+    for fib in fibonacci(8):
+        print("Fibonacci: " + str(fib))
+
+    # Part 2: Collect into a list
+    sq: list[int] = squares(5)
+    print("Collected: " + str(sq))

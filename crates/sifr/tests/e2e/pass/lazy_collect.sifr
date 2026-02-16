@@ -1,0 +1,12 @@
+# expect-stdout: [0, 1, 2, 3, 4]
+# Tests: collecting a generator into a list
+
+def count_up(n: int) -> list[int]:
+    i: int = 0
+    while i < n:
+        yield i
+        i = i + 1
+
+def main():
+    nums: list[int] = count_up(5)
+    print(nums)
