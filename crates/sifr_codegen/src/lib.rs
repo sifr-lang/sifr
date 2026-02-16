@@ -673,9 +673,15 @@ impl RustEmitter {
         let has_custom_eq = class.operator_impls.iter().any(|(n, _)| n == "__eq__");
         let has_custom_str = class.operator_impls.iter().any(|(n, _)| n == "__str__");
 
+        // Check if any field is a Callable type (Box<dyn Fn> doesn't implement Debug/Clone/PartialEq)
+        let has_callable_field = class.fields.iter().any(|(_, t)| matches!(t, Type::Callable(..)));
+
         // Derive attributes
         self.write_indent();
-        if has_custom_eq {
+        if has_callable_field {
+            // Callable fields (Box<dyn Fn>) don't implement Debug, Clone, or PartialEq
+            self.write("#[derive()]\n");
+        } else if has_custom_eq {
             // Don't derive PartialEq if custom __eq__ is defined
             self.write("#[derive(Debug, Clone)]\n");
         } else if class.is_hashable {
@@ -733,7 +739,7 @@ impl RustEmitter {
             if is_recursive {
                 self.write(&recursive_field_rust_type(field_ty, &class.name));
             } else {
-                self.write(&field_ty.rust_type());
+                self.write(&field_ty.rust_type_for_struct_field());
             }
             self.write(",\n");
         }
@@ -1297,6 +1303,9 @@ impl RustEmitter {
                         let is_recursive = self.recursive_fields.contains(&(class.name.clone(), param.name.clone()));
                         if is_recursive {
                             self.write(&recursive_field_rust_type(&param.ty, &class.name));
+                        } else if matches!(&param.ty, Type::Callable(..)) {
+                            // Callable params in constructors need 'static for Box::new()
+                            self.write(&format!("{} + 'static", param.ty.rust_type()));
                         } else {
                             self.write(&param.ty.rust_type());
                         }
@@ -1394,15 +1403,29 @@ impl RustEmitter {
                             self.write_indent();
                             self.write(field_name);
                             self.write(": ");
-                            self.emit_expr(value);
+                            // Wrap Callable values in Box::new() for struct fields
+                            let field_ty = class.fields.iter().find(|(n, _)| n == field_name).map(|(_, t)| t);
+                            let needs_box = field_ty.map_or(false, |t| matches!(t, Type::Callable(..)));
+                            if needs_box {
+                                self.write("Box::new(");
+                                self.emit_expr(value);
+                                self.write(")");
+                            } else {
+                                self.emit_expr(value);
+                            }
                             self.write(",\n");
                         }
                         // For any fields not explicitly assigned, check if param name matches
-                        for (field_name, _) in &class.fields {
+                        for (field_name, field_ty) in &class.fields {
                             if !field_inits.iter().any(|(f, _)| f == field_name) {
                                 if method.params.iter().any(|p| &p.name == field_name) {
                                     self.write_indent();
-                                    self.write(field_name);
+                                    // Wrap Callable params in Box::new() for struct fields
+                                    if matches!(field_ty, Type::Callable(..)) {
+                                        self.write(&format!("{}: Box::new({})", field_name, field_name));
+                                    } else {
+                                        self.write(field_name);
+                                    }
                                     self.write(",\n");
                                 }
                             }
@@ -1765,6 +1788,19 @@ impl RustEmitter {
                         // Returning a TypeVar-typed value needs .clone() to avoid move from &self
                         self.emit_expr(val);
                         self.write(".clone()");
+                    } else if self.current_class_name.is_some() {
+                        // Inside a class method: if returning `self` (a Name expr),
+                        // we need .clone() because methods take &self in Rust
+                        if let HirExpr::Name { name, .. } = val {
+                            if name == "self" {
+                                self.emit_expr(val);
+                                self.write(".clone()");
+                            } else {
+                                self.emit_expr(val);
+                            }
+                        } else {
+                            self.emit_expr(val);
+                        }
                     } else {
                         self.emit_expr(val);
                     }
@@ -2376,24 +2412,59 @@ impl RustEmitter {
                 self.emit_expr(value);
                 self.write(");\n");
             }
-            HirStmt::With { var, value, body } => {
+            HirStmt::With { items, body } => {
                 self.write_indent();
                 self.write("{\n");
                 self.indent += 1;
-                self.write_indent();
-                // Prefix unused variables with _ to suppress Rust warnings
-                if stmts_reference_var(body, var) {
-                    self.write("let ");
-                    self.write(var);
-                } else {
-                    self.write("let _");
-                    self.write(var);
+                // Emit each context manager item
+                let mut ctx_vars = Vec::new();
+                for (i, (var, value, has_cm)) in items.iter().enumerate() {
+                    let ctx_name = format!("__ctx_{}", i);
+                    if *has_cm {
+                        // Create context manager variable
+                        self.write_indent();
+                        self.write("let mut ");
+                        self.write(&ctx_name);
+                        self.write(" = ");
+                        self.emit_expr(value);
+                        self.write(";\n");
+                        // Call __enter__() and bind result to var
+                        self.write_indent();
+                        if stmts_reference_var(body, var) || items.iter().any(|(v, _, _)| v != var && v.contains(var)) {
+                            self.write("let ");
+                            self.write(var);
+                        } else {
+                            self.write("let _");
+                            self.write(var);
+                        }
+                        self.write(" = ");
+                        self.write(&ctx_name);
+                        self.write(".__enter__();\n");
+                        ctx_vars.push(ctx_name);
+                    } else {
+                        // Fallback: no context manager protocol, just bind directly
+                        self.write_indent();
+                        if stmts_reference_var(body, var) {
+                            self.write("let ");
+                            self.write(var);
+                        } else {
+                            self.write("let _");
+                            self.write(var);
+                        }
+                        self.write(" = ");
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
                 }
-                self.write(" = ");
-                self.emit_expr(value);
-                self.write(";\n");
+                // Emit body
                 for s in body {
                     self.emit_stmt(s);
+                }
+                // Call __exit__() on all context managers in reverse order
+                for ctx_name in ctx_vars.iter().rev() {
+                    self.write_indent();
+                    self.write(ctx_name);
+                    self.write(".__exit__();\n");
                 }
                 self.indent -= 1;
                 self.write_indent();
@@ -5482,8 +5553,10 @@ fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
                 if expr_references_var(iter, var_name) { return true; }
                 if stmts_reference_var(body, var_name) { return true; }
             }
-            HirStmt::With { value, body, .. } => {
-                if expr_references_var(value, var_name) { return true; }
+            HirStmt::With { items, body, .. } => {
+                for (_, value, _) in items {
+                    if expr_references_var(value, var_name) { return true; }
+                }
                 if stmts_reference_var(body, var_name) { return true; }
             }
             _ => {}
@@ -5666,8 +5739,10 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) 
             HirStmt::Yield { value } => {
                 collect_mutated_vars_in_expr(value, mutated);
             }
-            HirStmt::With { body, value, .. } => {
-                collect_mutated_vars_in_expr(value, mutated);
+            HirStmt::With { items, body, .. } => {
+                for (_, value, _) in items {
+                    collect_mutated_vars_in_expr(value, mutated);
+                }
                 collect_mutated_vars_inner(body, mutated);
             }
             _ => {}

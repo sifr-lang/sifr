@@ -405,8 +405,9 @@ Each `_sifr.*` intrinsic module maps to specific Rust crates or std modules. Whe
 | `_sifr.json` | `serde_json`, `serde` | Yes |
 | `_sifr.toml` | `toml` | Yes |
 | `_sifr.datetime` | `chrono` | Yes |
+| `_sifr.platform` | `std::env::consts`, `gethostname` | Partial (hostname needs `gethostname` crate) |
 
-**Key insight:** 5 of 10 intrinsic modules use only Rust std -- no external dependencies. Only `_sifr.crypto`, `_sifr.regex`, `_sifr.json`, `_sifr.toml`, and `_sifr.datetime` need external crates.
+**Key insight:** 6 of 11 intrinsic modules use only Rust std -- no external dependencies. Only `_sifr.crypto`, `_sifr.regex`, `_sifr.json`, `_sifr.toml`, `_sifr.datetime`, and `_sifr.platform` (for hostname) need external crates.
 
 ---
 

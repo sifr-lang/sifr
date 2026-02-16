@@ -1,0 +1,87 @@
+# milestone_compiler_hardening demo
+# Demonstrates three compiler correctness fixes:
+# 1. Import error reporting for nonexistent modules
+# 2. Full with statement protocol (__enter__/__exit__)
+# 3. Callable-as-struct-field compilation
+
+from typing import Callable
+
+# ============================================================
+# Part 1: with statement — full ContextManager protocol
+# ============================================================
+
+# A resource class implementing __enter__ and __exit__
+class DatabaseConnection:
+    host: str
+    connected: bool
+
+    def __init__(self, host: str, connected: bool):
+        self.host = host
+        self.connected = connected
+
+    def __enter__(self) -> DatabaseConnection:
+        print("Connecting to " + self.host + "...")
+        return self
+
+    def __exit__(self) -> None:
+        print("Disconnecting from " + self.host)
+
+    def query(self, sql: str) -> str:
+        return "Result from " + self.host + ": " + sql
+
+# expect-stdout: Connecting to localhost...
+# expect-stdout: Query: Result from localhost: SELECT 1
+# expect-stdout: Disconnecting from localhost
+
+# A second context manager for demonstrating multiple context managers
+class Logger:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __enter__(self) -> Logger:
+        print("[" + self.name + "] Session started")
+        return self
+
+    def __exit__(self) -> None:
+        print("[" + self.name + "] Session ended")
+
+    def log(self, msg: str) -> None:
+        print("[" + self.name + "] " + msg)
+
+# expect-stdout: [audit] Session started
+# expect-stdout: [audit] Processing data
+# expect-stdout: [audit] Session ended
+
+# ============================================================
+# Part 2: Callable-as-struct-field
+# ============================================================
+
+# A class that stores a callback function as a field
+class EventHandler:
+    name: str
+    handler: Callable[[str], str]
+
+    def __init__(self, name: str, handler: Callable[[str], str]):
+        self.name = name
+        self.handler = handler
+
+# expect-stdout: Handler: onClick
+
+def on_click(event: str) -> str:
+    return "Handled: " + event
+
+def main():
+    # Part 1: Single context manager with __enter__/__exit__
+    with DatabaseConnection("localhost", true) as db:
+        result: str = db.query("SELECT 1")
+        print("Query: " + result)
+
+    # Part 1b: Single context manager
+    with Logger("audit") as log:
+        log.log("Processing data")
+
+    # Part 2: Callable-as-struct-field compiles correctly
+    eh: EventHandler = EventHandler("onClick", on_click)
+    print("Handler: " + eh.name)

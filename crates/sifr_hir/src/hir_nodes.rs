@@ -211,9 +211,10 @@ pub enum HirStmt {
         value: HirExpr,
     },
     /// With statement: with expr as var: body
+    /// Supports multiple context managers: with A() as a, B() as b: body
+    /// Each item is (var_name, context_expr, has_context_manager_protocol)
     With {
-        var: String,
-        value: HirExpr,
+        items: Vec<(String, HirExpr, bool)>,
         body: Vec<HirStmt>,
     },
     /// Nested function definition: def inside def

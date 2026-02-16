@@ -29,6 +29,7 @@ This plan synthesizes findings from three audit documents:
 - **Known compiler gaps (addressed in m29):**
   - Importing from a nonexistent module silently fails — no "unknown module" error, only downstream "undefined function" when the symbol is used
   - `with` statement is syntactic sugar only — no `__enter__`/`__exit__` protocol, no multiple context managers, no compile-time enforcement
+  - `Callable` types emit `impl Fn(...)` which is invalid in Rust struct fields — needs `Box<dyn Fn(...)>` (blocks `ArgumentParser`, `defaultdict`, `Timer`)
 
 ---
 
@@ -37,41 +38,46 @@ This plan synthesizes findings from three audit documents:
 ```
 milestone_stdlib_classes (done)
     │
-    ├── m29: milestone_compiler_hardening   (S — import errors + with statement)
+    ├── m29:   milestone_compiler_hardening   (S-M — import errors + with protocol + Callable fix)
     │
-    ├── m30: milestone_test_infra           (S — test infrastructure)
+    ├── m29.5: milestone_lazy_iterators       (M — lazy state machine codegen for generators)
     │
-    ├── m31: milestone_stdlib_functions     (M — pure-Sifr + intrinsic function additions)
+    ├── m30:   milestone_test_infra           (S — test infrastructure)
     │
-    ├── m32: milestone_stdlib_naming        (S — API naming alignment)
+    ├── m31:   milestone_stdlib_functions     (M — pure-Sifr + intrinsic additions + generic stdlib)
     │
-    ├── m33: milestone_stdlib_class_rollout (L — 5 new stdlib classes)
+    ├── m32:   milestone_stdlib_naming        (S — API naming alignment)
     │
-    └── m34: milestone_cpython_tests        (M — port CPython test assertions)
+    ├── m33:   milestone_stdlib_class_rollout (L — 6 new stdlib classes incl. datetime)
+    │
+    └── m34:   milestone_cpython_tests        (M — port CPython test assertions)
 ```
 
 **CPython test suite reference:** `/Users/yaseralnajjar/work/sifr/cpython/` — the CPython source tree used as the authoritative behavioral reference. Test files live at `Lib/test/test_<module>.py`. External test data (e.g., `Lib/test/mathdata/math_testcases.txt`) can be mined for additional test vectors.
 
 **Dependency chain:**
 ```
-milestone_stdlib_classes → m29 → m30 → m31 → m32 → m33 → m34 → milestone_async
+milestone_stdlib_classes → m29 (compiler_hardening) → m29.5 (lazy_iterators) → m30 → m31 → m32 → m33 → m34 → milestone_async
 ```
 
+> **Note:** `milestone_lazy_iterators` was added after initial planning as a prerequisite milestone. It sits between m29 and m30 in the chain. See `07_stdlib_parity.md` for the canonical ordering.
+
 **Rationale for ordering:**
-- **m29 first:** Fixes two compiler correctness issues (silent import failures, incomplete `with` statement) that affect every subsequent milestone. New stdlib modules added in m31-m33 need proper import error reporting, and `with` support is a prerequisite for `io.open()` and `tempfile` class APIs in m33.
+- **m29 first:** Fixes compiler correctness issues (silent import failures, incomplete `with` statement, `Callable`-as-struct-field) that affect every subsequent milestone. New stdlib modules added in m31-m33 need proper import error reporting, and `with` support is a prerequisite for `io.open()` and `tempfile` class APIs in m33.
+- **lazy_iterators after m29:** Lazy iteration is a core compiler feature that should be in place before adding new stdlib functions. This way, `itertools` functions in m31 can be written as lazy generators from the start, and `csv.reader`/`glob.iglob` can be implemented properly.
 - **m30 before m31:** `assert_almost_eq` is needed to properly test the float-returning functions added in m31.
-- **m31 before m32:** Add the missing functions first, then rename everything in one pass. Renaming before adding would require naming new functions twice (once with old convention, once with new).
+- **m31 before m32:** Add the missing functions first (including generic `bisect`/`heapq`/`itertools`), then rename everything in one pass. Renaming before adding would require naming new functions twice (once with old convention, once with new).
 - **m32 before m33:** Classes should be written with the final CPython-aligned names from the start.
-- **m33 before m34:** CPython test porting for class-based modules (re, graphlib, pathlib) requires the classes to exist first.
+- **m33 before m34:** CPython test porting for class-based modules (re, graphlib, pathlib) requires the classes to exist first. `datetime`/`timedelta` with operator overloading validates the operator export pipeline.
 - **m34 last:** Test porting is the validation layer — it should run against the final API surface.
 
 **Total estimated effort:** ~5-6 sprints (S=1-2 days, M=3-5 days, L=5-8 days)
 
 ---
 
-## m29: milestone_compiler_hardening — Import Errors and Context Managers
+## m29: milestone_compiler_hardening — Import Errors, Context Managers, and Callable Fix
 
-**Goal:** Fix two compiler correctness gaps that affect developer experience and block stdlib features: (1) importing from a nonexistent module silently fails instead of producing a clear error, and (2) the `with` statement is incomplete — it's syntactic sugar for scoped blocks but doesn't implement the Python context manager protocol (`__enter__`/`__exit__`).
+**Goal:** Fix three compiler correctness gaps: (1) importing from a nonexistent module silently fails instead of producing a clear error, (2) the `with` statement is incomplete — it's syntactic sugar for scoped blocks but doesn't implement the Python context manager protocol (`__enter__`/`__exit__`), and (3) `Callable` types emit `impl Fn(...)` which is invalid in Rust struct fields — needs `Box<dyn Fn(...)>`.
 
 **Size:** Small-Medium (2-3 days)
 
@@ -159,18 +165,32 @@ Note: Python's `__exit__` takes `(exc_type, exc_val, exc_tb)` and can suppress e
 - `crates/sifr/tests/e2e/pass/with_multiple.sifr` — `with A() as a, B() as b:` — verify both context managers work
 - `crates/sifr/tests/e2e/fail/with_non_context_manager.sifr` — using a type without `__enter__`/`__exit__` in `with` should produce a compile error
 
+### Issue 3: `Callable`-as-Struct-Field Emits Invalid Rust
+
+`Callable` types currently emit `impl Fn(...)` via `rust_type()` in `types.rs` (line 293). This is valid for function parameters but **invalid in Rust struct fields** — Rust requires a concrete or boxed type. Fix: when `Callable` appears in a struct field context, emit `Box<dyn Fn(...)>` instead of `impl Fn(...)`.
+
+**What this unblocks:** `argparse.ArgumentParser`, `collections.defaultdict`, and `timeit.Timer` — all of which need to store callbacks as struct fields.
+
+**Files to change:**
+- `crates/sifr_type_system/src/types.rs` — `rust_type()` for `Type::Callable` (line 293): add context parameter or separate method for struct field emission
+
+**E2E tests:**
+- `crates/sifr/tests/e2e/pass/callable_struct_field.sifr` — class with a `Callable` field, verify it compiles and works
+
 ### Files to Change
 
 - `crates/sifr_hir/src/lower.rs` — import error reporting (lines 422-509), `with` lowering (lines 1681-1706)
 - `crates/sifr_codegen/src/lib.rs` — `with` codegen (lines 2379-2401)
+- `crates/sifr_type_system/src/types.rs` — `Callable` `rust_type()` for struct field context
 - Possibly `crates/sifr_hir/src/hir.rs` — update `HirStmt::With` to carry `__enter__`/`__exit__` method info
-- 2-3 new E2E pass tests, 2-3 new E2E fail tests
+- 3-4 new E2E pass tests, 2-3 new E2E fail tests
 - Update 1 existing fail test (`stdlib_invalid_module.sifr`)
 
 ### What This Unblocks
 
 - **Proper import errors** improve developer experience for every subsequent milestone — when adding new stdlib functions/classes (m31-m33), typos in import statements will be caught immediately instead of producing confusing downstream errors.
-- **`with` statement** unblocks `io.open()` as a context manager, `tempfile.NamedTemporaryFile`, and any future stdlib class that manages resources. This was previously listed as a deferred blocker.
+- **`with` statement** unblocks `io.open()` as a context manager, `tempfile.NamedTemporaryFile`, and any future stdlib class that manages resources.
+- **`Callable`-as-struct-field** unblocks `argparse.ArgumentParser`, `collections.defaultdict`, and `timeit.Timer`.
 
 ### Definition of Done
 
@@ -178,10 +198,57 @@ Note: Python's `__exit__` takes `(exc_type, exc_val, exc_tb)` and can suppress e
 - `from mymodule import bar` (when `mymodule` doesn't exist) produces `"unknown module 'mymodule'"`
 - Existing import error for bad members still works: `from sifr.math import nonexistent` → `"module 'sifr.math' has no member 'nonexistent'"`
 - `with X() as y:` calls `X().__enter__()` and binds result to `y`, calls `__exit__()` at scope end
+- `__exit__()` is called on all exit paths: normal completion, early `return`, `break`, `continue`, and error propagation (maps to Rust `Drop` semantics)
 - `with A() as a, B() as b:` handles all context managers (not just the first)
 - Using a non-`ContextManager` type in `with` produces a compile error
+- A class with a `Callable` field compiles correctly (struct field emits `Box<dyn Fn(...)>`)
 - All existing E2E tests pass (zero regressions)
-- New E2E tests for both import errors and `with` statement
+- New E2E tests: `with_enter_exit`, `with_multiple`, `callable_struct_field`
+- New E2E fail tests: `with_non_context_manager`, `import_nonexistent_local`
+
+---
+
+## m29.5: milestone_lazy_iterators — Lazy Iterator Protocol
+
+**Goal:** Replace the eager generator codegen (`_yields.push()` → return `Vec<T>`) with a proper lazy `Iterator` implementation using state machines. Currently, `yield` in a function collects all values into a `Vec` and returns the full list. This milestone makes generators produce lazy iterators that yield values on demand via `next() -> Option<T>`.
+
+**Size:** Medium (3-5 days)
+
+### Current State
+
+Generators work but are eager: the codegen creates a `Vec<T>`, pushes every `yield`ed value into it, and returns the full `Vec` at the end (lines 1578-1600 and 2373-2377 of `sifr_codegen/src/lib.rs`). There is no state machine, no `Iterator` trait implementation, no `next()` method.
+
+### Changes
+
+1. **HIR:** Add `HirType::Iterator(Box<Type>)` to represent lazy iterator types. A function containing `yield` returns `Iterator[T]` instead of `list[T]`.
+2. **Codegen — state machine:** Instead of `_yields.push(val)`, emit a Rust struct that implements `Iterator<Item = T>`. Each `yield` becomes a state transition. The struct stores local variables as fields and tracks the current state via an enum.
+3. **Codegen — `for` loop integration:** `for x in lazy_iter` emits `while let Some(x) = iter.next()` instead of `for x in &vec`.
+4. **Codegen — eager collection:** `list(iter)` or assigning an iterator to `list[T]` calls `.collect::<Vec<T>>()` for backward compatibility.
+5. **Type system:** `Iterator[T]` is a first-class type. It is assignable to `list[T]` via implicit `.collect()`.
+
+### Files to Change
+
+- `crates/sifr_hir/src/hir_nodes.rs` — add `HirType::Iterator(Box<Type>)`
+- `crates/sifr_type_system/src/types.rs` — add `Type::Iterator` variant, `rust_type()` implementation
+- `crates/sifr_codegen/src/lib.rs` — replace eager `_yields.push()` pattern (lines 1578-1600) with state machine struct emission; update `for` loop codegen; add `.collect()` for `list(iter)` conversion
+- `crates/sifr_hir/src/lower.rs` — update generator function return type inference from `list[T]` to `Iterator[T]`
+- 3 new E2E test files
+
+### What This Unblocks
+
+- `glob.iglob` — lazy directory traversal
+- `csv.reader` — lazy line-by-line reading
+- `itertools` functions (`chain`, `take`, `repeat`) — can be lazy instead of materializing full lists
+- Foundation for async iterators (`async for`) in Phase 8
+
+### Definition of Done
+
+- A generator function returns a lazy iterator, not a `Vec`
+- `for x in generator_fn()` works lazily (no full materialization)
+- `list(generator_fn())` eagerly collects into a list
+- Existing generator E2E tests pass (backward compatible via implicit collect)
+- New E2E tests: `lazy_generator`, `lazy_for_loop`, `lazy_collect`
+- `cargo test` passes (zero regressions)
 
 ---
 
@@ -261,7 +328,7 @@ Also fix `stdev` (which calls `variance`) and add `pstdev`.
 
 ## m31: milestone_stdlib_functions — Pure-Sifr and Intrinsic Function Additions
 
-**Goal:** Close the function-level gaps identified by both audits. Add ~25 pure-Sifr functions and ~12 new intrinsics across 12 modules. This is the largest single increase in stdlib API surface.
+**Goal:** Close the function-level gaps identified by both audits. Add ~25 pure-Sifr functions and ~12 new intrinsics across 12 modules. Also convert `bisect`, `heapq`, and `itertools` to generic `list[T]` using `TypeVar` — proving that generics work in the stdlib export pipeline. This is the largest single increase in stdlib API surface.
 
 **Size:** Medium (3-5 days)
 
@@ -313,21 +380,51 @@ def median_high(data: list[float]) -> float:
     # High median (for even-length: higher of two middle values)
 ```
 
-#### `sifr.bisect` — 1 new function
+#### `sifr.bisect` — 1 new function + generic conversion
 
 ```python
-def insort_right(a: list[int], x: int) -> list[int]:
-    # Insert at bisect_right position
+from typing import TypeVar
+T = TypeVar("T")
+
+def bisect_left(a: list[T], x: T) -> int:
+    # (existing, converted to generic)
+
+def bisect_right(a: list[T], x: T) -> int:
+    # (existing, converted to generic)
+
+def insort_left(a: list[T], x: T) -> list[T]:
+    # (existing, converted to generic)
+
+def insort_right(a: list[T], x: T) -> list[T]:
+    # Insert at bisect_right position (new)
 ```
 
-#### `sifr.heapq` — 2 new functions
+#### `sifr.heapq` — 2 new functions + generic conversion
 
 ```python
-def heapreplace(heap: list[int], item: int) -> list[int]:
-    # Pop smallest, push item (more efficient than separate pop+push)
+from typing import TypeVar
+T = TypeVar("T")
 
-def heappushpop(heap: list[int], item: int) -> list[int]:
-    # Push item, pop smallest
+def heappush(heap: list[T], item: T) -> list[T]:
+    # (existing, converted to generic)
+
+def heappop(heap: list[T]) -> list[T]:
+    # (existing, converted to generic)
+
+def heapify(data: list[T]) -> list[T]:
+    # (existing, converted to generic)
+
+def nsmallest(n: int, data: list[T]) -> list[T]:
+    # (existing, converted to generic)
+
+def nlargest(n: int, data: list[T]) -> list[T]:
+    # (existing, converted to generic)
+
+def heapreplace(heap: list[T], item: T) -> list[T]:
+    # Pop smallest, push item (new)
+
+def heappushpop(heap: list[T], item: T) -> list[T]:
+    # Push item, pop smallest (new)
 ```
 
 #### `sifr.string` — 2 new items
@@ -382,20 +479,32 @@ def is_global(addr: str) -> bool:
     # Not private, not loopback, not multicast, not reserved
 ```
 
-#### `sifr.itertools` — 3 new functions
+#### `sifr.itertools` — 3 new functions + generic conversion
 
 ```python
-def pairwise(data: list[int]) -> list[str]:
-    # Consecutive pairs as "a,b" strings (limited by no tuple type)
+from typing import TypeVar
+T = TypeVar("T")
 
-def batched(data: list[int], n: int) -> list[str]:
-    # Batch into groups (JSON-encoded sublists)
+def chain(a: list[T], b: list[T]) -> list[T]:
+    # (existing, converted to generic)
 
-def islice(data: list[int], start: int, stop: int) -> list[int]:
-    # Slice from start to stop
+def take(n: int, data: list[T]) -> list[T]:
+    # (existing, converted to generic)
+
+def flatten(data: list[list[T]]) -> list[T]:
+    # (existing, converted to generic)
+
+def pairwise(data: list[T]) -> list[str]:
+    # Consecutive pairs as "a,b" strings (new)
+
+def batched(data: list[T], n: int) -> list[list[T]]:
+    # Batch into groups (new)
+
+def islice(data: list[T], start: int, stop: int) -> list[T]:
+    # Slice from start to stop (new)
 ```
 
-Note: `itertools` is fundamentally limited without generics and iterators. These additions cover the most-requested non-generic, non-iterator functions.
+Note: Converting `bisect`, `heapq`, and `itertools` to generic `list[T]` using `TypeVar` is the first use of generics in stdlib `.sifr` files. The full pipeline (generic function in `.sifr` → `TypeVar` in exported signatures → user import → monomorphized codegen) must be validated here.
 
 #### `sifr.tempfile` — 1 new function
 
@@ -457,6 +566,7 @@ Add or expand tests for every new function. Target: ~40 new assertions across ~1
 
 - All ~25 pure-Sifr functions work correctly
 - All ~12 new intrinsics compile and produce correct output
+- `bisect`, `heapq`, `itertools` work with generic types (e.g., `bisect_left([1.0, 2.0, 3.0], 2.5)` works)
 - `sifr.math` coverage goes from ~85% to ~95% (29 → 41 functions)
 - `sifr.statistics` coverage goes from ~50% to ~70%
 - ~40 new test assertions pass
@@ -578,14 +688,14 @@ All existing stdlib test files that use renamed functions must be updated. This 
 
 - All renamed functions work with CPython-compatible names
 - All E2E tests updated and passing
-- Old names still work (re-exported as aliases) — to be deprecated later
+- Old names still work (re-exported as aliases). Deprecation schedule: aliases kept in Phase 7, compiler warnings in Phase 8, removal in Phase 9
 - `cargo test` passes (zero regressions)
 
 ---
 
 ## m33: milestone_stdlib_class_rollout — Expand Class-Based APIs
 
-**Goal:** Add 5 new class-based APIs to the stdlib, leveraging the pipeline proven by `milestone_stdlib_classes`. These are the classes that **don't** need `Callable`-as-struct-field and are therefore immediately implementable.
+**Goal:** Add 6 new class-based APIs to the stdlib, leveraging the pipeline proven by `milestone_stdlib_classes`. Includes `datetime`/`timedelta` with operator overloading (`__add__`/`__sub__`) — proving that operator methods export correctly from stdlib classes.
 
 **Size:** Large (5-8 days)
 
@@ -769,6 +879,62 @@ def uuid4() -> UUID:
 
 **Why:** CPython's `uuid.uuid4()` returns a `UUID` object, not a string. This is a lightweight class that wraps the existing `uuid4` intrinsic.
 
+#### 6. `sifr.datetime.datetime` / `timedelta` — Date/time classes with operator overloading
+
+```python
+class timedelta:
+    days: int
+    seconds: int
+    microseconds: int
+
+    def __init__(self, days: int, seconds: int, microseconds: int):
+        self.days = days
+        self.seconds = seconds
+        self.microseconds = microseconds
+
+    def total_seconds(self) -> float:
+        return float(self.days * 86400 + self.seconds) + float(self.microseconds) / 1000000.0
+
+    def __add__(self, other: timedelta) -> timedelta:
+        return timedelta(self.days + other.days, self.seconds + other.seconds, self.microseconds + other.microseconds)
+
+    def __sub__(self, other: timedelta) -> timedelta:
+        return timedelta(self.days - other.days, self.seconds - other.seconds, self.microseconds - other.microseconds)
+```
+
+```python
+class datetime:
+    year: int
+    month: int
+    day: int
+    hour: int
+    minute: int
+    second: int
+
+    def __init__(self, year: int, month: int, day: int, hour: int, minute: int, second: int):
+        # ...fields
+
+    def __add__(self, delta: timedelta) -> datetime:
+        # Add timedelta to datetime via intrinsic
+        return datetime_add(self, delta)
+
+    def __sub__(self, delta: timedelta) -> datetime:
+        return datetime_sub(self, delta)
+
+    def isoformat(self) -> str:
+        return datetime_isoformat(self)
+
+    def timestamp(self) -> float:
+        return datetime_timestamp(self)
+
+def now() -> datetime:
+    return datetime_now()
+```
+
+**New intrinsics:** `datetime_add`, `datetime_sub`, `datetime_isoformat`, `datetime_timestamp`, `datetime_now` (5 intrinsics in `_sifr.datetime`, wrapping `chrono`)
+
+**Why:** `datetime` is one of the most-used CPython modules. `timedelta` is pure Sifr (no intrinsics needed). This is the first stdlib class with `__add__`/`__sub__` operator overloading — validates that operator methods export correctly from stdlib `.sifr` files.
+
 ### E2E Tests
 
 - `stdlib_graphlib_sorter.sifr` — `TopologicalSorter` construction, `add`, `static_order`
@@ -776,18 +942,20 @@ def uuid4() -> UUID:
 - `stdlib_logging_logger.sifr` — `Logger` construction, level filtering, `getLogger`
 - `stdlib_re_match.sifr` — `Match` object from `search`, `.group()`, `.start()`, `.end()`
 - `stdlib_uuid_class.sifr` — `UUID` object, `.hex()`, `.urn()`, `.to_str()`
+- `stdlib_datetime_class.sifr` — `datetime.now()`, `timedelta` construction, `datetime + timedelta`, `timedelta + timedelta`, `isoformat`
 - Fail tests: wrong types to constructors (3-5 fail tests)
 
 ### Files to Change
 
-- `crates/sifr_hir/src/stdlib.rs` — ~5 new intrinsic signatures
-- `crates/sifr_codegen/src/lib.rs` — ~5 new codegen match arms
+- `crates/sifr_hir/src/stdlib.rs` — ~10 new intrinsic signatures
+- `crates/sifr_codegen/src/lib.rs` — ~10 new codegen match arms
 - `lib/sifr/graphlib.sifr` — add `TopologicalSorter` class
 - `lib/sifr/pathlib.sifr` — add `Path` class
 - `lib/sifr/logging.sifr` — add `Logger` class + `getLogger`
 - `lib/sifr/re.sifr` — add `Match` class + updated `search` function
 - `lib/sifr/uuid.sifr` — add `UUID` class + updated `uuid4`
-- ~8 new E2E test files
+- `lib/sifr/datetime.sifr` — add `datetime` + `timedelta` classes with `__add__`/`__sub__`, `now` factory
+- ~9 new E2E test files
 
 ### Risk Assessment
 
@@ -796,16 +964,18 @@ def uuid4() -> UUID:
 | Class method signature export fails for multi-class modules | Low | Medium | Pipeline proven by Counter; same pattern |
 | `Path` methods that call `_sifr.fs` intrinsics fail with borrow issues | Medium | Medium | Same pattern as Counter calling `_sifr.collections` — proven |
 | `Match` construction from JSON-encoded intrinsic output is fragile | Medium | Low | Can parse JSON in pure Sifr or add a dedicated intrinsic |
-| 5 classes in one milestone is too large | Low | Medium | Classes are independent — can be split if needed |
+| Operator overloading (`__add__`/`__sub__`) fails in stdlib class export | Medium | Medium | Operator overloading works in user code (`operator_overload.sifr`); first test in stdlib pipeline |
+| 6 classes in one milestone is too large | Low | Medium | Classes are independent — can be split if needed |
 
 ### Definition of Done
 
-- All 5 classes compile, export, and are importable by user code
+- All 6 classes compile, export, and are importable by user code
 - `from sifr.pathlib import Path` works; `p = Path("/tmp/test.txt"); p.exists()` works
 - `from sifr.logging import getLogger` works; `logger.info("hello")` prints with level filtering
 - `from sifr.graphlib import TopologicalSorter` works with `add`/`static_order`
 - `from sifr.re import Match` works; `search` returns `Match` objects
 - `from sifr.uuid import UUID` works; `uuid4()` returns `UUID` object
+- `from sifr.datetime import datetime, timedelta` works; `datetime.now() + timedelta(days=1)` works with operator overloading
 - All E2E tests pass
 - `cargo test` passes (zero regressions)
 - Demo: `demos/milestone_stdlib_class_rollout_demo.sifr`
@@ -1000,11 +1170,12 @@ Per the CPython test portability research:
 
 | Milestone | ID | Size | New Functions | New Intrinsics | New Tests | Key Deliverable |
 |---|---|---|---|---|---|---|
-| Compiler Hardening | m29 | S-M | 0 | 0 | ~6 assertions | Import error reporting, `with` protocol |
+| Compiler Hardening | m29 | S-M | 0 | 0 | ~8 assertions | Import errors, `with` protocol, `Callable` struct field fix |
+| Lazy Iterators | m29.5 | M | 0 | 0 | ~6 assertions | Lazy state machine codegen for generators |
 | Test Infrastructure | m30 | S | 2 (`pvariance`, `pstdev`) | 3 | ~10 assertions | `assert_almost_eq`, variance bug fix |
-| Stdlib Functions | m31 | M | ~25 | ~12 | ~40 assertions | Close function-level gaps |
+| Stdlib Functions | m31 | M | ~25 | ~12 | ~40 assertions | Function gaps + generic `bisect`/`heapq`/`itertools` |
 | Naming Alignment | m32 | S | 0 (renames) | 0 | ~0 (updates) | CPython-compatible names |
-| Class Rollout | m33 | L | 5 classes | ~5 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID |
+| Class Rollout | m33 | L | 6 class APIs (7 classes) | ~10 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID, datetime/timedelta |
 | CPython Tests | m34 | M | 0 | 0 | ~500 assertions | Behavioral validation against CPython |
 
 **Cumulative impact:**
@@ -1013,31 +1184,24 @@ Per the CPython test portability research:
 |---|---|---|
 | Stdlib test assertions | ~160 | ~750+ |
 | Stdlib functions (across all modules) | ~120 | ~170+ |
-| Class-based APIs | 1 (Counter) | 6 (+ Path, Logger, Match, TopologicalSorter, UUID) |
+| Class-based APIs | 1 (Counter) | 7 concrete classes across 6 APIs (+ Path, Logger, Match, TopologicalSorter, UUID, datetime/timedelta) |
+| Generic stdlib functions | 0 | `bisect`, `heapq`, `itertools` use `TypeVar` |
 | Modules with CPython-compatible names | ~5 | ~30+ |
 | Math function coverage | ~85% | ~95% |
 | Average module coverage | ~35% | ~55% |
 | Import error quality | Silent failures for nonexistent modules | Clear "unknown module" errors |
-| `with` statement | Scoped block only (no protocol) | Full `__enter__`/`__exit__` protocol |
+| `with` statement | Scoped block only (no protocol) | Full `__enter__`/`__exit__` protocol with cleanup on all exits |
+| `Callable` in struct fields | Compile error (`impl Fn`) | Works via `Box<dyn Fn(...)>` |
+| Generators | Eager (`Vec<T>`) | Lazy iterators via state machine |
 
 ---
 
 ## What's Explicitly Deferred (and Why)
 
-These items are blocked by language features not yet available:
-
 | Item | Blocker | When to Address |
 |---|---|---|
-| `argparse.ArgumentParser` | `Callable`-as-struct-field (`Box<dyn Fn>`) | After codegen fix milestone |
-| `collections.defaultdict` class | `Callable`-as-struct-field | After codegen fix milestone |
-| `timeit.Timer` class | `Callable`-as-struct-field | After codegen fix milestone |
-| Generic `bisect`/`heapq`/`itertools` | Generics milestone | After `milestone_generics_impl` |
-| Lazy iterators (`iglob`, `csv.reader`) | Iterator protocol | After generators/iterators milestone |
-| `io.open()` / context managers | `with` statement (m29 delivers protocol; `io.open` needs File class in m33) | m29 delivers `__enter__`/`__exit__` protocol; `io.open()` File class deferred to m33 or later |
-| `datetime`/`timedelta` class arithmetic | Operator overloading for stdlib classes | After operator overloading export is proven |
-| Exception types (`TOMLDecodeError`, `CycleError`) | Exception/error type support | After error handling milestone |
+| Exception types (`TOMLDecodeError`, `CycleError`) | Error types in stdlib `.sifr` files are untested — custom error classes work in user code but the export pipeline from stdlib is unproven | Next phase — requires validating error type export from stdlib |
 | `assert_raises` | `std::panic::catch_unwind` codegen | Lower priority — NAN/INF checks suffice for most cases |
-| Mining `mathdata/math_testcases.txt` | Parsing infrastructure | Stretch goal for m34 or future milestone |
 
 ---
 

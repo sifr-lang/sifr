@@ -470,7 +470,19 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                             aliases,
                         });
                         continue;
+                    } else {
+                        // Module doesn't exist in stdlib — emit clear error at the import site
+                        ctx.error(format!("unknown stdlib module '{}'", module_name));
+                        continue;
                     }
+                }
+
+                // Check if the local module exists in externals before resolving
+                let has_local_module = externals.functions.contains_key(&module_name)
+                    || externals.classes.contains_key(&module_name);
+                if !has_local_module {
+                    ctx.error(format!("unknown module '{}'", module_name));
+                    continue;
                 }
 
                 // Resolve imported names from external definitions (local modules)
@@ -482,23 +494,31 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                         continue;
                     }
 
+                    let mut found = false;
                     // Look up in external functions
                     if let Some(module_fns) = externals.functions.get(&module_name) {
                         if let Some(ft) = module_fns.get(name) {
                             ctx.functions.insert(local.clone(), ft.clone());
+                            found = true;
                         }
                     }
                     // Look up in external classes
-                    if let Some(module_classes) = externals.classes.get(&module_name) {
-                        if let Some(class_ty) = module_classes.get(name) {
-                            ctx.class_types.insert(local.clone(), class_ty.clone());
-                            // Also register the constructor
-                            if let Type::Class { fields, .. } = class_ty {
-                                let params: Vec<(String, Type)> = fields.clone();
-                                let ft = FunctionType::new(params, class_ty.clone());
-                                ctx.functions.insert(local, ft);
+                    if !found {
+                        if let Some(module_classes) = externals.classes.get(&module_name) {
+                            if let Some(class_ty) = module_classes.get(name) {
+                                ctx.class_types.insert(local.clone(), class_ty.clone());
+                                // Also register the constructor
+                                if let Type::Class { fields, .. } = class_ty {
+                                    let params: Vec<(String, Type)> = fields.clone();
+                                    let ft = FunctionType::new(params, class_ty.clone());
+                                    ctx.functions.insert(local, ft);
+                                }
+                                found = true;
                             }
                         }
+                    }
+                    if !found {
+                        ctx.error(format!("module '{}' has no member '{}'", module_name, name));
                     }
                 }
 
@@ -1683,26 +1703,76 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 ctx.error("with statement must have at least one item".to_string());
                 return None;
             }
-            let item = &with_stmt.items[0];
-            let value = lower_expr(&item.context_expr, ctx)?;
-            let var_name = if let Some(ref vars) = item.optional_vars {
-                match vars.as_ref() {
-                    Expr::Name(n) => n.id.to_string(),
-                    _ => {
-                        ctx.error("with target must be a simple name".to_string());
-                        return None;
-                    }
-                }
-            } else {
-                "_with_val".to_string()
-            };
-            // Define the variable in scope
-            let val_ty = value.ty().clone();
+            let mut items = Vec::new();
             ctx.scope.push();
-            ctx.scope.define(var_name.clone(), val_ty);
+            for item in &with_stmt.items {
+                let value = lower_expr(&item.context_expr, ctx)?;
+                let var_name = if let Some(ref vars) = item.optional_vars {
+                    match vars.as_ref() {
+                        Expr::Name(n) => n.id.to_string(),
+                        _ => {
+                            ctx.error("with target must be a simple name".to_string());
+                            return None;
+                        }
+                    }
+                } else {
+                    format!("_with_val_{}", items.len())
+                };
+                let val_ty = value.ty().clone();
+                // Check if the type implements the ContextManager protocol (__enter__/__exit__)
+                let has_context_manager = match &val_ty {
+                    Type::Class { methods, .. } => {
+                        let has_enter = methods.iter().any(|(name, _)| name == "__enter__");
+                        let has_exit = methods.iter().any(|(name, _)| name == "__exit__");
+                        if has_enter && has_exit {
+                            true
+                        } else if has_enter || has_exit {
+                            ctx.error(format!(
+                                "type used in 'with' statement must implement both __enter__ and __exit__ methods"
+                            ));
+                            false
+                        } else {
+                            ctx.error(format!(
+                                "type '{}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
+                                match &val_ty { Type::Class { name, .. } => name.clone(), _ => "unknown".to_string() }
+                            ));
+                            false
+                        }
+                    }
+                    _ => {
+                        // Non-class types don't have methods — can't be context managers
+                        ctx.error(format!(
+                            "type used in 'with' statement must implement the ContextManager protocol (__enter__/__exit__)"
+                        ));
+                        false
+                    }
+                };
+                // If the type has __enter__, the variable is bound to __enter__()'s return type
+                // We resolve the actual class type from ctx.class_types to get full fields/methods
+                let bound_ty = if has_context_manager {
+                    if let Type::Class { methods, .. } = &val_ty {
+                        let ret_ty = methods.iter()
+                            .find(|(name, _)| name == "__enter__")
+                            .map(|(_, ft)| (*ft.return_type).clone())
+                            .unwrap_or(val_ty.clone());
+                        // If the return type is a class, look up the fully-defined version
+                        if let Type::Class { name: ret_name, .. } = &ret_ty {
+                            ctx.class_types.get(ret_name).cloned().unwrap_or(ret_ty)
+                        } else {
+                            ret_ty
+                        }
+                    } else {
+                        val_ty.clone()
+                    }
+                } else {
+                    val_ty.clone()
+                };
+                ctx.scope.define(var_name.clone(), bound_ty);
+                items.push((var_name, value, has_context_manager));
+            }
             let body = lower_stmts(&with_stmt.body, func_type, ctx);
             ctx.scope.pop();
-            Some(HirStmt::With { var: var_name, value, body })
+            Some(HirStmt::With { items, body })
         }
         Stmt::Try(try_stmt) => {
             let prev_in_try = ctx.in_try_block;

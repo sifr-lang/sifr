@@ -16,9 +16,9 @@ status: pending
 - **Async runtime:** built on `tokio` (bundled automatically when async is used)
 - `**sifr.net`:** TCP/UDP sockets (async) -> wraps `tokio::net`
 - `**sifr.task`:** task spawning, sleep, timeouts -> wraps `tokio::task` + `tokio::time`
-- **Async iterators:** `async for` over async streams
+- **Async iterators:** `async for` over async streams. Builds on the lazy `Iterator` state machine codegen delivered in Phase 7 (Stdlib Parity, milestone_lazy_iterators) — the async variant wraps the same state machine pattern with `async fn next()`.
 - `**async with`:** async context managers for resources that require async setup/teardown (e.g., database connections, HTTP sessions). Builds on the sync `with` statement and `ContextManager` protocol (`__enter__`/`__exit__`) delivered in Phase 7 (Stdlib Parity, milestone_compiler_hardening). Codegen: the `__aenter__` and `__aexit__` methods are `async fn`, and the `with` block `.await`s them. Maps to Rust's async scope pattern with `Drop` + async cleanup.
-- **Async generators:** `yield` inside `async def` produces an async iterator. Codegen: combines the state machine from milestone_generators generators with async/await from this milestone.
+- **Async generators:** `yield` inside `async def` produces an async iterator. Codegen: combines the lazy state machine from milestone_lazy_iterators (Phase 7) with async/await from this milestone.
 
 ### Example
 
@@ -58,7 +58,7 @@ milestone_async also provides basic cross-task communication primitives:
 - Async closures captured across `.await` are checked for `Send + 'static`
 - `sifr.task.spawn` works for concurrent tasks
 - `async with` works for async context managers
-- Async generators (`yield` in `async def`) produce async iterators
+- Async generators (`yield` in `async def`) produce async iterators (builds on lazy iterator state machine from Phase 7)
 - `sifr.sync.Lock`, `sifr.sync.Channel`, `sifr.sync.Semaphore` work for cross-task coordination
 - E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, async_with_basic, async_generator_basic, lock_basic, channel_basic
 - Milestone demo in `./demos/milestone_async_demo.sifr`

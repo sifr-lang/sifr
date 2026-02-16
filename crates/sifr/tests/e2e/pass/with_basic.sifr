@@ -1,12 +1,21 @@
+# expect-stdout: entering
 # expect-stdout: inside with
+# expect-stdout: exiting
 # expect-stdout: done
-# Tests: basic with statement (scoped block)
+# Tests: basic with statement with __enter__/__exit__ protocol
 
 class Resource:
     name: str
 
     def __init__(self, name: str):
         self.name = name
+
+    def __enter__(self) -> Resource:
+        print("entering")
+        return self
+
+    def __exit__(self) -> None:
+        print("exiting")
 
 def main():
     with Resource("test") as r:
