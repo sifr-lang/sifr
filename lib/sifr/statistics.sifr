@@ -35,3 +35,26 @@ def variance(data: list[float]) -> float:
 
 def stdev(data: list[float]) -> float:
     return sqrt(variance(data))
+
+def mode(data: list[int]) -> int:
+    if len(data) == 0:
+        return 0
+    best: int = 0
+    best_count: int = 0
+    i: int = 0
+    while i < len(data):
+        val: int | None = data[i]
+        if val is not None:
+            count: int = 0
+            j: int = 0
+            while j < len(data):
+                other: int | None = data[j]
+                if other is not None:
+                    if other == val:
+                        count = count + 1
+                j = j + 1
+            if count > best_count:
+                best_count = count
+                best = val
+        i = i + 1
+    return best

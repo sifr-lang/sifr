@@ -1,0 +1,14 @@
+# sifr.logging — Simple logging (wraps _sifr.time)
+from _sifr.time import time_now
+
+def log_info(msg: str):
+    print("[INFO] " + msg)
+
+def log_warn(msg: str):
+    print("[WARN] " + msg)
+
+def log_error(msg: str):
+    print("[ERROR] " + msg)
+
+def log_debug(msg: str):
+    print("[DEBUG] " + msg)

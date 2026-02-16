@@ -36,6 +36,11 @@ const STDLIB_FILES: &[(&str, &str)] = &[
     ("sifr.bisect", include_str!("../../../lib/sifr/bisect.sifr")),
     ("sifr.functools", include_str!("../../../lib/sifr/functools.sifr")),
     ("sifr.secrets", include_str!("../../../lib/sifr/secrets.sifr")),
+    ("sifr.graphlib", include_str!("../../../lib/sifr/graphlib.sifr")),
+    ("sifr.uuid", include_str!("../../../lib/sifr/uuid.sifr")),
+    ("sifr.platform", include_str!("../../../lib/sifr/platform.sifr")),
+    ("sifr.pathlib", include_str!("../../../lib/sifr/pathlib.sifr")),
+    ("sifr.logging", include_str!("../../../lib/sifr/logging.sifr")),
     // Tier 2: Modules that depend on other stdlib modules
     ("sifr.statistics", include_str!("../../../lib/sifr/statistics.sifr")),
 ];

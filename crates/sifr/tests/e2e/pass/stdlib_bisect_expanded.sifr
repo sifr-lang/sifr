@@ -1,0 +1,9 @@
+# Test expanded sifr.bisect functions
+from sifr.bisect import insort_left
+
+def main():
+    data: list[int] = [1, 3, 5, 7]
+    result: list[int] = insort_left(data, 4)
+    print(result)
+
+# expect-stdout: [1, 3, 4, 5, 7]

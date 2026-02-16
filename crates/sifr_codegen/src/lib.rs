@@ -266,6 +266,11 @@ edition = "2021"
                     deps.push("rand = \"0.8\"".to_string());
                 }
             }
+            "sifr.uuid" | "_sifr.uuid" => {
+                if !deps.contains(&"rand = \"0.8\"".to_string()) {
+                    deps.push("rand = \"0.8\"".to_string());
+                }
+            }
             "sifr.re" | "_sifr.regex" => {
                 if !deps.contains(&"regex = \"1\"".to_string()) {
                     deps.push("regex = \"1\"".to_string());
@@ -4406,7 +4411,7 @@ impl RustEmitter {
     /// Used when the lambda is passed to .map()/.filter() where Rust can infer types.
     /// Check if a name is a stdlib constant.
     fn is_stdlib_constant(&self, name: &str) -> bool {
-        matches!(name, "pi" | "e") && self.intrinsic_functions.contains(name)
+        matches!(name, "pi" | "e" | "tau" | "inf" | "nan") && self.intrinsic_functions.contains(name)
     }
 
     /// Emit a stdlib constant value.
@@ -4414,6 +4419,9 @@ impl RustEmitter {
         match name {
             "pi" => self.write("std::f64::consts::PI"),
             "e" => self.write("std::f64::consts::E"),
+            "tau" => self.write("std::f64::consts::TAU"),
+            "inf" => self.write("f64::INFINITY"),
+            "nan" => self.write("f64::NAN"),
             _ => self.write(name),
         }
     }
@@ -4443,6 +4451,53 @@ impl RustEmitter {
                 self.write("std::fs::read_to_string(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").unwrap().lines().map(|s| s.to_string()).collect::<Vec<String>>()");
+            }
+            "append_text" => {
+                self.write("{ use std::io::Write; let mut _f = std::fs::OpenOptions::new().append(true).create(true).open(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap(); write!(_f, \"{}\", ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").unwrap(); }");
+            }
+            "getcwd" => {
+                self.write("std::env::current_dir().unwrap().to_string_lossy().to_string()");
+            }
+            "listdir" => {
+                self.write("std::fs::read_dir(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap().filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect::<Vec<String>>()");
+            }
+            "mkdir" => {
+                self.write("std::fs::create_dir_all(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap()");
+            }
+            "rmdir" => {
+                self.write("std::fs::remove_dir(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap()");
+            }
+            "remove_file" => {
+                self.write("std::fs::remove_file(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap()");
+            }
+            "rename" => {
+                self.write("std::fs::rename(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(", ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").unwrap()");
+            }
+            "is_file" => {
+                self.write("std::path::Path::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").is_file()");
+            }
+            "is_dir" => {
+                self.write("std::path::Path::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").is_dir()");
             }
             // sifr.json
             "json_loads" => {
@@ -4543,6 +4598,99 @@ impl RustEmitter {
                 self.write("(");
                 self.emit_expr(&args[0]);
                 self.write(").round() as i64");
+            }
+            "asin" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").asin()");
+            }
+            "acos" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").acos()");
+            }
+            "atan" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").atan()");
+            }
+            "atan2" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").atan2(");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "sinh" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").sinh()");
+            }
+            "cosh" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").cosh()");
+            }
+            "tanh" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").tanh()");
+            }
+            "log10" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").log10()");
+            }
+            "log2" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").log2()");
+            }
+            "degrees" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").to_degrees()");
+            }
+            "radians" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").to_radians()");
+            }
+            "isnan" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").is_nan()");
+            }
+            "isinf" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").is_infinite()");
+            }
+            "trunc" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").trunc() as i64");
+            }
+            "copysign" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").copysign(");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "fmod" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(") % (");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "hypot" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").hypot(");
+                self.emit_expr(&args[1]);
+                self.write(")");
             }
             // sifr.test
             "assert_eq" => {
@@ -4715,6 +4863,13 @@ impl RustEmitter {
                 self.emit_expr(&args[0]);
                 self.write("; items[rand::thread_rng().gen_range(0..items.len())].clone() }");
             }
+            "random_uniform" => {
+                self.write("{ use rand::Rng; rand::thread_rng().gen_range(");
+                self.emit_expr(&args[0]);
+                self.write("..=");
+                self.emit_expr(&args[1]);
+                self.write(") }");
+            }
             // sifr.re
             "re_match" => {
                 self.write("regex::Regex::new(");
@@ -4739,6 +4894,20 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[1]);
                 self.write(").to_string()");
             }
+            "re_findall" => {
+                self.write("{ let re = regex::Regex::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap(); re.find_iter(");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").map(|m| m.as_str().to_string()).collect::<Vec<String>>() }");
+            }
+            "re_split" => {
+                self.write("{ let re = regex::Regex::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap(); re.split(");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").map(|s| s.to_string()).collect::<Vec<String>>() }");
+            }
             // sifr.hash
             "sha256" => {
                 self.write("{ use sha2::Digest; format!(\"{:x}\", sha2::Sha256::digest(");
@@ -4760,6 +4929,17 @@ impl RustEmitter {
                 self.write("{ use base64::Engine; String::from_utf8(base64::engine::general_purpose::STANDARD.decode(");
                 self.emit_expr_as_bytes(&args[0]);
                 self.write(").unwrap()).unwrap() }");
+            }
+            // sifr.uuid
+            "uuid4" => {
+                self.write("{ use rand::Rng; let mut rng = rand::thread_rng(); let bytes: [u8; 16] = rng.gen(); format!(\"{:08x}-{:04x}-4{:03x}-{:04x}-{:012x}\", u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]), u16::from_be_bytes([bytes[4], bytes[5]]), u16::from_be_bytes([bytes[6], bytes[7]]) & 0x0fff, (u16::from_be_bytes([bytes[8], bytes[9]]) & 0x3fff) | 0x8000, u64::from_be_bytes([0, 0, bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]])) }");
+            }
+            // sifr.platform
+            "platform_system" => {
+                self.write("std::env::consts::OS.to_string()");
+            }
+            "platform_arch" => {
+                self.write("std::env::consts::ARCH.to_string()");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call

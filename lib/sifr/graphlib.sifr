@@ -1,0 +1,35 @@
+# sifr.graphlib — Graph algorithms (pure Sifr)
+
+def topological_sort(num_nodes: int, from_nodes: list[int], to_nodes: list[int]) -> list[int]:
+    result: list[int] = []
+    visited: list[int] = []
+    i: int = 0
+    while i < num_nodes:
+        visited.append(0)
+        i = i + 1
+    processed: int = 0
+    while processed < num_nodes:
+        node: int = 0
+        while node < num_nodes:
+            v: int | None = visited[node]
+            if v is not None:
+                if v == 0:
+                    has_dep: bool = False
+                    j: int = 0
+                    while j < len(to_nodes):
+                        to_val: int | None = to_nodes[j]
+                        from_val: int | None = from_nodes[j]
+                        if to_val is not None:
+                            if from_val is not None:
+                                if to_val == node:
+                                    dep_v: int | None = visited[from_val]
+                                    if dep_v is not None:
+                                        if dep_v == 0:
+                                            has_dep = True
+                        j = j + 1
+                    if not has_dep:
+                        result.append(node)
+                        visited[node] = 1
+                        processed = processed + 1
+            node = node + 1
+    return result

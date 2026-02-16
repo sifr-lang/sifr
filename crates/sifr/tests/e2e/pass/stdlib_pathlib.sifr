@@ -1,0 +1,13 @@
+# Test sifr.pathlib module
+from sifr.pathlib import join_path, basename, dirname, extension
+
+def main():
+    print(join_path("/home", "user"))
+    print(basename("/home/user/file.txt"))
+    print(dirname("/home/user/file.txt"))
+    print(extension("/home/user/file.txt"))
+
+# expect-stdout: /home/user
+# expect-stdout: file.txt
+# expect-stdout: /home/user
+# expect-stdout: .txt

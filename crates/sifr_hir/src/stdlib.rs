@@ -28,6 +28,8 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.time" => Some(intrinsic_time()),
         "_sifr.crypto" => Some(intrinsic_crypto()),
         "_sifr.regex" => Some(intrinsic_regex()),
+        "_sifr.uuid" => Some(intrinsic_uuid()),
+        "_sifr.platform" => Some(intrinsic_platform()),
         _ => None,
     }
 }
@@ -127,9 +129,63 @@ fn intrinsic_math() -> IntrinsicModule {
     // round_val(x: float) -> int
     functions.insert("round_val".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Int));
 
+    // asin(x: float) -> float
+    functions.insert("asin".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // acos(x: float) -> float
+    functions.insert("acos".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // atan(x: float) -> float
+    functions.insert("atan".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // atan2(y: float, x: float) -> float
+    functions.insert("atan2".to_string(), FunctionType::all_borrow(vec![("y".to_string(), Type::Float), ("x".to_string(), Type::Float)], Type::Float));
+
+    // sinh(x: float) -> float
+    functions.insert("sinh".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // cosh(x: float) -> float
+    functions.insert("cosh".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // tanh(x: float) -> float
+    functions.insert("tanh".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // log10(x: float) -> float
+    functions.insert("log10".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // log2(x: float) -> float
+    functions.insert("log2".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // degrees(x: float) -> float (radians to degrees)
+    functions.insert("degrees".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // radians(x: float) -> float (degrees to radians)
+    functions.insert("radians".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // isnan(x: float) -> bool
+    functions.insert("isnan".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Bool));
+
+    // isinf(x: float) -> bool
+    functions.insert("isinf".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Bool));
+
+    // trunc(x: float) -> int
+    functions.insert("trunc".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Int));
+
+    // copysign(x: float, y: float) -> float
+    functions.insert("copysign".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
+
+    // fmod(x: float, y: float) -> float
+    functions.insert("fmod".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
+
+    // hypot(x: float, y: float) -> float
+    functions.insert("hypot".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
+
     // Constants
     constants.insert("pi".to_string(), Type::Float);
     constants.insert("e".to_string(), Type::Float);
+    constants.insert("tau".to_string(), Type::Float);
+    constants.insert("inf".to_string(), Type::Float);
+    constants.insert("nan".to_string(), Type::Float);
 
     IntrinsicModule {
         functions,
@@ -342,6 +398,39 @@ fn intrinsic_fs() -> IntrinsicModule {
     // read_lines(path: str) -> list[str]
     functions.insert("read_lines".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
 
+    // append_text(path: str, content: str) -> None
+    functions.insert("append_text".to_string(), FunctionType::all_borrow(vec![
+            ("path".to_string(), Type::Str),
+            ("content".to_string(), Type::Str),
+        ], Type::None));
+
+    // getcwd() -> str
+    functions.insert("getcwd".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+
+    // listdir(path: str) -> list[str]
+    functions.insert("listdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
+
+    // mkdir(path: str) -> None
+    functions.insert("mkdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+
+    // rmdir(path: str) -> None
+    functions.insert("rmdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+
+    // remove_file(path: str) -> None
+    functions.insert("remove_file".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+
+    // rename(src: str, dst: str) -> None
+    functions.insert("rename".to_string(), FunctionType::all_borrow(vec![
+            ("src".to_string(), Type::Str),
+            ("dst".to_string(), Type::Str),
+        ], Type::None));
+
+    // is_file(path: str) -> bool
+    functions.insert("is_file".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
+
+    // is_dir(path: str) -> bool
+    functions.insert("is_dir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -376,6 +465,12 @@ fn intrinsic_crypto() -> IntrinsicModule {
     // base64_decode(s: str) -> str
     functions.insert("base64_decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
+    // random_uniform(min: float, max: float) -> float
+    functions.insert("random_uniform".to_string(), FunctionType::all_borrow(vec![
+            ("min".to_string(), Type::Float),
+            ("max".to_string(), Type::Float),
+        ], Type::Float));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -405,8 +500,38 @@ fn intrinsic_regex() -> IntrinsicModule {
             ("text".to_string(), Type::Str),
         ], Type::Str));
 
+    // re_findall(pattern: str, text: str) -> list[str]
+    functions.insert("re_findall".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ], Type::List(Box::new(Type::Str))));
+
+    // re_split(pattern: str, text: str) -> list[str]
+    functions.insert("re_split".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ], Type::List(Box::new(Type::Str))));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
+}
+
+/// _sifr.uuid — UUID generation intrinsics
+fn intrinsic_uuid() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+    // uuid4() -> str (random UUID v4)
+    functions.insert("uuid4".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    IntrinsicModule { functions, constants: HashMap::new() }
+}
+
+/// _sifr.platform — Platform information intrinsics
+fn intrinsic_platform() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+    // platform_system() -> str (e.g., "Linux", "Darwin", "Windows")
+    functions.insert("platform_system".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    // platform_arch() -> str (e.g., "x86_64", "aarch64")
+    functions.insert("platform_arch".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    IntrinsicModule { functions, constants: HashMap::new() }
 }
