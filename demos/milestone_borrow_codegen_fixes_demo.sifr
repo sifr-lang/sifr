@@ -1,0 +1,77 @@
+# Milestone: Borrow-by-Default Codegen Fixes Demo
+# =================================================
+# This demo showcases the codegen fixes for borrow-by-default regressions:
+# 1. Borrowed str params now compare correctly with string literals
+# 2. Union call sites consistently emit & for all variant types
+# 3. None passed to Option params correctly gets & prefix
+
+# --- Fix 1: Borrowed str param comparison ---
+# Previously: `name == "alice".to_string()` failed with &String != String
+# Now: emits `*name == "alice".to_string()` (dereference the borrow)
+
+def find_user(name: str) -> str | None:
+    if name == "alice":
+        return "Alice Smith"
+    return None
+
+# --- Fix 2: Union call sites with consistent & ---
+# Previously: `process(&IntOrStr::Str(...))` had & but
+#             `process(IntOrStr::Int(42))` was missing &
+# Now: all variants get & consistently
+
+def process(x: int | str) -> str:
+    if isinstance(x, int):
+        return f"number: {x}"
+    else:
+        return f"string: {x}"
+
+def classify(x: int | str | bool) -> str:
+    if isinstance(x, int):
+        return "int"
+    elif isinstance(x, str):
+        return "str"
+    else:
+        return "bool"
+
+# --- Fix 3: None to Option param gets & ---
+# Previously: `process_optional(None)` emitted bare `None`
+# Now: emits `&None` when param is &Option<T>
+
+def process_optional(x: str | None) -> str:
+    if x is not None:
+        return x.upper()
+    return "none"
+
+# --- Fix 4: Audit test with own keyword ---
+# consume() takes ownership -- must use `own` under borrow-by-default
+
+def consume(own s: str) -> str:
+    return s
+
+def main():
+    # Fix 1: Borrowed str comparison
+    result: str | None = find_user("alice")
+    if result is not None:
+        print(result)  # Alice Smith
+
+    missing: str | None = find_user("bob")
+    if missing is None:
+        print("not found")  # not found
+
+    # Fix 2: Union call sites
+    print(process(42))       # number: 42
+    print(process("hello"))  # string: hello
+    print(classify(1))       # int
+    print(classify("hi"))    # str
+    print(classify(True))    # bool
+
+    # Fix 3: None to Option param
+    print(process_optional("world"))  # WORLD
+    print(process_optional(None))     # none
+
+    # Fix 4: own keyword for consuming functions
+    s: str = "hello"
+    x: str = consume(s)
+    s = "world"  # reassignment resets moved state
+    print(s)     # world
+    print(x)     # hello

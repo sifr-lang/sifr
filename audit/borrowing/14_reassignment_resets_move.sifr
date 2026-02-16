@@ -5,7 +5,7 @@
 # Sifr should: behave like Rust — reassignment resets move
 # ============================================================
 
-def consume(s: str) -> str:
+def consume(own s: str) -> str:
     return s
 
 def main():
