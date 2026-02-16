@@ -214,6 +214,13 @@ pub fn lower_module_stdlib(stmts: &[Stmt]) -> Result<LoweringResult, Vec<Lowerin
     lower_module_impl(stmts, &ExternalDefs::default(), ctx)
 }
 
+/// Lower a stdlib .sifr module with external definitions (for inter-stdlib deps).
+pub fn lower_module_stdlib_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> Result<LoweringResult, Vec<LoweringError>> {
+    let mut ctx = LowerCtx::new();
+    ctx.allow_intrinsic_imports = true;
+    lower_module_impl(stmts, externals, ctx)
+}
+
 /// Lower a parsed module AST into a typed HIR module, with external module definitions.
 pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> Result<LoweringResult, Vec<LoweringError>> {
     let ctx = LowerCtx::new();

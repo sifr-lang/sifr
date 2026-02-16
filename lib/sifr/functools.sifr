@@ -1,0 +1,13 @@
+# sifr.functools — Functional programming tools (pure Sifr)
+# Note: reduce with callable is not yet supported due to type system limitations.
+# This module provides utility functions that work with the current type system.
+
+def identity(x: int) -> int:
+    return x
+
+def clamp(value: int, min_val: int, max_val: int) -> int:
+    if value < min_val:
+        return min_val
+    if value > max_val:
+        return max_val
+    return value

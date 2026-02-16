@@ -1,0 +1,31 @@
+# sifr.bisect — Array bisection algorithm (pure Sifr)
+
+def bisect_left(a: list[int], x: int) -> int:
+    lo: int = 0
+    hi: int = len(a)
+    while lo < hi:
+        mid: int = (lo + hi) // 2
+        val: int | None = a[mid]
+        if val is not None:
+            if val < x:
+                lo = mid + 1
+            else:
+                hi = mid
+        else:
+            lo = mid + 1
+    return lo
+
+def bisect_right(a: list[int], x: int) -> int:
+    lo: int = 0
+    hi: int = len(a)
+    while lo < hi:
+        mid: int = (lo + hi) // 2
+        val: int | None = a[mid]
+        if val is not None:
+            if x < val:
+                hi = mid
+            else:
+                lo = mid + 1
+        else:
+            lo = mid + 1
+    return lo

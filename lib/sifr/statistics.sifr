@@ -1,0 +1,37 @@
+# sifr.statistics — Basic statistical functions (pure Sifr)
+from sifr.math import sqrt
+
+def mean(data: list[float]) -> float:
+    total: float = 0.0
+    count: int = len(data)
+    for val in data:
+        total = total + val
+    return total / float(count)
+
+def median(data: list[float]) -> float:
+    n: int = len(data)
+    sorted_data: list[float] = sorted(data)
+    mid: int = n // 2
+    if n % 2 == 0:
+        a: float | None = sorted_data[mid - 1]
+        b: float | None = sorted_data[mid]
+        if a is not None:
+            if b is not None:
+                return (a + b) / 2.0
+        return 0.0
+    else:
+        val: float | None = sorted_data[mid]
+        if val is not None:
+            return val
+        return 0.0
+
+def variance(data: list[float]) -> float:
+    avg: float = mean(data)
+    total: float = 0.0
+    for val in data:
+        diff: float = val - avg
+        total = total + diff * diff
+    return total / float(len(data))
+
+def stdev(data: list[float]) -> float:
+    return sqrt(variance(data))

@@ -69,15 +69,27 @@ edition = "2021"
     let mut deps = Vec::new();
     for module_name in stdlib_modules {
         match module_name.as_str() {
-            "sifr.json" | "sifr.collections" => {
+            "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
                 if !deps.contains(&"serde_json = \"1\"") {
                     deps.push("serde_json = \"1\"");
                     deps.push("serde = { version = \"1\", features = [\"derive\"] }");
                 }
             }
-            "sifr.time" => deps.push("chrono = \"0.4\""),
-            "sifr.random" => deps.push("rand = \"0.8\""),
-            "sifr.re" => deps.push("regex = \"1\""),
+            "sifr.time" | "_sifr.time" => {
+                if !deps.contains(&"chrono = \"0.4\"") {
+                    deps.push("chrono = \"0.4\"");
+                }
+            }
+            "sifr.random" | "_sifr.crypto" => {
+                if !deps.contains(&"rand = \"0.8\"") {
+                    deps.push("rand = \"0.8\"");
+                }
+            }
+            "sifr.re" | "_sifr.regex" => {
+                if !deps.contains(&"regex = \"1\"") {
+                    deps.push("regex = \"1\"");
+                }
+            }
             "sifr.hash" | "sifr.hashlib" => {
                 if !deps.contains(&"sha2 = \"0.10\"") {
                     deps.push("sha2 = \"0.10\"");

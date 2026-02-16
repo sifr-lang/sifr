@@ -1,0 +1,16 @@
+# Test sifr.functools stdlib module
+from sifr.functools import clamp
+
+def main():
+    # Clamp within range
+    print(clamp(5, 1, 10))
+
+    # Clamp below min
+    print(clamp(-5, 0, 100))
+
+    # Clamp above max
+    print(clamp(200, 0, 100))
+
+# expect-stdout: 5
+# expect-stdout: 0
+# expect-stdout: 100

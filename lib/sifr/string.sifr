@@ -1,0 +1,10 @@
+# sifr.string — String constants (pure Sifr, no intrinsics)
+
+ascii_lowercase: str = "abcdefghijklmnopqrstuvwxyz"
+ascii_uppercase: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ascii_letters: str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+digits: str = "0123456789"
+hexdigits: str = "0123456789abcdefABCDEF"
+octdigits: str = "01234567"
+punctuation: str = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+whitespace: str = " \t\n\r"
