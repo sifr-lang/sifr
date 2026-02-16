@@ -3217,6 +3217,123 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 
 ---
 
+## milestone_stdlib_classes: Class-Based APIs in Sifr Standard Library
+
+**Goal:** Prove the stdlib class pipeline end-to-end by implementing `collections.Counter` as the first class defined in a stdlib `.sifr` file. This unblocks 12+ modules that need class-based APIs to reach CPython parity.
+
+**Full plan:** [issues/milestone_stdlib_classes.md](../../issues/milestone_stdlib_classes.md)
+
+**Context:** The CPython parity audit identified class-based APIs as the single biggest blocker — 12+ modules (argparse, csv, logging, pathlib, graphlib, uuid, collections, datetime, re, tempfile, difflib) need classes. The compiler already supports user-defined classes (constructors, methods, `&self`/`&mut self` inference, inheritance, protocols, `isinstance`), and the driver already exports classes via `ExternalDefs.classes`. However, **no stdlib `.sifr` module has ever defined a class** — the pipeline is wired but unproven.
+
+### Why `Counter` as the Proof-of-Concept
+
+1. **Existing intrinsics:** `_sifr.collections` already has `counter_from_list`, `counter_get`, `counter_most_common` — the Rust backing code exists
+2. **No `Callable`-as-struct-field needed:** Counter stores only `str` (JSON-encoded HashMap), avoiding the `impl Fn` vs `Box<dyn Fn>` blocker
+3. **Full pipeline exercise:** class in `.sifr` → HIR lowering → `ExternalDefs.classes` export → user import → codegen with `pub struct` + `pub fn new()` + methods
+4. **Both receiver types:** `&self` (read: `get`, `total`, `most_common`) and `&mut self` (mutate: `increment`)
+5. **Well-known API:** CPython's `Counter` is familiar and easily testable
+
+### Counter Class API
+
+```python
+class Counter:
+    data: str  # JSON-encoded dict[str, int]
+
+    def __init__(self, data: str):
+        self.data = data
+
+    def get(self, key: str) -> int:
+        return counter_get(self.data, key)
+
+    def most_common(self, n: int) -> str:
+        return counter_most_common(self.data, n)
+
+    def total(self) -> int:
+        return counter_total(self.data)
+
+    def values(self) -> list[int]:
+        return counter_values(self.data)
+
+    def keys(self) -> list[str]:
+        return counter_keys(self.data)
+
+    def items(self) -> str:
+        return counter_items(self.data)
+
+    def increment(self, key: str) -> None:
+        self.data = counter_increment(self.data, key)
+
+# Factory function (matches CPython's Counter(iterable) pattern)
+def from_list(items: list[str]) -> Counter:
+    return Counter(counter_from_list(items))
+```
+
+### New `_sifr.collections` Intrinsics
+
+| Intrinsic | Signature | Rust Implementation |
+| --- | --- | --- |
+| `counter_total` | `(counter: str) -> int` | Parse JSON HashMap, sum values |
+| `counter_values` | `(counter: str) -> list[int]` | Parse JSON HashMap, return values as Vec |
+| `counter_keys` | `(counter: str) -> list[str]` | Parse JSON HashMap, return keys as Vec |
+| `counter_items` | `(counter: str) -> str` | Parse JSON HashMap, return JSON array of `[key, count]` pairs |
+| `counter_increment` | `(counter: str, key: str) -> str` | Parse JSON HashMap, increment key, re-encode |
+
+Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `counter_most_common`.
+
+### Pipeline Verification Points
+
+1. **HIR lowering:** `Counter` class in `collections.sifr` lowered to `HirClass` with fields, methods, receiver inference
+2. **Driver export:** `compile_stdlib()` populates `ExternalDefs.classes["sifr.collections"]["Counter"]` with `Type::Class`
+3. **User import:** `from sifr.collections import Counter` resolves via `externals.classes` lookup, registers constructor
+4. **Codegen:** `pub struct Counter`, `pub fn new(...)`, methods emitted with correct `&self`/`&mut self`
+
+### Files to Change
+
+- `crates/sifr_hir/src/stdlib.rs` — add 5 new intrinsic signatures to `intrinsic_collections()`
+- `crates/sifr_codegen/src/lib.rs` — add codegen for 5 new `_sifr.collections` intrinsics
+- `lib/sifr/collections.sifr` — add `Counter` class + `from_list` factory function
+- `crates/sifr/tests/e2e/pass/stdlib_collections_counter.sifr` — basic Counter construction + method calls
+- `crates/sifr/tests/e2e/pass/stdlib_collections_counter_mutate.sifr` — Counter mutation via `increment`
+- `crates/sifr/tests/e2e/fail/stdlib_counter_wrong_type.sifr` — wrong argument type to Counter
+- `demos/milestone_stdlib_classes_demo.sifr` — demo showcasing Counter class usage
+- `audit/STDLIB_PARITY_MASTER_REPORT.md` — update metrics
+
+### Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+| --- | --- | --- | --- |
+| Class export pipeline has untested edge cases | Medium | High | This milestone specifically exercises and validates this path |
+| Method receiver inference wrong for stdlib classes | Low | Medium | Already proven in user-defined class E2E tests |
+| `pub_mode` doesn't apply correctly to class methods | Low | High | Codegen already handles `pub_mode` for struct, impl, and methods |
+| JSON-encoded HashMap is a performance bottleneck | Low | Low | Acceptable for PoC; future milestones can switch to native dict type |
+
+### What This Unblocks
+
+| Next Class | Module | Additional Compiler Work Needed |
+| --- | --- | --- |
+| `Path` | `sifr.pathlib` | Operator overloading export from stdlib |
+| `Match` | `sifr.re` | None — wraps existing regex intrinsics |
+| `Logger` | `sifr.logging` | None — wraps existing logging intrinsics |
+| `TopologicalSorter` | `sifr.graphlib` | None — pure algorithmic class |
+| `ArgumentParser` | `sifr.argparse` | `Callable`-as-struct-field fix (`Box<dyn Fn>`) |
+| `defaultdict` | `sifr.collections` | `Callable`-as-struct-field fix (`Box<dyn Fn>`) |
+| `datetime`/`timedelta` | `sifr.datetime` | Operator overloading for arithmetic |
+| `DictReader`/`DictWriter` | `sifr.csv` | Iterator protocol |
+
+### Definition of Done (milestone_stdlib_classes)
+
+- `Counter` class defined in `lib/sifr/collections.sifr` with `__init__`, `get`, `most_common`, `total`, `values`, `keys`, `items`, `increment` methods
+- `from_list` factory function works
+- 5 new `_sifr.collections` intrinsics implemented and tested
+- User code can `from sifr.collections import Counter` and use it
+- E2E pass tests for construction + methods, and mutation
+- E2E fail test for wrong argument type
+- `cargo test` passes (zero regressions)
+- Parity report updated
+- Demo: `demos/milestone_stdlib_classes_demo.sifr`
+
+---
+
 ## milestone_async: Async Runtime
 
 **Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that milestone_web_db (web, database) builds on.
