@@ -40,12 +40,13 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 ##### Features In
 
 1. Rename module functions to match CPython's API names where feasible without classes
-2. Add `perf_counter` and `monotonic` intrinsics to `_sifr.time` (uses `std::time::Instant`, no external deps), re-export in `sifr.time`, and wire `sifr.timeit.default_timer` to use `perf_counter` instead of wall clock
-3. Add missing E2E pass tests for glob, shutil, tempfile
-4. Add negative/fail E2E tests for stdlib error paths
-5. Fix stale comment in lower.rs
-6. Add missing `_sifr.fs.copy_file` and `_sifr.fs.walk_dir` intrinsics for shutil
-7. Update parity report with final metrics
+2. Add `perf_counter` and `monotonic` intrinsics to `_sifr.time` (uses `std::time::Instant`, no external deps), re-export in `sifr.time`
+3. Implement full `sifr.timeit` API: `default_timer` (backed by `perf_counter`), `timeit(stmt, number)` and `repeat(stmt, repeat, number)` using existing `Callable` type support
+4. Add missing E2E pass tests for glob, shutil, tempfile
+5. Add negative/fail E2E tests for stdlib error paths
+6. Fix stale comment in lower.rs
+7. Add missing `_sifr.fs.copy_file` and `_sifr.fs.walk_dir` intrinsics for shutil
+8. Update parity report with final metrics
 
 ##### Features Out
 
@@ -53,10 +54,10 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 | --- | --- |
 | Result/Option safety contract | Requires compiler-level intrinsic type changes (separate milestone) |
 | open()/File context manager | Requires `with` statement + class support in stdlib |
-| ArgumentParser class | Requires class definitions in stdlib .sifr files |
-| Logger/getLogger class API | Requires class definitions in stdlib .sifr files |
+| ArgumentParser class | Requires `Callable` as struct field (codegen emits `impl Fn` which Rust rejects in struct fields; needs `Box<dyn Fn>` fix) |
+| Logger/getLogger class API | Same `Callable`-in-struct-field blocker; also needs class support in stdlib |
 | Path class with operator overloading | Requires class + operator support in stdlib |
-| timeit.timeit() / timeit.repeat() | CPython's API takes a callable to time; requires closure-as-argument support |
+| timeit.Timer class | Functional API (`timeit`/`repeat`/`default_timer`) covers 100% of the functionality; Timer class adds no new capability, just OOP style. Also blocked by `Callable`-as-struct-field codegen issue. |
 | time.process_time() / time.thread_time() | Requires `libc` crate for platform-specific CPU clocks; niche usage, defer to future milestone |
 
 ---
@@ -71,11 +72,13 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 | AC-4 | At least 5 new stdlib fail tests covering bad imports, type mismatches, and invalid usage |
 | AC-5 | `_sifr.time` has `perf_counter` and `monotonic` intrinsics backed by `std::time::Instant` |
 | AC-6 | `sifr.time` re-exports `perf_counter` and `monotonic` (matching CPython's `time.perf_counter()` / `time.monotonic()`) |
-| AC-7 | `sifr.timeit.default_timer()` uses `perf_counter` (not wall clock), `elapsed` uses `perf_counter` |
-| AC-8 | tomllib.sifr exports `loads` and `load` |
-| AC-9 | lower.rs fallback comment is updated to reflect current behavior |
-| AC-10 | All existing tests pass (zero regressions) |
-| AC-11 | Parity report updated |
+| AC-7 | `sifr.timeit.default_timer()` uses `perf_counter` (not wall clock) |
+| AC-8 | `sifr.timeit.timeit(stmt, number)` accepts a `Callable[[], None]` and returns elapsed seconds |
+| AC-9 | `sifr.timeit.repeat(stmt, repeat, number)` returns `list[float]` of timing results |
+| AC-10 | tomllib.sifr exports `loads` and `load` |
+| AC-11 | lower.rs fallback comment is updated to reflect current behavior |
+| AC-12 | All existing tests pass (zero regressions) |
+| AC-13 | Parity report updated |
 
 ---
 
@@ -86,10 +89,16 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 **API renames (matching CPython's function names):**
 - `glob.sifr`: rename `glob_match` → `glob` (matches `glob.glob()`)
 - `shutil.sifr`: rename `copy_file` → `copy`, `move_file` → `move`, add `rmtree` (matches `shutil.copy()`, `shutil.move()`, `shutil.rmtree()`)
-- `timeit.sifr`: rename `timer` → `default_timer`, rewrite to use `perf_counter` instead of `time_now` (matches `timeit.default_timer()` which is `time.perf_counter()` in CPython); keep `elapsed` but rewire to use `perf_counter`
+- `timeit.sifr`: full CPython-matching API using existing `Callable` type support:
+  - `default_timer()` → calls `perf_counter()` (matches `timeit.default_timer()`)
+  - `timeit(stmt: Callable[[], None], number: int)` → runs `stmt` `number` times, returns total seconds (matches `timeit.timeit()`)
+  - `repeat(stmt: Callable[[], None], repeat: int, number: int)` → runs `timeit()` `repeat` times, returns `list[float]` (matches `timeit.repeat()`)
+  - Remove old `timer`/`elapsed` (replaced by the above)
 - `tomllib.sifr`: add `load` function that reads a file path then parses (pragmatic adaptation of `tomllib.load(fp)` since Sifr lacks file objects)
 
-**Note:** CPython's `timeit.timeit()` and `timeit.repeat()` take a callable to time, which requires closure-as-argument support. `time.process_time()` and `time.thread_time()` require `libc` for platform-specific CPU clocks. All are deferred.
+**Note on timeit:** Sifr already supports `Callable` type parameters (proven by `callable_type.sifr` and `callable_apply_twice.sifr` E2E tests). The `Callable` type emits `impl Fn(...)` in Rust codegen, which is exactly what's needed for `timeit(stmt, number)`. The `Timer` class is deferred (needs class support in stdlib).
+
+**Note:** `time.process_time()` and `time.thread_time()` require `libc` for platform-specific CPU clocks. Deferred to a future milestone.
 
 **New `_sifr.time` intrinsics (monotonic clocks):**
 - `_sifr.time.perf_counter() -> float` -- wraps `std::time::Instant` via `OnceLock` baseline; high-resolution monotonic clock for benchmarking (matches `time.perf_counter()`)
@@ -107,9 +116,13 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 - `_sifr.fs.walk_dir(path: str) -> list[str]` -- wraps `std::fs::read_dir` recursively
 - `_sifr.fs.rmdir_all(path: str) -> None` -- wraps `std::fs::remove_dir_all`
 
-**Stdlib re-exports:**
+**Stdlib re-exports and new functions:**
 - `sifr.time` adds re-exports: `perf_counter`, `monotonic`
-- `sifr.timeit` rewired: `default_timer()` calls `perf_counter()`, `elapsed(start)` calls `perf_counter() - start`
+- `sifr.timeit` rewritten with full CPython API:
+  - `default_timer()` → `perf_counter()`
+  - `timeit(stmt: Callable[[], None], number: int = 1000000)` → run stmt N times, return total seconds
+  - `repeat(stmt: Callable[[], None], repeat: int = 5, number: int = 1000000)` → run timeit() M times, return list[float]
+  - Old `timer`/`elapsed` removed
 
 **New E2E pass tests:**
 - `stdlib_glob.sifr` -- test glob with a real directory listing
@@ -128,10 +141,11 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 - `crates/sifr_hir/src/stdlib.rs` -- add `perf_counter`, `monotonic` to `_sifr.time`; add `copy_file`, `walk_dir`, `rmdir_all` to `_sifr.fs`
 - `crates/sifr_codegen/src/lib.rs` -- add codegen for `perf_counter`/`monotonic` (Instant + OnceLock) and `copy_file`/`walk_dir`/`rmdir_all`
 - `lib/sifr/time.sifr` -- add re-exports for `perf_counter`, `monotonic`
-- `lib/sifr/timeit.sifr` -- rename `timer` → `default_timer` (uses `perf_counter`), rewire `elapsed` to use `perf_counter`
+- `lib/sifr/timeit.sifr` -- rewrite with full API: `default_timer`, `timeit(stmt, number)`, `repeat(stmt, repeat, number)` using `Callable` + `perf_counter`
 - `lib/sifr/glob.sifr` -- rename `glob_match` → `glob`
 - `lib/sifr/shutil.sifr` -- rename `copy_file` → `copy`, `move_file` → `move`, add `rmtree`
 - `lib/sifr/tomllib.sifr` -- add `load` function
+- `crates/sifr_driver/src/lib.rs` -- fix `has_pure_sifr_code` check to include `!result.module.classes.is_empty()` (future-proofing for class-containing stdlib modules)
 - `crates/sifr_hir/src/lower.rs` -- fix stale comment
 - `crates/sifr/tests/e2e/pass/` -- 3 new pass tests + update `stdlib_timeit.sifr` for new API
 - `crates/sifr/tests/e2e/fail/` -- 5 new fail tests
@@ -148,7 +162,9 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 | AC-4 | E2E fail | N/A | Bad imports, wrong types, missing functions |
 | AC-5 | E2E pass | perf_counter returns monotonic float >= 0.0 | Two calls return increasing values |
 | AC-6 | E2E pass | sifr.time.perf_counter and monotonic importable | N/A |
-| AC-7 | E2E pass | default_timer returns monotonic time, elapsed computes delta | N/A |
-| AC-8 | E2E pass | loads parses string, load reads file | N/A |
-| AC-9 | Code review | Comment matches behavior | N/A |
-| AC-10 | cargo test | All 340+ tests pass | N/A |
+| AC-7 | E2E pass | default_timer returns monotonic time | N/A |
+| AC-8 | E2E pass | timeit(stmt, number) returns positive float | Callable param works with named function |
+| AC-9 | E2E pass | repeat(stmt, repeat, number) returns list[float] of correct length | N/A |
+| AC-10 | E2E pass | loads parses string, load reads file | N/A |
+| AC-11 | Code review | Comment matches behavior | N/A |
+| AC-12 | cargo test | All 340+ tests pass | N/A |

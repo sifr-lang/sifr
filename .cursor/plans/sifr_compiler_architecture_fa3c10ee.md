@@ -105,7 +105,7 @@ todos:
     content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), run comprehensive parity audit"
     status: pending
   - id: m27-stdlib-polish
-    content: "milestone_stdlib_polish: Add perf_counter/monotonic intrinsics to _sifr.time (std::time::Instant), re-export in sifr.time, rewire sifr.timeit to use perf_counter. Align stdlib API names with CPython (glob, shutil.copy/move/rmtree, timeit.default_timer, tomllib.load). Add missing E2E pass tests (glob, shutil, tempfile), negative/fail tests for stdlib error paths. Add _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all). Fix stale lower.rs comment, update parity report."
+    content: "milestone_stdlib_polish: Add perf_counter/monotonic intrinsics to _sifr.time (std::time::Instant), re-export in sifr.time. Full sifr.timeit CPython API: default_timer + timeit(stmt, number) + repeat(stmt, repeat, number) using existing Callable type. Align stdlib API names with CPython (glob, shutil.copy/move/rmtree, tomllib.load). Add missing E2E pass tests (glob, shutil, tempfile), negative/fail tests. Add _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all). Fix stale lower.rs comment, update parity report."
     status: pending
 isProject: false
 ---
@@ -3145,7 +3145,7 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 
 - `glob.sifr`: `glob_match` → `glob` (matches `glob.glob()`)
 - `shutil.sifr`: `copy_file` → `copy`, `move_file` → `move`, add `rmtree` (matches `shutil.copy/move/rmtree`)
-- `timeit.sifr`: `timer` → `default_timer` backed by `perf_counter` (matches `timeit.default_timer()` = `time.perf_counter()` in CPython); real `timeit()`/`repeat()` deferred until closures-as-arguments
+- `timeit.sifr`: full CPython API -- `default_timer()` backed by `perf_counter`, plus `timeit(stmt, number)` and `repeat(stmt, repeat, number)` using existing `Callable` type support (no new language features needed)
 - `tomllib.sifr`: add `load(path)` (pragmatic adaptation of `tomllib.load(fp)` since Sifr lacks file objects)
 
 ### New Intrinsics
@@ -3159,10 +3159,14 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 - `walk_dir(path)` -- wraps recursive `std::fs::read_dir`
 - `rmdir_all(path)` -- wraps `std::fs::remove_dir_all`
 
-### Stdlib Re-exports
+### Stdlib Re-exports and New Functions
 
 - `sifr.time` adds `perf_counter`, `monotonic` (from `_sifr.time`)
-- `sifr.timeit` rewired: `default_timer()` → `perf_counter()`, `elapsed(start)` → `perf_counter() - start`
+- `sifr.timeit` rewritten with full CPython API:
+  - `default_timer()` → `perf_counter()`
+  - `timeit(stmt: Callable[[], None], number: int)` → run stmt N times, return total seconds
+  - `repeat(stmt: Callable[[], None], repeat: int, number: int)` → run timeit() M times, return list[float]
+  - Old `timer`/`elapsed` removed
 
 ### Missing E2E Pass Tests
 
@@ -3181,17 +3185,24 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 ### Cleanup
 
 - Fix stale fallback comment in `lower.rs`
+- Fix `has_pure_sifr_code` check in `sifr_driver` to include classes (future-proofing)
 - Update `audit/STDLIB_PARITY_MASTER_REPORT.md` with final metrics
+
+### Not included (and why)
+
+- **`timeit.Timer` class:** Functional API covers 100% of the functionality. Also blocked by a codegen issue: `Callable` emits `impl Fn(...)` which Rust rejects in struct fields (needs `Box<dyn Fn(...)>` -- a small fix, but not needed since the functional API suffices).
+- **Class-based stdlib APIs** (ArgumentParser, Logger, Path, File): Same `Callable`-in-struct-field codegen issue applies to any class storing callbacks. Infrastructure for classes in stdlib `.sifr` files otherwise exists (parsing, lowering, export, import resolution, codegen all wired up).
 
 ### Definition of Done (milestone_stdlib_polish)
 
 - `perf_counter` and `monotonic` intrinsics work (backed by `std::time::Instant`)
 - `sifr.time` re-exports `perf_counter` and `monotonic`
-- `sifr.timeit.default_timer` uses `perf_counter` (not wall clock)
+- `sifr.timeit` has full CPython API: `default_timer` (uses `perf_counter`), `timeit(stmt, number)`, `repeat(stmt, repeat, number)` using `Callable` type
 - All renamed functions work and existing tests updated
 - E2E pass tests for glob, shutil, tempfile
 - At least 5 new stdlib fail tests
 - Stale comment fixed
+- `has_pure_sifr_code` check includes classes
 - `cargo test` passes (zero regressions)
 - Parity report updated
 - Demo: `demos/milestone_stdlib_polish_demo.sifr`
