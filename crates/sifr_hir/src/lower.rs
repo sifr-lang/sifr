@@ -417,8 +417,8 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                 }
 
                 // Check if this is a stdlib import (sifr.*)
-                // First try to resolve from pre-compiled stdlib .sifr modules (via externals)
-                // Then fall back to intrinsic resolution for modules not yet migrated to .sifr
+                // All sifr.* modules are now .sifr files compiled in the stdlib phase.
+                // Resolve from pre-compiled stdlib modules (via externals).
                 if module_name.starts_with("sifr.") {
                     // Check if there's a pre-compiled stdlib .sifr module in externals
                     let stdlib_module_key = module_name.clone();

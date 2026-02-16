@@ -104,6 +104,9 @@ todos:
   - id: m26-stdlib-parity
     content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), run comprehensive parity audit"
     status: pending
+  - id: m27-stdlib-polish
+    content: "milestone_stdlib_polish: Add perf_counter/monotonic intrinsics to _sifr.time (std::time::Instant), re-export in sifr.time. Full sifr.timeit CPython API: default_timer + timeit(stmt, number) + repeat(stmt, repeat, number) using existing Callable type. Align stdlib API names with CPython (glob, shutil.copy/move/rmtree, tomllib.load). Add missing E2E pass tests (glob, shutil, tempfile), negative/fail tests. Add _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all). Fix stale lower.rs comment, update parity report."
+    status: pending
 isProject: false
 ---
 
@@ -3127,6 +3130,82 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 - Parity audit report generated with coverage metrics
 - `cargo test` passes
 - 37 total stdlib modules available (13 pure Sifr + 24 intrinsic-backed)
+
+---
+
+## milestone_stdlib_polish: Stdlib API Alignment, Test Coverage, and Cleanup
+
+**Goal:** Polish the stdlib to align API names with the architecture plan, fill test coverage gaps, and clean up stale code. This milestone addresses reviewer findings that don't require new language features or compiler-level changes.
+
+**Full plan:** [issues/milestone_stdlib_polish.md](../../issues/milestone_stdlib_polish.md)
+
+**Context:** The Stdlib Architecture Phase delivered 37 modules with full compilation pipeline support. However, a reviewer audit identified: (1) function names that don't match the plan, (2) missing E2E tests for 3 modules, (3) thin negative/fail test coverage, and (4) a stale comment in lower.rs. The safety contract (Result/Option) and class-based APIs are deferred to future milestones.
+
+### API Alignment (renames to match CPython)
+
+- `glob.sifr`: `glob_match` → `glob` (matches `glob.glob()`)
+- `shutil.sifr`: `copy_file` → `copy`, `move_file` → `move`, add `rmtree` (matches `shutil.copy/move/rmtree`)
+- `timeit.sifr`: full CPython API -- `default_timer()` backed by `perf_counter`, plus `timeit(stmt, number)` and `repeat(stmt, repeat, number)` using existing `Callable` type support (no new language features needed)
+- `tomllib.sifr`: add `load(path)` (pragmatic adaptation of `tomllib.load(fp)` since Sifr lacks file objects)
+
+### New Intrinsics
+
+**`_sifr.time` (monotonic clocks via `std::time::Instant`):**
+- `perf_counter() -> float` -- high-resolution monotonic clock for benchmarking (matches `time.perf_counter()`)
+- `monotonic() -> float` -- guaranteed non-decreasing clock for timeouts (matches `time.monotonic()`)
+
+**`_sifr.fs` (file operations):**
+- `copy_file(src, dst)` -- wraps `std::fs::copy`
+- `walk_dir(path)` -- wraps recursive `std::fs::read_dir`
+- `rmdir_all(path)` -- wraps `std::fs::remove_dir_all`
+
+### Stdlib Re-exports and New Functions
+
+- `sifr.time` adds `perf_counter`, `monotonic` (from `_sifr.time`)
+- `sifr.timeit` rewritten with full CPython API:
+  - `default_timer()` → `perf_counter()`
+  - `timeit(stmt: Callable[[], None], number: int)` → run stmt N times, return total seconds
+  - `repeat(stmt: Callable[[], None], repeat: int, number: int)` → run timeit() M times, return list[float]
+  - Old `timer`/`elapsed` removed
+
+### Missing E2E Pass Tests
+
+- `stdlib_glob.sifr` -- test glob with directory listing
+- `stdlib_shutil.sifr` -- test copy/move
+- `stdlib_tempfile.sifr` -- test mkstemp/mkdtemp
+
+### New E2E Fail Tests (negative coverage)
+
+- `stdlib_invalid_module.sifr` -- import nonexistent `sifr.nonexistent`
+- `stdlib_wrong_type.sifr` -- pass wrong type to stdlib function
+- `stdlib_missing_function.sifr` -- import nonexistent function from valid module
+- `stdlib_intrinsic_direct_v2.sifr` -- another `_sifr.*` direct import attempt
+- `stdlib_readonly_param.sifr` -- attempt to mutate a borrowed stdlib parameter
+
+### Cleanup
+
+- Fix stale fallback comment in `lower.rs`
+- Fix `has_pure_sifr_code` check in `sifr_driver` to include classes (future-proofing)
+- Update `audit/STDLIB_PARITY_MASTER_REPORT.md` with final metrics
+
+### Not included (and why)
+
+- **`timeit.Timer` class:** Functional API covers 100% of the functionality. Also blocked by a codegen issue: `Callable` emits `impl Fn(...)` which Rust rejects in struct fields (needs `Box<dyn Fn(...)>` -- a small fix, but not needed since the functional API suffices).
+- **Class-based stdlib APIs** (ArgumentParser, Logger, Path, File): Same `Callable`-in-struct-field codegen issue applies to any class storing callbacks. Infrastructure for classes in stdlib `.sifr` files otherwise exists (parsing, lowering, export, import resolution, codegen all wired up).
+
+### Definition of Done (milestone_stdlib_polish)
+
+- `perf_counter` and `monotonic` intrinsics work (backed by `std::time::Instant`)
+- `sifr.time` re-exports `perf_counter` and `monotonic`
+- `sifr.timeit` has full CPython API: `default_timer` (uses `perf_counter`), `timeit(stmt, number)`, `repeat(stmt, repeat, number)` using `Callable` type
+- All renamed functions work and existing tests updated
+- E2E pass tests for glob, shutil, tempfile
+- At least 5 new stdlib fail tests
+- Stale comment fixed
+- `has_pure_sifr_code` check includes classes
+- `cargo test` passes (zero regressions)
+- Parity report updated
+- Demo: `demos/milestone_stdlib_polish_demo.sifr`
 
 ---
 

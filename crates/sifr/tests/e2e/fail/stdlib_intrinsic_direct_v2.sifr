@@ -1,0 +1,7 @@
+# Test that direct import from _sifr.fs is blocked for user code
+from _sifr.fs import read_text
+
+def main():
+    pass
+
+# expect-error: cannot import from '_sifr.fs'

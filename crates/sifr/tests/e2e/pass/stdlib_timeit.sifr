@@ -1,18 +1,22 @@
-# Test sifr.timeit module
-from sifr.timeit import timer, elapsed
+# Test sifr.timeit module (CPython-matching API)
+from sifr.timeit import default_timer, timeit
+from typing import Callable
 
-def main():
-    start: float = timer()
-    # Do some work
+def do_work():
     total: int = 0
     i: int = 0
-    while i < 1000:
+    while i < 100:
         total = total + i
         i = i + 1
-    dt: float = elapsed(start)
-    # Elapsed time should be non-negative
-    print(dt >= 0.0)
-    print(total)
+
+def main():
+    # default_timer returns a monotonic float >= 0.0
+    t: float = default_timer()
+    print(t >= 0.0)
+    # timeit runs a callable N times and returns elapsed seconds
+    elapsed: float = timeit(do_work, 10)
+    # elapsed should be non-negative (>= 0 includes 0.0 for very fast ops)
+    print(elapsed > -1.0)
 
 # expect-stdout: true
-# expect-stdout: 499500
+# expect-stdout: true

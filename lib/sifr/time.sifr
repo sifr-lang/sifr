@@ -1,2 +1,2 @@
 # sifr.time — Time operations
-from _sifr.time import time_now, sleep, time_format
+from _sifr.time import time_now, sleep, time_format, perf_counter, monotonic

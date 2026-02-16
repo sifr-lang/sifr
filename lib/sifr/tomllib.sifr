@@ -1,5 +1,10 @@
-# sifr.tomllib — TOML parsing (wraps _sifr.toml)
+# sifr.tomllib — TOML parsing (wraps _sifr.toml + _sifr.fs)
 from _sifr.toml import toml_parse
+from _sifr.fs import read_text
 
 def loads(text: str) -> str:
     return toml_parse(text)
+
+def load(path: str) -> str:
+    content: str = read_text(path)
+    return toml_parse(content)

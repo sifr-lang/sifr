@@ -1,0 +1,8 @@
+# Test that importing from a nonexistent stdlib module fails
+from sifr.nonexistent import foo
+
+def main():
+    x: int = foo()
+    print(x)
+
+# expect-error: undefined function: 'foo'
