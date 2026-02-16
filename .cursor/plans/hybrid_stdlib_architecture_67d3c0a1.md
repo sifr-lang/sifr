@@ -1,6 +1,6 @@
 ---
 name: Hybrid Stdlib Architecture
-overview: "Redesign Sifr's stdlib using a three-tier hybrid architecture: Rust intrinsics at the bottom, Sifr stdlib modules in the middle, and user code on top. This phase sits between the BorrowChecker phase and the Ecosystem phase, comprising 4 milestones that deliver ~42 stdlib modules covering the vast majority of what Python developers use day-to-day."
+overview: "Redesign Sifr's stdlib using a three-tier hybrid architecture: Rust intrinsics at the bottom, Sifr stdlib modules in the middle, and user code on top. This phase sits between the BorrowChecker phase and the Ecosystem phase, comprising 4 milestones that deliver ~43 stdlib modules covering the vast majority of what Python developers use day-to-day."
 todos:
   - id: m-intrinsics
     content: "milestone_intrinsics: Rewire stdlib plumbing -- _sifr.* intrinsics layer, stdlib .sifr file embedding, two-phase compilation pipeline, proof-of-concept with sifr.test"
@@ -12,7 +12,7 @@ todos:
     content: "milestone_stdlib_expansion: Add ~17 new pure-Sifr and intrinsic-backed modules (statistics, bisect, heapq, textwrap, csv, functools, itertools, string, argparse, logging, shutil, tempfile, glob, fnmatch, secrets, pprint, contextlib)"
     status: pending
   - id: m-stdlib-parity
-    content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, colorsys, graphlib, ipaddress, timeit, platform, configparser, tomllib, datetime, pathlib, uuid, copy, dataclasses, enum), run comprehensive parity audit"
+    content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, colorsys, graphlib, ipaddress, timeit, platform, configparser, tomllib, datetime, pathlib, uuid, copy, enum, logging), run comprehensive parity audit"
     status: pending
 isProject: false
 ---
@@ -22,8 +22,8 @@ isProject: false
 ## Phase Position in the Roadmap
 
 ```
-BorrowChecker Phase (current)
-  milestone_borrow_default
+BorrowChecker Phase (done: borrow_default, in-progress: borrow_hardening)
+  milestone_borrow_default       ✓
   milestone_borrow_hardening
       |
       v
@@ -35,8 +35,8 @@ Stdlib Architecture Phase (THIS PLAN -- 4 milestones)
       |
       v
 Ecosystem Phase
-  milestone_networking_stdlib    <-- T3 modules that need async/net
   milestone_async
+  milestone_networking_stdlib    <-- T3 modules that need async/net
   milestone_web_db
   ...
 ```
@@ -94,9 +94,9 @@ Compiler-provided primitives that map directly to Rust code. Intentionally minim
 
 These are the only modules that live in [sifr_hir/src/stdlib.rs](crates/sifr_hir/src/stdlib.rs) and [sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs). Convention: `_` prefix signals "internal, don't import directly."
 
-**Intrinsics surface (~35 primitives):**
+**Intrinsics surface (~60 primitives across 10 modules):**
 
-- `_sifr.fs` -- `read_bytes`, `write_bytes`, `append_bytes`, `exists`, `is_file`, `is_dir`, `list_dir`, `mkdir`, `mkdir_p`, `remove`, `remove_dir`, `rename`, `copy_file`, `getcwd`, `file_size`, `walk_dir` (Rust: `std::fs`, `std::path`)
+- `_sifr.fs` -- `read_bytes`, `write_bytes`, `append_bytes`, `exists`, `is_file`, `is_dir`, `list_dir`, `mkdir`, `mkdir_p`, `remove`, `remove_dir`, `rename`, `copy_file`, `getcwd`, `file_size`, `walk_dir`, `open_file`, `read_fd`, `write_fd`, `close_fd` (Rust: `std::fs`, `std::path`, `std::io`)
 - `_sifr.sys` -- `argv`, `exit`, `env_get`, `env_set`, `run_command`, `platform_os`, `platform_arch` (Rust: `std::env`, `std::process`)
 - `_sifr.io` -- `stdin_read_line`, `stdout_write`, `stderr_write` (Rust: `std::io`)
 - `_sifr.time` -- `monotonic_ns`, `sleep_ms`, `wall_clock_ns`, `perf_counter_ns` (Rust: `std::time`)
@@ -140,13 +140,13 @@ Rename the current `sifr.*` stdlib registry to `_sifr.*`. The existing `emit_std
 lib/sifr/
   test.sifr          # assert_eq, assert_ne, assert_true, assert_false
   math.sifr          # sqrt, sin, cos, floor, ceil, pi, e, factorial, gcd, ...
-  io.sifr            # read_text, write_text, exists, read_lines, append_text
+  io.sifr            # read_text, write_text, exists, read_lines, append_text, open() / File context manager
   os.sifr            # run_command, get_args, getcwd, listdir, mkdir, walk
   env.sifr           # env_get, env_set
-  json.sifr          # loads, dumps
-  re.sifr            # match, find, findall, replace, split
-  time.sifr          # now, sleep, format, monotonic, perf_counter
-  random.sifr        # randint, random, choice, shuffle, sample, seed
+  json.sifr          # json_loads, json_dumps
+  re.sifr            # re_match, re_find, re_findall, re_replace, re_split
+  time.sifr          # time_now, sleep, time_format, monotonic, perf_counter
+  random.sifr        # random_int, random_float, random_choice, shuffle, sample, seed
   hash.sifr          # sha256, md5, sha1, sha512, hmac
   encoding.sifr      # base64_encode, base64_decode, urlsafe_encode, ...
   bytes.sifr         # encode_utf8, decode_utf8, to_hex, from_hex
@@ -175,12 +175,11 @@ lib/sifr/
   timeit.sifr        # timeit, repeat
   platform.sifr      # system, machine, architecture
   configparser.sifr  # ConfigParser
-  tomllib.sifr       # loads, load
+  tomllib.sifr       # toml_loads, toml_load
   datetime.sifr      # date, datetime, timedelta, timezone
   pathlib.sifr       # Path class
   uuid.sifr          # uuid4
   copy.sifr          # copy, deepcopy
-  dataclasses.sifr   # dataclass decorator
   enum.sifr          # Enum, IntEnum
 ```
 
@@ -201,17 +200,17 @@ Each `_sifr.*` intrinsic module maps to specific Rust crates or std modules. Whe
 - `_sifr.toml` -- `toml` (external crate)
 - `_sifr.datetime` -- `chrono` (external crate)
 
-**Key insight:** 6 of 10 intrinsic modules use only Rust std -- no external dependencies. Only `_sifr.crypto`, `_sifr.regex`, `_sifr.json`, `_sifr.toml`, and `_sifr.datetime` need external crates.
+**Key insight:** 5 of 10 intrinsic modules use only Rust std -- no external dependencies. Only `_sifr.crypto`, `_sifr.regex`, `_sifr.json`, `_sifr.toml`, and `_sifr.datetime` need external crates.
 
 ---
 
 ## Complete Module Inventory: What to Port, What to Skip
 
-### Modules to Port (42 total, across 4 milestones)
+### Modules to Port (43 total, across 4 milestones)
 
 Organized by implementation type:
 
-**Pure Sifr -- no intrinsics needed (22 modules):**
+**Pure Sifr -- no intrinsics needed (20 modules):**
 
 - `test` -- assert functions
 - `collections` -- Counter, DefaultDict, OrderedDict, deque, Set wrappers
@@ -224,22 +223,20 @@ Organized by implementation type:
 - `itertools` -- chain, zip_longest, groupby
 - `string` -- ascii_letters, digits, punctuation constants
 - `argparse` -- ArgumentParser class with add_argument, parse_args
-- `logging` -- Logger, handlers, formatters (output via `_sifr.io` + `_sifr.time`)
 - `pprint` -- pretty-print data structures
-- `contextlib` -- suppress, context manager utilities
+- `contextlib` -- suppress (note: uses `Result`-based error suppression, not exception catching)
 - `difflib` -- unified_diff, get_close_matches, SequenceMatcher
 - `colorsys` -- color space conversions (pure math, ~50 lines)
 - `graphlib` -- TopologicalSorter
 - `ipaddress` -- IPv4/IPv6 address parsing and manipulation
 - `configparser` -- INI file parsing
-- `copy` -- copy, deepcopy
-- `dataclasses` -- dataclass decorator
+- `copy` -- copy, deepcopy (note: `deepcopy` requires Clone trait support; may need compiler assistance)
 - `enum` -- Enum, IntEnum
 
-**Thin Sifr wrapper over intrinsics (20 modules):**
+**Thin Sifr wrapper over intrinsics (23 modules):**
 
 - `math` -- wraps `_sifr.math` (f64 methods)
-- `io` -- wraps `_sifr.fs` + `_sifr.io`
+- `io` -- wraps `_sifr.fs` + `_sifr.io` (includes `open()` / `File` context manager)
 - `os` -- wraps `_sifr.fs` + `_sifr.sys`
 - `env` -- wraps `_sifr.sys`
 - `json` -- wraps `_sifr.json` (serde_json)
@@ -254,6 +251,7 @@ Organized by implementation type:
 - `tempfile` -- wraps `_sifr.fs` + `_sifr.crypto` (random names)
 - `glob` -- wraps `_sifr.fs` (list_dir) + fnmatch logic
 - `fnmatch` -- wraps `_sifr.regex` (pattern translation)
+- `logging` -- wraps `_sifr.io` + `_sifr.time` (Logger, handlers, formatters). Note: the main architecture plan uses `sifr.log`; that should be updated to `sifr.logging` to match Python's `import logging` convention.
 - `timeit` -- wraps `_sifr.time` (perf_counter)
 - `platform` -- wraps `_sifr.sys` (platform_os, platform_arch)
 - `tomllib` -- wraps `_sifr.toml`
@@ -263,7 +261,7 @@ Organized by implementation type:
 
 ### Modules to Defer to Ecosystem Phase
 
-These depend on async, networking, or threading -- features that come after this phase. A `milestone_networking_stdlib` should be the first milestone in the Ecosystem phase, before `milestone_async`.
+These depend on async, networking, or threading -- features that come after this phase. `milestone_networking_stdlib` comes **after** `milestone_async` in the Ecosystem phase, since most of these modules require an async runtime.
 
 - `socket` -- raw TCP/UDP (needs `_sifr.net` intrinsics + async runtime)
 - `ssl` -- TLS (needs socket + Rust `rustls` or `native-tls`)
@@ -281,6 +279,8 @@ These depend on async, networking, or threading -- features that come after this
 - `email` -- in `milestone_email` roadmap
 - `gzip` / `bz2` / `lzma` / `zipfile` / `tarfile` -- compression (needs Rust crate bindings, add on demand)
 - `decimal` / `fractions` -- arbitrary precision (needs Rust `rust_decimal` crate, add on demand)
+
+**Note:** `sifr.stream` (streaming read/write for large data, wrapping Rust's `Read`/`Write` traits) is mentioned in the main architecture plan but is **not** part of this stdlib phase. It will be added in the Ecosystem phase alongside async I/O.
 
 ### Modules to Never Port (at least for now)
 
@@ -311,6 +311,7 @@ These exist because of Python's specific nature (interpreted, dynamic, REPL-orie
 - `contextvars`, `sysconfig`, `rlcompleter` -- Python-specific
 - `weakref` -- Sifr's ownership model eliminates most use cases
 - `codecs`, `encodings` -- Rust is UTF-8 by default; minimal encode/decode in `sifr.bytes`
+- `dataclasses` -- not needed. In Python, `@dataclass` exists because classes are verbose (`self.x = x` boilerplate). Sifr classes have typed fields and the compiler should auto-derive `__init__`, `__repr__`, `__eq__` for all classes (like Rust's `#[derive(...)]`). This is a compiler feature, not a stdlib module.
 
 ### Modules to Revisit Later
 
@@ -322,6 +323,20 @@ These may become relevant as the language matures:
 - `gzip` / `zipfile` / `tarfile` -- if compression is commonly requested
 - `xml` / `html` -- if web scraping becomes a use case before the web milestone
 - `contextlib` advanced features -- `redirect_stdout`, `ExitStack` (revisit as context managers mature)
+
+---
+
+## Design Constraint: Safety Contract
+
+All stdlib modules must uphold Sifr's safety guarantees:
+
+1. **Fallible operations return `Result[T, E]` or `Option[T]`** -- file I/O, parsing, network calls, and any operation that can fail must return a `Result` or `Option`. No panics, no `.unwrap()` in user-facing APIs.
+2. **`open()` returns a `File` context manager** -- `sifr.io.open()` returns `Result[File, IOError]`. The `File` object implements the context manager protocol (`with` statement) to guarantee resource cleanup.
+3. **No raw pointers or unsafe code in Tier 2** -- all `unsafe` is confined to Tier 1 intrinsics. Tier 2 `.sifr` files are pure safe Sifr.
+4. **Borrow-by-default applies uniformly** -- stdlib functions accept `&T` by default, `&mut T` when mutation is needed, and `T` (owned) only when the function must consume the value.
+5. **No silent data loss** -- operations like `write_text` return `Result[None, IOError]`, not `None`. The caller must handle the error or propagate with `?`.
+
+This contract is an **acceptance criterion for every milestone** -- any stdlib function that violates it is a bug.
 
 ---
 
@@ -337,12 +352,13 @@ Rewires how stdlib works internally. No new user-facing features, but establishe
 
 1. Rename current `sifr.*` registry to `_sifr.*` in [sifr_hir/src/stdlib.rs](crates/sifr_hir/src/stdlib.rs) -- mechanical rename of `get_stdlib_module()` match arms and `is_stdlib_module()` check
 2. Rename `emit_stdlib_call` to `emit_intrinsic_call` in [sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs)
-3. Split current 55 functions into ~35 true primitives across `_sifr.fs`, `_sifr.sys`, `_sifr.io`, `_sifr.time`, `_sifr.math`, `_sifr.crypto`, `_sifr.regex`, `_sifr.json`
+3. Split current 55 functions into the initial set of intrinsic primitives across `_sifr.fs`, `_sifr.sys`, `_sifr.io`, `_sifr.time`, `_sifr.math`, `_sifr.crypto`, `_sifr.regex`, `_sifr.json` (full surface grows to ~60 primitives across 10 modules by milestone 4)
 4. Add `lib/sifr/` directory with `.sifr` files embedded via `include_str!`
 5. Update driver ([sifr_driver/src/lib.rs](crates/sifr_driver/src/lib.rs)) to discover and compile embedded stdlib `.sifr` modules before user modules
 6. Update `starts_with("sifr.")` check in [sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) to resolve stdlib `.sifr` files first, falling back to `_sifr.*` intrinsics
 7. Update codegen to handle stdlib modules as regular Rust `mod`/`use` (not inline emit)
-8. Proof-of-concept: `lib/sifr/test.sifr` (assert_eq, assert_ne, assert_true, assert_false are pure Sifr)
+8. Block user imports of `_sifr.*` in [sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics)
+9. Proof-of-concept: `lib/sifr/test.sifr` (assert_eq, assert_ne, assert_true, assert_false are pure Sifr)
 
 **Acceptance criteria:** `from sifr.test import assert_eq` resolves to the `.sifr` file, compiles, and works. All existing E2E tests still pass (old modules still use intrinsics path during transition).
 
@@ -361,7 +377,7 @@ Port all 13 existing stdlib modules from Rust codegen to `.sifr` files. Each mod
 3. `lib/sifr/encoding.sifr` -- wraps `_sifr.crypto` or pure Sifr (base64_encode, base64_decode)
 4. `lib/sifr/math.sifr` -- wraps `_sifr.math` (12 functions + pi, e constants)
 5. `lib/sifr/hash.sifr` -- wraps `_sifr.crypto` (sha256, md5)
-6. `lib/sifr/io.sifr` -- wraps `_sifr.fs` + `_sifr.io` (read_text, write_text, exists, read_lines)
+6. `lib/sifr/io.sifr` -- wraps `_sifr.fs` + `_sifr.io` (read_text, write_text, exists, read_lines, `open()` / `File` context manager). Needs new intrinsics: `_sifr.fs.open_file`, `_sifr.fs.read_fd`, `_sifr.fs.write_fd`, `_sifr.fs.close_fd`
 7. `lib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` (run_command, get_args)
 8. `lib/sifr/json.sifr` -- wraps `_sifr.json` (json_loads, json_dumps)
 9. `lib/sifr/time.sifr` -- wraps `_sifr.time` (time_now, sleep, time_format)
@@ -376,7 +392,7 @@ Port all 13 existing stdlib modules from Rust codegen to `.sifr` files. Each mod
 - Delete the old `sifr.*` entries in `get_stdlib_module()`
 - Update Cargo dependency injection to trace through `_sifr.*` intrinsics
 
-**Acceptance criteria:** `emit_stdlib_call` is deleted. Every `from sifr.X import Y` resolves to a `.sifr` file. All existing E2E tests, audit tests, and stdlib tests pass with zero regressions.
+**Acceptance criteria:** `emit_stdlib_call` is deleted. Every `from sifr.X import Y` resolves to a `.sifr` file. All fallible functions return `Result` or `Option` (safety contract). All existing E2E tests, audit tests, and stdlib tests pass with zero regressions.
 
 ---
 
@@ -398,7 +414,7 @@ Add ~17 new modules. These are the most commonly needed modules that Python deve
 8. `lib/sifr/textwrap.sifr` -- `wrap`, `fill`, `dedent`, `indent` (pure string processing)
 9. `lib/sifr/csv.sifr` -- `reader`, `writer` (pure string parsing)
 10. `lib/sifr/pprint.sifr` -- `pformat`, `pprint` (pure string formatting)
-11. `lib/sifr/contextlib.sifr` -- `suppress` (context manager utility)
+11. `lib/sifr/contextlib.sifr` -- `suppress` (context manager utility; note: Sifr uses `Result`-based error handling, so `suppress` catches specific error types from `Result`, not exceptions)
 12. `lib/sifr/argparse.sifr` -- `ArgumentParser` class with `add_argument`, `parse_args` (pure Sifr, uses `sifr.os.get_args`)
 
 **Intrinsic-backed modules (need new `_sifr.*` primitives):**
@@ -419,7 +435,7 @@ Add ~17 new modules. These are the most commonly needed modules that Python deve
 
 **Size: Medium-Large (comparable to milestone_borrow_default + milestone_borrow_hardening)**
 
-Two parts: (A) close gaps in existing modules by adding missing functions, (B) add remaining Tier 1+2 modules, (C) run the comprehensive parity audit.
+Three parts: (A) close gaps in existing modules by adding missing functions, (B) add remaining Tier 1+2 modules, (C) run the comprehensive parity audit.
 
 **Part A -- Expand existing modules:**
 
@@ -447,10 +463,9 @@ Two parts: (A) close gaps in existing modules by adding missing functions, (B) a
 8. `lib/sifr/datetime.sifr` -- `date`, `datetime`, `timedelta`, `timezone` (wraps new `_sifr.datetime` intrinsic)
 9. `lib/sifr/pathlib.sifr` -- `Path` class with `/` operator, `exists`, `read_text`, `write_text`, `stem`, `suffix`, `parent` (wraps `_sifr.fs`)
 10. `lib/sifr/uuid.sifr` -- `uuid4` (wraps `_sifr.crypto.random_bytes`)
-11. `lib/sifr/copy.sifr` -- `copy`, `deepcopy` (pure Sifr)
-12. `lib/sifr/dataclasses.sifr` -- `dataclass` decorator (pure Sifr, depends on metaprogramming support)
-13. `lib/sifr/enum.sifr` -- `Enum`, `IntEnum` (pure Sifr)
-14. `lib/sifr/logging.sifr` -- `Logger`, `getLogger`, `info`, `warning`, `error`, `debug` (wraps `_sifr.io` + `_sifr.time`)
+11. `lib/sifr/copy.sifr` -- `copy`, `deepcopy` (pure Sifr; note: `deepcopy` requires Clone trait support, may need compiler assistance)
+12. `lib/sifr/enum.sifr` -- `Enum`, `IntEnum` (pure Sifr)
+13. `lib/sifr/logging.sifr` -- `Logger`, `getLogger`, `info`, `warning`, `error`, `debug` (wraps `_sifr.io` + `_sifr.time`)
 
 **New intrinsics needed:** `_sifr.toml.toml_parse`, `_sifr.datetime.*` (4 primitives), `_sifr.sys.platform_os`, `_sifr.sys.platform_arch`, `_sifr.math` inverse trig/hyperbolic (~8 primitives)
 
@@ -466,7 +481,7 @@ Two parts: (A) close gaps in existing modules by adding missing functions, (B) a
 
 ## Ecosystem Phase: Networking Stdlib Milestone
 
-The first milestone in the Ecosystem phase should be `milestone_networking_stdlib`, which adds the Tier 3 modules that were deferred because they need async/networking primitives. This milestone should come before or alongside `milestone_async`:
+`milestone_networking_stdlib` comes **after** `milestone_async` in the Ecosystem phase, since these modules require async/networking primitives that the async milestone provides:
 
 **Modules:**
 - `sifr/subprocess.sifr` -- full Popen API (wraps new `_sifr.process` intrinsics)
