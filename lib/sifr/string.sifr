@@ -8,3 +8,17 @@ hexdigits: str = "0123456789abcdefABCDEF"
 octdigits: str = "01234567"
 punctuation: str = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 whitespace: str = " \t\n\r"
+printable: str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r"
+
+def capwords(s: str) -> str:
+    words: list[str] = s.split(" ")
+    result: str = ""
+    first: bool = True
+    for word in words:
+        if len(word) > 0:
+            if not first:
+                result = result + " "
+            first = False
+            cap: str = word.capitalize()
+            result = result + cap
+    return result

@@ -1,5 +1,5 @@
 # sifr.statistics — Basic statistical functions (pure Sifr)
-from sifr.math import sqrt
+from sifr.math import sqrt, log, exp
 
 def mean(data: list[float]) -> float:
     total: float = 0.0
@@ -46,6 +46,59 @@ def stdev(data: list[float]) -> float:
 
 def pstdev(data: list[float]) -> float:
     return sqrt(pvariance(data))
+
+def fmean(data: list[float]) -> float:
+    return mean(data)
+
+def harmonic_mean(data: list[float]) -> float:
+    n: int = len(data)
+    if n == 0:
+        return 0.0
+    total: float = 0.0
+    for val in data:
+        if val <= 0.0:
+            return 0.0
+        total = total + 1.0 / val
+    return float(n) / total
+
+def geometric_mean(data: list[float]) -> float:
+    n: int = len(data)
+    if n == 0:
+        return 0.0
+    log_sum: float = 0.0
+    for val in data:
+        if val <= 0.0:
+            return 0.0
+        log_sum = log_sum + log(val)
+    return exp(log_sum / float(n))
+
+def median_low(data: list[float]) -> float:
+    n: int = len(data)
+    if n == 0:
+        return 0.0
+    sorted_data: list[float] = sorted(data)
+    mid: int = n // 2
+    if n % 2 == 0:
+        val: float | None = sorted_data[mid - 1]
+        if val is not None:
+            return val
+        return 0.0
+    else:
+        val2: float | None = sorted_data[mid]
+        if val2 is not None:
+            return val2
+        return 0.0
+
+def median_high(data: list[float]) -> float:
+    n: int = len(data)
+    if n == 0:
+        return 0.0
+    sorted_data: list[float] = sorted(data)
+    mid: int = n // 2
+    val: float | None = sorted_data[mid]
+    if val is not None:
+        return val
+    return 0.0
 
 def mode(data: list[int]) -> int:
     if len(data) == 0:

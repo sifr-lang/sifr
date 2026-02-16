@@ -1,0 +1,11 @@
+# Test new sifr.ipaddress functions
+# expect-stdout: int_to_ip = 192.168.1.1
+# expect-stdout: is_multicast = true
+# expect-stdout: is_global = true
+
+from sifr.ipaddress import int_to_ip, is_multicast, is_global
+
+def main():
+    print("int_to_ip = " + int_to_ip(3232235777))
+    print("is_multicast = " + str(is_multicast("224.0.0.1")))
+    print("is_global = " + str(is_global("8.8.8.8")))

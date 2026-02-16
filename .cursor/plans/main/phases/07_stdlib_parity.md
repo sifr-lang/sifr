@@ -86,7 +86,7 @@ Generators work but are eager: the codegen creates a `Vec<T>`, pushes every `yie
 
 ## milestone_test_infra: Test Infrastructure for CPython Parity
 
-status: pending
+status: done
 
 **Goal:** Add test assertion primitives needed to port CPython tests, and fix the known `statistics.variance` bug.
 
@@ -111,7 +111,7 @@ Current `variance` divides by N (population variance). CPython's `variance` divi
 
 ## milestone_stdlib_functions: Pure-Sifr and Intrinsic Function Additions
 
-status: pending
+status: done
 
 **Goal:** Close function-level gaps. Add ~25 pure-Sifr functions and ~12 new intrinsics across 12 modules. Also make `bisect`, `heapq`, and `itertools` generic (using `TypeVar`) — proving that generics work in the stdlib export pipeline.
 

@@ -1,0 +1,9 @@
+# Test sifr.bisect insort_right
+# expect-stdout: [1, 2, 3, 3, 4, 5]
+
+from sifr.bisect import insort_right
+
+def main():
+    data: list[int] = [1, 2, 3, 4, 5]
+    result: list[int] = insort_right(data, 3)
+    print(str(result))

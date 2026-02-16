@@ -1,2 +1,91 @@
 # sifr.math — Math functions and constants
-from _sifr.math import sqrt, floor, ceil, abs_val, log, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, degrees, radians, isnan, isinf, trunc, copysign, fmod, hypot, tau, inf, nan
+from _sifr.math import sqrt, floor, ceil, abs_val, log, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, degrees, radians, isnan, isinf, trunc, copysign, fmod, hypot, tau, inf, nan, exp, expm1, log1p, fabs, isfinite
+
+def factorial(n: int) -> int:
+    if n < 0:
+        return 0
+    result: int = 1
+    i: int = 2
+    while i <= n:
+        result = result * i
+        i = i + 1
+    return result
+
+def gcd(a: int, b: int) -> int:
+    x: int = a
+    y: int = b
+    if x < 0:
+        x = 0 - x
+    if y < 0:
+        y = 0 - y
+    while y != 0:
+        temp: int = y
+        y = x % y
+        x = temp
+    return x
+
+def lcm(a: int, b: int) -> int:
+    if a == 0:
+        return 0
+    if b == 0:
+        return 0
+    g: int = gcd(a, b)
+    x: int = a
+    if x < 0:
+        x = 0 - x
+    y: int = b
+    if y < 0:
+        y = 0 - y
+    return (x // g) * y
+
+def comb(n: int, k: int) -> int:
+    if k < 0:
+        return 0
+    if k > n:
+        return 0
+    if k == 0:
+        return 1
+    if k == n:
+        return 1
+    r: int = k
+    if r > n - k:
+        r = n - k
+    result: int = 1
+    i: int = 0
+    while i < r:
+        result = result * (n - i)
+        result = result // (i + 1)
+        i = i + 1
+    return result
+
+def perm(n: int, k: int) -> int:
+    if k < 0:
+        return 0
+    if k > n:
+        return 0
+    result: int = 1
+    i: int = 0
+    while i < k:
+        result = result * (n - i)
+        i = i + 1
+    return result
+
+def isclose(a: float, b: float, rel_tol: float) -> bool:
+    diff: float = a - b
+    if diff < 0.0:
+        diff = 0.0 - diff
+    max_ab: float = a
+    if max_ab < 0.0:
+        max_ab = 0.0 - max_ab
+    b_abs: float = b
+    if b_abs < 0.0:
+        b_abs = 0.0 - b_abs
+    if b_abs > max_ab:
+        max_ab = b_abs
+    return diff <= rel_tol * max_ab
+
+def prod(data: list[int]) -> int:
+    result: int = 1
+    for val in data:
+        result = result * val
+    return result

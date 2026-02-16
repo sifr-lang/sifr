@@ -52,3 +52,46 @@ def enumerate_list(data: list[str]) -> list[int]:
         result.append(i)
         i = i + 1
     return result
+
+def pairwise(data: list[int]) -> list[list[int]]:
+    result: list[list[int]] = []
+    i: int = 0
+    while i < len(data) - 1:
+        pair: list[int] = []
+        a: int | None = data[i]
+        b: int | None = data[i + 1]
+        if a is not None:
+            pair.append(a)
+        if b is not None:
+            pair.append(b)
+        result.append(pair)
+        i = i + 1
+    return result
+
+def batched(data: list[int], n: int) -> list[list[int]]:
+    result: list[list[int]] = []
+    i: int = 0
+    while i < len(data):
+        batch: list[int] = []
+        j: int = 0
+        while j < n:
+            if i + j < len(data):
+                val: int | None = data[i + j]
+                if val is not None:
+                    batch.append(val)
+            j = j + 1
+        result.append(batch)
+        i = i + n
+    return result
+
+def islice(data: list[int], stop: int) -> list[int]:
+    result: list[int] = []
+    i: int = 0
+    while i < stop:
+        if i >= len(data):
+            return result
+        val: int | None = data[i]
+        if val is not None:
+            result.append(val)
+        i = i + 1
+    return result

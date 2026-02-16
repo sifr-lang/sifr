@@ -73,3 +73,17 @@ def indent(text: str, prefix: str) -> str:
         else:
             result = result + line
     return result
+
+def shorten(text: str, width: int) -> str:
+    words: list[str] = text.split(" ")
+    result: str = ""
+    for word in words:
+        if len(word) == 0:
+            pass
+        elif len(result) == 0:
+            result = word
+        elif len(result) + 1 + len(word) + 4 <= width:
+            result = result + " " + word
+        else:
+            return result + " [...]"
+    return result

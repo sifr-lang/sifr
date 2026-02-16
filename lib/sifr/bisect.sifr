@@ -1,11 +1,12 @@
-# sifr.bisect — Array bisection algorithm (pure Sifr)
+# sifr.bisect — Array bisection algorithm (pure Sifr, generic)
+T = TypeVar("T")
 
-def bisect_left(a: list[int], x: int) -> int:
+def bisect_left(a: list[T], x: T) -> int:
     lo: int = 0
     hi: int = len(a)
     while lo < hi:
         mid: int = (lo + hi) // 2
-        val: int | None = a[mid]
+        val: T | None = a[mid]
         if val is not None:
             if val < x:
                 lo = mid + 1
@@ -15,12 +16,12 @@ def bisect_left(a: list[int], x: int) -> int:
             lo = mid + 1
     return lo
 
-def bisect_right(a: list[int], x: int) -> int:
+def bisect_right(a: list[T], x: T) -> int:
     lo: int = 0
     hi: int = len(a)
     while lo < hi:
         mid: int = (lo + hi) // 2
-        val: int | None = a[mid]
+        val: T | None = a[mid]
         if val is not None:
             if x < val:
                 hi = mid
@@ -30,14 +31,29 @@ def bisect_right(a: list[int], x: int) -> int:
             lo = mid + 1
     return lo
 
-def insort_left(a: list[int], x: int) -> list[int]:
+def insort_left(a: list[T], x: T) -> list[T]:
     pos: int = bisect_left(a, x)
-    result: list[int] = []
+    result: list[T] = []
     i: int = 0
     while i < len(a):
         if i == pos:
             result.append(x)
-        val: int | None = a[i]
+        val: T | None = a[i]
+        if val is not None:
+            result.append(val)
+        i = i + 1
+    if pos == len(a):
+        result.append(x)
+    return result
+
+def insort_right(a: list[T], x: T) -> list[T]:
+    pos: int = bisect_right(a, x)
+    result: list[T] = []
+    i: int = 0
+    while i < len(a):
+        if i == pos:
+            result.append(x)
+        val: T | None = a[i]
         if val is not None:
             result.append(val)
         i = i + 1
