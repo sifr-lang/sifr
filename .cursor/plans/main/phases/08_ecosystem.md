@@ -17,7 +17,7 @@ status: pending
 - `**sifr.net`:** TCP/UDP sockets (async) -> wraps `tokio::net`
 - `**sifr.task`:** task spawning, sleep, timeouts -> wraps `tokio::task` + `tokio::time`
 - **Async iterators:** `async for` over async streams
-- `**async with`:** async context managers for resources that require async setup/teardown (e.g., database connections, HTTP sessions). Codegen: the `__aenter__` and `__aexit__` methods are `async fn`, and the `with` block `.await`s them. Maps to Rust's async scope pattern with `Drop` + async cleanup.
+- `**async with`:** async context managers for resources that require async setup/teardown (e.g., database connections, HTTP sessions). Builds on the sync `with` statement and `ContextManager` protocol (`__enter__`/`__exit__`) delivered in Phase 7 (Stdlib Parity, milestone_compiler_hardening). Codegen: the `__aenter__` and `__aexit__` methods are `async fn`, and the `with` block `.await`s them. Maps to Rust's async scope pattern with `Drop` + async cleanup.
 - **Async generators:** `yield` inside `async def` produces an async iterator. Codegen: combines the state machine from milestone_generators generators with async/await from this milestone.
 
 ### Example
@@ -69,7 +69,7 @@ milestone_async also provides basic cross-task communication primitives:
 
 status: pending
 
-**Goal:** Add networking-related stdlib modules that depend on the async runtime from milestone_async. These modules bridge the gap between the synchronous stdlib (from the Stdlib Architecture phase) and the web framework (milestone_web_db).
+**Goal:** Add networking-related stdlib modules that depend on the async runtime from milestone_async. These modules bridge the gap between the synchronous stdlib (from the Stdlib Architecture and Stdlib Parity phases) and the web framework (milestone_web_db).
 
 **Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md) (see "Modules to Defer to Ecosystem Phase")
 
@@ -466,13 +466,13 @@ csrf: str = token_urlsafe(32)          # base64url-encoded random
 
 status: pending
 
-**Goal:** Enhance the web stack with production-grade features that every deployed web application needs: structured JSON logging with request tracing, rate limiting, and CORS configuration. This milestone layers on top of `sifr.logging` (Phase 3: basic structured logging with levels) and `sifr.web` (milestone_web_db: basic routing and middleware) without modifying those locked milestones.
+**Goal:** Enhance the web stack with production-grade features that every deployed web application needs: structured JSON logging with request tracing, rate limiting, and CORS configuration. This milestone layers on top of `sifr.logging` (Phase 7: `logging.Logger` class with level filtering from milestone_stdlib_class_rollout) and `sifr.web` (milestone_web_db: basic routing and middleware) without modifying those locked milestones.
 
-**Depends on:** milestone_crypto_auth (rate limiting may use token-based identification), milestone_web_db (web framework must exist), milestone_ext_stdlib (`sifr.logging` provides basic logging; this milestone extends it)
+**Depends on:** milestone_crypto_auth (rate limiting may use token-based identification), milestone_web_db (web framework must exist), milestone_stdlib_class_rollout (`sifr.logging.Logger` provides named loggers with level filtering; this milestone extends it with JSON output and request tracing)
 
 ### Enhanced Logging (`sifr.logging` extensions)
 
-Phase 3's `sifr.logging` provides basic structured logging with levels (debug, info, warn, error) wrapping `tracing`. This milestone adds production features on top:
+Phase 7's `sifr.logging` (from milestone_stdlib_class_rollout) provides the `Logger` class with named loggers and level filtering (debug, info, warning, error, critical). This milestone adds production features on top:
 
 ```python
 from sifr.logging import configure, info, warn, error

@@ -6,7 +6,7 @@ This phase rewires the stdlib from compiler-emitted Rust code into a three-tier 
 
 ## milestone_intrinsics: Intrinsics Layer and Stdlib Compilation Pipeline
 
-status: pending
+status: completed
 
 **Goal:** Rewire how stdlib works internally. Introduce the three-tier hybrid architecture: Rust intrinsics (`_sifr.*`) at the bottom, Sifr stdlib modules (`sifr.*`) as `.sifr` files in the middle, and user code on top. No new user-facing features, but establishes the architecture everything else builds on.
 
@@ -55,7 +55,7 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 
 ## milestone_stdlib_migration: Migrate Existing 13 Modules to Sifr
 
-status: pending
+status: completed
 
 **Goal:** Port all 13 existing stdlib modules from Rust codegen to `.sifr` files. Each module becomes a thin wrapper importing from `_sifr.*` intrinsics. At the end, `emit_stdlib_call` is deleted.
 
@@ -97,7 +97,7 @@ status: pending
 
 ## milestone_stdlib_expansion: New Modules (Algorithms, CLI, File Utilities)
 
-status: pending
+status: completed
 
 **Goal:** Add ~14 new modules. These are the most commonly needed modules that Python developers reach for daily. Ordered by dependency and implementation complexity (pure Sifr first, then intrinsic-backed).
 
@@ -137,7 +137,7 @@ status: pending
 
 ## milestone_stdlib_parity: Gap Closing, Remaining Modules, and Audit
 
-status: pending
+status: completed
 
 **Goal:** Three parts: (A) close gaps in existing modules by adding missing functions, (B) add remaining Tier 1+2 modules, (C) run the comprehensive parity audit.
 
@@ -194,7 +194,7 @@ status: pending
 
 ## milestone_stdlib_polish: Stdlib API Alignment, Test Coverage, and Cleanup
 
-status: pending
+status: completed
 
 **Goal:** Polish the stdlib to align API names with the architecture plan, fill test coverage gaps, and clean up stale code. This milestone addresses reviewer findings that don't require new language features or compiler-level changes.
 
@@ -272,7 +272,7 @@ status: pending
 
 ## milestone_stdlib_classes: Class-Based APIs in Sifr Standard Library
 
-status: pending
+status: completed
 
 **Goal:** Prove the stdlib class pipeline end-to-end by implementing `collections.Counter` as the first class defined in a stdlib `.sifr` file. This unblocks 12+ modules that need class-based APIs to reach CPython parity.
 

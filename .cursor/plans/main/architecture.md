@@ -333,12 +333,13 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This contract
 - **Move invalidates source:** when a value is moved (assigned to another variable, or passed to a function via `own` parameter), the source is invalidated. Accessing it after move is a compile-time error. Note: default function parameters borrow (`&T`), so passing a value to a function does NOT move it unless the parameter is marked `own`.
 - **Partial moves:** when a struct field is moved out, the entire struct becomes partially invalid. The compiler tracks which fields are still valid.
 - **User-defined destructors deferred:** Sifr does NOT expose `__del__` or custom destructors in MVP. The compiler auto-generates `Drop` for types that hold resources (file handles, connections) via stdlib wrappers.
-- **Explicit cleanup via `with`:** for resource management (files, connections), use `with` blocks that map to Rust's scoped resource patterns. The resource is cleaned up when the `with` block exits.
+- **Explicit cleanup via `with`:** for resource management (files, connections), use `with` blocks that map to Rust's scoped resource patterns. The resource is cleaned up when the `with` block exits. The `with` statement calls `__enter__()` at scope start and `__exit__()` at scope end, with compile-time enforcement of the `ContextManager` protocol.
 - **Destructor failure:** auto-generated destructors do not fail. If an underlying Rust `Drop` implementation panics (only possible via FFI-wrapped types), the program aborts. This is a system-level failure, not a Sifr-level concern -- Sifr user code cannot trigger destructor panics.
 
 **Milestone responsibilities:**
 
-- milestone_generators: define `with` block semantics and `ContextManager` protocol (`__enter__`/`__exit__`)
+- milestone_generators: define initial `with` block syntax (scoped block desugaring)
+- milestone_compiler_hardening (Phase 7: Stdlib Parity): complete the `with` statement with full `ContextManager` protocol enforcement (`__enter__`/`__exit__` calls, multiple context managers, compile-time protocol checking)
 - milestone_classes: implement scope-end destruction for class instances
 - milestone_core_stdlib: implement `with` blocks for file handles and other stdlib resources
 
@@ -393,7 +394,7 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 | `Comparable`     | `Ord` (+ `PartialOrd`, `Eq`, `PartialEq`)       | milestone_protocols (defined), milestone_generics (usable as bound)                 | Ordering for `sort()`, `min()`, `max()`, comparison operators |
 | `Addable`        | `Add` (+ `Sum` for `sum()`)                     | milestone_protocols (defined), milestone_generics (usable as bound)                 | Arithmetic `+` operator, `sum()` built-in                     |
 | `Display`        | `std::fmt::Display`                             | milestone_classes (auto-derived for `__str__`), milestone_protocols (explicit impl) | String representation via `str()`, f-strings, `print()`       |
-| `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (defined and enforced)                                         | `with` statement resource management                          |
+| `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (syntax), milestone_compiler_hardening (protocol enforcement)  | `with` statement resource management                          |
 | `Iterator`       | `Iterator`                                      | milestone_generics (defined), milestone_generators (yield-based)                    | `for` loops, comprehensions, generator expressions            |
 | `Hashable`       | `Hash` (+ `Eq`)                                 | milestone_classes (auto-derived)                                                    | Dict keys, set membership                                     |
 
@@ -410,7 +411,8 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 - milestone_classes: auto-derive `Display` and `Hashable` for classes with eligible fields
 - milestone_protocols: define `Comparable`, `Addable`, `Display` as explicit protocols; enable operator overloading via protocol impl
 - milestone_generics: enable protocols as generic bounds (`T: Comparable`); define `Iterator` protocol
-- milestone_generators: define `ContextManager` protocol; enforce `with` statement compliance
+- milestone_generators: define initial `with` block syntax (scoped block desugaring)
+- milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking
 
 ### Ecosystem Strategy
 
