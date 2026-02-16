@@ -5,10 +5,12 @@
 # This is critical for LeetCode problems using ListNode, TreeNode, etc.
 
 # --- Functions using classes defined BELOW ---
+# Note: class params are borrowed by default (&T). Copy fields (int) can be
+# returned directly, but Move fields (str) need `own` to take ownership.
 def get_node_val(node: Node) -> int:
     return node.value
 
-def describe_person(p: Person) -> str:
+def describe_person(own p: Person) -> str:
     return p.name
 
 # --- Classes defined after the functions that use them ---

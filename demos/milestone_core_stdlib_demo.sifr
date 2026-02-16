@@ -9,9 +9,9 @@
 #   sifr.math  — Math functions and constants
 # ============================================================
 
-from sifr.io import read_file, write_file, file_exists, read_lines
+from sifr.io import read_text, write_text, exists, read_lines
 from sifr.json import json_loads
-from sifr.env import get_env, set_env
+from sifr.env import env_get, env_set
 from sifr.os import run_command
 from sifr.math import sqrt, floor, ceil, pi, e
 
@@ -22,14 +22,14 @@ def main():
     print("=== sifr.io ===")
 
     # Write a file
-    write_file("/tmp/sifr_demo.txt", "Hello from Sifr!\nLine 2")
+    write_text("/tmp/sifr_demo.txt", "Hello from Sifr!\nLine 2")
 
     # Check it exists
-    exists: bool = file_exists("/tmp/sifr_demo.txt")
-    print(f"File exists: {exists}")
+    file_exists: bool = exists("/tmp/sifr_demo.txt")
+    print(f"File exists: {file_exists}")
 
     # Read it back
-    content: str = read_file("/tmp/sifr_demo.txt")
+    content: str = read_text("/tmp/sifr_demo.txt")
     print(f"Content: {content}")
 
     # Read as lines
@@ -49,12 +49,12 @@ def main():
     # ----------------------------------------------------------
     print("=== sifr.env ===")
 
-    set_env("SIFR_DEMO", "active")
-    val: str | None = get_env("SIFR_DEMO")
+    env_set("SIFR_DEMO", "active")
+    val: str | None = env_get("SIFR_DEMO")
     if val is not None:
         print(f"SIFR_DEMO = {val}")
 
-    missing: str | None = get_env("SIFR_NONEXISTENT")
+    missing: str | None = env_get("SIFR_NONEXISTENT")
     if missing is None:
         print("SIFR_NONEXISTENT not set")
 
