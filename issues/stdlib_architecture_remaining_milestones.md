@@ -1027,25 +1027,10 @@ Per the CPython test portability research:
 
 ## What's Explicitly Deferred (and Why)
 
-> **Note:** This section was updated to reflect decisions made during Phase 7 planning. Items that were previously deferred but are now addressed within Phase 7 (Stdlib Parity) are listed in the "Now Addressed" table below.
-
-### Still Deferred
-
 | Item | Blocker | When to Address |
 |---|---|---|
 | Exception types (`TOMLDecodeError`, `CycleError`) | Error types in stdlib `.sifr` files are untested — custom error classes work in user code but the export pipeline from stdlib is unproven | Next phase — requires validating error type export from stdlib |
 | `assert_raises` | `std::panic::catch_unwind` codegen | Lower priority — NAN/INF checks suffice for most cases |
-
-### Now Addressed in Phase 7 (Stdlib Parity)
-
-| Item | Previously Claimed Blocker | Resolution |
-|---|---|---|
-| `Callable`-as-struct-field (`ArgumentParser`, `defaultdict`, `timeit.Timer`) | `impl Fn(...)` invalid in Rust struct fields | Fixed in `milestone_compiler_hardening` — emit `Box<dyn Fn(...)>` for struct field context |
-| Generic `bisect`/`heapq`/`itertools` | Generics in stdlib untested | Addressed in `milestone_stdlib_functions` — first use of `TypeVar` in stdlib `.sifr` files |
-| Lazy iterators (`iglob`, `csv.reader`) | Generators eagerly collect into `Vec<T>` | Fixed in `milestone_lazy_iterators` — proper state machine codegen with `Iterator` trait |
-| `io.open()` / context managers | `with` statement incomplete | `milestone_compiler_hardening` delivers `__enter__`/`__exit__` protocol; `io.open()` File class in `milestone_stdlib_class_rollout` or later |
-| `datetime`/`timedelta` class arithmetic | Operator overloading in stdlib classes untested | Addressed in `milestone_stdlib_class_rollout` — first stdlib class with `__add__`/`__sub__` |
-| Mining `mathdata/math_testcases.txt` | Parsing infrastructure | Added as stretch goal in `milestone_cpython_tests` |
 
 ---
 

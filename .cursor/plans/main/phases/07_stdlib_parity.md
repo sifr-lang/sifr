@@ -282,12 +282,3 @@ Why this order:
 | Item | Blocker | When to Address |
 |---|---|---|
 | Exception types (`TOMLDecodeError`, `CycleError`) | Error types in stdlib `.sifr` files are untested — custom error classes work in user code (`custom_error.sifr`) but the export pipeline from stdlib is unproven | Next phase — requires validating error type export from stdlib, then defining module-specific error types |
-
-### Previously Deferred, Now Addressed in This Phase
-
-| Item | Previously Claimed Blocker | Resolution |
-|---|---|---|
-| `Callable`-as-struct-field (`ArgumentParser`, `defaultdict`, `timeit.Timer`) | `impl Fn(...)` invalid in Rust struct fields | Fixed in `milestone_compiler_hardening` — emit `Box<dyn Fn(...)>` for struct field context |
-| Generic `bisect`/`heapq`/`itertools` | Generics in stdlib untested | Addressed in `milestone_stdlib_functions` — first use of `TypeVar` in stdlib `.sifr` files |
-| Lazy iterators (`iglob`, `csv.reader`) | Generators eagerly collect into `Vec<T>` | Fixed in `milestone_lazy_iterators` — proper state machine codegen with `Iterator` trait |
-| `datetime`/`timedelta` class arithmetic | Operator overloading in stdlib classes untested | Addressed in `milestone_stdlib_class_rollout` — first stdlib class with `__add__`/`__sub__` |
