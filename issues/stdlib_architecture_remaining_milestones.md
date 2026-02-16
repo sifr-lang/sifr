@@ -1,0 +1,930 @@
+# Stdlib Architecture Phase — Remaining Milestones
+
+Date: 2026-02-16
+Status: Proposed
+Phase: Stdlib Architecture (extends the existing chain after `milestone_stdlib_classes`)
+
+---
+
+## Context & Sources
+
+This plan synthesizes findings from three audit documents:
+
+1. **`stdlib_cpython_parity_audit_opus.md`** — Module-by-module detail with coverage %, blockers, quick-wins, and intrinsic gaps for all 37 stdlib modules.
+2. **`stdlib_cpython_parity_audit_gpt.md`** — Cross-cutting findings: naming mismatches, class rollout status, safety contract gaps, function-signature parity.
+3. **`cpython_test_suite_portability_research.md`** — Analysis of CPython's test suite portability: ~60-80% of assertions are directly portable, `assert_almost_eq` is the critical enabler, and Tier 1 modules (math, statistics, json, re) offer the highest ROI.
+
+### Current State (post-`milestone_stdlib_classes`)
+
+- **37 stdlib modules** exist and compile
+- **46 E2E pass tests**, **7 fail tests**, **~160 total assertions**
+- **1 class-based API** (`collections.Counter`) — pipeline proven end-to-end
+- **Known bug:** `statistics.variance` computes population variance (÷N) instead of CPython's sample variance (÷N-1)
+- **Known blockers:**
+  - `Callable`-as-struct-field (`Box<dyn Fn>` fix) blocks `argparse.ArgumentParser`, `collections.defaultdict`, `timeit.Timer`
+  - Generics blocks generic `bisect`, `heapq`, `itertools`
+  - Iterator protocol blocks lazy `itertools`, `csv.reader`, `glob.iglob`
+  - Exception types block `tomllib.TOMLDecodeError`, `graphlib.CycleError`
+  - Context managers (`with`) block `io.open`, `tempfile.NamedTemporaryFile`
+
+---
+
+## Milestone Overview
+
+```
+milestone_stdlib_classes (done)
+    │
+    ├── m29: milestone_test_infra          (S — test infrastructure)
+    │
+    ├── m30: milestone_stdlib_functions     (M — pure-Sifr + intrinsic function additions)
+    │
+    ├── m31: milestone_stdlib_naming        (S — API naming alignment)
+    │
+    ├── m32: milestone_stdlib_class_rollout (L — 5 new stdlib classes)
+    │
+    └── m33: milestone_cpython_tests        (M — port CPython test assertions)
+```
+
+**CPython test suite reference:** `/Users/yaseralnajjar/work/sifr/cpython/` — the CPython source tree used as the authoritative behavioral reference. Test files live at `Lib/test/test_<module>.py`. External test data (e.g., `Lib/test/mathdata/math_testcases.txt`) can be mined for additional test vectors.
+
+**Dependency chain:**
+```
+milestone_stdlib_classes → m29 → m30 → m31 → m32 → m33 → milestone_async
+```
+
+**Rationale for ordering:**
+- **m29 before m30:** `assert_almost_eq` is needed to properly test the float-returning functions added in m30.
+- **m30 before m31:** Add the missing functions first, then rename everything in one pass. Renaming before adding would require naming new functions twice (once with old convention, once with new).
+- **m31 before m32:** Classes should be written with the final CPython-aligned names from the start.
+- **m32 before m33:** CPython test porting for class-based modules (re, graphlib, pathlib) requires the classes to exist first.
+- **m33 last:** Test porting is the validation layer — it should run against the final API surface.
+
+**Total estimated effort:** ~4-5 sprints (S=1-2 days, M=3-5 days, L=5-8 days)
+
+---
+
+## m29: milestone_test_infra — Test Infrastructure for CPython Parity
+
+**Goal:** Add the test assertion primitives needed to port CPython tests, and fix the known `statistics.variance` bug. This is a small, focused milestone that unblocks all subsequent testing work.
+
+**Size:** Small (1-2 days)
+
+### Changes
+
+#### 1. New `_sifr.test` intrinsics
+
+| Intrinsic | Signature | Rust Codegen |
+|---|---|---|
+| `assert_almost_eq` | `(actual: float, expected: float, tolerance: float) -> None` | `assert!((actual - expected).abs() < tolerance, "assert_almost_eq failed: {} != {} (tolerance {})", actual, expected, tolerance);` |
+| `assert_gt` | `(a: int, b: int) -> None` | `assert!(a > b, "assert_gt failed: {} is not > {}", a, b);` |
+| `assert_lt` | `(a: int, b: int) -> None` | `assert!(a < b, "assert_lt failed: {} is not < {}", a, b);` |
+
+**Why these three:** `assert_almost_eq` is the critical enabler (unlocks ~400+ float test assertions from CPython). `assert_gt`/`assert_lt` are needed for range-based testing (e.g., `random_int` returns value in range, `bisect_left` returns correct position). These are trivial to implement — 3 new intrinsic signatures + 3 codegen match arms.
+
+**Not included:** `assert_raises` (needs `std::panic::catch_unwind`, complex codegen). ValueError tests can be converted to NAN/INF checks instead, which is what Rust's `f64` methods actually do for domain errors.
+
+#### 2. Update `lib/sifr/test.sifr`
+
+```python
+from _sifr.test import assert_eq, assert_ne, assert_true, assert_false, assert_almost_eq, assert_gt, assert_lt
+```
+
+#### 3. Fix `statistics.variance` bug
+
+The current `variance` divides by N (population variance). CPython's `variance` divides by N-1 (sample variance). Fix:
+
+```python
+# Current (wrong):
+def variance(data: list[float]) -> float:
+    ...
+    return total / float(len(data))
+
+# Fixed:
+def variance(data: list[float]) -> float:
+    ...
+    return total / float(len(data) - 1)
+
+# Add population variant:
+def pvariance(data: list[float]) -> float:
+    ...
+    return total / float(len(data))
+```
+
+Also fix `stdev` (which calls `variance`) and add `pstdev`.
+
+#### 4. E2E tests
+
+- `stdlib_test_almost_eq.sifr` — test `assert_almost_eq` with known float values
+- `stdlib_test_gt_lt.sifr` — test `assert_gt`, `assert_lt`
+- `stdlib_statistics_variance_fix.sifr` — verify sample variance vs population variance
+- Update existing `stdlib_statistics.sifr` if its expected output changes
+
+### Files to Change
+
+- `crates/sifr_hir/src/stdlib.rs` — 3 new intrinsic signatures in `intrinsic_test()`
+- `crates/sifr_codegen/src/lib.rs` — 3 new codegen match arms for `_sifr.test`
+- `lib/sifr/test.sifr` — add new imports
+- `lib/sifr/statistics.sifr` — fix `variance`/`stdev`, add `pvariance`/`pstdev`
+- New E2E test files (3-4 files)
+
+### Definition of Done
+
+- `assert_almost_eq(3.14159, 3.14159, 0.001)` passes
+- `assert_almost_eq(1.0, 2.0, 0.001)` panics with clear message
+- `variance([2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0])` returns `4.571...` (sample, N-1), not `4.0` (population, N)
+- `pvariance(...)` returns the population variance
+- `cargo test` passes (zero regressions)
+
+---
+
+## m30: milestone_stdlib_functions — Pure-Sifr and Intrinsic Function Additions
+
+**Goal:** Close the function-level gaps identified by both audits. Add ~25 pure-Sifr functions and ~12 new intrinsics across 12 modules. This is the largest single increase in stdlib API surface.
+
+**Size:** Medium (3-5 days)
+
+### Part A: Pure-Sifr Functions (no compiler changes)
+
+These are functions that can be implemented entirely in `.sifr` files using existing language features.
+
+#### `sifr.math` — 7 new functions
+
+```python
+def factorial(n: int) -> int:
+    # Iterative loop, n >= 0
+
+def gcd(a: int, b: int) -> int:
+    # Euclidean algorithm
+
+def lcm(a: int, b: int) -> int:
+    # a * b // gcd(a, b)
+
+def comb(n: int, k: int) -> int:
+    # Combinations: n! / (k! * (n-k)!)
+
+def perm(n: int, k: int) -> int:
+    # Permutations: n! / (n-k)!
+
+def isclose(a: float, b: float, rel_tol: float, abs_tol: float) -> bool:
+    # abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+def prod(data: list[int]) -> int:
+    # Product of all elements
+```
+
+#### `sifr.statistics` — 5 new functions
+
+```python
+def fmean(data: list[float]) -> float:
+    # Same as mean (already float-based)
+
+def harmonic_mean(data: list[float]) -> float:
+    # n / sum(1/x for x in data)
+
+def geometric_mean(data: list[float]) -> float:
+    # exp(mean(log(x) for x in data))
+
+def median_low(data: list[float]) -> float:
+    # Low median (for even-length: lower of two middle values)
+
+def median_high(data: list[float]) -> float:
+    # High median (for even-length: higher of two middle values)
+```
+
+#### `sifr.bisect` — 1 new function
+
+```python
+def insort_right(a: list[int], x: int) -> list[int]:
+    # Insert at bisect_right position
+```
+
+#### `sifr.heapq` — 2 new functions
+
+```python
+def heapreplace(heap: list[int], item: int) -> list[int]:
+    # Pop smallest, push item (more efficient than separate pop+push)
+
+def heappushpop(heap: list[int], item: int) -> list[int]:
+    # Push item, pop smallest
+```
+
+#### `sifr.string` — 2 new items
+
+```python
+printable: str = ...  # All printable ASCII characters
+
+def capwords(s: str) -> str:
+    # Capitalize each word (split on whitespace, capitalize, rejoin)
+```
+
+#### `sifr.textwrap` — 1 new function
+
+```python
+def shorten(text: str, width: int) -> str:
+    # Truncate to width with "..." placeholder
+```
+
+#### `sifr.pathlib` — 3 new functions
+
+```python
+def stem(path: str) -> str:
+    # Filename without extension
+
+def is_absolute(path: str) -> bool:
+    # Starts with /
+
+def splitext(path: str) -> str:
+    # Returns "root|ext" (pipe-separated, since no tuples yet)
+    # Or: two separate functions root(path) and ext(path)
+```
+
+Note: `splitext` returning a tuple is blocked by limited tuple support. Instead, provide `stem` + `extension` (already exists) which covers the same use case.
+
+#### `sifr.fnmatch` — 1 new function
+
+```python
+def fnmatchcase(name: str, pat: str) -> bool:
+    # Case-sensitive match (current fnmatch is case-insensitive on some platforms)
+```
+
+#### `sifr.ipaddress` — 3 new functions
+
+```python
+def int_to_ip(n: int) -> str:
+    # Reverse of ip_to_int
+
+def is_multicast(addr: str) -> bool:
+    # 224.0.0.0 - 239.255.255.255
+
+def is_global(addr: str) -> bool:
+    # Not private, not loopback, not multicast, not reserved
+```
+
+#### `sifr.itertools` — 3 new functions
+
+```python
+def pairwise(data: list[int]) -> list[str]:
+    # Consecutive pairs as "a,b" strings (limited by no tuple type)
+
+def batched(data: list[int], n: int) -> list[str]:
+    # Batch into groups (JSON-encoded sublists)
+
+def islice(data: list[int], start: int, stop: int) -> list[int]:
+    # Slice from start to stop
+```
+
+Note: `itertools` is fundamentally limited without generics and iterators. These additions cover the most-requested non-generic, non-iterator functions.
+
+#### `sifr.tempfile` — 1 new function
+
+```python
+def gettempdir() -> str:
+    # Return system temp directory path
+```
+
+This needs a new `_sifr.fs` intrinsic (see Part B).
+
+### Part B: New Intrinsics (Rust codegen additions)
+
+| Module | Intrinsic | Signature | Rust Implementation |
+|---|---|---|---|
+| `_sifr.math` | `exp` | `(x: float) -> float` | `f64::exp()` |
+| `_sifr.math` | `expm1` | `(x: float) -> float` | `f64::exp_m1()` |
+| `_sifr.math` | `log1p` | `(x: float) -> float` | `f64::ln_1p()` |
+| `_sifr.math` | `fabs` | `(x: float) -> float` | `f64::abs()` |
+| `_sifr.math` | `isfinite` | `(x: float) -> bool` | `f64::is_finite()` |
+| `_sifr.crypto` | `sha1` | `(s: str) -> str` | `sha1` crate (hex digest) |
+| `_sifr.crypto` | `sha512` | `(s: str) -> str` | `sha2` crate (hex digest) |
+| `_sifr.crypto` | `urlsafe_b64encode` | `(s: str) -> str` | `base64::engine::general_purpose::URL_SAFE` |
+| `_sifr.crypto` | `urlsafe_b64decode` | `(s: str) -> str` | `base64::engine::general_purpose::URL_SAFE` |
+| `_sifr.fs` | `gettempdir` | `() -> str` | `std::env::temp_dir()` |
+| `_sifr.fs` | `makedirs` | `(path: str) -> None` | `std::fs::create_dir_all()` |
+| `_sifr.platform` | `platform_node` | `() -> str` | `gethostname` crate or `libc::gethostname` |
+
+### Part C: Re-exports in `.sifr` modules
+
+Update the following `.sifr` files to import and re-export the new intrinsics:
+- `lib/sifr/math.sifr` — add `exp`, `expm1`, `log1p`, `fabs`, `isfinite`
+- `lib/sifr/hashlib.sifr` — add `sha1`, `sha512`
+- `lib/sifr/base64.sifr` — add `urlsafe_b64encode`, `urlsafe_b64decode`
+- `lib/sifr/os.sifr` — add `makedirs`
+- `lib/sifr/platform.sifr` — add `node` (re-export of `platform_node`)
+
+### E2E Tests
+
+Add or expand tests for every new function. Target: ~40 new assertions across ~10 test files.
+
+- `stdlib_math_functions.sifr` — `factorial`, `gcd`, `lcm`, `comb`, `perm`, `isclose`, `prod`, `exp`, `expm1`, `log1p`, `fabs`, `isfinite`
+- `stdlib_statistics_extended.sifr` — `fmean`, `harmonic_mean`, `geometric_mean`, `median_low`, `median_high`
+- `stdlib_bisect_insort.sifr` — `insort_right`
+- `stdlib_heapq_extended.sifr` — `heapreplace`, `heappushpop`
+- `stdlib_string_extended.sifr` — `printable`, `capwords`
+- `stdlib_pathlib_extended.sifr` — `stem`, `is_absolute`
+- `stdlib_ipaddress_extended.sifr` — `int_to_ip`, `is_multicast`, `is_global`
+- `stdlib_hashlib_extended.sifr` — `sha1`, `sha512`
+- `stdlib_base64_extended.sifr` — `urlsafe_b64encode`, `urlsafe_b64decode`
+
+### Files to Change
+
+- `crates/sifr_hir/src/stdlib.rs` — 12 new intrinsic signatures
+- `crates/sifr_codegen/src/lib.rs` — 12 new codegen match arms
+- 12 `.sifr` stdlib files (new functions + re-exports)
+- ~10 new E2E test files
+
+### Definition of Done
+
+- All ~25 pure-Sifr functions work correctly
+- All ~12 new intrinsics compile and produce correct output
+- `sifr.math` coverage goes from ~85% to ~95% (29 → 41 functions)
+- `sifr.statistics` coverage goes from ~50% to ~70%
+- ~40 new test assertions pass
+- `cargo test` passes (zero regressions)
+- Demo: `demos/milestone_stdlib_functions_demo.sifr`
+
+---
+
+## m31: milestone_stdlib_naming — API Naming Alignment with CPython
+
+**Goal:** Rename Sifr stdlib functions to match CPython naming conventions. This is a deliberate pre-1.0 breaking change that should be done once, in one pass, rather than incrementally.
+
+**Size:** Small (1-2 days)
+
+### Rust Keyword Collisions
+
+Two proposed CPython names collide with Rust strict keywords. Since Sifr compiles to Rust source code, any function name that is a Rust keyword would produce invalid Rust output unless handled. The codegen must emit `r#` raw identifiers for these names.
+
+**Colliding names (Rust strict keywords):**
+
+| CPython Name | Module | Rust Keyword | Resolution |
+|---|---|---|---|
+| `match` | `sifr.re` | `match` (strict) | Sifr name: `match` → codegen emits `r#match` in generated Rust |
+| `move` | `sifr.shutil` | `move` (strict) | Sifr name: `move` → codegen emits `r#move` in generated Rust |
+
+**Colliding names (Rust reserved keywords — currently unused but future-proof):**
+
+| CPython Name | Module | Rust Keyword | Resolution |
+|---|---|---|---|
+| `type` | (future: `sifr.builtins`) | `type` (strict) | If ever added, codegen emits `r#type` |
+| `yield` | (future: generators) | `yield` (reserved) | Already handled differently — `yield` is a Sifr keyword mapped to generator state machine, not a function name |
+
+**Names that look like keywords but are NOT Rust keywords (safe as-is):**
+
+`filter`, `search`, `split`, `random`, `time`, `match` (only in Sifr source — the `.sifr` layer is fine, only the generated Rust needs `r#`).
+
+**Implementation note:** The codegen change is small — when emitting a function name, check if it's in a set of Rust keywords and prefix with `r#` if so. This is a one-time change in `sifr_codegen` that applies to all current and future keyword collisions. See the architecture file's Python Divergences table for the documented divergence.
+
+### Renames
+
+| Module | Current Name | CPython Name | Rust Keyword? | Notes |
+|---|---|---|---|---|
+| `sifr.math` | `abs_val` | `fabs` | No | Keep `abs_val` as alias initially |
+| `sifr.math` | `pow_val` | `pow` | No | `pow` is a builtin in CPython, but `math.pow` exists |
+| `sifr.math` | `min_val` | — | — | Remove from math (these are builtins, not `math` functions) |
+| `sifr.math` | `max_val` | — | — | Remove from math (these are builtins, not `math` functions) |
+| `sifr.math` | `round_val` | — | — | Remove from math (this is a builtin) |
+| `sifr.re` | `re_match` | `match` | **Yes** (`match` is strict) | Codegen must emit `r#match` in generated Rust |
+| `sifr.re` | `re_find` | `search` | No | |
+| `sifr.re` | `re_replace` | `sub` | No | |
+| `sifr.re` | `re_findall` | `findall` | No | |
+| `sifr.re` | `re_split` | `split` | No | |
+| `sifr.json` | `json_loads` | `loads` | No | |
+| `sifr.json` | `json_dumps` | `dumps` | No | |
+| `sifr.shutil` | `move_file` | `move` | **Yes** (`move` is strict) | Codegen must emit `r#move` in generated Rust |
+| `sifr.base64` | `base64_encode` | `b64encode` | No | |
+| `sifr.base64` | `base64_decode` | `b64decode` | No | |
+| `sifr.random` | `random_int` | `randint` | No | |
+| `sifr.random` | `random_float` | `random` | No | |
+| `sifr.random` | `random_choice` | `choice` | No | |
+| `sifr.random` | `random_uniform` | `uniform` | No | |
+| `sifr.platform` | `platform_system` | `system` | No | |
+| `sifr.platform` | `platform_arch` | `machine` | No | |
+| `sifr.fnmatch` | `fnmatch_filter` | `filter` | No | |
+| `sifr.time` | `time_now` | `time` | No | |
+| `sifr.time` | `time_format` | `strftime` | No | |
+
+### Strategy
+
+The renames happen at the **Sifr stdlib layer only** — the `_sifr.*` intrinsic names stay unchanged. Each `.sifr` file re-exports with the new name:
+
+```python
+# lib/sifr/re.sifr — AFTER rename
+from _sifr.regex import re_match, re_find, re_replace, re_findall, re_split
+
+# CPython-compatible names (codegen emits r#match for the Rust function)
+def match(pattern: str, text: str) -> bool:
+    return re_match(pattern, text)
+
+def search(pattern: str, text: str) -> str | None:
+    return re_find(pattern, text)
+
+def sub(pattern: str, replacement: str, text: str) -> str:
+    return re_replace(pattern, replacement, text)
+
+def findall(pattern: str, text: str) -> list[str]:
+    return re_findall(pattern, text)
+
+def split(pattern: str, text: str) -> list[str]:
+    return re_split(pattern, text)
+```
+
+```python
+# lib/sifr/shutil.sifr — AFTER rename
+from _sifr.fs import copy_file, rename
+
+# CPython-compatible names (codegen emits r#move for the Rust function)
+def move(src: str, dst: str) -> None:
+    rename(src, dst)
+```
+
+This approach:
+- Keeps intrinsic names stable (no Rust codegen changes for intrinsics)
+- Requires a one-time codegen change: emit `r#` prefix for Rust-keyword function names
+- Allows old names to coexist as aliases during transition if desired
+- All E2E tests must be updated to use new names
+
+### E2E Test Updates
+
+All existing stdlib test files that use renamed functions must be updated. This is mechanical but touches ~20 test files.
+
+### Files to Change
+
+- ~15 `.sifr` stdlib files (add wrapper functions with CPython names)
+- ~20 E2E test files (update imports and function calls)
+- Demo files (update to use new names)
+
+### Definition of Done
+
+- All renamed functions work with CPython-compatible names
+- All E2E tests updated and passing
+- Old names still work (re-exported as aliases) — to be deprecated later
+- `cargo test` passes (zero regressions)
+
+---
+
+## m32: milestone_stdlib_class_rollout — Expand Class-Based APIs
+
+**Goal:** Add 5 new class-based APIs to the stdlib, leveraging the pipeline proven by `milestone_stdlib_classes`. These are the classes that **don't** need `Callable`-as-struct-field and are therefore immediately implementable.
+
+**Size:** Large (5-8 days)
+
+### Classes to Implement
+
+#### 1. `sifr.graphlib.TopologicalSorter` — Pure algorithmic class
+
+```python
+class TopologicalSorter:
+    nodes: str      # JSON-encoded adjacency list
+    num_nodes: int
+
+    def __init__(self, nodes: str, num_nodes: int):
+        self.nodes = nodes
+        self.num_nodes = num_nodes
+
+    def add(self, node: int, predecessor: int) -> None:
+        # Add edge: predecessor → node
+        self.nodes = sorter_add(self.nodes, node, predecessor)
+
+    def static_order(self) -> list[int]:
+        # Return topological ordering
+        return sorter_static_order(self.nodes, self.num_nodes)
+```
+
+**New intrinsics:** `sorter_add`, `sorter_static_order` (2 intrinsics in `_sifr.collections` or a new `_sifr.graph` module)
+
+**Why:** Replaces the awkward `topological_sort(num_nodes, from_nodes, to_nodes)` function API with the standard CPython class API. Pure algorithmic — no external dependencies.
+
+#### 2. `sifr.pathlib.Path` — File path class wrapping existing intrinsics
+
+```python
+class Path:
+    path: str
+
+    def __init__(self, path: str):
+        self.path = path
+
+    def name(self) -> str:
+        return basename(self.path)
+
+    def parent(self) -> Path:
+        return Path(dirname(self.path))
+
+    def suffix(self) -> str:
+        return extension(self.path)
+
+    def stem(self) -> str:
+        return stem(self.path)
+
+    def exists(self) -> bool:
+        return fs_exists(self.path)
+
+    def is_file(self) -> bool:
+        return fs_is_file(self.path)
+
+    def is_dir(self) -> bool:
+        return fs_is_dir(self.path)
+
+    def read_text(self) -> str:
+        return fs_read_text(self.path)
+
+    def write_text(self, content: str) -> None:
+        fs_write_text(self.path, content)
+
+    def mkdir(self) -> None:
+        fs_mkdir(self.path)
+
+    def joinpath(self, child: str) -> Path:
+        return Path(join_path(self.path, child))
+
+    def resolve(self) -> Path:
+        return Path(fs_resolve(self.path))
+```
+
+**New intrinsics:** `fs_resolve` (1 intrinsic — `std::fs::canonicalize`)
+
+**Why:** `pathlib.Path` is one of the most-used CPython classes. The functional helpers already exist — this wraps them in the standard class interface. Most methods delegate to existing `_sifr.fs` intrinsics.
+
+#### 3. `sifr.logging.Logger` — Logging class with levels
+
+```python
+class Logger:
+    name: str
+    level: int  # 0=DEBUG, 1=INFO, 2=WARNING, 3=ERROR, 4=CRITICAL
+
+    def __init__(self, name: str, level: int):
+        self.name = name
+        self.level = level
+
+    def debug(self, msg: str) -> None:
+        if self.level <= 0:
+            print("[DEBUG] " + self.name + ": " + msg)
+
+    def info(self, msg: str) -> None:
+        if self.level <= 1:
+            print("[INFO] " + self.name + ": " + msg)
+
+    def warning(self, msg: str) -> None:
+        if self.level <= 2:
+            print("[WARNING] " + self.name + ": " + msg)
+
+    def error(self, msg: str) -> None:
+        if self.level <= 3:
+            print("[ERROR] " + self.name + ": " + msg)
+
+    def critical(self, msg: str) -> None:
+        if self.level <= 4:
+            print("[CRITICAL] " + self.name + ": " + msg)
+
+def getLogger(name: str) -> Logger:
+    return Logger(name, 1)  # Default INFO level
+```
+
+**New intrinsics:** None — pure Sifr.
+
+**Why:** `logging.getLogger` is the standard CPython pattern. This gives users named loggers with level filtering. No handlers/formatters yet (those need more advanced features), but this covers the 80% use case.
+
+#### 4. `sifr.re.Match` — Regex match result class
+
+```python
+class Match:
+    matched: str    # The matched text
+    start_pos: int  # Start position in original string
+    end_pos: int    # End position in original string
+
+    def __init__(self, matched: str, start_pos: int, end_pos: int):
+        self.matched = matched
+        self.start_pos = start_pos
+        self.end_pos = end_pos
+
+    def group(self) -> str:
+        return self.matched
+
+    def start(self) -> int:
+        return self.start_pos
+
+    def end(self) -> int:
+        return self.end_pos
+
+    def span(self) -> str:
+        # Returns "start,end" since no tuple type
+        return str(self.start_pos) + "," + str(self.end_pos)
+```
+
+**New intrinsics:** `re_search_match` — returns JSON-encoded `{"matched": "...", "start": N, "end": N}` (1 intrinsic in `_sifr.regex`)
+
+**Why:** CPython's `re.search()` returns a `Match` object, not a string. This brings Sifr closer to the real API. The existing `re_find` returns `str | None`; the new `search` function returns `Match | None` (or a wrapper that constructs `Match`).
+
+**Note:** Full `Match` with groups (`.group(1)`, `.groups()`) is deferred — requires list-of-optional-string support. This initial version covers the most common use case: checking if a match exists and getting the matched text + position.
+
+#### 5. `sifr.uuid.UUID` — UUID value class
+
+```python
+class UUID:
+    hex_str: str  # 32-char hex string (no dashes)
+
+    def __init__(self, hex_str: str):
+        self.hex_str = hex_str
+
+    def hex(self) -> str:
+        return self.hex_str
+
+    def urn(self) -> str:
+        return "urn:uuid:" + self.to_str()
+
+    def to_str(self) -> str:
+        # Format as 8-4-4-4-12
+        return self.hex_str[:8] + "-" + self.hex_str[8:12] + "-" + self.hex_str[12:16] + "-" + self.hex_str[16:20] + "-" + self.hex_str[20:]
+
+    def version(self) -> int:
+        return 4  # Only uuid4 for now
+
+def uuid4() -> UUID:
+    raw: str = _uuid4()
+    # Strip dashes to get hex_str
+    return UUID(uuid_strip_dashes(raw))
+```
+
+**New intrinsics:** `uuid_strip_dashes` (1 intrinsic — simple string manipulation, or done in pure Sifr)
+
+**Why:** CPython's `uuid.uuid4()` returns a `UUID` object, not a string. This is a lightweight class that wraps the existing `uuid4` intrinsic.
+
+### E2E Tests
+
+- `stdlib_graphlib_sorter.sifr` — `TopologicalSorter` construction, `add`, `static_order`
+- `stdlib_pathlib_path.sifr` — `Path` construction, `name`, `parent`, `suffix`, `exists`, `is_file`, `read_text`, `write_text`, `joinpath`
+- `stdlib_logging_logger.sifr` — `Logger` construction, level filtering, `getLogger`
+- `stdlib_re_match.sifr` — `Match` object from `search`, `.group()`, `.start()`, `.end()`
+- `stdlib_uuid_class.sifr` — `UUID` object, `.hex()`, `.urn()`, `.to_str()`
+- Fail tests: wrong types to constructors (3-5 fail tests)
+
+### Files to Change
+
+- `crates/sifr_hir/src/stdlib.rs` — ~5 new intrinsic signatures
+- `crates/sifr_codegen/src/lib.rs` — ~5 new codegen match arms
+- `lib/sifr/graphlib.sifr` — add `TopologicalSorter` class
+- `lib/sifr/pathlib.sifr` — add `Path` class
+- `lib/sifr/logging.sifr` — add `Logger` class + `getLogger`
+- `lib/sifr/re.sifr` — add `Match` class + updated `search` function
+- `lib/sifr/uuid.sifr` — add `UUID` class + updated `uuid4`
+- ~8 new E2E test files
+
+### Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Class method signature export fails for multi-class modules | Low | Medium | Pipeline proven by Counter; same pattern |
+| `Path` methods that call `_sifr.fs` intrinsics fail with borrow issues | Medium | Medium | Same pattern as Counter calling `_sifr.collections` — proven |
+| `Match` construction from JSON-encoded intrinsic output is fragile | Medium | Low | Can parse JSON in pure Sifr or add a dedicated intrinsic |
+| 5 classes in one milestone is too large | Low | Medium | Classes are independent — can be split if needed |
+
+### Definition of Done
+
+- All 5 classes compile, export, and are importable by user code
+- `from sifr.pathlib import Path` works; `p = Path("/tmp/test.txt"); p.exists()` works
+- `from sifr.logging import getLogger` works; `logger.info("hello")` prints with level filtering
+- `from sifr.graphlib import TopologicalSorter` works with `add`/`static_order`
+- `from sifr.re import Match` works; `search` returns `Match` objects
+- `from sifr.uuid import UUID` works; `uuid4()` returns `UUID` object
+- All E2E tests pass
+- `cargo test` passes (zero regressions)
+- Demo: `demos/milestone_stdlib_class_rollout_demo.sifr`
+
+---
+
+## m33: milestone_cpython_tests — Port CPython Test Assertions
+
+**Goal:** Port ~500 test assertions from CPython's test suite to Sifr, focusing on the highest-ROI modules. This is the validation layer that proves Sifr's stdlib behaves correctly against CPython's behavioral specification.
+
+**Size:** Medium (3-5 days)
+
+### CPython Source Reference
+
+All test porting uses the CPython source tree at **`/Users/yaseralnajjar/work/sifr/cpython/`** as the authoritative reference:
+
+| What | Path |
+|---|---|
+| Test files | `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_<module>.py` |
+| Math test data | `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/mathdata/math_testcases.txt` |
+| JSON test suite | `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_json/` (19 files) |
+| Stdlib source | `/Users/yaseralnajjar/work/sifr/cpython/Lib/<module>.py` |
+
+### Porting Strategy
+
+Based on the CPython test portability research:
+- **No automated translator needed** — the mapping is mechanical (`assertEqual` → `assert_eq`, etc.)
+- **Skip:** TypeError tests (compiler handles), dunder protocol tests, pickling, platform-specific tests
+- **Convert:** ValueError tests to NAN/INF checks where applicable
+- **Focus:** Pure value assertions and float tolerance assertions (these are ~60% of CPython tests and are directly portable)
+
+### Assertion Mapping (CPython → Sifr)
+
+| CPython | Sifr | Notes |
+|---|---|---|
+| `self.assertEqual(a, b)` | `assert_eq(a, b)` | Direct |
+| `self.assertTrue(x)` | `assert_true(x)` | Direct |
+| `self.assertFalse(x)` | `assert_false(x)` | Direct |
+| `self.assertNotEqual(a, b)` | `assert_ne(a, b)` | Direct |
+| `self.ftest(name, got, expected)` | `assert_almost_eq(got, expected, 0.00001)` | Float tolerance |
+| `self.assertAlmostEqual(a, b)` | `assert_almost_eq(a, b, 0.0000001)` | Float tolerance |
+| `self.assertGreater(a, b)` | `assert_gt(a, b)` | Added in m29 |
+| `self.assertLess(a, b)` | `assert_lt(a, b)` | Added in m29 |
+| `self.assertRaises(TypeError, f, x)` | *skip — compiler catches this* | Compile-time |
+| `self.assertRaises(ValueError, f, x)` | `assert_true(isnan(f(x)))` | NAN/INF check |
+| `self.assertIs(a, b)` | *skip — identity not meaningful* | Compiled lang |
+| `self.assertIn(x, container)` | *express as boolean check* | Manual |
+
+### Tier 1: Highest ROI (port first)
+
+#### `sifr.math` — Target: ~200 assertions (from CPython's ~1,075)
+
+Port from `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_math.py`:
+
+| CPython Test Method | Assertions to Port | Notes |
+|---|---|---|
+| `testConstants` | ~5 | pi, e, tau values |
+| `testAcos` | ~10 | Domain [-1,1], NAN propagation, edge values |
+| `testAsin` | ~10 | Domain [-1,1], NAN propagation |
+| `testAtan` | ~10 | Full range, INF handling |
+| `testAtan2` | ~25 | All quadrants, INF, NAN, zero signs |
+| `testCos` | ~10 | Key values, NAN propagation |
+| `testSin` | ~10 | Key values, NAN propagation |
+| `testTan` | ~8 | Basic values, NAN |
+| `testCosh`, `testSinh`, `testTanh` | ~15 | Hyperbolic functions |
+| `testDegrees`, `testRadians` | ~8 | Angle conversion |
+| `testFloor`, `testCeil` | ~10 | Integer rounding, negative values |
+| `testTrunc` | ~5 | Truncation |
+| `testCopysign` | ~15 | Sign copying with INF, NAN, zero |
+| `testFmod` | ~8 | Float modulo |
+| `testHypot` | ~10 | Pythagorean distance, edge cases |
+| `testIsnan`, `testIsinf` | ~8 | Special value detection |
+| `testLog`, `testLog2`, `testLog10` | ~15 | Logarithms, edge cases |
+| `testSqrt` | ~8 | Square root, edge cases |
+| `testExp` | ~8 | Exponential (new in m30) |
+| `testFabs` | ~5 | Absolute value (new in m30) |
+| `testIsfinite` | ~5 | Finite check (new in m30) |
+| `testFactorial` | ~8 | Factorial (new in m30) |
+| `testGcd`, `testLcm` | ~10 | GCD/LCM (new in m30) |
+
+**File structure:** Split into multiple test files by category:
+- `stdlib_math_cpython_trig.sifr` — trig functions (~50 assertions)
+- `stdlib_math_cpython_exp_log.sifr` — exp/log functions (~30 assertions)
+- `stdlib_math_cpython_special.sifr` — INF/NAN/copysign/fmod (~40 assertions)
+- `stdlib_math_cpython_integer.sifr` — floor/ceil/trunc/factorial/gcd/lcm (~40 assertions)
+- `stdlib_math_cpython_misc.sifr` — hypot, degrees, radians, isclose, prod (~40 assertions)
+
+#### `sifr.statistics` — Target: ~80 assertions (from CPython's ~527)
+
+Port from `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_statistics.py`:
+
+- `mean` — basic, single element, large values, negative values (~15)
+- `median` — odd/even length, single element, sorted/unsorted (~15)
+- `variance` / `stdev` — basic, single element (should raise?), known values (~15)
+- `pvariance` / `pstdev` — same pattern (~10)
+- `mode` — basic, ties, single element (~10)
+- `fmean`, `harmonic_mean`, `geometric_mean` — basic correctness (~15)
+
+**File:** `stdlib_statistics_cpython.sifr`
+
+#### `sifr.json` — Target: ~40 assertions
+
+Port from `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_json/`:
+
+- Basic decode: strings, numbers, booleans, null, arrays, objects (~15)
+- Basic encode: same types (~10)
+- Edge cases: empty objects, nested structures, unicode (~10)
+- Whitespace handling (~5)
+
+**File:** `stdlib_json_cpython.sifr`
+
+#### `sifr.re` — Target: ~50 assertions
+
+Port from `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_re.py`:
+
+- Basic matching: literal, `.`, `*`, `+`, `?`, `^`, `$` (~15)
+- Character classes: `[abc]`, `[a-z]`, `\d`, `\w`, `\s` (~10)
+- `findall` with various patterns (~10)
+- `split` with various patterns (~10)
+- `sub` with various patterns (~5)
+
+**File:** `stdlib_re_cpython.sifr`
+
+### Tier 2: Medium ROI
+
+#### `sifr.collections` — Target: ~40 assertions
+
+- Set operations: union, intersection, add, remove, contains, len (~20)
+- Counter: get, total, most_common, increment, values, keys (~20)
+
+**File:** `stdlib_collections_cpython.sifr`
+
+#### `sifr.bisect` — Target: ~20 assertions
+
+- `bisect_left`, `bisect_right` with sorted lists, boundary cases (~10)
+- `insort_left`, `insort_right` correctness (~10)
+
+**File:** `stdlib_bisect_cpython.sifr`
+
+#### `sifr.heapq` — Target: ~20 assertions
+
+- Heap invariant after push/pop sequences (~10)
+- `nsmallest`, `nlargest` correctness (~10)
+
+**File:** `stdlib_heapq_cpython.sifr`
+
+#### `sifr.textwrap` — Target: ~25 assertions
+
+- `wrap` at various widths (~8)
+- `fill` behavior (~5)
+- `dedent` with various indentation (~7)
+- `indent` with prefix (~5)
+
+**File:** `stdlib_textwrap_cpython.sifr`
+
+#### `sifr.fnmatch` — Target: ~20 assertions
+
+- Wildcard patterns: `*`, `?`, `[abc]` (~10)
+- Edge cases: empty pattern, no match, case sensitivity (~10)
+
+**File:** `stdlib_fnmatch_cpython.sifr`
+
+### What NOT to Port (and Why)
+
+Per the CPython test portability research:
+
+1. **TypeError tests** — Sifr's compiler catches these at compile time
+2. **Dunder protocol tests** (`__float__`, `__index__`, `__hash__`) — Sifr doesn't have dynamic dispatch
+3. **Subclassing builtin types** — Sifr's type system is different
+4. **Pickling/unpickling** — Not applicable
+5. **`eval()`/`repr()` roundtrips** — Sifr doesn't have `eval()`
+6. **Locale-dependent tests** — Rust has fixed locale behavior
+7. **`Decimal`/`Fraction` type tests** — Sifr doesn't have these types
+8. **CPython-internal tests** (`@cpython_only`) — Implementation-specific
+
+### Files to Change
+
+- ~15 new E2E test files
+- No stdlib code changes (this milestone only adds tests)
+
+### Definition of Done
+
+- ~500 new test assertions across ~15 test files
+- All assertions pass
+- Total stdlib test assertion count goes from ~200 (after m29-m32) to ~700+
+- Math function coverage: every exported function has at least 5 assertions including edge cases (NAN, INF, boundary values)
+- `cargo test` passes (zero regressions)
+
+---
+
+## Summary Table
+
+| Milestone | ID | Size | New Functions | New Intrinsics | New Tests | Key Deliverable |
+|---|---|---|---|---|---|---|
+| Test Infrastructure | m29 | S | 2 (`pvariance`, `pstdev`) | 3 | ~10 assertions | `assert_almost_eq`, variance bug fix |
+| Stdlib Functions | m30 | M | ~25 | ~12 | ~40 assertions | Close function-level gaps |
+| Naming Alignment | m31 | S | 0 (renames) | 0 | ~0 (updates) | CPython-compatible names |
+| Class Rollout | m32 | L | 5 classes | ~5 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID |
+| CPython Tests | m33 | M | 0 | 0 | ~500 assertions | Behavioral validation against CPython |
+
+**Cumulative impact:**
+
+| Metric | Current | After All Milestones |
+|---|---|---|
+| Stdlib test assertions | ~160 | ~740+ |
+| Stdlib functions (across all modules) | ~120 | ~170+ |
+| Class-based APIs | 1 (Counter) | 6 (+ Path, Logger, Match, TopologicalSorter, UUID) |
+| Modules with CPython-compatible names | ~5 | ~30+ |
+| Math function coverage | ~85% | ~95% |
+| Average module coverage | ~35% | ~55% |
+
+---
+
+## What's Explicitly Deferred (and Why)
+
+These items are blocked by language features not yet available:
+
+| Item | Blocker | When to Address |
+|---|---|---|
+| `argparse.ArgumentParser` | `Callable`-as-struct-field (`Box<dyn Fn>`) | After codegen fix milestone |
+| `collections.defaultdict` class | `Callable`-as-struct-field | After codegen fix milestone |
+| `timeit.Timer` class | `Callable`-as-struct-field | After codegen fix milestone |
+| Generic `bisect`/`heapq`/`itertools` | Generics milestone | After `milestone_generics_impl` |
+| Lazy iterators (`iglob`, `csv.reader`) | Iterator protocol | After generators/iterators milestone |
+| `io.open()` / context managers | `with` statement | After context managers milestone |
+| `datetime`/`timedelta` class arithmetic | Operator overloading for stdlib classes | After operator overloading export is proven |
+| Exception types (`TOMLDecodeError`, `CycleError`) | Exception/error type support | After error handling milestone |
+| `assert_raises` | `std::panic::catch_unwind` codegen | Lower priority — NAN/INF checks suffice for most cases |
+| Mining `mathdata/math_testcases.txt` | Parsing infrastructure | Stretch goal for m33 or future milestone |
+
+---
+
+## Validation Against Codebase
+
+Cross-checked against actual codebase state (2026-02-16):
+
+- **37 `.sifr` files** confirmed in `lib/sifr/` — all module references in this plan are valid
+- **`_sifr.test` intrinsic module** exists with `assert_eq`, `assert_ne`, `assert_true`, `assert_false` — confirmed `assert_almost_eq` is missing
+- **`statistics.variance`** confirmed to divide by `float(len(data))` (population, not sample) — bug is real
+- **`_sifr.math` intrinsics** confirmed: 29 functions + 5 constants — `exp`, `expm1`, `log1p`, `fabs`, `isfinite` are genuinely missing
+- **`_sifr.crypto` intrinsics** confirmed: `sha256`, `md5`, `base64_encode`, `base64_decode` — `sha1`, `sha512`, `urlsafe_*` are genuinely missing
+- **`_sifr.fs` intrinsics** confirmed: no `gettempdir` or `makedirs` — these are genuinely missing
+- **Class pipeline** confirmed working via `collections.Counter` — `ExternalDefs.classes` export, method signature loading, borrow convention emission all proven
+- **46 pass tests, 7 fail tests, ~160 assertions** — confirmed baseline
