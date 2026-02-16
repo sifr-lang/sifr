@@ -1,0 +1,21 @@
+# Test sifr.bisect stdlib module
+from sifr.bisect import bisect_left, bisect_right
+
+def main():
+    data: list[int] = [1, 3, 5, 7, 9]
+
+    # bisect_left: find insertion point for 5 (returns index of 5)
+    pos: int = bisect_left(data, 5)
+    print(pos)
+
+    # bisect_right: find insertion point after 5
+    pos2: int = bisect_right(data, 5)
+    print(pos2)
+
+    # bisect_left for value not in list
+    pos3: int = bisect_left(data, 4)
+    print(pos3)
+
+# expect-stdout: 2
+# expect-stdout: 3
+# expect-stdout: 2

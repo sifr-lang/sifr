@@ -11,6 +11,8 @@ pub struct CodegenResult {
     pub rust_source: String,
     pub used_stdlib_modules: HashSet<String>,
     pub used_intrinsic_modules: HashSet<String>,
+    /// Map of constant_name -> (type, rust_name) for module-level constants
+    pub constant_mappings: HashMap<String, (Type, String)>,
 }
 
 /// Generate Rust source code from a HIR module.
@@ -55,12 +57,68 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         rust_source: result,
         used_stdlib_modules: emitter.used_stdlib_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
+        constant_mappings: emitter.module_constants,
+    }
+}
+
+/// Compiled stdlib information for codegen.
+/// Contains per-module Rust code and intrinsic name sets.
+pub struct StdlibCode {
+    /// Map of module_name -> compiled Rust source code for pure Sifr functions/constants
+    pub module_rust_code: HashMap<String, String>,
+    /// Map of module_name -> set of names that are intrinsic re-exports (from _sifr.*)
+    pub intrinsic_names: HashMap<String, HashSet<String>>,
+    /// Map of module_name -> (constant_name -> (type, rust_name)) for stdlib constants
+    /// This allows user code to reference stdlib constants with the correct Rust names.
+    pub module_constants: HashMap<String, HashMap<String, (Type, String)>>,
+    /// Map of module_name -> (func_name -> (param_types_with_conventions, return_type))
+    /// for pure Sifr stdlib functions. Used to emit correct borrow prefixes at call sites.
+    pub func_signatures: HashMap<String, HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>,
+    /// Map of module_name -> set of transitive intrinsic module dependencies.
+    /// E.g., sifr.secrets depends on _sifr.crypto, so when user imports sifr.secrets,
+    /// the Cargo dependencies for _sifr.crypto (rand) must be included.
+    pub transitive_deps: HashMap<String, HashSet<String>>,
+}
+
+impl Default for StdlibCode {
+    fn default() -> Self {
+        Self {
+            module_rust_code: HashMap::new(),
+            intrinsic_names: HashMap::new(),
+            module_constants: HashMap::new(),
+            func_signatures: HashMap::new(),
+            transitive_deps: HashMap::new(),
+        }
     }
 }
 
 /// Generate Rust source code from a HIR module, returning metadata about stdlib usage.
 pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
+    generate_rust_with_stdlib(module, &StdlibCode::default())
+}
+
+/// Generate Rust source code from a HIR module with compiled stdlib code.
+pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
     let mut emitter = RustEmitter::new();
+    emitter.stdlib_intrinsic_names = stdlib_code.intrinsic_names.clone();
+
+    // Pre-register stdlib constants and function signatures so user code can reference them correctly
+    for import in &module.imports {
+        if let Some(const_map) = stdlib_code.module_constants.get(&import.module) {
+            for name in &import.names {
+                if let Some((ty, rust_name)) = const_map.get(name) {
+                    emitter.module_constants.insert(name.clone(), (ty.clone(), rust_name.clone()));
+                }
+            }
+        }
+        if let Some(sig_map) = stdlib_code.func_signatures.get(&import.module) {
+            for name in &import.names {
+                if let Some(sig) = sig_map.get(name) {
+                    emitter.func_signatures.insert(name.clone(), sig.clone());
+                }
+            }
+        }
+    }
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
@@ -88,12 +146,37 @@ pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
         result.push_str(&emitter.enum_defs);
         result.push('\n');
     }
+
+    // Prepend compiled stdlib Rust code for used modules
+    let mut stdlib_preamble = String::new();
+    for module_name in &emitter.used_stdlib_modules {
+        if let Some(rust_code) = stdlib_code.module_rust_code.get(module_name) {
+            if !rust_code.is_empty() {
+                stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
+                stdlib_preamble.push_str(rust_code);
+                stdlib_preamble.push('\n');
+            }
+        }
+    }
+    if !stdlib_preamble.is_empty() {
+        result.push_str(&stdlib_preamble);
+    }
+
     result.push_str(&emitter.output);
+
+    // Add transitive dependencies from stdlib modules
+    let mut all_used_modules = emitter.used_stdlib_modules.clone();
+    for module_name in &emitter.used_stdlib_modules {
+        if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
+            all_used_modules.extend(deps.iter().cloned());
+        }
+    }
 
     CodegenResult {
         rust_source: result,
-        used_stdlib_modules: emitter.used_stdlib_modules.clone(),
+        used_stdlib_modules: all_used_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
+        constant_mappings: emitter.module_constants,
     }
 }
 
@@ -265,6 +348,9 @@ struct RustEmitter {
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
     borrowed_params: HashSet<String>,
+    /// Map of module_name -> set of names that are intrinsic re-exports (from _sifr.*)
+    /// Used to distinguish intrinsic function calls from pure Sifr function calls
+    stdlib_intrinsic_names: HashMap<String, HashSet<String>>,
 }
 
 impl RustEmitter {
@@ -294,6 +380,7 @@ impl RustEmitter {
             module_constants: HashMap::new(),
             generic_classes: HashSet::new(),
             borrowed_params: HashSet::new(),
+            stdlib_intrinsic_names: HashMap::new(),
         }
     }
 
@@ -455,8 +542,22 @@ impl RustEmitter {
         for import in &module.imports {
             if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
                 self.used_stdlib_modules.insert(import.module.clone());
+                // Only register names as intrinsic if they are known intrinsic re-exports.
+                // Pure Sifr functions/constants should go through the normal codegen path.
+                let intrinsic_set = self.stdlib_intrinsic_names.get(&import.module);
                 for name in &import.names {
-                    self.intrinsic_functions.insert(name.clone());
+                    if import.module.starts_with("_sifr.") {
+                        // Direct _sifr.* imports are always intrinsic
+                        self.intrinsic_functions.insert(name.clone());
+                    } else if let Some(iset) = intrinsic_set {
+                        // For sifr.* imports, only register if the name is an intrinsic re-export
+                        if iset.contains(name) {
+                            self.intrinsic_functions.insert(name.clone());
+                        }
+                    } else {
+                        // No intrinsic info available (legacy path) — treat all as intrinsic
+                        self.intrinsic_functions.insert(name.clone());
+                    }
                 }
             }
         }
@@ -3170,10 +3271,15 @@ impl RustEmitter {
                     self.emit_expr(right);
                     self.write(".iter().cloned()); __tmp }");
                 } else if op == "//" {
-                    // Floor division
+                    // Floor division (int // int -> int division in Rust)
+                    // Wrap sub-expressions in parens if they are BinOps to preserve precedence
+                    if matches!(left.as_ref(), HirExpr::BinOp { .. }) { self.write("("); }
                     self.emit_expr(left);
+                    if matches!(left.as_ref(), HirExpr::BinOp { .. }) { self.write(")"); }
                     self.write(" / ");
+                    if matches!(right.as_ref(), HirExpr::BinOp { .. }) { self.write("("); }
                     self.emit_expr(right);
+                    if matches!(right.as_ref(), HirExpr::BinOp { .. }) { self.write(")"); }
                 } else if op == "**" {
                     // Power: int ** int -> i64::pow, otherwise float
                     if left.ty() == &Type::Int && right.ty() == &Type::Int {
@@ -3597,9 +3703,15 @@ impl RustEmitter {
                     self.write(">()");
                 } else if func == "sorted" {
                     // sorted(list) -> { let mut v = list.clone(); v.sort(); v }
+                    // For f64 lists, use sort_by since f64 doesn't implement Ord
+                    let is_float_list = matches!(args[0].ty(), Type::List(inner) if **inner == Type::Float);
                     self.write("{ let mut _sorted = ");
                     self.emit_expr(&args[0]);
-                    self.write(".clone(); _sorted.sort(); _sorted }");
+                    if is_float_list {
+                        self.write(".clone(); _sorted.sort_by(|a, b| a.partial_cmp(b).unwrap()); _sorted }");
+                    } else {
+                        self.write(".clone(); _sorted.sort(); _sorted }");
+                    }
                 } else if func == "reversed" {
                     // reversed(list) -> { let mut v = list.clone(); v.reverse(); v }
                     self.write("{ let mut _rev = ");

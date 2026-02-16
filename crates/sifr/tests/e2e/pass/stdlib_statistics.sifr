@@ -1,0 +1,16 @@
+# Test sifr.statistics stdlib module
+from sifr.statistics import mean, median
+
+def main():
+    data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
+
+    # Mean
+    avg: float = mean(data)
+    print(avg)
+
+    # Median (odd count)
+    med: float = median(data)
+    print(med)
+
+# expect-stdout: 3
+# expect-stdout: 3

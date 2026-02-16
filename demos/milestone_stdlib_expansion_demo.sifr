@@ -1,0 +1,37 @@
+# milestone_stdlib_expansion Demo
+#
+# New stdlib modules added in this milestone.
+
+from sifr.string import ascii_lowercase, digits
+from sifr.bisect import bisect_left
+from sifr.functools import clamp
+from sifr.secrets import token_hex
+from sifr.statistics import mean
+from sifr.test import assert_eq, assert_true
+
+def main():
+    # sifr.string — constants
+    assert_true(len(ascii_lowercase) == 26)
+    assert_true(len(digits) == 10)
+
+    # sifr.bisect — binary search
+    data: list[int] = [10, 20, 30, 40, 50]
+    pos: int = bisect_left(data, 30)
+    assert_eq(pos, 2)
+
+    # sifr.functools — utility functions
+    assert_eq(clamp(5, 0, 10), 5)
+    assert_eq(clamp(-1, 0, 10), 0)
+
+    # sifr.secrets — secure random
+    token: str = token_hex(8)
+    assert_true(len(token) == 16)
+
+    # sifr.statistics — statistical functions (depends on sifr.math)
+    data2: list[float] = [2.0, 4.0, 6.0]
+    avg: float = mean(data2)
+    assert_true(avg == 4.0)
+
+    print("milestone_stdlib_expansion demo: all checks passed!")
+
+# expect-stdout: milestone_stdlib_expansion demo: all checks passed!

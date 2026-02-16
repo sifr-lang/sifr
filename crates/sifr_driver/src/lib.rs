@@ -7,8 +7,8 @@
 //! They are compiled before user code (two-phase compilation).
 
 use sifr_python_parser::parse_module;
-use sifr_hir::{lower_module, lower_module_with_externals, lower_module_stdlib, ExternalDefs, HirModule};
-use sifr_codegen::{generate_rust_with_metadata, generate_rust_test, generate_rust_multi, generate_project, generate_project_with_deps};
+use sifr_hir::{lower_module, lower_module_with_externals, lower_module_stdlib_with_externals, ExternalDefs, HirModule};
+use sifr_codegen::{generate_rust_with_stdlib, generate_rust_test, generate_rust_multi, generate_project, generate_project_with_deps, StdlibCode};
 use sifr_type_system::{Type, FunctionType, ParamConvention};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -18,6 +18,7 @@ use std::process::Command;
 /// Each entry is (module_name, source_code).
 /// Module names use dotted notation (e.g., "sifr.test").
 const STDLIB_FILES: &[(&str, &str)] = &[
+    // Tier 1: Modules with no inter-stdlib dependencies
     ("sifr.test", include_str!("../../../lib/sifr/test.sifr")),
     ("sifr.env", include_str!("../../../lib/sifr/env.sifr")),
     ("sifr.bytes", include_str!("../../../lib/sifr/bytes.sifr")),
@@ -31,12 +32,28 @@ const STDLIB_FILES: &[(&str, &str)] = &[
     ("sifr.random", include_str!("../../../lib/sifr/random.sifr")),
     ("sifr.re", include_str!("../../../lib/sifr/re.sifr")),
     ("sifr.collections", include_str!("../../../lib/sifr/collections.sifr")),
+    ("sifr.string", include_str!("../../../lib/sifr/string.sifr")),
+    ("sifr.bisect", include_str!("../../../lib/sifr/bisect.sifr")),
+    ("sifr.functools", include_str!("../../../lib/sifr/functools.sifr")),
+    ("sifr.secrets", include_str!("../../../lib/sifr/secrets.sifr")),
+    // Tier 2: Modules that depend on other stdlib modules
+    ("sifr.statistics", include_str!("../../../lib/sifr/statistics.sifr")),
 ];
 
-/// Compile all embedded stdlib `.sifr` files and return their exports as ExternalDefs.
+/// Result of compiling all stdlib modules.
+struct StdlibCompiled {
+    /// Type information for type checking user code
+    defs: ExternalDefs,
+    /// Compiled Rust code and intrinsic name tracking for codegen
+    code: StdlibCode,
+}
+
+/// Compile all embedded stdlib `.sifr` files and return their exports as ExternalDefs
+/// along with compiled Rust code for pure Sifr modules.
 /// Stdlib files can import from `_sifr.*` intrinsics (resolved via the intrinsic registry).
-fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
+fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
     let mut stdlib_defs = ExternalDefs::default();
+    let mut stdlib_code = StdlibCode::default();
 
     for (module_name, source) in STDLIB_FILES {
         let parsed = match parse_module(source) {
@@ -62,8 +79,8 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
             }
         };
 
-        // Lower the stdlib module (allows _sifr.* intrinsic imports)
-        let result = match lower_module_stdlib(parsed.suite()) {
+        // Lower the stdlib module (allows _sifr.* intrinsic imports + inter-stdlib deps)
+        let result = match lower_module_stdlib_with_externals(parsed.suite(), &stdlib_defs) {
             Ok(result) => result,
             Err(errors) => {
                 let compile_errors: Vec<CompileError> = errors
@@ -77,11 +94,16 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
             }
         };
 
+        // Track which names are intrinsic re-exports vs pure Sifr definitions
+        let mut intrinsic_names_for_module = HashSet::new();
+        // Track transitive intrinsic module dependencies
+        let mut transitive_deps_for_module = HashSet::new();
+
         // Collect exports for this stdlib module
         let mut fn_exports = HashMap::new();
         let mut class_exports = HashMap::new();
 
-        // Collect functions defined in the module
+        // Collect functions defined in the module (pure Sifr functions)
         for func in &result.module.functions {
             if !func.name.starts_with('_') {
                 let params: Vec<(String, Type, ParamConvention)> = func.params.iter()
@@ -98,16 +120,33 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
         let mut const_exports = HashMap::new();
         for import in &result.module.imports {
             if import.module.starts_with("_sifr.") {
+                transitive_deps_for_module.insert(import.module.clone());
                 if let Some(intrinsic_mod) = sifr_hir::stdlib::get_intrinsic_module(&import.module) {
                     for name in &import.names {
                         if let Some(ft) = intrinsic_mod.functions.get(name) {
                             fn_exports.insert(name.clone(), ft.clone());
+                            intrinsic_names_for_module.insert(name.clone());
                         }
                         if let Some(const_ty) = intrinsic_mod.constants.get(name) {
                             const_exports.insert(name.clone(), const_ty.clone());
+                            intrinsic_names_for_module.insert(name.clone());
                         }
                     }
                 }
+            } else if import.module.starts_with("sifr.") {
+                // Inter-stdlib dependency: also include the transitive deps of the imported module
+                transitive_deps_for_module.insert(import.module.clone());
+                if let Some(deps) = stdlib_code.transitive_deps.get(&import.module) {
+                    transitive_deps_for_module.extend(deps.iter().cloned());
+                }
+            }
+        }
+
+        // Collect module-level constants defined in the .sifr file
+        for (name, ty, _expr) in &result.module.constants {
+            if !name.starts_with('_') {
+                const_exports.insert(name.clone(), ty.clone());
+                // Note: NOT added to intrinsic_names — these are pure Sifr constants
             }
         }
 
@@ -134,6 +173,38 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
             }
         }
 
+        // Generate Rust code for this stdlib module (for pure Sifr functions/constants)
+        // Only generate if the module has functions or constants defined in .sifr
+        let has_pure_sifr_code = !result.module.functions.is_empty() || !result.module.constants.is_empty();
+        if has_pure_sifr_code {
+            // Use the existing codegen to compile the stdlib module's HIR to Rust
+            // Pass the current stdlib_code so that inter-stdlib intrinsic dispatch works correctly
+            let codegen_result = sifr_codegen::generate_rust_with_stdlib(&result.module, &stdlib_code);
+            stdlib_code.module_rust_code.insert(module_name.to_string(), codegen_result.rust_source);
+            // Store constant mappings so user code can reference them with correct Rust names
+            if !codegen_result.constant_mappings.is_empty() {
+                stdlib_code.module_constants.insert(module_name.to_string(), codegen_result.constant_mappings);
+            }
+            // Store function signatures for pure Sifr functions (for borrow convention at call sites)
+            let mut sig_map = HashMap::new();
+            for func in &result.module.functions {
+                if !func.name.starts_with('_') {
+                    let param_info: Vec<(Type, ParamConvention)> = func.params.iter()
+                        .map(|p| (p.ty.clone(), p.convention))
+                        .collect();
+                    sig_map.insert(func.name.clone(), (param_info, func.return_type.clone()));
+                }
+            }
+            if !sig_map.is_empty() {
+                stdlib_code.func_signatures.insert(module_name.to_string(), sig_map);
+            }
+        }
+
+        stdlib_code.intrinsic_names.insert(module_name.to_string(), intrinsic_names_for_module);
+        if !transitive_deps_for_module.is_empty() {
+            stdlib_code.transitive_deps.insert(module_name.to_string(), transitive_deps_for_module);
+        }
+
         stdlib_defs.functions.insert(module_name.to_string(), fn_exports);
         stdlib_defs.classes.insert(module_name.to_string(), class_exports);
         if !const_exports.is_empty() {
@@ -141,7 +212,7 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
         }
     }
 
-    Ok(stdlib_defs)
+    Ok(StdlibCompiled { defs: stdlib_defs, code: stdlib_code })
 }
 
 /// Result of compilation.
@@ -207,8 +278,8 @@ pub enum CompileResultFull {
 /// Compile Sifr source code to Rust source code, returning stdlib metadata.
 pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     // Phase 0: Compile embedded stdlib .sifr files
-    let stdlib_defs = match compile_stdlib() {
-        Ok(defs) => defs,
+    let stdlib_compiled = match compile_stdlib() {
+        Ok(compiled) => compiled,
         Err(errors) => return CompileResultFull::Errors { errors },
     };
 
@@ -239,7 +310,7 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     };
 
     // Phase 2: Lower to HIR with stdlib externals (type checking + name resolution)
-    let lowering_result = match lower_module_with_externals(parsed.suite(), &stdlib_defs) {
+    let lowering_result = match lower_module_with_externals(parsed.suite(), &stdlib_compiled.defs) {
         Ok(result) => result,
         Err(errors) => {
             let compile_errors: Vec<CompileError> = errors
@@ -260,8 +331,8 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
         eprintln!("{}", diag);
     }
 
-    // Phase 3: Generate Rust code with metadata
-    let codegen_result = generate_rust_with_metadata(&lowering_result.module);
+    // Phase 3: Generate Rust code with stdlib code
+    let codegen_result = generate_rust_with_stdlib(&lowering_result.module, &stdlib_compiled.code);
 
     CompileResultFull::Success {
         rust_source: codegen_result.rust_source,
@@ -337,10 +408,10 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     }
 
     // Phase 1.5: Compile embedded stdlib .sifr files
-    let stdlib_defs = compile_stdlib()?;
+    let stdlib_compiled = compile_stdlib()?;
 
     // Phase 2: Lower non-main modules first to collect their exports
-    let mut external_defs = stdlib_defs;
+    let mut external_defs = stdlib_compiled.defs;
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
 
     // First, lower all non-main modules

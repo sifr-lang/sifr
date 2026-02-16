@@ -1,0 +1,9 @@
+# Test sifr.string stdlib module
+from sifr.string import ascii_lowercase, digits
+
+def main():
+    print(ascii_lowercase)
+    print(digits)
+
+# expect-stdout: abcdefghijklmnopqrstuvwxyz
+# expect-stdout: 0123456789
