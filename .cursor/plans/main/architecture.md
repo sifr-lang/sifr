@@ -395,7 +395,7 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 | `Addable`        | `Add` (+ `Sum` for `sum()`)                     | milestone_protocols (defined), milestone_generics (usable as bound)                 | Arithmetic `+` operator, `sum()` built-in                     |
 | `Display`        | `std::fmt::Display`                             | milestone_classes (auto-derived for `__str__`), milestone_protocols (explicit impl) | String representation via `str()`, f-strings, `print()`       |
 | `ContextManager` | Custom trait (`__enter__`/`__exit__` -> `Drop`) | milestone_generators (syntax), milestone_compiler_hardening (protocol enforcement)  | `with` statement resource management                          |
-| `Iterator`       | `Iterator`                                      | milestone_generics (defined), milestone_generators (yield-based)                    | `for` loops, comprehensions, generator expressions            |
+| `Iterator`       | `Iterator`                                      | milestone_generics (defined), milestone_generators (yield-based, eager), milestone_lazy_iterators (lazy state machine codegen) | `for` loops, comprehensions, generator expressions, lazy iteration |
 | `Hashable`       | `Hash` (+ `Eq`)                                 | milestone_classes (auto-derived)                                                    | Dict keys, set membership                                     |
 
 
@@ -411,8 +411,9 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 - milestone_classes: auto-derive `Display` and `Hashable` for classes with eligible fields
 - milestone_protocols: define `Comparable`, `Addable`, `Display` as explicit protocols; enable operator overloading via protocol impl
 - milestone_generics: enable protocols as generic bounds (`T: Comparable`); define `Iterator` protocol
-- milestone_generators: define initial `with` block syntax (scoped block desugaring)
-- milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking
+- milestone_generators: define initial `with` block syntax (scoped block desugaring); eager generator codegen (`Vec<T>`)
+- milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
+- milestone_lazy_iterators (Phase 7: Stdlib Parity): replace eager generator codegen with lazy state machine implementing `Iterator<Item = T>`; `for` loops consume iterators lazily; `list(iter)` eagerly collects
 
 ### Ecosystem Strategy
 

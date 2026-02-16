@@ -10,7 +10,7 @@
 | 4 | Language Hardening | 19 (codegen_fixes → ownership_v3) | completed | ~60% LeetCode compiles, nested functions, generics, forward refs |
 | 5 | Borrow-by-Default | 2 (borrow_default, borrow_hardening) | pending | Borrow-by-default params, exclusivity, fearless concurrency foundation |
 | 6 | Stdlib Architecture | 6 (intrinsics → stdlib_classes) | completed | Stdlib rewritten as .sifr files, 37+ modules, class-in-stdlib pipeline |
-| 7 | Stdlib Parity | 6 (compiler_hardening → cpython_tests) | pending | Import error quality, `with` protocol, ~50 new functions, CPython-aligned names, 5 new classes, ~500 CPython test assertions |
+| 7 | Stdlib Parity | 7 (compiler_hardening → cpython_tests) | pending | Import errors, `with` protocol, `Callable` fix, lazy iterators, generic stdlib, ~50 new functions, CPython-aligned names, 6 new classes, `datetime` operator overloading, ~500 CPython test assertions |
 | 8 | Ecosystem | 10 (async → data_processing) | pending | Web framework, database, auth, Redis, S3, email, data processing |
 | 9 | Polish | 5 (metaprogramming → ecosystem) | pending | FFI, package management, LSP, formatter, REPL |
 
@@ -38,7 +38,8 @@
 
 7. **Stdlib Parity → Ecosystem**: The async runtime, web framework, and all ecosystem
    milestones depend on a mature stdlib with both function and class APIs, CPython-compatible
-   naming, proper `with` statement support, and validated behavior via CPython test assertions.
+   naming, proper `with` statement support, lazy iterators (foundation for async iterators),
+   and validated behavior via CPython test assertions.
 
 8. **Ecosystem → Polish**: Metaprogramming, FFI, package management, and tooling come after
    the language is functional for real-world use.
@@ -108,11 +109,12 @@ flowchart TD
         milestone_stdlib_classes["milestone_stdlib_classes: Stdlib Classes\ncollections.Counter class,\nclass-in-stdlib pipeline"]
     end
     subgraph phaseStdlibParity [Stdlib Parity]
-        milestone_compiler_hardening["milestone_compiler_hardening: Compiler Hardening\nImport errors, with protocol,\nContextManager enforcement"]
+        milestone_compiler_hardening["milestone_compiler_hardening: Compiler Hardening\nImport errors, with protocol,\nCallable-as-struct-field fix"]
+        milestone_lazy_iterators["milestone_lazy_iterators: Lazy Iterators\nState machine codegen,\nIterator trait, lazy yield"]
         milestone_test_infra["milestone_test_infra: Test Infrastructure\nassert_almost_eq, assert_gt/lt,\nvariance bug fix"]
-        milestone_stdlib_functions["milestone_stdlib_functions: Stdlib Functions\n~25 pure-Sifr + ~12 intrinsics,\nclose function-level gaps"]
+        milestone_stdlib_functions["milestone_stdlib_functions: Stdlib Functions\n~25 pure-Sifr + ~12 intrinsics,\ngeneric bisect/heapq/itertools"]
         milestone_stdlib_naming["milestone_stdlib_naming: Stdlib Naming\nCPython-compatible names,\nr# keyword handling"]
-        milestone_stdlib_class_rollout["milestone_stdlib_class_rollout: Stdlib Class Rollout\nPath, Logger, Match,\nTopologicalSorter, UUID"]
+        milestone_stdlib_class_rollout["milestone_stdlib_class_rollout: Stdlib Class Rollout\nPath, Logger, Match, UUID,\nTopologicalSorter, datetime"]
         milestone_cpython_tests["milestone_cpython_tests: CPython Tests\n~500 assertions ported,\nbehavioral validation"]
     end
     subgraph phase4 [Ecosystem]
@@ -150,7 +152,7 @@ flowchart TD
     milestone_phase_fixes --> milestone_borrow_default --> milestone_borrow_hardening
     milestone_borrow_hardening --> milestone_intrinsics --> milestone_stdlib_migration --> milestone_stdlib_expansion --> milestone_stdlib_parity_audit
     milestone_stdlib_parity_audit --> milestone_stdlib_polish --> milestone_stdlib_classes
-    milestone_stdlib_classes --> milestone_compiler_hardening --> milestone_test_infra --> milestone_stdlib_functions
+    milestone_stdlib_classes --> milestone_compiler_hardening --> milestone_lazy_iterators --> milestone_test_infra --> milestone_stdlib_functions
     milestone_stdlib_functions --> milestone_stdlib_naming --> milestone_stdlib_class_rollout --> milestone_cpython_tests
     milestone_cpython_tests --> milestone_async
     milestone_async --> milestone_networking_stdlib --> milestone_web_db --> milestone_typed_serde
@@ -169,6 +171,6 @@ After the Borrow-by-Default phase, Sifr uses borrow-by-default for function para
 
 After the Stdlib Architecture phase, Sifr's stdlib is rewritten as `.sifr` files using a three-tier hybrid architecture (Rust intrinsics → Sifr stdlib → user code), with 37+ modules. The legacy `emit_stdlib_call` codegen path is deleted, and the class-in-stdlib pipeline is proven end-to-end (collections.Counter).
 
-After the Stdlib Parity phase, the compiler produces clear "unknown module" errors for bad imports, the `with` statement implements the full `ContextManager` protocol (`__enter__`/`__exit__`), the test infrastructure includes `assert_almost_eq` for float testing, ~50 new stdlib functions and 5 new classes (Path, Logger, Match, TopologicalSorter, UUID) are available, all API names are aligned with CPython conventions, and ~500 CPython test assertions validate behavioral correctness.
+After the Stdlib Parity phase, the compiler produces clear "unknown module" errors for bad imports, the `with` statement implements the full `ContextManager` protocol (`__enter__`/`__exit__`), `Callable` types work correctly in struct fields (`Box<dyn Fn>`), generators produce lazy iterators via state machine codegen, the test infrastructure includes `assert_almost_eq` for float testing, ~50 new stdlib functions (including generic `bisect`/`heapq`/`itertools`) and 6 new classes (Path, Logger, Match, TopologicalSorter, UUID, datetime/timedelta with operator overloading) are available, all API names are aligned with CPython conventions, and ~500 CPython test assertions validate behavioral correctness.
 
 After the Ecosystem phase, Sifr can build production web applications with databases, auth, Redis, S3, email, and data processing. After the Polish phase, it is a complete language ecosystem with FFI, package management, IDE support, and a REPL.

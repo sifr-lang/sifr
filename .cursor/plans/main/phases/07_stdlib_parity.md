@@ -1,20 +1,20 @@
 # Stdlib Parity
 
-This phase closes the remaining gaps between Sifr's stdlib and CPython's stdlib. It fixes two compiler correctness issues (import error reporting, `with` statement protocol), adds test infrastructure, expands the function surface, aligns API names with CPython, rolls out 5 new class-based APIs, and ports ~500 CPython test assertions as behavioral validation.
+This phase closes the remaining gaps between Sifr's stdlib and CPython's stdlib. It fixes compiler correctness issues (import error reporting, `with` statement protocol, `Callable`-as-struct-field), adds lazy iterator support, adds test infrastructure, expands the function surface (including generic stdlib functions), aligns API names with CPython, rolls out 6+ new class-based APIs (including `datetime`/`timedelta` with operator overloading), and ports ~500 CPython test assertions as behavioral validation.
 
 **Predecessor:** Phase 6 (Stdlib Architecture) — all 37 modules exist, the three-tier hybrid architecture is in place, and the class-in-stdlib pipeline is proven via `collections.Counter`.
 
-**Successor:** Phase 8 (Ecosystem) — the async runtime, web framework, and all ecosystem milestones depend on a mature stdlib with both function and class APIs, CPython-compatible naming, and proper `with` statement support.
+**Successor:** Phase 8 (Ecosystem) — the async runtime, web framework, and all ecosystem milestones depend on a mature stdlib with both function and class APIs, CPython-compatible naming, proper `with` statement support, and lazy iteration.
 
 **Detailed plan:** [issues/stdlib_architecture_remaining_milestones.md](../../issues/stdlib_architecture_remaining_milestones.md)
 
 ---
 
-## milestone_compiler_hardening: Import Errors and Context Managers
+## milestone_compiler_hardening: Import Errors, Context Managers, and Callable Fix
 
 status: pending
 
-**Goal:** Fix two compiler correctness gaps: (1) importing from a nonexistent module silently fails instead of producing a clear error, and (2) the `with` statement is incomplete — it's syntactic sugar for scoped blocks but doesn't implement the Python context manager protocol (`__enter__`/`__exit__`).
+**Goal:** Fix three compiler correctness gaps: (1) importing from a nonexistent module silently fails instead of producing a clear error, (2) the `with` statement is incomplete — it's syntactic sugar for scoped blocks but doesn't implement the Python context manager protocol (`__enter__`/`__exit__`), and (3) `Callable` types emit `impl Fn(...)` which is invalid in Rust struct fields — needs `Box<dyn Fn(...)>`.
 
 ### Import Error Reporting
 
@@ -29,6 +29,10 @@ Fix:
 - Lowering: check protocol compliance, bind variable to `__enter__()` result, handle multiple items
 - Codegen: emit `__enter__()` call at scope start, `__exit__()` call at scope end
 
+### `Callable`-as-Struct-Field Fix
+
+`Callable` types currently emit `impl Fn(...)` via `rust_type()` in `types.rs` (line 293). This is valid for function parameters but **invalid in Rust struct fields** — Rust requires `Box<dyn Fn(...)>` for struct fields. Fix: when `Callable` appears in a struct field context, emit `Box<dyn Fn(...)>` instead of `impl Fn(...)`. This unblocks `argparse.ArgumentParser`, `collections.defaultdict`, and `timeit.Timer` — all of which need to store callbacks as struct fields.
+
 ### Definition of Done
 
 - `from sifr.nonexistent import foo` produces `"unknown stdlib module 'sifr.nonexistent'"`
@@ -36,8 +40,45 @@ Fix:
 - `with X() as y:` calls `__enter__()` and `__exit__()` correctly
 - `with A() as a, B() as b:` handles all context managers
 - Non-`ContextManager` type in `with` produces a compile error
-- E2E pass tests: `with_enter_exit`, `with_multiple`
+- A class with a `Callable` field compiles correctly (struct field emits `Box<dyn Fn(...)>`)
+- E2E pass tests: `with_enter_exit`, `with_multiple`, `callable_struct_field`
 - E2E fail tests: `with_non_context_manager`, `import_nonexistent_local`
+- `cargo test` passes (zero regressions)
+
+---
+
+## milestone_lazy_iterators: Lazy Iterator Protocol
+
+status: pending
+
+**Goal:** Replace the eager generator codegen (`_yields.push()` → return `Vec<T>`) with a proper lazy `Iterator` implementation using state machines. Currently, `yield` in a function collects all values into a `Vec` and returns the full list. This milestone makes generators produce lazy iterators that yield values on demand via `next() -> Option<T>`.
+
+### Current State
+
+Generators work but are eager: the codegen creates a `Vec<T>`, pushes every `yield`ed value into it, and returns the full `Vec` at the end (lines 1578-1600 and 2373-2377 of `sifr_codegen/src/lib.rs`). There is no state machine, no `Iterator` trait implementation, no `next()` method.
+
+### Changes
+
+1. **HIR:** Add `HirType::Iterator(Box<Type>)` to represent lazy iterator types. A function containing `yield` returns `Iterator[T]` instead of `list[T]`.
+2. **Codegen — state machine:** Instead of `_yields.push(val)`, emit a Rust struct that implements `Iterator<Item = T>`. Each `yield` becomes a state transition. The struct stores local variables as fields and tracks the current state via an enum.
+3. **Codegen — `for` loop integration:** `for x in lazy_iter` emits `while let Some(x) = iter.next()` instead of `for x in &vec`.
+4. **Codegen — eager collection:** `list(iter)` or assigning an iterator to `list[T]` calls `.collect::<Vec<T>>()` for backward compatibility.
+5. **Type system:** `Iterator[T]` is a first-class type. It is assignable to `list[T]` via implicit `.collect()`.
+
+### What This Unblocks
+
+- `glob.iglob` — lazy directory traversal
+- `csv.reader` — lazy line-by-line reading
+- `itertools` functions (`chain`, `take`, `repeat`) — can be lazy instead of materializing full lists
+- Foundation for async iterators (`async for`) in Phase 8
+
+### Definition of Done
+
+- A generator function returns a lazy iterator, not a `Vec`
+- `for x in generator_fn()` works lazily (no full materialization)
+- `list(generator_fn())` eagerly collects into a list
+- Existing generator E2E tests pass (backward compatible via implicit collect)
+- New E2E tests: `lazy_generator`, `lazy_for_loop`, `lazy_collect`
 - `cargo test` passes (zero regressions)
 
 ---
@@ -71,7 +112,7 @@ Current `variance` divides by N (population variance). CPython's `variance` divi
 
 status: pending
 
-**Goal:** Close function-level gaps. Add ~25 pure-Sifr functions and ~12 new intrinsics across 12 modules.
+**Goal:** Close function-level gaps. Add ~25 pure-Sifr functions and ~12 new intrinsics across 12 modules. Also make `bisect`, `heapq`, and `itertools` generic (using `TypeVar`) — proving that generics work in the stdlib export pipeline.
 
 ### Pure-Sifr Functions
 
@@ -87,6 +128,14 @@ status: pending
 - `sifr.itertools`: `pairwise`, `batched`, `islice`
 - `sifr.tempfile`: `gettempdir`
 
+### Generic Stdlib Functions
+
+Convert `bisect`, `heapq`, and `itertools` from concrete `list[int]` to generic `list[T]` using `TypeVar`. This is the first use of generics in stdlib `.sifr` files — the full pipeline (generic function in `.sifr` → `TypeVar` in exported signatures → user import → monomorphized codegen) is unproven and must be validated here.
+
+- `sifr.bisect`: `bisect_left(a: list[T], x: T)`, `bisect_right(a: list[T], x: T)`, `insort_left`, `insort_right`
+- `sifr.heapq`: `heappush(heap: list[T], item: T)`, `heappop`, `heapify`, `nsmallest`, `nlargest`
+- `sifr.itertools`: `chain(a: list[T], b: list[T])`, `take`, `flatten`, `pairwise`, `batched`, `islice`
+
 ### New Intrinsics
 
 - `_sifr.math`: `exp`, `expm1`, `log1p`, `fabs`, `isfinite`
@@ -97,6 +146,7 @@ status: pending
 ### Definition of Done
 
 - All ~25 pure-Sifr functions and ~12 intrinsics work correctly
+- `bisect`, `heapq`, `itertools` work with generic types (e.g., `bisect_left([1.0, 2.0, 3.0], 2.5)` works)
 - `sifr.math` coverage: ~85% → ~95%
 - ~40 new test assertions pass
 - `cargo test` passes (zero regressions)
@@ -143,7 +193,7 @@ Renames happen at the Sifr stdlib layer only — `_sifr.*` intrinsic names stay 
 
 status: pending
 
-**Goal:** Add 5 new class-based APIs leveraging the pipeline proven by `milestone_stdlib_classes` (Counter). These classes don't need `Callable`-as-struct-field.
+**Goal:** Add 6 new class-based APIs leveraging the pipeline proven by `milestone_stdlib_classes` (Counter). Includes `datetime`/`timedelta` with operator overloading (`__add__`/`__sub__`) — proving that operator methods export correctly from stdlib classes.
 
 ### Classes
 
@@ -152,15 +202,17 @@ status: pending
 3. **`sifr.logging.Logger`** — named loggers with level filtering (`debug`, `info`, `warning`, `error`, `critical`) + `getLogger` factory
 4. **`sifr.re.Match`** — regex match result with `group`, `start`, `end`, `span`
 5. **`sifr.uuid.UUID`** — UUID value class with `hex`, `urn`, `to_str`, `version`
+6. **`sifr.datetime.datetime` / `timedelta`** — date/time classes with `__add__`/`__sub__` operator overloading. `datetime` wraps existing `_sifr.datetime` intrinsics; `timedelta` is pure Sifr (stores days/seconds/microseconds). This is the first stdlib class with operator overloading — validates that `__add__`/`__sub__` methods export correctly from stdlib `.sifr` files.
 
 ### Definition of Done
 
-- All 5 classes compile, export, and are importable by user code
+- All 6 classes compile, export, and are importable by user code
 - `from sifr.pathlib import Path` works end-to-end
 - `from sifr.logging import getLogger` works with level filtering
 - `from sifr.graphlib import TopologicalSorter` works with `add`/`static_order`
 - `from sifr.re import Match` works; `search` returns `Match` objects
 - `from sifr.uuid import UUID` works; `uuid4()` returns `UUID` object
+- `from sifr.datetime import datetime, timedelta` works; `datetime.now() + timedelta(days=1)` works with operator overloading
 - `cargo test` passes (zero regressions)
 - Demo: `demos/milestone_stdlib_class_rollout_demo.sifr`
 
@@ -210,16 +262,17 @@ CPython ships external test data at `/Users/yaseralnajjar/work/sifr/cpython/Lib/
 ## Milestone Ordering
 
 ```
-milestone_stdlib_classes (done, Phase 6) → milestone_compiler_hardening → milestone_test_infra → milestone_stdlib_functions → milestone_stdlib_naming → milestone_stdlib_class_rollout → milestone_cpython_tests → milestone_async (Phase 8)
+milestone_stdlib_classes (done, Phase 6) → milestone_compiler_hardening → milestone_lazy_iterators → milestone_test_infra → milestone_stdlib_functions → milestone_stdlib_naming → milestone_stdlib_class_rollout → milestone_cpython_tests → milestone_async (Phase 8)
 ```
 
 Why this order:
 
-- **compiler_hardening first:** Fixes compiler correctness issues that affect every subsequent milestone. Import errors catch typos immediately; `with` protocol unblocks `io.open()` and `tempfile` class APIs.
+- **compiler_hardening first:** Fixes compiler correctness issues that affect every subsequent milestone. Import errors catch typos immediately; `with` protocol unblocks `io.open()` and `tempfile` class APIs; `Callable`-as-struct-field fix unblocks `ArgumentParser`, `defaultdict`, and `timeit.Timer`.
+- **lazy_iterators after compiler_hardening:** Lazy iteration is a compiler feature that should be in place before adding new stdlib functions. This way, `itertools` functions in `milestone_stdlib_functions` can be written as lazy generators from the start, and `csv.reader`/`glob.iglob` can be implemented properly in `milestone_stdlib_class_rollout`.
 - **test_infra before stdlib_functions:** `assert_almost_eq` is needed to test float-returning functions.
-- **stdlib_functions before stdlib_naming:** Add functions first, then rename in one pass.
+- **stdlib_functions before stdlib_naming:** Add functions first (including generic `bisect`/`heapq`/`itertools`), then rename in one pass.
 - **stdlib_naming before stdlib_class_rollout:** Classes should use final CPython-aligned names from the start.
-- **stdlib_class_rollout before cpython_tests:** CPython test porting for class-based modules requires the classes to exist.
+- **stdlib_class_rollout before cpython_tests:** CPython test porting for class-based modules requires the classes to exist. `datetime`/`timedelta` with operator overloading validates the operator export pipeline.
 - **cpython_tests last:** Validation layer against the final API surface.
 
 ---
@@ -228,10 +281,13 @@ Why this order:
 
 | Item | Blocker | When to Address |
 |---|---|---|
-| `argparse.ArgumentParser` | `Callable`-as-struct-field (`Box<dyn Fn>`) | After codegen fix milestone |
-| `collections.defaultdict` class | `Callable`-as-struct-field | After codegen fix milestone |
-| `timeit.Timer` class | `Callable`-as-struct-field | After codegen fix milestone |
-| Generic `bisect`/`heapq`/`itertools` | Generics milestone | After `milestone_generics_impl` |
-| Lazy iterators (`iglob`, `csv.reader`) | Iterator protocol | After generators/iterators milestone |
-| `datetime`/`timedelta` class arithmetic | Operator overloading for stdlib classes | After operator overloading export is proven |
-| Exception types (`TOMLDecodeError`, `CycleError`) | Exception/error type support | After error handling milestone |
+| Exception types (`TOMLDecodeError`, `CycleError`) | Error types in stdlib `.sifr` files are untested — custom error classes work in user code (`custom_error.sifr`) but the export pipeline from stdlib is unproven | Next phase — requires validating error type export from stdlib, then defining module-specific error types |
+
+### Previously Deferred, Now Addressed in This Phase
+
+| Item | Previously Claimed Blocker | Resolution |
+|---|---|---|
+| `Callable`-as-struct-field (`ArgumentParser`, `defaultdict`, `timeit.Timer`) | `impl Fn(...)` invalid in Rust struct fields | Fixed in `milestone_compiler_hardening` — emit `Box<dyn Fn(...)>` for struct field context |
+| Generic `bisect`/`heapq`/`itertools` | Generics in stdlib untested | Addressed in `milestone_stdlib_functions` — first use of `TypeVar` in stdlib `.sifr` files |
+| Lazy iterators (`iglob`, `csv.reader`) | Generators eagerly collect into `Vec<T>` | Fixed in `milestone_lazy_iterators` — proper state machine codegen with `Iterator` trait |
+| `datetime`/`timedelta` class arithmetic | Operator overloading in stdlib classes untested | Addressed in `milestone_stdlib_class_rollout` — first stdlib class with `__add__`/`__sub__` |

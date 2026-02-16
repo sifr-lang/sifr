@@ -54,15 +54,18 @@ milestone_stdlib_classes (done)
 
 **Dependency chain:**
 ```
-milestone_stdlib_classes → m29 → m30 → m31 → m32 → m33 → m34 → milestone_async
+milestone_stdlib_classes → m29 (compiler_hardening) → m29.5 (lazy_iterators) → m30 → m31 → m32 → m33 → m34 → milestone_async
 ```
 
+> **Note:** `milestone_lazy_iterators` was added after initial planning as a prerequisite milestone. It sits between m29 and m30 in the chain. See `07_stdlib_parity.md` for the canonical ordering.
+
 **Rationale for ordering:**
-- **m29 first:** Fixes two compiler correctness issues (silent import failures, incomplete `with` statement) that affect every subsequent milestone. New stdlib modules added in m31-m33 need proper import error reporting, and `with` support is a prerequisite for `io.open()` and `tempfile` class APIs in m33.
+- **m29 first:** Fixes compiler correctness issues (silent import failures, incomplete `with` statement, `Callable`-as-struct-field) that affect every subsequent milestone. New stdlib modules added in m31-m33 need proper import error reporting, and `with` support is a prerequisite for `io.open()` and `tempfile` class APIs in m33.
+- **lazy_iterators after m29:** Lazy iteration is a core compiler feature that should be in place before adding new stdlib functions. This way, `itertools` functions in m31 can be written as lazy generators from the start, and `csv.reader`/`glob.iglob` can be implemented properly.
 - **m30 before m31:** `assert_almost_eq` is needed to properly test the float-returning functions added in m31.
-- **m31 before m32:** Add the missing functions first, then rename everything in one pass. Renaming before adding would require naming new functions twice (once with old convention, once with new).
+- **m31 before m32:** Add the missing functions first (including generic `bisect`/`heapq`/`itertools`), then rename everything in one pass. Renaming before adding would require naming new functions twice (once with old convention, once with new).
 - **m32 before m33:** Classes should be written with the final CPython-aligned names from the start.
-- **m33 before m34:** CPython test porting for class-based modules (re, graphlib, pathlib) requires the classes to exist first.
+- **m33 before m34:** CPython test porting for class-based modules (re, graphlib, pathlib) requires the classes to exist first. `datetime`/`timedelta` with operator overloading validates the operator export pipeline.
 - **m34 last:** Test porting is the validation layer — it should run against the final API surface.
 
 **Total estimated effort:** ~5-6 sprints (S=1-2 days, M=3-5 days, L=5-8 days)
@@ -1024,20 +1027,25 @@ Per the CPython test portability research:
 
 ## What's Explicitly Deferred (and Why)
 
-These items are blocked by language features not yet available:
+> **Note:** This section was updated to reflect decisions made during Phase 7 planning. Items that were previously deferred but are now addressed within Phase 7 (Stdlib Parity) are listed in the "Now Addressed" table below.
+
+### Still Deferred
 
 | Item | Blocker | When to Address |
 |---|---|---|
-| `argparse.ArgumentParser` | `Callable`-as-struct-field (`Box<dyn Fn>`) | After codegen fix milestone |
-| `collections.defaultdict` class | `Callable`-as-struct-field | After codegen fix milestone |
-| `timeit.Timer` class | `Callable`-as-struct-field | After codegen fix milestone |
-| Generic `bisect`/`heapq`/`itertools` | Generics milestone | After `milestone_generics_impl` |
-| Lazy iterators (`iglob`, `csv.reader`) | Iterator protocol | After generators/iterators milestone |
-| `io.open()` / context managers | `with` statement (m29 delivers protocol; `io.open` needs File class in m33) | m29 delivers `__enter__`/`__exit__` protocol; `io.open()` File class deferred to m33 or later |
-| `datetime`/`timedelta` class arithmetic | Operator overloading for stdlib classes | After operator overloading export is proven |
-| Exception types (`TOMLDecodeError`, `CycleError`) | Exception/error type support | After error handling milestone |
+| Exception types (`TOMLDecodeError`, `CycleError`) | Error types in stdlib `.sifr` files are untested — custom error classes work in user code but the export pipeline from stdlib is unproven | Next phase — requires validating error type export from stdlib |
 | `assert_raises` | `std::panic::catch_unwind` codegen | Lower priority — NAN/INF checks suffice for most cases |
-| Mining `mathdata/math_testcases.txt` | Parsing infrastructure | Stretch goal for m34 or future milestone |
+
+### Now Addressed in Phase 7 (Stdlib Parity)
+
+| Item | Previously Claimed Blocker | Resolution |
+|---|---|---|
+| `Callable`-as-struct-field (`ArgumentParser`, `defaultdict`, `timeit.Timer`) | `impl Fn(...)` invalid in Rust struct fields | Fixed in `milestone_compiler_hardening` — emit `Box<dyn Fn(...)>` for struct field context |
+| Generic `bisect`/`heapq`/`itertools` | Generics in stdlib untested | Addressed in `milestone_stdlib_functions` — first use of `TypeVar` in stdlib `.sifr` files |
+| Lazy iterators (`iglob`, `csv.reader`) | Generators eagerly collect into `Vec<T>` | Fixed in `milestone_lazy_iterators` — proper state machine codegen with `Iterator` trait |
+| `io.open()` / context managers | `with` statement incomplete | `milestone_compiler_hardening` delivers `__enter__`/`__exit__` protocol; `io.open()` File class in `milestone_stdlib_class_rollout` or later |
+| `datetime`/`timedelta` class arithmetic | Operator overloading in stdlib classes untested | Addressed in `milestone_stdlib_class_rollout` — first stdlib class with `__add__`/`__sub__` |
+| Mining `mathdata/math_testcases.txt` | Parsing infrastructure | Added as stretch goal in `milestone_cpython_tests` |
 
 ---
 
