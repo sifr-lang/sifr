@@ -7,7 +7,7 @@
 //! They are compiled before user code (two-phase compilation).
 
 use sifr_python_parser::parse_module;
-use sifr_hir::{lower_module, lower_module_with_externals, ExternalDefs, HirModule};
+use sifr_hir::{lower_module, lower_module_with_externals, lower_module_stdlib, ExternalDefs, HirModule};
 use sifr_codegen::{generate_rust_with_metadata, generate_rust_test, generate_rust_multi, generate_project, generate_project_with_deps};
 use sifr_type_system::{Type, FunctionType, ParamConvention};
 use std::collections::{HashMap, HashSet};
@@ -19,6 +19,18 @@ use std::process::Command;
 /// Module names use dotted notation (e.g., "sifr.test").
 const STDLIB_FILES: &[(&str, &str)] = &[
     ("sifr.test", include_str!("../../../lib/sifr/test.sifr")),
+    ("sifr.env", include_str!("../../../lib/sifr/env.sifr")),
+    ("sifr.bytes", include_str!("../../../lib/sifr/bytes.sifr")),
+    ("sifr.base64", include_str!("../../../lib/sifr/base64.sifr")),
+    ("sifr.math", include_str!("../../../lib/sifr/math.sifr")),
+    ("sifr.hashlib", include_str!("../../../lib/sifr/hashlib.sifr")),
+    ("sifr.io", include_str!("../../../lib/sifr/io.sifr")),
+    ("sifr.os", include_str!("../../../lib/sifr/os.sifr")),
+    ("sifr.json", include_str!("../../../lib/sifr/json.sifr")),
+    ("sifr.time", include_str!("../../../lib/sifr/time.sifr")),
+    ("sifr.random", include_str!("../../../lib/sifr/random.sifr")),
+    ("sifr.re", include_str!("../../../lib/sifr/re.sifr")),
+    ("sifr.collections", include_str!("../../../lib/sifr/collections.sifr")),
 ];
 
 /// Compile all embedded stdlib `.sifr` files and return their exports as ExternalDefs.
@@ -50,8 +62,8 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
             }
         };
 
-        // Lower the stdlib module (it can import from _sifr.* intrinsics)
-        let result = match lower_module(parsed.suite()) {
+        // Lower the stdlib module (allows _sifr.* intrinsic imports)
+        let result = match lower_module_stdlib(parsed.suite()) {
             Ok(result) => result,
             Err(errors) => {
                 let compile_errors: Vec<CompileError> = errors
@@ -69,6 +81,7 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
         let mut fn_exports = HashMap::new();
         let mut class_exports = HashMap::new();
 
+        // Collect functions defined in the module
         for func in &result.module.functions {
             if !func.name.starts_with('_') {
                 let params: Vec<(String, Type, ParamConvention)> = func.params.iter()
@@ -78,6 +91,23 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
                     params,
                     return_type: Box::new(func.return_type.clone()),
                 });
+            }
+        }
+
+        // Collect re-exported functions and constants from _sifr.* intrinsic imports
+        let mut const_exports = HashMap::new();
+        for import in &result.module.imports {
+            if import.module.starts_with("_sifr.") {
+                if let Some(intrinsic_mod) = sifr_hir::stdlib::get_intrinsic_module(&import.module) {
+                    for name in &import.names {
+                        if let Some(ft) = intrinsic_mod.functions.get(name) {
+                            fn_exports.insert(name.clone(), ft.clone());
+                        }
+                        if let Some(const_ty) = intrinsic_mod.constants.get(name) {
+                            const_exports.insert(name.clone(), const_ty.clone());
+                        }
+                    }
+                }
             }
         }
 
@@ -106,6 +136,9 @@ fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
 
         stdlib_defs.functions.insert(module_name.to_string(), fn_exports);
         stdlib_defs.classes.insert(module_name.to_string(), class_exports);
+        if !const_exports.is_empty() {
+            stdlib_defs.constants.insert(module_name.to_string(), const_exports);
+        }
     }
 
     Ok(stdlib_defs)

@@ -1,0 +1,32 @@
+# milestone_stdlib_migration Demo
+#
+# All 13 stdlib modules are now resolved from .sifr files.
+# No intrinsic fallback is used.
+
+from sifr.test import assert_eq, assert_true
+from sifr.math import sqrt, pi
+from sifr.hashlib import sha256
+from sifr.base64 import base64_encode, base64_decode
+
+def main():
+    # sifr.test (pure Sifr, no intrinsics)
+    assert_eq(1 + 1, 2)
+    assert_true(True)
+
+    # sifr.math (wraps _sifr.math)
+    result: float = sqrt(9.0)
+    assert_true(result == 3.0)
+    assert_true(pi > 3.14)
+
+    # sifr.hashlib (renamed from sifr.hash, wraps _sifr.crypto)
+    h: str = sha256("hello")
+    assert_true(len(h) == 64)
+
+    # sifr.base64 (renamed from sifr.encoding, wraps _sifr.crypto)
+    encoded: str = base64_encode("Hello!")
+    decoded: str = base64_decode(encoded)
+    assert_eq(decoded, "Hello!")
+
+    print("milestone_stdlib_migration demo: all checks passed!")
+
+# expect-stdout: milestone_stdlib_migration demo: all checks passed!

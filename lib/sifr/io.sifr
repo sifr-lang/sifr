@@ -1,0 +1,2 @@
+# sifr.io — File I/O operations
+from _sifr.io import read_text, write_text, exists, read_lines

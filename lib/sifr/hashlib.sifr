@@ -1,0 +1,2 @@
+# sifr.hashlib — Hashing functions (renamed from sifr.hash)
+from _sifr.crypto import sha256, md5

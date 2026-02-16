@@ -1,5 +1,5 @@
-# Test sifr.hash stdlib module
-from sifr.hash import sha256, md5
+# Test sifr.hashlib stdlib module
+from sifr.hashlib import sha256, md5
 
 def main():
     # SHA-256 of empty string

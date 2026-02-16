@@ -1,5 +1,5 @@
-# Test sifr.encoding stdlib module
-from sifr.encoding import base64_encode, base64_decode
+# Test sifr.base64 stdlib module
+from sifr.base64 import base64_encode, base64_decode
 
 def main():
     # Encode

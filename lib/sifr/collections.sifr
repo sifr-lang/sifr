@@ -1,0 +1,2 @@
+# sifr.collections — Extended collection types
+from _sifr.collections import new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection, counter_from_list, counter_get, counter_most_common, defaultdict_new, defaultdict_get, defaultdict_set

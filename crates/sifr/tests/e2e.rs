@@ -78,11 +78,17 @@ edition = "2021"
             "sifr.time" => deps.push("chrono = \"0.4\""),
             "sifr.random" => deps.push("rand = \"0.8\""),
             "sifr.re" => deps.push("regex = \"1\""),
-            "sifr.hash" => {
-                deps.push("sha2 = \"0.10\"");
-                deps.push("md5 = \"0.7\"");
+            "sifr.hash" | "sifr.hashlib" => {
+                if !deps.contains(&"sha2 = \"0.10\"") {
+                    deps.push("sha2 = \"0.10\"");
+                    deps.push("md5 = \"0.7\"");
+                }
             }
-            "sifr.encoding" => deps.push("base64 = \"0.22\""),
+            "sifr.encoding" | "sifr.base64" => {
+                if !deps.contains(&"base64 = \"0.22\"") {
+                    deps.push("base64 = \"0.22\"");
+                }
+            }
             _ => {}
         }
     }

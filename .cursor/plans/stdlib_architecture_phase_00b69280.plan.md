@@ -19,19 +19,19 @@ todos:
     status: completed
   - id: m1-pr
     content: Create PR for milestone_intrinsics, review, and merge
-    status: in_progress
+    status: completed
   - id: m2-prds
     content: Create PRDS for milestone_stdlib_migration (issues/milestone_stdlib_migration.md)
-    status: pending
+    status: completed
   - id: m2-epic
     content: Create Epic ticket on GitHub board for milestone_stdlib_migration
-    status: pending
+    status: completed
   - id: m2-tasks
     content: Break milestone_stdlib_migration into task tickets (migrate 13 modules, delete emit_stdlib_call, rename hash/encoding)
-    status: pending
+    status: completed
   - id: m2-implement
     content: Implement milestone_stdlib_migration on feat/milestone-stdlib-migration branch
-    status: pending
+    status: in_progress
   - id: m2-demo
     content: Create and verify demos/milestone_stdlib_migration_demo.sifr
     status: pending

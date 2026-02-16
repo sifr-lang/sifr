@@ -1,0 +1,2 @@
+# sifr.random — Random number generation
+from _sifr.crypto import random_int, random_float, random_choice
