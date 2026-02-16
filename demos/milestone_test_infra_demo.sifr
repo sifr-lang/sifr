@@ -1,0 +1,50 @@
+# milestone_test_infra demo
+# Demonstrates new test assertion intrinsics and corrected statistics functions
+
+# expect-stdout: mean = 5
+# expect-stdout: sample variance = 4.571428571428571
+# expect-stdout: population variance = 4
+# expect-stdout: sample stdev = 2.138089935299395
+# expect-stdout: population stdev = 2
+# expect-stdout: All assertions passed!
+
+from sifr.statistics import mean, variance, pvariance, stdev, pstdev
+from sifr.test import assert_almost_eq, assert_gt, assert_lt
+
+def main():
+    # ============================================================
+    # Part 1: Corrected statistics functions
+    # ============================================================
+    data: list[float] = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+
+    m: float = mean(data)
+    print("mean = " + str(m))
+
+    sv: float = variance(data)
+    print("sample variance = " + str(sv))
+
+    pv: float = pvariance(data)
+    print("population variance = " + str(pv))
+
+    sd: float = stdev(data)
+    print("sample stdev = " + str(sd))
+
+    pd: float = pstdev(data)
+    print("population stdev = " + str(pd))
+
+    # ============================================================
+    # Part 2: New test assertion intrinsics
+    # ============================================================
+
+    # assert_almost_eq: compare floats with tolerance
+    assert_almost_eq(m, 5.0, 0.001)
+    assert_almost_eq(sv, 4.571, 0.01)
+    assert_almost_eq(pv, 4.0, 0.001)
+
+    # assert_gt / assert_lt: range-based assertions
+    assert_gt(10, 5)
+    assert_lt(3, 7)
+    assert_gt(100, 0)
+    assert_lt(0, 1)
+
+    print("All assertions passed!")

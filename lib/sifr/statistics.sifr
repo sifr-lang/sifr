@@ -31,10 +31,21 @@ def variance(data: list[float]) -> float:
     for val in data:
         diff: float = val - avg
         total = total + diff * diff
+    return total / float(len(data) - 1)
+
+def pvariance(data: list[float]) -> float:
+    avg: float = mean(data)
+    total: float = 0.0
+    for val in data:
+        diff: float = val - avg
+        total = total + diff * diff
     return total / float(len(data))
 
 def stdev(data: list[float]) -> float:
     return sqrt(variance(data))
+
+def pstdev(data: list[float]) -> float:
+    return sqrt(pvariance(data))
 
 def mode(data: list[int]) -> int:
     if len(data) == 0:

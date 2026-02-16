@@ -1,0 +1,8 @@
+# Tests: assert_almost_eq with known float values
+from sifr.test import assert_almost_eq
+
+def main():
+    assert_almost_eq(3.14159, 3.14159, 0.001)
+    assert_almost_eq(1.0, 1.0000001, 0.001)
+    assert_almost_eq(0.1 + 0.2, 0.3, 0.0001)
+    assert_almost_eq(100.0, 100.0, 0.0001)

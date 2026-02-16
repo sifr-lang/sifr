@@ -1,0 +1,10 @@
+# Tests: assert_gt and assert_lt
+from sifr.test import assert_gt, assert_lt
+
+def main():
+    assert_gt(10, 5)
+    assert_gt(1, 0)
+    assert_gt(100, 99)
+    assert_lt(5, 10)
+    assert_lt(0, 1)
+    assert_lt(-1, 0)
