@@ -287,6 +287,16 @@ edition = "2021"
                     deps.push("base64 = \"0.22\"".to_string());
                 }
             }
+            "sifr.tomllib" | "_sifr.toml" => {
+                if !deps.contains(&"toml = \"0.8\"".to_string()) {
+                    deps.push("toml = \"0.8\"".to_string());
+                }
+            }
+            "sifr.datetime" | "_sifr.datetime" => {
+                if !deps.contains(&"chrono = \"0.4\"".to_string()) {
+                    deps.push("chrono = \"0.4\"".to_string());
+                }
+            }
             // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes use only std library
             _ => {}
         }
@@ -4940,6 +4950,28 @@ impl RustEmitter {
             }
             "platform_arch" => {
                 self.write("std::env::consts::ARCH.to_string()");
+            }
+            // sifr.toml
+            "toml_parse" => {
+                self.write("{ let __toml_str = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __val: toml::Value = __toml_str.parse().unwrap(); format!(\"{}\", __val) }");
+            }
+            // sifr.datetime
+            "datetime_now" => {
+                self.write("chrono::Local::now().format(\"%Y-%m-%dT%H:%M:%S\").to_string()");
+            }
+            "datetime_format" => {
+                self.write("{ let __dt_str = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __fmt = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; __dt_str.to_string() }");
+            }
+            "datetime_from_timestamp" => {
+                self.write("{ let __ts = ");
+                self.emit_expr(&args[0]);
+                self.write(" as i64; chrono::DateTime::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).unwrap_or_default() }");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call

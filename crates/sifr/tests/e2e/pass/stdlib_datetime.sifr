@@ -1,0 +1,14 @@
+# Test sifr.datetime module
+from sifr.datetime import now, from_timestamp
+
+def main():
+    # now returns a non-empty string
+    dt: str = now()
+    print(len(dt) > 0)
+
+    # from_timestamp converts epoch to datetime string
+    ts_dt: str = from_timestamp(0.0)
+    print(len(ts_dt) > 0)
+
+# expect-stdout: true
+# expect-stdout: true

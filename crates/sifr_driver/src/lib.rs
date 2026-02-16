@@ -49,6 +49,11 @@ const STDLIB_FILES: &[(&str, &str)] = &[
     ("sifr.fnmatch", include_str!("../../../lib/sifr/fnmatch.sifr")),
     ("sifr.shutil", include_str!("../../../lib/sifr/shutil.sifr")),
     ("sifr.tempfile", include_str!("../../../lib/sifr/tempfile.sifr")),
+    ("sifr.difflib", include_str!("../../../lib/sifr/difflib.sifr")),
+    ("sifr.ipaddress", include_str!("../../../lib/sifr/ipaddress.sifr")),
+    ("sifr.timeit", include_str!("../../../lib/sifr/timeit.sifr")),
+    ("sifr.tomllib", include_str!("../../../lib/sifr/tomllib.sifr")),
+    ("sifr.datetime", include_str!("../../../lib/sifr/datetime.sifr")),
     // Tier 2: Modules that depend on other stdlib modules
     ("sifr.statistics", include_str!("../../../lib/sifr/statistics.sifr")),
     ("sifr.glob", include_str!("../../../lib/sifr/glob.sifr")),

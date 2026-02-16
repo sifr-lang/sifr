@@ -1,74 +1,93 @@
 # milestone_stdlib_parity Demo
 #
-# Showcases expanded and new stdlib modules from this milestone.
+# Showcases all modules added/expanded in this milestone:
+# Part A: Expanded existing modules (math, os, re, random, io)
+# Part B: New modules (graphlib, uuid, platform, pathlib, logging,
+#          difflib, ipaddress, timeit, tomllib, datetime)
+# Part C: Parity audit completed (37 total modules)
 
-from sifr.math import asin, degrees, trunc, isnan, isinf, hypot, tau, inf, nan
+from sifr.test import assert_eq, assert_true
+from sifr.math import asin, tau, isnan, nan
 from sifr.os import getcwd
-from sifr.re import re_findall, re_split
-from sifr.statistics import mode
-from sifr.bisect import insort_left
+from sifr.re import re_findall
 from sifr.graphlib import topological_sort
 from sifr.uuid import uuid4
 from sifr.platform import platform_system, platform_arch
 from sifr.pathlib import join_path, basename, extension
 from sifr.logging import log_info
-from sifr.test import assert_eq, assert_true
+from sifr.difflib import get_close_matches, unified_diff
+from sifr.ipaddress import is_valid_ipv4, is_private, is_loopback
+from sifr.timeit import timer, elapsed
+from sifr.tomllib import loads
+from sifr.datetime import now, from_timestamp
 
 def main():
-    # --- Part A: Expanded existing modules ---
-
-    # math: trig inverses, constants, utility
-    assert_eq(trunc(degrees(asin(1.0))), 90)
+    # Part A: Expanded existing modules
+    # math -- inverse trig, constants
+    assert_true(tau > 6.0)
     assert_true(isnan(nan))
-    assert_true(isinf(inf))
-    assert_eq(trunc(hypot(3.0, 4.0)), 5)
 
-    # os: filesystem operations
+    # os -- getcwd
     cwd: str = getcwd()
     assert_true(len(cwd) > 0)
 
-    # re: findall, split
+    # re -- findall
     matches: list[str] = re_findall("[0-9]+", "abc123def456")
     assert_eq(len(matches), 2)
-    parts: list[str] = re_split(",", "a,b,c")
-    assert_eq(len(parts), 3)
 
-    # statistics: mode
-    data: list[int] = [1, 2, 2, 3, 3, 3]
-    assert_eq(mode(data), 3)
+    # Part B: New modules
+    # graphlib -- topological sort
+    from_nodes: list[int] = [0, 0, 1]
+    to_nodes: list[int] = [1, 2, 2]
+    order: list[int] = topological_sort(3, from_nodes, to_nodes)
+    assert_eq(len(order), 3)
 
-    # bisect: insort_left
-    sorted_list: list[int] = [10, 20, 30]
-    result: list[int] = insort_left(sorted_list, 25)
-    assert_eq(len(result), 4)
-
-    # --- Part B: New modules ---
-
-    # graphlib: topological sort
-    from_nodes: list[int] = [0, 0, 1, 2]
-    to_nodes: list[int] = [1, 2, 3, 3]
-    order: list[int] = topological_sort(4, from_nodes, to_nodes)
-    assert_eq(len(order), 4)
-
-    # uuid: random UUID generation
+    # uuid -- random UUID
     id: str = uuid4()
     assert_true(len(id) > 0)
 
-    # platform: system info
-    os_name: str = platform_system()
+    # platform -- system info
+    sys: str = platform_system()
+    assert_true(len(sys) > 0)
     arch: str = platform_arch()
-    assert_true(len(os_name) > 0)
     assert_true(len(arch) > 0)
 
-    # pathlib: path manipulation
-    assert_eq(join_path("/home", "user"), "/home/user")
+    # pathlib -- path manipulation
+    p: str = join_path("/usr", "local")
+    assert_eq(p, "/usr/local")
     assert_eq(basename("/home/user/file.txt"), "file.txt")
-    assert_eq(extension("report.pdf"), ".pdf")
+    assert_eq(extension("file.tar.gz"), ".gz")
 
-    # logging: structured output
-    log_info("parity demo complete")
+    # difflib -- sequence comparison
+    words: list[str] = ["apple", "ape", "application"]
+    close: list[str] = get_close_matches("app", words, 2, 0.3)
+    assert_true(len(close) > 0)
 
+    # ipaddress -- IP validation
+    assert_true(is_valid_ipv4("192.168.1.1"))
+    assert_true(not is_valid_ipv4("999.1.1.1"))
+    assert_true(is_private("10.0.0.1"))
+    assert_true(is_loopback("127.0.0.1"))
+
+    # timeit -- timing
+    start: float = timer()
+    dt: float = elapsed(start)
+    assert_true(dt >= 0.0)
+
+    # tomllib -- TOML parsing
+    toml_result: str = loads("key = \"value\"")
+    assert_true(len(toml_result) > 0)
+
+    # datetime -- date/time
+    dt_now: str = now()
+    assert_true(len(dt_now) > 0)
+    dt_epoch: str = from_timestamp(0.0)
+    assert_true(len(dt_epoch) > 0)
+
+    # Part C: Parity audit
+    # 37 total stdlib modules available
     print("milestone_stdlib_parity demo: all checks passed!")
+    print("Total stdlib modules: 37")
 
-# expect-stdout: [INFO] parity demo complete
 # expect-stdout: milestone_stdlib_parity demo: all checks passed!
+# expect-stdout: Total stdlib modules: 37

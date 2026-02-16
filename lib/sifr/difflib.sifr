@@ -1,0 +1,97 @@
+# sifr.difflib — Sequence comparison (pure Sifr)
+
+def get_close_matches(word: str, possibilities: list[str], n: int, cutoff: float) -> list[str]:
+    result: list[str] = []
+    scores: list[float] = []
+    for candidate in possibilities:
+        score: float = _similarity(word, candidate)
+        if score >= cutoff:
+            result.append(candidate)
+            scores.append(score)
+    # Simple selection of top n (no sort needed for small lists)
+    if len(result) <= n:
+        return result
+    top: list[str] = []
+    used: list[int] = []
+    count: int = 0
+    while count < n:
+        best_idx: int = -1
+        best_score: float = -1.0
+        i: int = 0
+        while i < len(scores):
+            skip: bool = False
+            for u in used:
+                if u == i:
+                    skip = True
+            if not skip:
+                s: float | None = scores[i]
+                if s is not None:
+                    if s > best_score:
+                        best_score = s
+                        best_idx = i
+            i = i + 1
+        if best_idx >= 0:
+            used.append(best_idx)
+            val: str | None = result[best_idx]
+            if val is not None:
+                top.append(val)
+        count = count + 1
+    return top
+
+def _similarity(a: str, b: str) -> float:
+    if len(a) == 0:
+        if len(b) == 0:
+            return 1.0
+        return 0.0
+    if len(b) == 0:
+        return 0.0
+    matches: int = 0
+    i: int = 0
+    while i < len(a):
+        ch_a: str | None = a[i]
+        if ch_a is not None:
+            j: int = 0
+            while j < len(b):
+                ch_b: str | None = b[j]
+                if ch_b is not None:
+                    if ch_a == ch_b:
+                        matches = matches + 1
+                        j = len(b)
+                j = j + 1
+        i = i + 1
+    total: int = len(a) + len(b)
+    numerator: int = 2 * matches
+    return float(numerator) / float(total)
+
+def unified_diff(a: list[str], b: list[str]) -> list[str]:
+    result: list[str] = []
+    result.append("--- a")
+    result.append("+++ b")
+    # Simple line-by-line diff
+    max_len: int = len(a)
+    if len(b) > max_len:
+        max_len = len(b)
+    i: int = 0
+    while i < max_len:
+        if i < len(a):
+            if i < len(b):
+                line_a: str | None = a[i]
+                line_b: str | None = b[i]
+                if line_a is not None:
+                    if line_b is not None:
+                        if line_a == line_b:
+                            result.append(" " + line_a)
+                        else:
+                            result.append("-" + line_a)
+                            result.append("+" + line_b)
+            else:
+                line_a2: str | None = a[i]
+                if line_a2 is not None:
+                    result.append("-" + line_a2)
+        else:
+            if i < len(b):
+                line_b2: str | None = b[i]
+                if line_b2 is not None:
+                    result.append("+" + line_b2)
+        i = i + 1
+    return result

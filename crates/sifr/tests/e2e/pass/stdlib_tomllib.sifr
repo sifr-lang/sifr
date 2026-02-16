@@ -1,0 +1,9 @@
+# Test sifr.tomllib module
+from sifr.tomllib import loads
+
+def main():
+    toml_text: str = "name = \"test\"\nversion = 42"
+    result: str = loads(toml_text)
+    print(len(result) > 0)
+
+# expect-stdout: true

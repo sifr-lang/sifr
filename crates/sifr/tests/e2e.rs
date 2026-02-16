@@ -106,6 +106,16 @@ edition = "2021"
                     deps.push("base64 = \"0.22\"");
                 }
             }
+            "sifr.tomllib" | "_sifr.toml" => {
+                if !deps.contains(&"toml = \"0.8\"") {
+                    deps.push("toml = \"0.8\"");
+                }
+            }
+            "sifr.datetime" | "_sifr.datetime" => {
+                if !deps.contains(&"chrono = \"0.4\"") {
+                    deps.push("chrono = \"0.4\"");
+                }
+            }
             _ => {}
         }
     }
