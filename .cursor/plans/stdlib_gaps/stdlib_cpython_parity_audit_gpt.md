@@ -1,18 +1,21 @@
 # Sifr Stdlib vs CPython Gap Audit
 
-Date: 2026-02-16
+Date: 2026-02-16 (updated after `milestone_stdlib_classes`)
 
 ## Scope
 
 - Audited all modules in `lib/sifr` (37 modules).
 - Compared exported API shape and implementation level against CPython stdlib modules in `/Users/yaseralnajjar/work/sifr/cpython/Lib`.
-- Included milestone polish expectations from `issues/milestone_stdlib_polish.md`.
+- Included milestone expectations from:
+  - `issues/milestone_stdlib_polish.md`
+  - `issues/milestone_stdlib_classes.md`
 
 ## Executive Findings
 
 - The stdlib architecture is in place and all 37 modules exist.
-- `milestone_stdlib_polish` appears mostly implemented (new intrinsics, `glob`, `timeit`, `tomllib.load`, additional tests).
-- Significant CPython parity gaps still remain, mostly due to intentionally simplified/function-first APIs and deferred class-based surfaces.
+- `milestone_stdlib_polish` is mostly implemented (new intrinsics, `glob`, `timeit`, `tomllib.load`, additional tests).
+- `milestone_stdlib_classes` is implemented as a first class-based stdlib proof point: `sifr.collections.Counter`.
+- Significant CPython parity gaps still remain, but class parity is now **partially unblocked** rather than fully deferred.
 - One notable naming mismatch still exists: `sifr.shutil` exports `move_file` instead of CPython-style `move`.
 - Safety contract work is still incomplete: intrinsic codegen still contains many `.unwrap()` panic paths.
 
@@ -20,8 +23,9 @@ Date: 2026-02-16
 
 1. API naming parity
    - `sifr.shutil`: `move_file` should be `move` for CPython alignment.
-2. Class-based stdlib APIs are still not present
-   - `argparse.ArgumentParser`, `logging.Logger`, `pathlib.Path`, `datetime` object model, `graphlib.TopologicalSorter`.
+2. Class-based parity is only partially implemented
+   - Present: `sifr.collections.Counter` class (+ `from_list` factory).
+   - Still missing major class APIs: `argparse.ArgumentParser`, `logging.Logger`, `pathlib.Path`, `datetime` object model, `graphlib.TopologicalSorter`.
 3. Safety contract not yet fully enforced
    - Intrinsic emission in `crates/sifr_codegen/src/lib.rs` still uses many `.unwrap()` and similar panic-prone paths.
 4. Function-signature parity gaps
@@ -40,6 +44,23 @@ Largely done:
 
 Still incomplete vs strict CPython naming:
 - `sifr.shutil.move_file` is still not renamed to `move`.
+
+## Milestone Stdlib Classes Delta (Current Status)
+
+Implemented:
+- `sifr.collections` now defines class `Counter` with:
+  - `__init__`, `get`, `most_common`, `total`, `values`, `keys`, `items`, `increment`
+- Factory function:
+  - `from_list(items: list[str]) -> Counter`
+- New `_sifr.collections` intrinsics present:
+  - `counter_total`, `counter_values`, `counter_keys`, `counter_items`, `counter_increment`
+- New tests present:
+  - Pass: `stdlib_collections_counter.sifr`, `stdlib_collections_counter_mutate.sifr`
+  - Fail: `stdlib_counter_wrong_type.sifr`
+
+Remaining after this milestone:
+- Class rollout is still limited to one module (`collections.Counter`).
+- Most CPython class-heavy modules are still function shims (`argparse`, `logging`, `pathlib`, `datetime`, `graphlib`, `timeit.Timer`).
 
 ## Module-by-Module Findings
 
@@ -62,8 +83,8 @@ Still incomplete vs strict CPython naming:
   - Note: no direct one-to-one CPython module equivalent.
 
 - `collections`
-  - Current: low-level intrinsic operations for set/counter/defaultdict-like behavior.
-  - Missing: CPython public class API (`Counter`, `defaultdict`, `deque`, `OrderedDict`, `ChainMap`, `namedtuple`, etc.).
+  - Current: low-level intrinsic operations + class-based `Counter` API (`Counter` methods and `from_list` factory).
+  - Missing: broader CPython class API (`defaultdict`, `deque`, `OrderedDict`, `ChainMap`, `namedtuple`, and fuller `Counter` semantics).
 
 - `csv`
   - Current: simple comma split/join parser/writer.
@@ -196,7 +217,8 @@ Still incomplete vs strict CPython naming:
 ## Suggested Next Focus (If Goal Is Practical Pre-1.0 Parity)
 
 1. Fix remaining naming mismatch (`shutil.move_file` -> `move`).
-2. Prioritize class-backed modules (`argparse`, `pathlib`, `logging`, `datetime`) only after class/codegen blockers are addressed.
-3. Complete safety-contract pass for intrinsic codegen to eliminate panic paths.
-4. Define explicit parity target per module (minimal useful subset vs full CPython surface) to avoid scope churn.
+2. Expand class rollout now that the pipeline is proven (`pathlib.Path`, `logging.Logger`, `graphlib.TopologicalSorter`, then `datetime` object model).
+3. Resolve `Callable`-as-struct-field codegen blocker to unlock `argparse.ArgumentParser`, `collections.defaultdict`, and `timeit.Timer`.
+4. Complete safety-contract pass for intrinsic codegen to eliminate panic paths.
+5. Define explicit parity target per module (minimal useful subset vs full CPython surface) to avoid scope churn.
 

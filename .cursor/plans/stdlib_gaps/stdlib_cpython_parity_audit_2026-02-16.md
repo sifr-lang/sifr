@@ -1,13 +1,13 @@
 # Sifr Stdlib vs CPython — Comprehensive Gap Audit
 
-Date: 2026-02-16 (updated after milestone_stdlib_classes)
+Date: 2026-02-16
 Source: Compared every `lib/sifr/*.sifr` module against CPython source at `/Users/yaseralnajjar/work/sifr/cpython/Lib/`
 
 ## Executive Summary
 
 - All 37 Sifr stdlib modules exist and compile.
 - **API naming mismatches** are widespread — most Sifr functions use different names than their CPython counterparts.
-- **Class-based APIs** were the single biggest blocker — 12+ modules need classes to reach meaningful parity. **`milestone_stdlib_classes` has now proven the stdlib class pipeline end-to-end** by implementing `collections.Counter` as the first class in a stdlib `.sifr` file. Classes that don't need `Callable`-as-struct-field (Path, Logger, Match, TopologicalSorter, etc.) are now unblocked.
+- **Class-based APIs** are the single biggest blocker — 12+ modules need classes to reach meaningful parity.
 - **Pure-Sifr function additions** (no compiler changes needed) could close ~30 individual function gaps immediately.
 - **Intrinsic additions** (Rust codegen) could close ~15 more.
 - **One semantic bug**: `sifr.statistics.variance` computes population variance (÷N) but CPython's `variance` computes sample variance (÷N-1).
@@ -21,7 +21,7 @@ Source: Compared every `lib/sifr/*.sifr` module against CPython source at `/User
 | API naming mismatches | math, os, re, json, time, hashlib, base64, random, platform, shutil, fnmatch | Rename + update tests | Low |
 | Missing pure-Sifr functions | math, statistics, bisect, secrets, fnmatch, string, textwrap, pathlib, heapq | None — pure Sifr | Low-Medium |
 | Missing intrinsics (Rust codegen) | math, hashlib, base64, random, platform, os | Codegen additions | Medium |
-| Class-based APIs (partially unblocked) | argparse, csv, logging, pathlib, graphlib, uuid, collections, datetime, re, tempfile | **Pipeline proven** via `collections.Counter`. Classes without `Callable` fields are unblocked. `Callable`-as-struct-field still needs `Box<dyn Fn>` fix for argparse, defaultdict, timeit.Timer | Medium-High |
+| Class-based APIs | argparse, csv, logging, pathlib, graphlib, uuid, collections, datetime, re, tempfile | Class support in stdlib + Callable-as-struct-field fix | High |
 | Generic type support | bisect, heapq, itertools | Generics milestone | High |
 | Lazy iterators | itertools, csv, glob | Iterator protocol | High |
 | Return type mismatches | tomllib (returns str not dict), json (returns str not native) | Structured return types | Medium |
@@ -205,22 +205,13 @@ No direct CPython module to compare against. This is a pragmatic Sifr-specific u
 
 ---
 
-### 11. `sifr.collections` — ~40% coverage (up from ~25%)
+### 11. `sifr.collections` — ~25% coverage
 
-**Has:** `new_set`, `set_from_list`, `set_add`, `set_contains`, `set_remove`, `set_len`, `set_union`, `set_intersection`, `counter_from_list`, `counter_get`, `counter_most_common`, `counter_total`, `counter_values`, `counter_keys`, `counter_items`, `counter_increment`, `defaultdict_new`, `defaultdict_get`, `defaultdict_set`, **`Counter` class** (with `__init__`, `get`, `most_common`, `total`, `values`, `keys`, `items`, `increment` methods), `from_list` factory function
-
-**`Counter` class — IMPLEMENTED (milestone_stdlib_classes):**
-The `Counter` class is the first class-based API in the Sifr stdlib. It wraps the existing JSON-encoded HashMap intrinsics and exercises the full pipeline: class in `.sifr` → HIR lowering → `ExternalDefs.classes` export → user import → codegen with `pub struct` + methods. Both `&self` (read) and `&mut self` (mutate) receiver inference are proven.
-
-**Still missing on Counter:**
-- Arithmetic operators (`__add__`, `__sub__`) — works for user classes but needs stdlib export testing
-- `.elements()` — iterator over elements repeated by count
-- `.subtract(other)` — subtract counts
-- `.update(other)` — add counts from another counter
-- Generic `Counter[T]` — currently `str` keys only
+**Has:** `new_set`, `set_from_list`, `set_add`, `set_contains`, `set_remove`, `set_len`, `set_union`, `set_intersection`, `counter_from_list`, `counter_get`, `counter_most_common`, `defaultdict_new`, `defaultdict_get`, `defaultdict_set`
 
 **Missing (needs classes):**
-- `defaultdict` class — with `__missing__` (blocked by `Callable`-as-struct-field)
+- `Counter` class — with arithmetic operators, `.elements()`, `.most_common()`, `.subtract()`, `.total()`
+- `defaultdict` class — with `__missing__`
 - `deque` class — double-ended queue
 - `OrderedDict` class
 - `ChainMap` class
@@ -668,8 +659,7 @@ These are pure-Sifr functions that can be added immediately:
 
 | Feature Needed | Modules Blocked | Status |
 |---|---|---|
-| Classes in stdlib `.sifr` files | ~~collections~~ (Counter done), argparse, csv, logging, pathlib, graphlib, uuid, datetime, re, tempfile, difflib | **Pipeline proven** via `collections.Counter` (milestone_stdlib_classes). Classes without `Callable` fields (Path, Logger, Match, TopologicalSorter, datetime, etc.) are now unblocked. |
-| `Callable`-as-struct-field (`Box<dyn Fn>` fix) | argparse (`ArgumentParser`), collections (`defaultdict`), timeit (`Timer`) | Codegen emits `impl Fn` which Rust rejects in struct fields; needs `Box<dyn Fn>` |
+| Classes in stdlib `.sifr` files | argparse, csv, logging, pathlib, graphlib, uuid, collections, datetime, re, tempfile, difflib | Infrastructure exists but `Callable`-as-struct-field needs `Box<dyn Fn>` fix |
 | Generics | bisect, heapq, itertools | Generics milestone not yet started |
 | Iterator protocol | itertools, csv, glob | Not planned yet |
 | Exception types | tomllib, json, graphlib, ipaddress | Exception support needed |
