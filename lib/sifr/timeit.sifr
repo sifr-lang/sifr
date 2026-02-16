@@ -1,8 +1,28 @@
-# sifr.timeit — Execution timing (wraps _sifr.time)
-from _sifr.time import time_now
+# sifr.timeit — Execution timing (matches CPython's timeit module)
+from typing import Callable
+from _sifr.time import perf_counter
 
-def timer() -> float:
-    return time_now()
+def default_timer() -> float:
+    return perf_counter()
 
-def elapsed(start: float) -> float:
-    return time_now() - start
+def timeit(stmt: Callable[[], None], number: int) -> float:
+    start: float = perf_counter()
+    i: int = 0
+    while i < number:
+        stmt()
+        i = i + 1
+    return perf_counter() - start
+
+def repeat(stmt: Callable[[], None], count: int, number: int) -> list[float]:
+    results: list[float] = []
+    r: int = 0
+    while r < count:
+        start: float = perf_counter()
+        i: int = 0
+        while i < number:
+            stmt()
+            i = i + 1
+        elapsed: float = perf_counter() - start
+        results.append(elapsed)
+        r = r + 1
+    return results

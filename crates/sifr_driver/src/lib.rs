@@ -194,7 +194,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
 
         // Generate Rust code for this stdlib module (for pure Sifr functions/constants)
         // Only generate if the module has functions or constants defined in .sifr
-        let has_pure_sifr_code = !result.module.functions.is_empty() || !result.module.constants.is_empty();
+        let has_pure_sifr_code = !result.module.functions.is_empty() || !result.module.constants.is_empty() || !result.module.classes.is_empty();
         if has_pure_sifr_code {
             // Use the existing codegen to compile the stdlib module's HIR to Rust
             // Pass the current stdlib_code so that inter-stdlib intrinsic dispatch works correctly

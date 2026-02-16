@@ -347,6 +347,12 @@ fn intrinsic_time() -> IntrinsicModule {
             ("fmt".to_string(), Type::Str),
         ], Type::Str));
 
+    // perf_counter() -> float (high-resolution monotonic clock for benchmarking)
+    functions.insert("perf_counter".to_string(), FunctionType::all_borrow(vec![], Type::Float));
+
+    // monotonic() -> float (guaranteed non-decreasing clock for timeouts)
+    functions.insert("monotonic".to_string(), FunctionType::all_borrow(vec![], Type::Float));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -432,6 +438,18 @@ fn intrinsic_fs() -> IntrinsicModule {
 
     // is_dir(path: str) -> bool
     functions.insert("is_dir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
+
+    // copy_file(src: str, dst: str) -> None
+    functions.insert("copy_file".to_string(), FunctionType::all_borrow(vec![
+            ("src".to_string(), Type::Str),
+            ("dst".to_string(), Type::Str),
+        ], Type::None));
+
+    // walk_dir(path: str) -> list[str] (recursive directory listing)
+    functions.insert("walk_dir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
+
+    // rmdir_all(path: str) -> None (recursive directory removal)
+    functions.insert("rmdir_all".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
 
     IntrinsicModule {
         functions,

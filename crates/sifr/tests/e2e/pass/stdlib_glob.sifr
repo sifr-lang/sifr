@@ -1,0 +1,30 @@
+# Test sifr.glob module
+from sifr.glob import glob
+from sifr.io import write_text
+from sifr.os import run_command
+
+def main():
+    # Create a temp directory with some files
+    run_command("mkdir -p /tmp/sifr_test_glob")
+    write_text("/tmp/sifr_test_glob/hello.txt", "hi")
+    write_text("/tmp/sifr_test_glob/world.txt", "there")
+    write_text("/tmp/sifr_test_glob/data.csv", "1,2,3")
+
+    # Glob for .txt files
+    matches: list[str] = glob("/tmp/sifr_test_glob", "*.txt")
+    print(len(matches))
+
+    # Glob for .csv files
+    csv_matches: list[str] = glob("/tmp/sifr_test_glob", "*.csv")
+    print(len(csv_matches))
+
+    # Glob for nonexistent pattern
+    none_matches: list[str] = glob("/tmp/sifr_test_glob", "*.xyz")
+    print(len(none_matches))
+
+    # Cleanup
+    run_command("rm -rf /tmp/sifr_test_glob")
+
+# expect-stdout: 2
+# expect-stdout: 1
+# expect-stdout: 0

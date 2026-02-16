@@ -2,7 +2,7 @@
 from _sifr.fs import listdir
 from sifr.fnmatch import fnmatch
 
-def glob_match(directory: str, pattern: str) -> list[str]:
+def glob(directory: str, pattern: str) -> list[str]:
     entries: list[str] = listdir(directory)
     result: list[str] = []
     for entry in entries:

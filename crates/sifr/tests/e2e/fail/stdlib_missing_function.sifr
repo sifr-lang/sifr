@@ -1,0 +1,7 @@
+# Test that importing a nonexistent function from a valid stdlib module fails
+from sifr.math import nonexistent_func
+
+def main():
+    pass
+
+# expect-error: module 'sifr.math' has no member 'nonexistent_func'

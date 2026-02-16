@@ -1,0 +1,76 @@
+# milestone_stdlib_polish Demo
+# Showcases: API alignment, monotonic clocks, timeit with Callable, new intrinsics
+
+from typing import Callable
+from sifr.time import perf_counter, monotonic
+from sifr.timeit import default_timer, timeit, repeat
+from sifr.glob import glob
+from sifr.shutil import copy, move_file, rmtree
+from sifr.tomllib import loads, load
+from sifr.io import write_text, read_text, exists
+from sifr.os import run_command
+
+def do_work():
+    total: int = 0
+    i: int = 0
+    while i < 1000:
+        total = total + i
+        i = i + 1
+
+def main():
+    # ── 1. Monotonic clocks (perf_counter / monotonic) ──
+    print("=== Monotonic Clocks ===")
+    t1: float = perf_counter()
+    t2: float = perf_counter()
+    print(t2 >= t1)
+
+    m1: float = monotonic()
+    m2: float = monotonic()
+    print(m2 >= m1)
+
+    # ── 2. timeit with Callable ──
+    print("=== timeit (Callable API) ===")
+    dt: float = default_timer()
+    print(dt >= 0.0)
+
+    elapsed: float = timeit(do_work, 100)
+    print(elapsed >= 0.0)
+
+    results: list[float] = repeat(do_work, 3, 50)
+    print(len(results))
+
+    # ── 3. glob (renamed from glob_match) ──
+    print("=== glob ===")
+    run_command("mkdir -p /tmp/sifr_polish_demo")
+    write_text("/tmp/sifr_polish_demo/a.txt", "aaa")
+    write_text("/tmp/sifr_polish_demo/b.txt", "bbb")
+    write_text("/tmp/sifr_polish_demo/c.csv", "1,2")
+    matches: list[str] = glob("/tmp/sifr_polish_demo", "*.txt")
+    print(len(matches))
+
+    # ── 4. shutil (copy, move_file, rmtree) ──
+    print("=== shutil ===")
+    copy("/tmp/sifr_polish_demo/a.txt", "/tmp/sifr_polish_demo/a_copy.txt")
+    print(exists("/tmp/sifr_polish_demo/a_copy.txt"))
+
+    move_file("/tmp/sifr_polish_demo/a_copy.txt", "/tmp/sifr_polish_demo/a_moved.txt")
+    print(exists("/tmp/sifr_polish_demo/a_moved.txt"))
+    print(exists("/tmp/sifr_polish_demo/a_copy.txt"))
+
+    run_command("mkdir -p /tmp/sifr_polish_demo/sub")
+    write_text("/tmp/sifr_polish_demo/sub/nested.txt", "nested")
+    rmtree("/tmp/sifr_polish_demo/sub")
+    print(exists("/tmp/sifr_polish_demo/sub"))
+
+    # ── 5. tomllib.load (new) ──
+    print("=== tomllib ===")
+    write_text("/tmp/sifr_polish_demo/test.toml", "name = \"sifr\"\nversion = 1")
+    parsed: str = load("/tmp/sifr_polish_demo/test.toml")
+    print(len(parsed) > 0)
+
+    inline: str = loads("key = \"value\"")
+    print(len(inline) > 0)
+
+    # Cleanup
+    run_command("rm -rf /tmp/sifr_polish_demo")
+    print("=== Done ===")

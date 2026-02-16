@@ -4509,6 +4509,23 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").is_dir()");
             }
+            "copy_file" => {
+                self.write("{ std::fs::copy(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(", ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").unwrap(); }");
+            }
+            "walk_dir" => {
+                self.write("{ fn __walk(p: &std::path::Path) -> Vec<String> { let mut r = Vec::new(); if let Ok(entries) = std::fs::read_dir(p) { for e in entries.flatten() { let path = e.path(); r.push(path.display().to_string()); if path.is_dir() { r.extend(__walk(&path)); } } } r } __walk(std::path::Path::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(")) }");
+            }
+            "rmdir_all" => {
+                self.write("std::fs::remove_dir_all(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap()");
+            }
             // sifr.json
             "json_loads" => {
                 self.write("serde_json::from_str::<serde_json::Value>(");
@@ -4856,6 +4873,9 @@ impl RustEmitter {
                 self.write(" as i64; let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap(); dt.format(");
                 self.emit_expr_as_str_ref(&args[1]);
                 self.write(").to_string() }");
+            }
+            "perf_counter" | "monotonic" => {
+                self.write("{ fn __monotonic() -> f64 { static __START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new(); let s = __START.get_or_init(std::time::Instant::now); s.elapsed().as_secs_f64() } __monotonic() }");
             }
             // sifr.random
             "random_int" => {

@@ -1,0 +1,39 @@
+# Test sifr.shutil module
+from sifr.shutil import copy, move_file, rmtree
+from sifr.io import write_text, read_text, exists
+from sifr.os import run_command
+
+def main():
+    # Setup
+    run_command("mkdir -p /tmp/sifr_test_shutil")
+    write_text("/tmp/sifr_test_shutil/src.txt", "hello shutil")
+
+    # Test copy
+    copy("/tmp/sifr_test_shutil/src.txt", "/tmp/sifr_test_shutil/dst.txt")
+    content: str = read_text("/tmp/sifr_test_shutil/dst.txt")
+    print(content)
+
+    # Source still exists after copy
+    print(exists("/tmp/sifr_test_shutil/src.txt"))
+
+    # Test move
+    write_text("/tmp/sifr_test_shutil/moveme.txt", "moved")
+    move_file("/tmp/sifr_test_shutil/moveme.txt", "/tmp/sifr_test_shutil/moved.txt")
+    moved_content: str = read_text("/tmp/sifr_test_shutil/moved.txt")
+    print(moved_content)
+    print(exists("/tmp/sifr_test_shutil/moveme.txt"))
+
+    # Test rmtree
+    run_command("mkdir -p /tmp/sifr_test_shutil/subdir")
+    write_text("/tmp/sifr_test_shutil/subdir/file.txt", "nested")
+    rmtree("/tmp/sifr_test_shutil/subdir")
+    print(exists("/tmp/sifr_test_shutil/subdir"))
+
+    # Cleanup
+    run_command("rm -rf /tmp/sifr_test_shutil")
+
+# expect-stdout: hello shutil
+# expect-stdout: true
+# expect-stdout: moved
+# expect-stdout: false
+# expect-stdout: false
