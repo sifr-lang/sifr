@@ -1,0 +1,45 @@
+# milestone_stdlib_classes Demo
+# ============================
+# This demo showcases the first class-based API in the Sifr standard library:
+# collections.Counter — proving the full stdlib class pipeline end-to-end.
+#
+# Pipeline exercised:
+#   Counter class in collections.sifr
+#   → HIR lowering with &self/&mut self inference
+#   → ExternalDefs.classes export from compile_stdlib()
+#   → User import via `from sifr.collections import Counter`
+#   → Codegen with pub struct + pub fn new() + methods
+
+from sifr.collections import Counter, from_list
+
+def main():
+    # ─── 1. Create a Counter from a list of words ───
+    words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+    c: Counter = from_list(words)
+
+    # ─── 2. Query individual counts (read-only, uses &self) ───
+    print(c.get("apple"))
+    print(c.get("banana"))
+    print(c.get("cherry"))
+    print(c.get("missing"))
+
+    # ─── 3. Aggregate operations ───
+    print(c.total())
+    print(c.most_common(2))
+
+    # ─── 4. Mutation via increment (uses &mut self) ───
+    c.increment("banana")
+    c.increment("banana")
+    print(c.get("banana"))
+    print(c.total())
+
+    # ─── 5. Increment a new key that didn't exist before ───
+    c.increment("date")
+    print(c.get("date"))
+    print(c.total())
+
+    # ─── 6. Direct construction with JSON-encoded data ───
+    c2: Counter = Counter("{\"x\":10,\"y\":20}")
+    print(c2.get("x"))
+    print(c2.get("y"))
+    print(c2.total())

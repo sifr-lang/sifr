@@ -1,2 +1,32 @@
 # sifr.collections — Extended collection types
-from _sifr.collections import new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection, counter_from_list, counter_get, counter_most_common, defaultdict_new, defaultdict_get, defaultdict_set
+from _sifr.collections import new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection, counter_from_list, counter_get, counter_most_common, counter_total, counter_values, counter_keys, counter_items, counter_increment, defaultdict_new, defaultdict_get, defaultdict_set
+
+class Counter:
+    data: str
+
+    def __init__(self, data: str):
+        self.data = data
+
+    def get(self, key: str) -> int:
+        return counter_get(self.data, key)
+
+    def most_common(self, n: int) -> str:
+        return counter_most_common(self.data, n)
+
+    def total(self) -> int:
+        return counter_total(self.data)
+
+    def values(self) -> list[int]:
+        return counter_values(self.data)
+
+    def keys(self) -> list[str]:
+        return counter_keys(self.data)
+
+    def items(self) -> str:
+        return counter_items(self.data)
+
+    def increment(self, key: str) -> None:
+        self.data = counter_increment(self.data, key)
+
+def from_list(items: list[str]) -> Counter:
+    return Counter(counter_from_list(items))

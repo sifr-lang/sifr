@@ -285,6 +285,24 @@ fn intrinsic_collections() -> IntrinsicModule {
             ("n".to_string(), Type::Int),
         ], Type::Str));
 
+    // counter_total(counter: str) -> int (sum of all counts)
+    functions.insert("counter_total".to_string(), FunctionType::all_borrow(vec![("counter".to_string(), Type::Str)], Type::Int));
+
+    // counter_values(counter: str) -> list[int] (all count values)
+    functions.insert("counter_values".to_string(), FunctionType::all_borrow(vec![("counter".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
+
+    // counter_keys(counter: str) -> list[str] (all keys)
+    functions.insert("counter_keys".to_string(), FunctionType::all_borrow(vec![("counter".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
+
+    // counter_items(counter: str) -> str (JSON-encoded list of [key, count] pairs)
+    functions.insert("counter_items".to_string(), FunctionType::all_borrow(vec![("counter".to_string(), Type::Str)], Type::Str));
+
+    // counter_increment(counter: str, key: str) -> str (increment key count by 1, return new JSON)
+    functions.insert("counter_increment".to_string(), FunctionType::all_borrow(vec![
+            ("counter".to_string(), Type::Str),
+            ("key".to_string(), Type::Str),
+        ], Type::Str));
+
     // --- DefaultDict ---
 
     // defaultdict_new(default_value: int) -> str (JSON-encoded empty dict with default)

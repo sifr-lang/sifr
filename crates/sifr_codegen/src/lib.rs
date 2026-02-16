@@ -116,6 +116,13 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                 if let Some(sig) = sig_map.get(name) {
                     emitter.func_signatures.insert(name.clone(), sig.clone());
                 }
+                // Also load class method signatures (ClassName::method entries)
+                let prefix = format!("{}::", name);
+                for (key, sig) in sig_map.iter() {
+                    if key.starts_with(&prefix) {
+                        emitter.func_signatures.insert(key.clone(), sig.clone());
+                    }
+                }
             }
         }
     }
@@ -4802,9 +4809,9 @@ impl RustEmitter {
             "counter_get" => {
                 self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); *data.get(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").unwrap_or(&0) }");
+                self.write(").unwrap_or_default(); let __key = ");
+                self.emit_expr(&args[1]);
+                self.write("; *data.get(__key.as_str()).unwrap_or(&0) }");
             }
             "counter_most_common" => {
                 self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
@@ -4813,8 +4820,40 @@ impl RustEmitter {
                 self.write("pairs.sort_by(|a, b| b.1.cmp(&a.1)); pairs.truncate(");
                 self.emit_expr(&args[1]);
                 self.write(" as usize); ");
-                self.write("let items: Vec<String> = pairs.iter().map(|(k, v)| format!(\"[\\\"{}\\\"]\", format!(\"{},{}\", k, v))).collect(); ");
+                self.write("let items: Vec<String> = pairs.iter().map(|(k, v)| format!(\"[\\\"{}\\\",{}]\", k, v)).collect(); ");
                 self.write("format!(\"[{}]\", items.join(\",\")) }");
+            }
+            "counter_total" => {
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap_or_default(); data.values().sum::<i64>() }");
+            }
+            "counter_values" => {
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap_or_default(); data.values().cloned().collect::<Vec<i64>>() }");
+            }
+            "counter_keys" => {
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap_or_default(); data.keys().cloned().collect::<Vec<String>>() }");
+            }
+            "counter_items" => {
+                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap_or_default(); let mut pairs: Vec<(String, i64)> = data.into_iter().collect(); ");
+                self.write("pairs.sort_by(|a, b| a.0.cmp(&b.0)); ");
+                self.write("let items: Vec<String> = pairs.iter().map(|(k, v)| format!(\"[\\\"{}\\\",{}]\", k, v)).collect(); ");
+                self.write("format!(\"[{}]\", items.join(\",\")) }");
+            }
+            "counter_increment" => {
+                self.write("{ let mut data: std::collections::HashMap<String, i64> = serde_json::from_str(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap_or_default(); *data.entry(");
+                self.emit_expr(&args[1]);
+                self.write(".to_string()).or_insert(0) += 1; ");
+                self.write("let pairs: Vec<String> = data.iter().map(|(k, v)| format!(\"\\\"{}\\\":{}\", k, v)).collect(); ");
+                self.write("format!(\"{{{}}}\", pairs.join(\",\")) }");
             }
             // sifr.collections — DefaultDict
             "defaultdict_new" => {

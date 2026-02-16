@@ -1,6 +1,6 @@
 # Sifr Stdlib Parity Report
 
-Generated: 2026-02-16 (updated after milestone_stdlib_polish)
+Generated: 2026-02-16 (updated after milestone_stdlib_classes)
 
 ## Summary
 
@@ -9,8 +9,23 @@ Generated: 2026-02-16 (updated after milestone_stdlib_polish)
 | Total Sifr stdlib modules | 37 |
 | CPython top-20 modules covered | 18/20 (90%) |
 | Average function coverage | ~52% |
-| E2E pass tests (stdlib) | 44 |
-| E2E fail tests (stdlib) | 6 |
+| Stdlib modules with class-based APIs | 1 (`collections.Counter`) |
+| E2E pass tests (stdlib) | 46 |
+| E2E fail tests (stdlib) | 7 |
+
+## Changes in milestone_stdlib_classes
+
+| Change | Details |
+| --- | --- |
+| First stdlib class | `Counter` class in `lib/sifr/collections.sifr` — proves full class-in-stdlib pipeline |
+| New intrinsics | `_sifr.collections.counter_total`, `counter_values`, `counter_keys`, `counter_items`, `counter_increment` |
+| New stdlib class methods | `Counter.__init__`, `get`, `most_common`, `total`, `values`, `keys`, `items`, `increment` |
+| New factory function | `from_list(items: list[str]) -> Counter` |
+| Pipeline fixes | Class method signatures exported via `StdlibCode.func_signatures` for correct borrow convention at call sites |
+| Codegen fix | `counter_get` uses `.as_str()` pattern to handle both owned and borrowed string arguments |
+| Format fix | `counter_most_common` and `counter_items` output corrected to `["key",count]` format |
+| New E2E pass tests | `stdlib_collections_counter`, `stdlib_collections_counter_mutate` |
+| New E2E fail tests | `stdlib_counter_wrong_type` |
 
 ## Changes in milestone_stdlib_polish
 
@@ -40,7 +55,7 @@ Generated: 2026-02-16 (updated after milestone_stdlib_polish)
 | sifr.base64 | base64 | 2 functions | ~50% |
 | sifr.random | random | 4 functions | ~35% |
 | sifr.bytes | bytes/bytearray | 4 functions | ~30% |
-| sifr.collections | collections | 14 functions | ~25% |
+| sifr.collections | collections | 14 functions + Counter class (8 methods) | ~40% |
 | sifr.env | os.environ | 2 functions | ~50% |
 | sifr.test | unittest/assert | 4 functions | N/A (custom) |
 
@@ -88,7 +103,7 @@ Generated: 2026-02-16 (updated after milestone_stdlib_polish)
 ## Key Gaps and Recommendations
 
 ### Blocked by Language Features
-- **Class-based APIs**: `argparse.ArgumentParser`, `pathlib.Path`, `logging.Logger`, `timeit.Timer` — requires `Callable`-as-struct-field codegen fix (`impl Fn` → `Box<dyn Fn>`)
+- **Class-based APIs (partially unblocked)**: `collections.Counter` proves the stdlib class pipeline works end-to-end. Classes that don't need `Callable` fields (Path, Logger, Match, TopologicalSorter) are now unblocked. Classes needing `Callable`-as-struct-field (`argparse.ArgumentParser`, `collections.defaultdict`, `timeit.Timer`) still require the `impl Fn` → `Box<dyn Fn>` codegen fix.
 - **Complex generics**: Generic container types beyond `list[T]` and `dict[K,V]`
 - **Context managers**: `open()/File` requires `with` statement support
 - **CPU clocks**: `time.process_time()` / `time.thread_time()` require `libc` crate
@@ -112,8 +127,8 @@ Generated: 2026-02-16 (updated after milestone_stdlib_polish)
 
 | Category | Tests |
 | --- | --- |
-| E2E pass tests (stdlib) | 44 |
-| E2E fail tests (stdlib) | 6 |
+| E2E pass tests (stdlib) | 46 |
+| E2E fail tests (stdlib) | 7 |
 | Unit tests | 300+ |
 | Total | 350+ |
 

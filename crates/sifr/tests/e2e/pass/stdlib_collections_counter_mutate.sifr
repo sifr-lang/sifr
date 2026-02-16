@@ -1,0 +1,29 @@
+# Test sifr.collections Counter class — mutation via increment
+from sifr.collections import Counter, from_list
+
+def main():
+    # Create Counter
+    c: Counter = from_list(["x", "y", "x"])
+
+    # Check initial counts
+    print(c.get("x"))
+    print(c.get("y"))
+    print(c.total())
+
+    # Increment existing key
+    c.increment("x")
+    print(c.get("x"))
+    print(c.total())
+
+    # Increment new key
+    c.increment("z")
+    print(c.get("z"))
+    print(c.total())
+
+# expect-stdout: 2
+# expect-stdout: 1
+# expect-stdout: 3
+# expect-stdout: 3
+# expect-stdout: 4
+# expect-stdout: 1
+# expect-stdout: 5

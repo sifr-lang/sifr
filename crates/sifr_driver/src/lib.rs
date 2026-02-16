@@ -214,6 +214,20 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                     sig_map.insert(func.name.clone(), (param_info, func.return_type.clone()));
                 }
             }
+            // Store class method signatures (ClassName::method -> params, return_type)
+            for class in &result.module.classes {
+                for method in &class.methods {
+                    if method.name != "new" {
+                        let param_info: Vec<(Type, ParamConvention)> = method.params.iter()
+                            .map(|p| (p.ty.clone(), p.convention))
+                            .collect();
+                        sig_map.insert(
+                            format!("{}::{}", class.name, method.name),
+                            (param_info, method.return_type.clone()),
+                        );
+                    }
+                }
+            }
             if !sig_map.is_empty() {
                 stdlib_code.func_signatures.insert(module_name.to_string(), sig_map);
             }
