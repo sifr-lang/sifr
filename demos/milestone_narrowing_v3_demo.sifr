@@ -1,0 +1,80 @@
+# ============================================================
+# Milestone 13: Narrowing V3 Demo
+# ============================================================
+# Demonstrates:
+# 1. Equality narrowing in elif chains (no over-narrowing to Never)
+# 2. Field access on narrowed union types (isinstance + elif chains)
+# 3. Comparison on union/optional types (T|None vs T)
+# 4. Collection truthiness (not list_var -> .is_empty())
+
+# --- 1. Equality narrowing in elif chains ---
+def route_handler(method: str) -> str:
+    if method == "GET":
+        return "get handler"
+    elif method == "POST":
+        return "post handler"
+    elif method == "PUT":
+        return "put handler"
+    return "unknown"
+
+# --- 2. Field access on narrowed union types ---
+class Dog:
+    name: str
+    breed: str
+
+class Cat:
+    name: str
+    color: str
+
+class Bird:
+    name: str
+    wingspan: float
+
+def describe_pet(pet: Dog | Cat | Bird) -> str:
+    if isinstance(pet, Dog):
+        return f"{pet.name} is a {pet.breed}"
+    elif isinstance(pet, Cat):
+        return f"{pet.name} is {pet.color}"
+    else:
+        return f"{pet.name} has wingspan {pet.wingspan}"
+
+# --- 3. Comparison on union/optional types ---
+def find_value(x: int | None, target: int) -> str:
+    if x == target:
+        return "found"
+    return "not found"
+
+def is_positive(x: int | None) -> bool:
+    if x > 0:
+        return True
+    return False
+
+# --- 4. Collection truthiness ---
+def summarize(items: list[str]) -> str:
+    if not items:
+        return "no items"
+    return f"{len(items)} items"
+
+def main():
+    # 1. Equality narrowing
+    print(route_handler("GET"))
+    print(route_handler("POST"))
+    print(route_handler("PUT"))
+    print(route_handler("DELETE"))
+
+    # 2. isinstance narrowing with field access
+    print(describe_pet(Dog("Rex", "Labrador")))
+    print(describe_pet(Cat("Whiskers", "orange")))
+    print(describe_pet(Bird("Tweety", 0.3)))
+
+    # 3. Union/optional comparison
+    v: int | None = 42
+    print(find_value(v, 42))
+    print(find_value(v, 99))
+    print(is_positive(v))
+
+    # 4. Collection truthiness
+    empty: list[str] = []
+    print(summarize(empty))
+    full: list[str] = ["a", "b", "c"]
+    print(summarize(full))

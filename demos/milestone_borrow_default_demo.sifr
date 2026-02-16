@@ -1,0 +1,98 @@
+# Milestone: Borrow-by-Default Parameter Passing Demo
+# ====================================================
+# This demo showcases the new borrow-by-default ownership model in Sifr.
+# Function parameters are immutably borrowed by default (&T),
+# with opt-in `mut` (&mut T) and `own` (T) keywords.
+
+# --- Section 1: Borrow by Default ---
+# Parameters are borrowed by default. The caller retains ownership.
+# This means you can use a variable after passing it to a function.
+
+def get_length(items: list[int]) -> int:
+    # items is &Vec<i64> -- immutable borrow
+    return len(items)
+
+def get_first_char(s: str) -> str:
+    # s is &String -- immutable borrow
+    result: str | None = s[0]
+    if result is not None:
+        return result
+    return ""
+
+# --- Section 2: Own keyword for ownership transfer ---
+# Use `own` when a function needs to take ownership of a parameter.
+# The caller loses access to the variable after the call.
+
+def consume_and_count(own items: list[int]) -> int:
+    # items is Vec<i64> -- ownership transferred
+    return len(items)
+
+# --- Section 3: Copy types are always passed by value ---
+# Primitives (int, float, bool) are Copy types -- no borrow needed.
+
+def add(x: int, y: int) -> int:
+    # x and y are i64 -- passed by value (Copy)
+    return x + y
+
+def is_positive(n: float) -> bool:
+    return n > 0.0
+
+# --- Section 4: Borrow-by-default prevents use-after-move ---
+# Under the old model, passing a list to a function would move it.
+# Now it's borrowed, so the variable is still usable after the call.
+
+def process_data(data: list[int]) -> int:
+    total: int = 0
+    for item in data:
+        total = total + item
+    return total
+
+# --- Section 5: Using borrowed params in loops ---
+# Borrowed parameters can be used in loops without issues.
+
+def sum_multiple_times(items: list[int], times: int) -> int:
+    total: int = 0
+    for i in range(times):
+        total = total + get_length(items)
+    return total
+
+def main():
+    # Section 1: Borrow by default
+    my_list: list[int] = [10, 20, 30]
+    length: int = get_length(my_list)
+    print(length)  # 3
+    # my_list is still usable after the call!
+    print(my_list)  # [10, 20, 30]
+
+    greeting: str = "Hello, Sifr!"
+    first: str = get_first_char(greeting)
+    print(first)  # H
+    # greeting is still usable
+    print(greeting)  # Hello, Sifr!
+
+    # Section 2: Own keyword
+    owned_list: list[int] = [1, 2, 3, 4, 5]
+    count: int = consume_and_count(owned_list)
+    print(count)  # 5
+    # owned_list is now moved -- cannot use it after this point
+
+    # Section 3: Copy types
+    result: int = add(10, 20)
+    print(result)  # 30
+
+    pi: float = 3.14
+    print(is_positive(pi))  # True
+    print(pi)  # 3.14 -- still usable (Copy type)
+
+    # Section 4: No use-after-move with borrow-by-default
+    data: list[int] = [1, 2, 3, 4, 5]
+    total: int = process_data(data)
+    print(total)  # 15
+    # data is still usable!
+    print(data)  # [1, 2, 3, 4, 5]
+
+    # Section 5: Borrowed params in loops
+    items: list[int] = [10, 20, 30]
+    loop_total: int = sum_multiple_times(items, 3)
+    print(loop_total)  # 9 (3 * 3)
+    print(items)  # [10, 20, 30] -- still usable

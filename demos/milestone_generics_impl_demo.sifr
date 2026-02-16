@@ -1,0 +1,59 @@
+# ============================================================
+# Milestone 17: Generics Implementation Demo
+# ============================================================
+# This demo showcases:
+# 1. TypeVar for generic type parameters
+# 2. Generic functions with type inference
+# 3. Callable type for higher-order functions
+# 4. Combining generics with Callable
+# ============================================================
+
+from typing import TypeVar, Callable
+
+T = TypeVar("T")
+
+# --- 1. Generic identity function ---
+def identity(x: T) -> T:
+    return x
+
+# --- 2. Generic function operating on list[T] ---
+def first(items: list[T]) -> T:
+    return items[0]
+
+# --- 3. Higher-order function with Callable ---
+def apply(f: Callable[[int], int], x: int) -> int:
+    return f(x)
+
+def apply_twice(f: Callable[[int], int], x: int) -> int:
+    return f(f(x))
+
+# --- Helper functions for Callable demo ---
+def double(x: int) -> int:
+    return x * 2
+
+def add_one(x: int) -> int:
+    return x + 1
+
+def square(x: int) -> int:
+    return x * x
+
+def main():
+    # 1. Generic identity - works with int and str
+    a: int = identity(42)
+    b: str = identity("hello")
+    print(a)
+    print(b)
+
+    # 2. Generic first - works with list[int] and list[str]
+    nums: list[int] = [10, 20, 30]
+    words: list[str] = ["alpha", "beta", "gamma"]
+    print(first(nums))
+    print(first(words))
+
+    # 3. Callable - higher-order functions
+    print(apply(double, 5))
+    print(apply(add_one, 99))
+
+    # 4. Apply twice - composing functions
+    print(apply_twice(add_one, 5))
+    print(apply_twice(square, 3))

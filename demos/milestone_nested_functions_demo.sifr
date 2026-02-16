@@ -1,0 +1,85 @@
+# ============================================================
+# Milestone 11: Nested Functions and Closures Demo
+# ============================================================
+# This demo showcases all nested function patterns now supported
+# by the Sifr compiler after the Language Hardening Phase 2 M11.
+
+# --- Pattern 1: Basic nested function (no capture) ---
+# Inner function defined inside outer, called immediately.
+def pattern_basic() -> int:
+    def add(a: int, b: int) -> int:
+        return a + b
+    return add(3, 7)
+
+# --- Pattern 2: Closure (captures outer variable) ---
+# Inner function reads a variable from the enclosing scope.
+def pattern_closure() -> int:
+    multiplier: int = 3
+    def multiply(x: int) -> int:
+        return x * multiplier
+    return multiply(5)
+
+# --- Pattern 3: Recursive nested function (no capture) ---
+# Classic factorial via a recursive inner helper.
+def pattern_recursive() -> int:
+    def factorial(n: int) -> int:
+        if n <= 1:
+            return 1
+        return n * factorial(n - 1)
+    return factorial(6)
+
+# --- Pattern 4: Recursive + capture ---
+# Recursive helper that also captures an outer variable.
+# The compiler passes captured vars as extra parameters to the inner fn.
+def pattern_recursive_capture() -> int:
+    limit: int = 100
+    def sum_up(i: int, acc: int) -> int:
+        if i > limit:
+            return acc
+        return sum_up(i + 1, acc + i)
+    return sum_up(1, 0)
+
+# --- Pattern 5: Multiple nested functions ---
+# Several inner functions defined in the same scope.
+def pattern_multiple() -> str:
+    def greet(name: str) -> str:
+        return "Hello, " + name
+    def exclaim(msg: str) -> str:
+        return msg + "!"
+    return exclaim(greet("Sifr"))
+
+# --- Pattern 6: Nested function with parameters ---
+# Inner function with multiple parameters, called with different args.
+def pattern_params() -> int:
+    def power(base: int, exp: int) -> int:
+        if exp <= 0:
+            return 1
+        return base * power(base, exp - 1)
+    a: int = power(2, 10)
+    b: int = power(3, 4)
+    return a + b
+
+def main():
+    # Pattern 1: Basic nested function
+    print("Pattern 1 - Basic nested function:")
+    print(pattern_basic())  # 10
+
+    # Pattern 2: Closure
+    print("Pattern 2 - Closure (captures outer var):")
+    print(pattern_closure())  # 15
+
+    # Pattern 3: Recursive nested function
+    print("Pattern 3 - Recursive nested function:")
+    print(pattern_recursive())  # 720
+
+    # Pattern 4: Recursive + capture
+    print("Pattern 4 - Recursive with capture:")
+    print(pattern_recursive_capture())  # 5050
+
+    # Pattern 5: Multiple nested functions
+    print("Pattern 5 - Multiple nested functions:")
+    print(pattern_multiple())  # Hello, Sifr!
+
+    # Pattern 6: Nested function with parameters
+    print("Pattern 6 - Nested with params:")
+    print(pattern_params())  # 1024 + 81 = 1105

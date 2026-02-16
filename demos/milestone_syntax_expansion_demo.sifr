@@ -1,0 +1,46 @@
+# Milestone 7: Syntax Expansion Demo
+# Showcases bitwise operators, unary operators, augmented assignment, and chained assignment
+
+def main():
+    # === Bitwise Operators ===
+    a: int = 0b1010  # 10
+    b: int = 0b1100  # 12
+
+    print(a & b)   # AND: 0b1000 = 8
+    print(a | b)   # OR:  0b1110 = 14
+    print(a ^ b)   # XOR: 0b0110 = 6
+    print(a << 2)  # Left shift: 40
+    print(a >> 1)  # Right shift: 5
+
+    # === Bitwise Invert ===
+    x: int = 42
+    print(~x)      # -43
+    print(~0)      # -1
+
+    # === Unary Plus ===
+    y: int = -7
+    print(+y)      # -7 (no-op)
+    print(+42)     # 42
+
+    # === Bitwise Augmented Assignment ===
+    flags: int = 0
+    flags |= 0b0001  # Set bit 0
+    flags |= 0b0100  # Set bit 2
+    print(flags)      # 5 (0b0101)
+    flags &= 0b0011  # Mask to keep only bits 0-1
+    print(flags)      # 1 (0b0001)
+    flags ^= 0b0011  # Toggle bits 0-1
+    print(flags)      # 2 (0b0010)
+    flags <<= 3       # Shift left by 3
+    print(flags)      # 16 (0b10000)
+    flags >>= 2       # Shift right by 2
+    print(flags)      # 4 (0b100)
+
+    # === Chained Assignment ===
+    p: int = 0
+    q: int = 0
+    r: int = 0
+    p = q = r = 99
+    print(p)  # 99
+    print(q)  # 99
+    print(r)  # 99

@@ -2,10 +2,10 @@
 # Test 31: String Passed to Two Functions (should fail on second)
 # Python: string can be passed to multiple functions
 # Rust: String is moved on first call; second call is error
-# Sifr should: reject second call — use-after-move
+# Sifr should: reject second call — use-after-move (own param)
 # ============================================================
 
-def consume_str(s: str) -> int:
+def consume_str(own s: str) -> int:
     return len(s)
 
 def main():

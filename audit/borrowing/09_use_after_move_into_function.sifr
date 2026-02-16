@@ -2,10 +2,10 @@
 # Test 9: Use After Move Into Function (should fail)
 # Python: nums is still usable after passing to a function
 # Rust: nums is moved into consume(); using it after is error
-# Sifr should: reject this — use-after-move
+# Sifr should: reject this — use-after-move (own param)
 # ============================================================
 
-def consume(items: list[int]) -> int:
+def consume(own items: list[int]) -> int:
     return len(items)
 
 def main():

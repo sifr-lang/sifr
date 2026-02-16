@@ -1,15 +1,15 @@
 # ============================================================
-# Test 23: Pass Class Instance to Function (move)
+# Test 23: Pass Class Instance to Function (consumed via own)
 # Python: passing an object to a function doesn't affect caller
 # Rust: passing by value moves the object
-# Sifr should: move by default for function arguments
+# Sifr should: borrow by default; use `own` to explicitly move
 # ============================================================
 
 class Point:
     x: int
     y: int
 
-def describe(p: Point) -> str:
+def describe(own p: Point) -> str:
     return f"({p.x}, {p.y})"
 
 def main():

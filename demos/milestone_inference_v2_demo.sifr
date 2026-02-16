@@ -1,0 +1,24 @@
+# Milestone 9: Type Inference V2 Demo
+# Showcases return type inference when -> annotation is omitted
+
+# Return type inferred as int
+def double(x: int):
+    return x * 2
+
+# Return type inferred as str
+def greet(name: str):
+    return "hello " + name
+
+# Return type inferred as bool
+def is_positive(x: int):
+    return x > 0
+
+# Return type inferred as None (no return statement)
+def log_value(x: int):
+    print(x)
+
+def main():
+    print(double(21))       # 42
+    print(greet("sifr"))    # hello sifr
+    print(is_positive(5))   # true
+    log_value(99)           # 99
