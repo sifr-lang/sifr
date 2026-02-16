@@ -1,0 +1,23 @@
+# sifr.test — Test assertion functions
+# This is a pure Sifr stdlib module (no intrinsics needed).
+
+def assert_eq(actual: Any, expected: Any):
+    if actual != expected:
+        print("ASSERTION FAILED: assert_eq")
+        print("  expected: " + str(expected))
+        print("  actual:   " + str(actual))
+
+def assert_ne(actual: Any, expected: Any):
+    if actual == expected:
+        print("ASSERTION FAILED: assert_ne")
+        print("  values should differ but both are: " + str(actual))
+
+def assert_true(value: bool):
+    if not value:
+        print("ASSERTION FAILED: assert_true")
+        print("  expected True, got False")
+
+def assert_false(value: bool):
+    if value:
+        print("ASSERTION FAILED: assert_false")
+        print("  expected False, got True")

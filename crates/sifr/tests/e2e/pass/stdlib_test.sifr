@@ -1,0 +1,24 @@
+# Test sifr.test stdlib module (resolved from .sifr file)
+from sifr.test import assert_eq, assert_ne, assert_true, assert_false
+
+def main():
+    # assert_eq with matching values (should print nothing)
+    assert_eq(42, 42)
+    assert_eq("hello", "hello")
+
+    # assert_ne with different values (should print nothing)
+    assert_ne(1, 2)
+    assert_ne("a", "b")
+
+    # assert_true with True (should print nothing)
+    assert_true(True)
+    assert_true(1 == 1)
+
+    # assert_false with False (should print nothing)
+    assert_false(False)
+    assert_false(1 == 2)
+
+    # All assertions passed
+    print("all assertions passed")
+
+# expect-stdout: all assertions passed

@@ -1,45 +1,93 @@
-//! Sifr Standard Library Type Registry
+//! Sifr Intrinsic Type Registry
 //!
-//! Defines type signatures for all `sifr.*` stdlib modules.
-//! Used by the HIR lowering to type-check stdlib imports.
+//! Defines type signatures for all `_sifr.*` intrinsic modules.
+//! These are compiler-provided primitives that map directly to Rust code.
+//! User-facing stdlib modules live in `lib/sifr/*.sifr` files.
 
 use sifr_type_system::{Type, FunctionType};
 use std::collections::HashMap;
 
-/// A stdlib module definition with its functions and constants.
-pub struct StdlibModule {
+/// An intrinsic module definition with its functions and constants.
+pub struct IntrinsicModule {
     pub functions: HashMap<String, FunctionType>,
     pub constants: HashMap<String, Type>,
 }
 
-/// Look up a stdlib module by its dotted name (e.g., "sifr.io").
-/// Returns None if the module is not a known stdlib module.
-pub fn get_stdlib_module(module_name: &str) -> Option<StdlibModule> {
+/// Look up an intrinsic module by its dotted name (e.g., "_sifr.io").
+/// Returns None if the module is not a known intrinsic module.
+pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
     match module_name {
-        "sifr.io" => Some(stdlib_io()),
-        "sifr.json" => Some(stdlib_json()),
-        "sifr.env" => Some(stdlib_env()),
-        "sifr.os" => Some(stdlib_os()),
-        "sifr.math" => Some(stdlib_math()),
-        "sifr.test" => Some(stdlib_test()),
-        "sifr.collections" => Some(stdlib_collections()),
-        "sifr.bytes" => Some(stdlib_bytes()),
-        "sifr.time" => Some(stdlib_time()),
-        "sifr.random" => Some(stdlib_random()),
-        "sifr.re" => Some(stdlib_re()),
-        "sifr.hash" => Some(stdlib_hash()),
-        "sifr.encoding" => Some(stdlib_encoding()),
+        "_sifr.io" => Some(intrinsic_io()),
+        "_sifr.json" => Some(intrinsic_json()),
+        "_sifr.sys" => Some(intrinsic_sys()),
+        "_sifr.fs" => Some(intrinsic_fs()),
+        "_sifr.math" => Some(intrinsic_math()),
+        "_sifr.test" => Some(intrinsic_test()),
+        "_sifr.collections" => Some(intrinsic_collections()),
+        "_sifr.bytes" => Some(intrinsic_bytes()),
+        "_sifr.time" => Some(intrinsic_time()),
+        "_sifr.crypto" => Some(intrinsic_crypto()),
+        "_sifr.regex" => Some(intrinsic_regex()),
         _ => None,
     }
 }
 
-/// Check if a module name is a stdlib module.
+/// Check if a module name is an intrinsic module.
+pub fn is_intrinsic_module(module_name: &str) -> bool {
+    module_name.starts_with("_sifr.")
+}
+
+/// Map a user-facing stdlib module name (sifr.X) to its intrinsic module name (_sifr.X).
+/// This is used during the transition period where stdlib .sifr files don't exist yet
+/// and we fall back to intrinsics directly.
+pub fn stdlib_to_intrinsic(module_name: &str) -> Option<&str> {
+    match module_name {
+        "sifr.io" => Some("_sifr.io"),
+        "sifr.json" => Some("_sifr.json"),
+        "sifr.env" => Some("_sifr.sys"),
+        "sifr.os" => Some("_sifr.sys"),
+        "sifr.math" => Some("_sifr.math"),
+        "sifr.test" => Some("_sifr.test"),
+        "sifr.collections" => Some("_sifr.collections"),
+        "sifr.bytes" => Some("_sifr.bytes"),
+        "sifr.time" => Some("_sifr.time"),
+        "sifr.random" => Some("_sifr.crypto"),
+        "sifr.re" => Some("_sifr.regex"),
+        "sifr.hash" => Some("_sifr.crypto"),
+        "sifr.encoding" => Some("_sifr.crypto"),
+        _ => None,
+    }
+}
+
+/// Get the intrinsic module that backs a user-facing stdlib module.
+/// This resolves sifr.X -> _sifr.Y and returns the intrinsic module with
+/// the original function names (so sifr.io's read_text maps to _sifr.io's read_text).
+pub fn get_stdlib_as_intrinsic(module_name: &str) -> Option<IntrinsicModule> {
+    match module_name {
+        "sifr.io" => Some(intrinsic_io()),
+        "sifr.json" => Some(intrinsic_json()),
+        "sifr.env" => Some(intrinsic_env()),
+        "sifr.os" => Some(intrinsic_os()),
+        "sifr.math" => Some(intrinsic_math()),
+        "sifr.test" => Some(intrinsic_test()),
+        "sifr.collections" => Some(intrinsic_collections()),
+        "sifr.bytes" => Some(intrinsic_bytes()),
+        "sifr.time" => Some(intrinsic_time()),
+        "sifr.random" => Some(intrinsic_random()),
+        "sifr.re" => Some(intrinsic_re()),
+        "sifr.hash" => Some(intrinsic_hash()),
+        "sifr.encoding" => Some(intrinsic_encoding()),
+        _ => None,
+    }
+}
+
+/// Check if a module name is a user-facing stdlib module.
 pub fn is_stdlib_module(module_name: &str) -> bool {
     module_name.starts_with("sifr.")
 }
 
-/// sifr.io — File I/O operations
-fn stdlib_io() -> StdlibModule {
+/// _sifr.io — File I/O intrinsics
+fn intrinsic_io() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // read_text(path: str) -> str
@@ -60,14 +108,14 @@ fn stdlib_io() -> StdlibModule {
     // read_lines(path: str) -> list[str]
     functions.insert("read_lines".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.json — JSON serialization/deserialization
-fn stdlib_json() -> StdlibModule {
+/// _sifr.json — JSON serialization/deserialization intrinsics
+fn intrinsic_json() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // json_loads(s: str) -> str  (returns JSON as string for now)
@@ -76,14 +124,14 @@ fn stdlib_json() -> StdlibModule {
     // json_dumps(obj: Any) -> str
     functions.insert("json_dumps".to_string(), FunctionType::all_borrow(vec![("obj".to_string(), Type::Any)], Type::Str));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.env — Environment variables
-fn stdlib_env() -> StdlibModule {
+/// _sifr.sys — Environment variables (env_get, env_set)
+fn intrinsic_env() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // env_get(key: str) -> str | None
@@ -95,14 +143,14 @@ fn stdlib_env() -> StdlibModule {
             ("value".to_string(), Type::Str),
         ], Type::None));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.os — OS operations
-fn stdlib_os() -> StdlibModule {
+/// _sifr.sys — OS operations (run_command, get_args)
+fn intrinsic_os() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // run_command(cmd: str) -> str
@@ -111,14 +159,14 @@ fn stdlib_os() -> StdlibModule {
     // get_args() -> list[str]
     functions.insert("get_args".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.math — Math functions and constants
-fn stdlib_math() -> StdlibModule {
+/// _sifr.math — Math intrinsics
+fn intrinsic_math() -> IntrinsicModule {
     let mut functions = HashMap::new();
     let mut constants = HashMap::new();
 
@@ -162,14 +210,14 @@ fn stdlib_math() -> StdlibModule {
     constants.insert("pi".to_string(), Type::Float);
     constants.insert("e".to_string(), Type::Float);
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants,
     }
 }
 
-/// sifr.test — Test assertions
-fn stdlib_test() -> StdlibModule {
+/// _sifr.test — Test assertion intrinsics
+fn intrinsic_test() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // assert_eq(actual: Any, expected: Any) -> None
@@ -190,16 +238,14 @@ fn stdlib_test() -> StdlibModule {
     // assert_false(value: bool) -> None
     functions.insert("assert_false".to_string(), FunctionType::all_borrow(vec![("value".to_string(), Type::Bool)], Type::None));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.collections — Extended collection types
-/// Since we can't add new types without generics, we use functions that
-/// operate on existing types (list[int] for sets, dict for counters/defaultdicts)
-fn stdlib_collections() -> StdlibModule {
+/// _sifr.collections — Extended collection intrinsics
+fn intrinsic_collections() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // --- Set operations (backed by list[int] with dedup) ---
@@ -278,14 +324,14 @@ fn stdlib_collections() -> StdlibModule {
             ("value".to_string(), Type::Int),
         ], Type::Str));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.bytes — Binary data operations
-fn stdlib_bytes() -> StdlibModule {
+/// _sifr.bytes — Binary data intrinsics
+fn intrinsic_bytes() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // encode_utf8(s: str) -> list[int]
@@ -300,14 +346,14 @@ fn stdlib_bytes() -> StdlibModule {
     // bytes_from_hex(s: str) -> list[int]
     functions.insert("bytes_from_hex".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.time — Time operations
-fn stdlib_time() -> StdlibModule {
+/// _sifr.time — Time intrinsics
+fn intrinsic_time() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // time_now() -> float (epoch seconds)
@@ -322,14 +368,14 @@ fn stdlib_time() -> StdlibModule {
             ("fmt".to_string(), Type::Str),
         ], Type::Str));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.random — Random number generation
-fn stdlib_random() -> StdlibModule {
+/// _sifr.crypto — Random number generation intrinsics
+fn intrinsic_random() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // random_int(min: int, max: int) -> int
@@ -344,14 +390,14 @@ fn stdlib_random() -> StdlibModule {
     // random_choice(items: list[Any]) -> Any
     functions.insert("random_choice".to_string(), FunctionType::all_borrow(vec![("items".to_string(), Type::List(Box::new(Type::Any)))], Type::Any));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.re — Regular expressions
-fn stdlib_re() -> StdlibModule {
+/// _sifr.regex — Regular expression intrinsics
+fn intrinsic_re() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // re_match(pattern: str, text: str) -> bool
@@ -373,14 +419,14 @@ fn stdlib_re() -> StdlibModule {
             ("text".to_string(), Type::Str),
         ], Type::Str));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.hash — Hashing functions
-fn stdlib_hash() -> StdlibModule {
+/// _sifr.crypto — Hashing intrinsics
+fn intrinsic_hash() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // sha256(s: str) -> str (hex digest)
@@ -389,14 +435,14 @@ fn stdlib_hash() -> StdlibModule {
     // md5(s: str) -> str (hex digest)
     functions.insert("md5".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
-    StdlibModule {
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
 }
 
-/// sifr.encoding — Encoding/decoding utilities
-fn stdlib_encoding() -> StdlibModule {
+/// _sifr.crypto — Encoding/decoding intrinsics
+fn intrinsic_encoding() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
     // base64_encode(s: str) -> str
@@ -405,7 +451,123 @@ fn stdlib_encoding() -> StdlibModule {
     // base64_decode(s: str) -> str
     functions.insert("base64_decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
-    StdlibModule {
+    IntrinsicModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// _sifr.sys — Combined system intrinsics (env + os)
+fn intrinsic_sys() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+
+    // env_get(key: str) -> str | None
+    functions.insert("env_get".to_string(), FunctionType::all_borrow(vec![("key".to_string(), Type::Str)], Type::Union(vec![Type::Str, Type::None])));
+
+    // env_set(key: str, value: str) -> None
+    functions.insert("env_set".to_string(), FunctionType::all_borrow(vec![
+            ("key".to_string(), Type::Str),
+            ("value".to_string(), Type::Str),
+        ], Type::None));
+
+    // run_command(cmd: str) -> str
+    functions.insert("run_command".to_string(), FunctionType::all_borrow(vec![("cmd".to_string(), Type::Str)], Type::Str));
+
+    // get_args() -> list[str]
+    functions.insert("get_args".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))));
+
+    IntrinsicModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// _sifr.fs — File system intrinsics (io + os file ops)
+fn intrinsic_fs() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+
+    // read_text(path: str) -> str
+    functions.insert("read_text".to_string(), FunctionType::all_borrow(
+        vec![("path".to_string(), Type::Str)],
+        Type::Str,
+    ));
+
+    // write_text(path: str, content: str) -> None
+    functions.insert("write_text".to_string(), FunctionType::all_borrow(vec![
+            ("path".to_string(), Type::Str),
+            ("content".to_string(), Type::Str),
+        ], Type::None));
+
+    // exists(path: str) -> bool
+    functions.insert("exists".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
+
+    // read_lines(path: str) -> list[str]
+    functions.insert("read_lines".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
+
+    IntrinsicModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// _sifr.crypto — Combined crypto intrinsics (random + hash + encoding)
+fn intrinsic_crypto() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+
+    // random_int(min: int, max: int) -> int
+    functions.insert("random_int".to_string(), FunctionType::all_borrow(vec![
+            ("min".to_string(), Type::Int),
+            ("max".to_string(), Type::Int),
+        ], Type::Int));
+
+    // random_float() -> float
+    functions.insert("random_float".to_string(), FunctionType::all_borrow(vec![], Type::Float));
+
+    // random_choice(items: list[Any]) -> Any
+    functions.insert("random_choice".to_string(), FunctionType::all_borrow(vec![("items".to_string(), Type::List(Box::new(Type::Any)))], Type::Any));
+
+    // sha256(s: str) -> str (hex digest)
+    functions.insert("sha256".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // md5(s: str) -> str (hex digest)
+    functions.insert("md5".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // base64_encode(s: str) -> str
+    functions.insert("base64_encode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // base64_decode(s: str) -> str
+    functions.insert("base64_decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    IntrinsicModule {
+        functions,
+        constants: HashMap::new(),
+    }
+}
+
+/// _sifr.regex — Combined regex intrinsics
+fn intrinsic_regex() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+
+    // re_match(pattern: str, text: str) -> bool
+    functions.insert("re_match".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ], Type::Bool));
+
+    // re_find(pattern: str, text: str) -> str | None
+    functions.insert("re_find".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ], Type::Union(vec![Type::Str, Type::None])));
+
+    // re_replace(pattern: str, replacement: str, text: str) -> str
+    functions.insert("re_replace".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("replacement".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ], Type::Str));
+
+    IntrinsicModule {
         functions,
         constants: HashMap::new(),
     }
