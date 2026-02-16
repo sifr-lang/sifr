@@ -3700,8 +3700,9 @@ impl RustEmitter {
                     if !args.is_empty() {
                         match args[0].ty() {
                             Type::Float => {
+                                self.write("(");
                                 self.emit_expr(&args[0]);
-                                self.write(" as i64");
+                                self.write(") as i64");
                             }
                             Type::Str => {
                                 // int(str) -> Result<i64, String>
@@ -3722,8 +3723,9 @@ impl RustEmitter {
                     if !args.is_empty() {
                         match args[0].ty() {
                             Type::Int => {
+                                self.write("(");
                                 self.emit_expr(&args[0]);
-                                self.write(" as f64");
+                                self.write(") as f64");
                             }
                             Type::Str => {
                                 // float(str) -> Result<f64, String>
@@ -4855,6 +4857,43 @@ impl RustEmitter {
                 self.write("assert!(!(");
                 self.emit_expr(&args[0]);
                 self.write("))");
+            }
+            "assert_almost_eq" => {
+                self.write("assert!((");
+                self.emit_expr(&args[0]);
+                self.write(" - ");
+                self.emit_expr(&args[1]);
+                self.write(").abs() < ");
+                self.emit_expr(&args[2]);
+                self.write(", \"assert_almost_eq failed: {} != {} (tolerance {})\", ");
+                self.emit_expr(&args[0]);
+                self.write(", ");
+                self.emit_expr(&args[1]);
+                self.write(", ");
+                self.emit_expr(&args[2]);
+                self.write(")");
+            }
+            "assert_gt" => {
+                self.write("assert!(");
+                self.emit_expr(&args[0]);
+                self.write(" > ");
+                self.emit_expr(&args[1]);
+                self.write(", \"assert_gt failed: {} is not > {}\", ");
+                self.emit_expr(&args[0]);
+                self.write(", ");
+                self.emit_expr(&args[1]);
+                self.write(")");
+            }
+            "assert_lt" => {
+                self.write("assert!(");
+                self.emit_expr(&args[0]);
+                self.write(" < ");
+                self.emit_expr(&args[1]);
+                self.write(", \"assert_lt failed: {} is not < {}\", ");
+                self.emit_expr(&args[0]);
+                self.write(", ");
+                self.emit_expr(&args[1]);
+                self.write(")");
             }
             // sifr.collections — Set operations
             "new_set" => {

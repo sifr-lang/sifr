@@ -1,2 +1,2 @@
 # sifr.test — Test assertion functions
-from _sifr.test import assert_eq, assert_ne, assert_true, assert_false
+from _sifr.test import assert_eq, assert_ne, assert_true, assert_false, assert_almost_eq, assert_gt, assert_lt

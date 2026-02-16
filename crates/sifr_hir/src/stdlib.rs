@@ -217,6 +217,25 @@ fn intrinsic_test() -> IntrinsicModule {
     // assert_false(value: bool) -> None
     functions.insert("assert_false".to_string(), FunctionType::all_borrow(vec![("value".to_string(), Type::Bool)], Type::None));
 
+    // assert_almost_eq(actual: float, expected: float, tolerance: float) -> None
+    functions.insert("assert_almost_eq".to_string(), FunctionType::all_borrow(vec![
+        ("actual".to_string(), Type::Float),
+        ("expected".to_string(), Type::Float),
+        ("tolerance".to_string(), Type::Float),
+    ], Type::None));
+
+    // assert_gt(a: int, b: int) -> None
+    functions.insert("assert_gt".to_string(), FunctionType::all_borrow(vec![
+        ("a".to_string(), Type::Int),
+        ("b".to_string(), Type::Int),
+    ], Type::None));
+
+    // assert_lt(a: int, b: int) -> None
+    functions.insert("assert_lt".to_string(), FunctionType::all_borrow(vec![
+        ("a".to_string(), Type::Int),
+        ("b".to_string(), Type::Int),
+    ], Type::None));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
