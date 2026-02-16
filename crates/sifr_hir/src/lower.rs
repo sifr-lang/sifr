@@ -59,6 +59,8 @@ struct LowerCtx {
     type_vars: std::collections::HashSet<String>,
     /// Map of generic function names to their type variable names
     generic_functions: HashMap<String, Vec<String>>,
+    /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
+    allow_intrinsic_imports: bool,
 }
 
 impl LowerCtx {
@@ -78,6 +80,7 @@ impl LowerCtx {
             vararg_functions: std::collections::HashSet::new(),
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
+            allow_intrinsic_imports: false,
         }
     }
 
@@ -195,6 +198,8 @@ pub struct ExternalDefs {
     pub functions: std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
     /// Map of module_name -> (class_name -> Type)
     pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
+    /// Map of module_name -> (constant_name -> Type)
+    pub constants: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
 }
 
 /// Lower a parsed module AST into a typed HIR module.
@@ -202,9 +207,21 @@ pub fn lower_module(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>
     lower_module_with_externals(stmts, &ExternalDefs::default())
 }
 
+/// Lower a stdlib .sifr module. Allows _sifr.* intrinsic imports.
+pub fn lower_module_stdlib(stmts: &[Stmt]) -> Result<LoweringResult, Vec<LoweringError>> {
+    let mut ctx = LowerCtx::new();
+    ctx.allow_intrinsic_imports = true;
+    lower_module_impl(stmts, &ExternalDefs::default(), ctx)
+}
+
 /// Lower a parsed module AST into a typed HIR module, with external module definitions.
 pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> Result<LoweringResult, Vec<LoweringError>> {
-    let mut ctx = LowerCtx::new();
+    let ctx = LowerCtx::new();
+    lower_module_impl(stmts, externals, ctx)
+}
+
+/// Internal implementation of module lowering.
+fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx) -> Result<LoweringResult, Vec<LoweringError>> {
 
     // Register built-in functions
     register_builtins(&mut ctx);
@@ -362,9 +379,34 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                 }
 
                 // Block user imports of _sifr.* (internal intrinsics)
+                // Stdlib .sifr files are allowed to import from _sifr.*
                 if module_name.starts_with("_sifr.") {
-                    ctx.error(format!("cannot import from '{}' — _sifr.* modules are internal compiler intrinsics", module_name));
-                    continue;
+                    if !ctx.allow_intrinsic_imports {
+                        ctx.error(format!("cannot import from '{}' — _sifr.* modules are internal compiler intrinsics", module_name));
+                        continue;
+                    }
+                    // Resolve intrinsic imports for stdlib .sifr files
+                    if let Some(intrinsic_module) = crate::stdlib::get_intrinsic_module(&module_name) {
+                        for name in &names {
+                            let local = local_name_for(name);
+                            if let Some(ft) = intrinsic_module.functions.get(name) {
+                                ctx.functions.insert(local, ft.clone());
+                            } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
+                                ctx.scope.define(local, const_ty.clone());
+                            } else {
+                                ctx.error(format!("intrinsic module '{}' has no member '{}'", module_name, name));
+                            }
+                        }
+                        imports.push(HirImport {
+                            module: module_name,
+                            names,
+                            aliases,
+                        });
+                        continue;
+                    } else {
+                        ctx.error(format!("unknown intrinsic module '{}'", module_name));
+                        continue;
+                    }
                 }
 
                 // Check if this is a stdlib import (sifr.*)
@@ -373,53 +415,45 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                 if module_name.starts_with("sifr.") {
                     // Check if there's a pre-compiled stdlib .sifr module in externals
                     let stdlib_module_key = module_name.clone();
-                    let resolved_from_sifr = if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
-                        let mut found_any = false;
+                    let has_module = externals.functions.contains_key(&stdlib_module_key)
+                        || externals.classes.contains_key(&stdlib_module_key)
+                        || externals.constants.contains_key(&stdlib_module_key);
+                    if has_module {
+                        // Resolve each imported name from the stdlib module
                         for name in &names {
                             let local = local_name_for(name);
-                            if let Some(ft) = module_fns.get(name) {
-                                ctx.functions.insert(local, ft.clone());
-                                found_any = true;
-                            }
-                        }
-                        // Also check classes
-                        if let Some(module_classes) = externals.classes.get(&stdlib_module_key) {
-                            for name in &names {
-                                let local = local_name_for(name);
-                                if let Some(class_ty) = module_classes.get(name) {
-                                    ctx.class_types.insert(local.clone(), class_ty.clone());
-                                    if let Type::Class { fields, .. } = class_ty {
-                                        let params: Vec<(String, Type)> = fields.clone();
-                                        let ft = FunctionType::new(params, class_ty.clone());
-                                        ctx.functions.insert(local, ft);
-                                    }
-                                    found_any = true;
+                            let mut found = false;
+                            // Check functions
+                            if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
+                                if let Some(ft) = module_fns.get(name) {
+                                    ctx.functions.insert(local.clone(), ft.clone());
+                                    found = true;
                                 }
                             }
-                        }
-                        found_any
-                    } else {
-                        false
-                    };
-
-                    if resolved_from_sifr {
-                        imports.push(HirImport {
-                            module: module_name,
-                            names,
-                            aliases,
-                        });
-                        continue;
-                    }
-
-                    // Fall back to intrinsic resolution (for modules not yet migrated to .sifr)
-                    if let Some(intrinsic_module) = crate::stdlib::get_stdlib_as_intrinsic(&module_name) {
-                        for name in &names {
-                            let local = local_name_for(name);
-                            if let Some(ft) = intrinsic_module.functions.get(name) {
-                                ctx.functions.insert(local, ft.clone());
-                            } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
-                                ctx.scope.define(local, const_ty.clone());
-                            } else {
+                            // Check classes
+                            if !found {
+                                if let Some(module_classes) = externals.classes.get(&stdlib_module_key) {
+                                    if let Some(class_ty) = module_classes.get(name) {
+                                        ctx.class_types.insert(local.clone(), class_ty.clone());
+                                        if let Type::Class { fields, .. } = class_ty {
+                                            let params: Vec<(String, Type)> = fields.clone();
+                                            let ft = FunctionType::new(params, class_ty.clone());
+                                            ctx.functions.insert(local.clone(), ft);
+                                        }
+                                        found = true;
+                                    }
+                                }
+                            }
+                            // Check constants
+                            if !found {
+                                if let Some(module_consts) = externals.constants.get(&stdlib_module_key) {
+                                    if let Some(const_ty) = module_consts.get(name) {
+                                        ctx.scope.define(local, const_ty.clone());
+                                        found = true;
+                                    }
+                                }
+                            }
+                            if !found {
                                 ctx.error(format!("module '{}' has no member '{}'", module_name, name));
                             }
                         }

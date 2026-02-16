@@ -1,0 +1,2 @@
+# sifr.bytes — Binary data operations
+from _sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex

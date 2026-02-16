@@ -1,0 +1,2 @@
+# sifr.math — Math functions and constants
+from _sifr.math import sqrt, floor, ceil, abs_val, log, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e

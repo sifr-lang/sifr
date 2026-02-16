@@ -1,0 +1,2 @@
+# sifr.re — Regular expressions
+from _sifr.regex import re_match, re_find, re_replace

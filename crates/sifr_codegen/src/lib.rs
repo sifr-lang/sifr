@@ -188,13 +188,13 @@ edition = "2021"
                     deps.push("regex = \"1\"".to_string());
                 }
             }
-            "sifr.hash" => {
+            "sifr.hash" | "sifr.hashlib" => {
                 if !deps.contains(&"sha2 = \"0.10\"".to_string()) {
                     deps.push("sha2 = \"0.10\"".to_string());
                     deps.push("md5 = \"0.7\"".to_string());
                 }
             }
-            "sifr.encoding" => {
+            "sifr.encoding" | "sifr.base64" => {
                 if !deps.contains(&"base64 = \"0.22\"".to_string()) {
                     deps.push("base64 = \"0.22\"".to_string());
                 }

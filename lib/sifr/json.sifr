@@ -1,0 +1,2 @@
+# sifr.json — JSON serialization/deserialization
+from _sifr.json import json_loads, json_dumps
