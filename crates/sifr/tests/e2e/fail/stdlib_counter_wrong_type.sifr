@@ -1,0 +1,8 @@
+# Test: passing wrong type to Counter constructor
+from sifr.collections import Counter
+
+def main():
+    c: Counter = Counter(42)
+    print(c.total())
+
+# expect-error: argument 1 ('data') of function 'Counter': expected 'str', got 'int'

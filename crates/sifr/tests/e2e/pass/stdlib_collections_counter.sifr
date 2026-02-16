@@ -1,0 +1,25 @@
+# Test sifr.collections Counter class — basic construction and read methods
+from sifr.collections import Counter, from_list
+
+def main():
+    # Create Counter from a list of strings
+    c: Counter = from_list(["apple", "banana", "apple", "cherry", "banana", "apple"])
+
+    # Get count for a specific key
+    print(c.get("apple"))
+    print(c.get("banana"))
+    print(c.get("cherry"))
+    print(c.get("missing"))
+
+    # Total count
+    print(c.total())
+
+    # Most common (top 2)
+    print(c.most_common(2))
+
+# expect-stdout: 3
+# expect-stdout: 2
+# expect-stdout: 1
+# expect-stdout: 0
+# expect-stdout: 6
+# expect-stdout: [["apple",3],["banana",2]]

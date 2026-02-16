@@ -107,6 +107,9 @@ todos:
   - id: m27-stdlib-polish
     content: "milestone_stdlib_polish: Add perf_counter/monotonic intrinsics to _sifr.time (std::time::Instant), re-export in sifr.time. Full sifr.timeit CPython API: default_timer + timeit(stmt, number) + repeat(stmt, repeat, number) using existing Callable type. Align stdlib API names with CPython (glob, shutil.copy/move/rmtree, tomllib.load). Add missing E2E pass tests (glob, shutil, tempfile), negative/fail tests. Add _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all). Fix stale lower.rs comment, update parity report."
     status: pending
+  - id: m28-stdlib-classes
+    content: "milestone_stdlib_classes: Prove stdlib class pipeline end-to-end by implementing collections.Counter as a class in lib/sifr/collections.sifr. Add new _sifr.collections intrinsics (counter_total, counter_values, counter_keys, counter_items, counter_increment). Counter wraps existing JSON-encoded HashMap intrinsics, exercises &self/&mut self receiver inference, pub_mode export, ExternalDefs.classes import pipeline. Add from_list factory function. E2E pass tests (construction + methods, mutation), fail tests (wrong types). Demo. Unblocks 12+ modules needing class-based APIs."
+    status: pending
 isProject: false
 ---
 
@@ -287,6 +290,8 @@ flowchart TD
         milestone_stdlib_migration["milestone_stdlib_migration: Stdlib Migration\nPort 13 modules to .sifr,\ndelete emit_stdlib_call"]
         milestone_stdlib_expansion["milestone_stdlib_expansion: Stdlib Expansion\n~14 new modules: algorithms,\nCLI, file utilities"]
         milestone_stdlib_parity["milestone_stdlib_parity: Stdlib Parity\nGap closing, remaining modules,\nparity audit"]
+        milestone_stdlib_polish["milestone_stdlib_polish: Stdlib Polish\nAPI alignment, perf_counter/monotonic,\ntimeit API, test coverage"]
+        milestone_stdlib_classes["milestone_stdlib_classes: Stdlib Classes\ncollections.Counter class,\nclass-in-stdlib pipeline"]
     end
     subgraph phase4 [Phase 4: Ecosystem]
         milestone_async["milestone_async: Async Runtime\nasync/await, tokio,\ntasks, streams"]
@@ -322,7 +327,8 @@ flowchart TD
     milestone_comprehension_v2 --> milestone_generics_impl --> milestone_phase_fixes
     milestone_phase_fixes --> milestone_borrow_default --> milestone_borrow_hardening
     milestone_borrow_hardening --> milestone_intrinsics --> milestone_stdlib_migration --> milestone_stdlib_expansion --> milestone_stdlib_parity
-    milestone_stdlib_parity --> milestone_async --> milestone_networking_stdlib --> milestone_web_db --> milestone_typed_serde
+    milestone_stdlib_parity --> milestone_stdlib_polish --> milestone_stdlib_classes --> milestone_async
+    milestone_async --> milestone_networking_stdlib --> milestone_web_db --> milestone_typed_serde
     milestone_typed_serde --> milestone_crypto_auth --> milestone_web_production --> milestone_redis
     milestone_redis --> milestone_storage --> milestone_email --> milestone_data_processing
     milestone_data_processing --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
@@ -372,7 +378,9 @@ flowchart TD
 - **milestone_intrinsics before milestone_stdlib_migration:** The intrinsics layer (`_sifr.*`) and two-phase compilation pipeline must exist before any stdlib module can be ported to `.sifr` files. This milestone establishes the architecture; migration uses it.
 - **milestone_stdlib_migration before milestone_stdlib_expansion:** All 13 existing stdlib modules must be ported to `.sifr` files (and `emit_stdlib_call` deleted) before adding new modules. This ensures new modules are written against the final architecture, not the legacy codegen path.
 - **milestone_stdlib_expansion before milestone_stdlib_parity:** New pure-Sifr and intrinsic-backed modules (~14) are added before the gap-closing and parity audit. Expansion adds the modules; parity fills in missing functions and validates coverage.
-- **milestone_stdlib_parity before milestone_async:** The stdlib must be comprehensive before the async runtime, which depends on a mature stdlib (logging, collections, I/O, etc.) for real-world async programs.
+- **milestone_stdlib_parity before milestone_stdlib_polish:** Parity adds all remaining modules and fills API gaps. Polish then aligns the API names with CPython, adds missing intrinsics (perf_counter, monotonic), and fills test coverage gaps identified by the parity audit.
+- **milestone_stdlib_polish before milestone_stdlib_classes:** Polish ensures all function-level stdlib APIs are correct and tested before adding the first class-based stdlib module. Classes introduce a new pipeline (class parsing, lowering, export, import) that should build on a stable function-level foundation.
+- **milestone_stdlib_classes before milestone_async:** The stdlib classes milestone proves the class-in-stdlib pipeline end-to-end (collections.Counter) and unblocks 12+ modules needing class-based APIs. The async runtime depends on a mature stdlib with both function and class APIs.
 - **milestone_async before milestone_networking_stdlib:** The async runtime must exist before networking stdlib modules (socket, http, subprocess) that require async I/O primitives.
 - **milestone_networking_stdlib before milestone_web_db:** Networking stdlib modules (socket, http, url) provide the foundation that the web framework and database milestones build on.
 - **milestone_async after Stdlib Architecture Phase:** Async runtime needs the full stdlib (now written in Sifr), a hardened core language, and a complete ownership model in place
@@ -3209,6 +3217,123 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 
 ---
 
+## milestone_stdlib_classes: Class-Based APIs in Sifr Standard Library
+
+**Goal:** Prove the stdlib class pipeline end-to-end by implementing `collections.Counter` as the first class defined in a stdlib `.sifr` file. This unblocks 12+ modules that need class-based APIs to reach CPython parity.
+
+**Full plan:** [issues/milestone_stdlib_classes.md](../../issues/milestone_stdlib_classes.md)
+
+**Context:** The CPython parity audit identified class-based APIs as the single biggest blocker — 12+ modules (argparse, csv, logging, pathlib, graphlib, uuid, collections, datetime, re, tempfile, difflib) need classes. The compiler already supports user-defined classes (constructors, methods, `&self`/`&mut self` inference, inheritance, protocols, `isinstance`), and the driver already exports classes via `ExternalDefs.classes`. However, **no stdlib `.sifr` module has ever defined a class** — the pipeline is wired but unproven.
+
+### Why `Counter` as the Proof-of-Concept
+
+1. **Existing intrinsics:** `_sifr.collections` already has `counter_from_list`, `counter_get`, `counter_most_common` — the Rust backing code exists
+2. **No `Callable`-as-struct-field needed:** Counter stores only `str` (JSON-encoded HashMap), avoiding the `impl Fn` vs `Box<dyn Fn>` blocker
+3. **Full pipeline exercise:** class in `.sifr` → HIR lowering → `ExternalDefs.classes` export → user import → codegen with `pub struct` + `pub fn new()` + methods
+4. **Both receiver types:** `&self` (read: `get`, `total`, `most_common`) and `&mut self` (mutate: `increment`)
+5. **Well-known API:** CPython's `Counter` is familiar and easily testable
+
+### Counter Class API
+
+```python
+class Counter:
+    data: str  # JSON-encoded dict[str, int]
+
+    def __init__(self, data: str):
+        self.data = data
+
+    def get(self, key: str) -> int:
+        return counter_get(self.data, key)
+
+    def most_common(self, n: int) -> str:
+        return counter_most_common(self.data, n)
+
+    def total(self) -> int:
+        return counter_total(self.data)
+
+    def values(self) -> list[int]:
+        return counter_values(self.data)
+
+    def keys(self) -> list[str]:
+        return counter_keys(self.data)
+
+    def items(self) -> str:
+        return counter_items(self.data)
+
+    def increment(self, key: str) -> None:
+        self.data = counter_increment(self.data, key)
+
+# Factory function (matches CPython's Counter(iterable) pattern)
+def from_list(items: list[str]) -> Counter:
+    return Counter(counter_from_list(items))
+```
+
+### New `_sifr.collections` Intrinsics
+
+| Intrinsic | Signature | Rust Implementation |
+| --- | --- | --- |
+| `counter_total` | `(counter: str) -> int` | Parse JSON HashMap, sum values |
+| `counter_values` | `(counter: str) -> list[int]` | Parse JSON HashMap, return values as Vec |
+| `counter_keys` | `(counter: str) -> list[str]` | Parse JSON HashMap, return keys as Vec |
+| `counter_items` | `(counter: str) -> str` | Parse JSON HashMap, return JSON array of `[key, count]` pairs |
+| `counter_increment` | `(counter: str, key: str) -> str` | Parse JSON HashMap, increment key, re-encode |
+
+Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `counter_most_common`.
+
+### Pipeline Verification Points
+
+1. **HIR lowering:** `Counter` class in `collections.sifr` lowered to `HirClass` with fields, methods, receiver inference
+2. **Driver export:** `compile_stdlib()` populates `ExternalDefs.classes["sifr.collections"]["Counter"]` with `Type::Class`
+3. **User import:** `from sifr.collections import Counter` resolves via `externals.classes` lookup, registers constructor
+4. **Codegen:** `pub struct Counter`, `pub fn new(...)`, methods emitted with correct `&self`/`&mut self`
+
+### Files to Change
+
+- `crates/sifr_hir/src/stdlib.rs` — add 5 new intrinsic signatures to `intrinsic_collections()`
+- `crates/sifr_codegen/src/lib.rs` — add codegen for 5 new `_sifr.collections` intrinsics
+- `lib/sifr/collections.sifr` — add `Counter` class + `from_list` factory function
+- `crates/sifr/tests/e2e/pass/stdlib_collections_counter.sifr` — basic Counter construction + method calls
+- `crates/sifr/tests/e2e/pass/stdlib_collections_counter_mutate.sifr` — Counter mutation via `increment`
+- `crates/sifr/tests/e2e/fail/stdlib_counter_wrong_type.sifr` — wrong argument type to Counter
+- `demos/milestone_stdlib_classes_demo.sifr` — demo showcasing Counter class usage
+- `audit/STDLIB_PARITY_MASTER_REPORT.md` — update metrics
+
+### Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+| --- | --- | --- | --- |
+| Class export pipeline has untested edge cases | Medium | High | This milestone specifically exercises and validates this path |
+| Method receiver inference wrong for stdlib classes | Low | Medium | Already proven in user-defined class E2E tests |
+| `pub_mode` doesn't apply correctly to class methods | Low | High | Codegen already handles `pub_mode` for struct, impl, and methods |
+| JSON-encoded HashMap is a performance bottleneck | Low | Low | Acceptable for PoC; future milestones can switch to native dict type |
+
+### What This Unblocks
+
+| Next Class | Module | Additional Compiler Work Needed |
+| --- | --- | --- |
+| `Path` | `sifr.pathlib` | Operator overloading export from stdlib |
+| `Match` | `sifr.re` | None — wraps existing regex intrinsics |
+| `Logger` | `sifr.logging` | None — wraps existing logging intrinsics |
+| `TopologicalSorter` | `sifr.graphlib` | None — pure algorithmic class |
+| `ArgumentParser` | `sifr.argparse` | `Callable`-as-struct-field fix (`Box<dyn Fn>`) |
+| `defaultdict` | `sifr.collections` | `Callable`-as-struct-field fix (`Box<dyn Fn>`) |
+| `datetime`/`timedelta` | `sifr.datetime` | Operator overloading for arithmetic |
+| `DictReader`/`DictWriter` | `sifr.csv` | Iterator protocol |
+
+### Definition of Done (milestone_stdlib_classes)
+
+- `Counter` class defined in `lib/sifr/collections.sifr` with `__init__`, `get`, `most_common`, `total`, `values`, `keys`, `items`, `increment` methods
+- `from_list` factory function works
+- 5 new `_sifr.collections` intrinsics implemented and tested
+- User code can `from sifr.collections import Counter` and use it
+- E2E pass tests for construction + methods, and mutation
+- E2E fail test for wrong argument type
+- `cargo test` passes (zero regressions)
+- Parity report updated
+- Demo: `demos/milestone_stdlib_classes_demo.sifr`
+
+---
+
 ## milestone_async: Async Runtime
 
 **Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that milestone_web_db (web, database) builds on.
@@ -4462,6 +4587,8 @@ PHASE: Stdlib Architecture (after Borrow-by-Default, before Ecosystem):
   milestone_stdlib_migration:  Stdlib Migration        -> Port 13 existing modules to .sifr files, delete emit_stdlib_call, rename hash->hashlib / encoding->base64, zero regressions
   milestone_stdlib_expansion:  Stdlib Expansion        -> ~14 new modules: string, statistics, bisect, heapq, functools, itertools, textwrap, csv, argparse, fnmatch, glob, shutil, tempfile, secrets
   milestone_stdlib_parity:     Stdlib Parity           -> Expand existing modules (~20 math fns, os, re, random, io, collections, time, hashlib, base64, itertools, functools), add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), parity audit
+  milestone_stdlib_polish:     Stdlib Polish           -> Align API names with CPython (glob, shutil, tomllib), add perf_counter/monotonic intrinsics, full timeit CPython API, E2E pass/fail test coverage, fix stale comments, update parity report
+  milestone_stdlib_classes:    Stdlib Classes          -> Prove class-in-stdlib pipeline with collections.Counter, _sifr.collections intrinsics, &self/&mut self receivers, pub_mode export, ExternalDefs.classes import, from_list factory, E2E tests
 
 PHASE 4 - Ecosystem:
   milestone_async:              Async Runtime           -> async/await, tokio, tasks, async streams
@@ -4483,7 +4610,7 @@ PHASE 5 - Polish:
   milestone_ecosystem:  Package Ecosystem          -> Registry, incremental compilation, REPL
 ```
 
-After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_stdlib_hardening (end of Hardening Phase 1), the core language compiles 80%+ of real-world Python programs -- codegen bugs are fixed, narrowing/ownership/mutation work correctly, iteration and builtins match Python semantics, recursive types are supported, and the stdlib is production-ready. After milestone_phase_fixes (end of Language Hardening), the language is fully hardened -- nested functions, forward references, generics, comprehensions, union operations, and all Phase 2/3 bugs are fixed, enabling ~50-60% of LeetCode problems to compile. After milestone_borrow_hardening (end of Borrow-by-Default), Sifr uses borrow-by-default for function parameters with explicit `mut`/`own` opt-in -- matching how 95% of stdlib functions already work internally. The ownership model is unified, exclusivity is enforced, and the foundation for fearless concurrency is complete. After milestone_stdlib_parity (end of Stdlib Architecture), Sifr's stdlib is rewritten as `.sifr` files using a three-tier hybrid architecture (Rust intrinsics -> Sifr stdlib -> user code), with 37 modules covering the vast majority of what Python developers use daily -- algorithms, file utilities, CLI parsing, data formats, cryptographic hashing, and more. The legacy `emit_stdlib_call` codegen path is deleted, and all stdlib modules uphold the safety contract (Result/Option for fallible ops, no panics, borrow-by-default). After milestone_web_db, Sifr can build basic web applications with databases. After milestone_typed_serde, Sifr has automatic typed serialization and typed web request/response handling. After milestone_crypto_auth, Sifr has password hashing, JWT, encryption, and secure random -- the auth building blocks. After milestone_web_production, Sifr has production-grade logging, request tracing, rate limiting, and CORS. After milestone_redis, Sifr has native caching, session storage, and pub/sub. After milestone_storage, Sifr can upload/download files to S3-compatible object storage. After milestone_email, Sifr can send transactional emails. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
+After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_stdlib_hardening (end of Hardening Phase 1), the core language compiles 80%+ of real-world Python programs -- codegen bugs are fixed, narrowing/ownership/mutation work correctly, iteration and builtins match Python semantics, recursive types are supported, and the stdlib is production-ready. After milestone_phase_fixes (end of Language Hardening), the language is fully hardened -- nested functions, forward references, generics, comprehensions, union operations, and all Phase 2/3 bugs are fixed, enabling ~50-60% of LeetCode problems to compile. After milestone_borrow_hardening (end of Borrow-by-Default), Sifr uses borrow-by-default for function parameters with explicit `mut`/`own` opt-in -- matching how 95% of stdlib functions already work internally. The ownership model is unified, exclusivity is enforced, and the foundation for fearless concurrency is complete. After milestone_stdlib_classes (end of Stdlib Architecture), Sifr's stdlib is rewritten as `.sifr` files using a three-tier hybrid architecture (Rust intrinsics -> Sifr stdlib -> user code), with 37+ modules covering the vast majority of what Python developers use daily -- algorithms, file utilities, CLI parsing, data formats, cryptographic hashing, and more. The legacy `emit_stdlib_call` codegen path is deleted, API names are aligned with CPython, test coverage includes both pass and fail cases, and the class-in-stdlib pipeline is proven end-to-end (collections.Counter). All stdlib modules uphold the safety contract (Result/Option for fallible ops, no panics, borrow-by-default). After milestone_web_db, Sifr can build basic web applications with databases. After milestone_typed_serde, Sifr has automatic typed serialization and typed web request/response handling. After milestone_crypto_auth, Sifr has password hashing, JWT, encryption, and secure random -- the auth building blocks. After milestone_web_production, Sifr has production-grade logging, request tracing, rate limiting, and CORS. After milestone_redis, Sifr has native caching, session storage, and pub/sub. After milestone_storage, Sifr can upload/download files to S3-compatible object storage. After milestone_email, Sifr can send transactional emails. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
 
 ---
 
