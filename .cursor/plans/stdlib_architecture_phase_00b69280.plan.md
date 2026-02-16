@@ -31,49 +31,49 @@ todos:
     status: completed
   - id: m2-implement
     content: Implement milestone_stdlib_migration on feat/milestone-stdlib-migration branch
-    status: in_progress
+    status: completed
   - id: m2-demo
     content: Create and verify demos/milestone_stdlib_migration_demo.sifr
-    status: pending
+    status: completed
   - id: m2-pr
     content: Create PR(s) for milestone_stdlib_migration, review, and merge
-    status: pending
+    status: completed
   - id: m3-prds
     content: Create PRDS for milestone_stdlib_expansion (issues/milestone_stdlib_expansion.md)
-    status: pending
+    status: completed
   - id: m3-epic
     content: Create Epic ticket on GitHub board for milestone_stdlib_expansion
-    status: pending
+    status: completed
   - id: m3-tasks
     content: Break milestone_stdlib_expansion into task tickets (9 pure Sifr modules, 5 intrinsic-backed modules)
-    status: pending
+    status: completed
   - id: m3-implement
     content: Implement milestone_stdlib_expansion on feat/milestone-stdlib-expansion branch
-    status: pending
+    status: completed
   - id: m3-demo
     content: Create and verify demos/milestone_stdlib_expansion_demo.sifr
-    status: pending
+    status: completed
   - id: m3-pr
     content: Create PR(s) for milestone_stdlib_expansion, review, and merge
-    status: pending
+    status: completed
   - id: m4-prds
     content: Create PRDS for milestone_stdlib_parity (issues/milestone_stdlib_parity.md)
-    status: pending
+    status: completed
   - id: m4-epic
     content: Create Epic ticket on GitHub board for milestone_stdlib_parity
-    status: pending
+    status: completed
   - id: m4-tasks
     content: Break milestone_stdlib_parity into task tickets (expand existing, new modules, parity audit)
-    status: pending
+    status: completed
   - id: m4-implement
     content: Implement milestone_stdlib_parity on feat/milestone-stdlib-parity branch
-    status: pending
+    status: completed
   - id: m4-demo
     content: Create and verify demos/milestone_stdlib_parity_demo.sifr
-    status: pending
+    status: completed
   - id: m4-pr
     content: Create PR(s) for milestone_stdlib_parity, review, and merge
-    status: pending
+    status: completed
 isProject: false
 ---
 
