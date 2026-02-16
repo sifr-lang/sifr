@@ -105,7 +105,7 @@ todos:
     content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), run comprehensive parity audit"
     status: pending
   - id: m27-stdlib-polish
-    content: "milestone_stdlib_polish: Align stdlib API names with architecture plan, add missing E2E pass tests (glob, shutil, tempfile), add negative/fail tests for stdlib error paths, fix stale lower.rs comment, add missing _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all), update parity report"
+    content: "milestone_stdlib_polish: Align stdlib API names with CPython (glob, shutil.copy/move/rmtree, timeit.default_timer, tomllib.load), add missing E2E pass tests (glob, shutil, tempfile), add negative/fail tests for stdlib error paths, fix stale lower.rs comment, add _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all), update parity report"
     status: pending
 isProject: false
 ---
@@ -3141,12 +3141,12 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 
 **Context:** The Stdlib Architecture Phase delivered 37 modules with full compilation pipeline support. However, a reviewer audit identified: (1) function names that don't match the plan, (2) missing E2E tests for 3 modules, (3) thin negative/fail test coverage, and (4) a stale comment in lower.rs. The safety contract (Result/Option) and class-based APIs are deferred to future milestones.
 
-### API Alignment (renames)
+### API Alignment (renames to match CPython)
 
-- `glob.sifr`: `glob_match` → `glob`
-- `shutil.sifr`: `copy_file` → `copy`, `move_file` → `move`, add `rmtree`
-- `timeit.sifr`: `timer` → `timeit`, `elapsed` → `repeat`
-- `tomllib.sifr`: add `load` (file-based parsing)
+- `glob.sifr`: `glob_match` → `glob` (matches `glob.glob()`)
+- `shutil.sifr`: `copy_file` → `copy`, `move_file` → `move`, add `rmtree` (matches `shutil.copy/move/rmtree`)
+- `timeit.sifr`: `timer` → `default_timer` (matches `timeit.default_timer()`); real `timeit()`/`repeat()` deferred until closures-as-arguments are supported
+- `tomllib.sifr`: add `load(path)` (pragmatic adaptation of `tomllib.load(fp)` since Sifr lacks file objects)
 
 ### New Intrinsics
 

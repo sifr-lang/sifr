@@ -39,7 +39,7 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 
 ##### Features In
 
-1. Rename module functions to align with architecture plan where feasible without classes
+1. Rename module functions to match CPython's API names where feasible without classes
 2. Add missing E2E pass tests for glob, shutil, tempfile
 3. Add negative/fail E2E tests for stdlib error paths
 4. Fix stale comment in lower.rs
@@ -55,6 +55,7 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 | ArgumentParser class | Requires class definitions in stdlib .sifr files |
 | Logger/getLogger class API | Requires class definitions in stdlib .sifr files |
 | Path class with operator overloading | Requires class + operator support in stdlib |
+| timeit.timeit() / timeit.repeat() | CPython's API takes a callable to time; requires closure-as-argument support |
 
 ---
 
@@ -66,7 +67,7 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 | AC-2 | shutil.sifr exports `copy`, `move`, `rmtree` with `_sifr.fs` intrinsics and has an E2E pass test |
 | AC-3 | tempfile.sifr has an E2E pass test |
 | AC-4 | At least 5 new stdlib fail tests covering bad imports, type mismatches, and invalid usage |
-| AC-5 | timeit.sifr exports `timeit` and `repeat` (matching plan) |
+| AC-5 | timeit.sifr renames `timer` → `default_timer` to match CPython's timer accessor |
 | AC-6 | tomllib.sifr exports `loads` and `load` |
 | AC-7 | lower.rs fallback comment is updated to reflect current behavior |
 | AC-8 | All existing tests pass (zero regressions) |
@@ -78,11 +79,13 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 
 ### 2.1 Functional Requirements
 
-**API renames (no behavior change, just function name alignment):**
-- `glob.sifr`: rename `glob_match` to `glob`
-- `shutil.sifr`: rename `copy_file` to `copy`, `move_file` to `move`, add `rmtree`
-- `timeit.sifr`: rename `timer` to `timeit`, `elapsed` to `repeat` (or add aliases)
-- `tomllib.sifr`: add `load` function (reads file then parses)
+**API renames (matching CPython's function names):**
+- `glob.sifr`: rename `glob_match` → `glob` (matches `glob.glob()`)
+- `shutil.sifr`: rename `copy_file` → `copy`, `move_file` → `move`, add `rmtree` (matches `shutil.copy()`, `shutil.move()`, `shutil.rmtree()`)
+- `timeit.sifr`: rename `timer` → `default_timer` (matches `timeit.default_timer()`); keep `elapsed` as-is (Sifr utility, no CPython equivalent)
+- `tomllib.sifr`: add `load` function that reads a file path then parses (pragmatic adaptation of `tomllib.load(fp)` since Sifr lacks file objects)
+
+**Note:** CPython's `timeit.timeit()` and `timeit.repeat()` take a callable to time, which requires closure-as-argument support. These are deferred until that language feature is available.
 
 **New intrinsics:**
 - `_sifr.fs.copy_file(src: str, dst: str) -> None` -- wraps `std::fs::copy`
@@ -103,10 +106,10 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 
 ### 2.2 Files to Change
 
-- `lib/sifr/glob.sifr` -- rename function
-- `lib/sifr/shutil.sifr` -- rename functions, add rmtree
-- `lib/sifr/timeit.sifr` -- rename functions
-- `lib/sifr/tomllib.sifr` -- add load function
+- `lib/sifr/glob.sifr` -- rename `glob_match` → `glob`
+- `lib/sifr/shutil.sifr` -- rename `copy_file` → `copy`, `move_file` → `move`, add `rmtree`
+- `lib/sifr/timeit.sifr` -- rename `timer` → `default_timer`
+- `lib/sifr/tomllib.sifr` -- add `load` function
 - `crates/sifr_hir/src/stdlib.rs` -- add copy_file, walk_dir, rmdir_all intrinsics
 - `crates/sifr_codegen/src/lib.rs` -- add codegen for new intrinsics
 - `crates/sifr_hir/src/lower.rs` -- fix stale comment
@@ -123,7 +126,7 @@ Note: The safety contract (Result/Option for fallible ops) and class-based APIs 
 | AC-2 | E2E pass | copy creates duplicate, move removes source | N/A |
 | AC-3 | E2E pass | mkstemp creates file, mkdtemp creates dir | N/A |
 | AC-4 | E2E fail | N/A | Bad imports, wrong types, missing functions |
-| AC-5 | E2E pass | timeit returns timing, repeat runs N times | N/A |
+| AC-5 | E2E pass | default_timer returns current time | N/A |
 | AC-6 | E2E pass | loads parses string, load reads file | N/A |
 | AC-7 | Code review | Comment matches behavior | N/A |
 | AC-8 | cargo test | All 340+ tests pass | N/A |
