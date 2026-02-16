@@ -27,7 +27,7 @@ The `with` statement was implemented in `milestone_generators` but only as a min
 Fix:
 - Define `ContextManager` as a built-in protocol with `__enter__(self) -> Self` and `__exit__(self) -> None`
 - Lowering: check protocol compliance, bind variable to `__enter__()` result, handle multiple items
-- Codegen: emit `__enter__()` call at scope start, `__exit__()` call at scope end
+- Codegen: emit `__enter__()` call at scope start, `__exit__()` call on all exit paths (normal completion, early `return`, `break`, `continue`, error propagation) — maps to Rust `Drop` semantics
 
 ### `Callable`-as-Struct-Field Fix
 
@@ -38,6 +38,7 @@ Fix:
 - `from sifr.nonexistent import foo` produces `"unknown stdlib module 'sifr.nonexistent'"`
 - `from mymodule import bar` (nonexistent) produces `"unknown module 'mymodule'"`
 - `with X() as y:` calls `__enter__()` and `__exit__()` correctly
+- `__exit__()` is called on all exit paths: normal completion, early `return`, `break`, `continue`, and error propagation (maps to Rust `Drop` semantics)
 - `with A() as a, B() as b:` handles all context managers
 - Non-`ContextManager` type in `with` produces a compile error
 - A class with a `Callable` field compiles correctly (struct field emits `Box<dyn Fn(...)>`)

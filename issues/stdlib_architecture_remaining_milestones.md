@@ -37,17 +37,19 @@ This plan synthesizes findings from three audit documents:
 ```
 milestone_stdlib_classes (done)
     │
-    ├── m29: milestone_compiler_hardening   (S — import errors + with statement)
+    ├── m29:   milestone_compiler_hardening   (S-M — import errors + with protocol + Callable fix)
     │
-    ├── m30: milestone_test_infra           (S — test infrastructure)
+    ├── m29.5: milestone_lazy_iterators       (M — lazy state machine codegen for generators)
     │
-    ├── m31: milestone_stdlib_functions     (M — pure-Sifr + intrinsic function additions)
+    ├── m30:   milestone_test_infra           (S — test infrastructure)
     │
-    ├── m32: milestone_stdlib_naming        (S — API naming alignment)
+    ├── m31:   milestone_stdlib_functions     (M — pure-Sifr + intrinsic additions + generic stdlib)
     │
-    ├── m33: milestone_stdlib_class_rollout (L — 5 new stdlib classes)
+    ├── m32:   milestone_stdlib_naming        (S — API naming alignment)
     │
-    └── m34: milestone_cpython_tests        (M — port CPython test assertions)
+    ├── m33:   milestone_stdlib_class_rollout (L — 6 new stdlib classes incl. datetime)
+    │
+    └── m34:   milestone_cpython_tests        (M — port CPython test assertions)
 ```
 
 **CPython test suite reference:** `/Users/yaseralnajjar/work/sifr/cpython/` — the CPython source tree used as the authoritative behavioral reference. Test files live at `Lib/test/test_<module>.py`. External test data (e.g., `Lib/test/mathdata/math_testcases.txt`) can be mined for additional test vectors.
@@ -72,9 +74,9 @@ milestone_stdlib_classes → m29 (compiler_hardening) → m29.5 (lazy_iterators)
 
 ---
 
-## m29: milestone_compiler_hardening — Import Errors and Context Managers
+## m29: milestone_compiler_hardening — Import Errors, Context Managers, and Callable Fix
 
-**Goal:** Fix two compiler correctness gaps that affect developer experience and block stdlib features: (1) importing from a nonexistent module silently fails instead of producing a clear error, and (2) the `with` statement is incomplete — it's syntactic sugar for scoped blocks but doesn't implement the Python context manager protocol (`__enter__`/`__exit__`).
+**Goal:** Fix three compiler correctness gaps: (1) importing from a nonexistent module silently fails instead of producing a clear error, (2) the `with` statement is incomplete — it's syntactic sugar for scoped blocks but doesn't implement the Python context manager protocol (`__enter__`/`__exit__`), and (3) `Callable` types emit `impl Fn(...)` which is invalid in Rust struct fields — needs `Box<dyn Fn(...)>`.
 
 **Size:** Small-Medium (2-3 days)
 
@@ -162,18 +164,32 @@ Note: Python's `__exit__` takes `(exc_type, exc_val, exc_tb)` and can suppress e
 - `crates/sifr/tests/e2e/pass/with_multiple.sifr` — `with A() as a, B() as b:` — verify both context managers work
 - `crates/sifr/tests/e2e/fail/with_non_context_manager.sifr` — using a type without `__enter__`/`__exit__` in `with` should produce a compile error
 
+### Issue 3: `Callable`-as-Struct-Field Emits Invalid Rust
+
+`Callable` types currently emit `impl Fn(...)` via `rust_type()` in `types.rs` (line 293). This is valid for function parameters but **invalid in Rust struct fields** — Rust requires a concrete or boxed type. Fix: when `Callable` appears in a struct field context, emit `Box<dyn Fn(...)>` instead of `impl Fn(...)`.
+
+**What this unblocks:** `argparse.ArgumentParser`, `collections.defaultdict`, and `timeit.Timer` — all of which need to store callbacks as struct fields.
+
+**Files to change:**
+- `crates/sifr_type_system/src/types.rs` — `rust_type()` for `Type::Callable` (line 293): add context parameter or separate method for struct field emission
+
+**E2E tests:**
+- `crates/sifr/tests/e2e/pass/callable_struct_field.sifr` — class with a `Callable` field, verify it compiles and works
+
 ### Files to Change
 
 - `crates/sifr_hir/src/lower.rs` — import error reporting (lines 422-509), `with` lowering (lines 1681-1706)
 - `crates/sifr_codegen/src/lib.rs` — `with` codegen (lines 2379-2401)
+- `crates/sifr_type_system/src/types.rs` — `Callable` `rust_type()` for struct field context
 - Possibly `crates/sifr_hir/src/hir.rs` — update `HirStmt::With` to carry `__enter__`/`__exit__` method info
-- 2-3 new E2E pass tests, 2-3 new E2E fail tests
+- 3-4 new E2E pass tests, 2-3 new E2E fail tests
 - Update 1 existing fail test (`stdlib_invalid_module.sifr`)
 
 ### What This Unblocks
 
 - **Proper import errors** improve developer experience for every subsequent milestone — when adding new stdlib functions/classes (m31-m33), typos in import statements will be caught immediately instead of producing confusing downstream errors.
-- **`with` statement** unblocks `io.open()` as a context manager, `tempfile.NamedTemporaryFile`, and any future stdlib class that manages resources. This was previously listed as a deferred blocker.
+- **`with` statement** unblocks `io.open()` as a context manager, `tempfile.NamedTemporaryFile`, and any future stdlib class that manages resources.
+- **`Callable`-as-struct-field** unblocks `argparse.ArgumentParser`, `collections.defaultdict`, and `timeit.Timer`.
 
 ### Definition of Done
 
@@ -181,10 +197,13 @@ Note: Python's `__exit__` takes `(exc_type, exc_val, exc_tb)` and can suppress e
 - `from mymodule import bar` (when `mymodule` doesn't exist) produces `"unknown module 'mymodule'"`
 - Existing import error for bad members still works: `from sifr.math import nonexistent` → `"module 'sifr.math' has no member 'nonexistent'"`
 - `with X() as y:` calls `X().__enter__()` and binds result to `y`, calls `__exit__()` at scope end
+- `__exit__()` is called on all exit paths: normal completion, early `return`, `break`, `continue`, and error propagation (maps to Rust `Drop` semantics)
 - `with A() as a, B() as b:` handles all context managers (not just the first)
 - Using a non-`ContextManager` type in `with` produces a compile error
+- A class with a `Callable` field compiles correctly (struct field emits `Box<dyn Fn(...)>`)
 - All existing E2E tests pass (zero regressions)
-- New E2E tests for both import errors and `with` statement
+- New E2E tests: `with_enter_exit`, `with_multiple`, `callable_struct_field`
+- New E2E fail tests: `with_non_context_manager`, `import_nonexistent_local`
 
 ---
 
@@ -1003,11 +1022,12 @@ Per the CPython test portability research:
 
 | Milestone | ID | Size | New Functions | New Intrinsics | New Tests | Key Deliverable |
 |---|---|---|---|---|---|---|
-| Compiler Hardening | m29 | S-M | 0 | 0 | ~6 assertions | Import error reporting, `with` protocol |
+| Compiler Hardening | m29 | S-M | 0 | 0 | ~8 assertions | Import errors, `with` protocol, `Callable` struct field fix |
+| Lazy Iterators | m29.5 | M | 0 | 0 | ~6 assertions | Lazy state machine codegen for generators |
 | Test Infrastructure | m30 | S | 2 (`pvariance`, `pstdev`) | 3 | ~10 assertions | `assert_almost_eq`, variance bug fix |
-| Stdlib Functions | m31 | M | ~25 | ~12 | ~40 assertions | Close function-level gaps |
+| Stdlib Functions | m31 | M | ~25 | ~12 | ~40 assertions | Function gaps + generic `bisect`/`heapq`/`itertools` |
 | Naming Alignment | m32 | S | 0 (renames) | 0 | ~0 (updates) | CPython-compatible names |
-| Class Rollout | m33 | L | 5 classes | ~5 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID |
+| Class Rollout | m33 | L | 6 classes | ~5 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID, datetime/timedelta |
 | CPython Tests | m34 | M | 0 | 0 | ~500 assertions | Behavioral validation against CPython |
 
 **Cumulative impact:**
@@ -1016,12 +1036,15 @@ Per the CPython test portability research:
 |---|---|---|
 | Stdlib test assertions | ~160 | ~750+ |
 | Stdlib functions (across all modules) | ~120 | ~170+ |
-| Class-based APIs | 1 (Counter) | 6 (+ Path, Logger, Match, TopologicalSorter, UUID) |
+| Class-based APIs | 1 (Counter) | 7 (+ Path, Logger, Match, TopologicalSorter, UUID, datetime, timedelta) |
+| Generic stdlib functions | 0 | `bisect`, `heapq`, `itertools` use `TypeVar` |
 | Modules with CPython-compatible names | ~5 | ~30+ |
 | Math function coverage | ~85% | ~95% |
 | Average module coverage | ~35% | ~55% |
 | Import error quality | Silent failures for nonexistent modules | Clear "unknown module" errors |
-| `with` statement | Scoped block only (no protocol) | Full `__enter__`/`__exit__` protocol |
+| `with` statement | Scoped block only (no protocol) | Full `__enter__`/`__exit__` protocol with cleanup on all exits |
+| `Callable` in struct fields | Compile error (`impl Fn`) | Works via `Box<dyn Fn(...)>` |
+| Generators | Eager (`Vec<T>`) | Lazy iterators via state machine |
 
 ---
 
