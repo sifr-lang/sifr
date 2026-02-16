@@ -1,14 +1,63 @@
-# Modules & Imports Audit Report
+# Post-Hardening Audit Report: Modules & Imports
 
-**4 PASS / 1 FAIL** out of 5 tests.
+**Date:** February 16, 2026  
+**Scope:** 5 test files in `audit/modules_and_imports/`  
+**Context:** Post borrow-by-default phase
 
-## Issues Found
+---
 
-### Issue 1: `import X as alias` Not Supported
-**Test:** 03 | `from sifr.math import sqrt as square_root` gives `undefined function: 'square_root'`. Import aliasing doesn't work.
+## Summary
 
-## What Works
-- `import sifr.math` (bare import, parses but no qualified access `sifr.math.X`)
-- `from sifr.math import sqrt, floor, ceil, pi` (named imports from stdlib)
-- Multiple `from` imports from different modules in same file
-- `from sifr.json import json_dumps` (cross-module imports)
+| Status | Count | Percentage |
+|--------|-------|------------|
+| **PASS** | 5 | 100% |
+| **Fail** | 0 | 0% |
+| **Total** | 5 | 100% |
+
+---
+
+## Passing Tests (5)
+
+All tests compile and run correctly after the borrow-by-default phase:
+
+| # | Test | Notes |
+|---|------|-------|
+| 01 | `01_basic_import.sifr` | Basic import |
+| 02 | `02_from_import.sifr` | From-import syntax |
+| 03 | `03_import_as.sifr` | Import alias |
+| 04 | `04_multi_file.sifr` | Multi-file modules |
+| 05 | `05_stdlib_imports.sifr` | Standard library imports |
+
+---
+
+## Failure Categories
+
+None. All 5 tests pass.
+
+---
+
+## Improvements Since Last Audit (February 15, 2026)
+
+Previous result: **4 PASS, 1 Fail (Rust compile)**.
+
+| Test | Previous | Current | What Changed |
+|------|----------|---------|--------------|
+| `03_import_as.sifr` | FAIL (Rust) — codegen referenced original name instead of alias | PASS | Import alias codegen was fixed; `import X as Y` now correctly emits the alias name in generated Rust |
+
+---
+
+## Remaining Issues
+
+None. All 5 tests pass.
+
+---
+
+## Test File Index
+
+| File | Status | Root Cause |
+|------|--------|------------|
+| `01_basic_import.sifr` | PASS | — |
+| `02_from_import.sifr` | PASS | — |
+| `03_import_as.sifr` | PASS | — |
+| `04_multi_file.sifr` | PASS | — |
+| `05_stdlib_imports.sifr` | PASS | — |
