@@ -92,6 +92,18 @@ todos:
   - id: m22-borrow-hardening
     content: "milestone_borrow_hardening: Add mutable borrow exclusivity checking, improve error messages for borrow violations, update 50 borrowing audit tests, add new E2E pass/fail tests, add parser snapshot tests for mut/own edge cases, add multi-module convention tests, update stdlib collections for mut params, update architecture docs."
     status: pending
+  - id: m23-intrinsics
+    content: "milestone_intrinsics: Rewire stdlib plumbing -- _sifr.* intrinsics layer, stdlib .sifr file embedding via include_str!, two-phase compilation pipeline, block user imports of _sifr.*, proof-of-concept with sifr.test"
+    status: pending
+  - id: m24-stdlib-migration
+    content: "milestone_stdlib_migration: Port all 13 existing stdlib modules from Rust codegen to .sifr files (env, bytes, base64, math, hashlib, io, os, json, time, random, re, collections, test), delete emit_stdlib_call, zero regressions"
+    status: pending
+  - id: m25-stdlib-expansion
+    content: "milestone_stdlib_expansion: Add ~14 new pure-Sifr and intrinsic-backed modules (string, statistics, bisect, heapq, functools, itertools, textwrap, csv, argparse, fnmatch, glob, shutil, tempfile, secrets)"
+    status: pending
+  - id: m26-stdlib-parity
+    content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), run comprehensive parity audit"
+    status: pending
 isProject: false
 ---
 
@@ -241,7 +253,7 @@ flowchart TD
         milestone_core_stdlib["milestone_core_stdlib: Core Stdlib\nI/O, JSON, env, os,\ntoml, collections, open"]
         milestone_test_runner["milestone_test_runner: Test Runner\nsifr test, assertions,\ndiscovery, parallel"]
         milestone_ext_collections["milestone_ext_collections: Extended Collections\nfrozenset, Counter,\ndefaultdict, bytes"]
-        milestone_ext_stdlib["milestone_ext_stdlib: Extended Stdlib\nmath, time, random, regex,\nhash, encoding, stream, log"]
+        milestone_ext_stdlib["milestone_ext_stdlib: Extended Stdlib\nmath, time, random, regex,\nhashlib, base64, stream, logging"]
     end
     subgraph phaseHardening [Phase: Language Hardening]
         milestone_codegen_fixes["milestone_codegen_fixes: Codegen Fixes\nTuple indexing, union returns,\nint/int, print None, escapes"]
@@ -267,8 +279,15 @@ flowchart TD
         milestone_borrow_default["milestone_borrow_default: Borrow Default\nParamConvention enum,\nmut/own syntax, codegen"]
         milestone_borrow_hardening["milestone_borrow_hardening: Borrow Hardening\nExclusivity checks,\nerror messages, tests"]
     end
+    subgraph phaseStdlibArch [Phase: Stdlib Architecture]
+        milestone_intrinsics["milestone_intrinsics: Intrinsics Layer\n_sifr.* primitives, .sifr embedding,\ntwo-phase compilation"]
+        milestone_stdlib_migration["milestone_stdlib_migration: Stdlib Migration\nPort 13 modules to .sifr,\ndelete emit_stdlib_call"]
+        milestone_stdlib_expansion["milestone_stdlib_expansion: Stdlib Expansion\n~14 new modules: algorithms,\nCLI, file utilities"]
+        milestone_stdlib_parity["milestone_stdlib_parity: Stdlib Parity\nGap closing, remaining modules,\nparity audit"]
+    end
     subgraph phase4 [Phase 4: Ecosystem]
         milestone_async["milestone_async: Async Runtime\nasync/await, tokio,\ntasks, streams"]
+        milestone_networking_stdlib["milestone_networking_stdlib: Networking Stdlib\nsocket, http, subprocess,\nurl parsing"]
         milestone_web_db["milestone_web_db: Web + Database\naxum, reqwest, sqlx,\ngraceful shutdown, health"]
         milestone_typed_serde["milestone_typed_serde: Typed Serialization\nAuto serde, Json/Path/Query,\nform/multipart, file uploads"]
         milestone_crypto_auth["milestone_crypto_auth: Crypto + Auth\nArgon2/Bcrypt, JWT,\nAES-GCM, HMAC, secrets"]
@@ -299,7 +318,8 @@ flowchart TD
     milestone_narrowing_v3 --> milestone_union_ops --> milestone_subscript_v2 --> milestone_comprehension_v2
     milestone_comprehension_v2 --> milestone_generics_impl --> milestone_phase_fixes
     milestone_phase_fixes --> milestone_borrow_default --> milestone_borrow_hardening
-    milestone_borrow_hardening --> milestone_async --> milestone_web_db --> milestone_typed_serde
+    milestone_borrow_hardening --> milestone_intrinsics --> milestone_stdlib_migration --> milestone_stdlib_expansion --> milestone_stdlib_parity
+    milestone_stdlib_parity --> milestone_async --> milestone_networking_stdlib --> milestone_web_db --> milestone_typed_serde
     milestone_typed_serde --> milestone_crypto_auth --> milestone_web_production --> milestone_redis
     milestone_redis --> milestone_storage --> milestone_email --> milestone_data_processing
     milestone_data_processing --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
@@ -345,8 +365,14 @@ flowchart TD
 - **milestone_phase_fixes before milestone_borrow_default:** The language must be fully hardened before changing the default parameter passing convention. Borrow-by-default is a semantic change that affects every user-defined function -- it must build on a stable foundation.
 - **milestone_borrow_default before milestone_async:** Borrow-by-default is a prerequisite for fearless concurrency. The `own` keyword makes ownership transfer explicit at task spawn boundaries. Without it, milestone_async would need to re-implement parameter convention logic.
 - **milestone_borrow_hardening after milestone_borrow_default:** Exclusivity checking and error messages build on the working borrow-by-default codegen. Tests validate the complete model.
-- **milestone_borrow_hardening before milestone_async:** The ownership model must be fully hardened (with exclusivity enforcement) before async/await, which depends on Send/Sync checking that requires knowing borrow vs own at every point.
-- **milestone_async after Borrow-by-Default:** Async runtime needs the full stdlib, a hardened core language, and a complete ownership model in place
+- **milestone_borrow_hardening before milestone_intrinsics:** The ownership model must be fully hardened (with exclusivity enforcement) before rewriting the stdlib architecture. Stdlib `.sifr` files must be written against the final borrow-by-default semantics -- retrofitting convention annotations after the fact would be error-prone and wasteful.
+- **milestone_intrinsics before milestone_stdlib_migration:** The intrinsics layer (`_sifr.*`) and two-phase compilation pipeline must exist before any stdlib module can be ported to `.sifr` files. This milestone establishes the architecture; migration uses it.
+- **milestone_stdlib_migration before milestone_stdlib_expansion:** All 13 existing stdlib modules must be ported to `.sifr` files (and `emit_stdlib_call` deleted) before adding new modules. This ensures new modules are written against the final architecture, not the legacy codegen path.
+- **milestone_stdlib_expansion before milestone_stdlib_parity:** New pure-Sifr and intrinsic-backed modules (~14) are added before the gap-closing and parity audit. Expansion adds the modules; parity fills in missing functions and validates coverage.
+- **milestone_stdlib_parity before milestone_async:** The stdlib must be comprehensive before the async runtime, which depends on a mature stdlib (logging, collections, I/O, etc.) for real-world async programs.
+- **milestone_async before milestone_networking_stdlib:** The async runtime must exist before networking stdlib modules (socket, http, subprocess) that require async I/O primitives.
+- **milestone_networking_stdlib before milestone_web_db:** Networking stdlib modules (socket, http, url) provide the foundation that the web framework and database milestones build on.
+- **milestone_async after Stdlib Architecture Phase:** Async runtime needs the full stdlib (now written in Sifr), a hardened core language, and a complete ownership model in place
 - **milestone_async before milestone_web_db:** Async runtime is needed for web framework and database access
 - **milestone_typed_serde after milestone_web_db:** The web framework must exist before we can add typed extractors (`Json[T]`, `Form[T]`). Typed serde also enhances `sifr.json` from milestone_core_stdlib with class serialization.
 - **milestone_crypto_auth after milestone_typed_serde:** JWT payloads are classes that need auto-serde. Password hashing and encryption are independent but benefit from the typed patterns established in milestone_typed_serde.
@@ -2304,10 +2330,10 @@ Depends on milestone_core_stdlib: needs `sifr.io` for test file discovery and `s
 - `**sifr.time`:** timestamps, durations, sleep, formatting -> wraps `std::time` + `chrono`
 - `**sifr.random`:** random number generation -> wraps `rand` crate
 - `**sifr.re`:** regular expressions -> wraps `regex` crate
-- `**sifr.hash`:** hashing (sha256, md5, etc.) -> wraps `sha2` + `md5` crates
-- `**sifr.encoding`:** base64, hex, url encoding -> wraps `base64` + `hex` + `percent-encoding`
+- `**sifr.hashlib`:** hashing (sha256, md5, etc.) -> wraps `sha2` + `md5` crates
+- `**sifr.base64`:** base64, hex, url encoding -> wraps `base64` + `hex` + `percent-encoding`
 - `**sifr.stream`:** streaming read/write for large data -> wraps Rust's `Read`/`Write` traits with buffered readers/writers, line-by-line iteration, and pipe-style chaining
-- `**sifr.log`:** structured logging -> wraps `tracing` crate
+- `**sifr.logging`:** structured logging -> wraps `tracing` crate
 
 ### Definition of Done (milestone_ext_stdlib)
 
@@ -2315,13 +2341,13 @@ Depends on milestone_core_stdlib: needs `sifr.io` for test file discovery and `s
 - `sifr.time`: timestamps, durations, sleep, formatting work
 - `sifr.random`: random number generation works
 - `sifr.re`: regex match, search, replace work
-- `sifr.hash`: sha256, md5 hashing works
-- `sifr.encoding`: base64, hex, url encoding/decoding works
+- `sifr.hashlib`: sha256, md5 hashing works
+- `sifr.base64`: base64, hex, url encoding/decoding works
 - `sifr.stream`: streaming read/write with line iteration and chaining
-- `sifr.log`: structured logging with levels (debug, info, warn, error)
+- `sifr.logging`: structured logging with levels (debug, info, warn, error)
 - Each module has integration tests verifying the Sifr API against the Rust crate behavior
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
-- E2E pass tests: math_ops, time_basic, random_gen, regex_match, hash_sha256, encoding_base64, stream_lines, log_basic
+- E2E pass tests: math_ops, time_basic, random_gen, regex_match, hashlib_sha256, base64_encode, stream_lines, logging_basic
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Lib/test/test_math.py`, `Lib/test/test_time.py`, `Lib/test/test_random.py`, `Lib/test/test_re/`
 - Milestone demo in `./demos/milestone_ext_stdlib_demo.sifr`
 
@@ -2924,6 +2950,186 @@ This milestone completes the foundation for fearless concurrency in `milestone_a
 
 ---
 
+## milestone_intrinsics: Intrinsics Layer and Stdlib Compilation Pipeline
+
+**Goal:** Rewire how stdlib works internally. Introduce the three-tier hybrid architecture: Rust intrinsics (`_sifr.*`) at the bottom, Sifr stdlib modules (`sifr.*`) as `.sifr` files in the middle, and user code on top. No new user-facing features, but establishes the architecture everything else builds on.
+
+**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md)
+
+### Three-Tier Model
+
+- **Tier 1: Rust Intrinsics (`_sifr.*`)** -- Compiler-provided primitives that map directly to Rust code. Intentionally minimal -- only operations that cannot be written in pure Sifr (OS access, unsafe code, Rust crate bindings). ~60 primitives across 10 modules (`_sifr.fs`, `_sifr.sys`, `_sifr.io`, `_sifr.time`, `_sifr.math`, `_sifr.crypto`, `_sifr.regex`, `_sifr.json`, `_sifr.toml`, `_sifr.datetime`).
+- **Tier 2: Sifr Stdlib (`sifr.*`)** -- `.sifr` files that import from `_sifr.*` intrinsics and provide the user-facing API. Written in Sifr itself. Users can read the source to understand how things work.
+- **Tier 3: User Code** -- Users import from `sifr.*` (Tier 2). They never need to touch `_sifr.*`.
+
+### Compiler Changes
+
+1. Rename current `sifr.*` registry to `_sifr.*` in [sifr_hir/src/stdlib.rs](crates/sifr_hir/src/stdlib.rs) -- mechanical rename of `get_stdlib_module()` match arms and `is_stdlib_module()` check
+2. Rename `emit_stdlib_call` to `emit_intrinsic_call` in [sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs)
+3. Split current 55 functions into initial intrinsic primitives across `_sifr.fs`, `_sifr.sys`, `_sifr.io`, `_sifr.time`, `_sifr.math`, `_sifr.crypto`, `_sifr.regex`, `_sifr.json`
+4. Add `lib/sifr/` directory with `.sifr` files embedded via `include_str!`
+5. Update driver ([sifr_driver/src/lib.rs](crates/sifr_driver/src/lib.rs)) to discover and compile embedded stdlib `.sifr` modules before user modules (two-phase compilation)
+6. Update `starts_with("sifr.")` check in [sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) to resolve stdlib `.sifr` files first, falling back to `_sifr.*` intrinsics
+7. Update codegen to handle stdlib modules as regular Rust `mod`/`use` (not inline emit)
+8. Block user imports of `_sifr.*` in [sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics). Trust boundary: the compiler distinguishes stdlib from user code by checking whether the source originated from the embedded `lib/sifr/` module set (via `include_str!`), not by filename convention.
+9. Proof-of-concept: `lib/sifr/test.sifr` (assert_eq, assert_ne, assert_true, assert_false are pure Sifr)
+
+### Design Constraint: Safety Contract
+
+All stdlib modules must uphold Sifr's safety guarantees:
+
+1. **Fallible operations return `Result[T, E]` or `Option[T]`** -- file I/O, parsing, network calls, and any operation that can fail must return a `Result` or `Option`. No panics, no `.unwrap()` in user-facing APIs.
+2. **`open()` returns a `File` context manager** -- `sifr.io.open()` returns `Result[File, IOError]`. The `File` object implements the context manager protocol (`with` statement) to guarantee resource cleanup.
+3. **No raw pointers or unsafe code in Tier 2** -- all `unsafe` is confined to Tier 1 intrinsics. Tier 2 `.sifr` files are pure safe Sifr.
+4. **Borrow-by-default applies uniformly** -- stdlib functions accept `&T` by default, `&mut T` when mutation is needed, and `T` (owned) only when the function must consume the value.
+5. **No silent data loss** -- operations like `write_text` return `Result[None, IOError]`, not `None`. The caller must handle the error or propagate with `?`.
+
+This contract is an **acceptance criterion for every milestone** in this phase.
+
+### Definition of Done (milestone_intrinsics)
+
+- `from sifr.test import assert_eq` resolves to the `.sifr` file, compiles, and works
+- All existing E2E tests still pass (old modules still use intrinsics path during transition)
+- `_sifr.*` imports are blocked for user code with a clear compile error
+- Two-phase compilation pipeline works (stdlib compiled before user code)
+- E2E pass tests: stdlib_import_test, intrinsics_block_test
+- E2E fail tests: user_imports_intrinsics_rejected
+
+---
+
+## milestone_stdlib_migration: Migrate Existing 13 Modules to Sifr
+
+**Goal:** Port all 13 existing stdlib modules from Rust codegen to `.sifr` files. Each module becomes a thin wrapper importing from `_sifr.*` intrinsics. At the end, `emit_stdlib_call` is deleted.
+
+**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md)
+
+### Modules to Migrate (in dependency order)
+
+1. `lib/sifr/env.sifr` -- wraps `_sifr.sys` (env_get, env_set) -- simplest, good first migration
+2. `lib/sifr/bytes.sifr` -- wraps `_sifr.io` (encode_utf8, decode_utf8, to_hex, from_hex)
+3. `lib/sifr/base64.sifr` -- wraps `_sifr.crypto` or pure Sifr (b64encode, b64decode)
+4. `lib/sifr/math.sifr` -- wraps `_sifr.math` (12 functions + pi, e constants)
+5. `lib/sifr/hashlib.sifr` -- wraps `_sifr.crypto` (sha256, md5)
+6. `lib/sifr/io.sifr` -- wraps `_sifr.fs` + `_sifr.io` (read_text, write_text, exists, read_lines, `open()` / `File` context manager). Needs new intrinsics: `_sifr.fs.open_file`, `read_fd`, `write_fd`, `close_fd`
+7. `lib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` (run_command, get_args)
+8. `lib/sifr/json.sifr` -- wraps `_sifr.json` (json_loads, json_dumps)
+9. `lib/sifr/time.sifr` -- wraps `_sifr.time` (time_now, sleep, time_format)
+10. `lib/sifr/random.sifr` -- wraps `_sifr.crypto` (random_int, random_float, random_choice)
+11. `lib/sifr/re.sifr` -- wraps `_sifr.regex` (re_match, re_find, re_replace)
+12. `lib/sifr/collections.sifr` -- wraps existing set/counter/defaultdict intrinsics
+13. `lib/sifr/test.sifr` -- already done in milestone_intrinsics (verify still works)
+
+**Note:** During migration, two modules are renamed to match Python conventions: `sifr.hash` -> `sifr.hashlib`, `sifr.encoding` -> `sifr.base64`. This is a deliberate pre-1.0 breaking change; existing tests and code must be updated as part of this milestone.
+
+### Final Cleanup
+
+- Delete the ~430-line `emit_stdlib_call` function in codegen
+- Delete the old `sifr.*` entries in `get_stdlib_module()`
+- Update Cargo dependency injection to trace through `_sifr.*` intrinsics
+
+### Definition of Done (milestone_stdlib_migration)
+
+- `emit_stdlib_call` is deleted
+- Every `from sifr.X import Y` resolves to a `.sifr` file
+- All fallible functions return `Result` or `Option` (safety contract)
+- All existing E2E tests, audit tests, and stdlib tests pass with zero regressions
+- `sifr.hash` and `sifr.encoding` references updated to `sifr.hashlib` and `sifr.base64`
+
+---
+
+## milestone_stdlib_expansion: New Modules (Algorithms, CLI, File Utilities)
+
+**Goal:** Add ~14 new modules. These are the most commonly needed modules that Python developers reach for daily. Ordered by dependency and implementation complexity (pure Sifr first, then intrinsic-backed).
+
+**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md)
+
+### Pure Sifr Modules (no new intrinsics needed)
+
+1. `lib/sifr/string.sifr` -- `ascii_letters`, `digits`, `punctuation`, `whitespace` constants
+2. `lib/sifr/statistics.sifr` -- `mean`, `median`, `stdev`, `variance`
+3. `lib/sifr/bisect.sifr` -- `bisect_left`, `bisect_right`, `insort`
+4. `lib/sifr/heapq.sifr` -- `heappush`, `heappop`, `heapify`, `nlargest`, `nsmallest`
+5. `lib/sifr/functools.sifr` -- `reduce`
+6. `lib/sifr/itertools.sifr` -- `chain`, `zip_longest`, `groupby`
+7. `lib/sifr/textwrap.sifr` -- `wrap`, `fill`, `dedent`, `indent`
+8. `lib/sifr/csv.sifr` -- `reader`, `writer`
+9. `lib/sifr/argparse.sifr` -- `ArgumentParser` class with `add_argument`, `parse_args`
+
+### Intrinsic-backed Modules (need new `_sifr.*` primitives)
+
+10. `lib/sifr/fnmatch.sifr` -- `fnmatch`, `filter`, `translate` (wraps `_sifr.regex`)
+11. `lib/sifr/glob.sifr` -- `glob`, `iglob` (wraps `_sifr.fs.list_dir` + fnmatch)
+12. `lib/sifr/shutil.sifr` -- `copy`, `copytree`, `rmtree`, `move` (wraps `_sifr.fs` -- needs new intrinsics: `copy_file`, `walk_dir`)
+13. `lib/sifr/tempfile.sifr` -- `mkstemp`, `mkdtemp` (wraps `_sifr.fs` + `_sifr.crypto.random_bytes`)
+14. `lib/sifr/secrets.sifr` -- `token_hex`, `token_urlsafe`, `token_bytes`, `choice` (wraps `_sifr.crypto`)
+
+**New intrinsics needed:** `_sifr.fs.copy_file`, `_sifr.fs.walk_dir` (2 new primitives added to existing `_sifr.fs`)
+
+### Definition of Done (milestone_stdlib_expansion)
+
+- Each new module compiles, imports work, functions produce correct output
+- All fallible functions return `Result` or `Option` (safety contract)
+- No panic paths in stdlib code
+- E2E tests for each module, including negative tests (bad input)
+- Language gaps discovered during dogfooding are filed as issues
+
+---
+
+## milestone_stdlib_parity: Gap Closing, Remaining Modules, and Audit
+
+**Goal:** Three parts: (A) close gaps in existing modules by adding missing functions, (B) add remaining Tier 1+2 modules, (C) run the comprehensive parity audit.
+
+**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md)
+
+### Part A -- Expand Existing Modules
+
+- `sifr/math.sifr` -- add ~20 missing functions: `asin`, `acos`, `atan`, `atan2`, `sinh`, `cosh`, `tanh`, `exp`, `log2`, `log10`, `log1p`, `factorial`, `gcd`, `lcm`, `isnan`, `isinf`, `isfinite`, `fmod`, `hypot`, `tau`, `inf` (needs new `_sifr.math` intrinsics for inverse trig and hyperbolic)
+- `sifr/os.sifr` -- add `getcwd`, `listdir`, `mkdir`, `makedirs`, `rename`, `remove`, `walk`
+- `sifr/re.sifr` -- add `findall`, `split`
+- `sifr/random.sifr` -- add `shuffle`, `sample`, `seed`, `uniform`, `randrange`
+- `sifr/io.sifr` -- add `append_text`, binary I/O
+- `sifr/collections.sifr` -- add `deque`, `OrderedDict`
+- `sifr/time.sifr` -- add `monotonic`, `perf_counter`
+- `sifr/hashlib.sifr` -- add `sha1`, `sha512`, `hmac`
+- `sifr/base64.sifr` -- add `urlsafe_b64encode`, `urlsafe_b64decode`, `b32encode`, `b32decode`
+- `sifr/itertools.sifr` -- add `combinations`, `permutations`, `product`, `accumulate`
+- `sifr/functools.sifr` -- add `partial` (**stretch goal** -- requires closure capture support; skip if not available by M4, revisit when closures mature)
+
+### Part B -- New Modules (remaining Tier 1+2)
+
+1. `lib/sifr/difflib.sifr` -- `unified_diff`, `get_close_matches`, `SequenceMatcher` (pure Sifr, algorithmic)
+2. `lib/sifr/graphlib.sifr` -- `TopologicalSorter` (pure Sifr, algorithmic)
+3. `lib/sifr/ipaddress.sifr` -- `ip_address`, `ip_network` (pure Sifr, parsing + math)
+4. `lib/sifr/timeit.sifr` -- `timeit`, `repeat` (wraps `_sifr.time.perf_counter_ns`)
+5. `lib/sifr/platform.sifr` -- `system`, `machine`, `architecture` (wraps `_sifr.sys.platform_os`, `platform_arch`)
+6. `lib/sifr/tomllib.sifr` -- `loads`, `load` (wraps new `_sifr.toml` intrinsic)
+7. `lib/sifr/datetime.sifr` -- `date`, `datetime`, `timedelta`, `timezone` (wraps new `_sifr.datetime` intrinsic)
+8. `lib/sifr/pathlib.sifr` -- `Path` class with `/` operator, `exists`, `read_text`, `write_text`, `stem`, `suffix`, `parent` (wraps `_sifr.fs`)
+9. `lib/sifr/uuid.sifr` -- `uuid4` (wraps `_sifr.crypto.random_bytes`)
+10. `lib/sifr/logging.sifr` -- `Logger`, `getLogger`, `info`, `warning`, `error`, `debug` (wraps `_sifr.io` + `_sifr.time`)
+
+**New intrinsics needed:** `_sifr.toml.toml_parse`, `_sifr.datetime.*` (4 primitives), `_sifr.sys.platform_os`, `_sifr.sys.platform_arch`, `_sifr.math` inverse trig/hyperbolic (~8 primitives)
+
+### Part C -- Parity Audit
+
+- Run the comprehensive stdlib parity audit from [.cursor/plans/stdlib_parity_audit_2c354444.md](.cursor/plans/stdlib_parity_audit_2c354444.md) (~200 test files across 30 directories)
+- Produce `audit/STDLIB_PARITY_MASTER_REPORT.md` with coverage percentages per module
+- Target: 60%+ coverage across the top 20 CPython modules
+- **Reference:** CPython stdlib source is available at `/Users/yaseralnajjar/work/sifr/cpython` for comparing implementations and verifying API surfaces
+
+### Definition of Done (milestone_stdlib_parity)
+
+- All expanded modules pass their tests
+- All new modules compile and work
+- All fallible functions return `Result` or `Option` (safety contract)
+- No panic paths in stdlib code
+- Negative tests (bad input) for each module
+- Parity audit report generated with coverage metrics
+- `cargo test` passes
+- 37 total stdlib modules available (13 pure Sifr + 24 intrinsic-backed)
+
+---
+
 ## milestone_async: Async Runtime
 
 **Goal:** Add async/await language support. This is a language feature milestone -- it adds the async primitives that milestone_web_db (web, database) builds on.
@@ -2980,6 +3186,28 @@ milestone_async also provides basic cross-task communication primitives:
 - `sifr.sync.Lock`, `sifr.sync.Channel`, `sifr.sync.Semaphore` work for cross-task coordination
 - E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, async_with_basic, async_generator_basic, lock_basic, channel_basic
 - Milestone demo in `./demos/milestone_async_demo.sifr`
+
+---
+
+## milestone_networking_stdlib: Networking Standard Library
+
+**Goal:** Add networking-related stdlib modules that depend on the async runtime from milestone_async. These modules bridge the gap between the synchronous stdlib (from the Stdlib Architecture phase) and the web framework (milestone_web_db).
+
+**Full plan:** [.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md](.cursor/plans/hybrid_stdlib_architecture_67d3c0a1.md) (see "Modules to Defer to Ecosystem Phase")
+
+### Modules
+
+- `sifr/subprocess.sifr` -- full Popen API (wraps new `_sifr.process` intrinsics)
+- `sifr/socket.sifr` -- TCP/UDP (wraps new `_sifr.net` intrinsics)
+- `sifr/http.sifr` -- HTTP client (wraps `_sifr.net` + potentially `reqwest` crate)
+- `sifr/url.sifr` -- URL parsing (pure Sifr or wraps `url` crate)
+
+### Definition of Done (milestone_networking_stdlib)
+
+- Each networking module compiles and works with async I/O
+- All fallible operations return `Result` or `Option`
+- E2E pass tests: subprocess_run, socket_tcp, http_get, url_parse
+- Integration with the async runtime (tokio) is seamless
 
 ---
 
@@ -3241,7 +3469,7 @@ async def upload_many(files: Multipart) -> Json[list[str]]:
 
 **Goal:** Provide the cryptographic primitives and authentication building blocks that every web application needs. Password hashing with secure defaults, JWT tokens, encryption, and HMAC. The principle: make the secure choice the easy choice.
 
-**Depends on:** milestone_typed_serde (JWT payloads need typed serialization), milestone_ext_stdlib (`sifr.hash` provides data hashing; this milestone adds password hashing and encryption which are distinct)
+**Depends on:** milestone_typed_serde (JWT payloads need typed serialization), milestone_ext_stdlib (`sifr.hashlib` provides data hashing; this milestone adds password hashing and encryption which are distinct)
 
 ### Password Hashing (`sifr.crypto.password`)
 
@@ -3331,7 +3559,7 @@ csrf: str = token_urlsafe(32)          # base64url-encoded random
 - Password hashing: `argon2` (1.4M downloads/month, RustCrypto team) + `bcrypt` (273K downloads/month) for legacy support
 - JWT: `jsonwebtoken` (4.6M downloads/month, #1 in Authentication category, 996 reverse deps)
 - Encryption: `aes-gcm` (RustCrypto, 6.5M downloads/month via `aead`) -- NCC Group security audited
-- HMAC: `hmac` + `sha2` (RustCrypto, already used by `sifr.hash` in milestone_ext_stdlib)
+- HMAC: `hmac` + `sha2` (RustCrypto, already used by `sifr.hashlib` in milestone_ext_stdlib)
 - Random: `rand` (already a dependency from milestone_ext_stdlib)
 
 ### Definition of Done (milestone_crypto_auth)
@@ -3352,16 +3580,16 @@ csrf: str = token_urlsafe(32)          # base64url-encoded random
 
 ## milestone_web_production: Production Web Features
 
-**Goal:** Enhance the web stack with production-grade features that every deployed web application needs: structured JSON logging with request tracing, rate limiting, and CORS configuration. This milestone layers on top of `sifr.log` (Phase 3: basic structured logging with levels) and `sifr.web` (milestone_web_db: basic routing and middleware) without modifying those locked milestones.
+**Goal:** Enhance the web stack with production-grade features that every deployed web application needs: structured JSON logging with request tracing, rate limiting, and CORS configuration. This milestone layers on top of `sifr.logging` (Phase 3: basic structured logging with levels) and `sifr.web` (milestone_web_db: basic routing and middleware) without modifying those locked milestones.
 
-**Depends on:** milestone_crypto_auth (rate limiting may use token-based identification), milestone_web_db (web framework must exist), milestone_ext_stdlib (`sifr.log` provides basic logging; this milestone extends it)
+**Depends on:** milestone_crypto_auth (rate limiting may use token-based identification), milestone_web_db (web framework must exist), milestone_ext_stdlib (`sifr.logging` provides basic logging; this milestone extends it)
 
-### Enhanced Logging (`sifr.log` extensions)
+### Enhanced Logging (`sifr.logging` extensions)
 
-Phase 3's `sifr.log` provides basic structured logging with levels (debug, info, warn, error) wrapping `tracing`. This milestone adds production features on top:
+Phase 3's `sifr.logging` provides basic structured logging with levels (debug, info, warn, error) wrapping `tracing`. This milestone adds production features on top:
 
 ```python
-from sifr.log import configure, info, warn, error
+from sifr.logging import configure, info, warn, error
 
 # JSON output mode for production (machine-readable logs)
 configure(format="json")  # default is "pretty" (human-readable)
@@ -3386,7 +3614,7 @@ Automatic request/response logging for web handlers -- every HTTP request is log
 
 ```python
 from sifr.web import App
-from sifr.log import configure
+from sifr.logging import configure
 
 configure(format="json")
 
@@ -4122,8 +4350,8 @@ PHASE 3 - Standard Library:
   milestone_core_stdlib:  Core Stdlib                -> I/O, JSON, toml, env, os, collections, open()
   milestone_test_runner:  Test Runner                -> sifr test, assertions, discovery, parallel
   milestone_ext_collections:  Extended Collections       -> frozenset, Counter, defaultdict, bytes, bytearray
-  milestone_ext_stdlib:  Extended Stdlib            -> math, time, random, regex, hash, encoding, stream, log
-  milestone_codegen_quality_v3:  Phase 3 Codegen Polish  -> Remove redundant .to_string() on literals, .clone() on vec literals, fix json_dumps, hoist set_intersection args, clean re_replace/hash/encoding codegen
+  milestone_ext_stdlib:  Extended Stdlib            -> math, time, random, regex, hashlib, base64, stream, logging
+  milestone_codegen_quality_v3:  Phase 3 Codegen Polish  -> Remove redundant .to_string() on literals, .clone() on vec literals, fix json_dumps, hoist set_intersection args, clean re_replace/hashlib/base64 codegen
 
 PHASE: LANGUAGE HARDENING:
   milestone_codegen_fixes:      Codegen Fixes            -> Tuple indexing, union return wrapping, int/int codegen, print(None), escaped quotes, narrowed reassignment
@@ -4146,20 +4374,27 @@ PHASE: LANGUAGE HARDENING:
   milestone_phase_fixes:        Phase Fixes               -> Protocol dispatch, context manager scope, cls calls, import alias codegen, stdlib gaps, module-level constants
   milestone_ownership_v3:       Ownership v3              -> Assignment-based move detection, move-in-loop, conditional move merging, set Display fix. Foundation for fearless concurrency.
 
-PHASE: Borrow-by-Default (after Language Hardening, before Ecosystem):
+PHASE: Borrow-by-Default (after Language Hardening, before Stdlib Architecture):
   milestone_borrow_default:    Borrow Default          -> ParamConvention enum (Borrow/MutBorrow/Own), extend FunctionType/Callable with conventions, parse mut/own keywords, HIR convention propagation across all call paths, codegen &T/&mut T/T emission, call-site borrow emission, delete borrows_args list, no-silent-clone enforcement
   milestone_borrow_hardening:  Borrow Hardening        -> Mutable borrow exclusivity checking, error messages, borrowing audit test updates, new E2E tests, parser snapshot tests, multi-module convention tests, stdlib mut param annotations, architecture doc updates
 
+PHASE: Stdlib Architecture (after Borrow-by-Default, before Ecosystem):
+  milestone_intrinsics:        Intrinsics Layer        -> _sifr.* primitives, .sifr file embedding via include_str!, two-phase compilation, block user _sifr.* imports, proof-of-concept sifr.test
+  milestone_stdlib_migration:  Stdlib Migration        -> Port 13 existing modules to .sifr files, delete emit_stdlib_call, rename hash->hashlib / encoding->base64, zero regressions
+  milestone_stdlib_expansion:  Stdlib Expansion        -> ~14 new modules: string, statistics, bisect, heapq, functools, itertools, textwrap, csv, argparse, fnmatch, glob, shutil, tempfile, secrets
+  milestone_stdlib_parity:     Stdlib Parity           -> Expand existing modules (~20 math fns, os, re, random, io, collections, time, hashlib, base64, itertools, functools), add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), parity audit
+
 PHASE 4 - Ecosystem:
-  milestone_async:           Async Runtime           -> async/await, tokio, tasks, async streams
-  milestone_web_db:          Web + Database           -> axum web, reqwest HTTP, SQLite, sqlx, graceful shutdown, health check
-  milestone_typed_serde:     Typed Serialization      -> Auto serde for classes, Json[T]/Path[T]/Query[T]/Form[T], file uploads
-  milestone_crypto_auth:     Crypto + Auth            -> Argon2/Bcrypt password hashing, JWT, AES-GCM, HMAC, secure random
-  milestone_web_production:  Production Web           -> JSON logging, request tracing, rate limiting, CORS config
-  milestone_redis:           Redis                    -> Async client, key-value, hashes, lists, sets, pub/sub, connection pool
-  milestone_storage:         Object Storage           -> S3/R2/MinIO, upload/download, presigned URLs, multi-provider
-  milestone_email:           Email                    -> SMTP client, HTML email, attachments, env-based config
-  milestone_data_processing: Data Processing          -> polars DataFrames, CSV/Parquet, CLI args
+  milestone_async:              Async Runtime           -> async/await, tokio, tasks, async streams
+  milestone_networking_stdlib:  Networking Stdlib       -> socket, http, subprocess, url parsing (depends on async runtime)
+  milestone_web_db:             Web + Database          -> axum web, reqwest HTTP, SQLite, sqlx, graceful shutdown, health check
+  milestone_typed_serde:        Typed Serialization     -> Auto serde for classes, Json[T]/Path[T]/Query[T]/Form[T], file uploads
+  milestone_crypto_auth:        Crypto + Auth           -> Argon2/Bcrypt password hashing, JWT, AES-GCM, HMAC, secure random
+  milestone_web_production:     Production Web          -> JSON logging, request tracing, rate limiting, CORS config
+  milestone_redis:              Redis                   -> Async client, key-value, hashes, lists, sets, pub/sub, connection pool
+  milestone_storage:            Object Storage          -> S3/R2/MinIO, upload/download, presigned URLs, multi-provider
+  milestone_email:              Email                   -> SMTP client, HTML email, attachments, env-based config
+  milestone_data_processing:    Data Processing         -> polars DataFrames, CSV/Parquet, CLI args
 
 PHASE 5 - Polish:
   milestone_metaprogramming:  Metaprogramming            -> Compile-time decorators, @dataclass, const eval
@@ -4169,7 +4404,7 @@ PHASE 5 - Polish:
   milestone_ecosystem:  Package Ecosystem          -> Registry, incremental compilation, REPL
 ```
 
-After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_stdlib_hardening (end of Hardening Phase 1), the core language compiles 80%+ of real-world Python programs -- codegen bugs are fixed, narrowing/ownership/mutation work correctly, iteration and builtins match Python semantics, recursive types are supported, and the stdlib is production-ready. After milestone_phase_fixes (end of Language Hardening), the language is fully hardened -- nested functions, forward references, generics, comprehensions, union operations, and all Phase 2/3 bugs are fixed, enabling ~50-60% of LeetCode problems to compile. After milestone_borrow_hardening (end of Borrow-by-Default), Sifr uses borrow-by-default for function parameters with explicit `mut`/`own` opt-in -- matching how 95% of stdlib functions already work internally. The ownership model is unified, exclusivity is enforced, and the foundation for fearless concurrency is complete. After milestone_web_db, Sifr can build basic web applications with databases. After milestone_typed_serde, Sifr has automatic typed serialization and typed web request/response handling. After milestone_crypto_auth, Sifr has password hashing, JWT, encryption, and secure random -- the auth building blocks. After milestone_web_production, Sifr has production-grade logging, request tracing, rate limiting, and CORS. After milestone_redis, Sifr has native caching, session storage, and pub/sub. After milestone_storage, Sifr can upload/download files to S3-compatible object storage. After milestone_email, Sifr can send transactional emails. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
+After milestone_safe_indexing, Sifr has a complete safety story (no panics from data access). After milestone_imports, Sifr supports multi-file projects. After milestone_generics, the type system is fully expressive. After milestone_decorators, the language has all features needed for stdlib and framework design. After milestone_test_runner, Sifr can test itself (dogfooding). After milestone_stdlib_hardening (end of Hardening Phase 1), the core language compiles 80%+ of real-world Python programs -- codegen bugs are fixed, narrowing/ownership/mutation work correctly, iteration and builtins match Python semantics, recursive types are supported, and the stdlib is production-ready. After milestone_phase_fixes (end of Language Hardening), the language is fully hardened -- nested functions, forward references, generics, comprehensions, union operations, and all Phase 2/3 bugs are fixed, enabling ~50-60% of LeetCode problems to compile. After milestone_borrow_hardening (end of Borrow-by-Default), Sifr uses borrow-by-default for function parameters with explicit `mut`/`own` opt-in -- matching how 95% of stdlib functions already work internally. The ownership model is unified, exclusivity is enforced, and the foundation for fearless concurrency is complete. After milestone_stdlib_parity (end of Stdlib Architecture), Sifr's stdlib is rewritten as `.sifr` files using a three-tier hybrid architecture (Rust intrinsics -> Sifr stdlib -> user code), with 37 modules covering the vast majority of what Python developers use daily -- algorithms, file utilities, CLI parsing, data formats, cryptographic hashing, and more. The legacy `emit_stdlib_call` codegen path is deleted, and all stdlib modules uphold the safety contract (Result/Option for fallible ops, no panics, borrow-by-default). After milestone_web_db, Sifr can build basic web applications with databases. After milestone_typed_serde, Sifr has automatic typed serialization and typed web request/response handling. After milestone_crypto_auth, Sifr has password hashing, JWT, encryption, and secure random -- the auth building blocks. After milestone_web_production, Sifr has production-grade logging, request tracing, rate limiting, and CORS. After milestone_redis, Sifr has native caching, session storage, and pub/sub. After milestone_storage, Sifr can upload/download files to S3-compatible object storage. After milestone_email, Sifr can send transactional emails. After milestone_data_processing, it can handle data pipelines. After milestone_ffi, Sifr has access to the entire Rust crate ecosystem. After milestone_dev_tooling, developers have full IDE support. After milestone_ecosystem, it is a complete language ecosystem with package sharing.
 
 ---
 

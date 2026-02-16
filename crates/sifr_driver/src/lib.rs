@@ -2,6 +2,9 @@
 //!
 //! Orchestrates the full compilation pipeline:
 //! parse -> type-check/HIR -> codegen -> build
+//!
+//! Stdlib `.sifr` files are embedded in the compiler binary via `include_str!`.
+//! They are compiled before user code (two-phase compilation).
 
 use sifr_python_parser::parse_module;
 use sifr_hir::{lower_module, lower_module_with_externals, ExternalDefs, HirModule};
@@ -10,6 +13,103 @@ use sifr_type_system::{Type, FunctionType, ParamConvention};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+/// Embedded stdlib `.sifr` files.
+/// Each entry is (module_name, source_code).
+/// Module names use dotted notation (e.g., "sifr.test").
+const STDLIB_FILES: &[(&str, &str)] = &[
+    ("sifr.test", include_str!("../../../lib/sifr/test.sifr")),
+];
+
+/// Compile all embedded stdlib `.sifr` files and return their exports as ExternalDefs.
+/// Stdlib files can import from `_sifr.*` intrinsics (resolved via the intrinsic registry).
+fn compile_stdlib() -> Result<ExternalDefs, Vec<CompileError>> {
+    let mut stdlib_defs = ExternalDefs::default();
+
+    for (module_name, source) in STDLIB_FILES {
+        let parsed = match parse_module(source) {
+            Ok(parsed) => {
+                if !parsed.is_valid() {
+                    let errors: Vec<CompileError> = parsed
+                        .errors()
+                        .iter()
+                        .map(|e| CompileError {
+                            message: format!("[stdlib:{}] {}", module_name, e),
+                            phase: CompilePhase::Parse,
+                        })
+                        .collect();
+                    return Err(errors);
+                }
+                parsed
+            }
+            Err(e) => {
+                return Err(vec![CompileError {
+                    message: format!("[stdlib:{}] failed to parse: {}", module_name, e),
+                    phase: CompilePhase::Parse,
+                }]);
+            }
+        };
+
+        // Lower the stdlib module (it can import from _sifr.* intrinsics)
+        let result = match lower_module(parsed.suite()) {
+            Ok(result) => result,
+            Err(errors) => {
+                let compile_errors: Vec<CompileError> = errors
+                    .into_iter()
+                    .map(|e| CompileError {
+                        message: format!("[stdlib:{}] {}", module_name, e.message),
+                        phase: CompilePhase::TypeCheck,
+                    })
+                    .collect();
+                return Err(compile_errors);
+            }
+        };
+
+        // Collect exports for this stdlib module
+        let mut fn_exports = HashMap::new();
+        let mut class_exports = HashMap::new();
+
+        for func in &result.module.functions {
+            if !func.name.starts_with('_') {
+                let params: Vec<(String, Type, ParamConvention)> = func.params.iter()
+                    .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                    .collect();
+                fn_exports.insert(func.name.clone(), FunctionType {
+                    params,
+                    return_type: Box::new(func.return_type.clone()),
+                });
+            }
+        }
+
+        for class in &result.module.classes {
+            if !class.name.starts_with('_') {
+                let methods: Vec<(String, FunctionType)> = class.methods.iter()
+                    .filter(|m| m.name != "new")
+                    .map(|m| {
+                        let params: Vec<(String, Type, ParamConvention)> = m.params.iter()
+                            .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                            .collect();
+                        (m.name.clone(), FunctionType {
+                            params,
+                            return_type: Box::new(m.return_type.clone()),
+                        })
+                    })
+                    .collect();
+                let class_ty = Type::Class {
+                    name: class.name.clone(),
+                    fields: class.fields.clone(),
+                    methods,
+                };
+                class_exports.insert(class.name.clone(), class_ty);
+            }
+        }
+
+        stdlib_defs.functions.insert(module_name.to_string(), fn_exports);
+        stdlib_defs.classes.insert(module_name.to_string(), class_exports);
+    }
+
+    Ok(stdlib_defs)
+}
 
 /// Result of compilation.
 #[derive(Debug)]
@@ -73,6 +173,12 @@ pub enum CompileResultFull {
 
 /// Compile Sifr source code to Rust source code, returning stdlib metadata.
 pub fn compile_with_metadata(source: &str) -> CompileResultFull {
+    // Phase 0: Compile embedded stdlib .sifr files
+    let stdlib_defs = match compile_stdlib() {
+        Ok(defs) => defs,
+        Err(errors) => return CompileResultFull::Errors { errors },
+    };
+
     // Phase 1: Parse
     let parsed = match parse_module(source) {
         Ok(parsed) => {
@@ -99,8 +205,8 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
         }
     };
 
-    // Phase 2: Lower to HIR (type checking + name resolution)
-    let lowering_result = match lower_module(parsed.suite()) {
+    // Phase 2: Lower to HIR with stdlib externals (type checking + name resolution)
+    let lowering_result = match lower_module_with_externals(parsed.suite(), &stdlib_defs) {
         Ok(result) => result,
         Err(errors) => {
             let compile_errors: Vec<CompileError> = errors
@@ -197,8 +303,11 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         parsed_modules.insert(module_name.clone(), parsed.into_suite());
     }
 
+    // Phase 1.5: Compile embedded stdlib .sifr files
+    let stdlib_defs = compile_stdlib()?;
+
     // Phase 2: Lower non-main modules first to collect their exports
-    let mut external_defs = ExternalDefs::default();
+    let mut external_defs = stdlib_defs;
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
 
     // First, lower all non-main modules

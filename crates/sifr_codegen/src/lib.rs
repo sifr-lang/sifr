@@ -10,6 +10,7 @@ use std::collections::{HashMap, HashSet};
 pub struct CodegenResult {
     pub rust_source: String,
     pub used_stdlib_modules: HashSet<String>,
+    pub used_intrinsic_modules: HashSet<String>,
 }
 
 /// Generate Rust source code from a HIR module.
@@ -52,7 +53,8 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
 
     CodegenResult {
         rust_source: result,
-        used_stdlib_modules: emitter.used_stdlib_modules,
+        used_stdlib_modules: emitter.used_stdlib_modules.clone(),
+        used_intrinsic_modules: emitter.used_stdlib_modules,
     }
 }
 
@@ -90,7 +92,8 @@ pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
 
     CodegenResult {
         rust_source: result,
-        used_stdlib_modules: emitter.used_stdlib_modules,
+        used_stdlib_modules: emitter.used_stdlib_modules.clone(),
+        used_intrinsic_modules: emitter.used_stdlib_modules,
     }
 }
 
@@ -160,31 +163,41 @@ edition = "2021"
 "#
     );
 
-    // Add dependencies based on used stdlib modules
+    // Add dependencies based on used stdlib/intrinsic modules
     let mut deps = Vec::new();
     for module_name in stdlib_modules {
         match module_name.as_str() {
-            "sifr.json" | "sifr.collections" => {
+            "sifr.json" | "sifr.collections" | "_sifr.json" | "_sifr.collections" => {
                 if !deps.contains(&"serde_json = \"1\"".to_string()) {
                     deps.push("serde_json = \"1\"".to_string());
                     deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
                 }
             }
-            "sifr.time" => {
-                deps.push("chrono = \"0.4\"".to_string());
+            "sifr.time" | "_sifr.time" => {
+                if !deps.contains(&"chrono = \"0.4\"".to_string()) {
+                    deps.push("chrono = \"0.4\"".to_string());
+                }
             }
-            "sifr.random" => {
-                deps.push("rand = \"0.8\"".to_string());
+            "sifr.random" | "_sifr.crypto" => {
+                if !deps.contains(&"rand = \"0.8\"".to_string()) {
+                    deps.push("rand = \"0.8\"".to_string());
+                }
             }
-            "sifr.re" => {
-                deps.push("regex = \"1\"".to_string());
+            "sifr.re" | "_sifr.regex" => {
+                if !deps.contains(&"regex = \"1\"".to_string()) {
+                    deps.push("regex = \"1\"".to_string());
+                }
             }
             "sifr.hash" => {
-                deps.push("sha2 = \"0.10\"".to_string());
-                deps.push("md5 = \"0.7\"".to_string());
+                if !deps.contains(&"sha2 = \"0.10\"".to_string()) {
+                    deps.push("sha2 = \"0.10\"".to_string());
+                    deps.push("md5 = \"0.7\"".to_string());
+                }
             }
             "sifr.encoding" => {
-                deps.push("base64 = \"0.22\"".to_string());
+                if !deps.contains(&"base64 = \"0.22\"".to_string()) {
+                    deps.push("base64 = \"0.22\"".to_string());
+                }
             }
             // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes use only std library
             _ => {}
@@ -230,10 +243,10 @@ struct RustEmitter {
     parent_fields: HashMap<String, (String, HashSet<String>)>,
     /// The class currently being emitted (for field access resolution)
     current_class_name: Option<String>,
-    /// Set of stdlib modules used (for Cargo dependency injection)
+    /// Set of stdlib/intrinsic modules used (for Cargo dependency injection)
     pub used_stdlib_modules: HashSet<String>,
-    /// Set of stdlib function names (for codegen dispatch)
-    stdlib_functions: HashSet<String>,
+    /// Set of intrinsic function names (for codegen dispatch)
+    intrinsic_functions: HashSet<String>,
     /// Whether to emit in test mode (#[test] on test_* functions, no main)
     test_mode: bool,
     /// Set of (class_name, field_name) pairs that are self-referential and need Box<T>
@@ -273,7 +286,7 @@ impl RustEmitter {
             parent_fields: HashMap::new(),
             current_class_name: None,
             used_stdlib_modules: HashSet::new(),
-            stdlib_functions: HashSet::new(),
+            intrinsic_functions: HashSet::new(),
             test_mode: false,
             recursive_fields: HashSet::new(),
             class_field_order: HashMap::new(),
@@ -438,12 +451,12 @@ impl RustEmitter {
     }
 
     fn emit_module(&mut self, module: &HirModule) {
-        // Pre-scan: collect stdlib imports and register stdlib function names
+        // Pre-scan: collect stdlib/intrinsic imports and register function names
         for import in &module.imports {
-            if import.module.starts_with("sifr.") {
+            if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
                 self.used_stdlib_modules.insert(import.module.clone());
                 for name in &import.names {
-                    self.stdlib_functions.insert(name.clone());
+                    self.intrinsic_functions.insert(name.clone());
                 }
             }
         }
@@ -3110,7 +3123,7 @@ impl RustEmitter {
             }
             HirExpr::Name { name, .. } => {
                 // Check for stdlib constants
-                if self.stdlib_functions.contains(name.as_str()) || self.is_stdlib_constant(name) {
+                if self.intrinsic_functions.contains(name.as_str()) || self.is_stdlib_constant(name) {
                     self.emit_stdlib_constant(name);
                 } else if let Some((_ty, rust_name)) = self.module_constants.get(name).cloned() {
                     // Module-level constant
@@ -3631,9 +3644,9 @@ impl RustEmitter {
                         self.emit_lambda_untyped(&args[0]);
                         self.write(")(x)).collect::<Vec<_>>()");
                     }
-                } else if self.stdlib_functions.contains(func.as_str()) {
-                    // Stdlib function call — emit the correct Rust code
-                    self.emit_stdlib_call(func, args);
+                } else if self.intrinsic_functions.contains(func.as_str()) {
+                    // Intrinsic function call — emit the correct Rust code
+                    self.emit_intrinsic_call(func, args);
                 } else {
                     self.write(func);
                     self.write("(");
@@ -4281,7 +4294,7 @@ impl RustEmitter {
     /// Used when the lambda is passed to .map()/.filter() where Rust can infer types.
     /// Check if a name is a stdlib constant.
     fn is_stdlib_constant(&self, name: &str) -> bool {
-        matches!(name, "pi" | "e") && self.stdlib_functions.contains(name)
+        matches!(name, "pi" | "e") && self.intrinsic_functions.contains(name)
     }
 
     /// Emit a stdlib constant value.
@@ -4293,8 +4306,8 @@ impl RustEmitter {
         }
     }
 
-    /// Emit a stdlib function call with the correct Rust code.
-    fn emit_stdlib_call(&mut self, func: &str, args: &[HirExpr]) {
+    /// Emit an intrinsic function call with the correct Rust code.
+    fn emit_intrinsic_call(&mut self, func: &str, args: &[HirExpr]) {
         match func {
             // sifr.io
             "read_text" => {

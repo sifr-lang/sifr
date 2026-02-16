@@ -1,0 +1,7 @@
+# Importing from _sifr.* should be blocked for user code
+from _sifr.io import read_text
+
+def main():
+    pass
+
+# expect-error: cannot import from '_sifr.io'

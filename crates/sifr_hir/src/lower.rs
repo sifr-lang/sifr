@@ -361,26 +361,75 @@ pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> 
                     continue;
                 }
 
-                // Check if this is a stdlib import (sifr.*)
-                if let Some(stdlib_module) = crate::stdlib::get_stdlib_module(&module_name) {
-                    // Register stdlib function/constant types
-                    for name in &names {
-                        let local = local_name_for(name);
-                        if let Some(ft) = stdlib_module.functions.get(name) {
-                            ctx.functions.insert(local, ft.clone());
-                        } else if let Some(const_ty) = stdlib_module.constants.get(name) {
-                            // Register constants as variables in scope
-                            ctx.scope.define(local, const_ty.clone());
-                        } else {
-                            ctx.error(format!("module '{}' has no member '{}'", module_name, name));
-                        }
-                    }
-                    imports.push(HirImport {
-                        module: module_name,
-                        names,
-                        aliases,
-                    });
+                // Block user imports of _sifr.* (internal intrinsics)
+                if module_name.starts_with("_sifr.") {
+                    ctx.error(format!("cannot import from '{}' — _sifr.* modules are internal compiler intrinsics", module_name));
                     continue;
+                }
+
+                // Check if this is a stdlib import (sifr.*)
+                // First try to resolve from pre-compiled stdlib .sifr modules (via externals)
+                // Then fall back to intrinsic resolution for modules not yet migrated to .sifr
+                if module_name.starts_with("sifr.") {
+                    // Check if there's a pre-compiled stdlib .sifr module in externals
+                    let stdlib_module_key = module_name.clone();
+                    let resolved_from_sifr = if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
+                        let mut found_any = false;
+                        for name in &names {
+                            let local = local_name_for(name);
+                            if let Some(ft) = module_fns.get(name) {
+                                ctx.functions.insert(local, ft.clone());
+                                found_any = true;
+                            }
+                        }
+                        // Also check classes
+                        if let Some(module_classes) = externals.classes.get(&stdlib_module_key) {
+                            for name in &names {
+                                let local = local_name_for(name);
+                                if let Some(class_ty) = module_classes.get(name) {
+                                    ctx.class_types.insert(local.clone(), class_ty.clone());
+                                    if let Type::Class { fields, .. } = class_ty {
+                                        let params: Vec<(String, Type)> = fields.clone();
+                                        let ft = FunctionType::new(params, class_ty.clone());
+                                        ctx.functions.insert(local, ft);
+                                    }
+                                    found_any = true;
+                                }
+                            }
+                        }
+                        found_any
+                    } else {
+                        false
+                    };
+
+                    if resolved_from_sifr {
+                        imports.push(HirImport {
+                            module: module_name,
+                            names,
+                            aliases,
+                        });
+                        continue;
+                    }
+
+                    // Fall back to intrinsic resolution (for modules not yet migrated to .sifr)
+                    if let Some(intrinsic_module) = crate::stdlib::get_stdlib_as_intrinsic(&module_name) {
+                        for name in &names {
+                            let local = local_name_for(name);
+                            if let Some(ft) = intrinsic_module.functions.get(name) {
+                                ctx.functions.insert(local, ft.clone());
+                            } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
+                                ctx.scope.define(local, const_ty.clone());
+                            } else {
+                                ctx.error(format!("module '{}' has no member '{}'", module_name, name));
+                            }
+                        }
+                        imports.push(HirImport {
+                            module: module_name,
+                            names,
+                            aliases,
+                        });
+                        continue;
+                    }
                 }
 
                 // Resolve imported names from external definitions (local modules)
