@@ -104,6 +104,9 @@ todos:
   - id: m26-stdlib-parity
     content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), run comprehensive parity audit"
     status: pending
+  - id: m27-stdlib-polish
+    content: "milestone_stdlib_polish: Align stdlib API names with architecture plan, add missing E2E pass tests (glob, shutil, tempfile), add negative/fail tests for stdlib error paths, fix stale lower.rs comment, add missing _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all), update parity report"
+    status: pending
 isProject: false
 ---
 
@@ -3127,6 +3130,58 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 - Parity audit report generated with coverage metrics
 - `cargo test` passes
 - 37 total stdlib modules available (13 pure Sifr + 24 intrinsic-backed)
+
+---
+
+## milestone_stdlib_polish: Stdlib API Alignment, Test Coverage, and Cleanup
+
+**Goal:** Polish the stdlib to align API names with the architecture plan, fill test coverage gaps, and clean up stale code. This milestone addresses reviewer findings that don't require new language features or compiler-level changes.
+
+**Full plan:** [issues/milestone_stdlib_polish.md](../../issues/milestone_stdlib_polish.md)
+
+**Context:** The Stdlib Architecture Phase delivered 37 modules with full compilation pipeline support. However, a reviewer audit identified: (1) function names that don't match the plan, (2) missing E2E tests for 3 modules, (3) thin negative/fail test coverage, and (4) a stale comment in lower.rs. The safety contract (Result/Option) and class-based APIs are deferred to future milestones.
+
+### API Alignment (renames)
+
+- `glob.sifr`: `glob_match` → `glob`
+- `shutil.sifr`: `copy_file` → `copy`, `move_file` → `move`, add `rmtree`
+- `timeit.sifr`: `timer` → `timeit`, `elapsed` → `repeat`
+- `tomllib.sifr`: add `load` (file-based parsing)
+
+### New Intrinsics
+
+- `_sifr.fs.copy_file(src, dst)` -- wraps `std::fs::copy`
+- `_sifr.fs.walk_dir(path)` -- wraps recursive `std::fs::read_dir`
+- `_sifr.fs.rmdir_all(path)` -- wraps `std::fs::remove_dir_all`
+
+### Missing E2E Pass Tests
+
+- `stdlib_glob.sifr` -- test glob with directory listing
+- `stdlib_shutil.sifr` -- test copy/move
+- `stdlib_tempfile.sifr` -- test mkstemp/mkdtemp
+
+### New E2E Fail Tests (negative coverage)
+
+- `stdlib_invalid_module.sifr` -- import nonexistent `sifr.nonexistent`
+- `stdlib_wrong_type.sifr` -- pass wrong type to stdlib function
+- `stdlib_missing_function.sifr` -- import nonexistent function from valid module
+- `stdlib_intrinsic_direct_v2.sifr` -- another `_sifr.*` direct import attempt
+- `stdlib_readonly_param.sifr` -- attempt to mutate a borrowed stdlib parameter
+
+### Cleanup
+
+- Fix stale fallback comment in `lower.rs`
+- Update `audit/STDLIB_PARITY_MASTER_REPORT.md` with final metrics
+
+### Definition of Done (milestone_stdlib_polish)
+
+- All renamed functions work and existing tests updated
+- E2E pass tests for glob, shutil, tempfile
+- At least 5 new stdlib fail tests
+- Stale comment fixed
+- `cargo test` passes (zero regressions)
+- Parity report updated
+- Demo: `demos/milestone_stdlib_polish_demo.sifr`
 
 ---
 
