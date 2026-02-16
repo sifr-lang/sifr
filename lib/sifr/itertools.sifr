@@ -1,0 +1,54 @@
+# sifr.itertools — Iterator building blocks (pure Sifr)
+# Note: Higher-order functions (map, filter, groupby) require callable support.
+# This module provides functions that work with the current type system.
+
+def chain(a: list[int], b: list[int]) -> list[int]:
+    result: list[int] = []
+    for val in a:
+        result.append(val)
+    for val2 in b:
+        result.append(val2)
+    return result
+
+def chain_str(a: list[str], b: list[str]) -> list[str]:
+    result: list[str] = []
+    for val in a:
+        result.append(val)
+    for val2 in b:
+        result.append(val2)
+    return result
+
+def repeat_val(value: int, times: int) -> list[int]:
+    result: list[int] = []
+    i: int = 0
+    while i < times:
+        result.append(value)
+        i = i + 1
+    return result
+
+def take(n: int, data: list[int]) -> list[int]:
+    result: list[int] = []
+    i: int = 0
+    while i < n:
+        if i >= len(data):
+            return result
+        val: int | None = data[i]
+        if val is not None:
+            result.append(val)
+        i = i + 1
+    return result
+
+def flatten(lists: list[list[int]]) -> list[int]:
+    result: list[int] = []
+    for inner in lists:
+        for val in inner:
+            result.append(val)
+    return result
+
+def enumerate_list(data: list[str]) -> list[int]:
+    result: list[int] = []
+    i: int = 0
+    while i < len(data):
+        result.append(i)
+        i = i + 1
+    return result

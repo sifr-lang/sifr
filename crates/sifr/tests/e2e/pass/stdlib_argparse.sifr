@@ -1,0 +1,29 @@
+# Test sifr.argparse module
+from sifr.argparse import parse_flag, parse_option, parse_positional
+
+def main():
+    args: list[str] = ["--output", "file.txt", "input.sifr"]
+
+    # parse_flag
+    verbose: bool = parse_flag(args, "--output")
+    print(verbose)
+
+    quiet: bool = parse_flag(args, "--quiet")
+    print(quiet)
+
+    # parse_option
+    output: str = parse_option(args, "--output", "default.txt")
+    print(output)
+
+    missing: str = parse_option(args, "--format", "json")
+    print(missing)
+
+    # parse_positional (skips --option value pairs)
+    pos0: str = parse_positional(args, 0, "none")
+    print(pos0)
+
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: file.txt
+# expect-stdout: json
+# expect-stdout: input.sifr
