@@ -249,6 +249,9 @@ struct RustEmitter {
     module_constants: HashMap<String, (Type, String)>,
     /// Set of class names that have generic type parameters
     generic_classes: HashSet<String>,
+    /// Set of parameter names that are borrowed (&T) in the current function.
+    /// Used to emit dereference (*name) in comparisons where &String != String.
+    borrowed_params: HashSet<String>,
 }
 
 impl RustEmitter {
@@ -277,6 +280,7 @@ impl RustEmitter {
             nested_fn_captures: HashMap::new(),
             module_constants: HashMap::new(),
             generic_classes: HashSet::new(),
+            borrowed_params: HashSet::new(),
         }
     }
 
@@ -1345,6 +1349,16 @@ impl RustEmitter {
 
         // Pre-scan: collect mutated variables so we know which need `mut`
         self.mutated_vars = collect_mutated_vars(&func.body);
+
+        // Track borrowed parameters for dereference in comparisons
+        self.borrowed_params.clear();
+        for param in &func.params {
+            if param.convention == ParamConvention::Borrow
+                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            {
+                self.borrowed_params.insert(param.name.clone());
+            }
+        }
 
         // Emit decorator comments before the function
         for decorator in &func.decorators {
@@ -3298,9 +3312,10 @@ impl RustEmitter {
                             self.write(&format!(" {} ", op));
                             self.emit_expr(&comparators[0]);
                         } else {
-                            self.emit_expr(left);
+                            // Dereference borrowed params in comparisons to avoid &String == String
+                            self.emit_expr_for_compare(left);
                             self.write(&format!(" {} ", op));
-                            self.emit_expr(&comparators[0]);
+                            self.emit_expr_for_compare(&comparators[0]);
                         }
                     }
                 } else {
@@ -3634,10 +3649,18 @@ impl RustEmitter {
                                 let (ref param_ty, convention) = pts[i];
                                 // Option param with non-Option arg -> wrap in Some()
                                 if is_option_type(param_ty) && !is_option_type(arg.ty()) && !matches!(arg, HirExpr::NoneLiteral) {
-                                    self.emit_borrow_prefix(convention, arg.ty());
+                                    // Use param_ty for ownership check: the wrapped Some(...) is Option<T> (Move),
+                                    // not the inner arg type which may be Copy
+                                    self.emit_borrow_prefix(convention, param_ty);
                                     self.write("Some(");
                                     self.emit_expr(arg);
                                     self.write(")");
+                                    continue;
+                                }
+                                // None literal passed to Option param -> emit &None for borrowed params
+                                if is_option_type(param_ty) && matches!(arg, HirExpr::NoneLiteral) {
+                                    self.emit_borrow_prefix(convention, param_ty);
+                                    self.emit_expr(arg);
                                     continue;
                                 }
                                 // Non-Option union param -> wrap in enum variant
@@ -3646,7 +3669,9 @@ impl RustEmitter {
                                         let arg_ty = arg.ty();
                                         if let Some(variant) = find_union_variant(members, arg_ty) {
                                             let enum_name = param_ty.union_enum_name();
-                                            self.emit_borrow_prefix(convention, arg.ty());
+                                            // Use param_ty for ownership check: the wrapped enum value is a Union (Move),
+                                            // not the inner arg type which may be Copy (e.g., Int inside IntOrStr)
+                                            self.emit_borrow_prefix(convention, param_ty);
                                             self.write(&format!("{}::{}(", enum_name, variant));
                                             self.emit_expr(arg);
                                             self.write(")");
@@ -4710,6 +4735,21 @@ impl RustEmitter {
             self.write("&");
             self.emit_expr(expr);
         }
+    }
+
+    /// Emit an expression for use in comparisons, dereferencing borrowed params.
+    /// When a function parameter is `&String` (borrow-by-default), comparing it
+    /// directly with a `String` fails in Rust (`&String != String`).
+    /// This method emits `*name` for borrowed params so the comparison works.
+    fn emit_expr_for_compare(&mut self, expr: &HirExpr) {
+        if let HirExpr::Name { name, ty } = expr {
+            if self.borrowed_params.contains(name) && matches!(ty, Type::Str) {
+                self.write("*");
+                self.emit_expr(expr);
+                return;
+            }
+        }
+        self.emit_expr(expr);
     }
 
     /// Emit an expression as bytes for stdlib call sites (hash, encoding).

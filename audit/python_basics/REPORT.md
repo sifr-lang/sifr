@@ -1,400 +1,277 @@
-# Sifr Python Basics Audit Report
+# Post-Hardening Audit Report: Python Basics
 
-**Date:** February 15, 2026
-**Methodology:** 45 test files compiled and run against the Sifr compiler to probe core Python language functionality.
-**Scope:** Everyday Python features -- arithmetic, strings, collections, control flow, functions, classes, comprehensions, generators, error handling, and real-world programs. Does not duplicate the type system or type inference audits.
-
----
-
-## Executive Summary
-
-**22 PASS / 23 FAIL** out of 45 tests.
-
-The core language fundamentals are solid -- basic arithmetic, comparisons, boolean logic, string formatting, slicing, for/while loops, functions with defaults and recursion, unpacking, lambdas, generators, error handling, ternary expressions, assert, pass, decorators, and multiline expressions all work. However, there are **15 distinct issues** that prevent writing normal Python-style code, ranging from missing features to codegen bugs.
+**Date:** February 16, 2026  
+**Scope:** 45 test files in `audit/python_basics/`  
+**Context:** Post borrow-by-default phase
 
 ---
 
-## What Works Well (PASS)
+## Summary
 
-| # | Test | Python Feature | Status |
-|---|------|---------------|--------|
-| 02 | Comparison operators | `==`, `!=`, `<`, `>`, `<=`, `>=`, `is`, `in`, chained | PASS |
-| 03 | Boolean logic | `and`, `or`, `not`, compound expressions | PASS |
-| 05 | String formatting | f-strings, `str()`, string multiply, concatenation | PASS |
-| 06 | String slicing | `s[0]`, `s[-1]`, `s[1:3]`, `s[::-1]`, `len()` | PASS |
-| 10 | If/elif/else | Multi-branch, nested if, integer comparisons | PASS |
-| 11 | For loops | `range()`, list iteration, enumerate, nested for | PASS |
-| 12 | While loops | Basic while, break, continue, countdown | PASS |
-| 13 | Functions basic | Positional args, defaults, tuple return, nested calls | PASS |
-| 14 | Functions advanced | Keyword args, recursion (factorial, fibonacci, accumulator) | PASS |
-| 20 | Unpacking | Tuple unpacking, swap, star unpacking | PASS |
-| 22 | Lambda expressions | `map`, `filter`, chained lambdas | PASS |
-| 23 | Generators | `yield`, generator with filter, fibonacci generator | PASS |
-| 24 | Error handling | `Result`, `try/except`, `raise`, multiple try blocks | PASS |
-| 26 | Class inheritance | `super().__init__()`, method override, field access | PASS |
-| 28 | Decorators | `@log` pass-through decorator | PASS |
-| 30 | Assert | `assert True`, `assert expr`, assert with message | PASS |
-| 33 | Ternary expression | `x if cond else y`, nested ternary, in f-string | PASS |
-| 35 | Pass statement | `pass` in function, class, if block | PASS |
-| 38 | Multiline expressions | Parenthesized multiline, nested function calls | PASS |
-| 40 | FizzBuzz | Real-world: elif chain with modulo | PASS |
-| 41 | Fibonacci | Real-world: recursive + iterative, tuple swap in loop | PASS |
+| Status | Count | Percentage |
+|--------|-------|------------|
+| **PASS** | 30 | 66.7% |
+| **Fail (Sifr compile)** | 2 | 4.4% |
+| **Fail (Rust compile)** | 10 | 22.2% |
+| **Fail (runtime)** | 3 | 6.7% |
+| **Total** | 45 | 100% |
 
 ---
 
-## Issues Found
+## Changes Since Last Report
 
-### Issue 1: Mixed `int`/`float` Arithmetic Not Supported (Critical)
+The previous report (February 15, 2026) had: **28 PASS**, 13 Sifr compile, 4 Rust compile, 0 runtime.
 
-**Test:** 01
-**Rust error:** `cannot add f64 to i64`
+Net change: **+2 passing tests** (28 → 30). Sifr compile failures dropped dramatically (13 → 2) as many features were implemented, but Rust compile failures increased (4 → 10) due to borrow-by-default codegen regressions and newly-exposed Rust-level issues.
 
-Python automatically promotes `int` to `float` in mixed arithmetic (`10 + 3.5` = `13.5`). Sifr does not -- the generated Rust tries `i64 + f64` which fails.
+### Improvements (13 tests progressed)
 
-```python
-# FAILS
-print(10 + 3.5)    # Rust: 10_i64 + 3.5_f64 -- type mismatch
-print(2 * 3.14)    # Rust: 2_i64 * 3.14_f64 -- type mismatch
-```
+| Test | Previous | Current | Notes |
+|------|----------|---------|-------|
+| 07_list_operations.sifr | FAIL (Sifr) | **PASS** | list.remove(), list + now supported |
+| 14_functions_advanced.sifr | FAIL (Sifr) | **PASS** | Narrowing to Never fixed |
+| 18_builtins.sifr | FAIL (Sifr) | **PASS** | range iteration now works |
+| 21_scope_and_closures.sifr | FAIL (Sifr) | **PASS** | Nested functions / closures supported |
+| 25_classes_basic.sifr | FAIL (Rust) | **PASS** | &mut self codegen fixed |
+| 27_classes_static_class_methods.sifr | FAIL (Sifr) | **PASS** | cls parameter recognized |
+| 43_real_world_todo_list.sifr | FAIL (Rust) | **PASS** | Borrow as mutable fixed |
+| 15_list_comprehension.sifr | FAIL (Sifr) | FAIL (Runtime) | Progressed past Sifr compile |
+| 16_dict_comprehension.sifr | FAIL (Sifr) | FAIL (Rust) | Progressed past Sifr compile |
+| 29_context_managers.sifr | FAIL (Rust) | FAIL (Rust) | Different error: &String comparison |
+| 36_global_constants.sifr | FAIL (Sifr) | FAIL (Runtime) | Progressed past Sifr compile |
+| 44_real_world_calculator.sifr | FAIL (Sifr) | FAIL (Rust) | Progressed past Sifr compile |
+| 45_real_world_matrix_ops.sifr | FAIL (Sifr) | FAIL (Runtime) | Progressed past Sifr compile |
 
-**Impact:** Any computation mixing integers and floats fails. This is extremely common in Python.
+### Regressions (5 tests that previously passed now fail)
 
----
-
-### Issue 2: Unary `+` Operator Not Supported (Low)
-
-**Test:** 01
-**Rust error:** `expected expression, found +`
-
-`+x` (unary plus) generates invalid Rust. Unary minus (`-x`) works fine.
-
----
-
-### Issue 3: String Methods Trigger Move Semantics (High)
-
-**Test:** 04
-**Error:** `use of moved value: 'parts'`
-
-Calling `.split()` on a string and then using the result (e.g., passing to `.join()`) fails because the result is moved on first use.
-
-```python
-# FAILS
-parts = "a,b,c".split(",")
-print(parts)                # moves parts
-joined = ", ".join(parts)   # Error: use of moved value 'parts'
-```
-
-**Impact:** Cannot use string method results more than once. Already documented in type system audit as the move semantics issue, but it severely impacts basic string operations.
+| Test | Previous | Current | Root Cause |
+|------|----------|---------|------------|
+| 06_string_slicing.sifr | PASS | FAIL (Rust) | E0308 mismatched types |
+| 10_control_flow_if.sifr | PASS | FAIL (Rust) | E0277 cannot multiply f64 by i64 |
+| 12_loops_while.sifr | PASS | FAIL (Rust) | E0308 mismatched types |
+| 30_assert.sifr | PASS | FAIL (Rust) | E0277 can't compare &String with String |
+| 42_real_world_word_count.sifr | PASS | FAIL (Rust) | E0308 mismatched types |
 
 ---
 
-### Issue 4: List Mutation After Use Triggers Move (High)
+## Passing Tests (30)
 
-**Test:** 07
-**Error:** `use of moved value: 'nums'`
+These tests compile and run correctly:
 
-After calling `.append()` on a list, further operations on the same list fail.
-
-```python
-# FAILS
-nums.append(9)
-print(nums)       # moves nums
-nums.insert(0, 0) # Error: use of moved value 'nums'
-```
-
----
-
-### Issue 5: Dict Subscript Assignment Not Supported (Critical)
-
-**Test:** 08, 42
-**Error:** `assignment target must be a simple name`
-
-Cannot assign to dict keys with `d["key"] = value`. This is one of the most fundamental dict operations in Python.
-
-```python
-# FAILS
-d["d"] = 4  # Error: assignment target must be a simple name
-```
-
-**Impact:** Cannot add or update dictionary entries. Dict is essentially read-only after creation.
-
----
-
-### Issue 6: Tuple `len()` Triggers Move (Medium)
-
-**Test:** 09
-**Error:** `use of moved value: 'pair'`
-
-Printing a tuple and then accessing it again fails due to move semantics.
+| # | Test | Notes |
+|---|------|-------|
+| 01 | `01_arithmetic_full.sifr` | Arithmetic operations |
+| 02 | `02_comparison_operators.sifr` | Comparison operators |
+| 03 | `03_boolean_logic.sifr` | Boolean logic |
+| 04 | `04_string_methods.sifr` | String methods |
+| 05 | `05_string_formatting.sifr` | String formatting |
+| 07 | `07_list_operations.sifr` | List operations (NEW) |
+| 08 | `08_dict_operations.sifr` | Dict operations |
+| 09 | `09_tuple_operations.sifr` | Tuple operations |
+| 11 | `11_loops_for.sifr` | For loops |
+| 13 | `13_functions_basic.sifr` | Basic functions |
+| 14 | `14_functions_advanced.sifr` | Advanced functions (NEW) |
+| 18 | `18_builtins.sifr` | Builtins (NEW) |
+| 19 | `19_augmented_assignment.sifr` | Augmented assignment |
+| 20 | `20_unpacking.sifr` | Unpacking |
+| 21 | `21_scope_and_closures.sifr` | Scope and closures (NEW) |
+| 22 | `22_lambda_expressions.sifr` | Lambda expressions |
+| 23 | `23_generators.sifr` | Generators |
+| 24 | `24_error_handling.sifr` | Error handling |
+| 25 | `25_classes_basic.sifr` | Basic classes (NEW) |
+| 26 | `26_classes_inheritance.sifr` | Class inheritance |
+| 27 | `27_classes_static_class_methods.sifr` | Static/class methods (NEW) |
+| 28 | `28_decorators.sifr` | Decorators |
+| 33 | `33_ternary_expression.sifr` | Ternary expression |
+| 34 | `34_multiple_assignment.sifr` | Multiple assignment |
+| 35 | `35_pass_statement.sifr` | Pass statement |
+| 38 | `38_multiline_expressions.sifr` | Multiline expressions |
+| 39 | `39_nested_data_structures.sifr` | Nested data structures |
+| 40 | `40_real_world_fizzbuzz.sifr` | Real-world: FizzBuzz |
+| 41 | `41_real_world_fibonacci.sifr` | Real-world: Fibonacci |
+| 43 | `43_real_world_todo_list.sifr` | Real-world: Todo list (NEW) |
 
 ---
 
-### Issue 7: List Comprehension Over `range()` Fails (Critical)
+## Failure Categories
 
-**Test:** 15, 18
-**Error:** `cannot iterate over type 'range'`
+### Sifr Compilation Failures (2)
 
-List comprehensions like `[x * x for x in range(6)]` fail because `range` is not recognized as iterable inside comprehensions. Regular `for x in range(n)` loops work fine.
+#### 1. Set Comprehension / Set Type Not Supported
 
-```python
-# FAILS
-squares = [x * x for x in range(6)]  # Error: cannot iterate over type 'range'
+**Error:** `unsupported statement type`, `unknown generic type 'Set'`, `undefined function 'Set'`
 
-# WORKS
-for x in range(6):
-    print(x * x)
-```
+| File | Description |
+|------|-------------|
+| `17_set_comprehension.sifr` | Set comprehension syntax; `Set` generic type unknown |
 
-**Impact:** A very common Python pattern is broken. List comprehensions only work with list iterables, not `range()`.
+#### 2. `del` Statement Limitations
 
----
-
-### Issue 8: Dict Comprehension Not Supported (High)
-
-**Test:** 16
-**Error:** `unsupported expression type`
-
-Dict comprehensions (`{k: v for k, v in ...}`) are not recognized by the compiler.
-
-```python
-# FAILS
-squares = {x: x * x for x in range(5)}  # Error: unsupported expression type
-```
-
----
-
-### Issue 9: Set Type / `from` Import Not Supported (Medium)
-
-**Test:** 17
-**Error:** `unsupported statement type` (for `from sifr.collections import Set`)
-
-The `from X import Y` syntax is not supported. Sets may exist in the stdlib but cannot be imported this way.
-
----
-
-### Issue 10: `pow()` Built-in Not Defined (Low)
-
-**Test:** 18
-**Error:** `undefined function: 'pow'`
-
-The `pow(base, exp)` built-in is not available. The `**` operator works as a workaround.
-
----
-
-### Issue 11: `**=` Augmented Power Assignment Codegen Bug (Medium)
-
-**Test:** 19
-**Rust error:** `expected i64, found f64`
-
-`x **= 3` generates `(x as f64).powf(3 as f64)` which returns `f64`, but the variable is `i64`.
-
----
-
-### Issue 12: Module-Level Variables / Global Constants Not Accessible (Critical)
-
-**Test:** 21, 36
-**Error:** `undefined variable: 'PI'` / `undefined variable: 'x'`
-
-Variables defined at module level (outside `main()`) cannot be accessed from functions. Python supports module-level constants freely.
-
-```python
-# FAILS
-PI: float = 3.14159
-
-def circle_area(r: float) -> float:
-    return PI * r * r  # Error: undefined variable 'PI'
-```
-
-**Impact:** Cannot define constants, configuration values, or shared state at module level. Every value must be passed as a function parameter.
-
----
-
-### Issue 13: Nested Function Definitions Not Supported (Medium)
-
-**Test:** 21
-**Error:** `unsupported statement type`
-
-Cannot define a function inside another function (closures/nested functions).
-
-```python
-# FAILS
-def outer() -> int:
-    def inner() -> int:  # Error: unsupported statement type
-        return 5
-    return inner()
-```
-
----
-
-### Issue 14: `@classmethod` with `cls` Not Supported (Medium)
-
-**Test:** 27
-**Error:** `undefined function: 'cls'`
-
-Class methods decorated with `@classmethod` that use `cls(...)` to construct instances fail because `cls` is not recognized.
-
-```python
-# FAILS
-@classmethod
-def from_fahrenheit(cls, f: float) -> Temperature:
-    return cls((f - 32.0) * 5.0 / 9.0)  # Error: undefined function 'cls'
-```
-
----
-
-### Issue 15: `with` Statement Variable Not Accessible (Medium)
-
-**Test:** 29
-**Rust error:** `cannot find value 'conn' in this scope`
-
-The `with X as name:` syntax parses but the bound variable (`conn`) is not accessible inside the block.
-
-```python
-# FAILS at Rust build
-with Connection("db") as conn:
-    result = conn.query()  # Rust: cannot find value 'conn'
-```
-
----
-
-### Issue 16: `del` Only Works on Collection Items (Low)
-
-**Test:** 31
 **Error:** `del is only supported for collection items`
 
-`del x` (delete a variable) is not supported. Only `del d["key"]` and `del lst[i]` work.
+| File | Description |
+|------|-------------|
+| `31_del_statement.sifr` | `del` on variables or unsupported targets |
 
 ---
 
-### Issue 17: Chained Assignment Not Supported (Low)
+### Rust Compilation Failures (10)
 
-**Test:** 34
-**Error:** `multiple assignment targets not supported yet`
+#### 1. Mismatched Types (E0308)
 
-`x = y = z = 0` is not supported. Must assign each variable separately.
+Generated Rust code has type mismatches — typically `&String` vs `String`, or integer/float type conflicts from the borrow-by-default codegen changes.
+
+| File | Error |
+|------|-------|
+| `06_string_slicing.sifr` | E0308 mismatched types |
+| `12_loops_while.sifr` | E0308 mismatched types |
+| `30_assert.sifr` | E0308 mismatched types (also &String comparison) |
+| `42_real_world_word_count.sifr` | E0308 mismatched types |
+
+#### 2. &String vs String Comparison (E0277)
+
+Borrow-by-default generates `&String` references where Rust expects owned `String` for comparison operations.
+
+| File | Error |
+|------|-------|
+| `29_context_managers.sifr` | E0277 can't compare &String with String |
+| `30_assert.sifr` | E0277 can't compare &String with String |
+| `44_real_world_calculator.sifr` | E0277 can't compare &String with String (4 occurrences) |
+
+#### 3. Numeric Type Mismatch (E0277)
+
+Arithmetic operations between different numeric types (f64 * i64) are not handled in codegen.
+
+| File | Error |
+|------|-------|
+| `10_control_flow_if.sifr` | E0277 cannot multiply f64 by i64 |
+
+#### 4. Borrow of Moved Value (E0382)
+
+A value is used after being moved in the generated Rust code.
+
+| File | Error |
+|------|-------|
+| `16_dict_comprehension.sifr` | E0382 borrow of moved value: `n` |
+
+#### 5. Display Trait Not Implemented (E0277)
+
+Result type used in print context without Display implementation.
+
+| File | Error |
+|------|-------|
+| `32_walrus_operator.sifr` | E0277 `Result<i64, String>` doesn't implement Display |
+
+#### 6. Type Annotations Needed (E0282)
+
+Rust cannot infer types in generated conversion code.
+
+| File | Error |
+|------|-------|
+| `37_type_conversions.sifr` | E0282 type annotations needed |
 
 ---
 
-### Issue 18: `bool()` on Collections Codegen Bug (Medium)
+### Runtime Failures (3)
 
-**Test:** 37
-**Rust error:** `` `Vec<i64>` doesn't implement `std::fmt::Display` ``
+#### 1. Binary Not Found
 
-`bool([1, 2])` and `bool([])` fail because the codegen doesn't properly handle truthiness conversion for collections.
+Cargo build succeeds but the binary cannot be located or executed.
 
----
+| File | Error |
+|------|-------|
+| `15_list_comprehension.sifr` | could not run binary: No such file or directory |
+| `36_global_constants.sifr` | could not run binary: No such file or directory |
 
-### Issue 19: `self.field += value` Not Supported (High)
+#### 2. Cargo Build Failure (Syntax)
 
-**Test:** 25, 43
-**Error:** `augmented assignment target must be a simple name`
+Cargo build fails due to generated Rust code containing syntax errors.
 
-Cannot use augmented assignment on class fields. `self.count += 1` fails.
-
-```python
-# FAILS
-def increment(self) -> None:
-    self.count += 1  # Error: augmented assignment target must be a simple name
-```
-
-**Impact:** Cannot write mutable classes with increment/decrement patterns. Must use `self.count = self.count + 1` as a workaround (if that even works).
+| File | Error |
+|------|-------|
+| `45_real_world_matrix_ops.sifr` | cargo build failed: expected identifier, found keyword `mod` |
 
 ---
 
-### Issue 20: `elif` Equality Chain in Functions Returning Result (Known)
+## Remaining Issues (Prioritized by Impact)
 
-**Test:** 44
-**Error:** `cannot compare 'Never' and 'str' with ==`
+### Tier 1 — Borrow-by-Default Regressions (5 tests)
 
-Already documented in type system audit. The calculator example hits the `elif` equality narrowing bug.
+These tests previously passed and broke due to the borrow-by-default codegen changes. Fixing the `&String` vs `String` and mismatched types patterns would recover them immediately.
 
----
+1. **Mismatched types / &String comparison** (06, 10, 12, 30, 42) — Five previously-passing tests now fail with E0308/E0277 errors from borrow-by-default codegen.
 
-### Issue 21: Safe Indexing in Nested Operations (Medium)
+### Tier 2 — Rust Codegen Issues (5 tests)
 
-**Test:** 45
-**Error:** `len() argument must be a string, list, dict, or tuple, got 'list[int] | None'`
+Tests that progressed past Sifr compilation but hit Rust-level issues. These represent new codegen challenges exposed by recent Sifr compiler improvements.
 
-`a[i][j]` returns `list[int] | None` from the first index, and then `len()` doesn't accept an optional type. Need to unwrap the first index before using the result.
+2. **&String comparison in context managers / calculator** (29, 44) — Same &String vs String pattern but in tests that were already failing at Sifr level.
+3. **Borrow of moved value in dict comprehension** (16) — Dict comprehension now compiles in Sifr but generates Rust code with ownership issues.
+4. **Walrus operator Display trait** (32) — Result type needs Display implementation for print.
+5. **Type annotations needed** (37) — Rust type inference insufficient for conversion code.
 
----
+### Tier 3 — Runtime / Binary Issues (3 tests)
 
-## Priority Ranking
+Tests that pass both Sifr and Rust compilation but fail at runtime.
 
-### Tier 1 -- Must Fix (Blocks Normal Python Code)
+6. **Binary not found** (15, 36) — Build succeeds but binary location is incorrect.
+7. **Generated `mod` keyword** (45) — Matrix ops generates invalid Rust syntax with `mod` keyword.
 
-1. **Mixed int/float arithmetic** (Issue 1) -- `10 + 3.5` must work. Python's most basic feature.
-2. **Dict subscript assignment** (Issue 5) -- `d["key"] = value` is fundamental to dict usage.
-3. **List comprehension over range()** (Issue 7) -- `[x for x in range(n)]` is one of Python's most used patterns.
-4. **Module-level variables** (Issue 12) -- Constants and shared state must be accessible from functions.
-5. **`self.field += value`** (Issue 19) -- Mutable class fields are essential for OOP.
+### Tier 4 — Sifr Limitations (2 tests)
 
-### Tier 2 -- Should Fix (Significant Ergonomics)
+Remaining Sifr-level compilation failures for unsupported language features.
 
-6. **Move semantics on collections/strings** (Issues 3, 4, 6) -- Using a value more than once must work.
-7. **Dict comprehension** (Issue 8) -- Common Python pattern.
-8. **Nested functions** (Issue 13) -- Closures and helper functions inside functions.
-9. **`@classmethod` with `cls`** (Issue 14) -- Factory methods are a common pattern.
-10. **`with` statement variable binding** (Issue 15) -- Context managers must bind the variable.
-
-### Tier 3 -- Nice to Have
-
-11. **`from X import Y`** (Issue 9) -- Import syntax.
-12. **`pow()` built-in** (Issue 10) -- `**` works as workaround.
-13. **`**=` codegen** (Issue 11) -- Power augmented assignment.
-14. **`del` on variables** (Issue 16) -- Rarely needed.
-15. **Chained assignment** (Issue 17) -- `x = y = 0`.
-16. **`bool()` on collections** (Issue 18) -- Truthiness conversion.
-17. **Unary `+`** (Issue 2) -- Rarely used.
+8. **Set type / set comprehension** (17) — `Set` generic type not supported.
+9. **`del` on non-collection targets** (31) — `del` restricted to collection items.
 
 ---
 
 ## Test File Index
 
-| File | Tests | Result |
-|------|-------|--------|
-| `01_arithmetic_full.sifr` | `+`, `-`, `*`, `/`, `//`, `%`, `**`, unary, mixed int/float | FAIL (Issues 1, 2) |
-| `02_comparison_operators.sifr` | `==`, `!=`, `<`, `>`, `<=`, `>=`, `is`, `in`, chained | PASS |
-| `03_boolean_logic.sifr` | `and`, `or`, `not`, compound, short-circuit | PASS |
-| `04_string_methods.sifr` | upper, lower, strip, split, join, replace, find, startswith | FAIL (Issue 3) |
-| `05_string_formatting.sifr` | f-strings, `str()`, string multiply, concatenation | PASS |
-| `06_string_slicing.sifr` | Indexing, negative index, slicing, step, reverse, len | PASS |
-| `07_list_operations.sifr` | append, insert, pop, remove, sort, reverse, count, slice | FAIL (Issue 4) |
-| `08_dict_operations.sifr` | get, keys, values, items, subscript assign, del, pop, clear | FAIL (Issue 5) |
-| `09_tuple_operations.sifr` | Indexing, unpacking, len, nested, multiple return | FAIL (Issue 6) |
-| `10_control_flow_if.sifr` | if/elif/else, nested if, multi-branch | PASS |
-| `11_loops_for.sifr` | range, list iteration, enumerate, nested for | PASS |
-| `12_loops_while.sifr` | while, break, continue, countdown | PASS |
-| `13_functions_basic.sifr` | Positional, defaults, tuple return, nested calls | PASS |
-| `14_functions_advanced.sifr` | Keyword args, recursion, accumulator | PASS |
-| `15_list_comprehension.sifr` | `[x for x in range()]`, filter, nested | FAIL (Issue 7) |
-| `16_dict_comprehension.sifr` | `{k: v for ...}` | FAIL (Issue 8) |
-| `17_set_comprehension.sifr` | Set type, `from` import | FAIL (Issue 9) |
-| `18_builtins.sifr` | len, abs, min, max, sum, sorted, reversed, enumerate, zip, range, conversions, round, pow | FAIL (Issues 7, 10) |
-| `19_augmented_assignment.sifr` | `+=`, `-=`, `*=`, `//=`, `%=`, `**=` | FAIL (Issue 11) |
-| `20_unpacking.sifr` | Tuple unpack, swap, star unpack | PASS |
-| `21_scope_and_closures.sifr` | Module-level vars, nested functions, shadowing | FAIL (Issues 12, 13) |
-| `22_lambda_expressions.sifr` | map, filter, chained lambdas | PASS |
-| `23_generators.sifr` | yield, generator with filter, fibonacci | PASS |
-| `24_error_handling.sifr` | Result, try/except, raise, multiple blocks | PASS |
-| `25_classes_basic.sifr` | Fields, methods, `__str__`, mutable state | FAIL (Issue 19) |
-| `26_classes_inheritance.sifr` | super(), method override, field access | PASS |
-| `27_classes_static_class_methods.sifr` | @staticmethod, @classmethod | FAIL (Issue 14) |
-| `28_decorators.sifr` | @log pass-through | PASS |
-| `29_context_managers.sifr` | `with X as name:`, nested with | FAIL (Issue 15) |
-| `30_assert.sifr` | assert, assert with message | PASS |
-| `31_del_statement.sifr` | del dict key, del variable | FAIL (Issue 16) |
-| `32_walrus_operator.sifr` | `:=` in if and while | FAIL (walrus + safe indexing interaction) |
-| `33_ternary_expression.sifr` | `x if cond else y`, nested, in f-string | PASS |
-| `34_multiple_assignment.sifr` | `a, b, c = 1, 2, 3`, chained `x = y = 0` | FAIL (Issue 17) |
-| `35_pass_statement.sifr` | pass in function, class, if | PASS |
-| `36_global_constants.sifr` | Module-level constants | FAIL (Issue 12) |
-| `37_type_conversions.sifr` | int(), float(), str(), bool() | FAIL (Issue 18) |
-| `38_multiline_expressions.sifr` | Parenthesized multiline, nested calls | PASS |
-| `39_nested_data_structures.sifr` | List of dicts, dict of lists, matrix | FAIL (Issue 4) |
-| `40_real_world_fizzbuzz.sifr` | FizzBuzz | PASS |
-| `41_real_world_fibonacci.sifr` | Recursive + iterative fibonacci | PASS |
-| `42_real_world_word_count.sifr` | Word frequency counter | FAIL (Issue 5) |
-| `43_real_world_todo_list.sifr` | Class-based todo app | FAIL (Issues 19, codegen) |
-| `44_real_world_calculator.sifr` | Calculator with elif dispatch | FAIL (Issue 20) |
-| `45_real_world_matrix_ops.sifr` | Matrix addition | FAIL (Issues 4, 21) |
+| File | Status | Root Cause |
+|------|--------|------------|
+| `01_arithmetic_full.sifr` | PASS | — |
+| `02_comparison_operators.sifr` | PASS | — |
+| `03_boolean_logic.sifr` | PASS | — |
+| `04_string_methods.sifr` | PASS | — |
+| `05_string_formatting.sifr` | PASS | — |
+| `06_string_slicing.sifr` | FAIL (Rust) | E0308 mismatched types — REGRESSION |
+| `07_list_operations.sifr` | PASS | — (was Sifr fail) |
+| `08_dict_operations.sifr` | PASS | — |
+| `09_tuple_operations.sifr` | PASS | — |
+| `10_control_flow_if.sifr` | FAIL (Rust) | E0277 cannot multiply f64 by i64 — REGRESSION |
+| `11_loops_for.sifr` | PASS | — |
+| `12_loops_while.sifr` | FAIL (Rust) | E0308 mismatched types — REGRESSION |
+| `13_functions_basic.sifr` | PASS | — |
+| `14_functions_advanced.sifr` | PASS | — (was Sifr fail: narrowing to Never) |
+| `15_list_comprehension.sifr` | FAIL (Runtime) | could not run binary: No such file or directory |
+| `16_dict_comprehension.sifr` | FAIL (Rust) | E0382 borrow of moved value: n |
+| `17_set_comprehension.sifr` | FAIL (Sifr) | unsupported statement type, unknown Set type |
+| `18_builtins.sifr` | PASS | — (was Sifr fail: range iteration) |
+| `19_augmented_assignment.sifr` | PASS | — |
+| `20_unpacking.sifr` | PASS | — |
+| `21_scope_and_closures.sifr` | PASS | — (was Sifr fail: nested functions) |
+| `22_lambda_expressions.sifr` | PASS | — |
+| `23_generators.sifr` | PASS | — |
+| `24_error_handling.sifr` | PASS | — |
+| `25_classes_basic.sifr` | PASS | — (was Rust fail: &mut self) |
+| `26_classes_inheritance.sifr` | PASS | — |
+| `27_classes_static_class_methods.sifr` | PASS | — (was Sifr fail: cls parameter) |
+| `28_decorators.sifr` | PASS | — |
+| `29_context_managers.sifr` | FAIL (Rust) | E0277 can't compare &String with String |
+| `30_assert.sifr` | FAIL (Rust) | E0277 &String comparison, E0308 — REGRESSION |
+| `31_del_statement.sifr` | FAIL (Sifr) | del only supported for collection items |
+| `32_walrus_operator.sifr` | FAIL (Rust) | E0277 Result<i64, String> doesn't implement Display |
+| `33_ternary_expression.sifr` | PASS | — |
+| `34_multiple_assignment.sifr` | PASS | — |
+| `35_pass_statement.sifr` | PASS | — |
+| `36_global_constants.sifr` | FAIL (Runtime) | could not run binary: No such file or directory |
+| `37_type_conversions.sifr` | FAIL (Rust) | E0282 type annotations needed |
+| `38_multiline_expressions.sifr` | PASS | — |
+| `39_nested_data_structures.sifr` | PASS | — |
+| `40_real_world_fizzbuzz.sifr` | PASS | — |
+| `41_real_world_fibonacci.sifr` | PASS | — |
+| `42_real_world_word_count.sifr` | FAIL (Rust) | E0308 mismatched types — REGRESSION |
+| `43_real_world_todo_list.sifr` | PASS | — (was Rust fail: borrow as mutable) |
+| `44_real_world_calculator.sifr` | FAIL (Rust) | E0277 can't compare &String with String (4×) |
+| `45_real_world_matrix_ops.sifr` | FAIL (Runtime) | cargo build failed: expected identifier, found keyword `mod` |

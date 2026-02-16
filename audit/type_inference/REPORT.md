@@ -1,259 +1,186 @@
-# Sifr Type Inference Audit Report
+# Post-Hardening Audit Report: Type Inference
 
-**Date:** February 15, 2026
-**Methodology:** 30 test files compiled and run against the Sifr compiler to probe type inference capabilities against TypeScript's inference engine.
-**Scope:** Purely inference -- where the compiler should figure out types without the programmer spelling them out. Does not duplicate the type system audit (unions, narrowing, generics, protocols, etc.).
-
----
-
-## Executive Summary
-
-**18 PASS / 12 FAIL** out of 30 tests.
-
-Sifr's type inference is **solid for the basics** -- it correctly infers variable types from literals, expressions, function calls, collection literals, comprehensions, map/filter, class constructors, loop variables, ternary expressions, walrus operators, builtins, zip/enumerate, and any/all. However, there are **7 distinct inference issues** that limit the experience compared to TypeScript.
+**Date:** February 16, 2026  
+**Scope:** 30 test files in `audit/type_inference/`  
+**Context:** Post borrow-by-default phase
 
 ---
 
-## What Works Well (PASS)
+## Summary
 
-| # | Test | What's Inferred | Status |
-|---|------|----------------|--------|
-| 02 | Variable from expression | `int` from `1 + 2`, `float` from `2.5 * 4.0`, `str` from concat, `bool` from comparison | PASS |
-| 03 | Variable from function call | Type from return type annotation | PASS |
-| 04 | Collection literal inference | `list[int]` from `[1,2,3]`, `dict[str,int]` from `{"a": 1}`, `tuple` from `(42, "hi")` | PASS |
-| 06 | From method call | `str` from `.upper()`, `int` from `len()`, `list[int]` from `sorted()` | PASS |
-| 07 | From conditional/ternary | `str` from `"yes" if True else "no"` | PASS |
-| 08 | From list comprehension | `list[int]` from `[x*x for x in nums]`, `list[str]`, `list[bool]` | PASS |
-| 09 | From map/filter | `list[int]` from `map(lambda x: x*2, nums)` | PASS |
-| 10 | From class constructor | `Point` from `Point(3.0, 4.0)` | PASS |
-| 11 | In for loop | Loop variable type from iterable element type | PASS |
-| 13 | Full program, no var annotations | All locals inferred from function calls, arithmetic, builtins | PASS |
-| 15 | From optional return | `str \| None` from function returning `str \| None` | PASS |
-| 19 | Reassignment same type | `int` stays `int` after `x = 1; x = 2` | PASS |
-| 21 | From builtin functions | `int` from `len()`, `abs()`, `min()`, `max()`, `sum()`; `str` from `str()`; `bool` from `bool()` | PASS |
-| 22 | Nested collections | `list[list[int]]` from `[[1,2],[3,4]]`, `dict[str, list[int]]`, `list[tuple[str,int]]` | PASS |
-| 25 | From walrus operator | `int` from `(n := len(items))` | PASS |
-| 26 | Lambda param from context | Lambda param inferred as `int` from `list[int]` context in `map` | PASS |
-| 28 | From zip/enumerate | `list[tuple[str,int]]` from `zip(names, ages)` | PASS |
-| 29 | From any/all | `bool` from `any(...)` and `all(...)` | PASS |
+| Status | Count | Percentage |
+|--------|-------|------------|
+| **PASS** | 19 | 63.3% |
+| **Fail (Sifr compile)** | 1 | 3.3% |
+| **Fail (Rust compile)** | 8 | 26.7% |
+| **Fail (Runtime)** | 2 | 6.7% |
+| **Total** | 30 | 100% |
 
 ---
 
-## Issues Found
+## Passing Tests (19)
 
-### Issue 1: No Return Type Inference (High)
+These tests compile and run correctly after the borrow-by-default phase:
 
-**Test:** 05
-**Error:** `type error: return type mismatch: expected 'None', got 'int'`
-
-When a function omits the `-> ReturnType` annotation, the compiler defaults to `-> None` instead of inferring the return type from `return` statements. TypeScript infers return types from all return paths.
-
-```python
-# FAILS -- compiler assumes -> None
-def add(a: int, b: int):
-    return a + b  # Error: expected 'None', got 'int'
-
-# WORKS -- explicit annotation
-def add(a: int, b: int) -> int:
-    return a + b
-```
-
-**TypeScript equivalent that works:**
-```typescript
-function add(a: number, b: number) { return a + b; }  // inferred as number
-```
-
-**Impact:** Every function must have an explicit return type annotation. This is the biggest ergonomic gap vs TypeScript, where return type annotations are almost always optional.
-
----
-
-### Issue 2: `print(None)` Fails -- `()` Not Display-able (Medium)
-
-**Test:** 01
-**Rust error:** `` `()` cannot be formatted with the default formatter ``
-
-Inferring a variable as `None` and then printing it fails because `None` maps to `()` in Rust, which doesn't implement `Display`.
-
-```python
-# FAILS at Rust build
-e = None
-print(e)  # Rust: println!("{}", e) where e: () -- () has no Display
-```
-
-**Impact:** Cannot print `None` values. This is a codegen issue -- the compiler should emit `println!("None")` or use `Debug` formatting for unit type.
+| # | Test | Notes |
+|---|------|-------|
+| 02 | `02_variable_from_expression.sifr` | Arithmetic, concat, comparison, logic |
+| 03 | `03_variable_from_function_call.sifr` | Infer from return type annotation |
+| 04 | `04_collection_literal_inference.sifr` | list, dict, tuple literals |
+| 06 | `06_infer_from_method_call.sifr` | .upper(), len(), sorted() |
+| 08 | `08_infer_from_comprehension.sifr` | List comprehensions |
+| 09 | `09_infer_from_map_filter.sifr` | map/filter with lambda |
+| 10 | `10_infer_from_class_constructor.sifr` | Class instantiation |
+| 11 | `11_infer_in_for_loop.sifr` | Loop variable from iterable |
+| 12 | `12_infer_chained_operations.sifr` | Chained filter/map/len |
+| 13 | `13_infer_mixed_no_annotation.sifr` | Full program, no var annotations |
+| 18 | `18_infer_empty_collection.sifr` | Empty collection inference |
+| 19 | `19_infer_reassignment_same_type.sifr` | Reassign same type |
+| 21 | `21_infer_from_builtin_functions.sifr` | len, abs, min, max, sum, str, bool |
+| 22 | `22_infer_nested_collection.sifr` | Nested list/dict/tuple |
+| 23 | `23_infer_class_field_access.sifr` | Field type from class |
+| 24 | `24_infer_from_index_access.sifr` | List/dict/tuple indexing |
+| 26 | `26_infer_lambda_param_from_context.sifr` | Lambda param from collection type |
+| 28 | `28_infer_from_zip_enumerate.sifr` | zip/enumerate result types |
+| 30 | `30_infer_from_string_ops.sifr` | String method return types |
 
 ---
 
-### Issue 3: Union Return Values Not Wrapped in Enum Variant (High)
+## Failure Categories
 
-**Test:** 16
-**Rust error:** `expected IntOrStr, found i64` -- suggests `try wrapping in IntOrStr::Int`
+### 1. Sifr: Reassignment to Different Type (Intentional)
 
-When a function returns a union type (`int | str`) and the inferred variable receives it, the codegen doesn't wrap return values in the generated enum variant.
+**Error:** `type mismatch: cannot assign 'str' to variable 'x' of type 'int'`
 
-```python
-# FAILS at Rust build
-def parse_input(s: str) -> int | str:
-    if s == "42":
-        return 42  # Rust: return 42_i64 -- should be IntOrStr::Int(42_i64)
-    return s
-```
+Sifr enforces static typing — reassigning a variable to a different type after inference is intentionally disallowed. This is by design.
 
-**Impact:** Functions returning union types (inferred at call site) fail at Rust compilation. This is a codegen bug -- return values must be wrapped in the appropriate enum variant.
+| File | Description |
+|------|-------------|
+| `20_infer_reassignment_different_type.sifr` | `x = 42` then `x = "hello"` — correctly rejected |
 
 ---
 
-### Issue 4: `print(Result)` Fails -- Result Not Display-able (Medium)
+### 2. Codegen: `print(None)` / Unit Type Display
 
-**Test:** 17
-**Rust error:** `` `Result<i64, String>` doesn't implement `std::fmt::Display` ``
+**Error:** `E0308 mismatched types`
 
-When a `try` block infers the variable type from a `Result`-returning function, printing the value inside the `try` block fails because the inferred type is `Result<T, E>` rather than the unwrapped `T`.
+`None` maps to Rust's `()` (unit type), which does not implement `Display`. The codegen should emit `println!("None")` or use `Debug` formatting for unit type.
 
-```python
-# FAILS at Rust build
-try:
-    val = parse_int("42")  # val inferred as Result[int, str]? Should be int
-    print(val)             # Rust: println!("{}", val) where val: Result<i64, String>
-except str as e:
-    print(e)
-```
-
-**Impact:** Type inference inside `try` blocks doesn't properly unwrap `Result` to the success type. The variable should be inferred as `int`, not `Result[int, str]`.
+| File | Description |
+|------|-------------|
+| `05_return_type_inference.sifr` | Return type defaults to `None`; inferred `dyn Any` or mixed types don't implement `Display` |
 
 ---
 
-### Issue 5: Tuple Literal Index Codegen Bug (Medium)
+### 3. Borrow-by-Default: `&String` vs `String` Comparison
 
-**Test:** 24
-**Rust error:** `no field '0_' on type (String, i64)` -- suggests `pair.0` instead of `pair.0_i64`
+**Error:** `E0277 String: Borrow<&String> not satisfied` / `can't compare &String with String`
 
-When indexing a tuple with a literal integer (`pair[0]`), the codegen emits `pair.0_i64` instead of `pair.0`.
+Under borrow-by-default, parameters are passed as `&String` but comparison operators expect owned `String` or matching reference types. The codegen needs to dereference or adjust comparison logic for borrowed parameters.
 
-```python
-pair: tuple[str, int] = ("hello", 42)
-a = pair[0]  # Rust: pair.0_i64 -- should be pair.0
-```
-
-**Impact:** Tuple indexing with inferred result type fails at Rust build. The codegen appends the integer suffix `_i64` to the tuple field access.
-
----
-
-### Issue 6: `int / int` Inferred as `float` but Codegen Emits `i64` (Medium)
-
-**Test:** 27
-**Rust error:** `expected f64, found i64`
-
-When `total / len(items)` is computed (both `int`), the type system infers `float` but the codegen emits `i64` division, creating a mismatch when the result is assigned to an inferred `float` variable.
-
-```python
-total = sum(items)       # int
-avg = total / len(items) # Sifr infers float, but Rust emits i64 / i64 = i64
-```
-
-**Impact:** Division between inferred `int` values doesn't properly coerce to `float` in the generated Rust.
+| File | Description |
+|------|-------------|
+| `07_infer_from_conditional.sifr` | `String: Borrow<&String>` not satisfied in conditional |
+| `15_infer_from_optional_return.sifr` | Can't compare `&String` with `String` |
+| `16_infer_from_union_return.sifr` | Can't compare `&String` with `String`, plus E0308 mismatched types |
+| `17_infer_from_result_return.sifr` | Can't compare `&String` with `String` (3 occurrences) |
 
 ---
 
-### Issue 7: No Type Widening on Reassignment (Expected Behavior, but Worth Noting)
+### 4. Borrow-by-Default: Mismatched Types and Move Errors
 
-**Test:** 20
-**Error:** `type error: type mismatch: cannot assign 'str' to variable 'x' of type 'int'`
+**Error:** `E0308 mismatched types`, `E0507 cannot move out of shared reference`
 
-Once a variable's type is inferred, it cannot be reassigned to a different type. This is **correct behavior** for a statically typed language (TypeScript also rejects this in strict mode), but worth documenting.
+Borrow-by-default introduces `&T` where `T` was expected, causing type mismatches. In some cases, code attempts to move a value out of a shared reference, which Rust forbids.
 
-```python
-x = 42       # inferred as int
-x = "hello"  # Error: cannot assign str to int
-```
-
-**Note:** This is actually the right design choice for Sifr. TypeScript also rejects this unless the variable is explicitly typed as `number | string`.
+| File | Description |
+|------|-------------|
+| `25_infer_from_walrus.sifr` | E0308 mismatched types |
+| `27_infer_multiline_no_annotations.sifr` | E0308 mismatched types + E0507 cannot move out of shared reference |
+| `29_infer_from_any_all.sifr` | E0308 mismatched types |
 
 ---
 
-### Existing Issues Surfaced Again (From Type System Audit)
+### 5. Runtime Failures
 
-These failures are caused by issues already documented in the type system audit, not new inference bugs:
-
-| Test | Error | Root Cause |
-|------|-------|------------|
-| 12 | `use of moved value: 'doubled'` | Ownership/move semantics (Type System Issue 4) |
-| 14 | `use of moved value: 'msg'` | Ownership/move semantics (Type System Issue 4) |
-| 18 | `use of moved value: 'empty_list'` | Ownership/move semantics (Type System Issue 4) |
-| 23 | `use of moved value: 'name'` | Ownership/move semantics (Type System Issue 4) |
-| 30 | `use of moved value: 'parts'` | Ownership/move semantics (Type System Issue 4) |
-
-These are all the same underlying problem: strings and collections are moved on use, preventing subsequent access. This is an ownership tracking issue, not an inference issue.
+| File | Error | Description |
+|------|-------|-------------|
+| `01_variable_from_literal.sifr` | `could not run binary: No such file or directory` | Binary not produced or path incorrect |
+| `14_infer_from_fstring.sifr` | Empty output | Binary runs but produces no output |
 
 ---
 
-## Missing TypeScript Inference Features
+## Regressions Since Last Audit (February 15, 2026)
 
-| Feature | TypeScript Behavior | Sifr Status |
-|---------|-------------------|-------------|
-| Return type inference | Inferred from all return paths | **Not implemented** -- defaults to `None` |
-| Contextual typing (callbacks) | `arr.map(x => x + 1)` infers `x` as element type | **Works** for built-in `map`/`filter` |
-| Generic inference | `identity(42)` infers `T = number` | **Not applicable** -- no generics |
-| Best common type | `[1, "hello"]` infers `(number \| string)[]` | **Not tested** -- likely fails (heterogeneous lists) |
-| Control flow inference | Type narrows through if/else | **Works** (covered in type system audit) |
-| Destructuring inference | `let { name, age } = user` infers types | **Not tested** -- Sifr has tuple unpacking but not object destructuring |
-| `typeof` inference | `if (typeof x === "string")` narrows | **N/A** -- Sifr uses `isinstance` |
-| Satisfies inference | `config satisfies Config` preserves literal types | **Not implemented** |
-| `as const` inference | `[1, 2, 3] as const` infers readonly tuple | **Not implemented** |
+Previous result: **24 PASS, 1 Fail (Sifr compile), 5 Fail (Rust compile)**.  
+Current result: **19 PASS, 1 Fail (Sifr compile), 8 Fail (Rust compile), 2 Fail (Runtime)**.
+
+**6 tests that previously passed now fail** — all related to the borrow-by-default phase:
+
+| Test | Previous | Current | Root Cause |
+|------|----------|---------|------------|
+| `07_infer_from_conditional.sifr` | PASS | FAIL (Rust) | `String: Borrow<&String>` not satisfied — borrow-by-default codegen |
+| `14_infer_from_fstring.sifr` | PASS | FAIL (Runtime) | Empty output — binary runs but produces nothing |
+| `15_infer_from_optional_return.sifr` | PASS | FAIL (Rust) | `&String` vs `String` comparison — borrow-by-default codegen |
+| `25_infer_from_walrus.sifr` | PASS | FAIL (Rust) | Mismatched types — borrow-by-default codegen |
+| `27_infer_multiline_no_annotations.sifr` | PASS | FAIL (Rust) | Mismatched types + cannot move out of shared reference |
+| `29_infer_from_any_all.sifr` | PASS | FAIL (Rust) | Mismatched types — borrow-by-default codegen |
+
+**Pattern:** 5 of the 6 regressions are Rust compile failures caused by borrow-by-default introducing `&T` references where the generated code expects owned `T` values. The codegen needs to insert dereferences, adjust comparisons, or clone where appropriate.
 
 ---
 
-## Priority Ranking
+## Remaining Issues (Prioritized by Impact)
 
-### Tier 1 -- Must Fix
+### Tier 1 — Borrow-by-Default Regressions (Blocks Previously Working Code)
 
-1. **Return type inference** (Issue 1) -- Every function requiring explicit return type is a major ergonomic burden. TypeScript's biggest inference win is that return types are almost never needed.
-2. **Union return value wrapping** (Issue 3) -- Functions returning union types silently fail at Rust build. Codegen must wrap return values in enum variants.
+1. **`&String` vs `String` comparisons** (07, 15, 16, 17) — Borrowed parameters can't be compared with owned strings. Codegen must dereference or adjust comparison operators.
+2. **Mismatched types from borrows** (25, 27, 29) — Borrow-by-default introduces `&T` where `T` is expected. Codegen must insert derefs or clones.
+3. **Cannot move out of shared reference** (27) — Code tries to move a value from behind `&`. Codegen must clone or restructure.
 
-### Tier 2 -- Should Fix
+### Tier 2 — Pre-Existing Issues
 
-3. **`print(None)` codegen** (Issue 2) -- Printing `None` should work.
-4. **Result unwrapping in try blocks** (Issue 4) -- Variables in `try` blocks should be inferred as the success type, not `Result`.
-5. **Tuple index codegen** (Issue 5) -- `pair[0]` should emit `pair.0`, not `pair.0_i64`.
-6. **`int / int` codegen** (Issue 6) -- Division result type and generated Rust must agree.
+4. **Return type inference** (05) — Functions default to `None` return type; `dyn Any` doesn't implement `Display`.
+5. **Runtime: binary not found** (01) — Binary not produced or path incorrect for `print(None)` test.
+6. **Runtime: empty output** (14) — F-string test binary runs but produces no output.
 
-### Tier 3 -- Nice to Have
+### Tier 3 — By Design
 
-7. **Type widening on reassignment** (Issue 7) -- Current behavior (reject) is correct for a strict language. No change needed.
+7. **Reassignment to different type** (20) — Correctly rejected. No change needed.
 
 ---
 
 ## Test File Index
 
-| File | Tests | Result |
-|------|-------|--------|
-| `01_variable_from_literal.sifr` | int, float, str, bool, None literals | FAIL (Issue 2) |
-| `02_variable_from_expression.sifr` | Arithmetic, concat, comparison, logic | PASS |
-| `03_variable_from_function_call.sifr` | Infer from return type | PASS |
-| `04_collection_literal_inference.sifr` | list, dict, tuple literals | PASS |
-| `05_return_type_inference.sifr` | Omitted return type annotation | FAIL (Issue 1) |
-| `06_infer_from_method_call.sifr` | .upper(), len(), sorted() | PASS |
-| `07_infer_from_conditional.sifr` | Ternary expressions | PASS |
-| `08_infer_from_comprehension.sifr` | List comprehensions | PASS |
-| `09_infer_from_map_filter.sifr` | map/filter with lambda | PASS |
-| `10_infer_from_class_constructor.sifr` | Class instantiation | PASS |
-| `11_infer_in_for_loop.sifr` | Loop variable from iterable | PASS |
-| `12_infer_chained_operations.sifr` | Chained filter/map/len | FAIL (move semantics) |
-| `13_infer_mixed_no_annotation.sifr` | Full program, no var annotations | PASS |
-| `14_infer_from_fstring.sifr` | F-string result type | FAIL (move semantics) |
-| `15_infer_from_optional_return.sifr` | `str \| None` from function | PASS |
-| `16_infer_from_union_return.sifr` | `int \| str` from function | FAIL (Issue 3) |
-| `17_infer_from_result_return.sifr` | `Result[int, str]` in try block | FAIL (Issue 4) |
-| `18_infer_empty_collection.sifr` | Empty list/dict | FAIL (move semantics) |
-| `19_infer_reassignment_same_type.sifr` | Reassign same type | PASS |
-| `20_infer_reassignment_different_type.sifr` | Reassign different type | FAIL (Issue 7 -- correct) |
-| `21_infer_from_builtin_functions.sifr` | len, abs, min, max, sum, str, bool | PASS |
-| `22_infer_nested_collection.sifr` | Nested list/dict/tuple | PASS |
-| `23_infer_class_field_access.sifr` | Field type from class | FAIL (move semantics) |
-| `24_infer_from_index_access.sifr` | List/dict/tuple indexing | FAIL (Issue 5) |
-| `25_infer_from_walrus.sifr` | Walrus operator | PASS |
-| `26_infer_lambda_param_from_context.sifr` | Lambda param from collection type | PASS |
-| `27_infer_multiline_no_annotations.sifr` | Multi-step computation | FAIL (Issue 6) |
-| `28_infer_from_zip_enumerate.sifr` | zip/enumerate result types | PASS |
-| `29_infer_from_any_all.sifr` | bool from any/all | PASS |
-| `30_infer_from_string_ops.sifr` | String method return types | FAIL (move semantics) |
+| File | Status | Root Cause |
+|------|--------|------------|
+| `01_variable_from_literal.sifr` | FAIL (Runtime) | Binary not found |
+| `02_variable_from_expression.sifr` | PASS | — |
+| `03_variable_from_function_call.sifr` | PASS | — |
+| `04_collection_literal_inference.sifr` | PASS | — |
+| `05_return_type_inference.sifr` | FAIL (Rust) | Return type inference / Display |
+| `06_infer_from_method_call.sifr` | PASS | — |
+| `07_infer_from_conditional.sifr` | FAIL (Rust) | Borrow: `&String` comparison **[REGRESSION]** |
+| `08_infer_from_comprehension.sifr` | PASS | — |
+| `09_infer_from_map_filter.sifr` | PASS | — |
+| `10_infer_from_class_constructor.sifr` | PASS | — |
+| `11_infer_in_for_loop.sifr` | PASS | — |
+| `12_infer_chained_operations.sifr` | PASS | — |
+| `13_infer_mixed_no_annotation.sifr` | PASS | — |
+| `14_infer_from_fstring.sifr` | FAIL (Runtime) | Empty output **[REGRESSION]** |
+| `15_infer_from_optional_return.sifr` | FAIL (Rust) | Borrow: `&String` vs `String` **[REGRESSION]** |
+| `16_infer_from_union_return.sifr` | FAIL (Rust) | Borrow: `&String` comparison + E0308 |
+| `17_infer_from_result_return.sifr` | FAIL (Rust) | Borrow: `&String` comparison (×3) |
+| `18_infer_empty_collection.sifr` | PASS | — |
+| `19_infer_reassignment_same_type.sifr` | PASS | — |
+| `20_infer_reassignment_different_type.sifr` | FAIL (Sifr) | Intentional — static typing |
+| `21_infer_from_builtin_functions.sifr` | PASS | — |
+| `22_infer_nested_collection.sifr` | PASS | — |
+| `23_infer_class_field_access.sifr` | PASS | — |
+| `24_infer_from_index_access.sifr` | PASS | — |
+| `25_infer_from_walrus.sifr` | FAIL (Rust) | Borrow: mismatched types **[REGRESSION]** |
+| `26_infer_lambda_param_from_context.sifr` | PASS | — |
+| `27_infer_multiline_no_annotations.sifr` | FAIL (Rust) | Borrow: mismatched types + move error **[REGRESSION]** |
+| `28_infer_from_zip_enumerate.sifr` | PASS | — |
+| `29_infer_from_any_all.sifr` | FAIL (Rust) | Borrow: mismatched types **[REGRESSION]** |
+| `30_infer_from_string_ops.sifr` | PASS | — |
