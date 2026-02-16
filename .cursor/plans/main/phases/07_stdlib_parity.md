@@ -1,6 +1,6 @@
 # Stdlib Parity
 
-This phase closes the remaining gaps between Sifr's stdlib and CPython's stdlib. It fixes compiler correctness issues (import error reporting, `with` statement protocol, `Callable`-as-struct-field), adds lazy iterator support, adds test infrastructure, expands the function surface (including generic stdlib functions), aligns API names with CPython, rolls out 6+ new class-based APIs (including `datetime`/`timedelta` with operator overloading), and ports ~500 CPython test assertions as behavioral validation.
+This phase closes the remaining gaps between Sifr's stdlib and CPython's stdlib. It fixes compiler correctness issues (import error reporting, `with` statement protocol, `Callable`-as-struct-field), adds lazy iterator support, adds test infrastructure, expands the function surface (including generic stdlib functions), aligns API names with CPython, rolls out 6 new class-based APIs — 7 concrete classes including `datetime`/`timedelta` with operator overloading, and ports ~500 CPython test assertions as behavioral validation.
 
 **Predecessor:** Phase 6 (Stdlib Architecture) — all 37 modules exist, the three-tier hybrid architecture is in place, and the class-in-stdlib pipeline is proven via `collections.Counter`.
 
@@ -179,7 +179,7 @@ Two CPython names collide with Rust strict keywords: `match` (`sifr.re`) and `mo
 
 ### Strategy
 
-Renames happen at the Sifr stdlib layer only — `_sifr.*` intrinsic names stay unchanged. Each `.sifr` file re-exports with the new name via wrapper functions. Old names kept as aliases initially.
+Renames happen at the Sifr stdlib layer only — `_sifr.*` intrinsic names stay unchanged. Each `.sifr` file re-exports with the new name via wrapper functions. Old names kept as aliases. Deprecation schedule: aliases kept in Phase 7, compiler warnings in Phase 8, removal in Phase 9.
 
 ### Definition of Done
 

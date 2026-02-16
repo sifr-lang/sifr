@@ -1,0 +1,19 @@
+# expect-stdout: 42
+# Tests: class with a Callable field compiles correctly
+
+from typing import Callable
+
+class Config:
+    value: int
+    callback: Callable[[int], int]
+
+    def __init__(self, value: int, callback: Callable[[int], int]):
+        self.value = value
+        self.callback = callback
+
+def double(x: int) -> int:
+    return x * 2
+
+def main():
+    c: Config = Config(42, double)
+    print(c.value)

@@ -298,6 +298,25 @@ impl Type {
         }
     }
 
+    /// Generate the Rust type for use in struct fields.
+    /// For most types this is the same as `rust_type()`, but `Callable` types
+    /// emit `Box<dyn Fn(...)>` instead of `impl Fn(...)` because `impl Trait`
+    /// is not allowed in struct field positions in Rust.
+    pub fn rust_type_for_struct_field(&self) -> String {
+        match self {
+            Self::Callable(params, _, ret) => {
+                let param_types: Vec<String> = params.iter().map(Self::rust_type).collect();
+                let ret_type = ret.rust_type();
+                if ret_type == "()" {
+                    format!("Box<dyn Fn({})>", param_types.join(", "))
+                } else {
+                    format!("Box<dyn Fn({}) -> {}>", param_types.join(", "), ret_type)
+                }
+            }
+            _ => self.rust_type(),
+        }
+    }
+
     /// Generate a Rust enum name for a union type.
     ///
     /// E.g., `int | str` -> `IntOrStr`, `int | str | bool` -> `IntOrStrOrBool`

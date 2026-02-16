@@ -688,7 +688,7 @@ All existing stdlib test files that use renamed functions must be updated. This 
 
 - All renamed functions work with CPython-compatible names
 - All E2E tests updated and passing
-- Old names still work (re-exported as aliases) — to be deprecated later
+- Old names still work (re-exported as aliases). Deprecation schedule: aliases kept in Phase 7, compiler warnings in Phase 8, removal in Phase 9
 - `cargo test` passes (zero regressions)
 
 ---
@@ -1175,7 +1175,7 @@ Per the CPython test portability research:
 | Test Infrastructure | m30 | S | 2 (`pvariance`, `pstdev`) | 3 | ~10 assertions | `assert_almost_eq`, variance bug fix |
 | Stdlib Functions | m31 | M | ~25 | ~12 | ~40 assertions | Function gaps + generic `bisect`/`heapq`/`itertools` |
 | Naming Alignment | m32 | S | 0 (renames) | 0 | ~0 (updates) | CPython-compatible names |
-| Class Rollout | m33 | L | 6 classes | ~5 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID, datetime/timedelta |
+| Class Rollout | m33 | L | 6 class APIs (7 classes) | ~10 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID, datetime/timedelta |
 | CPython Tests | m34 | M | 0 | 0 | ~500 assertions | Behavioral validation against CPython |
 
 **Cumulative impact:**
@@ -1184,7 +1184,7 @@ Per the CPython test portability research:
 |---|---|---|
 | Stdlib test assertions | ~160 | ~750+ |
 | Stdlib functions (across all modules) | ~120 | ~170+ |
-| Class-based APIs | 1 (Counter) | 7 (+ Path, Logger, Match, TopologicalSorter, UUID, datetime, timedelta) |
+| Class-based APIs | 1 (Counter) | 7 concrete classes across 6 APIs (+ Path, Logger, Match, TopologicalSorter, UUID, datetime/timedelta) |
 | Generic stdlib functions | 0 | `bisect`, `heapq`, `itertools` use `TypeVar` |
 | Modules with CPython-compatible names | ~5 | ~30+ |
 | Math function coverage | ~85% | ~95% |

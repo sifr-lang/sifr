@@ -5,4 +5,4 @@ def main():
     x: int = foo()
     print(x)
 
-# expect-error: undefined function: 'foo'
+# expect-error: unknown stdlib module 'sifr.nonexistent'

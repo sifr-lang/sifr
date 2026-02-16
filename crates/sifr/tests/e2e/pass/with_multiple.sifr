@@ -1,0 +1,36 @@
+# expect-stdout: A.__enter__
+# expect-stdout: B.__enter__
+# expect-stdout: using a and b
+# expect-stdout: B.__exit__
+# expect-stdout: A.__exit__
+# Tests: with statement with multiple context managers
+
+class CtxA:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __enter__(self) -> CtxA:
+        print("A.__enter__")
+        return self
+
+    def __exit__(self) -> None:
+        print("A.__exit__")
+
+class CtxB:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __enter__(self) -> CtxB:
+        print("B.__enter__")
+        return self
+
+    def __exit__(self) -> None:
+        print("B.__exit__")
+
+def main():
+    with CtxA("first") as a, CtxB("second") as b:
+        print("using a and b")
