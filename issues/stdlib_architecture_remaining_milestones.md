@@ -26,6 +26,9 @@ This plan synthesizes findings from three audit documents:
   - Iterator protocol blocks lazy `itertools`, `csv.reader`, `glob.iglob`
   - Exception types block `tomllib.TOMLDecodeError`, `graphlib.CycleError`
   - Context managers (`with`) block `io.open`, `tempfile.NamedTemporaryFile`
+- **Known compiler gaps (addressed in m29):**
+  - Importing from a nonexistent module silently fails — no "unknown module" error, only downstream "undefined function" when the symbol is used
+  - `with` statement is syntactic sugar only — no `__enter__`/`__exit__` protocol, no multiple context managers, no compile-time enforcement
 
 ---
 
@@ -34,36 +37,155 @@ This plan synthesizes findings from three audit documents:
 ```
 milestone_stdlib_classes (done)
     │
-    ├── m29: milestone_test_infra          (S — test infrastructure)
+    ├── m29: milestone_compiler_hardening   (S — import errors + with statement)
     │
-    ├── m30: milestone_stdlib_functions     (M — pure-Sifr + intrinsic function additions)
+    ├── m30: milestone_test_infra           (S — test infrastructure)
     │
-    ├── m31: milestone_stdlib_naming        (S — API naming alignment)
+    ├── m31: milestone_stdlib_functions     (M — pure-Sifr + intrinsic function additions)
     │
-    ├── m32: milestone_stdlib_class_rollout (L — 5 new stdlib classes)
+    ├── m32: milestone_stdlib_naming        (S — API naming alignment)
     │
-    └── m33: milestone_cpython_tests        (M — port CPython test assertions)
+    ├── m33: milestone_stdlib_class_rollout (L — 5 new stdlib classes)
+    │
+    └── m34: milestone_cpython_tests        (M — port CPython test assertions)
 ```
 
 **CPython test suite reference:** `/Users/yaseralnajjar/work/sifr/cpython/` — the CPython source tree used as the authoritative behavioral reference. Test files live at `Lib/test/test_<module>.py`. External test data (e.g., `Lib/test/mathdata/math_testcases.txt`) can be mined for additional test vectors.
 
 **Dependency chain:**
 ```
-milestone_stdlib_classes → m29 → m30 → m31 → m32 → m33 → milestone_async
+milestone_stdlib_classes → m29 → m30 → m31 → m32 → m33 → m34 → milestone_async
 ```
 
 **Rationale for ordering:**
-- **m29 before m30:** `assert_almost_eq` is needed to properly test the float-returning functions added in m30.
-- **m30 before m31:** Add the missing functions first, then rename everything in one pass. Renaming before adding would require naming new functions twice (once with old convention, once with new).
-- **m31 before m32:** Classes should be written with the final CPython-aligned names from the start.
-- **m32 before m33:** CPython test porting for class-based modules (re, graphlib, pathlib) requires the classes to exist first.
-- **m33 last:** Test porting is the validation layer — it should run against the final API surface.
+- **m29 first:** Fixes two compiler correctness issues (silent import failures, incomplete `with` statement) that affect every subsequent milestone. New stdlib modules added in m31-m33 need proper import error reporting, and `with` support is a prerequisite for `io.open()` and `tempfile` class APIs in m33.
+- **m30 before m31:** `assert_almost_eq` is needed to properly test the float-returning functions added in m31.
+- **m31 before m32:** Add the missing functions first, then rename everything in one pass. Renaming before adding would require naming new functions twice (once with old convention, once with new).
+- **m32 before m33:** Classes should be written with the final CPython-aligned names from the start.
+- **m33 before m34:** CPython test porting for class-based modules (re, graphlib, pathlib) requires the classes to exist first.
+- **m34 last:** Test porting is the validation layer — it should run against the final API surface.
 
-**Total estimated effort:** ~4-5 sprints (S=1-2 days, M=3-5 days, L=5-8 days)
+**Total estimated effort:** ~5-6 sprints (S=1-2 days, M=3-5 days, L=5-8 days)
 
 ---
 
-## m29: milestone_test_infra — Test Infrastructure for CPython Parity
+## m29: milestone_compiler_hardening — Import Errors and Context Managers
+
+**Goal:** Fix two compiler correctness gaps that affect developer experience and block stdlib features: (1) importing from a nonexistent module silently fails instead of producing a clear error, and (2) the `with` statement is incomplete — it's syntactic sugar for scoped blocks but doesn't implement the Python context manager protocol (`__enter__`/`__exit__`).
+
+**Size:** Small-Medium (2-3 days)
+
+### Issue 1: Silent Import Failures for Nonexistent Modules
+
+**Current behavior (confirmed by testing):**
+
+| Scenario | Current Error | Expected Error |
+|---|---|---|
+| `from sifr.math import sqrt` (valid) | None (works) | None (works) |
+| `from sifr.math import nonexistent` (bad member) | `module 'sifr.math' has no member 'nonexistent'` | Same (already correct) |
+| `from sifr.nonexistent import foo` (bad module) | `undefined function: 'foo'` (at usage site) | `unknown module 'sifr.nonexistent'` (at import) |
+| `from mymodule import bar` (bad local module) | `undefined function: 'bar'` (at usage site) | `unknown module 'mymodule'` (at import) |
+
+**Root cause in `crates/sifr_hir/src/lower.rs`:**
+
+The import resolution at line 422-474 checks `has_module` for `sifr.*` imports. When the module doesn't exist, the code falls through to the local module resolution path (line 476-503), which also finds nothing — but no error is emitted. The import is silently pushed to the imports list (line 505-509), and the error only surfaces later as "undefined function" when the symbol is used.
+
+**Fix:**
+
+After the `sifr.*` check and the local module resolution, add a check: if the module name doesn't exist in any externals map (functions, classes, constants), emit `"unknown module '{module_name}'"`. Specifically:
+
+1. For `sifr.*` modules: after the `has_module` check at line 425-427, if `has_module` is false, emit `"unknown stdlib module '{module_name}'"` and continue (don't fall through to local resolution).
+2. For local modules: after the local resolution loop at line 476-503, check if any names were actually resolved. If none were found and the module key doesn't exist in any externals map, emit `"unknown module '{module_name}'"`.
+
+**E2E tests:**
+
+- Update `crates/sifr/tests/e2e/fail/stdlib_invalid_module.sifr` — change expected error from `"undefined function: 'foo'"` to `"unknown stdlib module 'sifr.nonexistent'"` (or similar)
+- Add `crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr` — `from mymodule import bar` should produce `"unknown module 'mymodule'"`
+
+### Issue 2: Incomplete `with` Statement
+
+**Current behavior:**
+
+The `with` statement was implemented in `milestone_generators` but only as a minimal "scoped block" desugaring. The Definition of Done for that milestone included items that were never delivered:
+- "`ContextManager` protocol enforced at compile time" — **not done**
+- "E2E fail tests: `with_non_context_manager`" — **not done**
+- "E2E pass tests: `with_file`, `with_multiple`" — **not done**
+
+**What currently works:**
+- `with X() as y:` parses and compiles — but emits `{ let y = X(); ... }` (just a scoped block)
+- `with` without `as` works (defaults to `_with_val`)
+- One passing test: `with_basic.sifr`
+
+**What's missing:**
+
+| Gap | Description | Impact |
+|---|---|---|
+| `__enter__` call | Python's `with X() as y` calls `X().__enter__()` and binds the result to `y`. Currently `y = X()` directly | Incorrect semantics |
+| `__exit__` call | No cleanup call at scope end. Rust's `Drop` is not wired to `__exit__` | Resource leaks |
+| `ContextManager` protocol | No protocol definition. Any type can be used in `with` — no compile-time check | No type safety |
+| Multiple context managers | `with A() as a, B() as b:` silently drops everything after `items[0]` (line 1686 of `lower.rs`) | Silent data loss |
+| E2E tests | `with_non_context_manager`, `with_file`, `with_multiple` were in DoD but never created | Missing coverage |
+
+**Fix — Lowering (`crates/sifr_hir/src/lower.rs`):**
+
+1. **Multiple items:** Replace `let item = &with_stmt.items[0]` with a loop over all items, nesting scopes for each.
+2. **Protocol check:** After resolving the context expression type, check that it implements a `ContextManager` protocol (has `__enter__` and `__exit__` methods). Emit error if not.
+3. **`__enter__` binding:** The `HirStmt::With` should record that the variable is bound to the result of `__enter__()`, not the context expression directly.
+
+**Fix — Codegen (`crates/sifr_codegen/src/lib.rs`):**
+
+1. **`__enter__` call:** Instead of `let y = X();`, emit:
+   ```rust
+   let __ctx = X();
+   let y = __ctx.__enter__();
+   ```
+2. **`__exit__` call:** At scope end, emit `__ctx.__exit__();` before the closing brace.
+3. **Multiple items:** Nest the blocks for each context manager.
+
+**Fix — Protocol definition:**
+
+Define `ContextManager` as a built-in protocol (similar to how `Iterator` or `Sized` would be defined):
+```python
+protocol ContextManager:
+    def __enter__(self) -> Self
+    def __exit__(self) -> None
+```
+
+Note: Python's `__exit__` takes `(exc_type, exc_val, exc_tb)` and can suppress exceptions. For Sifr's initial implementation, `__exit__(self) -> None` is sufficient — exception suppression is deferred.
+
+**E2E tests:**
+
+- `crates/sifr/tests/e2e/pass/with_enter_exit.sifr` — class with `__enter__`/`__exit__`, verify both are called
+- `crates/sifr/tests/e2e/pass/with_multiple.sifr` — `with A() as a, B() as b:` — verify both context managers work
+- `crates/sifr/tests/e2e/fail/with_non_context_manager.sifr` — using a type without `__enter__`/`__exit__` in `with` should produce a compile error
+
+### Files to Change
+
+- `crates/sifr_hir/src/lower.rs` — import error reporting (lines 422-509), `with` lowering (lines 1681-1706)
+- `crates/sifr_codegen/src/lib.rs` — `with` codegen (lines 2379-2401)
+- Possibly `crates/sifr_hir/src/hir.rs` — update `HirStmt::With` to carry `__enter__`/`__exit__` method info
+- 2-3 new E2E pass tests, 2-3 new E2E fail tests
+- Update 1 existing fail test (`stdlib_invalid_module.sifr`)
+
+### What This Unblocks
+
+- **Proper import errors** improve developer experience for every subsequent milestone — when adding new stdlib functions/classes (m31-m33), typos in import statements will be caught immediately instead of producing confusing downstream errors.
+- **`with` statement** unblocks `io.open()` as a context manager, `tempfile.NamedTemporaryFile`, and any future stdlib class that manages resources. This was previously listed as a deferred blocker.
+
+### Definition of Done
+
+- `from sifr.nonexistent import foo` produces `"unknown stdlib module 'sifr.nonexistent'"` (not `"undefined function: 'foo'"`)
+- `from mymodule import bar` (when `mymodule` doesn't exist) produces `"unknown module 'mymodule'"`
+- Existing import error for bad members still works: `from sifr.math import nonexistent` → `"module 'sifr.math' has no member 'nonexistent'"`
+- `with X() as y:` calls `X().__enter__()` and binds result to `y`, calls `__exit__()` at scope end
+- `with A() as a, B() as b:` handles all context managers (not just the first)
+- Using a non-`ContextManager` type in `with` produces a compile error
+- All existing E2E tests pass (zero regressions)
+- New E2E tests for both import errors and `with` statement
+
+---
+
+## m30: milestone_test_infra — Test Infrastructure for CPython Parity
 
 **Goal:** Add the test assertion primitives needed to port CPython tests, and fix the known `statistics.variance` bug. This is a small, focused milestone that unblocks all subsequent testing work.
 
@@ -137,7 +259,7 @@ Also fix `stdev` (which calls `variance`) and add `pstdev`.
 
 ---
 
-## m30: milestone_stdlib_functions — Pure-Sifr and Intrinsic Function Additions
+## m31: milestone_stdlib_functions — Pure-Sifr and Intrinsic Function Additions
 
 **Goal:** Close the function-level gaps identified by both audits. Add ~25 pure-Sifr functions and ~12 new intrinsics across 12 modules. This is the largest single increase in stdlib API surface.
 
@@ -343,7 +465,7 @@ Add or expand tests for every new function. Target: ~40 new assertions across ~1
 
 ---
 
-## m31: milestone_stdlib_naming — API Naming Alignment with CPython
+## m32: milestone_stdlib_naming — API Naming Alignment with CPython
 
 **Goal:** Rename Sifr stdlib functions to match CPython naming conventions. This is a deliberate pre-1.0 breaking change that should be done once, in one pass, rather than incrementally.
 
@@ -461,7 +583,7 @@ All existing stdlib test files that use renamed functions must be updated. This 
 
 ---
 
-## m32: milestone_stdlib_class_rollout — Expand Class-Based APIs
+## m33: milestone_stdlib_class_rollout — Expand Class-Based APIs
 
 **Goal:** Add 5 new class-based APIs to the stdlib, leveraging the pipeline proven by `milestone_stdlib_classes`. These are the classes that **don't** need `Callable`-as-struct-field and are therefore immediately implementable.
 
@@ -690,7 +812,7 @@ def uuid4() -> UUID:
 
 ---
 
-## m33: milestone_cpython_tests — Port CPython Test Assertions
+## m34: milestone_cpython_tests — Port CPython Test Assertions
 
 **Goal:** Port ~500 test assertions from CPython's test suite to Sifr, focusing on the highest-ROI modules. This is the validation layer that proves Sifr's stdlib behaves correctly against CPython's behavioral specification.
 
@@ -725,8 +847,8 @@ Based on the CPython test portability research:
 | `self.assertNotEqual(a, b)` | `assert_ne(a, b)` | Direct |
 | `self.ftest(name, got, expected)` | `assert_almost_eq(got, expected, 0.00001)` | Float tolerance |
 | `self.assertAlmostEqual(a, b)` | `assert_almost_eq(a, b, 0.0000001)` | Float tolerance |
-| `self.assertGreater(a, b)` | `assert_gt(a, b)` | Added in m29 |
-| `self.assertLess(a, b)` | `assert_lt(a, b)` | Added in m29 |
+| `self.assertGreater(a, b)` | `assert_gt(a, b)` | Added in m30 |
+| `self.assertLess(a, b)` | `assert_lt(a, b)` | Added in m30 |
 | `self.assertRaises(TypeError, f, x)` | *skip — compiler catches this* | Compile-time |
 | `self.assertRaises(ValueError, f, x)` | `assert_true(isnan(f(x)))` | NAN/INF check |
 | `self.assertIs(a, b)` | *skip — identity not meaningful* | Compiled lang |
@@ -758,11 +880,11 @@ Port from `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/test_math.py`:
 | `testIsnan`, `testIsinf` | ~8 | Special value detection |
 | `testLog`, `testLog2`, `testLog10` | ~15 | Logarithms, edge cases |
 | `testSqrt` | ~8 | Square root, edge cases |
-| `testExp` | ~8 | Exponential (new in m30) |
-| `testFabs` | ~5 | Absolute value (new in m30) |
-| `testIsfinite` | ~5 | Finite check (new in m30) |
-| `testFactorial` | ~8 | Factorial (new in m30) |
-| `testGcd`, `testLcm` | ~10 | GCD/LCM (new in m30) |
+| `testExp` | ~8 | Exponential (new in m31) |
+| `testFabs` | ~5 | Absolute value (new in m31) |
+| `testIsfinite` | ~5 | Finite check (new in m31) |
+| `testFactorial` | ~8 | Factorial (new in m31) |
+| `testGcd`, `testLcm` | ~10 | GCD/LCM (new in m31) |
 
 **File structure:** Split into multiple test files by category:
 - `stdlib_math_cpython_trig.sifr` — trig functions (~50 assertions)
@@ -868,7 +990,7 @@ Per the CPython test portability research:
 
 - ~500 new test assertions across ~15 test files
 - All assertions pass
-- Total stdlib test assertion count goes from ~200 (after m29-m32) to ~700+
+- Total stdlib test assertion count goes from ~200 (after m29-m33) to ~700+
 - Math function coverage: every exported function has at least 5 assertions including edge cases (NAN, INF, boundary values)
 - `cargo test` passes (zero regressions)
 
@@ -878,22 +1000,25 @@ Per the CPython test portability research:
 
 | Milestone | ID | Size | New Functions | New Intrinsics | New Tests | Key Deliverable |
 |---|---|---|---|---|---|---|
-| Test Infrastructure | m29 | S | 2 (`pvariance`, `pstdev`) | 3 | ~10 assertions | `assert_almost_eq`, variance bug fix |
-| Stdlib Functions | m30 | M | ~25 | ~12 | ~40 assertions | Close function-level gaps |
-| Naming Alignment | m31 | S | 0 (renames) | 0 | ~0 (updates) | CPython-compatible names |
-| Class Rollout | m32 | L | 5 classes | ~5 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID |
-| CPython Tests | m33 | M | 0 | 0 | ~500 assertions | Behavioral validation against CPython |
+| Compiler Hardening | m29 | S-M | 0 | 0 | ~6 assertions | Import error reporting, `with` protocol |
+| Test Infrastructure | m30 | S | 2 (`pvariance`, `pstdev`) | 3 | ~10 assertions | `assert_almost_eq`, variance bug fix |
+| Stdlib Functions | m31 | M | ~25 | ~12 | ~40 assertions | Close function-level gaps |
+| Naming Alignment | m32 | S | 0 (renames) | 0 | ~0 (updates) | CPython-compatible names |
+| Class Rollout | m33 | L | 5 classes | ~5 | ~30 assertions | Path, Logger, Match, TopologicalSorter, UUID |
+| CPython Tests | m34 | M | 0 | 0 | ~500 assertions | Behavioral validation against CPython |
 
 **Cumulative impact:**
 
 | Metric | Current | After All Milestones |
 |---|---|---|
-| Stdlib test assertions | ~160 | ~740+ |
+| Stdlib test assertions | ~160 | ~750+ |
 | Stdlib functions (across all modules) | ~120 | ~170+ |
 | Class-based APIs | 1 (Counter) | 6 (+ Path, Logger, Match, TopologicalSorter, UUID) |
 | Modules with CPython-compatible names | ~5 | ~30+ |
 | Math function coverage | ~85% | ~95% |
 | Average module coverage | ~35% | ~55% |
+| Import error quality | Silent failures for nonexistent modules | Clear "unknown module" errors |
+| `with` statement | Scoped block only (no protocol) | Full `__enter__`/`__exit__` protocol |
 
 ---
 
@@ -908,11 +1033,11 @@ These items are blocked by language features not yet available:
 | `timeit.Timer` class | `Callable`-as-struct-field | After codegen fix milestone |
 | Generic `bisect`/`heapq`/`itertools` | Generics milestone | After `milestone_generics_impl` |
 | Lazy iterators (`iglob`, `csv.reader`) | Iterator protocol | After generators/iterators milestone |
-| `io.open()` / context managers | `with` statement | After context managers milestone |
+| `io.open()` / context managers | `with` statement (m29 delivers protocol; `io.open` needs File class in m33) | m29 delivers `__enter__`/`__exit__` protocol; `io.open()` File class deferred to m33 or later |
 | `datetime`/`timedelta` class arithmetic | Operator overloading for stdlib classes | After operator overloading export is proven |
 | Exception types (`TOMLDecodeError`, `CycleError`) | Exception/error type support | After error handling milestone |
 | `assert_raises` | `std::panic::catch_unwind` codegen | Lower priority — NAN/INF checks suffice for most cases |
-| Mining `mathdata/math_testcases.txt` | Parsing infrastructure | Stretch goal for m33 or future milestone |
+| Mining `mathdata/math_testcases.txt` | Parsing infrastructure | Stretch goal for m34 or future milestone |
 
 ---
 
