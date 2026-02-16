@@ -1,0 +1,28 @@
+# Test that stdlib modules correctly wrap intrinsics
+# This verifies that sifr.* modules successfully import from _sifr.* internally
+# while user code only sees the sifr.* public API.
+from sifr.io import exists
+from sifr.hashlib import sha256
+from sifr.base64 import base64_encode, base64_decode
+from sifr.env import env_get
+
+def main():
+    # sifr.io wraps _sifr.fs/_sifr.io intrinsics
+    result: bool = exists("/nonexistent_path_12345")
+    print(result)
+
+    # sifr.hashlib wraps _sifr.crypto intrinsics
+    hash_val: str = sha256("test")
+    print(len(hash_val) > 0)
+
+    # sifr.base64 wraps _sifr.crypto intrinsics
+    encoded: str = base64_encode("hello")
+    decoded: str = base64_decode(encoded)
+    print(decoded)
+
+    print("intrinsics block test passed")
+
+# expect-stdout: false
+# expect-stdout: true
+# expect-stdout: hello
+# expect-stdout: intrinsics block test passed
