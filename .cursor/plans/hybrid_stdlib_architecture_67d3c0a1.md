@@ -94,7 +94,9 @@ Compiler-provided primitives that map directly to Rust code. Intentionally minim
 
 These are the only modules that live in [sifr_hir/src/stdlib.rs](crates/sifr_hir/src/stdlib.rs) and [sifr_codegen/src/lib.rs](crates/sifr_codegen/src/lib.rs). Convention: `_` prefix signals "internal, don't import directly."
 
-**Intrinsics surface (~60 primitives across 10 modules):**
+**Intrinsics surface (~60 primitives across 10 modules, introduced incrementally):**
+
+*M1 baseline:* `_sifr.fs` (core 16), `_sifr.sys` (7), `_sifr.io` (3), `_sifr.time` (4), `_sifr.math` (12), `_sifr.crypto` (7), `_sifr.regex` (5), `_sifr.json` (2). *M2 adds:* `_sifr.fs.open_file`, `read_fd`, `write_fd`, `close_fd`. *M3 adds:* `_sifr.fs.copy_file`, `walk_dir`. *M4 adds:* `_sifr.toml` (1), `_sifr.datetime` (4), `_sifr.sys.platform_os/arch` (2), `_sifr.math` inverse trig/hyperbolic (~8).
 
 - `_sifr.fs` -- `read_bytes`, `write_bytes`, `append_bytes`, `exists`, `is_file`, `is_dir`, `list_dir`, `mkdir`, `mkdir_p`, `remove`, `remove_dir`, `rename`, `copy_file`, `getcwd`, `file_size`, `walk_dir`, `open_file`, `read_fd`, `write_fd`, `close_fd` (Rust: `std::fs`, `std::path`, `std::io`)
 - `_sifr.sys` -- `argv`, `exit`, `env_get`, `env_set`, `run_command`, `platform_os`, `platform_arch` (Rust: `std::env`, `std::process`)
@@ -113,7 +115,7 @@ These are the only modules that live in [sifr_hir/src/stdlib.rs](crates/sifr_hir
 
 ### Tier 3: User Code
 
-Users import from `sifr.*` (Tier 2) as they do today. The API surface doesn't change. They never need to touch `_sifr.*`.
+Users import from `sifr.*` (Tier 2). They never need to touch `_sifr.*`. Note: during M2 migration, two modules are renamed to match Python conventions (`sifr.hash` -> `sifr.hashlib`, `sifr.encoding` -> `sifr.base64`). This is a deliberate pre-1.0 breaking change; existing tests and code must be updated as part of M2.
 
 ---
 
@@ -206,10 +208,9 @@ Each `_sifr.*` intrinsic module maps to specific Rust crates or std modules. Whe
 
 Organized by implementation type:
 
-**Pure Sifr -- no intrinsics needed (14 modules):**
+**Pure Sifr -- no intrinsics needed (13 modules):**
 
 - `test` -- assert functions
-- `collections` -- Counter, DefaultDict, OrderedDict, deque, Set wrappers
 - `statistics` -- mean, median, stdev, variance
 - `bisect` -- bisect_left, bisect_right, insort
 - `heapq` -- heappush, heappop, heapify, nlargest, nsmallest
@@ -223,8 +224,9 @@ Organized by implementation type:
 - `graphlib` -- TopologicalSorter
 - `ipaddress` -- IPv4/IPv6 address parsing and manipulation
 
-**Thin Sifr wrapper over intrinsics (23 modules):**
+**Thin Sifr wrapper over intrinsics (24 modules):**
 
+- `collections` -- wraps existing set/counter/defaultdict intrinsics (Counter, DefaultDict, OrderedDict, deque, Set wrappers)
 - `math` -- wraps `_sifr.math` (f64 methods)
 - `io` -- wraps `_sifr.fs` + `_sifr.io` (includes `open()` / `File` context manager)
 - `os` -- wraps `_sifr.fs` + `_sifr.sys`
@@ -419,7 +421,7 @@ Add ~14 new modules. These are the most commonly needed modules that Python deve
 
 **New intrinsics needed:** `_sifr.fs.copy_file`, `_sifr.fs.walk_dir` (2 new primitives added to existing `_sifr.fs`)
 
-**Acceptance criteria:** Each new module compiles, imports work, functions produce correct output. E2E tests for each module. Language gaps discovered during dogfooding are filed as issues.
+**Acceptance criteria:** Each new module compiles, imports work, functions produce correct output. All fallible functions return `Result` or `Option` (safety contract). No panic paths in stdlib code. E2E tests for each module, including negative tests (bad input). Language gaps discovered during dogfooding are filed as issues.
 
 ---
 
@@ -441,7 +443,7 @@ Three parts: (A) close gaps in existing modules by adding missing functions, (B)
 - `sifr/hashlib.sifr` -- add `sha1`, `sha512`, `hmac`
 - `sifr/base64.sifr` -- add `urlsafe_b64encode`, `urlsafe_b64decode`, `b32encode`, `b32decode`
 - `sifr/itertools.sifr` -- add `combinations`, `permutations`, `product`, `accumulate`
-- `sifr/functools.sifr` -- add `partial` (if closures support it)
+- `sifr/functools.sifr` -- add `partial` (**stretch goal** -- requires closure capture support; skip if not available by M4, revisit after `milestone_ffi`)
 
 **Part B -- New modules (remaining Tier 1+2):**
 
@@ -464,7 +466,7 @@ Three parts: (A) close gaps in existing modules by adding missing functions, (B)
 - Produce `audit/STDLIB_PARITY_MASTER_REPORT.md` with coverage percentages per module
 - Target: 60%+ coverage across the top 20 CPython modules
 
-**Acceptance criteria:** All expanded modules pass their tests. All new modules compile and work. Parity audit report generated with coverage metrics. `cargo test` passes.
+**Acceptance criteria:** All expanded modules pass their tests. All new modules compile and work. All fallible functions return `Result` or `Option` (safety contract). No panic paths in stdlib code. Negative tests (bad input) for each module. Parity audit report generated with coverage metrics. `cargo test` passes.
 
 ---
 
