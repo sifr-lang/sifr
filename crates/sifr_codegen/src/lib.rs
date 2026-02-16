@@ -373,6 +373,9 @@ struct RustEmitter {
     /// Map of module_name -> set of names that are intrinsic re-exports (from _sifr.*)
     /// Used to distinguish intrinsic function calls from pure Sifr function calls
     stdlib_intrinsic_names: HashMap<String, HashSet<String>>,
+    /// Set of function names that are generators (contain yield statements)
+    /// Used to emit .collect() when assigning generator results to list[T]
+    generator_functions: HashSet<String>,
 }
 
 impl RustEmitter {
@@ -403,6 +406,7 @@ impl RustEmitter {
             generic_classes: HashSet::new(),
             borrowed_params: HashSet::new(),
             stdlib_intrinsic_names: HashMap::new(),
+            generator_functions: HashSet::new(),
         }
     }
 
@@ -432,6 +436,11 @@ impl RustEmitter {
                 .map(|p| (p.ty.clone(), p.convention))
                 .collect();
             self.func_signatures.insert(func.name.clone(), (param_info, func.return_type.clone()));
+
+            // Track generator functions (contain yield statements)
+            if body_contains_yield(&func.body) {
+                self.generator_functions.insert(func.name.clone());
+            }
 
             // Check params
             for param in &func.params {
@@ -1587,19 +1596,30 @@ impl RustEmitter {
 
         self.write(")");
 
+        // Detect if this is a generator function (contains yield statements)
+        let is_generator = body_contains_yield(&func.body);
+
         // Return type (omit for main and for None return)
         if func.return_type != Type::None || func.name != "main" {
             if func.return_type != Type::None {
                 self.write(" -> ");
-                self.write(&func.return_type.rust_type());
+                if is_generator {
+                    // Generator functions return impl Iterator<Item = T>
+                    let yield_ty = if let Type::List(ref elem) = func.return_type {
+                        elem.rust_type()
+                    } else {
+                        "i64".to_string()
+                    };
+                    self.write(&format!("impl Iterator<Item = {}>", yield_ty));
+                } else {
+                    self.write(&func.return_type.rust_type());
+                }
             }
         }
 
         self.write(" {\n");
         self.indent += 1;
 
-        // Detect if this is a generator function (contains yield statements)
-        let is_generator = body_contains_yield(&func.body);
         if is_generator {
             // Emit the yields accumulator at the start
             let yield_ty = if let Type::List(ref elem) = func.return_type {
@@ -1616,10 +1636,10 @@ impl RustEmitter {
             self.emit_stmt(stmt);
         }
 
-        // If generator, return the accumulated yields
+        // If generator, return the accumulated yields as a lazy iterator
         if is_generator {
             self.write_indent();
-            self.write("_yields\n");
+            self.write("_yields.into_iter()\n");
         }
 
         self.indent -= 1;
@@ -1657,8 +1677,12 @@ impl RustEmitter {
                     self.emit_expr(value);
                     self.write(")");
                 } else {
-                    // RHS already returns the right type (e.g., function returning Option<T>)
+                    // Check if RHS is a call to a generator function and target is list[T]
+                    let needs_collect = matches!(ty, Type::List(_)) && self.is_generator_call(value);
                     self.emit_expr(value);
+                    if needs_collect {
+                        self.write(".collect()");
+                    }
                 }
                 self.write(";\n");
             }
@@ -2128,13 +2152,14 @@ impl RustEmitter {
                 self.write(" in ");
                 // For lists, iterate with .iter() to borrow and clone elements
                 // But not for generator expressions which are already iterators
-                let is_generator = matches!(iter, HirExpr::GeneratorExpr { .. });
+                let is_generator_expr = matches!(iter, HirExpr::GeneratorExpr { .. });
+                let is_generator_fn_call = self.is_generator_call(iter);
                 let is_list = matches!(iter.ty(), Type::List(_));
                 let is_dict = matches!(iter.ty(), Type::Dict(_, _));
                 let is_str = matches!(iter.ty(), Type::Str);
                 self.emit_expr(iter);
-                if is_generator {
-                    // Generator expressions are already iterators, no .iter() needed
+                if is_generator_expr || is_generator_fn_call {
+                    // Generator expressions and generator function calls are already iterators
                 } else if is_list {
                     self.write(".iter().cloned()");
                 } else if is_dict {
@@ -2771,6 +2796,15 @@ impl RustEmitter {
             self.write("; ");
 
             self.write("_s.chars().skip(_start).take(_stop - _start).collect::<String>() }");
+        }
+    }
+
+    /// Check if an expression is a call to a generator function
+    fn is_generator_call(&self, expr: &HirExpr) -> bool {
+        if let HirExpr::Call { func, .. } = expr {
+            self.generator_functions.contains(func)
+        } else {
+            false
         }
     }
 

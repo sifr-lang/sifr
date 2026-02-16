@@ -1,0 +1,14 @@
+# expect-stdout: 1
+# expect-stdout: 4
+# expect-stdout: 9
+# Tests: for loop consumes generator lazily
+
+def squares(n: int) -> list[int]:
+    i: int = 1
+    while i <= n:
+        yield i * i
+        i = i + 1
+
+def main():
+    for s in squares(3):
+        print(s)
