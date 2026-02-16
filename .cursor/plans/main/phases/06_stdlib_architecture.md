@@ -389,6 +389,84 @@ Existing intrinsics reused unchanged: `counter_from_list`, `counter_get`, `count
 
 ---
 
+## Rust Crate Mapping for Intrinsics
+
+Each `_sifr.*` intrinsic module maps to specific Rust crates or std modules. When a Sifr stdlib module is used, the compiler traces through to the intrinsics it depends on and injects the appropriate Cargo dependencies.
+
+| Intrinsic Module | Rust Backing | External Crate? |
+|---|---|---|
+| `_sifr.fs` | `std::fs`, `std::path` | No |
+| `_sifr.sys` | `std::env`, `std::process` | No |
+| `_sifr.io` | `std::io` | No |
+| `_sifr.time` | `std::time`, `std::thread` | No |
+| `_sifr.math` | `f64` methods (all transcendental functions are on `f64` in Rust std) | No |
+| `_sifr.crypto` | `sha2`, `sha1`, `md5`, `rand` | Yes |
+| `_sifr.regex` | `regex` | Yes |
+| `_sifr.json` | `serde_json`, `serde` | Yes |
+| `_sifr.toml` | `toml` | Yes |
+| `_sifr.datetime` | `chrono` | Yes |
+
+**Key insight:** 5 of 10 intrinsic modules use only Rust std -- no external dependencies. Only `_sifr.crypto`, `_sifr.regex`, `_sifr.json`, `_sifr.toml`, and `_sifr.datetime` need external crates.
+
+---
+
+## Module Triage: What to Port, Defer, or Skip
+
+CPython has ~289 stdlib modules. Sifr targets 37 in this phase. The rest are triaged as follows.
+
+### Modules Deferred to Ecosystem Phase
+
+These depend on async, networking, or threading -- features that come after this phase:
+
+- `socket`, `ssl`, `http`, `urllib` -- networking (needs `_sifr.net` + async runtime)
+- `asyncio` -- IS the async milestone itself
+- `threading`, `queue`, `multiprocessing`, `concurrent` -- concurrency primitives
+- `selectors` -- I/O multiplexing (async runtime internal)
+- `subprocess` -- full Popen API needs async; partially covered by `os.run_command`
+- `sqlite3` -- in `milestone_web_db` roadmap
+- `xml`, `html` -- parsing libraries (add during web milestone)
+- `email` -- in `milestone_email` roadmap
+- `gzip`, `bz2`, `lzma`, `zipfile`, `tarfile` -- compression (needs Rust crate bindings, add on demand)
+- `decimal`, `fractions` -- arbitrary precision (needs `rust_decimal` crate, add on demand)
+
+### Modules Never Ported
+
+These exist because of Python's specific nature (interpreted, dynamic, REPL-oriented) and have no meaningful equivalent in a compiled, statically-typed language:
+
+- **Python compiler internals:** `ast`, `dis`, `symtable`, `tokenize`, `token`, `keyword`, `code`, `codeop`, `compileall`, `py_compile`
+- **Python import machinery:** `importlib`, `pkgutil`, `modulefinder`, `runpy`, `zipimport`
+- **Runtime introspection:** `inspect`, `types`, `typing`, `abc`, `numbers`, `operator`
+- **Python debugger/profiler:** `pdb`, `bdb`, `profile`, `cProfile`, `pstats`, `trace`, `traceback`, `tracemalloc`
+- **Python serialization:** `pickle`, `pickletools`, `shelve`, `copyreg`
+- **Python environment:** `warnings`, `__future__`, `annotationlib`, `site`, `_sitebuiltins`, `ensurepip`, `venv`
+- **GUI/terminal:** `idlelib`, `tkinter`, `turtle`, `turtledemo`, `curses`
+- **C FFI:** `ctypes`, `struct` (Sifr will have its own FFI)
+- **Not needed in Sifr:** `dataclasses` (compiler auto-derives), `enum` (union types + classes), `copy` (compiler-derived `.clone()`), `pprint` (auto-derived `Debug`), `contextlib` (Result-based errors), `weakref` (ownership model eliminates most use cases)
+- **Niche/deprecated:** `antigravity`, `this`, `gettext`, `locale`, `optparse`, `getopt`, `wave`, `pty`, `tty`, `webbrowser`, `netrc`, `mailbox`, `mimetypes`, `quopri`, `stringprep`, `reprlib`, `sched`, `filecmp`, `fileinput`, `linecache`, `tabnanny`, `stat`, `signal`, `contextvars`, `sysconfig`, `rlcompleter`, `codecs`, `encodings`
+
+### Modules to Revisit Later
+
+- `signal` -- OS signal handling (revisit if users need graceful shutdown without async)
+- `weakref` -- if ownership model needs weak references for specific patterns
+- `decimal` / `fractions` -- if financial/scientific computing becomes a priority
+- `gzip` / `zipfile` / `tarfile` -- if compression is commonly requested
+- `xml` / `html` -- if web scraping becomes a use case before the web milestone
+- `configparser` -- INI file parsing; TOML covers the config use case for a new language
+- `colorsys` -- color space conversions; very niche, better as a third-party package
+
+---
+
+## Why NOT Full Rust FFI for Stdlib
+
+Full FFI (`extern crate`, `unsafe` blocks, type marshaling) solves a different problem: letting **users** call arbitrary Rust crates. For stdlib, the intrinsics approach is:
+
+- **Simpler:** No `unsafe` keyword, no extern blocks, no type marshaling
+- **Safer:** Intrinsics are compiler-controlled, always correct
+- **Faster to ship:** Reuses the existing `emit_stdlib_call` mechanism
+- **Forward-compatible:** When FFI lands later (milestone_ffi in the Polish phase), intrinsics can be reimplemented as FFI calls internally without changing the stdlib `.sifr` files
+
+---
+
 ## Milestone ordering
 
 Why the milestones within this phase are in this order:
