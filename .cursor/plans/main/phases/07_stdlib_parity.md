@@ -193,12 +193,17 @@ status: pending
 
 TypeError tests (compiler handles), dunder protocol tests, subclassing builtins, pickling, `eval()`/`repr()` roundtrips, locale-dependent tests, `Decimal`/`Fraction` types, CPython-internal tests.
 
+### Stretch Goal: Mine `mathdata/math_testcases.txt`
+
+CPython ships external test data at `/Users/yaseralnajjar/work/sifr/cpython/Lib/test/mathdata/math_testcases.txt` containing hundreds of pre-computed math test vectors (input → expected output pairs for trig, exp, log, and special-value functions). Parsing and converting these into Sifr E2E test assertions would significantly increase math coverage beyond the hand-picked assertions in Tier 1. Requires building a small parser/converter to translate the data file format into `.sifr` test files.
+
 ### Definition of Done
 
 - ~500 new test assertions across ~15 test files
 - Total stdlib assertions: ~200 → ~700+
 - Every exported math function has at least 5 assertions including edge cases
 - `cargo test` passes (zero regressions)
+- Stretch: `mathdata/math_testcases.txt` mined for additional math test vectors
 
 ---
 
