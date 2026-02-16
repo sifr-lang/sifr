@@ -354,7 +354,7 @@ Rewires how stdlib works internally. No new user-facing features, but establishe
 5. Update driver ([sifr_driver/src/lib.rs](crates/sifr_driver/src/lib.rs)) to discover and compile embedded stdlib `.sifr` modules before user modules
 6. Update `starts_with("sifr.")` check in [sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) to resolve stdlib `.sifr` files first, falling back to `_sifr.*` intrinsics
 7. Update codegen to handle stdlib modules as regular Rust `mod`/`use` (not inline emit)
-8. Block user imports of `_sifr.*` in [sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics)
+8. Block user imports of `_sifr.*` in [sifr_hir/src/lower.rs](crates/sifr_hir/src/lower.rs) -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics). Trust boundary: the compiler distinguishes stdlib from user code by checking whether the source originated from the embedded `lib/sifr/` module set (via `include_str!`), not by filename convention.
 9. Proof-of-concept: `lib/sifr/test.sifr` (assert_eq, assert_ne, assert_true, assert_false are pure Sifr)
 
 **Acceptance criteria:** `from sifr.test import assert_eq` resolves to the `.sifr` file, compiles, and works. All existing E2E tests still pass (old modules still use intrinsics path during transition).
@@ -443,7 +443,7 @@ Three parts: (A) close gaps in existing modules by adding missing functions, (B)
 - `sifr/hashlib.sifr` -- add `sha1`, `sha512`, `hmac`
 - `sifr/base64.sifr` -- add `urlsafe_b64encode`, `urlsafe_b64decode`, `b32encode`, `b32decode`
 - `sifr/itertools.sifr` -- add `combinations`, `permutations`, `product`, `accumulate`
-- `sifr/functools.sifr` -- add `partial` (**stretch goal** -- requires closure capture support; skip if not available by M4, revisit after `milestone_ffi`)
+- `sifr/functools.sifr` -- add `partial` (**stretch goal** -- requires closure capture support; skip if not available by M4, revisit when closures mature)
 
 **Part B -- New modules (remaining Tier 1+2):**
 
