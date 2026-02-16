@@ -20,15 +20,18 @@ def safe_len(items: list[str] | None) -> int:
     return len(items)
 
 # --- 3. list + list concatenation ---
-def merge_lists(a: list[int], b: list[int]) -> list[int]:
+# `own` needed: concatenation consumes both lists to produce a new one
+def merge_lists(own a: list[int], own b: list[int]) -> list[int]:
     return a + b
 
 # --- 4. dict.get with default ---
-def lookup(d: dict[str, int], key: str) -> int:
+# `own` needed: returning a value from the dict requires ownership
+def lookup(own d: dict[str, int], key: str) -> int:
     return d.get(key, -1)
 
 # --- 5. list.remove ---
-def remove_first(items: list[int], val: int) -> list[int]:
+# `mut` needed: remove mutates the list in place
+def remove_first(mut items: list[int], val: int) -> list[int]:
     items.remove(val)
     return items
 

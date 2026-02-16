@@ -31,6 +31,7 @@ class Container[T]:
 
 # --- 3. Protocol Method Dispatch ---
 # Calling methods on protocol-typed parameters
+# `own` needed: protocol params generate Box<dyn Trait>, requiring ownership
 
 class Printable(Protocol):
     def display(self) -> str:
@@ -52,7 +53,7 @@ class Product:
     def display(self) -> str:
         return f"Product({self.title}, ${self.price})"
 
-def show(item: Printable) -> None:
+def show(own item: Printable) -> None:
     print(item.display())
 
 # --- 4. Multi-Generator Comprehensions ---
