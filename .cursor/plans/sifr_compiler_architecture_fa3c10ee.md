@@ -107,6 +107,9 @@ todos:
   - id: m27-stdlib-polish
     content: "milestone_stdlib_polish: Add perf_counter/monotonic intrinsics to _sifr.time (std::time::Instant), re-export in sifr.time. Full sifr.timeit CPython API: default_timer + timeit(stmt, number) + repeat(stmt, repeat, number) using existing Callable type. Align stdlib API names with CPython (glob, shutil.copy/move/rmtree, tomllib.load). Add missing E2E pass tests (glob, shutil, tempfile), negative/fail tests. Add _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all). Fix stale lower.rs comment, update parity report."
     status: pending
+  - id: m28-stdlib-classes
+    content: "milestone_stdlib_classes: Prove stdlib class pipeline end-to-end by implementing collections.Counter as a class in lib/sifr/collections.sifr. Add new _sifr.collections intrinsics (counter_total, counter_values, counter_keys, counter_items, counter_increment). Counter wraps existing JSON-encoded HashMap intrinsics, exercises &self/&mut self receiver inference, pub_mode export, ExternalDefs.classes import pipeline. Add from_list factory function. E2E pass tests (construction + methods, mutation), fail tests (wrong types). Demo. Unblocks 12+ modules needing class-based APIs."
+    status: pending
 isProject: false
 ---
 
