@@ -41,8 +41,17 @@ const STDLIB_FILES: &[(&str, &str)] = &[
     ("sifr.platform", include_str!("../../../lib/sifr/platform.sifr")),
     ("sifr.pathlib", include_str!("../../../lib/sifr/pathlib.sifr")),
     ("sifr.logging", include_str!("../../../lib/sifr/logging.sifr")),
+    ("sifr.heapq", include_str!("../../../lib/sifr/heapq.sifr")),
+    ("sifr.itertools", include_str!("../../../lib/sifr/itertools.sifr")),
+    ("sifr.textwrap", include_str!("../../../lib/sifr/textwrap.sifr")),
+    ("sifr.csv", include_str!("../../../lib/sifr/csv.sifr")),
+    ("sifr.argparse", include_str!("../../../lib/sifr/argparse.sifr")),
+    ("sifr.fnmatch", include_str!("../../../lib/sifr/fnmatch.sifr")),
+    ("sifr.shutil", include_str!("../../../lib/sifr/shutil.sifr")),
+    ("sifr.tempfile", include_str!("../../../lib/sifr/tempfile.sifr")),
     // Tier 2: Modules that depend on other stdlib modules
     ("sifr.statistics", include_str!("../../../lib/sifr/statistics.sifr")),
+    ("sifr.glob", include_str!("../../../lib/sifr/glob.sifr")),
 ];
 
 /// Result of compiling all stdlib modules.

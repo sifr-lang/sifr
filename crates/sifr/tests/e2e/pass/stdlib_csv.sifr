@@ -1,0 +1,26 @@
+# Test sifr.csv module
+from sifr.csv import parse_row, format_row, format_csv
+
+def main():
+    # parse_row splits by comma
+    row: list[str] = parse_row("a,b,c")
+    print(len(row))
+    first: str | None = row[0]
+    if first is not None:
+        print(first)
+
+    # format_row joins with comma
+    fields: list[str] = ["x", "y", "z"]
+    line: str = format_row(fields)
+    print(line)
+
+    # format_csv joins rows with newline
+    rows: list[list[str]] = [["1", "2"], ["3", "4"]]
+    csv_text: str = format_csv(rows)
+    print(csv_text)
+
+# expect-stdout: 3
+# expect-stdout: a
+# expect-stdout: x,y,z
+# expect-stdout: 1,2
+# expect-stdout: 3,4

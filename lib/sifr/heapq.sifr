@@ -1,0 +1,169 @@
+# sifr.heapq — Heap queue algorithm (pure Sifr)
+# Implements a min-heap. Functions return new lists (functional style)
+# to work with Sifr's borrow-by-default parameter convention.
+
+def _swap(data: list[int], i: int, j: int) -> list[int]:
+    result: list[int] = []
+    k: int = 0
+    while k < len(data):
+        if k == i:
+            val_j: int | None = data[j]
+            if val_j is not None:
+                result.append(val_j)
+            else:
+                result.append(0)
+        elif k == j:
+            val_i: int | None = data[i]
+            if val_i is not None:
+                result.append(val_i)
+            else:
+                result.append(0)
+        else:
+            val: int | None = data[k]
+            if val is not None:
+                result.append(val)
+            else:
+                result.append(0)
+        k = k + 1
+    return result
+
+def heapify(data: list[int]) -> list[int]:
+    result: list[int] = []
+    for val in data:
+        result.append(val)
+    n: int = len(result)
+    i: int = n // 2 - 1
+    while i >= 0:
+        # sift down at position i
+        pos: int = i
+        done: bool = False
+        while not done:
+            smallest: int = pos
+            left: int = 2 * pos + 1
+            right: int = 2 * pos + 2
+            if left < n:
+                s_val: int | None = result[smallest]
+                l_val: int | None = result[left]
+                if s_val is not None:
+                    if l_val is not None:
+                        if l_val < s_val:
+                            smallest = left
+            if right < n:
+                s_val2: int | None = result[smallest]
+                r_val: int | None = result[right]
+                if s_val2 is not None:
+                    if r_val is not None:
+                        if r_val < s_val2:
+                            smallest = right
+            if smallest == pos:
+                done = True
+            else:
+                result = _swap(result, pos, smallest)
+                pos = smallest
+        i = i - 1
+    return result
+
+def heappush(heap: list[int], item: int) -> list[int]:
+    result: list[int] = []
+    for val in heap:
+        result.append(val)
+    result.append(item)
+    # sift up
+    pos: int = len(result) - 1
+    while pos > 0:
+        parent: int = (pos - 1) // 2
+        p_val: int | None = result[parent]
+        c_val: int | None = result[pos]
+        if p_val is not None:
+            if c_val is not None:
+                if c_val < p_val:
+                    result = _swap(result, parent, pos)
+                    pos = parent
+                else:
+                    return result
+            else:
+                return result
+        else:
+            return result
+    return result
+
+def heappop(heap: list[int]) -> int:
+    if len(heap) == 0:
+        return 0
+    top: int | None = heap[0]
+    if top is not None:
+        return top
+    return 0
+
+def heappop_rest(heap: list[int]) -> list[int]:
+    n: int = len(heap)
+    if n <= 1:
+        result: list[int] = []
+        return result
+    # Put last element at root, remove last
+    last: int | None = heap[n - 1]
+    result2: list[int] = []
+    if last is not None:
+        result2.append(last)
+    i: int = 1
+    while i < n - 1:
+        val: int | None = heap[i]
+        if val is not None:
+            result2.append(val)
+        i = i + 1
+    # sift down at position 0
+    pos: int = 0
+    done: bool = False
+    sz: int = len(result2)
+    while not done:
+        smallest: int = pos
+        left: int = 2 * pos + 1
+        right: int = 2 * pos + 2
+        if left < sz:
+            s_val: int | None = result2[smallest]
+            l_val: int | None = result2[left]
+            if s_val is not None:
+                if l_val is not None:
+                    if l_val < s_val:
+                        smallest = left
+        if right < sz:
+            s_val2: int | None = result2[smallest]
+            r_val: int | None = result2[right]
+            if s_val2 is not None:
+                if r_val is not None:
+                    if r_val < s_val2:
+                        smallest = right
+        if smallest == pos:
+            done = True
+        else:
+            result2 = _swap(result2, pos, smallest)
+            pos = smallest
+    return result2
+
+def nsmallest(n: int, data: list[int]) -> list[int]:
+    heap: list[int] = heapify(data)
+    result: list[int] = []
+    count: int = 0
+    while count < n:
+        if len(heap) == 0:
+            return result
+        val: int = heappop(heap)
+        result.append(val)
+        heap = heappop_rest(heap)
+        count = count + 1
+    return result
+
+def nlargest(n: int, data: list[int]) -> list[int]:
+    sorted_data: list[int] = sorted(data)
+    result: list[int] = []
+    i: int = len(sorted_data) - 1
+    count: int = 0
+    while count < n:
+        if i < 0:
+            return result
+        val: int | None = sorted_data[i]
+        if val is not None:
+            result.append(val)
+        i = i - 1
+        count = count + 1
+    return result

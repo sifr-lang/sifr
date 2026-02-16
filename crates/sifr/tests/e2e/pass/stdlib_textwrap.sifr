@@ -1,0 +1,22 @@
+# Test sifr.textwrap module
+from sifr.textwrap import wrap, fill, indent
+
+def main():
+    # wrap splits text into lines of given width
+    lines: list[str] = wrap("the quick brown fox jumps", 10)
+    print(len(lines))
+
+    # fill joins wrapped lines
+    filled: str = fill("hello world foo bar", 12)
+    print(filled)
+
+    # indent adds prefix to non-empty lines
+    text: str = "hello\nworld"
+    result: str = indent(text, ">> ")
+    print(result)
+
+# expect-stdout: 3
+# expect-stdout: hello world
+# expect-stdout: foo bar
+# expect-stdout: >> hello
+# expect-stdout: >> world

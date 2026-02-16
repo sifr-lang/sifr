@@ -1,0 +1,11 @@
+# sifr.glob — Filename globbing (wraps _sifr.fs + sifr.fnmatch)
+from _sifr.fs import listdir
+from sifr.fnmatch import fnmatch
+
+def glob_match(directory: str, pattern: str) -> list[str]:
+    entries: list[str] = listdir(directory)
+    result: list[str] = []
+    for entry in entries:
+        if fnmatch(entry, pattern):
+            result.append(entry)
+    return result

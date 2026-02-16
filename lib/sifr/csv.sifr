@@ -1,0 +1,34 @@
+# sifr.csv — CSV parsing and writing (pure Sifr)
+# Simplified CSV: no quoting, comma-separated values.
+
+def parse_row(line: str) -> list[str]:
+    return line.split(",")
+
+def parse_csv(text: str) -> list[list[str]]:
+    rows: list[list[str]] = []
+    lines: list[str] = text.split("\n")
+    for line in lines:
+        if len(line) > 0:
+            row: list[str] = parse_row(line)
+            rows.append(row)
+    return rows
+
+def format_row(fields: list[str]) -> str:
+    result: str = ""
+    i: int = 0
+    for field in fields:
+        if i > 0:
+            result = result + ","
+        result = result + field
+        i = i + 1
+    return result
+
+def format_csv(rows: list[list[str]]) -> str:
+    result: str = ""
+    i: int = 0
+    for row in rows:
+        if i > 0:
+            result = result + "\n"
+        result = result + format_row(row)
+        i = i + 1
+    return result
