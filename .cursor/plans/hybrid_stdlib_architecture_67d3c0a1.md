@@ -147,8 +147,8 @@ lib/sifr/
   re.sifr            # re_match, re_find, re_findall, re_replace, re_split
   time.sifr          # time_now, sleep, time_format, monotonic, perf_counter
   random.sifr        # random_int, random_float, random_choice, shuffle, sample, seed
-  hash.sifr          # sha256, md5, sha1, sha512, hmac
-  encoding.sifr      # base64_encode, base64_decode, urlsafe_encode, ...
+  hashlib.sifr       # sha256, md5, sha1, sha512, hmac
+  base64.sifr        # b64encode, b64decode, urlsafe_b64encode, ...
   bytes.sifr         # encode_utf8, decode_utf8, to_hex, from_hex
   collections.sifr   # Counter, DefaultDict, OrderedDict, deque, Set ops
   statistics.sifr    # mean, median, stdev, variance
@@ -243,8 +243,8 @@ Organized by implementation type:
 - `re` -- wraps `_sifr.regex` (regex crate)
 - `time` -- wraps `_sifr.time`
 - `random` -- wraps `_sifr.crypto` (rand crate)
-- `hash` -- wraps `_sifr.crypto` (sha2, md5)
-- `encoding` -- wraps `_sifr.crypto` for base64 (or pure Sifr)
+- `hashlib` -- wraps `_sifr.crypto` (sha2, md5)
+- `base64` -- wraps `_sifr.crypto` for base64 (or pure Sifr)
 - `bytes` -- wraps `_sifr.io`
 - `secrets` -- wraps `_sifr.crypto` (CSPRNG)
 - `shutil` -- wraps `_sifr.fs` (high-level file ops)
@@ -374,9 +374,9 @@ Port all 13 existing stdlib modules from Rust codegen to `.sifr` files. Each mod
 
 1. `lib/sifr/env.sifr` -- wraps `_sifr.sys` (env_get, env_set) -- simplest, good first migration
 2. `lib/sifr/bytes.sifr` -- wraps `_sifr.io` (encode_utf8, decode_utf8, to_hex, from_hex)
-3. `lib/sifr/encoding.sifr` -- wraps `_sifr.crypto` or pure Sifr (base64_encode, base64_decode)
+3. `lib/sifr/base64.sifr` -- wraps `_sifr.crypto` or pure Sifr (b64encode, b64decode)
 4. `lib/sifr/math.sifr` -- wraps `_sifr.math` (12 functions + pi, e constants)
-5. `lib/sifr/hash.sifr` -- wraps `_sifr.crypto` (sha256, md5)
+5. `lib/sifr/hashlib.sifr` -- wraps `_sifr.crypto` (sha256, md5)
 6. `lib/sifr/io.sifr` -- wraps `_sifr.fs` + `_sifr.io` (read_text, write_text, exists, read_lines, `open()` / `File` context manager). Needs new intrinsics: `_sifr.fs.open_file`, `_sifr.fs.read_fd`, `_sifr.fs.write_fd`, `_sifr.fs.close_fd`
 7. `lib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` (run_command, get_args)
 8. `lib/sifr/json.sifr` -- wraps `_sifr.json` (json_loads, json_dumps)
@@ -446,8 +446,8 @@ Three parts: (A) close gaps in existing modules by adding missing functions, (B)
 - `sifr/io.sifr` -- add `append_text`, binary I/O
 - `sifr/collections.sifr` -- add `deque`, `OrderedDict`
 - `sifr/time.sifr` -- add `monotonic`, `perf_counter`
-- `sifr/hash.sifr` -- add `sha1`, `sha512`, `hmac`
-- `sifr/encoding.sifr` -- add `urlsafe_b64encode`, `urlsafe_b64decode`, `b32encode`, `b32decode`
+- `sifr/hashlib.sifr` -- add `sha1`, `sha512`, `hmac`
+- `sifr/base64.sifr` -- add `urlsafe_b64encode`, `urlsafe_b64decode`, `b32encode`, `b32decode`
 - `sifr/itertools.sifr` -- add `combinations`, `permutations`, `product`, `accumulate`
 - `sifr/functools.sifr` -- add `partial` (if closures support it)
 
