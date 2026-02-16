@@ -2,14 +2,14 @@
 # Test 24: Use Class After Passing to Function (should fail)
 # Python: p is still usable after passing to describe()
 # Rust: p is moved into describe(); using p after is error
-# Sifr should: reject this — use-after-move
+# Sifr should: reject this — use-after-move (own param)
 # ============================================================
 
 class Point:
     x: int
     y: int
 
-def describe(p: Point) -> str:
+def describe(own p: Point) -> str:
     return f"({p.x}, {p.y})"
 
 def main():

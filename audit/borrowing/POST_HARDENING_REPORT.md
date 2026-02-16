@@ -1,8 +1,8 @@
 # Post-Hardening Audit Report: Borrowing & Ownership
 
-**Date:** February 15, 2026  
+**Date:** February 15, 2026 (updated February 16, 2026)  
 **Scope:** 50 test files in `audit/borrowing/`  
-**Context:** Post milestone_ownership_v3 (assignment-based move detection, move-in-loop, conditional move merging, set Display fix)
+**Context:** Post milestone_borrow_hardening (borrow-by-default parameter passing with `mut`/`own` keywords)
 
 ---
 
@@ -10,24 +10,37 @@
 
 | Status | Count | Percentage |
 |--------|-------|------------|
-| **PASS** | 38 | 76.0% |
-| **Fail (Sifr compile)** | 12 | 24.0% |
+| **PASS** | 39 | 78.0% |
+| **Fail (Sifr compile -- correct rejections)** | 10 | 20.0% |
+| **Fail (pre-existing type issue)** | 1 | 2.0% |
 | **Fail (Rust compile)** | 0 | 0.0% |
 | **Fail (runtime)** | 0 | 0.0% |
 | **Total** | 50 | 100% |
 
 ---
 
-## Comparison: Before vs After milestone_ownership_v3
+## Borrow-by-Default Model
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Pass | 37 | 38 | +1 |
-| Fail (Sifr compile) | 5 | 12 | +7 (correct rejections) |
-| Fail (Rust compile) | 8 | **0** | **-8 (all fixed)** |
-| Fail (runtime) | 0 | 0 | -- |
+As of milestone_borrow_default, function parameters are **borrowed by default** (`&T`). The `own` keyword explicitly transfers ownership (`T`), and `mut` enables mutable borrowing (`&mut T`). Copy types (`int`, `float`, `bool`) always pass by value.
 
-**Key achievement:** All ownership errors are now caught by Sifr's own type checker. Zero errors leak to the Rust backend.
+### Updated Tests (8 tests modified for `own` keyword)
+
+| Test | Change | Reason |
+|------|--------|--------|
+| 08 | Added `own` to `consume()` param | Function consumes its argument |
+| 09 | Added `own` to `consume()` param | Tests use-after-move via `own` |
+| 16 | Added `own` to `consume()` param | Tests move-in-loop via `own` |
+| 23 | Added `own` to `describe()` param | Function consumes class instance |
+| 24 | Added `own` to `describe()` param | Tests use-after-move of class |
+| 31 | Added `own` to `consume_str()` param | Tests str move into two functions |
+| 32 | Added `own` to `consume()` param | Tests conditional move |
+| 33 | Added `own` to `consume()` param | Tests move in both branches |
+
+### Correctly Failing Tests (10 tests)
+
+Tests 03, 05, 07, 09, 16, 20, 24, 26, 31, 40 correctly produce Sifr compile errors for ownership violations.
+
+**Key achievement:** All ownership errors are caught by Sifr's own type checker. Zero errors leak to the Rust backend. The borrow-by-default model eliminates accidental use-after-move for function calls.
 
 ---
 

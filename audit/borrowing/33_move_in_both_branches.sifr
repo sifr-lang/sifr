@@ -2,10 +2,10 @@
 # Test 33: Move in Both Branches (definitely moved after)
 # Python: variable is always usable after if/else
 # Rust: if moved in both branches, definitely moved after
-# Sifr should: detect that s is moved in both branches
+# Sifr should: detect that s is moved in both branches (own param)
 # ============================================================
 
-def consume(s: str) -> str:
+def consume(own s: str) -> str:
     return s
 
 def main():

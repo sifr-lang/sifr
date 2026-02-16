@@ -3,10 +3,10 @@
 # Python: variables are always usable regardless of branches
 # Rust: if a variable is moved in one branch, it may be
 #        unusable after the if/else (depends on all branches)
-# Sifr should: handle conditional moves correctly
+# Sifr should: handle conditional moves correctly (own param)
 # ============================================================
 
-def consume(s: str) -> str:
+def consume(own s: str) -> str:
     return s
 
 def main():

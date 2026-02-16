@@ -1,11 +1,11 @@
 # ============================================================
-# Test 8: Move Type Passed to Function (consumed)
+# Test 8: Move Type Passed to Function (consumed via own)
 # Python: passing a list to a function doesn't affect caller
 # Rust: passing a Vec to a function moves it; caller can't use it
-# Sifr should: behave like Rust — function args move by default
+# Sifr should: borrow by default; use `own` to explicitly move
 # ============================================================
 
-def consume(items: list[int]) -> int:
+def consume(own items: list[int]) -> int:
     return len(items)
 
 def main():
