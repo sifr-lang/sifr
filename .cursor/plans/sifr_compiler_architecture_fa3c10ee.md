@@ -105,7 +105,7 @@ todos:
     content: "milestone_stdlib_parity: Close gaps in existing modules, add remaining modules (difflib, graphlib, ipaddress, timeit, platform, tomllib, datetime, pathlib, uuid, logging), run comprehensive parity audit"
     status: pending
   - id: m27-stdlib-polish
-    content: "milestone_stdlib_polish: Align stdlib API names with CPython (glob, shutil.copy/move/rmtree, timeit.default_timer, tomllib.load), add missing E2E pass tests (glob, shutil, tempfile), add negative/fail tests for stdlib error paths, fix stale lower.rs comment, add _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all), update parity report"
+    content: "milestone_stdlib_polish: Add perf_counter/monotonic intrinsics to _sifr.time (std::time::Instant), re-export in sifr.time, rewire sifr.timeit to use perf_counter. Align stdlib API names with CPython (glob, shutil.copy/move/rmtree, timeit.default_timer, tomllib.load). Add missing E2E pass tests (glob, shutil, tempfile), negative/fail tests for stdlib error paths. Add _sifr.fs intrinsics (copy_file, walk_dir, rmdir_all). Fix stale lower.rs comment, update parity report."
     status: pending
 isProject: false
 ---
@@ -3145,14 +3145,24 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 
 - `glob.sifr`: `glob_match` → `glob` (matches `glob.glob()`)
 - `shutil.sifr`: `copy_file` → `copy`, `move_file` → `move`, add `rmtree` (matches `shutil.copy/move/rmtree`)
-- `timeit.sifr`: `timer` → `default_timer` (matches `timeit.default_timer()`); real `timeit()`/`repeat()` deferred until closures-as-arguments are supported
+- `timeit.sifr`: `timer` → `default_timer` backed by `perf_counter` (matches `timeit.default_timer()` = `time.perf_counter()` in CPython); real `timeit()`/`repeat()` deferred until closures-as-arguments
 - `tomllib.sifr`: add `load(path)` (pragmatic adaptation of `tomllib.load(fp)` since Sifr lacks file objects)
 
 ### New Intrinsics
 
-- `_sifr.fs.copy_file(src, dst)` -- wraps `std::fs::copy`
-- `_sifr.fs.walk_dir(path)` -- wraps recursive `std::fs::read_dir`
-- `_sifr.fs.rmdir_all(path)` -- wraps `std::fs::remove_dir_all`
+**`_sifr.time` (monotonic clocks via `std::time::Instant`):**
+- `perf_counter() -> float` -- high-resolution monotonic clock for benchmarking (matches `time.perf_counter()`)
+- `monotonic() -> float` -- guaranteed non-decreasing clock for timeouts (matches `time.monotonic()`)
+
+**`_sifr.fs` (file operations):**
+- `copy_file(src, dst)` -- wraps `std::fs::copy`
+- `walk_dir(path)` -- wraps recursive `std::fs::read_dir`
+- `rmdir_all(path)` -- wraps `std::fs::remove_dir_all`
+
+### Stdlib Re-exports
+
+- `sifr.time` adds `perf_counter`, `monotonic` (from `_sifr.time`)
+- `sifr.timeit` rewired: `default_timer()` → `perf_counter()`, `elapsed(start)` → `perf_counter() - start`
 
 ### Missing E2E Pass Tests
 
@@ -3175,6 +3185,9 @@ This contract is an **acceptance criterion for every milestone** in this phase.
 
 ### Definition of Done (milestone_stdlib_polish)
 
+- `perf_counter` and `monotonic` intrinsics work (backed by `std::time::Instant`)
+- `sifr.time` re-exports `perf_counter` and `monotonic`
+- `sifr.timeit.default_timer` uses `perf_counter` (not wall clock)
 - All renamed functions work and existing tests updated
 - E2E pass tests for glob, shutil, tempfile
 - At least 5 new stdlib fail tests
