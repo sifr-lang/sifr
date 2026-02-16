@@ -1,0 +1,28 @@
+# Test sifr.itertools module
+from sifr.itertools import chain, repeat_val, take, flatten
+
+def main():
+    # chain two lists
+    a: list[int] = [1, 2]
+    b: list[int] = [3, 4]
+    result: list[int] = chain(a, b)
+    print(result)
+
+    # repeat_val
+    repeated: list[int] = repeat_val(7, 3)
+    print(repeated)
+
+    # take first N elements
+    data: list[int] = [10, 20, 30, 40, 50]
+    first3: list[int] = take(3, data)
+    print(first3)
+
+    # flatten nested lists
+    nested: list[list[int]] = [[1, 2], [3], [4, 5]]
+    flat: list[int] = flatten(nested)
+    print(flat)
+
+# expect-stdout: [1, 2, 3, 4]
+# expect-stdout: [7, 7, 7]
+# expect-stdout: [10, 20, 30]
+# expect-stdout: [1, 2, 3, 4, 5]

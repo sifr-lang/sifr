@@ -1,0 +1,47 @@
+# sifr.fnmatch — Filename matching (pure Sifr)
+# Simplified glob-style pattern matching: supports * and ? wildcards.
+
+def fnmatch(name: str, pattern: str) -> bool:
+    return _match(name, 0, pattern, 0)
+
+def _match(name: str, ni: int, pattern: str, pi: int) -> bool:
+    while pi < len(pattern):
+        pc: str | None = pattern[pi]
+        if pc is not None:
+            if pc == "*":
+                # Try matching rest of pattern at every position
+                pi = pi + 1
+                if pi == len(pattern):
+                    return True
+                j: int = ni
+                while j <= len(name):
+                    if _match(name, j, pattern, pi):
+                        return True
+                    j = j + 1
+                return False
+            elif pc == "?":
+                if ni >= len(name):
+                    return False
+                ni = ni + 1
+                pi = pi + 1
+            else:
+                if ni >= len(name):
+                    return False
+                nc: str | None = name[ni]
+                if nc is not None:
+                    if nc != pc:
+                        return False
+                else:
+                    return False
+                ni = ni + 1
+                pi = pi + 1
+        else:
+            return False
+    return ni == len(name)
+
+def fnmatch_filter(names: list[str], pattern: str) -> list[str]:
+    result: list[str] = []
+    for name in names:
+        if fnmatch(name, pattern):
+            result.append(name)
+    return result

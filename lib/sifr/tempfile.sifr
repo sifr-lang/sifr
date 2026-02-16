@@ -1,0 +1,21 @@
+# sifr.tempfile — Temporary file and directory creation (wraps _sifr.fs + _sifr.crypto)
+from _sifr.fs import mkdir, write_text
+from _sifr.crypto import random_int
+
+def _random_suffix() -> str:
+    n: int = random_int(100000, 999999)
+    return str(n)
+
+def mktemp_path(prefix: str) -> str:
+    suffix: str = _random_suffix()
+    return "/tmp/" + prefix + suffix
+
+def mkstemp(prefix: str) -> str:
+    path: str = mktemp_path(prefix)
+    write_text(path, "")
+    return path
+
+def mkdtemp(prefix: str) -> str:
+    path: str = mktemp_path(prefix)
+    mkdir(path)
+    return path

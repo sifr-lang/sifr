@@ -1,0 +1,11 @@
+# sifr.shutil — High-level file operations (wraps _sifr.fs)
+from _sifr.fs import read_text, write_text, exists, listdir, mkdir, remove_file, rmdir, is_file, is_dir
+
+def copy_file(src: str, dst: str):
+    content: str = read_text(src)
+    write_text(dst, content)
+
+def move_file(src: str, dst: str):
+    content: str = read_text(src)
+    write_text(dst, content)
+    remove_file(src)

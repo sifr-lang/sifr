@@ -1,0 +1,61 @@
+# sifr.argparse — Command-line argument parsing (pure Sifr)
+# Simplified argument parser using function-based API.
+
+def parse_flag(args: list[str], flag: str) -> bool:
+    for arg in args:
+        if arg == flag:
+            return True
+    return False
+
+def parse_option(args: list[str], name: str, default: str) -> str:
+    i: int = 0
+    while i < len(args) - 1:
+        arg: str | None = args[i]
+        if arg is not None:
+            if arg == name:
+                next_val: str | None = args[i + 1]
+                if next_val is not None:
+                    return next_val + ""
+        i = i + 1
+    return default + ""
+
+def parse_positional(args: list[str], index: int, default: str) -> str:
+    positionals: list[str] = []
+    skip_next: bool = False
+    for arg in args:
+        if skip_next:
+            skip_next = False
+        elif len(arg) >= 2:
+            first: str | None = arg[0]
+            second: str | None = arg[1]
+            if first is not None:
+                if first == "-":
+                    if second is not None:
+                        if second == "-":
+                            # --option, skip next as value
+                            skip_next = True
+                        else:
+                            # -o, skip next as value
+                            skip_next = True
+                    else:
+                        positionals.append(arg)
+                else:
+                    positionals.append(arg)
+            else:
+                positionals.append(arg)
+        elif len(arg) >= 1:
+            first2: str | None = arg[0]
+            if first2 is not None:
+                if first2 == "-":
+                    skip_next = True
+                else:
+                    positionals.append(arg)
+            else:
+                positionals.append(arg)
+        else:
+            positionals.append(arg)
+    if index < len(positionals):
+        val: str | None = positionals[index]
+        if val is not None:
+            return val + ""
+    return default + ""

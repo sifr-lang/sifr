@@ -1,0 +1,75 @@
+# sifr.textwrap — Text wrapping and filling (pure Sifr)
+
+def wrap(text: str, width: int) -> list[str]:
+    words: list[str] = text.split(" ")
+    result: list[str] = []
+    current: str = ""
+    for word in words:
+        if len(word) == 0:
+            pass
+        elif len(current) == 0:
+            current = word
+        elif len(current) + 1 + len(word) > width:
+            result.append(current)
+            current = word
+        else:
+            current = current + " " + word
+    if len(current) > 0:
+        result.append(current)
+    return result
+
+def fill(text: str, width: int) -> str:
+    lines: list[str] = wrap(text, width)
+    result: str = ""
+    i: int = 0
+    for line in lines:
+        if i > 0:
+            result = result + "\n"
+        result = result + line
+        i = i + 1
+    return result
+
+def dedent(text: str) -> str:
+    lines: list[str] = text.split("\n")
+    min_indent: int = 9999
+    for line in lines:
+        if len(line) > 0:
+            spaces: int = 0
+            j: int = 0
+            done: bool = False
+            while j < len(line):
+                if not done:
+                    ch: str | None = line[j]
+                    if ch is not None:
+                        if ch == " ":
+                            spaces = spaces + 1
+                        else:
+                            done = True
+                j = j + 1
+            if spaces < min_indent:
+                min_indent = spaces
+    result: str = ""
+    first: bool = True
+    for line2 in lines:
+        if not first:
+            result = result + "\n"
+        first = False
+        if len(line2) > min_indent:
+            result = result + line2[min_indent:]
+        else:
+            result = result + line2
+    return result
+
+def indent(text: str, prefix: str) -> str:
+    lines: list[str] = text.split("\n")
+    result: str = ""
+    first: bool = True
+    for line in lines:
+        if not first:
+            result = result + "\n"
+        first = False
+        if len(line) > 0:
+            result = result + prefix + line
+        else:
+            result = result + line
+    return result
