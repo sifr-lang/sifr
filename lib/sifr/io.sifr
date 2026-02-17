@@ -1,3 +1,4 @@
 # sifr.io — File I/O operations
+# All file I/O functions return Result[T, IOError] for safe error handling.
 from _sifr.io import read_text, write_text, exists, read_lines
 from _sifr.fs import append_text

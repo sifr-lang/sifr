@@ -2,7 +2,10 @@
 from sifr.os import getcwd
 
 def main():
-    cwd: str = getcwd()
-    print(len(cwd) > 0)
+    try:
+        cwd: str = getcwd()
+        print(len(cwd) > 0)
+    except IOError as e:
+        print("ERROR: " + e.message)
 
 # expect-stdout: true

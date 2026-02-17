@@ -4,26 +4,29 @@ from sifr.io import write_text
 from sifr.os import run_command
 
 def main():
-    # Create a temp directory with some files
-    run_command("mkdir -p /tmp/sifr_test_glob")
-    write_text("/tmp/sifr_test_glob/hello.txt", "hi")
-    write_text("/tmp/sifr_test_glob/world.txt", "there")
-    write_text("/tmp/sifr_test_glob/data.csv", "1,2,3")
+    try:
+        # Create a temp directory with some files
+        r0: str = run_command("mkdir -p /tmp/sifr_test_glob")
+        r1: None = write_text("/tmp/sifr_test_glob/hello.txt", "hi")
+        r2: None = write_text("/tmp/sifr_test_glob/world.txt", "there")
+        r3: None = write_text("/tmp/sifr_test_glob/data.csv", "1,2,3")
 
-    # Glob for .txt files
-    matches: list[str] = glob("/tmp/sifr_test_glob", "*.txt")
-    print(len(matches))
+        # Glob for .txt files
+        matches: list[str] = glob("/tmp/sifr_test_glob", "*.txt")
+        print(len(matches))
 
-    # Glob for .csv files
-    csv_matches: list[str] = glob("/tmp/sifr_test_glob", "*.csv")
-    print(len(csv_matches))
+        # Glob for .csv files
+        csv_matches: list[str] = glob("/tmp/sifr_test_glob", "*.csv")
+        print(len(csv_matches))
 
-    # Glob for nonexistent pattern
-    none_matches: list[str] = glob("/tmp/sifr_test_glob", "*.xyz")
-    print(len(none_matches))
+        # Glob for nonexistent pattern
+        none_matches: list[str] = glob("/tmp/sifr_test_glob", "*.xyz")
+        print(len(none_matches))
 
-    # Cleanup
-    run_command("rm -rf /tmp/sifr_test_glob")
+        # Cleanup
+        r4: str = run_command("rm -rf /tmp/sifr_test_glob")
+    except IOError as e:
+        print("ERROR: " + e.message)
 
 # expect-stdout: 2
 # expect-stdout: 1
