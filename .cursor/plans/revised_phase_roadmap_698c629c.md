@@ -128,7 +128,7 @@ The most critical safety violation. 5 modules, ~15 intrinsics.
 - `collections.set_pop` -> `Option[str]` on empty set
 - `math.factorial(-1)` -> `Result[int, ValueError]`; `factorial(large_n)` -> overflow check
 - `list.remove()` / `list.index()` -> `Option`/`Result` instead of panic
-- `min()` / `max()` on empty -> `Option[T]`
+- `min()` / `max()` on empty -> `Option[T]` (CPython raises `ValueError`, which would be Rule 1 / `Result[T, ValueError]`, but the semantics here are "no value exists" -- absence, not failure -- consistent with the spirit of Rules 2-3. This is a deliberate divergence from Rule 1; document in `architecture.md` Python Divergences.)
 - `sorted()` with floats -> use `total_cmp` instead of `partial_cmp().unwrap()`
 - **Math domain errors (design decision required):** `sqrt(-1)`, `log(0)`, `log(-1)`, `asin(2)`, `acos(2)` currently return NaN/inf silently (matching Rust's `f64` behavior). CPython raises `ValueError`. The architecture's Rule 1 says "Where CPython raises an exception, Sifr returns `Result[T, E]`." Decide one of: (a) return `Result[float, ValueError]` for domain errors (matching architecture/CPython), or (b) document as an explicit divergence ("Sifr follows Rust's IEEE 754 behavior for math domain errors") and add to the Python Divergences table in `architecture.md`. Either choice is valid -- document whichever is chosen. This decision affects `math`'s safety score and the zero-panic gate threshold.
 
@@ -148,8 +148,8 @@ The most critical safety violation. 5 modules, ~15 intrinsics.
 
 Systematic verification that the safety remediation is complete. This is a hard quality gate -- Phase 10 cannot start until this passes.
 
-- Audit all codegen intrinsic emission paths in `crates/sifr_codegen/src/lib.rs` -- assert zero `.unwrap()` calls on user-facing operations (the only acceptable `.unwrap()` is on compiler-internal invariants that cannot fail)
-- Add a CI lint that greps for `.unwrap()` in intrinsic codegen blocks and fails if any are found on `Result`/`Option` values from external operations (file I/O, parsing, collection access)
+- Audit all codegen intrinsic emission paths in `crates/sifr_codegen/src/lib.rs` -- assert zero panic-inducing patterns on user-facing operations. This includes `.unwrap()`, `.expect(`, `panic!(`, `unreachable!(`, and unchecked indexing (`[i as usize]` without bounds check). The only acceptable panic-path code is on compiler-internal invariants that cannot fail.
+- Add a CI lint that scans intrinsic codegen blocks for all panic-inducing patterns (`.unwrap()`, `.expect(`, `panic!(`, `unreachable!(`, raw indexing on user data) and fails if any are found on user-facing operations (file I/O, parsing, collection access, subscript assignment)
 - Run the full stdlib safety audit script against all 37 modules and produce an updated safety score -- every module must score 7/10 or higher (up from the current state where 12 modules score below 5/10). Modules with documented divergences (e.g., math domain errors if option (b) is chosen in `milestone_collection_safety`) are scored against the documented behavior, not the CPython behavior -- a deliberate, documented design choice does not count as a safety violation.
 - E2E test: a program that calls every fallible stdlib function with invalid input must compile and run without panicking, handling all errors via `try`/`except`
 - Update `audit/STDLIB_PARITY_MASTER_REPORT.md` with post-remediation safety scores
@@ -208,7 +208,7 @@ High-ROI, no new intrinsics needed:
 - `functools`: `reduce`
 - `collections`: `Counter.update`, `Counter.subtract`, `Counter.elements`, `Counter.__add__`/`__sub__`
 - `itertools`: `accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `count`, `cycle`
-- **Cleanup:** Remove any non-CPython functions that were added during Phase 07 for convenience (e.g., extra helpers in `functools` or `itertools` that don't exist in CPython). The stdlib must be a strict CPython subset -- no invented API surface.
+- **Cleanup:** Remove any non-CPython functions that were added during Phase 07 for convenience (e.g., extra helpers in `functools` or `itertools` that don't exist in CPython). The stdlib must expose only CPython-equivalent functionality -- no invented API surface. (Naming divergences forced by Rust keyword conflicts are acceptable and documented separately below.)
 - **Document API naming divergences in `architecture.md`:** Several stdlib functions intentionally diverge from CPython names due to Rust keyword conflicts (e.g., `sifr.shutil.move_file` instead of `sifr.shutil.move` because `move` is a Rust keyword). Audit all such cases across the stdlib, collect them into a table in the Python Divergences section of `architecture.md` with the format: `| sifr name | CPython name | reason |`. This makes the divergences discoverable and prevents future contributors from "fixing" them or introducing inconsistent workarounds.
 
 ### milestone_new_modules: Critical Missing Modules
