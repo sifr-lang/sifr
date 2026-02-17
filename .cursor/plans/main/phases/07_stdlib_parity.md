@@ -221,7 +221,7 @@ status: done
 
 ## milestone_cpython_tests: Port CPython Test Assertions
 
-status: pending
+status: done
 
 **Goal:** Port ~500 test assertions from CPython's test suite to Sifr, focusing on the highest-ROI modules.
 

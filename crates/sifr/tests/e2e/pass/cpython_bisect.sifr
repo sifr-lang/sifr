@@ -1,0 +1,79 @@
+# CPython test_bisect.py — ported assertions for sifr.bisect
+# Note: Sifr's insort functions return new lists (functional style)
+from sifr.test import assert_eq
+from sifr.bisect import bisect_left, bisect_right, insort_left, insort_right
+
+def main():
+    # --- bisect_left ---
+    empty: list[int] = []
+    assert_eq(bisect_left(empty, 1), 0)
+
+    one: list[int] = [1]
+    assert_eq(bisect_left(one, 0), 0)
+    assert_eq(bisect_left(one, 1), 0)
+    assert_eq(bisect_left(one, 2), 1)
+
+    two: list[int] = [1, 2]
+    assert_eq(bisect_left(two, 0), 0)
+    assert_eq(bisect_left(two, 1), 0)
+    assert_eq(bisect_left(two, 2), 1)
+    assert_eq(bisect_left(two, 3), 2)
+
+    three: list[int] = [1, 2, 3]
+    assert_eq(bisect_left(three, 0), 0)
+    assert_eq(bisect_left(three, 1), 0)
+    assert_eq(bisect_left(three, 2), 1)
+    assert_eq(bisect_left(three, 3), 2)
+    assert_eq(bisect_left(three, 4), 3)
+
+    # --- bisect_right ---
+    assert_eq(bisect_right(empty, 1), 0)
+
+    assert_eq(bisect_right(one, 0), 0)
+    assert_eq(bisect_right(one, 1), 1)
+    assert_eq(bisect_right(one, 2), 1)
+
+    assert_eq(bisect_right(two, 0), 0)
+    assert_eq(bisect_right(two, 1), 1)
+    assert_eq(bisect_right(two, 2), 2)
+    assert_eq(bisect_right(two, 3), 2)
+
+    assert_eq(bisect_right(three, 0), 0)
+    assert_eq(bisect_right(three, 1), 1)
+    assert_eq(bisect_right(three, 2), 2)
+    assert_eq(bisect_right(three, 3), 3)
+    assert_eq(bisect_right(three, 4), 3)
+
+    # Duplicates
+    dups: list[int] = [1, 2, 2, 3, 3, 3, 4]
+    assert_eq(bisect_left(dups, 2), 1)
+    assert_eq(bisect_right(dups, 2), 3)
+    assert_eq(bisect_left(dups, 3), 3)
+    assert_eq(bisect_right(dups, 3), 6)
+
+    # --- insort_left (returns new list) ---
+    ins1: list[int] = insort_left([], 5)
+    assert_eq(len(ins1), 1)
+    print(ins1)
+
+    ins2: list[int] = insort_left([1, 3, 5], 2)
+    assert_eq(len(ins2), 4)
+    print(ins2)
+
+    # --- insort_right (returns new list) ---
+    ins3: list[int] = insort_right([1, 3, 5], 4)
+    assert_eq(len(ins3), 4)
+    print(ins3)
+
+    # insort with duplicates
+    ins4: list[int] = insort_left([1, 3, 3, 5], 3)
+    assert_eq(len(ins4), 5)
+    print(ins4)
+
+    print("cpython_bisect: all 34 assertions passed")
+
+# expect-stdout: [5]
+# expect-stdout: [1, 2, 3, 5]
+# expect-stdout: [1, 3, 4, 5]
+# expect-stdout: [1, 3, 3, 3, 5]
+# expect-stdout: cpython_bisect: all 34 assertions passed

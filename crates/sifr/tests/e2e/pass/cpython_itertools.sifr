@@ -1,0 +1,97 @@
+# CPython test_itertools — ported assertions for sifr.itertools
+from sifr.test import assert_eq
+from sifr.itertools import chain, repeat_val, take, flatten, enumerate_list, pairwise, batched, islice
+
+def main():
+    # --- chain ---
+    a: list[int] = [1, 2, 3]
+    b: list[int] = [4, 5, 6]
+    c: list[int] = chain(a, b)
+    assert_eq(len(c), 6)
+    print(c)
+
+    # chain with empty
+    empty: list[int] = []
+    c2: list[int] = chain(empty, a)
+    assert_eq(len(c2), 3)
+    c3: list[int] = chain(a, empty)
+    assert_eq(len(c3), 3)
+    c4: list[int] = chain(empty, empty)
+    assert_eq(len(c4), 0)
+
+    # --- repeat_val ---
+    r1: list[int] = repeat_val(42, 5)
+    assert_eq(len(r1), 5)
+    print(r1)
+
+    r2: list[int] = repeat_val(0, 3)
+    assert_eq(len(r2), 3)
+    print(r2)
+
+    r3: list[int] = repeat_val(1, 0)
+    assert_eq(len(r3), 0)
+
+    # --- take ---
+    data: list[int] = [10, 20, 30, 40, 50]
+    t1: list[int] = take(3, data)
+    assert_eq(len(t1), 3)
+    print(t1)
+
+    t2: list[int] = take(0, data)
+    assert_eq(len(t2), 0)
+
+    t3: list[int] = take(10, data)
+    assert_eq(len(t3), 5)
+
+    # --- flatten ---
+    nested: list[list[int]] = [[1, 2], [3, 4], [5]]
+    flat: list[int] = flatten(nested)
+    assert_eq(len(flat), 5)
+    print(flat)
+
+    empty_nested: list[list[int]] = [[], [], []]
+    flat2: list[int] = flatten(empty_nested)
+    assert_eq(len(flat2), 0)
+
+    # --- enumerate_list ---
+    items: list[str] = ["a", "b", "c"]
+    en: list[int] = enumerate_list(items)
+    assert_eq(len(en), 3)
+    print(en)
+
+    # --- pairwise ---
+    pw_data: list[int] = [1, 2, 3, 4]
+    pw: list[list[int]] = pairwise(pw_data)
+    assert_eq(len(pw), 3)
+    print(pw)
+
+    # --- batched ---
+    bat_data: list[int] = [1, 2, 3, 4, 5]
+    bat: list[list[int]] = batched(bat_data, 2)
+    assert_eq(len(bat), 3)
+    print(bat)
+
+    # --- islice ---
+    sl_data: list[int] = [10, 20, 30, 40, 50]
+    sl: list[int] = islice(sl_data, 3)
+    assert_eq(len(sl), 3)
+    print(sl)
+
+    sl2: list[int] = islice(sl_data, 0)
+    assert_eq(len(sl2), 0)
+
+    sl3: list[int] = islice(sl_data, 10)
+    assert_eq(len(sl3), 5)
+
+    print("cpython_itertools: all 24 assertions passed")
+
+# expect-stdout: [1, 2, 3, 4, 5, 6]
+# expect-stdout: [42, 42, 42, 42, 42]
+# expect-stdout: [0, 0, 0]
+# expect-stdout: [10, 20, 30]
+# expect-stdout: [1, 2, 3, 4, 5]
+# expect-stdout: [0, 1, 2]
+# expect-stdout: [[1, 2], [2, 3], [3, 4]]
+# expect-stdout: [[1, 2], [3, 4], [5]]
+# expect-stdout: [10, 20, 30]
+# expect-stdout: cpython_itertools: all 24 assertions passed

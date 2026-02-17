@@ -5197,9 +5197,9 @@ impl RustEmitter {
             "assert_almost_eq" => {
                 self.write("assert!((");
                 self.emit_expr(&args[0]);
-                self.write(" - ");
+                self.write(" - (");
                 self.emit_expr(&args[1]);
-                self.write(").abs() < ");
+                self.write(")).abs() < ");
                 self.emit_expr(&args[2]);
                 self.write(", \"assert_almost_eq failed: {} != {} (tolerance {})\", ");
                 self.emit_expr(&args[0]);

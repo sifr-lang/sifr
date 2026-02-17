@@ -1,0 +1,165 @@
+# CPython test_math.py — ported assertions for sifr.math
+from sifr.test import assert_eq, assert_true, assert_false, assert_almost_eq
+from sifr.math import (
+    sqrt, floor, ceil, fabs, log, log2, log10, exp, sin, cos, tan,
+    asin, acos, atan, atan2, sinh, cosh, tanh, pow_val, factorial,
+    gcd, lcm, isnan, isinf, copysign, hypot, trunc, degrees, radians,
+    isfinite, fmod, expm1, log1p, pi, e, tau, inf, nan, isclose,
+    comb, perm, prod
+)
+
+def main():
+    # --- Trigonometric functions ---
+    assert_almost_eq(sin(0.0), 0.0, 0.0001)
+    assert_almost_eq(cos(0.0), 1.0, 0.0001)
+    assert_almost_eq(tan(0.0), 0.0, 0.0001)
+    assert_almost_eq(sin(pi / 2.0), 1.0, 0.0001)
+    assert_almost_eq(cos(pi), -1.0, 0.0001)
+    assert_almost_eq(sin(pi), 0.0, 0.0001)
+    assert_almost_eq(tan(pi / 4.0), 1.0, 0.0001)
+
+    # --- Inverse trig ---
+    assert_almost_eq(asin(0.0), 0.0, 0.0001)
+    assert_almost_eq(asin(1.0), pi / 2.0, 0.0001)
+    assert_almost_eq(acos(1.0), 0.0, 0.0001)
+    assert_almost_eq(acos(0.0), pi / 2.0, 0.0001)
+    assert_almost_eq(atan(0.0), 0.0, 0.0001)
+    assert_almost_eq(atan(1.0), pi / 4.0, 0.0001)
+    assert_almost_eq(atan2(0.0, 1.0), 0.0, 0.0001)
+    assert_almost_eq(atan2(1.0, 0.0), pi / 2.0, 0.0001)
+    assert_almost_eq(atan2(1.0, 1.0), pi / 4.0, 0.0001)
+    assert_almost_eq(atan2(-1.0, 1.0), 0.0 - pi / 4.0, 0.0001)
+
+    # --- Hyperbolic ---
+    assert_almost_eq(sinh(0.0), 0.0, 0.0001)
+    assert_almost_eq(cosh(0.0), 1.0, 0.0001)
+    assert_almost_eq(tanh(0.0), 0.0, 0.0001)
+
+    # --- Exp/Log ---
+    assert_almost_eq(exp(0.0), 1.0, 0.0001)
+    assert_almost_eq(exp(1.0), e, 0.0001)
+    assert_almost_eq(log(1.0), 0.0, 0.0001)
+    assert_almost_eq(log(e), 1.0, 0.0001)
+    assert_almost_eq(log2(1.0), 0.0, 0.0001)
+    assert_almost_eq(log2(2.0), 1.0, 0.0001)
+    assert_almost_eq(log2(8.0), 3.0, 0.0001)
+    assert_almost_eq(log10(1.0), 0.0, 0.0001)
+    assert_almost_eq(log10(10.0), 1.0, 0.0001)
+    assert_almost_eq(log10(100.0), 2.0, 0.0001)
+    assert_almost_eq(expm1(0.0), 0.0, 0.0001)
+    assert_almost_eq(log1p(0.0), 0.0, 0.0001)
+
+    # --- Rounding ---
+    assert_eq(ceil(0.5), 1)
+    assert_eq(ceil(1.0), 1)
+    assert_eq(ceil(1.5), 2)
+    assert_eq(ceil(-0.5), 0)
+    assert_eq(ceil(-1.5), -1)
+    assert_eq(floor(0.5), 0)
+    assert_eq(floor(1.0), 1)
+    assert_eq(floor(1.5), 1)
+    assert_eq(floor(-0.5), -1)
+    assert_eq(floor(-1.5), -2)
+    assert_eq(trunc(1.7), 1)
+    assert_eq(trunc(-1.7), -1)
+    assert_eq(trunc(0.0), 0)
+
+    # --- Absolute value ---
+    assert_almost_eq(fabs(-1.0), 1.0, 0.0001)
+    assert_almost_eq(fabs(0.0), 0.0, 0.0001)
+    assert_almost_eq(fabs(1.0), 1.0, 0.0001)
+    assert_almost_eq(fabs(-3.14), 3.14, 0.0001)
+
+    # --- Square root ---
+    assert_almost_eq(sqrt(0.0), 0.0, 0.0001)
+    assert_almost_eq(sqrt(1.0), 1.0, 0.0001)
+    assert_almost_eq(sqrt(4.0), 2.0, 0.0001)
+    assert_almost_eq(sqrt(9.0), 3.0, 0.0001)
+    assert_almost_eq(sqrt(2.0), 1.4142, 0.001)
+
+    # --- Power ---
+    assert_almost_eq(pow_val(2.0, 3.0), 8.0, 0.0001)
+    assert_almost_eq(pow_val(2.0, 0.0), 1.0, 0.0001)
+    assert_almost_eq(pow_val(2.0, -1.0), 0.5, 0.0001)
+    assert_almost_eq(pow_val(10.0, 2.0), 100.0, 0.0001)
+
+    # --- Factorial ---
+    assert_eq(factorial(0), 1)
+    assert_eq(factorial(1), 1)
+    assert_eq(factorial(5), 120)
+    assert_eq(factorial(10), 3628800)
+
+    # --- GCD ---
+    assert_eq(gcd(0, 0), 0)
+    assert_eq(gcd(1, 0), 1)
+    assert_eq(gcd(0, 1), 1)
+    assert_eq(gcd(120, 84), 12)
+    assert_eq(gcd(12, 8), 4)
+
+    # --- LCM ---
+    assert_eq(lcm(2, 3), 6)
+    assert_eq(lcm(4, 6), 12)
+    assert_eq(lcm(1, 1), 1)
+    assert_eq(lcm(0, 5), 0)
+
+    # --- Combinatorics ---
+    assert_eq(comb(5, 2), 10)
+    assert_eq(comb(10, 3), 120)
+    assert_eq(comb(5, 0), 1)
+    assert_eq(comb(5, 5), 1)
+    assert_eq(perm(5, 2), 20)
+    assert_eq(perm(5, 0), 1)
+
+    # --- Product ---
+    nums: list[int] = [1, 2, 3, 4, 5]
+    assert_eq(prod(nums), 120)
+    single: list[int] = [42]
+    assert_eq(prod(single), 42)
+    empty: list[int] = []
+    assert_eq(prod(empty), 1)
+
+    # --- Special values ---
+    assert_true(isnan(nan))
+    assert_false(isnan(0.0))
+    assert_false(isnan(1.0))
+    assert_true(isinf(inf))
+    assert_false(isinf(0.0))
+    assert_false(isinf(1.0))
+    assert_true(isfinite(0.0))
+    assert_true(isfinite(1.0))
+    assert_false(isfinite(inf))
+    assert_false(isfinite(nan))
+
+    # --- Copysign ---
+    assert_almost_eq(copysign(1.0, 42.0), 1.0, 0.0001)
+    assert_almost_eq(copysign(1.0, -42.0), -1.0, 0.0001)
+    assert_almost_eq(copysign(0.0, 42.0), 0.0, 0.0001)
+
+    # --- Hypot ---
+    assert_almost_eq(hypot(3.0, 4.0), 5.0, 0.0001)
+    assert_almost_eq(hypot(5.0, 12.0), 13.0, 0.0001)
+    assert_almost_eq(hypot(0.0, 0.0), 0.0, 0.0001)
+
+    # --- fmod ---
+    assert_almost_eq(fmod(10.0, 3.0), 1.0, 0.0001)
+    assert_almost_eq(fmod(7.5, 2.5), 0.0, 0.0001)
+
+    # --- Degrees/Radians ---
+    assert_almost_eq(degrees(pi), 180.0, 0.0001)
+    assert_almost_eq(degrees(pi / 2.0), 90.0, 0.0001)
+    assert_almost_eq(radians(180.0), pi, 0.0001)
+    assert_almost_eq(radians(90.0), pi / 2.0, 0.0001)
+
+    # --- isclose ---
+    assert_true(isclose(1.0, 1.0000001, 0.001))
+    assert_false(isclose(1.0, 2.0, 0.001))
+    assert_true(isclose(0.1 + 0.2, 0.3, 0.0001))
+
+    # --- Constants ---
+    assert_almost_eq(pi, 3.141592653589793, 0.000001)
+    assert_almost_eq(e, 2.718281828459045, 0.000001)
+    assert_almost_eq(tau, 2.0 * pi, 0.000001)
+
+    print("cpython_math: all 113 assertions passed")
+
+# expect-stdout: cpython_math: all 113 assertions passed

@@ -1,0 +1,47 @@
+# CPython test_textwrap.py — ported assertions for sifr.textwrap
+from sifr.test import assert_eq
+from sifr.textwrap import wrap, fill, dedent, indent, shorten
+
+def main():
+    # --- wrap ---
+    w1: list[str] = wrap("Hello there, how are you this fine day?", 12)
+    assert_eq(len(w1), 4)
+    print(w1)
+
+    w2: list[str] = wrap("", 6)
+    assert_eq(len(w2), 0)
+
+    w3: list[str] = wrap("Short", 80)
+    assert_eq(len(w3), 1)
+
+    w4: list[str] = wrap("Hello there", 5)
+    assert_eq(len(w4), 2)
+    print(w4)
+
+    # --- fill ---
+    assert_eq(fill("Hello there", 5), "Hello\nthere")
+    assert_eq(fill("", 6), "")
+    assert_eq(fill("Short", 80), "Short")
+
+    # --- dedent ---
+    assert_eq(dedent("  Hello"), "Hello")
+    assert_eq(dedent("  Hello\n  World"), "Hello\nWorld")
+    assert_eq(dedent(""), "")
+    assert_eq(dedent("Hello"), "Hello")
+    assert_eq(dedent("    line1\n    line2\n    line3"), "line1\nline2\nline3")
+
+    # --- indent ---
+    assert_eq(indent("Hello\nWorld", "  "), "  Hello\n  World")
+    assert_eq(indent("", "  "), "")
+    assert_eq(indent("Hello", ""), "Hello")
+    assert_eq(indent("A\nB\nC", ">> "), ">> A\n>> B\n>> C")
+
+    # --- shorten ---
+    assert_eq(shorten("Hello", 10), "Hello")
+    assert_eq(shorten("", 6), "")
+
+    print("cpython_textwrap: all 20 assertions passed")
+
+# expect-stdout: ["Hello there,", "how are you", "this fine", "day?"]
+# expect-stdout: ["Hello", "there"]
+# expect-stdout: cpython_textwrap: all 20 assertions passed

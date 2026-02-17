@@ -1,0 +1,113 @@
+# CPython test_re.py — ported assertions for sifr.re
+from sifr.test import assert_eq, assert_true, assert_false
+from sifr.re import re_match, re_find, re_replace, re_findall, re_split, search, sub, findall, split
+
+def main():
+    # --- re_match (returns bool) ---
+    assert_true(re_match("a", "a"))
+    assert_true(re_match("a", "abc"))
+    assert_false(re_match("b", "a"))
+    assert_true(re_match("ab", "abc"))
+    assert_true(re_match("a*", "aaa"))
+    assert_true(re_match("a*", ""))
+    assert_true(re_match("x*", "xxxa"))
+    assert_true(re_match(".", "a"))
+
+    # --- search (re_find) returns str | None ---
+    found: str | None = search("x+", "axx")
+    print(found)
+
+    not_found: str | None = search("x", "aaa")
+    assert_true(not_found is None)
+
+    word: str | None = search("\\w+", "hello world")
+    print(word)
+
+    digit: str | None = search("\\d+", "abc123def")
+    print(digit)
+
+    # --- findall ---
+    r1: list[str] = findall(":+", "abc")
+    assert_eq(len(r1), 0)
+
+    r2: list[str] = findall(":+", "a:b::c:::d")
+    assert_eq(len(r2), 3)
+    print(r2)
+
+    r3: list[str] = findall("a", "abacada")
+    assert_eq(len(r3), 4)
+
+    r4: list[str] = findall("\\d+", "08.2 -2 23x99y")
+    assert_eq(len(r4), 5)
+    print(r4)
+
+    # --- sub ---
+    assert_eq(sub("y", "a", "xyz"), "xaz")
+    assert_eq(sub("a", "b", "aaaaa"), "bbbbb")
+    assert_eq(sub("\\d", "X", "a1b2c3"), "aXbXcX")
+    assert_eq(sub("\\s+", " ", "hello   world"), "hello world")
+    assert_eq(sub("x", "", "xaxbxcx"), "abc")
+
+    # --- split ---
+    s1: list[str] = split(":", ":a:b::c")
+    assert_eq(len(s1), 5)
+    print(s1)
+
+    s2: list[str] = split(":+", ":a:b::c")
+    assert_eq(len(s2), 4)
+    print(s2)
+
+    s3: list[str] = split("\\s+", "hello world  foo")
+    assert_eq(len(s3), 3)
+    print(s3)
+
+    # --- Edge cases ---
+    empty_find: list[str] = findall("x", "")
+    assert_eq(len(empty_find), 0)
+
+    no_match_sub: str = sub("x", "y", "abc")
+    assert_eq(no_match_sub, "abc")
+
+    # --- More match patterns ---
+    assert_true(re_match("^abc$", "abc"))
+    assert_false(re_match("^abc$", "abcd"))
+    assert_true(re_match("[0-9]+", "123"))
+    assert_false(re_match("[0-9]+", "abc"))
+    assert_true(re_match("[a-z]+", "hello"))
+    assert_true(re_match("(a|b)", "a"))
+    assert_true(re_match("(a|b)", "b"))
+    assert_false(re_match("(a|b)", "c"))
+
+    # --- More sub ---
+    assert_eq(sub("[aeiou]", "*", "hello"), "h*ll*")
+    assert_eq(sub("^", ">>", "hello"), ">>hello")
+    assert_eq(sub("[0-9]", "#", "a1b2c3d4"), "a#b#c#d#")
+
+    # --- More findall ---
+    r5: list[str] = findall("[A-Z]", "Hello World")
+    assert_eq(len(r5), 2)
+
+    r6: list[str] = findall("\\w+", "one two three")
+    assert_eq(len(r6), 3)
+
+    r7: list[str] = findall("[aeiou]", "beautiful")
+    assert_eq(len(r7), 5)
+
+    # --- More split ---
+    s4: list[str] = split(",", "a,b,c,d")
+    assert_eq(len(s4), 4)
+
+    s5: list[str] = split("[,;]", "a,b;c,d")
+    assert_eq(len(s5), 4)
+
+    print("cpython_re: all 47 assertions passed")
+
+# expect-stdout: xx
+# expect-stdout: hello
+# expect-stdout: 123
+# expect-stdout: [":", "::", ":::"]
+# expect-stdout: ["08", "2", "2", "23", "99"]
+# expect-stdout: ["", "a", "b", "", "c"]
+# expect-stdout: ["", "a", "b", "c"]
+# expect-stdout: ["hello", "world", "foo"]
+# expect-stdout: cpython_re: all 47 assertions passed

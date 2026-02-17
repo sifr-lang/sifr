@@ -1,0 +1,80 @@
+# CPython test_collections.py — ported assertions for sifr.collections
+# Note: Set operations return new lists (functional style)
+from sifr.test import assert_eq, assert_true, assert_false
+from sifr.collections import (
+    new_set, set_from_list, set_add, set_contains, set_remove,
+    set_len, set_union, set_intersection,
+    counter_from_list, counter_get, counter_most_common, counter_total,
+    counter_values, counter_keys, counter_increment
+)
+
+def main():
+    # --- Set operations (int-backed, functional) ---
+    s1: list[int] = new_set()
+    assert_eq(set_len(s1), 0)
+
+    s1 = set_add(s1, 1)
+    assert_eq(set_len(s1), 1)
+    assert_true(set_contains(s1, 1))
+    assert_false(set_contains(s1, 2))
+
+    s1 = set_add(s1, 2)
+    s1 = set_add(s1, 3)
+    assert_eq(set_len(s1), 3)
+
+    s1 = set_remove(s1, 2)
+    assert_eq(set_len(s1), 2)
+    assert_false(set_contains(s1, 2))
+
+    # Duplicate add
+    s1 = set_add(s1, 1)
+    assert_eq(set_len(s1), 2)
+
+    # set_from_list
+    items: list[int] = [10, 20, 30, 10, 20]
+    s2: list[int] = set_from_list(items)
+    assert_eq(set_len(s2), 3)
+    assert_true(set_contains(s2, 10))
+    assert_true(set_contains(s2, 20))
+    assert_true(set_contains(s2, 30))
+
+    # set_union
+    a_set: list[int] = set_from_list([1, 2, 3])
+    b_set: list[int] = set_from_list([2, 3, 4])
+    u: list[int] = set_union(a_set, b_set)
+    assert_eq(set_len(u), 4)
+
+    # set_intersection
+    inter: list[int] = set_intersection(a_set, b_set)
+    assert_eq(set_len(inter), 2)
+
+    # --- Counter operations (counter handle is str) ---
+    words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+    c: str = counter_from_list(words)
+
+    assert_eq(counter_get(c, "apple"), 3)
+    assert_eq(counter_get(c, "banana"), 2)
+    assert_eq(counter_get(c, "cherry"), 1)
+    assert_eq(counter_get(c, "missing"), 0)
+    assert_eq(counter_total(c), 6)
+
+    # counter_most_common
+    mc: str = counter_most_common(c, 2)
+    print(mc)
+
+    # counter_keys
+    keys: list[str] = counter_keys(c)
+    assert_eq(len(keys), 3)
+
+    # counter_values
+    vals: list[int] = counter_values(c)
+    assert_eq(len(vals), 3)
+
+    # counter_increment
+    c = counter_increment(c, "banana")
+    assert_eq(counter_get(c, "banana"), 3)
+
+    print("cpython_collections: all 26 assertions passed")
+
+# expect-stdout: [["apple",3],["banana",2]]
+# expect-stdout: cpython_collections: all 26 assertions passed
