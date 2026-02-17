@@ -1,0 +1,7 @@
+# expect-error: not a valid error type in Result
+
+def broken() -> Result[int, str]:
+    return 42
+
+def main():
+    _ = broken()

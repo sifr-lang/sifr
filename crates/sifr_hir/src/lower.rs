@@ -51,6 +51,9 @@ struct LowerCtx {
     current_parent_class: Option<String>,
     /// Whether we're inside a try block (auto-unwrap Result values)
     in_try_block: bool,
+    /// Error types collected from Result-returning calls during try body lowering.
+    /// Each entry is the name of an error class encountered via auto-unwrap in the current try block.
+    try_block_error_types: std::collections::HashSet<String>,
     /// Set of class names that are error types (class Foo(Error))
     error_types: std::collections::HashSet<String>,
     /// Set of function names that have *args (vararg) parameters
@@ -76,6 +79,7 @@ impl LowerCtx {
             current_class: None,
             current_parent_class: None,
             in_try_block: false,
+            try_block_error_types: std::collections::HashSet::new(),
             error_types: std::collections::HashSet::new(),
             vararg_functions: std::collections::HashSet::new(),
             type_vars: std::collections::HashSet::new(),
@@ -622,6 +626,56 @@ fn is_error_class(class_def: &StmtClassDef) -> bool {
         }
     }
     false
+}
+
+/// Check if a type is a valid error type (a class registered in error_types).
+fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
+    match ty {
+        Type::Class { name, .. } => ctx.error_types.contains(name),
+        _ => false,
+    }
+}
+
+/// Format a type name for use in error messages.
+fn format_type_name(ty: &Type) -> String {
+    match ty {
+        Type::Int => "int".to_string(),
+        Type::Float => "float".to_string(),
+        Type::Str => "str".to_string(),
+        Type::Bool => "bool".to_string(),
+        Type::None => "None".to_string(),
+        Type::Class { name, .. } => name.clone(),
+        Type::List(inner) => format!("list[{}]", format_type_name(inner)),
+        Type::Dict(k, v) => format!("dict[{}, {}]", format_type_name(k), format_type_name(v)),
+        _ => format!("{:?}", ty),
+    }
+}
+
+
+/// Collect error types from raise statements in a list of HIR statements.
+fn collect_raise_error_types(stmts: &[HirStmt], errors: &mut std::collections::HashSet<String>) {
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Raise { value } => {
+                if let Type::Class { name, .. } = value.ty() {
+                    errors.insert(name.clone());
+                }
+            }
+            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+                collect_raise_error_types(then_body, errors);
+                for (_, body) in elif_clauses {
+                    collect_raise_error_types(body, errors);
+                }
+                if let Some(eb) = else_body {
+                    collect_raise_error_types(eb, errors);
+                }
+            }
+            HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
+                collect_raise_error_types(body, errors);
+            }
+            _ => {}
+        }
+    }
 }
 
 /// Check if a class definition has `(Protocol)` as its base class.
@@ -1225,6 +1279,37 @@ fn register_builtins(ctx: &mut LowerCtx) {
         "print".to_string(),
         FunctionType::all_borrow(vec![("value".to_string(), Type::Any)], Type::None),
     );
+
+    // Register built-in error classes.
+    // These are compiler built-ins (like int, str, bool) — available without imports.
+    // Each has a `message: str` field and a constructor that accepts a single string.
+    let builtin_error_classes = [
+        "Error",
+        "IOError",
+        "ParseError",
+        "ValueError",
+        "DivisionError",
+        "KeyError",
+        "JSONDecodeError",
+        "TOMLDecodeError",
+        "RegexError",
+    ];
+    for &error_name in &builtin_error_classes {
+        let fields = vec![("message".to_string(), Type::Str)];
+        let class_ty = Type::Class {
+            name: error_name.to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+        };
+        ctx.class_types.insert(error_name.to_string(), class_ty.clone());
+        ctx.error_types.insert(error_name.to_string());
+        // Register constructor: ErrorName("message") -> ErrorName
+        let ft = FunctionType::new(
+            vec![("message".to_string(), Type::Str)],
+            class_ty,
+        );
+        ctx.functions.insert(error_name.to_string(), ft);
+    }
 }
 
 fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
@@ -1421,6 +1506,16 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                             }
                             let ok_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
                             let err_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
+                            // Enforce: E must be a class extending Error
+                            if !is_valid_error_type(&err_ty, ctx) {
+                                let err_name = format_type_name(&err_ty);
+                                ctx.error(format!(
+                                    "`{}` is not a valid error type in Result — use a class extending Error, e.g. `Result[{}, ValueError]`",
+                                    err_name,
+                                    format_type_name(&ok_ty),
+                                ));
+                                return Type::Any;
+                            }
                             Type::Result(Box::new(ok_ty), Box::new(err_ty))
                         }
                         _ => {
@@ -1709,7 +1804,22 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
         }
         Stmt::Raise(raise_stmt) => {
             if let Some(ref exc) = raise_stmt.exc {
+                // Check if the raise expression is a string literal — disallow raise "message"
+                if matches!(exc.as_ref(), Expr::StringLiteral(_) | Expr::FString(_)) {
+                    ctx.error("raise requires an Error class instance — `raise \"message\"` is not allowed, use e.g. `raise ValueError(\"message\")`".to_string());
+                    return None;
+                }
                 let value = lower_expr(exc, ctx)?;
+                // Verify the raised value is an error type
+                let raised_ty = value.ty();
+                if !is_valid_error_type(raised_ty, ctx) {
+                    let ty_name = format_type_name(raised_ty);
+                    ctx.error(format!(
+                        "raise requires an Error class instance — `{}` is not an Error class",
+                        ty_name
+                    ));
+                    return None;
+                }
                 Some(HirStmt::Raise { value })
             } else {
                 ctx.error("bare 'raise' without an expression is not supported".to_string());
@@ -1794,10 +1904,19 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
         }
         Stmt::Try(try_stmt) => {
             let prev_in_try = ctx.in_try_block;
+            let prev_try_errors = std::mem::take(&mut ctx.try_block_error_types);
             ctx.in_try_block = true;
             let body = lower_stmts(&try_stmt.body, func_type, ctx);
             ctx.in_try_block = prev_in_try;
+            let mut try_error_types = std::mem::replace(&mut ctx.try_block_error_types, prev_try_errors);
+
+            // Also collect error types from raise statements in the body
+            collect_raise_error_types(&body, &mut try_error_types);
+
             let mut handlers = Vec::new();
+            let mut has_catch_all = false;
+            let mut covered_types = std::collections::HashSet::new();
+
             for handler in &try_stmt.handlers {
                 let ExceptHandler::ExceptHandler(h) = handler;
                 let error_type = if let Some(ref type_expr) = h.type_ {
@@ -1810,32 +1929,63 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                     None
                 };
                 let name = h.name.as_ref().map(|n| n.to_string());
+
+                // Check if this is a catch-all (except Error) or a specific handler
+                if let Some(ref et) = error_type {
+                    if et == "Error" {
+                        has_catch_all = true;
+                    } else {
+                        // Validate the except type is a known error class
+                        if !ctx.error_types.contains(et) {
+                            ctx.error(format!(
+                                "`{}` in except arm is not a known error class — use a class extending Error",
+                                et
+                            ));
+                        }
+                        covered_types.insert(et.clone());
+                    }
+                } else {
+                    // Bare except (no type) — acts as catch-all
+                    has_catch_all = true;
+                }
+
                 // Define the error variable in scope if named
                 ctx.scope.push();
                 if let Some(ref var_name) = name {
-                    // Determine the type of the error variable
                     let error_var_ty = if let Some(ref et) = error_type {
-                        if let Some(class_ty) = ctx.class_types.get(et) {
+                        if et == "Error" {
+                            // catch-all: bind as the base Error type
+                            ctx.class_types.get("Error").cloned().unwrap_or_else(|| Type::Class {
+                                name: "Error".to_string(),
+                                fields: vec![("message".to_string(), Type::Str)],
+                                methods: vec![],
+                            })
+                        } else if let Some(class_ty) = ctx.class_types.get(et) {
                             class_ty.clone()
                         } else {
-                            Type::Str // Default: error messages are strings
+                            // Unknown error type — already reported above
+                            Type::Class {
+                                name: et.clone(),
+                                fields: vec![("message".to_string(), Type::Str)],
+                                methods: vec![],
+                            }
                         }
                     } else {
-                        Type::Str
+                        // Bare except — error variable is base Error type
+                        ctx.class_types.get("Error").cloned().unwrap_or_else(|| Type::Class {
+                            name: "Error".to_string(),
+                            fields: vec![("message".to_string(), Type::Str)],
+                            methods: vec![],
+                        })
                     };
                     ctx.scope.define(var_name.clone(), error_var_ty);
                 }
                 let handler_body = lower_stmts(&h.body, func_type, ctx);
                 ctx.scope.pop();
+
                 // Resolve the error type for codegen
                 let error_resolved_type = error_type.as_ref().and_then(|et| {
-                    if let Some(class_ty) = ctx.class_types.get(et) {
-                        Some(class_ty.clone())
-                    } else if et == "str" {
-                        Some(Type::Str)
-                    } else {
-                        None
-                    }
+                    ctx.class_types.get(et).cloned()
                 });
                 handlers.push(HirExceptHandler {
                     error_type,
@@ -1844,7 +1994,25 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                     body: handler_body,
                 });
             }
-            Some(HirStmt::TryExcept { body, handlers })
+
+            // Exhaustiveness checking: if no catch-all, all error types must be covered
+            if !has_catch_all && !try_error_types.is_empty() {
+                let uncovered: Vec<String> = try_error_types.iter()
+                    .filter(|et| !covered_types.contains(*et))
+                    .cloned()
+                    .collect();
+                if !uncovered.is_empty() {
+                    let mut sorted = uncovered;
+                    sorted.sort();
+                    ctx.error(format!(
+                        "except arms do not cover all error types from try body — uncovered: {}. Add `except Error as e` as a catch-all or add specific except arms",
+                        sorted.join(", ")
+                    ));
+                }
+            }
+
+            let body_error_types: Vec<String> = try_error_types.into_iter().collect();
+            Some(HirStmt::TryExcept { body, handlers, body_error_types })
         }
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
@@ -1977,8 +2145,12 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         let expr_ty = expr.ty().clone();
         // Inside try blocks, auto-unwrap Result[T, E] when declared type is T
         if ctx.in_try_block {
-            if let Type::Result(ref ok_ty, _) = expr_ty {
+            if let Type::Result(ref ok_ty, ref err_ty) = expr_ty {
                 if ok_ty.as_ref().is_assignable_to(&declared_type) {
+                    // Track the error type for exhaustiveness checking
+                    if let Type::Class { name, .. } = err_ty.as_ref() {
+                        ctx.try_block_error_types.insert(name.clone());
+                    }
                     expr = HirExpr::QuestionMark {
                         expr: Box::new(expr),
                         ty: declared_type.clone(),
@@ -2576,7 +2748,7 @@ fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
             HirStmt::For { body, .. } => {
                 types.extend(collect_return_types(body));
             }
-            HirStmt::TryExcept { body, handlers } => {
+            HirStmt::TryExcept { body, handlers, .. } => {
                 types.extend(collect_return_types(body));
                 for handler in handlers {
                     types.extend(collect_return_types(&handler.body));
@@ -3346,12 +3518,17 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         let arg_ty = arg.ty().clone();
-        // int(str) -> Result[int, str] (fallible)
+        // int(str) -> Result[int, ParseError] (fallible)
         // int(float) -> int (infallible truncation)
         // int(int) -> int (identity)
         // int(bool) -> int (True=1, False=0)
         let result_ty = if arg_ty == Type::Str {
-            Type::Result(Box::new(Type::Int), Box::new(Type::Str))
+            let parse_error_ty = ctx.class_types.get("ParseError").cloned().unwrap_or(Type::Class {
+                name: "ParseError".to_string(),
+                fields: vec![("message".to_string(), Type::Str)],
+                methods: vec![],
+            });
+            Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
         } else {
             Type::Int
         };
@@ -3370,11 +3547,16 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         let arg_ty = arg.ty().clone();
-        // float(str) -> Result[float, str] (fallible)
+        // float(str) -> Result[float, ParseError] (fallible)
         // float(int) -> float (infallible widening)
         // float(float) -> float (identity)
         let result_ty = if arg_ty == Type::Str {
-            Type::Result(Box::new(Type::Float), Box::new(Type::Str))
+            let parse_error_ty = ctx.class_types.get("ParseError").cloned().unwrap_or(Type::Class {
+                name: "ParseError".to_string(),
+                fields: vec![("message".to_string(), Type::Str)],
+                methods: vec![],
+            });
+            Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
         } else {
             Type::Float
         };

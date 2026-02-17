@@ -1,6 +1,6 @@
 # expect-stdout: done
 
-def fallible() -> Result[int, str]:
+def fallible() -> Result[int, ValueError]:
     return 42
 
 def main():

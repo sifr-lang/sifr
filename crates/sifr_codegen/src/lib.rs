@@ -6,6 +6,46 @@ use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};
 use std::collections::{HashMap, HashSet};
 
+/// Built-in error class names that the compiler provides.
+const BUILTIN_ERROR_CLASSES: &[&str] = &[
+    "Error", "IOError", "ParseError", "ValueError", "DivisionError",
+    "KeyError", "JSONDecodeError", "TOMLDecodeError", "RegexError",
+];
+
+/// Check if a built-in error class name is referenced in the generated Rust code.
+/// Uses word-boundary-aware matching to avoid false positives like "EmailError" matching "Error".
+fn is_builtin_error_referenced(code: &str, error_name: &str) -> bool {
+    let mut start = 0;
+    while let Some(pos) = code[start..].find(error_name) {
+        let abs_pos = start + pos;
+        let before_ok = if abs_pos == 0 {
+            true
+        } else {
+            let ch = code.as_bytes()[abs_pos - 1];
+            // Must not be preceded by an alphanumeric char or underscore
+            !(ch.is_ascii_alphanumeric() || ch == b'_')
+        };
+        let after_pos = abs_pos + error_name.len();
+        let after_ok = if after_pos >= code.len() {
+            true
+        } else {
+            let ch = code.as_bytes()[after_pos];
+            // Must not be followed by an alphanumeric char or underscore
+            !(ch.is_ascii_alphanumeric() || ch == b'_')
+        };
+        if before_ok && after_ok {
+            // Skip matches inside "std::error::Error" (the Rust trait)
+            let prefix_end = abs_pos;
+            let is_std_error = prefix_end >= 12 && &code[prefix_end - 12..prefix_end] == "std::error::";
+            if !is_std_error {
+                return true;
+            }
+        }
+        start = abs_pos + error_name.len();
+    }
+    false
+}
+
 /// Result of code generation, including the Rust source and metadata.
 pub struct CodegenResult {
     pub rust_source: String,
@@ -377,6 +417,34 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         result.push('\n');
     }
 
+    // Emit built-in error class struct definitions for any that are referenced
+    // Scan the output for references to built-in error types
+    let user_defined_error_classes: HashSet<String> = module.classes.iter()
+        .filter(|c| c.is_error_type)
+        .map(|c| c.name.clone())
+        .collect();
+    for &error_name in BUILTIN_ERROR_CLASSES {
+        // Only emit if referenced in the generated code AND not user-defined (avoid duplicate)
+        // Use word-boundary-aware matching to avoid false positives
+        // (e.g., "Error" should not match "EmailError" or "std::error::Error")
+        let is_referenced = is_builtin_error_referenced(&emitter.output, error_name);
+        if is_referenced && !user_defined_error_classes.contains(error_name) {
+            result.push_str("#[derive(Debug, Clone)]\n");
+            result.push_str(&format!("struct {} {{\n", error_name));
+            result.push_str("    message: String,\n");
+            result.push_str("}\n\n");
+            result.push_str(&format!("impl {} {{\n", error_name));
+            result.push_str(&format!("    fn new(message: String) -> Self {{ Self {{ message }} }}\n"));
+            result.push_str("}\n\n");
+            result.push_str(&format!("impl std::fmt::Display for {} {{\n", error_name));
+            result.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+            result.push_str("        write!(f, \"{}\", self.message)\n");
+            result.push_str("    }\n");
+            result.push_str("}\n\n");
+            result.push_str(&format!("impl std::error::Error for {} {{}}\n\n", error_name));
+        }
+    }
+
     // Prepend compiled stdlib Rust code for used modules
     // Include transitive sifr.* dependencies in dependency order (deps first)
     let mut stdlib_preamble = String::new();
@@ -659,6 +727,8 @@ struct RustEmitter {
     suppress_field_clone: bool,
     /// Whether we're inside a generator closure (yield -> return Some(val))
     in_generator_closure: bool,
+    /// Counter for generating unique try-block error enum names
+    try_enum_counter: usize,
 }
 
 impl RustEmitter {
@@ -693,6 +763,7 @@ impl RustEmitter {
             imported_stdlib_names: HashMap::new(),
             suppress_field_clone: false,
             in_generator_closure: false,
+            try_enum_counter: 0,
         }
     }
 
@@ -2698,46 +2769,167 @@ impl RustEmitter {
                     self.write(&format!("let {} = _star_tmp[_star_tmp.len() - {}].clone();\n", name, after.len() - i));
                 }
             }
-            HirStmt::TryExcept { body, handlers } => {
-                // Determine the error type from the first handler
-                let error_rust_type = handlers.first()
-                    .and_then(|h| h.error_resolved_type.as_ref())
-                    .map(|t| t.rust_type())
-                    .unwrap_or_else(|| "String".to_string());
-
-                // Emit try body as a closure that returns Result, then match on it
-                self.write_indent();
-                self.write(&format!("match (|| -> Result<(), {}> {{\n", error_rust_type));
-                self.indent += 1;
-                for stmt in body {
-                    self.emit_stmt(stmt);
-                }
-                self.write_indent();
-                self.write("Ok(())\n");
-                self.indent -= 1;
-                self.write_indent();
-                self.write("})() {\n");
-                self.indent += 1;
-                self.write_indent();
-                self.write("Ok(()) => {}\n");
+            HirStmt::TryExcept { body, handlers, body_error_types } => {
+                // Collect distinct error types from handlers and body
+                let mut error_type_names: Vec<String> = Vec::new();
+                let mut has_catch_all = false;
                 for handler in handlers {
-                    self.write_indent();
-                    if let Some(ref name) = handler.name {
-                        self.write(&format!("Err({}) => {{\n", name));
+                    if let Some(ref et) = handler.error_type {
+                        if et == "Error" {
+                            has_catch_all = true;
+                        } else if !error_type_names.contains(et) {
+                            error_type_names.push(et.clone());
+                        }
                     } else {
-                        self.write("Err(_e) => {\n");
+                        has_catch_all = true;
                     }
+                }
+                // If catch-all only (no specific handlers), use body error types
+                if error_type_names.is_empty() && has_catch_all {
+                    for et in body_error_types {
+                        if et != "Error" && !error_type_names.contains(et) {
+                            error_type_names.push(et.clone());
+                        }
+                    }
+                }
+
+                let needs_enum = error_type_names.len() > 1;
+
+                if needs_enum {
+                    // Multi-error-type try block: generate a local error enum
+                    self.try_enum_counter += 1;
+                    let enum_name = format!("_TryErr{}", self.try_enum_counter);
+
+                    // Emit enum definition
+                    self.write_indent();
+                    self.write("#[allow(non_camel_case_types)]\n");
+                    self.write_indent();
+                    self.write(&format!("enum {} {{\n", enum_name));
                     self.indent += 1;
-                    for stmt in &handler.body {
+                    for et in &error_type_names {
+                        self.write_indent();
+                        self.write(&format!("{}({}),\n", et, et));
+                    }
+                    // If there's a catch-all, we need a variant for "other" errors
+                    // In practice, the catch-all covers all remaining error types
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
+
+                    // Emit From impls for each error type
+                    for et in &error_type_names {
+                        self.write_indent();
+                        self.write(&format!("impl From<{}> for {} {{\n", et, enum_name));
+                        self.indent += 1;
+                        self.write_indent();
+                        self.write(&format!("fn from(e: {}) -> Self {{ {}::{}(e) }}\n", et, enum_name, et));
+                        self.indent -= 1;
+                        self.write_indent();
+                        self.write("}\n");
+                    }
+
+                    // Emit try body as a closure
+                    self.write_indent();
+                    self.write(&format!("match (|| -> Result<(), {}> {{\n", enum_name));
+                    self.indent += 1;
+                    for stmt in body {
                         self.emit_stmt(stmt);
+                    }
+                    self.write_indent();
+                    self.write("Ok(())\n");
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("})() {\n");
+                    self.indent += 1;
+                    self.write_indent();
+                    self.write("Ok(()) => {}\n");
+
+                    // Emit match arms
+                    for handler in handlers {
+                        if let Some(ref et) = handler.error_type {
+                            if et == "Error" {
+                                // Catch-all: match on any remaining variant
+                                let var_name = handler.name.as_deref().unwrap_or("_e");
+                                self.write_indent();
+                                self.write(&format!("Err({}) => {{\n", var_name));
+                                // For catch-all, we need to extract the message from whichever variant
+                                // Since all error types have a `message` field, shadow the variable
+                                if handler.name.is_some() {
+                                    self.indent += 1;
+                                    self.write_indent();
+                                    // Re-bind to extract inner value for catch-all
+                                    // Actually, just use the enum value as-is; the handler body accesses .message
+                                    // We need to handle this differently - bind the inner value
+                                    self.indent -= 1;
+                                }
+                            } else {
+                                let var_name = handler.name.as_deref().unwrap_or("_e");
+                                self.write_indent();
+                                self.write(&format!("Err({}::{}({})) => {{\n", enum_name, et, var_name));
+                            }
+                        } else {
+                            // Bare except — catch-all
+                            let var_name = handler.name.as_deref().unwrap_or("_e");
+                            self.write_indent();
+                            self.write(&format!("Err({}) => {{\n", var_name));
+                        }
+                        self.indent += 1;
+                        for stmt in &handler.body {
+                            self.emit_stmt(stmt);
+                        }
+                        self.indent -= 1;
+                        self.write_indent();
+                        self.write("}\n");
+                    }
+
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
+                } else {
+                    // Single error type: use simple codegen
+                    // Prefer body error types (concrete) over handler-declared types (may be catch-all Error)
+                    let error_rust_type = if let Some(first_body_err) = error_type_names.first() {
+                        first_body_err.clone()
+                    } else {
+                        handlers.first()
+                            .and_then(|h| h.error_resolved_type.as_ref())
+                            .map(|t| t.rust_type())
+                            .unwrap_or_else(|| "String".to_string())
+                    };
+
+                    self.write_indent();
+                    self.write(&format!("match (|| -> Result<(), {}> {{\n", error_rust_type));
+                    self.indent += 1;
+                    for stmt in body {
+                        self.emit_stmt(stmt);
+                    }
+                    self.write_indent();
+                    self.write("Ok(())\n");
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("})() {\n");
+                    self.indent += 1;
+                    self.write_indent();
+                    self.write("Ok(()) => {}\n");
+                    for handler in handlers {
+                        self.write_indent();
+                        if let Some(ref name) = handler.name {
+                            self.write(&format!("Err({}) => {{\n", name));
+                        } else {
+                            self.write("Err(_e) => {\n");
+                        }
+                        self.indent += 1;
+                        for stmt in &handler.body {
+                            self.emit_stmt(stmt);
+                        }
+                        self.indent -= 1;
+                        self.write_indent();
+                        self.write("}\n");
                     }
                     self.indent -= 1;
                     self.write_indent();
                     self.write("}\n");
                 }
-                self.indent -= 1;
-                self.write_indent();
-                self.write("}\n");
             }
             HirStmt::Raise { value } => {
                 self.write_indent();
@@ -4227,9 +4419,9 @@ impl RustEmitter {
                                 self.write(") as i64");
                             }
                             Type::Str => {
-                                // int(str) -> Result<i64, String>
+                                // int(str) -> Result<i64, ParseError>
                                 self.emit_expr(&args[0]);
-                                self.write(".parse::<i64>().map_err(|e| e.to_string())");
+                                self.write(".parse::<i64>().map_err(|e| ParseError { message: e.to_string() })");
                             }
                             Type::Bool => {
                                 self.write("if ");
@@ -4250,9 +4442,9 @@ impl RustEmitter {
                                 self.write(") as f64");
                             }
                             Type::Str => {
-                                // float(str) -> Result<f64, String>
+                                // float(str) -> Result<f64, ParseError>
                                 self.emit_expr(&args[0]);
-                                self.write(".parse::<f64>().map_err(|e| e.to_string())");
+                                self.write(".parse::<f64>().map_err(|e| ParseError { message: e.to_string() })");
                             }
                             _ => {
                                 self.emit_expr(&args[0]);
@@ -6398,7 +6590,7 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) 
                     collect_mutated_vars_inner(eb, mutated);
                 }
             }
-            HirStmt::TryExcept { body, handlers } => {
+            HirStmt::TryExcept { body, handlers, .. } => {
                 collect_mutated_vars_inner(body, mutated);
                 for handler in handlers {
                     collect_mutated_vars_inner(&handler.body, mutated);

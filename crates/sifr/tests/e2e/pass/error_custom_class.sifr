@@ -1,0 +1,26 @@
+# expect-stdout: caught: invalid value
+# expect-stdout: ok: 42
+# expect-stdout: user-defined errors work
+
+class AppError(Error):
+    message: str
+
+def validate(x: int) -> Result[int, AppError]:
+    if x < 0:
+        raise AppError("invalid value")
+    return x
+
+def main():
+    try:
+        val: int = validate(-1)
+        print(f"ok: {val}")
+    except AppError as e:
+        print(f"caught: {e.message}")
+
+    try:
+        val2: int = validate(42)
+        print(f"ok: {val2}")
+    except AppError as e:
+        print(f"caught: {e.message}")
+
+    print("user-defined errors work")
