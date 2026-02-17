@@ -675,9 +675,9 @@ fn intrinsic_datetime() -> IntrinsicModule {
         ("dt".to_string(), Type::Str),
         ("fmt".to_string(), Type::Str),
     ], Type::Str));
-    // datetime_from_timestamp(ts: float) -> str (ISO 8601 from epoch)
+    // datetime_from_timestamp(ts: float) -> Result[str, ValueError]
     functions.insert("datetime_from_timestamp".to_string(), FunctionType::all_borrow(vec![
         ("ts".to_string(), Type::Float),
-    ], Type::Str));
+    ], result_ty(Type::Str, "ValueError")));
     IntrinsicModule { functions, constants: HashMap::new() }
 }

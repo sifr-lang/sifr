@@ -1,6 +1,6 @@
 # sifr.textwrap — Text wrapping and filling (pure Sifr)
 
-def wrap(text: str, width: int) -> list[str]:
+def _wrap_impl(text: str, width: int) -> list[str]:
     words: list[str] = text.split(" ")
     result: list[str] = []
     current: str = ""
@@ -18,8 +18,15 @@ def wrap(text: str, width: int) -> list[str]:
         result.append(current)
     return result
 
-def fill(text: str, width: int) -> str:
-    lines: list[str] = wrap(text, width)
+def wrap(text: str, width: int) -> Result[list[str], ValueError]:
+    if width <= 0:
+        raise ValueError("wrap: width must be > 0")
+    return _wrap_impl(text, width)
+
+def fill(text: str, width: int) -> Result[str, ValueError]:
+    if width <= 0:
+        raise ValueError("fill: width must be > 0")
+    lines: list[str] = _wrap_impl(text, width)
     result: str = ""
     i: int = 0
     for line in lines:

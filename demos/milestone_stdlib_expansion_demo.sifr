@@ -55,8 +55,11 @@ def main():
     assert_eq(len(first3), 3)
 
     # sifr.textwrap — text formatting
-    filled: str = fill("hello world foo bar", 12)
-    assert_true(len(filled) > 0)
+    try:
+        filled: str = fill("hello world foo bar", 12)
+        assert_true(len(filled) > 0)
+    except ValueError as e:
+        print(f"error: {e.message}")
 
     # sifr.csv — CSV parsing
     row: list[str] = parse_row("a,b,c")

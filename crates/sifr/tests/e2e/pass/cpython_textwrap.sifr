@@ -4,24 +4,42 @@ from sifr.textwrap import wrap, fill, dedent, indent, shorten
 
 def main():
     # --- wrap ---
-    w1: list[str] = wrap("Hello there, how are you this fine day?", 12)
-    assert_eq(len(w1), 4)
-    print(w1)
+    try:
+        w1: list[str] = wrap("Hello there, how are you this fine day?", 12)
+        assert_eq(len(w1), 4)
+        print(w1)
+    except ValueError as e:
+        print(f"error: {e.message}")
 
-    w2: list[str] = wrap("", 6)
-    assert_eq(len(w2), 0)
+    try:
+        w2: list[str] = wrap("", 6)
+        assert_eq(len(w2), 0)
+    except ValueError as e:
+        print(f"error: {e.message}")
 
-    w3: list[str] = wrap("Short", 80)
-    assert_eq(len(w3), 1)
+    try:
+        w3: list[str] = wrap("Short", 80)
+        assert_eq(len(w3), 1)
+    except ValueError as e:
+        print(f"error: {e.message}")
 
-    w4: list[str] = wrap("Hello there", 5)
-    assert_eq(len(w4), 2)
-    print(w4)
+    try:
+        w4: list[str] = wrap("Hello there", 5)
+        assert_eq(len(w4), 2)
+        print(w4)
+    except ValueError as e:
+        print(f"error: {e.message}")
 
     # --- fill ---
-    assert_eq(fill("Hello there", 5), "Hello\nthere")
-    assert_eq(fill("", 6), "")
-    assert_eq(fill("Short", 80), "Short")
+    try:
+        f1: str = fill("Hello there", 5)
+        assert_eq(f1, "Hello\nthere")
+        f2: str = fill("", 6)
+        assert_eq(f2, "")
+        f3: str = fill("Short", 80)
+        assert_eq(f3, "Short")
+    except ValueError as e:
+        print(f"error: {e.message}")
 
     # --- dedent ---
     assert_eq(dedent("  Hello"), "Hello")

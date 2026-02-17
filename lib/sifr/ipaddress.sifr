@@ -47,7 +47,7 @@ def _parse_int(s: str) -> int:
         i = i + 1
     return result
 
-def ip_to_int(addr: str) -> int:
+def _ip_to_int_raw(addr: str) -> int:
     parts: list[str] = addr.split(".")
     result: int = 0
     for part in parts:
@@ -55,8 +55,13 @@ def ip_to_int(addr: str) -> int:
         result = result * 256 + val
     return result
 
+def ip_to_int(addr: str) -> Result[int, ValueError]:
+    if not is_valid_ipv4(addr):
+        raise ValueError("invalid IPv4 address")
+    return _ip_to_int_raw(addr)
+
 def is_private(addr: str) -> bool:
-    val: int = ip_to_int(addr)
+    val: int = _ip_to_int_raw(addr)
     # 10.0.0.0/8
     if val >= 167772160:
         if val <= 184549375:

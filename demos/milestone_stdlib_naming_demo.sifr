@@ -25,9 +25,12 @@ def main():
     print(decoded)
 
     # --- sifr.random: randint, random, uniform ---
-    r: int = randint(1, 100)
-    print(r >= 1)
-    print(r <= 100)
+    try:
+        r: int = randint(1, 100)
+        print(r >= 1)
+        print(r <= 100)
+    except ValueError as e:
+        print(f"error: {e.message}")
     f: float = random()
     print(f >= 0.0)
     print(f < 1.0)
