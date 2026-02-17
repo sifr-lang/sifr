@@ -1,2 +1,16 @@
 # sifr.re — Regular expressions
 from _sifr.regex import re_match, re_find, re_replace, re_findall, re_split
+
+# CPython-compatible aliases
+# Note: match is skipped (Python keyword)
+def search(pattern: str, text: str) -> str | None:
+    return re_find(pattern, text)
+
+def sub(pattern: str, replacement: str, text: str) -> str:
+    return re_replace(pattern, replacement, text)
+
+def findall(pattern: str, text: str) -> list[str]:
+    return re_findall(pattern, text)
+
+def split(pattern: str, text: str) -> list[str]:
+    return re_split(pattern, text)

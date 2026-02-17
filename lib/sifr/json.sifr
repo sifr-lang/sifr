@@ -1,2 +1,10 @@
 # sifr.json — JSON serialization/deserialization
 from _sifr.json import json_loads, json_dumps
+
+# CPython-compatible aliases
+def loads(s: str) -> str:
+    return json_loads(s)
+
+# Note: dumps(obj: Any) cannot be a wrapper function because Any → Box<dyn Any>
+# doesn't implement Serialize in Rust. Users should import json_dumps directly,
+# which gets inlined with the correct concrete type at the call site.

@@ -89,3 +89,8 @@ def prod(data: list[int]) -> int:
     for val in data:
         result = result * val
     return result
+
+# CPython-compatible aliases
+# Note: fabs is already imported from _sifr.math, so it's already available
+def pow(x: float, y: float) -> float:
+    return pow_val(x, y)

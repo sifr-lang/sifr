@@ -1,2 +1,9 @@
 # sifr.base64 — Base64 encoding/decoding (renamed from sifr.encoding)
 from _sifr.crypto import base64_encode, base64_decode, urlsafe_b64encode, urlsafe_b64decode
+
+# CPython-compatible aliases
+def b64encode(s: str) -> str:
+    return base64_encode(s)
+
+def b64decode(s: str) -> str:
+    return base64_decode(s)

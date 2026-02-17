@@ -48,3 +48,7 @@ def fnmatch_filter(names: list[str], pattern: str) -> list[str]:
 
 def fnmatchcase(name: str, pattern: str) -> bool:
     return _match(name, 0, pattern, 0)
+
+# CPython-compatible alias
+def filter(names: list[str], pattern: str) -> list[str]:
+    return fnmatch_filter(names, pattern)

@@ -157,7 +157,7 @@ Convert `bisect`, `heapq`, and `itertools` from concrete `list[int]` to generic 
 
 ## milestone_stdlib_naming: API Naming Alignment with CPython
 
-status: pending
+status: done
 
 **Goal:** Rename Sifr stdlib functions to match CPython naming conventions. Deliberate pre-1.0 breaking change done in one pass.
 
