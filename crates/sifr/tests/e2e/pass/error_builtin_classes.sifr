@@ -1,0 +1,48 @@
+# expect-stdout: caught ValueError: out of range
+# expect-stdout: caught DivisionError: division by zero
+# expect-stdout: caught IOError: file not found
+# expect-stdout: caught ParseError: invalid format
+# expect-stdout: all built-in errors work
+
+def validate(x: int) -> Result[int, ValueError]:
+    if x < 0:
+        raise ValueError("out of range")
+    return x
+
+def divide(a: int, b: int) -> Result[int, DivisionError]:
+    if b == 0:
+        raise DivisionError("division by zero")
+    return a // b
+
+def read_file(path: str) -> Result[str, IOError]:
+    if path == "missing.txt":
+        raise IOError("file not found")
+    return "contents"
+
+def parse_data(s: str) -> Result[int, ParseError]:
+    if s == "bad":
+        raise ParseError("invalid format")
+    return 42
+
+def main():
+    try:
+        val: int = validate(-1)
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+
+    try:
+        val2: int = divide(10, 0)
+    except DivisionError as e:
+        print(f"caught DivisionError: {e.message}")
+
+    try:
+        data: str = read_file("missing.txt")
+    except IOError as e:
+        print(f"caught IOError: {e.message}")
+
+    try:
+        num: int = parse_data("bad")
+    except ParseError as e:
+        print(f"caught ParseError: {e.message}")
+
+    print("all built-in errors work")

@@ -1,0 +1,122 @@
+# milestone_error_safety demo
+# Showcases: Built-in error classes, Result[T, E] enforcement,
+#            exhaustiveness checking, raise enforcement, custom errors
+
+# expect-stdout: === Built-in Error Classes ===
+# expect-stdout: caught ValueError: age must be positive
+# expect-stdout: caught DivisionError: division by zero
+# expect-stdout: caught ParseError: invalid digit found in string
+# expect-stdout: === Custom Error Classes ===
+# expect-stdout: caught AppError: invalid input
+# expect-stdout: === Exhaustiveness: Specific Except Arms ===
+# expect-stdout: caught ValueError: negative input
+# expect-stdout: === Exhaustiveness: Catch-All ===
+# expect-stdout: caught: too large
+# expect-stdout: === Error Propagation ===
+# expect-stdout: pipeline error: age must be positive
+# expect-stdout: === Multiple Try/Except ===
+# expect-stdout: parsed: 42
+# expect-stdout: validated: 42
+# expect-stdout: result: 7
+# expect-stdout: demo complete!
+
+class AppError(Error):
+    message: str
+
+def validate_age(age: int) -> Result[int, ValueError]:
+    if age < 0:
+        raise ValueError("age must be positive")
+    if age > 150:
+        raise ValueError("too large")
+    return age
+
+def safe_divide(a: int, b: int) -> Result[int, DivisionError]:
+    if b == 0:
+        raise DivisionError("division by zero")
+    return a // b
+
+def check_input(x: int) -> Result[int, AppError]:
+    if x < 0:
+        raise AppError("invalid input")
+    return x
+
+def process_age(age: int) -> Result[int, ValueError]:
+    if age < 0:
+        raise ValueError("age must be positive")
+    if age > 150:
+        raise ValueError("too large")
+    return age
+
+def main():
+    # --- Built-in Error Classes ---
+    print("=== Built-in Error Classes ===")
+
+    try:
+        age: int = validate_age(-5)
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+
+    try:
+        result: int = safe_divide(10, 0)
+    except DivisionError as e:
+        print(f"caught DivisionError: {e.message}")
+
+    try:
+        n: int = int("not_a_number")
+    except ParseError as e:
+        print(f"caught ParseError: {e.message}")
+
+    # --- Custom Error Classes ---
+    print("=== Custom Error Classes ===")
+
+    try:
+        val: int = check_input(-1)
+    except AppError as e:
+        print(f"caught AppError: {e.message}")
+
+    # --- Exhaustiveness: Specific Except Arms ---
+    print("=== Exhaustiveness: Specific Except Arms ===")
+
+    try:
+        a: int = validate_age(-10)
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+
+    # --- Exhaustiveness: Catch-All ---
+    print("=== Exhaustiveness: Catch-All ===")
+
+    try:
+        b: int = validate_age(200)
+    except Error as e:
+        print(f"caught: {e.message}")
+
+    # --- Error Propagation ---
+    print("=== Error Propagation ===")
+
+    try:
+        c: int = process_age(-1)
+    except ValueError as e:
+        print(f"pipeline error: {e.message}")
+
+    # --- Multiple Try/Except ---
+    print("=== Multiple Try/Except ===")
+
+    try:
+        parsed: int = int("42")
+        print(f"parsed: {parsed}")
+    except ParseError as e:
+        print(f"parse error: {e.message}")
+
+    try:
+        validated: int = validate_age(42)
+        print(f"validated: {validated}")
+    except ValueError as e:
+        print(f"validation error: {e.message}")
+
+    try:
+        divided: int = safe_divide(42, 6)
+        print(f"result: {divided}")
+    except DivisionError as e:
+        print(f"division error: {e.message}")
+
+    print("demo complete!")

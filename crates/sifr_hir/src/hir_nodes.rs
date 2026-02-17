@@ -164,6 +164,8 @@ pub enum HirStmt {
     TryExcept {
         body: Vec<HirStmt>,
         handlers: Vec<HirExceptHandler>,
+        /// Error types that can arise from the try body (collected during lowering)
+        body_error_types: Vec<String>,
     },
     /// Field assignment: self.field = value (inside methods)
     FieldAssign {

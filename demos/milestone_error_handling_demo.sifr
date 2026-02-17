@@ -35,9 +35,9 @@ def validate_range(x: int, lo: int, hi: int) -> Result[int, ValidationError]:
         raise ValidationError(f"value out of range: {x}")
     return x
 
-def safe_divide(a: int, b: int) -> Result[int, str]:
+def safe_divide(a: int, b: int) -> Result[int, DivisionError]:
     if b == 0:
-        raise "division by zero"
+        raise DivisionError("division by zero")
     return a // b
 
 def main():
@@ -47,14 +47,14 @@ def main():
     try:
         n: int = int("42")
         print(f"parsed: {n}")
-    except str as e:
-        print(f"parse failed: {e}")
+    except ParseError as e:
+        print(f"parse failed: {e.message}")
 
     try:
         n2: int = int("not_a_number")
         print(f"parsed: {n2}")
-    except str as e:
-        print(f"parse failed (expected): {e}")
+    except ParseError as e:
+        print(f"parse failed (expected): {e.message}")
 
     # --- Custom Error Types ---
     print("=== Custom Error Types ===")
@@ -103,14 +103,14 @@ def main():
     try:
         d1: int = safe_divide(10, 3)
         print(f"divide(10, 3) = {d1}")
-    except str as e:
-        print(f"divide error: {e}")
+    except DivisionError as e:
+        print(f"divide error: {e.message}")
 
     try:
         d2: int = safe_divide(10, 0)
         print(f"divide(10, 0) = {d2}")
-    except str as e:
-        print(f"divide(10, 0) error: {e}")
+    except DivisionError as e:
+        print(f"divide(10, 0) error: {e.message}")
 
     # --- Assert Statement ---
     print("=== Assert Statement ===")
