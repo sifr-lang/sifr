@@ -6,7 +6,7 @@
 
 ## milestone_io_safety: File I/O Safety (Priority 1 -- Critical)
 
-status: pending
+status: completed (PR #158)
 
 **Goal:** Eliminate all panic paths in file I/O intrinsics. The most critical safety violation — 5 modules, ~15 intrinsics.
 
@@ -30,7 +30,7 @@ status: pending
 
 ## milestone_parse_safety: Parse/Decode Safety (Priority 2 -- Critical)
 
-status: pending
+status: completed (PR #159)
 
 **Goal:** Eliminate all panic paths in parse/decode intrinsics. Uses the specific error types defined in Phase 08 — not generic `ParseError` — so that exhaustiveness checking can distinguish between different parse failure sources in the same `try` block.
 
@@ -55,7 +55,7 @@ status: pending
 
 ## milestone_collection_safety: Collection, Math, and Built-in Safety (Priority 3 -- High)
 
-status: pending
+status: completed (PR #160)
 
 **Goal:** Eliminate panic paths in collection operations, math functions, and built-in functions. Also make an explicit design decision on math domain errors.
 
@@ -92,7 +92,7 @@ Either choice is valid — document whichever is chosen. This decision affects `
 
 ## milestone_edge_case_safety: Edge Case Validation (Priority 4 -- Moderate)
 
-status: pending
+status: completed (PR #161)
 
 **Goal:** Validate inputs for edge cases that currently panic or produce undefined behavior.
 
@@ -118,7 +118,7 @@ status: pending
 
 ## milestone_zero_panic_gate: Safety Verification Gate
 
-status: pending
+status: completed (PR #162)
 
 **Goal:** Systematic verification that the safety remediation is complete. This is a hard quality gate — Phase 10 cannot start until this passes.
 
