@@ -1,4 +1,5 @@
-# sifr.pathlib — Path manipulation (pure Sifr)
+# sifr.pathlib — Path manipulation (pure Sifr + intrinsics)
+from _sifr.fs import exists, is_file, is_dir, read_text, write_text, mkdir
 
 def join_path(base: str, child: str) -> str:
     if len(base) == 0:
@@ -60,3 +61,48 @@ def is_absolute(path: str) -> bool:
         if first == "/":
             return True
     return False
+
+class Path:
+    _path: str
+
+    def __init__(self, path: str):
+        self._path = path
+
+    def name(self) -> str:
+        return basename(self._path)
+
+    def parent(self) -> str:
+        return dirname(self._path)
+
+    def suffix(self) -> str:
+        return extension(self._path)
+
+    def stem(self) -> str:
+        return stem(self._path)
+
+    def exists(self) -> bool:
+        return exists(self._path)
+
+    def is_file(self) -> bool:
+        return is_file(self._path)
+
+    def is_dir(self) -> bool:
+        return is_dir(self._path)
+
+    def is_absolute(self) -> bool:
+        return is_absolute(self._path)
+
+    def read_text(self) -> str:
+        return read_text(self._path)
+
+    def write_text(self, content: str) -> None:
+        write_text(self._path, content)
+
+    def mkdir(self) -> None:
+        mkdir(self._path)
+
+    def joinpath(self, child: str) -> str:
+        return join_path(self._path, child)
+
+    def to_str(self) -> str:
+        return self._path + ""

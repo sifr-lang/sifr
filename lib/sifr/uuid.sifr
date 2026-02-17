@@ -1,2 +1,32 @@
-# sifr.uuid — UUID generation
+# sifr.uuid — UUID generation and manipulation
 from _sifr.uuid import uuid4
+
+class UUID:
+    _hex: str
+
+    def __init__(self, hex_str: str):
+        self._hex = hex_str
+
+    def hex(self) -> str:
+        # Return the 32-char hex string (without dashes)
+        result: str = ""
+        i: int = 0
+        while i < len(self._hex):
+            ch: str | None = self._hex[i]
+            if ch is not None:
+                if ch != "-":
+                    result = result + ch
+            i = i + 1
+        return result
+
+    def urn(self) -> str:
+        return "urn:uuid:" + self._hex
+
+    def to_str(self) -> str:
+        return self._hex + ""
+
+    def version(self) -> int:
+        return 4
+
+def uuid4_obj() -> UUID:
+    return UUID(uuid4())

@@ -442,9 +442,17 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                 if let Some(module_classes) = externals.classes.get(&stdlib_module_key) {
                                     if let Some(class_ty) = module_classes.get(name) {
                                         ctx.class_types.insert(local.clone(), class_ty.clone());
-                                        if let Type::Class { fields, .. } = class_ty {
-                                            let params: Vec<(String, Type)> = fields.clone();
-                                            let ft = FunctionType::new(params, class_ty.clone());
+                                        // Register constructor: prefer `new` method params if available
+                                        if let Type::Class { fields, methods, .. } = class_ty {
+                                            let ft = if let Some((_, new_ft)) = methods.iter().find(|(n, _)| n == "new") {
+                                                let params: Vec<(String, Type)> = new_ft.params.iter()
+                                                    .map(|(n, t, _)| (n.clone(), t.clone()))
+                                                    .collect();
+                                                FunctionType::new(params, class_ty.clone())
+                                            } else {
+                                                let params: Vec<(String, Type)> = fields.clone();
+                                                FunctionType::new(params, class_ty.clone())
+                                            };
                                             ctx.functions.insert(local.clone(), ft);
                                         }
                                         found = true;
@@ -507,10 +515,20 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                         if let Some(module_classes) = externals.classes.get(&module_name) {
                             if let Some(class_ty) = module_classes.get(name) {
                                 ctx.class_types.insert(local.clone(), class_ty.clone());
-                                // Also register the constructor
-                                if let Type::Class { fields, .. } = class_ty {
-                                    let params: Vec<(String, Type)> = fields.clone();
-                                    let ft = FunctionType::new(params, class_ty.clone());
+                                // Register the constructor: prefer `new` method params if available,
+                                // otherwise fall back to field-based constructor
+                                if let Type::Class { fields, methods, .. } = class_ty {
+                                    let ft = if let Some((_, new_ft)) = methods.iter().find(|(n, _)| n == "new") {
+                                        // Use the actual __init__ parameters
+                                        let params: Vec<(String, Type)> = new_ft.params.iter()
+                                            .map(|(n, t, _)| (n.clone(), t.clone()))
+                                            .collect();
+                                        FunctionType::new(params, class_ty.clone())
+                                    } else {
+                                        // No __init__ — default constructor from fields
+                                        let params: Vec<(String, Type)> = fields.clone();
+                                        FunctionType::new(params, class_ty.clone())
+                                    };
                                     ctx.functions.insert(local, ft);
                                 }
                                 found = true;

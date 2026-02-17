@@ -1,10 +1,44 @@
 # sifr.re — Regular expressions
-from _sifr.regex import re_match, re_find, re_replace, re_findall, re_split
+from _sifr.regex import re_match, re_find, re_replace, re_findall, re_split, re_find_start, re_find_end
+
+class Match:
+    _matched: str
+    _start: int
+    _end: int
+
+    def __init__(self, matched: str, start: int, end: int):
+        self._matched = matched
+        self._start = start
+        self._end = end
+
+    def group(self) -> str:
+        return self._matched + ""
+
+    def start(self) -> int:
+        return self._start
+
+    def end(self) -> int:
+        return self._end
+
+    def span(self) -> list[int]:
+        result: list[int] = [self._start, self._end]
+        return result
+
+    def to_str(self) -> str:
+        return self._matched + ""
 
 # CPython-compatible aliases
 # Note: match is skipped (Python keyword)
 def search(pattern: str, text: str) -> str | None:
     return re_find(pattern, text)
+
+def search_match(pattern: str, text: str) -> Match | None:
+    found: str | None = re_find(pattern, text)
+    if found is not None:
+        s: int = re_find_start(pattern, text)
+        e: int = re_find_end(pattern, text)
+        return Match(found, s, e)
+    return None
 
 def sub(pattern: str, replacement: str, text: str) -> str:
     return re_replace(pattern, replacement, text)

@@ -192,7 +192,7 @@ Renames happen at the Sifr stdlib layer only — `_sifr.*` intrinsic names stay 
 
 ## milestone_stdlib_class_rollout: Expand Class-Based APIs
 
-status: pending
+status: done
 
 **Goal:** Add 6 new class-based APIs leveraging the pipeline proven by `milestone_stdlib_classes` (Counter). Includes `datetime`/`timedelta` with operator overloading (`__add__`/`__sub__`) — proving that operator methods export correctly from stdlib classes.
 

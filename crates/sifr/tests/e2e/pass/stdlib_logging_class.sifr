@@ -1,0 +1,18 @@
+# Test Logger class
+from sifr.logging import getLogger, Logger
+
+def main():
+    log: Logger = getLogger("myapp")
+    log.info("starting up")
+    log.warning("low memory")
+    log.error("disk full")
+    # debug should not print (default level is INFO=20)
+    log.debug("trace info")
+    # Set level to DEBUG
+    log.set_level(10)
+    log.debug("now visible")
+
+# expect-stdout: [INFO] myapp: starting up
+# expect-stdout: [WARNING] myapp: low memory
+# expect-stdout: [ERROR] myapp: disk full
+# expect-stdout: [DEBUG] myapp: now visible

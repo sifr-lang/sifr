@@ -1,6 +1,7 @@
-# sifr.logging — Simple logging (wraps _sifr.time)
+# sifr.logging — Simple logging with level filtering
 from _sifr.time import time_now
 
+# Log levels: DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50
 def log_info(msg: str):
     print("[INFO] " + msg)
 
@@ -12,3 +13,37 @@ def log_error(msg: str):
 
 def log_debug(msg: str):
     print("[DEBUG] " + msg)
+
+class Logger:
+    _name: str
+    _level: int
+
+    def __init__(self, name: str):
+        self._name = name
+        self._level = 20
+
+    def set_level(self, level: int) -> None:
+        self._level = level
+
+    def debug(self, msg: str) -> None:
+        if self._level <= 10:
+            print("[DEBUG] " + self._name + ": " + msg)
+
+    def info(self, msg: str) -> None:
+        if self._level <= 20:
+            print("[INFO] " + self._name + ": " + msg)
+
+    def warning(self, msg: str) -> None:
+        if self._level <= 30:
+            print("[WARNING] " + self._name + ": " + msg)
+
+    def error(self, msg: str) -> None:
+        if self._level <= 40:
+            print("[ERROR] " + self._name + ": " + msg)
+
+    def critical(self, msg: str) -> None:
+        if self._level <= 50:
+            print("[CRITICAL] " + self._name + ": " + msg)
+
+def getLogger(name: str) -> Logger:
+    return Logger(name)

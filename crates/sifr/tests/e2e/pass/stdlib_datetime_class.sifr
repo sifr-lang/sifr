@@ -1,0 +1,25 @@
+# Test timedelta class
+from sifr.datetime import timedelta
+
+def main():
+    td1: timedelta = timedelta(1, 3600)
+    print(td1.total_seconds())
+    print(td1.days())
+    print(td1.seconds())
+
+    td2: timedelta = timedelta(0, 7200)
+    td3: timedelta = td1 + td2
+    print(td3.total_seconds())
+
+    td4: timedelta = td1 - td2
+    print(td4.total_seconds())
+
+    td5: timedelta = timedelta(1, 3600)
+    print(td1 == td5)
+
+# expect-stdout: 90000
+# expect-stdout: 1
+# expect-stdout: 3600
+# expect-stdout: 97200
+# expect-stdout: 82800
+# expect-stdout: true

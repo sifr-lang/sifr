@@ -171,8 +171,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
 
         for class in &result.module.classes {
             if !class.name.starts_with('_') {
-                let methods: Vec<(String, FunctionType)> = class.methods.iter()
-                    .filter(|m| m.name != "new")
+                let mut methods: Vec<(String, FunctionType)> = class.methods.iter()
                     .map(|m| {
                         let params: Vec<(String, Type, ParamConvention)> = m.params.iter()
                             .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
@@ -183,6 +182,16 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                         })
                     })
                     .collect();
+                // Include operator dunder methods so imported classes support operator overloading
+                for (dunder_name, op_func) in &class.operator_impls {
+                    let params: Vec<(String, Type, ParamConvention)> = op_func.params.iter()
+                        .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                        .collect();
+                    methods.push((dunder_name.clone(), FunctionType {
+                        params,
+                        return_type: Box::new(op_func.return_type.clone()),
+                    }));
+                }
                 let class_ty = Type::Class {
                     name: class.name.clone(),
                     fields: class.fields.clone(),
@@ -493,7 +502,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         for class in &result.module.classes {
             if !class.name.starts_with('_') {
                 // Extract method types from the class
-                let methods: Vec<(String, FunctionType)> = class.methods.iter()
+                let mut methods: Vec<(String, FunctionType)> = class.methods.iter()
                     .filter(|m| m.name != "new") // Skip constructor
                     .map(|m| {
                         let params: Vec<(String, Type, ParamConvention)> = m.params.iter()
@@ -505,6 +514,16 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
                         })
                     })
                     .collect();
+                // Include operator dunder methods so imported classes support operator overloading
+                for (dunder_name, op_func) in &class.operator_impls {
+                    let params: Vec<(String, Type, ParamConvention)> = op_func.params.iter()
+                        .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                        .collect();
+                    methods.push((dunder_name.clone(), FunctionType {
+                        params,
+                        return_type: Box::new(op_func.return_type.clone()),
+                    }));
+                }
                 let class_ty = Type::Class {
                     name: class.name.clone(),
                     fields: class.fields.clone(),
