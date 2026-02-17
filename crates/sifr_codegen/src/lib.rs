@@ -3371,8 +3371,8 @@ impl RustEmitter {
 
             // Build result
             self.write("let mut _result = Vec::new(); ");
-            self.write("if _step > 0 { let mut _i = _start; while _i < _stop { _result.push(_v[_i].clone()); _i += _step as usize; } }");
-            self.write(" else { let mut _i = _start as i64; let _stop_i = _stop as i64; while _i > _stop_i { _result.push(_v[_i as usize].clone()); _i += _step; } }");
+            self.write("if _step > 0 { let mut _i = _start; while _i < _stop { if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } _i += _step as usize; } }");
+            self.write(" else { let mut _i = _start as i64; let _stop_i = _stop as i64; while _i > _stop_i { if _i >= 0 { if let Some(_el) = _v.get(_i as usize) { _result.push(_el.clone()); } } _i += _step; } }");
             self.write("; _result }");
         } else {
             // Simple slice without step
@@ -3433,8 +3433,8 @@ impl RustEmitter {
             self.write("; ");
 
             self.write("let mut _result = String::new(); ");
-            self.write("if _step > 0 { let mut _i = _start; while _i < _stop { _result.push(_s[_i]); _i += _step as usize; } }");
-            self.write(" else { let mut _i = _start as i64; let _stop_i = _stop as i64; while _i > _stop_i { _result.push(_s[_i as usize]); _i += _step; } }");
+            self.write("if _step > 0 { let mut _i = _start; while _i < _stop { if let Some(&_ch) = _s.get(_i) { _result.push(_ch); } _i += _step as usize; } }");
+            self.write(" else { let mut _i = _start as i64; let _stop_i = _stop as i64; while _i > _stop_i { if _i >= 0 { if let Some(&_ch) = _s.get(_i as usize) { _result.push(_ch); } } _i += _step; } }");
             self.write("; _result }");
         } else {
             self.write("{ let _s = &");
@@ -5771,7 +5771,7 @@ impl RustEmitter {
                 self.emit_expr(&args[1]);
                 self.write(".to_string(), serde_json::json!(");
                 self.emit_expr(&args[2]);
-                self.write(")); serde_json::to_string(&data).unwrap() }");
+                self.write(")); serde_json::to_string(&data).unwrap_or_default() }");
             }
             // sifr.bytes
             "encode_utf8" => {
@@ -5794,7 +5794,7 @@ impl RustEmitter {
             }
             // sifr.time
             "time_now" => {
-                self.write("std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64()");
+                self.write("std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs_f64()");
             }
             "sleep" => {
                 self.write("std::thread::sleep(std::time::Duration::from_secs_f64(");
@@ -5804,7 +5804,7 @@ impl RustEmitter {
             "time_format" => {
                 self.write("{ let secs = ");
                 self.emit_expr(&args[0]);
-                self.write(" as i64; let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap(); dt.format(");
+                self.write(" as i64; let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap_or_default(); dt.format(");
                 self.emit_expr_as_str_ref(&args[1]);
                 self.write(").to_string() }");
             }

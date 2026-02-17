@@ -1,0 +1,212 @@
+# expect-stdout: io_safety: all errors caught
+# expect-stdout: parse_safety: all errors caught
+# expect-stdout: collection_safety: all safe behaviors verified
+# expect-stdout: edge_case_safety: all errors caught
+# expect-stdout: subscript_safety: bounds checked
+# expect-stdout: ZERO PANIC GATE: PASS
+
+# Comprehensive E2E test: every fallible stdlib function with invalid input
+# Must compile and run without panicking, handling all errors via try/except
+
+from sifr.io import read_text, read_lines
+from sifr.os import listdir, rmdir, remove_file, rename
+from sifr.shutil import copy
+from sifr.json import json_loads
+from sifr.tomllib import loads
+from sifr.re import re_match, search, findall, split, sub
+from sifr.base64 import b64decode
+from sifr.random import randint
+from sifr.secrets import randbelow
+from sifr.textwrap import wrap, fill
+from sifr.itertools import batched
+from sifr.graphlib import topological_sort, CycleError
+from sifr.uuid import uuid_from_hex, UUID
+from sifr.ipaddress import ip_to_int
+from sifr.datetime import from_timestamp
+
+def main():
+    io_errors: int = 0
+    parse_errors: int = 0
+    collection_checks: int = 0
+    edge_errors: int = 0
+    subscript_checks: int = 0
+
+    # === 1. I/O Safety (IOError) ===
+
+    try:
+        c1: str = read_text("__nonexistent_file__")
+    except IOError as e:
+        io_errors = io_errors + 1
+
+    try:
+        l1: list[str] = read_lines("__nonexistent_file__")
+    except IOError as e:
+        io_errors = io_errors + 1
+
+    try:
+        d1: list[str] = listdir("__nonexistent_dir__")
+    except IOError as e:
+        io_errors = io_errors + 1
+
+    try:
+        r1: None = rmdir("__nonexistent_dir__")
+    except IOError as e:
+        io_errors = io_errors + 1
+
+    try:
+        r2: None = remove_file("__nonexistent_file__")
+    except IOError as e:
+        io_errors = io_errors + 1
+
+    try:
+        r3: None = rename("__nonexistent__", "dst")
+    except IOError as e:
+        io_errors = io_errors + 1
+
+    try:
+        r4: None = copy("__nonexistent__", "dst")
+    except IOError as e:
+        io_errors = io_errors + 1
+
+    if io_errors == 7:
+        print("io_safety: all errors caught")
+
+    # === 2. Parse Safety ===
+
+    try:
+        j1: str = json_loads("not json")
+    except JSONDecodeError as e:
+        parse_errors = parse_errors + 1
+
+    try:
+        t1: str = loads("not toml [[[")
+    except TOMLDecodeError as e:
+        parse_errors = parse_errors + 1
+
+    try:
+        m1: bool = re_match("[invalid", "text")
+    except RegexError as e:
+        parse_errors = parse_errors + 1
+
+    try:
+        s1: str | None = search("[invalid", "text")
+    except RegexError as e:
+        parse_errors = parse_errors + 1
+
+    try:
+        f1: list[str] = findall("[invalid", "text")
+    except RegexError as e:
+        parse_errors = parse_errors + 1
+
+    try:
+        sp1: list[str] = split("[invalid", "text")
+    except RegexError as e:
+        parse_errors = parse_errors + 1
+
+    try:
+        sb1: str = sub("[invalid", "x", "text")
+    except RegexError as e:
+        parse_errors = parse_errors + 1
+
+    try:
+        b1: str = b64decode("not-base64!!!")
+    except ParseError as e:
+        parse_errors = parse_errors + 1
+
+    if parse_errors == 8:
+        print("parse_safety: all errors caught")
+
+    # === 3. Collection Safety ===
+
+    items: list[int] = [1, 2, 3]
+    items.remove(99)
+    collection_checks = collection_checks + 1
+
+    idx_missing: int | None = items.index(99)
+    if idx_missing is None:
+        collection_checks = collection_checks + 1
+
+    empty: list[int] = []
+    lo: int | None = min(empty)
+    if lo is None:
+        collection_checks = collection_checks + 1
+
+    hi: int | None = max(empty)
+    if hi is None:
+        collection_checks = collection_checks + 1
+
+    floats: list[float] = [1.1, 2.2, 3.3]
+    sorted_floats: list[float] = sorted(floats)
+    collection_checks = collection_checks + 1
+
+    if collection_checks == 5:
+        print("collection_safety: all safe behaviors verified")
+
+    # === 4. Edge Case Safety ===
+
+    try:
+        ev1: int = randint(5, 3)
+    except ValueError as e:
+        edge_errors = edge_errors + 1
+
+    try:
+        ev2: int = randbelow(0)
+    except ValueError as e:
+        edge_errors = edge_errors + 1
+
+    try:
+        ev3: list[str] = wrap("text", 0)
+    except ValueError as e:
+        edge_errors = edge_errors + 1
+
+    try:
+        ev4: str = fill("text", 0)
+    except ValueError as e:
+        edge_errors = edge_errors + 1
+
+    try:
+        bdata: list[int] = [1, 2, 3]
+        ev5: list[list[int]] = batched(bdata, 0)
+    except ValueError as e:
+        edge_errors = edge_errors + 1
+
+    from_n: list[int] = [0, 1, 2]
+    to_n: list[int] = [1, 2, 0]
+    try:
+        ev6: list[int] = topological_sort(3, from_n, to_n)
+    except CycleError as e:
+        edge_errors = edge_errors + 1
+
+    try:
+        ev7: UUID = uuid_from_hex("xyz")
+    except ValueError as e:
+        edge_errors = edge_errors + 1
+
+    try:
+        ev8: int = ip_to_int("bad")
+    except ValueError as e:
+        edge_errors = edge_errors + 1
+
+    try:
+        ev9: str = from_timestamp(999999999999999.0)
+    except ValueError as e:
+        edge_errors = edge_errors + 1
+
+    if edge_errors == 9:
+        print("edge_case_safety: all errors caught")
+
+    # === 5. Subscript Safety ===
+
+    nums: list[int] = [10, 20, 30]
+    val_out: int | None = nums[99]
+    if val_out is None:
+        subscript_checks = subscript_checks + 1
+
+    nums[99] = 999
+    if len(nums) == 3:
+        subscript_checks = subscript_checks + 1
+
+    if subscript_checks == 2:
+        print("subscript_safety: bounds checked")
+
+    print("ZERO PANIC GATE: PASS")
