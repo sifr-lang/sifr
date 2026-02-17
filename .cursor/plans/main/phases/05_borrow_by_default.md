@@ -1,4 +1,6 @@
-# Borrow-by-Default
+# Borrow-by-Default (Original Phase 05 -- Superseded)
+
+> **Note:** This phase was never executed. It has been superseded by **Phase 10: Borrow-by-Default** in the revised roadmap (`10_borrow_by_default.md`). The revised Phase 10 incorporates the content below plus additional milestones (escape analysis, consuming-self receivers, for-loop element semantics, stdlib ownership patterns) identified by post-Phase-07 audits. This file is preserved as a reference for the original detailed implementation plan, which Phase 10's `milestone_borrow_default` references.
 
 This phase changes Sifr's function parameter passing from move-by-default to borrow-by-default. Function arguments are immutably borrowed (`&T`) by default, with opt-in `mut` (mutable borrow, `&mut T`) and `own` (ownership transfer, `T`) keywords. This eliminates "use-after-move" friction for the common case, unifies the two-tier system where built-in functions borrow and user-defined functions move, and establishes the ownership foundation required for fearless concurrency in the async phase.
 
