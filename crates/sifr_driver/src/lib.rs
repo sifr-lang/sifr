@@ -198,6 +198,10 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                     methods,
                 };
                 class_exports.insert(class.name.clone(), class_ty);
+                // Track error types for cross-module import resolution
+                if class.is_error_type {
+                    stdlib_defs.error_types.insert(class.name.clone());
+                }
             }
         }
 

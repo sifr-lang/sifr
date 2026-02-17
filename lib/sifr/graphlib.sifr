@@ -1,5 +1,8 @@
 # sifr.graphlib — Graph algorithms (pure Sifr)
 
+class CycleError(Error):
+    message: str
+
 def topological_sort(num_nodes: int, from_nodes: list[int], to_nodes: list[int]) -> list[int]:
     result: list[int] = []
     visited: list[int] = []

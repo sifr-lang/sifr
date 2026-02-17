@@ -1,0 +1,64 @@
+# Demo: milestone_error_safety_stdlib_types
+# Module-specific error types defined in stdlib .sifr files,
+# imported by user code, and caught with exhaustiveness checking.
+
+from sifr.statistics import StatisticsError
+from sifr.graphlib import CycleError
+
+# --- StatisticsError from sifr.statistics ---
+
+def compute_mean(data: list[float]) -> Result[float, StatisticsError]:
+    if len(data) == 0:
+        raise StatisticsError("cannot compute mean of empty dataset")
+    total: float = 0.0
+    for val in data:
+        total = total + val
+    return total / len(data)
+
+# --- CycleError from sifr.graphlib ---
+
+def topo_sort(has_cycle: bool) -> Result[int, CycleError]:
+    if has_cycle:
+        raise CycleError("graph contains a cycle")
+    return 42
+
+# --- Using module-specific error types ---
+
+def main():
+    # 1. StatisticsError: success case
+    try:
+        mean: float = compute_mean([1.0, 2.0, 3.0])
+        print(f"mean = {mean}")
+    except StatisticsError as e:
+        print(f"stats error: {e.message}")
+
+    # 2. StatisticsError: failure case
+    empty: list[float] = []
+    try:
+        mean2: float = compute_mean(empty)
+    except StatisticsError as e:
+        print(f"caught StatisticsError: {e.message}")
+
+    # 3. CycleError: success case
+    try:
+        order: int = topo_sort(False)
+        print(f"topo sort result = {order}")
+    except CycleError as e:
+        print(f"cycle error: {e.message}")
+
+    # 4. CycleError: failure case
+    try:
+        order2: int = topo_sort(True)
+    except CycleError as e:
+        print(f"caught CycleError: {e.message}")
+
+    # 5. Mixed: built-in + module-specific error types with exhaustiveness
+    try:
+        val: int = int("not_a_number")
+        mean3: float = compute_mean(empty)
+    except ParseError as e:
+        print(f"caught ParseError: {e.message}")
+    except StatisticsError as e:
+        print(f"caught StatisticsError: {e.message}")
+
+    print("all module-specific error types work correctly")

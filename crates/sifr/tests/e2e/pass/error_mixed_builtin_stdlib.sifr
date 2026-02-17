@@ -1,0 +1,29 @@
+# expect-stdout: caught ValueError: bad age
+# expect-stdout: caught StatisticsError: no data
+# expect-stdout: mixed error types work
+
+from sifr.statistics import StatisticsError
+
+def validate_age(age: int) -> Result[int, ValueError]:
+    if age < 0:
+        raise ValueError("bad age")
+    return age
+
+def check_data(data: list[float]) -> Result[float, StatisticsError]:
+    if len(data) == 0:
+        raise StatisticsError("no data")
+    return 1.0
+
+def main():
+    try:
+        val: int = validate_age(-1)
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+
+    empty: list[float] = []
+    try:
+        avg: float = check_data(empty)
+    except StatisticsError as e:
+        print(f"caught StatisticsError: {e.message}")
+
+    print("mixed error types work")

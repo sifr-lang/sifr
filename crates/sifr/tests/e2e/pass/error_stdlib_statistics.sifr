@@ -1,0 +1,21 @@
+# expect-stdout: caught StatisticsError: empty dataset
+# expect-stdout: stdlib error types work
+
+from sifr.statistics import StatisticsError
+
+def compute_stats(data: list[float]) -> Result[float, StatisticsError]:
+    if len(data) == 0:
+        raise StatisticsError("empty dataset")
+    total: float = 0.0
+    for val in data:
+        total = total + val
+    return total / float(len(data))
+
+def main():
+    empty: list[float] = []
+    try:
+        avg: float = compute_stats(empty)
+    except StatisticsError as e:
+        print(f"caught StatisticsError: {e.message}")
+
+    print("stdlib error types work")
