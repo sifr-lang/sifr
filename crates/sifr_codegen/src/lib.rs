@@ -2717,11 +2717,20 @@ impl RustEmitter {
                 self.write_indent();
                 self.write("{\n");
                 self.indent += 1;
-                // Emit each context manager item
-                let mut ctx_vars = Vec::new();
+                // Emit each context manager item with Drop-based cleanup
+                // This ensures __exit__() is called on ALL exit paths:
+                // normal completion, early return, break, continue
                 for (i, (var, value, has_cm)) in items.iter().enumerate() {
                     let ctx_name = format!("__ctx_{}", i);
+                    let guard_type = format!("__WithGuard{}", i);
+                    let guard_var = format!("__guard_{}", i);
                     if *has_cm {
+                        // Extract the class type name for the guard struct
+                        let class_name = if let Type::Class { name, .. } = value.ty() {
+                            name.clone()
+                        } else {
+                            "Unknown".to_string()
+                        };
                         // Create context manager variable
                         self.write_indent();
                         self.write("let mut ");
@@ -2741,7 +2750,20 @@ impl RustEmitter {
                         self.write(" = ");
                         self.write(&ctx_name);
                         self.write(".__enter__();\n");
-                        ctx_vars.push(ctx_name);
+                        // Emit Drop guard struct that calls __exit__() on scope exit
+                        self.write_indent();
+                        self.write(&format!("struct {} {{ ctx: {} }}\n", guard_type, class_name));
+                        self.write_indent();
+                        self.write(&format!("impl Drop for {} {{\n", guard_type));
+                        self.indent += 1;
+                        self.write_indent();
+                        self.write("fn drop(&mut self) { self.ctx.__exit__(); }\n");
+                        self.indent -= 1;
+                        self.write_indent();
+                        self.write("}\n");
+                        // Create guard instance, moving ctx into it
+                        self.write_indent();
+                        self.write(&format!("let {} = {} {{ ctx: {} }};\n", guard_var, guard_type, ctx_name));
                     } else {
                         // Fallback: no context manager protocol, just bind directly
                         self.write_indent();
@@ -2761,12 +2783,7 @@ impl RustEmitter {
                 for s in body {
                     self.emit_stmt(s);
                 }
-                // Call __exit__() on all context managers in reverse order
-                for ctx_name in ctx_vars.iter().rev() {
-                    self.write_indent();
-                    self.write(ctx_name);
-                    self.write(".__exit__();\n");
-                }
+                // No explicit __exit__() calls needed — Drop guards handle cleanup
                 self.indent -= 1;
                 self.write_indent();
                 self.write("}\n");

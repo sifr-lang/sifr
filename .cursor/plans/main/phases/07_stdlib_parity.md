@@ -12,7 +12,7 @@ This phase closes the remaining gaps between Sifr's stdlib and CPython's stdlib.
 
 ## milestone_compiler_hardening: Import Errors, Context Managers, and Callable Fix
 
-status: pending
+status: done
 
 **Goal:** Fix three compiler correctness gaps: (1) importing from a nonexistent module silently fails instead of producing a clear error, (2) the `with` statement is incomplete — it's syntactic sugar for scoped blocks but doesn't implement the Python context manager protocol (`__enter__`/`__exit__`), and (3) `Callable` types emit `impl Fn(...)` which is invalid in Rust struct fields — needs `Box<dyn Fn(...)>`.
 

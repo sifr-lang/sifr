@@ -1,0 +1,30 @@
+# Tests: with statement calls __exit__ on break (Drop semantics)
+class Resource:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __enter__(self) -> Resource:
+        print("enter")
+        return self
+
+    def __exit__(self) -> None:
+        print("exit")
+
+def main():
+    i: int = 0
+    while i < 3:
+        with Resource("r") as r:
+            if i == 1:
+                break
+            print("body")
+        i = i + 1
+    print("done")
+
+# expect-stdout: enter
+# expect-stdout: body
+# expect-stdout: exit
+# expect-stdout: enter
+# expect-stdout: exit
+# expect-stdout: done

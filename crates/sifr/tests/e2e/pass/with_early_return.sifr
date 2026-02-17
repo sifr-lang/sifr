@@ -1,0 +1,28 @@
+# Tests: with statement calls __exit__ on early return (Drop semantics)
+class Resource:
+    name: str
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __enter__(self) -> Resource:
+        print("enter: " + self.name)
+        return self
+
+    def __exit__(self) -> None:
+        print("exit: " + self.name)
+
+def test_return() -> int:
+    with Resource("res") as r:
+        print("using: " + r.name)
+        return 42
+    return 0
+
+def main():
+    val: int = test_return()
+    print(val)
+
+# expect-stdout: enter: res
+# expect-stdout: using: res
+# expect-stdout: exit: res
+# expect-stdout: 42
