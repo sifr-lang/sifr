@@ -33,3 +33,24 @@ def topological_sort(num_nodes: int, from_nodes: list[int], to_nodes: list[int])
                         processed = processed + 1
             node = node + 1
     return result
+
+class TopologicalSorter:
+    from_nodes: list[int]
+    to_nodes: list[int]
+    max_node: int
+
+    def __init__(self):
+        self.from_nodes = []
+        self.to_nodes = []
+        self.max_node = 0
+
+    def add(self, node: int, predecessor: int) -> None:
+        self.from_nodes.append(predecessor)
+        self.to_nodes.append(node)
+        if node > self.max_node:
+            self.max_node = node
+        if predecessor > self.max_node:
+            self.max_node = predecessor
+
+    def static_order(self) -> list[int]:
+        return topological_sort(self.max_node + 1, self.from_nodes, self.to_nodes)

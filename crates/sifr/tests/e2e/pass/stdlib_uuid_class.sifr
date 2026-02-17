@@ -1,0 +1,14 @@
+# Test UUID class
+from sifr.uuid import UUID
+
+def main():
+    u: UUID = UUID("550e8400-e29b-41d4-a716-446655440000")
+    print(u.hex())
+    print(u.urn())
+    print(u.version())
+    print(u.to_str())
+
+# expect-stdout: 550e8400e29b41d4a716446655440000
+# expect-stdout: urn:uuid:550e8400-e29b-41d4-a716-446655440000
+# expect-stdout: 4
+# expect-stdout: 550e8400-e29b-41d4-a716-446655440000

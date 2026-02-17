@@ -1,0 +1,62 @@
+# Milestone: stdlib_class_rollout — Expand Class-Based APIs
+# Demonstrates 6 new class-based APIs from stdlib
+
+from sifr.graphlib import TopologicalSorter
+from sifr.pathlib import Path
+from sifr.logging import getLogger, Logger
+from sifr.re import Match
+from sifr.uuid import UUID
+from sifr.datetime import timedelta
+
+def main():
+    # 1. TopologicalSorter — pure algorithmic class
+    print("=== TopologicalSorter ===")
+    ts: TopologicalSorter = TopologicalSorter()
+    ts.add(1, 0)
+    ts.add(2, 1)
+    order: list[int] = ts.static_order()
+    print(order[0])
+    print(order[1])
+    print(order[2])
+
+    # 2. Path — file path manipulation
+    print("=== Path ===")
+    p: Path = Path("/home/user/docs/report.pdf")
+    print(p.name())
+    print(p.parent())
+    print(p.suffix())
+    print(p.stem())
+    print(p.is_absolute())
+
+    # 3. Logger — named loggers with level filtering
+    print("=== Logger ===")
+    log: Logger = getLogger("demo")
+    log.info("application started")
+    log.warning("disk space low")
+    log.debug("this should not appear at INFO level")
+    log.set_level(10)
+    log.debug("now visible after level change")
+
+    # 4. Match — regex match result
+    print("=== Match ===")
+    m: Match = Match("world", 6, 11)
+    print(m.group())
+    print(m.start())
+    print(m.end())
+
+    # 5. UUID — UUID value class
+    print("=== UUID ===")
+    u: UUID = UUID("550e8400-e29b-41d4-a716-446655440000")
+    print(u.hex())
+    print(u.version())
+
+    # 6. timedelta — date/time arithmetic with operator overloading
+    print("=== timedelta ===")
+    one_day: timedelta = timedelta(1, 0)
+    two_hours: timedelta = timedelta(0, 7200)
+    combined: timedelta = one_day + two_hours
+    print(combined.total_seconds())
+    print(combined.days())
+    diff: timedelta = one_day - two_hours
+    print(diff.total_seconds())
+    print(one_day == timedelta(1, 0))

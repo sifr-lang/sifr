@@ -143,12 +143,25 @@ fn filter_rust_code_to_needed(rust_code: &str, imported_names: &HashSet<String>)
     // Step 4: Emit only needed blocks (preserving order) + non-block lines
     let mut result = String::new();
     let mut lines = rust_code.lines().peekable();
+    // Buffer for attribute lines (#[...]) that precede an item
+    let mut pending_attrs: Vec<String> = Vec::new();
 
     while let Some(line) = lines.next() {
+        // Collect attribute lines to attach to the next item
+        if line.trim().starts_with("#[") {
+            pending_attrs.push(line.to_string());
+            continue;
+        }
+
         let item_name = extract_top_level_item_name(line);
 
         if let Some(ref name) = item_name {
             if needed.contains(name) {
+                // Emit pending attributes
+                for attr in &pending_attrs {
+                    result.push_str(attr);
+                    result.push('\n');
+                }
                 // Emit this entire item
                 result.push_str(line);
                 result.push('\n');
@@ -165,7 +178,7 @@ fn filter_rust_code_to_needed(rust_code: &str, imported_names: &HashSet<String>)
                 }
                 result.push('\n');
             } else {
-                // Skip this entire item
+                // Skip this entire item (and its pending attributes)
                 let mut depth: i32 = count_braces(line);
                 if depth > 0 {
                     while let Some(next_line) = lines.next() {
@@ -176,10 +189,18 @@ fn filter_rust_code_to_needed(rust_code: &str, imported_names: &HashSet<String>)
                     }
                 }
             }
+            pending_attrs.clear();
         } else if line.trim().is_empty() {
             // Skip blank lines
+            pending_attrs.clear();
         } else {
             // Non-item lines (use statements, comments) — always include
+            // Also flush any pending attributes
+            for attr in &pending_attrs {
+                result.push_str(attr);
+                result.push('\n');
+            }
+            pending_attrs.clear();
             result.push_str(line);
             result.push('\n');
         }
@@ -192,10 +213,19 @@ fn filter_rust_code_to_needed(rust_code: &str, imported_names: &HashSet<String>)
 fn parse_rust_blocks(rust_code: &str) -> Vec<(String, String)> {
     let mut blocks = Vec::new();
     let mut lines = rust_code.lines().peekable();
+    let mut pending_attrs = String::new();
 
     while let Some(line) = lines.next() {
+        // Collect attribute lines
+        if line.trim().starts_with("#[") {
+            pending_attrs.push_str(line);
+            pending_attrs.push('\n');
+            continue;
+        }
         if let Some(name) = extract_top_level_item_name(line) {
-            let mut block_code = String::from(line);
+            let mut block_code = pending_attrs.clone();
+            pending_attrs.clear();
+            block_code.push_str(line);
             block_code.push('\n');
             let mut depth: i32 = count_braces(line);
             if depth > 0 {
@@ -209,6 +239,8 @@ fn parse_rust_blocks(rust_code: &str) -> Vec<(String, String)> {
                 }
             }
             blocks.push((name, block_code));
+        } else {
+            pending_attrs.clear();
         }
     }
 
@@ -244,11 +276,15 @@ fn extract_top_level_item_name(line: &str) -> Option<String> {
     }
     // impl Name or impl Display for Name
     if let Some(rest) = trimmed.strip_prefix("impl ") {
-        // "impl Display for Name {"
+        // "impl Display for Name {" or "impl std::ops::Add<&Name> for &Name {"
         if let Some(for_idx) = rest.find(" for ") {
             let after_for = &rest[for_idx + 5..];
+            // Strip leading & (reference types in trait impls)
+            let after_for = after_for.trim_start_matches('&');
             let name = after_for.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
-            return Some(name.to_string());
+            if !name.is_empty() {
+                return Some(name.to_string());
+            }
         }
         // "impl Name {"
         let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
@@ -607,6 +643,8 @@ struct RustEmitter {
     generator_functions: HashSet<String>,
     /// Map of module_name -> set of imported names (for filtering preamble to only used functions)
     imported_stdlib_names: HashMap<String, HashSet<String>>,
+    /// Temporarily suppress .clone() on field access (for mutating method calls on self.field)
+    suppress_field_clone: bool,
 }
 
 impl RustEmitter {
@@ -639,6 +677,7 @@ impl RustEmitter {
             stdlib_intrinsic_names: HashMap::new(),
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
+            suppress_field_clone: false,
         }
     }
 
@@ -3046,6 +3085,13 @@ impl RustEmitter {
     }
 
     fn emit_method_call(&mut self, object: &HirExpr, method: &str, args: &[HirExpr]) {
+        // For mutating methods on self.field, suppress .clone() so mutations are applied
+        // to the actual field, not a temporary clone.
+        let is_self_field = matches!(object, HirExpr::FieldAccess { object: inner, .. }
+            if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
+        if is_self_field && MUTATING_METHODS.contains(&method) {
+            self.suppress_field_clone = true;
+        }
         let obj_ty = object.ty();
         match (obj_ty, method) {
             // String methods
@@ -4410,7 +4456,8 @@ impl RustEmitter {
             HirExpr::FieldAccess { object, field, ty } => {
                 // Determine if we need .clone() (non-Copy field accessed on &self)
                 let is_self_access = matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
-                let needs_clone = is_self_access && needs_clone_for_type(ty);
+                let needs_clone = is_self_access && needs_clone_for_type(ty) && !self.suppress_field_clone;
+                self.suppress_field_clone = false;
 
                 // Determine the class name for parent field resolution
                 // Either from current_class_name (inside a method) or from the object's type
@@ -4477,7 +4524,17 @@ impl RustEmitter {
                             self.write("))");
                         }
                     } else {
+                        // If the argument is a borrowed parameter (non-Copy type),
+                        // clone it since constructors expect owned values
+                        let needs_clone = if let HirExpr::Name { name, ty } = arg {
+                            self.borrowed_params.contains(name) && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                        } else {
+                            false
+                        };
                         self.emit_expr(arg);
+                        if needs_clone {
+                            self.write(".clone()");
+                        }
                     }
                 }
                 self.write(")");
@@ -5399,6 +5456,20 @@ impl RustEmitter {
                 self.write(").unwrap(); re.split(");
                 self.emit_expr_as_str_ref(&args[1]);
                 self.write(").map(|s| s.to_string()).collect::<Vec<String>>() }");
+            }
+            "re_find_start" => {
+                self.write("regex::Regex::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap().find(");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").map_or(-1_i64, |m| m.start() as i64)");
+            }
+            "re_find_end" => {
+                self.write("regex::Regex::new(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").unwrap().find(");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").map_or(-1_i64, |m| m.end() as i64)");
             }
             // sifr.hash
             "sha256" => {

@@ -1,4 +1,4 @@
-# sifr.datetime — Date and time (wraps _sifr.datetime)
+# sifr.datetime — Date and time classes
 from _sifr.datetime import datetime_now, datetime_format, datetime_from_timestamp
 
 def now() -> str:
@@ -9,3 +9,35 @@ def format_datetime(dt: str, fmt: str) -> str:
 
 def from_timestamp(ts: float) -> str:
     return datetime_from_timestamp(ts)
+
+class timedelta:
+    _days: int
+    _seconds: int
+
+    def __init__(self, days: int, seconds: int):
+        self._days = days
+        self._seconds = seconds
+
+    def total_seconds(self) -> int:
+        return self._days * 86400 + self._seconds
+
+    def days(self) -> int:
+        return self._days
+
+    def seconds(self) -> int:
+        return self._seconds
+
+    def __add__(self, other: timedelta) -> timedelta:
+        total: int = self.total_seconds() + other.total_seconds()
+        d: int = total // 86400
+        s: int = total % 86400
+        return timedelta(d, s)
+
+    def __sub__(self, other: timedelta) -> timedelta:
+        total: int = self.total_seconds() - other.total_seconds()
+        d: int = total // 86400
+        s: int = total % 86400
+        return timedelta(d, s)
+
+    def __eq__(self, other: timedelta) -> bool:
+        return self.total_seconds() == other.total_seconds()

@@ -602,6 +602,20 @@ fn intrinsic_regex() -> IntrinsicModule {
             ("text".to_string(), Type::Str),
         ], Type::List(Box::new(Type::Str))));
 
+    // re_find_start(pattern: str, text: str) -> int
+    // Returns the start index of the first match, or -1 if no match
+    functions.insert("re_find_start".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ], Type::Int));
+
+    // re_find_end(pattern: str, text: str) -> int
+    // Returns the end index of the first match, or -1 if no match
+    functions.insert("re_find_end".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+        ], Type::Int));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
