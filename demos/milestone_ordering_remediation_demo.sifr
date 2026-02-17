@@ -1,0 +1,65 @@
+# Milestone: Ordering Remediation Demo
+# Fixes three gaps caused by out-of-order milestone execution in Phase 7.
+
+from typing import Callable
+from sifr.itertools import repeat_val, chain, take
+from sifr.json import loads
+from sifr.re import search, sub, findall, split
+
+# ─── Gap 3: Callable field invocation ────────────────────────────────
+# Previously, storing a Callable in a struct field worked (Box<dyn Fn>),
+# but calling it (obj.callback(args)) failed with "has no method".
+# Now both storing AND calling work.
+
+class Processor:
+    name: str
+    transform: Callable[[int], int]
+
+    def __init__(self, name: str, transform: Callable[[int], int]):
+        self.name = name
+        self.transform = transform
+
+def triple(x: int) -> int:
+    return x * 3
+
+def main():
+    # ─── Gap 1: Lazy itertools ───────────────────────────────────────
+    # repeat_val is now a lazy generator (uses yield instead of list+append).
+    # When assigned to list[int], .collect() is automatically emitted.
+    repeated: list[int] = repeat_val(7, 3)
+    print(repeated)
+
+    # Lazy generators work in for-loops too (no full materialization)
+    for val in repeat_val(42, 2):
+        print(val)
+
+    # Eager functions (chain, take) remain eager due to codegen limitations
+    chained: list[int] = chain([1, 2], [3, 4])
+    print(chained)
+
+    first_two: list[int] = take(2, [10, 20, 30, 40])
+    print(first_two)
+
+    # ─── Gap 2: CPython-compatible names ─────────────────────────────
+    # json: loads (alias for json_loads)
+    parsed: str = loads("{\"key\": 42}")
+    print(parsed)
+
+    # re: search, sub, findall, split (aliases for re_find, re_replace, etc.)
+    found: str | None = search("\\d+", "abc123")
+    print(found)
+
+    replaced: str = sub("\\d", "X", "a1b2c3")
+    print(replaced)
+
+    words: list[str] = findall("\\w+", "hello world")
+    print(words)
+
+    parts: list[str] = split(",", "a,b,c")
+    print(parts)
+
+    # ─── Gap 3: Callable field invocation ────────────────────────────
+    p: Processor = Processor("tripler", triple)
+    print(p.name)
+    result: int = p.transform(10)
+    print(result)

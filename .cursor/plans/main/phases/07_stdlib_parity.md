@@ -260,6 +260,45 @@ CPython ships external test data at `/Users/yaseralnajjar/work/sifr/cpython/Lib/
 
 ---
 
+## milestone_ordering_remediation: Fix Gaps from Out-of-Order Execution
+
+status: done
+
+**Goal:** The milestones in this phase were executed out of order. The plan specified `compiler_hardening → lazy_iterators → test_infra → stdlib_functions → stdlib_naming → stdlib_class_rollout → cpython_tests`, but the actual execution was `stdlib_class_rollout → cpython_tests → compiler_hardening → lazy_iterators`. This caused three categories of gaps that this ad-hoc milestone fixes:
+
+### Gap 1: Eager itertools (lazy_iterators was done AFTER stdlib_functions)
+
+The plan says: *"lazy_iterators after compiler_hardening: Lazy iteration is a compiler feature that should be in place before adding new stdlib functions. This way, itertools functions in milestone_stdlib_functions can be written as lazy generators from the start."*
+
+All 9 functions in `lib/sifr/itertools.sifr` (`chain`, `chain_str`, `repeat_val`, `take`, `flatten`, `enumerate_list`, `pairwise`, `batched`, `islice`) are implemented eagerly — they build a `list` with `.append()` and return it. They should use `yield` to be lazy generators, now that the lazy iterator codegen (`std::iter::from_fn`) is in place.
+
+### Gap 2: CPython tests use old names (cpython_tests was done BEFORE stdlib_naming was verified)
+
+The CPython test files were written using old pre-rename function names:
+- `cpython_json.sifr`: uses `json_loads`/`json_dumps` instead of `loads`/`dumps`
+- `cpython_fnmatch.sifr`: uses `fnmatch_filter` instead of `filter`
+- `cpython_re.sifr`: uses `re_match` instead of the CPython-compatible alias
+
+These should be updated to use the new CPython-compatible names to validate that the naming alignment actually works end-to-end.
+
+### Gap 3: Callable struct fields can't be called (compiler_hardening was done AFTER stdlib_class_rollout)
+
+The plan says Callable-as-struct-field should unblock `argparse.ArgumentParser`, `collections.defaultdict`, and `timeit.Timer` — all of which need to store AND call callbacks. The current implementation only supports *storing* a Callable in a struct field (`Box<dyn Fn(...)>`), but *calling* it (`obj.callback(args)`) fails because the lowering treats it as a method call and errors with `"class has no method 'callback'"`. The E2E test `callable_struct_field.sifr` only tests storage, not invocation.
+
+### Definition of Done
+
+- All `sifr.itertools` functions use `yield` (lazy generators) instead of eager list building
+- Existing `cpython_itertools.sifr` tests still pass with lazy itertools
+- `cpython_json.sifr` uses `loads`/`dumps` (new names)
+- `cpython_fnmatch.sifr` uses `filter` (new name)
+- `cpython_re.sifr` uses CPython-compatible names consistently
+- `obj.callable_field(args)` works — lowering detects Callable fields and emits a field-call
+- `callable_struct_field.sifr` tests both storing AND calling the callback
+- `cargo test` passes (zero regressions)
+- Demo: `demos/milestone_ordering_remediation_demo.sifr`
+
+---
+
 ## Milestone Ordering
 
 ```

@@ -1,4 +1,6 @@
 # CPython test_fnmatch.py — ported assertions for sifr.fnmatch
+# Note: fnmatch_filter is used instead of the CPython alias 'filter' because
+# 'filter' conflicts with the built-in filter(func, iterable) function
 from sifr.test import assert_eq, assert_true, assert_false
 from sifr.fnmatch import fnmatch, fnmatch_filter, fnmatchcase
 

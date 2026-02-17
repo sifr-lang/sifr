@@ -4760,7 +4760,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 None
             }
         },
-        Type::Class { name, methods, .. } => {
+        Type::Class { name, fields, methods, .. } => {
             if let Some((_, ft)) = methods.iter().find(|(n, _)| n == method) {
                 // Check argument count
                 if args.len() != ft.params.len() {
@@ -4781,6 +4781,30 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     }
                 }
                 Some(*ft.return_type.clone())
+            } else if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == method) {
+                // Check if the field is a Callable type — allow calling it like a method
+                if let Type::Callable(param_types, _, ret_type) = field_ty {
+                    if args.len() != param_types.len() {
+                        ctx.error(format!(
+                            "{}.{}() (callable field) takes {} argument(s), got {}",
+                            name, method, param_types.len(), args.len()
+                        ));
+                        return None;
+                    }
+                    for (i, (arg, param_ty)) in args.iter().zip(param_types.iter()).enumerate() {
+                        if !arg.ty().is_assignable_to(param_ty) {
+                            ctx.error(format!(
+                                "argument {} of {}.{}(): expected '{}', got '{}'",
+                                i + 1, name, method,
+                                param_ty.display_name(), arg.ty().display_name()
+                            ));
+                        }
+                    }
+                    Some(*ret_type.clone())
+                } else {
+                    ctx.error(format!("field '{}' of class '{}' is not callable (type: '{}')", method, name, field_ty.display_name()));
+                    None
+                }
             } else {
                 ctx.error(format!("class '{}' has no method '{}'", name, method));
                 None

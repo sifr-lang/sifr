@@ -214,6 +214,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                 module_constants: stdlib_code.module_constants.clone(),
                 func_signatures: stdlib_code.func_signatures.clone(),
                 transitive_deps: stdlib_code.transitive_deps.clone(),
+                generator_functions: stdlib_code.generator_functions.clone(),
             };
             let codegen_result = sifr_codegen::generate_rust_with_stdlib(&result.module, &codegen_stdlib);
             stdlib_code.module_rust_code.insert(module_name.to_string(), codegen_result.rust_source);
@@ -247,6 +248,17 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
             }
             if !sig_map.is_empty() {
                 stdlib_code.func_signatures.insert(module_name.to_string(), sig_map);
+            }
+
+            // Track generator functions (contain yield statements) for .collect() at call sites
+            let mut gen_fns = HashSet::new();
+            for func in &result.module.functions {
+                if !func.name.starts_with('_') && sifr_codegen::body_contains_yield(&func.body) {
+                    gen_fns.insert(func.name.clone());
+                }
+            }
+            if !gen_fns.is_empty() {
+                stdlib_code.generator_functions.insert(module_name.to_string(), gen_fns);
             }
         }
 
