@@ -2,9 +2,14 @@
 # expect-stdout: 5
 # expect-stdout: 14
 # Tests: min, max, sum built-in functions
+# min/max on lists return Option[T] (None on empty)
 
 def main():
     nums: list[int] = [3, 1, 4, 1, 5]
-    print(min(nums))
-    print(max(nums))
+    lo: int | None = min(nums)
+    hi: int | None = max(nums)
+    if lo is not None:
+        print(lo)
+    if hi is not None:
+        print(hi)
     print(sum(nums))

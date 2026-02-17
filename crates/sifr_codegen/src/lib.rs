@@ -3722,25 +3722,25 @@ impl RustEmitter {
                 self.write(".pop()");
             }
             (Type::List(_), "remove") => {
-                // list.remove(val) -> { let pos = list.iter().position(|x| *x == val).unwrap(); list.remove(pos); }
-                self.write("{ let __pos = ");
+                // list.remove(val) -> no-op if not found (safe: no panic)
+                self.write("{ if let Some(__pos) = ");
                 self.emit_expr(object);
                 self.write(".iter().position(|__x| *__x == ");
                 if !args.is_empty() {
                     self.emit_expr(&args[0]);
                 }
-                self.write(").unwrap(); ");
+                self.write(") { ");
                 self.emit_expr(object);
-                self.write(".remove(__pos); }");
+                self.write(".remove(__pos); } }");
             }
             (Type::List(_), "index") => {
-                // list.index(val) -> list.iter().position(|x| *x == val).unwrap() as i64
+                // list.index(val) -> Option[int]: Some(pos) or None
                 self.emit_expr(object);
                 self.write(".iter().position(|__x| *__x == ");
                 if !args.is_empty() {
                     self.emit_expr(&args[0]);
                 }
-                self.write(").unwrap() as i64");
+                self.write(").map(|__p| __p as i64)");
             }
             // Dict methods
             (Type::Dict(_, _), "keys") => {
@@ -3909,17 +3909,17 @@ impl RustEmitter {
                 self.write(")");
             }
             (Type::Set(_), "pop") => {
-                // HashSet doesn't have pop() directly, use iter().next().cloned() + remove
-                // For simplicity, emit a helper pattern
+                // set.pop() -> Option[T]: returns None on empty set (safe: no panic)
                 self.write("{ let __v = ");
                 self.emit_expr(object);
-                self.write(".iter().next().cloned().unwrap(); ");
+                self.write(".iter().next().cloned(); if let Some(ref __val) = __v { ");
                 self.emit_expr(object);
-                self.write(".remove(&__v); __v }");
+                self.write(".remove(__val); } __v }");
             }
             (Type::Set(_), "len") => {
+                self.write("(");
                 self.emit_expr(object);
-                self.write(".len() as i64");
+                self.write(".len() as i64)");
             }
             // Tuple count()
             (Type::Tuple(_), "count") => {
@@ -3933,18 +3933,21 @@ impl RustEmitter {
             }
             // String len() - character count
             (Type::Str, "len") => {
+                self.write("(");
                 self.emit_expr(object);
-                self.write(".chars().count() as i64");
+                self.write(".chars().count() as i64)");
             }
             // len() on Option types (T|None) - unwrap first
             (ty, "len") if is_option_type(ty) => {
+                self.write("(");
                 self.emit_expr(object);
-                self.write(".as_ref().unwrap().len() as i64");
+                self.write(".as_ref().unwrap().len() as i64)");
             }
             // Generic len() for all types
             (_, "len") => {
+                self.write("(");
                 self.emit_expr(object);
-                self.write(".len() as i64");
+                self.write(".len() as i64)");
             }
             (Type::Class { name: ref class_name, fields, methods, .. }, _) => {
                 // Check if this is a callable field invocation (not a real method)
@@ -4491,13 +4494,13 @@ impl RustEmitter {
                             self.write(")");
                         }
                     } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                        // min(list[float]) -> Option[float] (safe: None on empty)
                         self.emit_expr(&args[0]);
-                        self.write(".iter().cloned().reduce(f64::min).unwrap()");
+                        self.write(".iter().cloned().reduce(f64::min)");
                     } else {
-                        // .iter().min() returns &T, dereference with * instead of .clone()
-                        self.write("*");
+                        // min(list[T]) -> Option[T] (safe: None on empty)
                         self.emit_expr(&args[0]);
-                        self.write(".iter().min().unwrap()");
+                        self.write(".iter().min().cloned()");
                     }
                 } else if func == "max" {
                     if args.len() == 2 {
@@ -4515,13 +4518,13 @@ impl RustEmitter {
                             self.write(")");
                         }
                     } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                        // max(list[float]) -> Option[float] (safe: None on empty)
                         self.emit_expr(&args[0]);
-                        self.write(".iter().cloned().reduce(f64::max).unwrap()");
+                        self.write(".iter().cloned().reduce(f64::max)");
                     } else {
-                        // .iter().max() returns &T, dereference with * instead of .clone()
-                        self.write("*");
+                        // max(list[T]) -> Option[T] (safe: None on empty)
                         self.emit_expr(&args[0]);
-                        self.write(".iter().max().unwrap()");
+                        self.write(".iter().max().cloned()");
                     }
                 } else if func == "sum" {
                     // sum(list) -> list.iter().sum()
@@ -4540,7 +4543,7 @@ impl RustEmitter {
                     self.write("{ let mut _sorted = ");
                     self.emit_expr(&args[0]);
                     if is_float_list {
-                        self.write(".clone(); _sorted.sort_by(|a, b| a.partial_cmp(b).unwrap()); _sorted }");
+                        self.write(".clone(); _sorted.sort_by(|a, b| a.total_cmp(b)); _sorted }");
                     } else {
                         self.write(".clone(); _sorted.sort(); _sorted }");
                     }

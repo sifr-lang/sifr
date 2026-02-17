@@ -87,13 +87,13 @@ def heappush(heap: list[int], item: int) -> list[int]:
             return result
     return result
 
-def heappop(heap: list[int]) -> int:
+def heappop(heap: list[int]) -> int | None:
     if len(heap) == 0:
-        return 0
+        return None
     top: int | None = heap[0]
     if top is not None:
         return top
-    return 0
+    return None
 
 def heappop_rest(heap: list[int]) -> list[int]:
     n: int = len(heap)
@@ -140,9 +140,9 @@ def heappop_rest(heap: list[int]) -> list[int]:
             pos = smallest
     return result2
 
-def heapreplace(heap: list[int], item: int) -> int:
+def heapreplace(heap: list[int], item: int) -> int | None:
     if len(heap) == 0:
-        return item
+        return None
     top: int | None = heap[0]
     result: int = 0
     if top is not None:
@@ -151,7 +151,7 @@ def heapreplace(heap: list[int], item: int) -> int:
     rest = heappush(rest, item)
     return result
 
-def heappushpop(heap: list[int], item: int) -> int:
+def heappushpop(heap: list[int], item: int) -> int | None:
     if len(heap) == 0:
         return item
     top: int | None = heap[0]
@@ -159,7 +159,7 @@ def heappushpop(heap: list[int], item: int) -> int:
         if item <= top:
             return item
     pushed: list[int] = heappush(heap, item)
-    val: int = heappop(pushed)
+    val: int | None = heappop(pushed)
     return val
 
 def nsmallest(n: int, data: list[int]) -> list[int]:
@@ -169,8 +169,9 @@ def nsmallest(n: int, data: list[int]) -> list[int]:
     while count < n:
         if len(heap) == 0:
             return result
-        val: int = heappop(heap)
-        result.append(val)
+        val: int | None = heappop(heap)
+        if val is not None:
+            result.append(val)
         heap = heappop_rest(heap)
         count = count + 1
     return result

@@ -1,0 +1,88 @@
+# =============================================================
+# Sifr Milestone: Collection Safety Demo
+# =============================================================
+# This milestone eliminates all panic paths in collection
+# operations, math functions, and built-in functions.
+#
+# Features demonstrated:
+# 1. list.remove() is a safe no-op when element is missing
+# 2. list.index() returns int | None instead of panicking
+# 3. min()/max() on lists return T | None (None on empty)
+# 4. sorted() with floats uses total_cmp (no NaN panic)
+# 5. list.pop() on empty list returns None
+# 6. min(a,b) / max(a,b) scalar calls unchanged
+# =============================================================
+
+def main():
+    # --- 1. Safe list.remove(): no-op when element not found ---
+    items: list[int] = [10, 20, 30]
+    items.remove(99)
+    print("After removing missing 99:")
+    print(items)
+
+    items.remove(20)
+    print("After removing 20:")
+    print(items)
+
+    # --- 2. Safe list.index(): returns Option[int] ---
+    names: list[str] = ["alice", "bob", "charlie"]
+    pos: int | None = names.index("bob")
+    if pos is not None:
+        print(f"Found 'bob' at index {pos}")
+    else:
+        print("'bob' not found")
+
+    missing: int | None = names.index("dave")
+    if missing is not None:
+        print(f"Found 'dave' at index {missing}")
+    else:
+        print("'dave' not found (safe: returned None)")
+
+    # --- 3. Safe min()/max(): return Option[T] ---
+    nums: list[int] = [5, 3, 8, 1, 9]
+    lo: int | None = min(nums)
+    hi: int | None = max(nums)
+    if lo is not None:
+        if hi is not None:
+            print(f"min={lo}, max={hi}")
+
+    empty: list[int] = []
+    empty_min: int | None = min(empty)
+    empty_max: int | None = max(empty)
+    if empty_min is not None:
+        print("ERROR: min on empty should be None")
+    else:
+        print("min([]) = None (safe!)")
+    if empty_max is not None:
+        print("ERROR: max on empty should be None")
+    else:
+        print("max([]) = None (safe!)")
+
+    # --- 4. Sorted with floats: no panic on comparison ---
+    floats: list[float] = [3.14, 1.0, 2.71, 0.5]
+    print("sorted floats:")
+    print(sorted(floats))
+
+    # --- 5. Safe list.pop() on empty ---
+    stack: list[int] = [42]
+    val1: int | None = stack.pop()
+    val2: int | None = stack.pop()
+    if val1 is not None:
+        print(f"popped: {val1}")
+    if val2 is not None:
+        print("ERROR: pop on empty should be None")
+    else:
+        print("pop on empty = None (safe!)")
+
+    # --- 6. Scalar min/max still work as expected ---
+    print(f"min(3, 7) = {min(3, 7)}")
+    print(f"max(3, 7) = {max(3, 7)}")
+
+    # --- Summary ---
+    print("")
+    print("All collection operations are panic-free!")
+    print("  - list.remove(missing) -> no-op")
+    print("  - list.index(missing) -> None")
+    print("  - min/max(empty) -> None")
+    print("  - sorted(floats) -> total_cmp (NaN-safe)")
+    print("  - list.pop(empty) -> None")

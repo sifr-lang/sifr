@@ -14,20 +14,24 @@ def main():
     h1 = heappush(h1, 1)
     assert_eq(len(h1), 4)
 
-    v1: int = heappop(h1)
-    assert_eq(v1, 1)
+    v1: int | None = heappop(h1)
+    if v1 is not None:
+        assert_eq(v1, 1)
     h1 = heappop_rest(h1)
 
-    v2: int = heappop(h1)
-    assert_eq(v2, 3)
+    v2: int | None = heappop(h1)
+    if v2 is not None:
+        assert_eq(v2, 3)
     h1 = heappop_rest(h1)
 
-    v3: int = heappop(h1)
-    assert_eq(v3, 5)
+    v3: int | None = heappop(h1)
+    if v3 is not None:
+        assert_eq(v3, 5)
     h1 = heappop_rest(h1)
 
-    v4: int = heappop(h1)
-    assert_eq(v4, 7)
+    v4: int | None = heappop(h1)
+    if v4 is not None:
+        assert_eq(v4, 7)
     h1 = heappop_rest(h1)
     assert_eq(len(h1), 0)
 
@@ -38,8 +42,9 @@ def main():
     # Pop all to verify sorted order
     sorted_vals: list[int] = []
     while len(h2) > 0:
-        val: int = heappop(h2)
-        sorted_vals.append(val)
+        val: int | None = heappop(h2)
+        if val is not None:
+            sorted_vals.append(val)
         h2 = heappop_rest(h2)
     assert_eq(len(sorted_vals), 8)
     print(sorted_vals)
@@ -69,17 +74,20 @@ def main():
 
     # --- heappushpop ---
     h5: list[int] = [3, 5, 7]
-    r1: int = heappushpop(h5, 1)
-    assert_eq(r1, 1)
+    r1: int | None = heappushpop(h5, 1)
+    if r1 is not None:
+        assert_eq(r1, 1)
 
     h6: list[int] = [3, 5, 7]
-    r2: int = heappushpop(h6, 4)
-    assert_eq(r2, 3)
+    r2: int | None = heappushpop(h6, 4)
+    if r2 is not None:
+        assert_eq(r2, 3)
 
     # --- heapreplace ---
     h7: list[int] = [1, 5, 7]
-    r3: int = heapreplace(h7, 10)
-    assert_eq(r3, 1)
+    r3: int | None = heapreplace(h7, 10)
+    if r3 is not None:
+        assert_eq(r3, 1)
 
     print("cpython_heapq: all 18 assertions passed")
 

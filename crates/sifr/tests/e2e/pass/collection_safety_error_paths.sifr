@@ -1,0 +1,61 @@
+# Collection safety: all error paths return Option/Result instead of panicking
+# expect-stdout: remove missing: ok
+# expect-stdout: index found: 1
+# expect-stdout: index missing: none
+# expect-stdout: min empty: none
+# expect-stdout: max empty: none
+# expect-stdout: min ok: 1
+# expect-stdout: max ok: 5
+# expect-stdout: [1.1, 2.2, 3.3]
+# expect-stdout: list pop empty: none
+
+def main():
+    # --- list.remove on missing element: no-op, no panic ---
+    items: list[int] = [1, 2, 3]
+    items.remove(99)
+    print("remove missing: ok")
+
+    # --- list.index returns Option[int] ---
+    idx_found: int | None = items.index(2)
+    if idx_found is not None:
+        print(f"index found: {idx_found}")
+
+    idx_missing: int | None = items.index(99)
+    if idx_missing is not None:
+        print(f"index missing: {idx_missing}")
+    else:
+        print("index missing: none")
+
+    # --- min/max on empty list returns None ---
+    empty: list[int] = []
+    lo: int | None = min(empty)
+    hi: int | None = max(empty)
+    if lo is not None:
+        print(f"min empty: {lo}")
+    else:
+        print("min empty: none")
+    if hi is not None:
+        print(f"max empty: {hi}")
+    else:
+        print("max empty: none")
+
+    # --- min/max on non-empty list returns Some ---
+    nums: list[int] = [3, 1, 4, 1, 5]
+    lo2: int | None = min(nums)
+    hi2: int | None = max(nums)
+    if lo2 is not None:
+        print(f"min ok: {lo2}")
+    if hi2 is not None:
+        print(f"max ok: {hi2}")
+
+    # --- sorted with floats uses total_cmp (no panic on NaN) ---
+    floats: list[float] = [3.3, 1.1, 2.2]
+    print(sorted(floats))
+
+    # --- list.pop on empty returns None ---
+    empty2: list[int] = []
+    val: int | None = empty2.pop()
+    if val is not None:
+        print(f"list pop empty: {val}")
+    else:
+        print("list pop empty: none")
