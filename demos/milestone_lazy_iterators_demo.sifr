@@ -1,18 +1,9 @@
 # milestone_lazy_iterators demo
 # Demonstrates lazy iterator support for generator functions
-
-# expect-stdout: Fibonacci: 0
-# expect-stdout: Fibonacci: 1
-# expect-stdout: Fibonacci: 1
-# expect-stdout: Fibonacci: 2
-# expect-stdout: Fibonacci: 3
-# expect-stdout: Fibonacci: 5
-# expect-stdout: Fibonacci: 8
-# expect-stdout: Fibonacci: 13
-# expect-stdout: Collected: [0, 1, 4, 9, 16]
+# Generators now use std::iter::from_fn instead of eager Vec collection
 
 # ============================================================
-# Part 1: Lazy generator consumed by for loop
+# Part 1: Lazy generator consumed by for loop (fibonacci)
 # ============================================================
 
 def fibonacci(n: int) -> list[int]:
@@ -27,7 +18,7 @@ def fibonacci(n: int) -> list[int]:
         count = count + 1
 
 # ============================================================
-# Part 2: Generator collected into a list
+# Part 2: Generator collected into a list (squares)
 # ============================================================
 
 def squares(n: int) -> list[int]:
@@ -36,11 +27,71 @@ def squares(n: int) -> list[int]:
         yield i * i
         i = i + 1
 
+# ============================================================
+# Part 3: Conditional yield (filter pattern — evens)
+# ============================================================
+
+def evens(limit: int) -> list[int]:
+    i: int = 0
+    while i < limit:
+        if i % 2 == 0:
+            yield i
+        i = i + 1
+
+# ============================================================
+# Part 4: Simple count generator
+# ============================================================
+
+def count_up(n: int) -> list[int]:
+    i: int = 0
+    while i < n:
+        yield i
+        i = i + 1
+
 def main():
-    # Part 1: Lazy iteration — for loop consumes the iterator
+    # Part 1: Lazy iteration — for loop consumes one value at a time
+    print("=== Fibonacci (lazy for loop) ===")
     for fib in fibonacci(8):
-        print("Fibonacci: " + str(fib))
+        print(fib)
 
     # Part 2: Collect into a list
+    print("=== Squares (collected) ===")
     sq: list[int] = squares(5)
-    print("Collected: " + str(sq))
+    print(sq)
+
+    # Part 3: Conditional yield — only even numbers
+    print("=== Evens (conditional yield) ===")
+    for e in evens(10):
+        print(e)
+
+    # Part 4: Simple count — both lazy and collected
+    print("=== Count (lazy) ===")
+    for c in count_up(3):
+        print(c)
+    print("=== Count (collected) ===")
+    nums: list[int] = count_up(5)
+    print(nums)
+
+# expect-stdout: === Fibonacci (lazy for loop) ===
+# expect-stdout: 0
+# expect-stdout: 1
+# expect-stdout: 1
+# expect-stdout: 2
+# expect-stdout: 3
+# expect-stdout: 5
+# expect-stdout: 8
+# expect-stdout: 13
+# expect-stdout: === Squares (collected) ===
+# expect-stdout: [0, 1, 4, 9, 16]
+# expect-stdout: === Evens (conditional yield) ===
+# expect-stdout: 0
+# expect-stdout: 2
+# expect-stdout: 4
+# expect-stdout: 6
+# expect-stdout: 8
+# expect-stdout: === Count (lazy) ===
+# expect-stdout: 0
+# expect-stdout: 1
+# expect-stdout: 2
+# expect-stdout: === Count (collected) ===
+# expect-stdout: [0, 1, 2, 3, 4]

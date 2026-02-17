@@ -1,0 +1,17 @@
+# Tests: lazy generator with conditional yield (filter pattern)
+def evens(limit: int) -> list[int]:
+    i: int = 0
+    while i < limit:
+        if i % 2 == 0:
+            yield i
+        i = i + 1
+
+def main():
+    for e in evens(10):
+        print(e)
+
+# expect-stdout: 0
+# expect-stdout: 2
+# expect-stdout: 4
+# expect-stdout: 6
+# expect-stdout: 8
