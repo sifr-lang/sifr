@@ -2,7 +2,9 @@
 from _sifr.crypto import random_int, random_float, random_choice, random_uniform
 
 # CPython-compatible aliases
-def randint(min: int, max: int) -> int:
+def randint(min: int, max: int) -> Result[int, ValueError]:
+    if min > max:
+        raise ValueError("randint: min must be <= max")
     return random_int(min, max)
 
 def random() -> float:

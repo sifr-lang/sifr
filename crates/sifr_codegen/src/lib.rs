@@ -2969,13 +2969,14 @@ impl RustEmitter {
                 self.write_indent();
                 match object_ty {
                     Type::List(_) => {
-                        // list[i] = val -> list[i as usize] = val
-                        self.write(object);
-                        self.write("[");
+                        // list[i] = val -> bounds-checked assignment (safe no-op if out of bounds)
+                        self.write("{ let __idx = ");
                         self.emit_expr(index);
-                        self.write(" as usize] = ");
+                        self.write(" as usize; if let Some(__elem) = ");
+                        self.write(object);
+                        self.write(".get_mut(__idx) { *__elem = ");
                         self.emit_expr(value);
-                        self.write(";\n");
+                        self.write("; } }\n");
                     }
                     Type::Dict(_, _) => {
                         // dict[key] = val -> dict.insert(key, val)
@@ -2999,46 +3000,42 @@ impl RustEmitter {
             }
             HirStmt::NestedSubscriptAssign { object, outer_index, inner_index, value, object_ty: _ } => {
                 self.write_indent();
-                // matrix[i][j] = val -> matrix[i as usize][j as usize] = val
-                self.write(object);
-                self.write("[");
+                // matrix[i][j] = val -> bounds-checked nested assignment (safe no-op if out of bounds)
+                self.write("{ let __oi = ");
                 self.emit_expr(outer_index);
-                self.write(" as usize][");
+                self.write(" as usize; let __ii = ");
                 self.emit_expr(inner_index);
-                self.write(" as usize] = ");
+                self.write(" as usize; if let Some(__row) = ");
+                self.write(object);
+                self.write(".get_mut(__oi) { if let Some(__elem) = __row.get_mut(__ii) { *__elem = ");
                 self.emit_expr(value);
-                self.write(";\n");
+                self.write("; } } }\n");
             }
             HirStmt::SubscriptAugAssign { object, index, op, value, object_ty: _ } => {
                 self.write_indent();
-                // list[i] += val -> list[i as usize] += val
-                self.write(object);
-                self.write("[");
+                // list[i] += val -> bounds-checked augmented assignment (safe no-op if out of bounds)
+                self.write("{ let __idx = ");
                 self.emit_expr(index);
-                self.write(" as usize] ");
+                self.write(" as usize; if let Some(__elem) = ");
+                self.write(object);
+                self.write(".get_mut(__idx) { ");
                 // Convert **= to .pow() pattern
                 if op == "**=" {
-                    self.write("= ");
-                    self.write(object);
-                    self.write("[");
-                    self.emit_expr(index);
-                    self.write(" as usize].pow(");
+                    self.write("*__elem = __elem.pow(");
                     self.emit_expr(value);
-                    self.write(" as u32);\n");
+                    self.write(" as u32);");
                 } else if op == "//=" {
-                    self.write("= ");
-                    self.write(object);
-                    self.write("[");
-                    self.emit_expr(index);
-                    self.write(" as usize] / ");
+                    self.write("*__elem = *__elem / ");
                     self.emit_expr(value);
-                    self.write(";\n");
+                    self.write(";");
                 } else {
+                    self.write("*__elem ");
                     self.write(op);
                     self.write(" ");
                     self.emit_expr(value);
-                    self.write(";\n");
+                    self.write(";");
                 }
+                self.write(" } }\n");
             }
             HirStmt::AttributeAugAssign { object, field, op, value } => {
                 self.write_indent();
@@ -5965,7 +5962,7 @@ impl RustEmitter {
             "datetime_from_timestamp" => {
                 self.write("{ let __ts = ");
                 self.emit_expr(&args[0]);
-                self.write(" as i64; chrono::DateTime::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).unwrap_or_default() }");
+                self.write(" as i64; chrono::DateTime::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).ok_or_else(|| ValueError { message: \"invalid timestamp\".to_string() }) }");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call

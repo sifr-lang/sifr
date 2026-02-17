@@ -1,6 +1,69 @@
 # sifr.uuid — UUID generation and manipulation
 from _sifr.uuid import uuid4
 
+def _is_hex_char(ch: str) -> bool:
+    if ch == "0":
+        return True
+    if ch == "1":
+        return True
+    if ch == "2":
+        return True
+    if ch == "3":
+        return True
+    if ch == "4":
+        return True
+    if ch == "5":
+        return True
+    if ch == "6":
+        return True
+    if ch == "7":
+        return True
+    if ch == "8":
+        return True
+    if ch == "9":
+        return True
+    if ch == "a":
+        return True
+    if ch == "b":
+        return True
+    if ch == "c":
+        return True
+    if ch == "d":
+        return True
+    if ch == "e":
+        return True
+    if ch == "f":
+        return True
+    if ch == "A":
+        return True
+    if ch == "B":
+        return True
+    if ch == "C":
+        return True
+    if ch == "D":
+        return True
+    if ch == "E":
+        return True
+    if ch == "F":
+        return True
+    return False
+
+def _count_hex_chars(hex_str: str) -> int:
+    count: int = 0
+    i: int = 0
+    valid: bool = True
+    while i < len(hex_str):
+        ch: str | None = hex_str[i]
+        if ch is not None:
+            if ch != "-":
+                if not _is_hex_char(ch):
+                    valid = False
+                count = count + 1
+        i = i + 1
+    if not valid:
+        return -1
+    return count
+
 class UUID:
     _hex: str
 
@@ -8,7 +71,6 @@ class UUID:
         self._hex = hex_str
 
     def hex(self) -> str:
-        # Return the 32-char hex string (without dashes)
         result: str = ""
         i: int = 0
         while i < len(self._hex):
@@ -30,3 +92,11 @@ class UUID:
 
 def uuid4_obj() -> UUID:
     return UUID(uuid4())
+
+def uuid_from_hex(hex_str: str) -> Result[UUID, ValueError]:
+    count: int = _count_hex_chars(hex_str)
+    if count < 0:
+        raise ValueError("invalid UUID hex string")
+    if count != 32:
+        raise ValueError("UUID hex string must be 32 hex characters")
+    return UUID(hex_str)

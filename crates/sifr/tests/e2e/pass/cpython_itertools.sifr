@@ -67,9 +67,12 @@ def main():
 
     # --- batched ---
     bat_data: list[int] = [1, 2, 3, 4, 5]
-    bat: list[list[int]] = batched(bat_data, 2)
-    assert_eq(len(bat), 3)
-    print(bat)
+    try:
+        bat: list[list[int]] = batched(bat_data, 2)
+        assert_eq(len(bat), 3)
+        print(bat)
+    except ValueError as e:
+        print(f"error: {e.message}")
 
     # --- islice ---
     sl_data: list[int] = [10, 20, 30, 40, 50]

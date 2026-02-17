@@ -79,7 +79,9 @@ def pairwise(data: list[int]) -> list[list[int]]:
         i = i + 1
     return result
 
-def batched(data: list[int], n: int) -> list[list[int]]:
+def batched(data: list[int], n: int) -> Result[list[list[int]], ValueError]:
+    if n <= 0:
+        raise ValueError("batched: n must be > 0")
     # Eager: nested while loop + list indexing
     result: list[list[int]] = []
     i: int = 0

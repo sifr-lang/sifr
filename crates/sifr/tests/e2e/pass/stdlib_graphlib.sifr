@@ -1,11 +1,14 @@
 # Test sifr.graphlib module
-from sifr.graphlib import topological_sort
+from sifr.graphlib import topological_sort, CycleError
 
 def main():
     # Graph: 0->1, 0->2, 1->3, 2->3 (4 nodes)
     from_nodes: list[int] = [0, 0, 1, 2]
     to_nodes: list[int] = [1, 2, 3, 3]
-    result: list[int] = topological_sort(4, from_nodes, to_nodes)
-    print(result)
+    try:
+        result: list[int] = topological_sort(4, from_nodes, to_nodes)
+        print(result)
+    except CycleError as e:
+        print(f"error: {e.message}")
 
 # expect-stdout: [0, 1, 2, 3]

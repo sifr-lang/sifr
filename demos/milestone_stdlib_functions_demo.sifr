@@ -67,6 +67,10 @@ def main():
     items: list[int] = [1, 2, 3, 4]
     print("pairwise = " + str(pairwise(items)))
     items2: list[int] = [1, 2, 3, 4, 5, 6, 7, 8]
-    print("batched = " + str(batched(items2, 3)))
+    try:
+        bat: list[list[int]] = batched(items2, 3)
+        print("batched = " + str(bat))
+    except ValueError as e:
+        print(f"error: {e.message}")
 
     print("Done!")

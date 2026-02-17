@@ -1,0 +1,177 @@
+# Edge case safety: validates all new input validation guards
+# expect-stdout: === randint ===
+# expect-stdout: caught ValueError: randint: min must be <= max
+# expect-stdout: randint(1, 5) ok
+# expect-stdout: === randbelow ===
+# expect-stdout: caught ValueError: randbelow: n must be > 0
+# expect-stdout: randbelow(10) ok
+# expect-stdout: === wrap ===
+# expect-stdout: caught ValueError: wrap: width must be > 0
+# expect-stdout: wrap ok
+# expect-stdout: === fill ===
+# expect-stdout: caught ValueError: fill: width must be > 0
+# expect-stdout: fill ok
+# expect-stdout: === batched ===
+# expect-stdout: caught ValueError: batched: n must be > 0
+# expect-stdout: batched ok
+# expect-stdout: === topological_sort ===
+# expect-stdout: caught CycleError: cycle detected in graph
+# expect-stdout: topo sort ok
+# expect-stdout: === uuid_from_hex ===
+# expect-stdout: caught ValueError: invalid UUID hex string
+# expect-stdout: caught ValueError: UUID hex string must be 32 hex characters
+# expect-stdout: uuid ok
+# expect-stdout: === ip_to_int ===
+# expect-stdout: caught ValueError: invalid IPv4 address
+# expect-stdout: ip_to_int ok
+# expect-stdout: === from_timestamp ===
+# expect-stdout: caught ValueError: invalid timestamp
+# expect-stdout: from_timestamp ok
+# expect-stdout: === subscript assign ===
+# expect-stdout: [10, 20, 30]
+# expect-stdout: all edge case safety checks passed
+
+from sifr.random import randint
+from sifr.secrets import randbelow
+from sifr.textwrap import wrap, fill
+from sifr.itertools import batched
+from sifr.graphlib import topological_sort, CycleError
+from sifr.uuid import uuid_from_hex, UUID
+from sifr.ipaddress import ip_to_int
+from sifr.datetime import from_timestamp
+
+def main():
+    # --- randint: a > b ---
+    print("=== randint ===")
+    try:
+        val: int = randint(5, 3)
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        val2: int = randint(1, 5)
+        print("randint(1, 5) ok")
+    except ValueError as e:
+        print(f"error: {e.message}")
+
+    # --- randbelow: n <= 0 ---
+    print("=== randbelow ===")
+    try:
+        val3: int = randbelow(0)
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        val4: int = randbelow(10)
+        print("randbelow(10) ok")
+    except ValueError as e:
+        print(f"error: {e.message}")
+
+    # --- wrap: width <= 0 ---
+    print("=== wrap ===")
+    try:
+        lines: list[str] = wrap("hello", 0)
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        lines2: list[str] = wrap("hello world", 5)
+        print("wrap ok")
+    except ValueError as e:
+        print(f"error: {e.message}")
+
+    # --- fill: width <= 0 ---
+    print("=== fill ===")
+    try:
+        filled: str = fill("hello", 0)
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        filled2: str = fill("hello world", 5)
+        print("fill ok")
+    except ValueError as e:
+        print(f"error: {e.message}")
+
+    # --- batched: n <= 0 ---
+    print("=== batched ===")
+    data: list[int] = [1, 2, 3]
+    try:
+        bat: list[list[int]] = batched(data, 0)
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        bat2: list[list[int]] = batched(data, 2)
+        print("batched ok")
+    except ValueError as e:
+        print(f"error: {e.message}")
+
+    # --- topological_sort: cycle ---
+    print("=== topological_sort ===")
+    from_nodes: list[int] = [0, 1]
+    to_nodes: list[int] = [1, 0]
+    try:
+        order: list[int] = topological_sort(2, from_nodes, to_nodes)
+        print("unexpected")
+    except CycleError as e:
+        print(f"caught CycleError: {e.message}")
+    from_nodes2: list[int] = [0, 0]
+    to_nodes2: list[int] = [1, 2]
+    try:
+        order2: list[int] = topological_sort(3, from_nodes2, to_nodes2)
+        print("topo sort ok")
+    except CycleError as e:
+        print(f"error: {e.message}")
+
+    # --- uuid_from_hex: invalid ---
+    print("=== uuid_from_hex ===")
+    try:
+        u: UUID = uuid_from_hex("not-a-uuid-xyz!")
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        u2: UUID = uuid_from_hex("abcd")
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        u3: UUID = uuid_from_hex("550e8400e29b41d4a716446655440000")
+        print("uuid ok")
+    except ValueError as e:
+        print(f"error: {e.message}")
+
+    # --- ip_to_int: invalid ---
+    print("=== ip_to_int ===")
+    try:
+        ip_val: int = ip_to_int("not.an.ip.address")
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        ip_val2: int = ip_to_int("192.168.1.1")
+        print("ip_to_int ok")
+    except ValueError as e:
+        print(f"error: {e.message}")
+
+    # --- from_timestamp: invalid ---
+    print("=== from_timestamp ===")
+    try:
+        dt: str = from_timestamp(-99999999999999.0)
+        print("unexpected")
+    except ValueError as e:
+        print(f"caught ValueError: {e.message}")
+    try:
+        dt2: str = from_timestamp(0.0)
+        print("from_timestamp ok")
+    except ValueError as e:
+        print(f"error: {e.message}")
+
+    # --- subscript assign: out of bounds is a no-op ---
+    print("=== subscript assign ===")
+    nums: list[int] = [10, 20, 30]
+    nums[99] = 999
+    print(nums)
+
+    print("all edge case safety checks passed")

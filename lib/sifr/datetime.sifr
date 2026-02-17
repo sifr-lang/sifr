@@ -7,7 +7,7 @@ def now() -> str:
 def format_datetime(dt: str, fmt: str) -> str:
     return datetime_format(dt, fmt)
 
-def from_timestamp(ts: float) -> str:
+def from_timestamp(ts: float) -> Result[str, ValueError]:
     return datetime_from_timestamp(ts)
 
 class timedelta:

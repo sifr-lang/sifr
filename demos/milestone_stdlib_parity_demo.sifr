@@ -10,7 +10,7 @@ from sifr.test import assert_eq, assert_true
 from sifr.math import asin, tau, isnan, nan
 from sifr.os import getcwd
 from sifr.re import re_findall
-from sifr.graphlib import topological_sort
+from sifr.graphlib import topological_sort, CycleError
 from sifr.uuid import uuid4
 from sifr.platform import platform_system, platform_arch
 from sifr.pathlib import join_path, basename, extension
@@ -39,8 +39,11 @@ def main():
     # graphlib -- topological sort
     from_nodes: list[int] = [0, 0, 1]
     to_nodes: list[int] = [1, 2, 2]
-    order: list[int] = topological_sort(3, from_nodes, to_nodes)
-    assert_eq(len(order), 3)
+    try:
+        order: list[int] = topological_sort(3, from_nodes, to_nodes)
+        assert_eq(len(order), 3)
+    except CycleError as e:
+        print(f"error: {e.message}")
 
     # uuid -- random UUID
     id: str = uuid4()
@@ -81,8 +84,11 @@ def main():
     # datetime -- date/time
     dt_now: str = now()
     assert_true(len(dt_now) > 0)
-    dt_epoch: str = from_timestamp(0.0)
-    assert_true(len(dt_epoch) > 0)
+    try:
+        dt_epoch: str = from_timestamp(0.0)
+        assert_true(len(dt_epoch) > 0)
+    except ValueError as e:
+        print(f"error: {e.message}")
 
     # Part C: Parity audit
     # 37 total stdlib modules available

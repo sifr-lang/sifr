@@ -9,6 +9,10 @@ def main():
     data: list[int] = [1, 2, 3, 4]
     print("pairwise = " + str(pairwise(data)))
     data2: list[int] = [1, 2, 3, 4, 5]
-    print("batched = " + str(batched(data2, 2)))
+    try:
+        bat: list[list[int]] = batched(data2, 2)
+        print("batched = " + str(bat))
+    except ValueError as e:
+        print(f"error: {e.message}")
     data3: list[int] = [10, 20, 30, 40, 50]
     print("islice = " + str(islice(data3, 3)))
