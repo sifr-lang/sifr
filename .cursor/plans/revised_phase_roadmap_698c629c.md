@@ -357,9 +357,10 @@ Depends on both `milestone_web_db` (web framework must exist) and `milestone_typ
 
 ## Error Taxonomy Policy
 
-Phase 08 defines both generic and module-specific error types. The policy for which to use:
+Phase 08 defines error types at two levels. The policy for which to use and where they live:
 
-- **Module-specific error types** (`JSONDecodeError`, `TOMLDecodeError`, `RegexError`, `StatisticsError`, `CycleError`) are used when the error source is a distinct domain and users benefit from catching it specifically in exhaustiveness checking. These are compiler built-ins available without imports.
+- **Core compiler built-in error types** (`Error`, `IOError`, `ParseError`, `ValueError`, `DivisionError`, `KeyError`, `JSONDecodeError`, `TOMLDecodeError`, `RegexError`) are registered in the compiler's type system like `int`, `str`, `bool`. Available without imports. Defined in `milestone_error_safety`.
+- **Module-specific error types** (`StatisticsError`, `CycleError`, and future module-level errors) are defined and exported from their respective stdlib `.sifr` files (e.g., `StatisticsError` from `sifr.statistics`). These require an import to use. Defined in `milestone_error_safety_stdlib_types`, which also validates the export pipeline.
 - **Generic error types** (`ParseError`, `ValueError`, `IOError`) are used for operations where the failure mode is common across domains (e.g., base64 decoding, hex parsing, string-to-number conversion) and fine-grained distinction adds no value.
 - **Rule of thumb:** if two different fallible calls in the same `try` block could fail with the same error type but the user would want to handle them differently, they need distinct error types.
 
