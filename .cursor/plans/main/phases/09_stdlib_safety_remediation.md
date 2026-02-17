@@ -141,7 +141,7 @@ status: completed (PR #162)
 
 ## milestone_error_subclasses: Error Subclass Hierarchy (Priority 6 -- Enhancement)
 
-status: pending
+status: completed (PR #163)
 
 **Goal:** Introduce a structured error subclass hierarchy so developers can handle specific failure modes via `except` arms with compile-time exhaustiveness checking — no string matching needed. All errors retain `message: str` populated from Rust's `Display` (for built-ins) or the constructor (for user-defined errors). Where Rust provides genuinely useful structured data (line/column on parse errors), surface it as additional typed fields alongside `message`. `print(e)` becomes the idiomatic way to display error messages (via `Display` which formats `self.message`).
 
