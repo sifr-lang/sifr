@@ -69,7 +69,7 @@ Generate a local error enum when a `try` block contains calls that can fail with
 
 ## milestone_error_safety_stdlib_types: Module-Specific Error Types
 
-status: pending
+status: done
 
 **Goal:** Define and export module-specific error types from stdlib `.sifr` files. These are distinct from the core compiler built-in error types — they require an import to use.
 

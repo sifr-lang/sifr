@@ -11,7 +11,7 @@
 | 5 | Borrow-by-Default | 2 (borrow_default, borrow_hardening) | superseded | Original plan moved to Phase 10 after safety audit findings |
 | 6 | Stdlib Architecture | 6 (intrinsics → stdlib_classes) | completed | Stdlib rewritten as .sifr files, 37+ modules, class-in-stdlib pipeline |
 | 7 | Stdlib Parity | 7 (compiler_hardening → cpython_tests) | completed | Import errors, `with` protocol, `Callable` fix, lazy iterators, generic stdlib, ~50 new functions, CPython-aligned names, 6 new classes, `datetime` operator overloading, ~500 CPython test assertions |
-| 8 | Error Safety | 2 (error_safety, error_safety_stdlib_types) | pending | Built-in error classes, exhaustiveness checking on `except` arms, `Result[T, str]` eliminated, module-specific error type export pipeline |
+| 8 | Error Safety | 2 (error_safety, error_safety_stdlib_types) | completed | Built-in error classes, exhaustiveness checking on `except` arms, `Result[T, str]` eliminated, module-specific error type export pipeline |
 | 9 | Stdlib Safety Remediation | 5 (io_safety → zero_panic_gate) | pending | All ~45+ `.unwrap()` panic paths fixed, zero-panic gate enforced, safety scores 7/10+ per module |
 | 10 | Borrow-by-Default | 3 (borrow_default, borrow_hardening, borrow_stdlib) | pending | Borrow-by-default params, exclusivity, escape analysis, consuming-self, for-loop semantics, stdlib ownership patterns |
 | 11 | Stdlib Deepening | 4 (pure_expansion → class_deepening) | pending | ~38% → deep CPython parity, 8 new modules, `open()` built-in, `datetime`/`deque`/`Pattern` classes, API naming divergences documented |
