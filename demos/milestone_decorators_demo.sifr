@@ -26,7 +26,10 @@ def sum_all(*nums: int) -> int:
     return total
 
 def max_of(*values: int) -> int:
-    return max(values)
+    result: int | None = max(values)
+    if result is not None:
+        return result
+    return 0
 
 def join_strings(sep: str, *parts: str) -> str:
     result: str = ""

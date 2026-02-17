@@ -7,14 +7,16 @@ def main():
     heap = heappush(heap, 5)
     heap = heappush(heap, 1)
     heap = heappush(heap, 3)
-    val: int = heappop(heap)
-    print(val)
+    val: int | None = heappop(heap)
+    if val is not None:
+        print(val)
 
     # heapify
     data: list[int] = [4, 2, 7, 1, 5]
     data = heapify(data)
-    top: int = heappop(data)
-    print(top)
+    top: int | None = heappop(data)
+    if top is not None:
+        print(top)
 
     # nsmallest
     items: list[int] = [9, 3, 7, 1, 5]

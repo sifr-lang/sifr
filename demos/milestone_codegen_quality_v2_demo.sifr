@@ -23,8 +23,12 @@ class Item:
 def main():
     # ---- Task 1: No redundant .clone() on Copy types in min/max ----
     nums: list[int] = [5, 3, 1, 4, 2]
-    print(min(nums))
-    print(max(nums))
+    lo: int | None = min(nums)
+    hi: int | None = max(nums)
+    if lo is not None:
+        print(lo)
+    if hi is not None:
+        print(hi)
 
     # ---- Task 2: Inline lambda in filter() ----
     evens: list[int] = filter(lambda x: x % 2 == 0, nums)

@@ -3697,10 +3697,11 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                     return None;
                 }
             };
+            // Returns Option[T] = T | None (safe: None on empty list)
             return Some(HirExpr::Call {
                 func: "min".to_string(),
                 args: vec![arg],
-                ty: elem_ty,
+                ty: Type::Union(vec![elem_ty, Type::None]),
             });
         } else {
             ctx.error("min() takes 1 or 2 arguments".to_string());
@@ -3729,10 +3730,11 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                     return None;
                 }
             };
+            // Returns Option[T] = T | None (safe: None on empty list)
             return Some(HirExpr::Call {
                 func: "max".to_string(),
                 args: vec![arg],
-                ty: elem_ty,
+                ty: Type::Union(vec![elem_ty, Type::None]),
             });
         } else {
             ctx.error("max() takes 1 or 2 arguments".to_string());
@@ -4797,7 +4799,8 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     ctx.error(format!("list.index() takes exactly 1 argument, got {}", args.len()));
                     return None;
                 }
-                Some(Type::Int)
+                // Returns Option[int] = int | None (safe: no panic if not found)
+                Some(Type::Union(vec![Type::Int, Type::None]))
             }
             _ => {
                 ctx.error(format!("list has no method '{}'", method));
@@ -4949,7 +4952,8 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     ctx.error("set.pop() takes no arguments".to_string());
                     return None;
                 }
-                Some(*elem_ty.clone())
+                // Returns Option[T] = T | None (safe: no panic on empty set)
+                Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
             }
             _ => {
                 ctx.error(format!("set has no method '{}'", method));
