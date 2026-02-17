@@ -143,45 +143,61 @@ status: completed (PR #162)
 
 status: pending
 
-**Goal:** Introduce CPython-aligned error subclasses (`FileNotFoundError`, `PermissionError`, etc.) so that developers can handle specific failure modes via `except` arms with compile-time exhaustiveness checking — not by inspecting message strings at runtime. This extends Sifr's safety guarantee deeper: the compiler enforces that every distinguishable error category is handled.
+**Goal:** Replace flat, message-only error types with a structured error hierarchy where the **variant is the information**. Developers handle specific failure modes via `except` arms with compile-time exhaustiveness checking — no string matching, no `message` fields on errors where the type already tells you everything. Where Rust provides genuinely useful structured data (line/column on parse errors), surface it as typed fields.
 
 **Depends on:** milestone_zero_panic_gate (all prior safety milestones must be complete; this builds on top of the stable, non-panicking foundation they established)
 
-**Why now:** The prior milestones replaced all panics with `Result[T, IOError]`, but every I/O failure is a flat `IOError` with only a `message: str` field. Distinguishing "file not found" from "permission denied" requires string matching — the exact kind of fragile runtime check that Sifr's type system is designed to eliminate. This milestone refines the error types that milestones 1-5 established, without changing any of their completed work.
+**Why now:** The prior milestones replaced all panics with `Result[T, IOError]`, but every I/O failure is a flat `IOError` with only a `message: str` field. That message is just Rust's `e.to_string()` — a verbose restatement of the `ErrorKind` that the developer must string-match at runtime. This is the exact kind of fragile check Sifr's type system is designed to eliminate. Furthermore, the codegen already generates `Display` trait implementations for all error types (used by `print(e)` and `f"{e}"`), so the infrastructure to surface human-readable error messages without a stored `message` field is already in place — it's just not being used. Current Sifr code overwhelmingly accesses `e.message` directly (~120+ occurrences across demos and tests), which means the `message` field is doing work that `Display` should be doing. This milestone removes the redundant field and makes `Display` the single source of human-readable error text.
 
-**Backward compatibility:** All existing code that catches `except IOError as e` continues to work unchanged — `IOError` becomes a parent type that catches all its subclass variants. No existing E2E tests need modification. The change is purely additive: new subclass types become available for finer-grained handling, but are not required.
+### Design Principles
 
-### Design Decision: Enum Variants, Not Separate Structs
+**1. The variant IS the information.** For most errors, the type name tells you everything you need to know. `FileNotFoundError` means the file wasn't found — the developer already knows which file (they passed the path). No `message` field needed.
 
-Error subclasses are represented as **enum variants of their parent error type** in generated Rust. This is the cleanest mapping because:
+**2. Structured fields only where Rust provides data the developer can't know in advance.** JSON/TOML parse errors have `line` and `column` — the developer can't predict where a parse error will occur in runtime input. Regex errors have a `detail` string describing the syntax problem. These are genuinely useful fields.
 
-- The intrinsic return type stays `Result[T, IOError]` — no signature changes in `stdlib.rs`
-- The Rust `match` on enum variants maps directly to Sifr's `except` arms
-- `except IOError as e` catches all variants (parent = catch-all for children)
-- `except FileNotFoundError as e` catches one variant (triggers exhaustiveness checking for the rest)
-- Rust's `std::io::ErrorKind` maps directly to enum variants in codegen
+**3. `Display` replaces `message`.** Every error type implements `Display`, generating a human-readable string from the variant name (and fields, if any). The codegen already emits `Display` impls for all error types today — `print(e)` and `f"{e}"` already work via this trait. After this milestone, `Display` becomes the single source of human-readable error text: `print(e)` produces messages like `"file not found"`, `"JSON decode error at line 3, column 12"`, or `"regex error: unclosed group"`. No stored `message` field needed. Existing `e.message` usage across demos and tests migrates to `print(e)` or `f"{e}"`.
 
-At the **Sifr language level**, these look like subclasses (matching CPython). At the **Rust codegen level**, they are enum variants of the parent type.
+**4. No catch-all `Other` variants.** Every `ErrorKind` that Sifr's I/O intrinsics can produce maps to a named subclass. The parent type (`IOError`) serves as the catch-all for error kinds not yet mapped to a subclass — but this is a parent-level catch, not a variant-level escape hatch.
 
-### Error Subclass Hierarchy
+**5. Enum variants in Rust, subclasses in Sifr.** At the Sifr language level, these look like subclasses (matching CPython). At the Rust codegen level, they are enum variants of the parent type. The intrinsic return type stays `Result[T, IOError]` — no signature changes.
 
-**IOError subclasses** (matching CPython's `OSError` subclasses):
+### Error Hierarchy (Complete)
 
-| Sifr type | CPython equivalent | Rust `io::ErrorKind` | When raised |
+#### Audit of Rust Error Sources
+
+Every error type was audited against the actual Rust error types the Sifr codegen encounters. The `message: str` field is removed wherever the variant name or structured fields already carry the information.
+
+| Sifr error type | Rust source | What Rust provides | Sifr fields | Rationale |
+|---|---|---|---|---|
+| **IOError** | `std::io::Error` | `kind()` → `ErrorKind` (41 variants), `to_string()` → OS message | **none** | Variant name IS the error; developer knows the path |
+| **ParseError** | `ParseIntError`, `ParseFloatError`, `FromUtf8Error`, `base64::DecodeError` | `to_string()` → description | **none** | Developer knows the input; variant name is sufficient |
+| **JSONDecodeError** | `serde_json::Error` | `line()`, `column()`, `classify()` → Category | **`line: int`, `column: int`** | Position in runtime input is genuinely unknown to developer |
+| **TOMLDecodeError** | `toml::de::Error` | `line_col()` → `Option<(usize, usize)>` | **`line: int`, `column: int`** | Position in runtime input is genuinely unknown to developer |
+| **RegexError** | `regex::Error` | `Syntax(String)` — syntax error description | **`detail: str`** | Regex syntax errors are complex; description aids debugging |
+| **ValueError** | Manually constructed | Hardcoded strings | **none** | Always a validation failure; developer knows the input |
+| **DivisionError** | Compiler-generated | Division by zero check | **none** | Always division by zero |
+| **KeyError** | Compiler-generated | Missing key access | **none** | Developer knows the key |
+
+#### IOError Subclasses
+
+Every `std::io::ErrorKind` that Sifr's I/O intrinsics can produce is mapped to a named subclass. No `Other` catch-all variant.
+
+| Sifr type | CPython equivalent | Rust `io::ErrorKind` | Raised by |
 |---|---|---|---|
-| `FileNotFoundError` | `FileNotFoundError` | `NotFound` | File/directory does not exist |
-| `PermissionError` | `PermissionError` | `PermissionDenied` | Insufficient permissions |
-| `FileExistsError` | `FileExistsError` | `AlreadyExists` | File/directory already exists |
-| `IsADirectoryError` | `IsADirectoryError` | `IsADirectory` | Operation expected file, got directory |
-| `NotADirectoryError` | `NotADirectoryError` | `NotADirectory` | Operation expected directory, got file |
+| `FileNotFoundError` | `FileNotFoundError` | `NotFound` | `read_text`, `read_lines`, `remove_file`, `rmdir`, `rename`, `copy_file`, `listdir`, `walk_dir`, `run_command` |
+| `PermissionError` | `PermissionError` | `PermissionDenied` | `read_text`, `write_text`, `mkdir`, `rmdir`, `remove_file`, `rename`, `copy_file`, `listdir`, `run_command` |
+| `FileExistsError` | `FileExistsError` | `AlreadyExists` | `mkdir` (when not using `create_dir_all`), `write_text` (dir conflict) |
+| `IsADirectoryError` | `IsADirectoryError` | `IsADirectory` | `read_text`, `remove_file`, `write_text` |
+| `NotADirectoryError` | `NotADirectoryError` | `NotADirectory` | `listdir`, `rmdir`, `read_dir` |
+| `DirectoryNotEmptyError` | (no CPython equivalent) | `DirectoryNotEmpty` | `rmdir` |
 
-`IOError` itself remains the catch-all for any I/O error not matching a specific subclass (maps to the `Other` variant).
+`IOError` itself is the parent — `except IOError as e` catches all subclasses. For any `ErrorKind` not in the table above (which would be unusual for filesystem operations), the codegen maps to the parent `IOError` type directly.
 
-**No subclasses needed for other error types (yet):**
-
-- `ParseError`, `JSONDecodeError`, `TOMLDecodeError`, `RegexError` — the failure mode is already distinguished by having separate types per domain. Sub-categorizing "invalid JSON syntax" vs "unexpected EOF in JSON" adds little value for error handling.
-- `ValueError`, `DivisionError`, `KeyError` — single failure mode per type.
-- Future milestones may add subclasses to other error types if the need arises.
+**Future subclasses** (added when networking/async stdlib lands):
+- `ConnectionRefusedError` — `ConnectionRefused`
+- `ConnectionResetError` — `ConnectionReset`
+- `TimedOutError` — `TimedOut`
+- `BrokenPipeError` — `BrokenPipe`
 
 ### Work Items
 
@@ -191,19 +207,25 @@ At the **Sifr language level**, these look like subclasses (matching CPython). A
 - Update `is_assignable_to` (line ~533): a child class is assignable to its parent class. Walk up the `parent_class` chain. `FileNotFoundError` is assignable to `IOError`, which is assignable to `Error`
 - Update all `Type::Class { name, fields, methods }` construction sites across the codebase to include `parent_class: None` (or the appropriate parent). This is a mechanical but wide-reaching change — grep for `Type::Class {` across all crates
 
-#### 2. HIR: Register Error Subclasses as Built-ins (`crates/sifr_hir/src/lower.rs`)
+#### 2. HIR: Register Error Types with Correct Fields (`crates/sifr_hir/src/lower.rs`)
 
-- Extend the `builtin_error_classes` registration block (lines ~1376-1410) to register subclass types with their parent relationship:
-  ```
-  ("FileNotFoundError", parent: "IOError")
-  ("PermissionError", parent: "IOError")
-  ("FileExistsError", parent: "IOError")
-  ("IsADirectoryError", parent: "IOError")
-  ("NotADirectoryError", parent: "IOError")
-  ```
-- Each subclass gets the same `message: str` field and constructor as its parent
-- Store the parent relationship in `Type::Class { parent_class: Some("IOError".to_string()), ... }`
-- Add all subclasses to `ctx.error_types` so they are recognized as valid error types
+Rework the `builtin_error_classes` registration block (lines ~1376-1410). Instead of all error types sharing `message: str`, each type gets its own field list:
+
+- **No fields:** `Error`, `IOError`, `FileNotFoundError`, `PermissionError`, `FileExistsError`, `IsADirectoryError`, `NotADirectoryError`, `DirectoryNotEmptyError`, `ParseError`, `ValueError`, `DivisionError`, `KeyError`
+- **`line: int`, `column: int`:** `JSONDecodeError`, `TOMLDecodeError`
+- **`detail: str`:** `RegexError`
+
+Register parent relationships:
+```
+("FileNotFoundError", parent: "IOError")
+("PermissionError", parent: "IOError")
+("FileExistsError", parent: "IOError")
+("IsADirectoryError", parent: "IOError")
+("NotADirectoryError", parent: "IOError")
+("DirectoryNotEmptyError", parent: "IOError")
+```
+
+Store the parent relationship in `Type::Class { parent_class: Some("IOError".to_string()), ... }`. Add all types to `ctx.error_types`.
 
 #### 3. HIR: Expand `is_error_class` for Transitive Inheritance (`crates/sifr_hir/src/lower.rs`)
 
@@ -220,69 +242,168 @@ At the **Sifr language level**, these look like subclasses (matching CPython). A
   - When a `try` body produces `IOError` errors (from intrinsics), the exhaustiveness checker knows the full set of possible subclasses
 - The existing `except Error as e` catch-all continues to work unchanged
 
-#### 5. Codegen: Generate `IOError` as Enum with Subclass Variants (`crates/sifr_codegen/src/lib.rs`)
+#### 5. Codegen: Generate Error Types as Enums or Fieldless Structs (`crates/sifr_codegen/src/lib.rs`)
 
-- Change the built-in `IOError` struct generation (lines ~475-499) from a flat struct to a Rust enum:
-  ```rust
-  #[derive(Debug, Clone)]
-  enum IOError {
-      FileNotFound { message: String },
-      PermissionDenied { message: String },
-      FileExists { message: String },
-      IsADirectory { message: String },
-      NotADirectory { message: String },
-      Other { message: String },
-  }
-  ```
-- Generate `impl IOError` with a `message(&self) -> &str` method that returns the message from whichever variant
-- Generate `Display` impl that delegates to the message
-- Generate `std::error::Error` impl
-- Other built-in error types (`ParseError`, `ValueError`, etc.) remain as flat structs — no enum needed since they have no subclasses
+Replace the current flat-struct generation (lines ~475-499) with type-appropriate codegen:
 
-#### 6. Codegen: Map `io::ErrorKind` to Enum Variants (~16 Intrinsic Sites) (`crates/sifr_codegen/src/lib.rs`)
+**IOError — enum with fieldless variants:**
+```rust
+#[derive(Debug, Clone)]
+enum IOError {
+    FileNotFound,
+    PermissionDenied,
+    FileExists,
+    IsADirectory,
+    NotADirectory,
+    DirectoryNotEmpty,
+}
 
-- Replace all `IOError { message: e.to_string() }` constructions (lines ~5278-5397) with a helper that maps `std::io::ErrorKind`:
-  ```rust
-  .map_err(|e| match e.kind() {
-      std::io::ErrorKind::NotFound => IOError::FileNotFound { message: e.to_string() },
-      std::io::ErrorKind::PermissionDenied => IOError::PermissionDenied { message: e.to_string() },
-      std::io::ErrorKind::AlreadyExists => IOError::FileExists { message: e.to_string() },
-      std::io::ErrorKind::IsADirectory => IOError::IsADirectory { message: e.to_string() },
-      std::io::ErrorKind::NotADirectory => IOError::NotADirectory { message: e.to_string() },
-      _ => IOError::Other { message: e.to_string() },
-  })
-  ```
-- Emit a shared helper function `fn __io_err(e: std::io::Error) -> IOError` in the generated Rust preamble to avoid repeating the match at every call site
-- Affected intrinsics: `read_text`, `write_text`, `read_lines`, `append_text`, `getcwd`, `listdir`, `mkdir`, `rmdir`, `remove_file`, `rename`, `copy_file`, `walk_dir`, `rmdir_all`, `makedirs`, `run_command`
+impl std::fmt::Display for IOError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IOError::FileNotFound => write!(f, "file not found"),
+            IOError::PermissionDenied => write!(f, "permission denied"),
+            IOError::FileExists => write!(f, "file already exists"),
+            IOError::IsADirectory => write!(f, "is a directory"),
+            IOError::NotADirectory => write!(f, "not a directory"),
+            IOError::DirectoryNotEmpty => write!(f, "directory not empty"),
+        }
+    }
+}
+```
+
+**JSONDecodeError — struct with line/column:**
+```rust
+#[derive(Debug, Clone)]
+struct JSONDecodeError {
+    line: i64,
+    column: i64,
+}
+
+impl std::fmt::Display for JSONDecodeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "JSON decode error at line {}, column {}", self.line, self.column)
+    }
+}
+```
+
+**TOMLDecodeError — struct with line/column:**
+```rust
+#[derive(Debug, Clone)]
+struct TOMLDecodeError {
+    line: i64,
+    column: i64,
+}
+```
+
+**RegexError — struct with detail:**
+```rust
+#[derive(Debug, Clone)]
+struct RegexError {
+    detail: String,
+}
+```
+
+**Fieldless error types** (`ParseError`, `ValueError`, `DivisionError`, `KeyError`) — empty structs with `Display`:
+```rust
+#[derive(Debug, Clone)]
+struct ParseError;
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "parse error")
+    }
+}
+```
+
+#### 6. Codegen: Map Rust Errors to Correct Sifr Types (~All Intrinsic Sites) (`crates/sifr_codegen/src/lib.rs`)
+
+**I/O intrinsics (~16 sites):** Replace all `IOError { message: e.to_string() }` with a shared helper `fn __io_err(e: std::io::Error) -> IOError`:
+```rust
+fn __io_err(e: std::io::Error) -> IOError {
+    match e.kind() {
+        std::io::ErrorKind::NotFound => IOError::FileNotFound,
+        std::io::ErrorKind::PermissionDenied => IOError::PermissionDenied,
+        std::io::ErrorKind::AlreadyExists => IOError::FileExists,
+        std::io::ErrorKind::IsADirectory => IOError::IsADirectory,
+        std::io::ErrorKind::NotADirectory => IOError::NotADirectory,
+        std::io::ErrorKind::DirectoryNotEmpty => IOError::DirectoryNotEmpty,
+        _ => IOError::FileNotFound, // unreachable for filesystem ops; compile-time assert
+    }
+}
+```
+
+**JSON intrinsic:** Extract `line()` and `column()` from `serde_json::Error`:
+```rust
+.map_err(|e| JSONDecodeError { line: e.line() as i64, column: e.column() as i64 })
+```
+
+**TOML intrinsic:** Extract `line_col()` from `toml::de::Error`:
+```rust
+.map_err(|e| {
+    let (line, column) = e.line_col().unwrap_or((0, 0));
+    TOMLDecodeError { line: (line + 1) as i64, column: (column + 1) as i64 }
+})
+```
+
+**Regex intrinsics (~7 sites):** Extract the syntax error description:
+```rust
+.map_err(|e| RegexError { detail: e.to_string() })
+```
+
+**Parse intrinsics (int/float/base64/utf8):** Fieldless construction:
+```rust
+.map_err(|_| ParseError)
+```
+
+**ValueError construction:** Fieldless:
+```rust
+Err(ValueError)
+```
+
+Affected intrinsics: `read_text`, `write_text`, `read_lines`, `append_text`, `getcwd`, `listdir`, `mkdir`, `rmdir`, `remove_file`, `rename`, `copy_file`, `walk_dir`, `rmdir_all`, `makedirs`, `run_command`, `json_loads`, `toml_parse`, `re_match`, `re_find`, `re_replace`, `re_findall`, `re_split`, `re_find_start`, `re_find_end`, `base64_decode`, `urlsafe_b64decode`, `decode_utf8`, `bytes_from_hex`, `int()`, `float()`, `datetime_from_timestamp`
 
 #### 7. Codegen: Try/Except Match Arms for Subclass Dispatch (`crates/sifr_codegen/src/lib.rs`)
 
 - Update the try/except codegen (lines ~2761-2921) to handle subclass matching:
-  - `except FileNotFoundError as e` generates: `Err(IOError::FileNotFound { message }) => { let e = FileNotFoundError { message }; ... }` (or direct field access)
-  - `except IOError as e` generates a catch-all arm: `Err(e @ IOError::...) => { ... }` matching all variants
-  - When mixed with other error types (e.g., `IOError` + `ParseError`), the existing `_TryErr` enum pattern wraps the parent types as before — subclass dispatch happens inside the parent's match arm
+  - `except FileNotFoundError` generates: `Err(IOError::FileNotFound) => { ... }`
+  - `except IOError as e` generates a catch-all arm matching all variants
+  - When mixed with other error types (e.g., `IOError` + `JSONDecodeError`), the existing `_TryErr` enum pattern wraps the parent types as before — subclass dispatch happens inside the parent's match arm
 - For the single-error-type case (only `IOError` in the try body), the codegen generates a `match` on `IOError` variants directly
 
-#### 8. Stdlib Signatures: No Changes Required (`crates/sifr_hir/src/stdlib.rs`)
+#### 8. Codegen: Migrate `e.message` to `Display` (`crates/sifr_codegen/src/lib.rs`)
 
-- Intrinsic return types stay as `Result[T, IOError]` — the subclass information is a runtime property of the enum variant, not a type-level change
-- Stdlib `.sifr` wrappers (`io.sifr`, `os.sifr`, `shutil.sifr`, etc.) propagate `Result[T, IOError]` unchanged
+- All existing `.sifr` code that accesses `e.message` must be migrated to use `print(e)` or f-string interpolation `f"{e}"` (which uses `Display`)
+- For `JSONDecodeError` and `TOMLDecodeError`, field access changes from `e.message` to `e.line` and `e.column`
+- For `RegexError`, field access changes from `e.message` to `e.detail`
+- Update all stdlib `.sifr` wrappers and demo files that reference `e.message`
 
-#### 9. Architecture Documentation (`architecture.md`)
+#### 9. Stdlib Signatures: No Changes Required (`crates/sifr_hir/src/stdlib.rs`)
 
-- Update the Built-in Error Classes section to document the subclass hierarchy
-- Add `FileNotFoundError`, `PermissionError`, `FileExistsError`, `IsADirectoryError`, `NotADirectoryError` to the error type table
+- Intrinsic return types stay as `Result[T, IOError]`, `Result[T, JSONDecodeError]`, etc. — no signature changes
+- Stdlib `.sifr` wrappers propagate `Result` unchanged
+
+#### 10. Architecture Documentation (`architecture.md`)
+
+- Update the Built-in Error Classes section to document the full error hierarchy with fields
+- Document the "variant IS the information" design principle
 - Update the `except` exhaustiveness examples to show subclass handling
 - Document the design decision: subclasses at Sifr level = enum variants at Rust level
+- Add `JSONDecodeError.line`, `JSONDecodeError.column`, `TOMLDecodeError.line`, `TOMLDecodeError.column`, `RegexError.detail` to the error type reference
 
-#### 10. E2E Tests
+#### 11. E2E Tests
 
 - **Pass test: specific subclass handling** — `read_text` on missing file caught by `except FileNotFoundError`
 - **Pass test: parent catch-all** — `except IOError as e` catches `FileNotFoundError`
 - **Pass test: mixed subclass + parent** — `except FileNotFoundError` + `except IOError` covers all cases
 - **Pass test: mixed error families** — `try` block with `read_text` (IOError family) + `json_loads` (JSONDecodeError), catching `FileNotFoundError` + `IOError` + `JSONDecodeError`
-- **Fail test: incomplete subclass coverage** — `except FileNotFoundError` without covering remaining IOError subtypes (missing catch-all) is a compile error
-- **Fail test: wrong subclass family** — `except FileNotFoundError` on a `try` block that only calls `json_loads` (no IOError source) is a compile error or warning
+- **Pass test: JSONDecodeError fields** — `except JSONDecodeError as e` with access to `e.line` and `e.column`
+- **Pass test: TOMLDecodeError fields** — `except TOMLDecodeError as e` with access to `e.line` and `e.column`
+- **Pass test: RegexError field** — `except RegexError as e` with access to `e.detail`
+- **Pass test: fieldless errors** — `except ParseError`, `except ValueError`, `except DivisionError` work without field access
+- **Pass test: Display on all errors** — `print(e)` works for every error type via `Display`
+- **Fail test: incomplete subclass coverage** — `except FileNotFoundError` without covering remaining IOError subtypes is a compile error
+- **Fail test: `e.message` access** — accessing `.message` on any error type is a compile error (field no longer exists)
 - **Pass test: user-defined error subclass** — `class MyAppError(IOError)` works as an error type with exhaustiveness checking
 - **Demo file:** `demos/milestone_error_subclasses_demo.sifr` showing all patterns
 
@@ -291,22 +412,45 @@ At the **Sifr language level**, these look like subclasses (matching CPython). A
 | Risk | Impact | Mitigation |
 |---|---|---|
 | `Type::Class` change is pervasive — adding `parent_class` field touches dozens of construction sites | High churn, potential for missed sites | Mechanical change; compiler errors will catch every missed site since the struct pattern becomes non-exhaustive |
-| `IOError` changing from struct to enum breaks existing codegen that accesses `.message` directly | Breaks all existing `e.message` access in user code | Generate a `.message` accessor method on the enum; update `Display` impl; existing `e.message` in `.sifr` code compiles to `e.message()` method call |
-| Exhaustiveness checking complexity increases | Harder to reason about coverage | Start with IOError only; keep other error types as flat structs; expand later if needed |
-| `IsADirectory` / `NotADirectory` ErrorKind variants may not be stable on all Rust versions | Codegen may not compile on older rustc | Use `#[allow(unreachable_patterns)]` and fall through to `Other` for unrecognized kinds; check minimum Rust version |
+| Removing `message` field breaks all existing `e.message` access in `.sifr` code | Breaking change for user code and demos | Migrate all `.sifr` files to use `print(e)` / `f"{e}"` via Display; update demos; provide clear compiler diagnostic: "error type X has no field 'message'; use print(e) or f\"{e}\" instead" |
+| Exhaustiveness checking complexity increases | Harder to reason about coverage | Start with IOError subclasses only; other error types get field changes but no subclasses |
+| `IsADirectory` / `NotADirectory` / `DirectoryNotEmpty` ErrorKind variants may not be stable on all Rust versions | Codegen may not compile on older rustc | Check minimum Rust version; use `#[allow(unreachable_patterns)]` fallback |
+| `toml::de::Error::line_col()` returns `None` for some errors | `line`/`column` may be 0 | Default to `(0, 0)` when position unavailable; document that 0 means "position unknown" |
 
 ### Definition of Done (milestone_error_subclasses)
 
-- `IOError` is generated as a Rust enum with variants: `FileNotFound`, `PermissionDenied`, `FileExists`, `IsADirectory`, `NotADirectory`, `Other`
-- All ~16 I/O intrinsic codegen sites map `std::io::ErrorKind` to the correct variant
+**Type system and exhaustiveness:**
 - `Type::Class` has `parent_class` field; `is_assignable_to` walks the inheritance chain
-- `except FileNotFoundError as e` compiles and catches only file-not-found errors
+- `except FileNotFoundError` compiles and catches only file-not-found errors
 - `except IOError as e` catches all IOError variants (parent = catch-all)
 - Exhaustiveness checking enforces coverage of subclasses when specific handlers are used
-- `e.message` continues to work on all error types (accessor method on enum)
-- All existing E2E tests pass (no regressions from IOError struct-to-enum change)
-- New E2E pass/fail tests for subclass handling and exhaustiveness
-- `architecture.md` updated with error subclass hierarchy documentation
+
+**Codegen — error type generation:**
+- `IOError` is generated as a Rust enum with fieldless variants: `FileNotFound`, `PermissionDenied`, `FileExists`, `IsADirectory`, `NotADirectory`, `DirectoryNotEmpty`
+- `JSONDecodeError` and `TOMLDecodeError` are structs with `line: i64` and `column: i64` fields
+- `RegexError` is a struct with `detail: String` field
+- `ParseError`, `ValueError`, `DivisionError`, `KeyError` are fieldless structs
+- No error type has a `message` field — `Display` impl replaces it everywhere
+
+**Codegen — subclass dispatch (critical):**
+- All ~16 I/O intrinsic sites use the shared `__io_err` helper to map `std::io::ErrorKind` to the most specific `IOError` variant
+- No intrinsic raises a generic parent error when a more specific subclass applies
+- `json_loads` extracts `line()` and `column()` from `serde_json::Error` into `JSONDecodeError` fields
+- `toml_parse` extracts `line_col()` from `toml::de::Error` into `TOMLDecodeError` fields
+- Regex intrinsics extract the syntax description into `RegexError.detail`
+- Parse intrinsics (`int()`, `float()`, `base64_decode`, etc.) construct fieldless `ParseError`
+- Audit: zero remaining instances of `{ message: e.to_string() }` pattern in codegen
+
+**Backward compatibility:**
+- All existing E2E tests pass (migrated from `e.message` to `Display`-based output)
+
+**New tests:**
+- E2E pass tests for every IOError subclass, JSONDecodeError/TOMLDecodeError field access, RegexError detail access, fieldless error handling, Display output, mixed error families
+- E2E fail test for incomplete subclass coverage
+- E2E fail test for accessing nonexistent `.message` field
+
+**Documentation:**
+- `architecture.md` updated with full error hierarchy, field reference, and design principles
 - Demo file: `demos/milestone_error_subclasses_demo.sifr`
 
 ---
