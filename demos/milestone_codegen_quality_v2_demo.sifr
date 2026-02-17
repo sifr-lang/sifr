@@ -5,6 +5,10 @@ class Timer:
     label: str
     def __init__(self, label: str):
         self.label = label
+    def __enter__(self) -> Timer:
+        return self
+    def __exit__(self) -> None:
+        pass
 
 class Describable(Protocol):
     def describe(self) -> str: ...

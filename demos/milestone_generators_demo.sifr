@@ -34,13 +34,20 @@ class Timer:
     def __init__(self, label: str):
         self.label = label
 
+    def __enter__(self) -> Timer:
+        return self
+
+    def __exit__(self) -> None:
+        pass
+
 def main():
     # Generator: fibonacci
     fibs: list[int] = fibonacci(8)
     print(fibs)
 
-    # Generator: even numbers
-    print(evens(10))
+    # Generator: even numbers (lazy — collect into list to print)
+    even_nums: list[int] = evens(10)
+    print(even_nums)
 
     # Generator expression in for loop
     nums: list[int] = [1, 2, 3, 4, 5]

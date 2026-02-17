@@ -17,7 +17,7 @@ from sifr.pathlib import join_path, basename, extension
 from sifr.logging import log_info
 from sifr.difflib import get_close_matches, unified_diff
 from sifr.ipaddress import is_valid_ipv4, is_private, is_loopback
-from sifr.timeit import timer, elapsed
+from sifr.timeit import default_timer
 from sifr.tomllib import loads
 from sifr.datetime import now, from_timestamp
 
@@ -70,9 +70,9 @@ def main():
     assert_true(is_loopback("127.0.0.1"))
 
     # timeit -- timing
-    start: float = timer()
-    dt: float = elapsed(start)
-    assert_true(dt >= 0.0)
+    start: float = default_timer()
+    end: float = default_timer()
+    assert_true(end >= start)
 
     # tomllib -- TOML parsing
     toml_result: str = loads("key = \"value\"")
