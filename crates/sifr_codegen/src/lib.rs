@@ -92,6 +92,181 @@ impl Default for StdlibCode {
     }
 }
 
+/// Filter compiled Rust source code to only include top-level items whose names
+/// are in the given set (or are transitively called by them).
+fn filter_rust_code_to_needed(rust_code: &str, imported_names: &HashSet<String>) -> String {
+    // Step 1: Parse the Rust code into named blocks
+    let blocks = parse_rust_blocks(rust_code);
+
+    // Step 2: Build a dependency graph (which functions call which)
+    let mut deps: HashMap<String, HashSet<String>> = HashMap::new();
+    let block_names: HashSet<String> = blocks.iter().map(|(name, _)| name.clone()).collect();
+    for (name, code) in &blocks {
+        let mut called = HashSet::new();
+        for other_name in &block_names {
+            if other_name != name {
+                // Check if this block's code contains a call to other_name
+                // Use word-boundary check to avoid substring false positives
+                // (e.g., "fnmatch_filter(" should not match "filter(")
+                let call_pattern = format!("{}(", other_name);
+                for (idx, _) in code.match_indices(&call_pattern) {
+                    // Check that the character before the match is not alphanumeric or underscore
+                    let is_word_boundary = if idx == 0 {
+                        true
+                    } else {
+                        let prev_char = code.as_bytes()[idx - 1] as char;
+                        !prev_char.is_alphanumeric() && prev_char != '_'
+                    };
+                    if is_word_boundary {
+                        called.insert(other_name.clone());
+                        break;
+                    }
+                }
+            }
+        }
+        deps.insert(name.clone(), called);
+    }
+
+    // Step 3: Compute transitive closure of needed functions
+    let mut needed: HashSet<String> = imported_names.clone();
+    let mut worklist: Vec<String> = imported_names.iter().cloned().collect();
+    while let Some(name) = worklist.pop() {
+        if let Some(called) = deps.get(&name) {
+            for dep in called {
+                if needed.insert(dep.clone()) {
+                    worklist.push(dep.clone());
+                }
+            }
+        }
+    }
+
+    // Step 4: Emit only needed blocks (preserving order) + non-block lines
+    let mut result = String::new();
+    let mut lines = rust_code.lines().peekable();
+
+    while let Some(line) = lines.next() {
+        let item_name = extract_top_level_item_name(line);
+
+        if let Some(ref name) = item_name {
+            if needed.contains(name) {
+                // Emit this entire item
+                result.push_str(line);
+                result.push('\n');
+                let mut depth: i32 = count_braces(line);
+                if depth > 0 {
+                    while let Some(next_line) = lines.next() {
+                        result.push_str(next_line);
+                        result.push('\n');
+                        depth += count_braces(next_line);
+                        if depth <= 0 {
+                            break;
+                        }
+                    }
+                }
+                result.push('\n');
+            } else {
+                // Skip this entire item
+                let mut depth: i32 = count_braces(line);
+                if depth > 0 {
+                    while let Some(next_line) = lines.next() {
+                        depth += count_braces(next_line);
+                        if depth <= 0 {
+                            break;
+                        }
+                    }
+                }
+            }
+        } else if line.trim().is_empty() {
+            // Skip blank lines
+        } else {
+            // Non-item lines (use statements, comments) — always include
+            result.push_str(line);
+            result.push('\n');
+        }
+    }
+
+    result
+}
+
+/// Parse Rust source into a list of (name, full_code) blocks for top-level items.
+fn parse_rust_blocks(rust_code: &str) -> Vec<(String, String)> {
+    let mut blocks = Vec::new();
+    let mut lines = rust_code.lines().peekable();
+
+    while let Some(line) = lines.next() {
+        if let Some(name) = extract_top_level_item_name(line) {
+            let mut block_code = String::from(line);
+            block_code.push('\n');
+            let mut depth: i32 = count_braces(line);
+            if depth > 0 {
+                while let Some(next_line) = lines.next() {
+                    block_code.push_str(next_line);
+                    block_code.push('\n');
+                    depth += count_braces(next_line);
+                    if depth <= 0 {
+                        break;
+                    }
+                }
+            }
+            blocks.push((name, block_code));
+        }
+    }
+
+    blocks
+}
+
+/// Extract the name of a top-level Rust item from a line, if it starts one.
+fn extract_top_level_item_name(line: &str) -> Option<String> {
+    let trimmed = line.trim();
+    // fn name( or fn name<T>(
+    if let Some(rest) = trimmed.strip_prefix("fn ") {
+        // Check for generic params first: fn name<T: ...>(...)
+        if let Some(lt) = rest.find('<') {
+            let paren = rest.find('(');
+            if paren.is_none() || lt < paren.unwrap() {
+                return Some(rest[..lt].trim().to_string());
+            }
+        }
+        if let Some(paren) = rest.find('(') {
+            return Some(rest[..paren].trim().to_string());
+        }
+    }
+    // const NAME:
+    if let Some(rest) = trimmed.strip_prefix("const ") {
+        if let Some(colon) = rest.find(':') {
+            return Some(rest[..colon].trim().to_string());
+        }
+    }
+    // struct Name
+    if let Some(rest) = trimmed.strip_prefix("struct ") {
+        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+        return Some(name.to_string());
+    }
+    // impl Name or impl Display for Name
+    if let Some(rest) = trimmed.strip_prefix("impl ") {
+        // "impl Display for Name {"
+        if let Some(for_idx) = rest.find(" for ") {
+            let after_for = &rest[for_idx + 5..];
+            let name = after_for.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+            return Some(name.to_string());
+        }
+        // "impl Name {"
+        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+        return Some(name.to_string());
+    }
+    None
+}
+
+/// Count net brace depth change in a line (opening braces minus closing braces).
+fn count_braces(line: &str) -> i32 {
+    let mut depth = 0i32;
+    for ch in line.chars() {
+        if ch == '{' { depth += 1; }
+        if ch == '}' { depth -= 1; }
+    }
+    depth
+}
+
 /// Generate Rust source code from a HIR module, returning metadata about stdlib usage.
 pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
     generate_rust_with_stdlib(module, &StdlibCode::default())
@@ -178,9 +353,42 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         }
         if let Some(rust_code) = stdlib_code.module_rust_code.get(module_name) {
             if !rust_code.is_empty() {
-                stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
-                stdlib_preamble.push_str(rust_code);
-                stdlib_preamble.push('\n');
+                // Filter preamble to only emit functions that are imported or
+                // transitively needed by imported functions. This avoids emitting
+                // wrapper functions with uncompilable types (e.g. Any → Box<dyn Any>).
+                let filtered = if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
+                    // Only include non-intrinsic names (intrinsics are inlined at call sites)
+                    let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
+                    let pure_sifr_imports: HashSet<String> = imported_names.iter()
+                        .filter(|name| !intrinsic_set.map_or(false, |iset| iset.contains(*name)))
+                        .cloned()
+                        .collect();
+                    if pure_sifr_imports.is_empty() {
+                        // User only imports intrinsics — skip the module's Rust code
+                        String::new()
+                    } else {
+                        // Expand imported names to include __const_ prefixed versions
+                        // (constants like `ascii_lowercase` compile to `__const_ascii_lowercase()`)
+                        let mut expanded_imports = pure_sifr_imports.clone();
+                        if let Some(const_map) = stdlib_code.module_constants.get(module_name) {
+                            for name in &pure_sifr_imports {
+                                if const_map.contains_key(name) {
+                                    expanded_imports.insert(format!("__const_{}", name));
+                                }
+                            }
+                        }
+                        // Filter to only needed functions (imported + their transitive deps)
+                        filter_rust_code_to_needed(rust_code, &expanded_imports)
+                    }
+                } else {
+                    // Transitive dependency — emit everything
+                    rust_code.clone()
+                };
+                if !filtered.trim().is_empty() {
+                    stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
+                    stdlib_preamble.push_str(&filtered);
+                    stdlib_preamble.push('\n');
+                }
                 emitted_modules.insert(module_name.clone());
             }
         }
@@ -397,6 +605,8 @@ struct RustEmitter {
     /// Set of function names that are generators (contain yield statements)
     /// Used to emit .collect() when assigning generator results to list[T]
     generator_functions: HashSet<String>,
+    /// Map of module_name -> set of imported names (for filtering preamble to only used functions)
+    imported_stdlib_names: HashMap<String, HashSet<String>>,
 }
 
 impl RustEmitter {
@@ -428,6 +638,7 @@ impl RustEmitter {
             borrowed_params: HashSet::new(),
             stdlib_intrinsic_names: HashMap::new(),
             generator_functions: HashSet::new(),
+            imported_stdlib_names: HashMap::new(),
         }
     }
 
@@ -594,6 +805,11 @@ impl RustEmitter {
         for import in &module.imports {
             if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
                 self.used_stdlib_modules.insert(import.module.clone());
+                // Track which specific names are imported from each stdlib module
+                let names_set = self.imported_stdlib_names.entry(import.module.clone()).or_default();
+                for name in &import.names {
+                    names_set.insert(name.clone());
+                }
                 // Only register names as intrinsic if they are known intrinsic re-exports.
                 // Pure Sifr functions/constants should go through the normal codegen path.
                 let intrinsic_set = self.stdlib_intrinsic_names.get(&import.module);
@@ -5352,11 +5568,20 @@ impl RustEmitter {
 
     /// Emit an expression as a `&str` for stdlib call sites.
     /// String literals are emitted as bare `"literal"` (no `.to_string()`).
+    /// Borrowed parameters are emitted directly (already `&String`, deref-coerces to `&str`).
     /// Other expressions are emitted as `&expr` (borrow the String, deref-coerces to `&str`).
     /// Use this for Rust APIs that accept `&str`, `AsRef<str>`, `AsRef<Path>`, `AsRef<OsStr>`, etc.
     fn emit_expr_as_str_ref(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
             self.write(&format!("{:?}", val));
+        } else if let HirExpr::Name { name, .. } = expr {
+            if self.borrowed_params.contains(name) {
+                // Already &String, no extra & needed
+                self.emit_expr(expr);
+            } else {
+                self.write("&");
+                self.emit_expr(expr);
+            }
         } else {
             self.write("&");
             self.emit_expr(expr);

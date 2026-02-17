@@ -1,2 +1,9 @@
 # sifr.platform — Platform information
 from _sifr.platform import platform_system, platform_arch, platform_node
+
+# CPython-compatible aliases
+def system() -> str:
+    return platform_system()
+
+def machine() -> str:
+    return platform_arch()
