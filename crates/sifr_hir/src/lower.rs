@@ -204,6 +204,8 @@ pub struct ExternalDefs {
     pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
     /// Map of module_name -> (constant_name -> Type)
     pub constants: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
+    /// Set of class names that are error types (class Foo(Error)) across all modules
+    pub error_types: std::collections::HashSet<String>,
 }
 
 /// Lower a parsed module AST into a typed HIR module.
@@ -279,6 +281,12 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
             collect_class_type(class_def, &mut ctx);
         }
     }
+
+    // Early import pass: resolve imported types so they're available for function signatures.
+    // This must happen before function signature extraction so that imported error classes
+    // (e.g., StatisticsError from sifr.statistics) can be used in Result[T, E] annotations.
+    resolve_imports_early(stmts, externals, &mut ctx);
+
     for stmt in stmts {
         match stmt {
             Stmt::TypeAlias(type_alias) => {
@@ -446,6 +454,10 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                 if let Some(module_classes) = externals.classes.get(&stdlib_module_key) {
                                     if let Some(class_ty) = module_classes.get(name) {
                                         ctx.class_types.insert(local.clone(), class_ty.clone());
+                                        // Register as error type if flagged in external defs
+                                        if externals.error_types.contains(name) {
+                                            ctx.error_types.insert(local.clone());
+                                        }
                                         // Register constructor: prefer `new` method params if available
                                         if let Type::Class { fields, methods, .. } = class_ty {
                                             let ft = if let Some((_, new_ft)) = methods.iter().find(|(n, _)| n == "new") {
@@ -519,6 +531,10 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                         if let Some(module_classes) = externals.classes.get(&module_name) {
                             if let Some(class_ty) = module_classes.get(name) {
                                 ctx.class_types.insert(local.clone(), class_ty.clone());
+                                // Register as error type if flagged in external defs
+                                if externals.error_types.contains(name) {
+                                    ctx.error_types.insert(local.clone());
+                                }
                                 // Register the constructor: prefer `new` method params if available,
                                 // otherwise fall back to field-based constructor
                                 if let Type::Class { fields, methods, .. } = class_ty {
@@ -613,6 +629,83 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
         })
     } else {
         Err(ctx.errors)
+    }
+}
+
+/// Early import resolution: register imported types/functions/constants in the context
+/// so they're available during function signature extraction and type annotation resolution.
+/// This is a subset of the full import processing — it doesn't produce HirImport nodes.
+fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut LowerCtx) {
+    for stmt in stmts {
+        if let Stmt::ImportFrom(import_from) = stmt {
+            if let Some(ref module) = import_from.module {
+                let module_name = module.to_string();
+                let names: Vec<String> = import_from.names.iter()
+                    .map(|alias| alias.name.to_string())
+                    .collect();
+                let aliases: Vec<(String, String)> = import_from.names.iter()
+                    .filter_map(|alias| {
+                        alias.asname.as_ref().map(|asname| {
+                            (alias.name.to_string(), asname.to_string())
+                        })
+                    })
+                    .collect();
+                let local_name_for = |original: &str| -> String {
+                    aliases.iter()
+                        .find(|(orig, _)| orig == original)
+                        .map(|(_, alias)| alias.clone())
+                        .unwrap_or_else(|| original.to_string())
+                };
+
+                // Only resolve from externals (stdlib and local modules)
+                let module_key = module_name.clone();
+                if let Some(module_classes) = externals.classes.get(&module_key) {
+                    for name in &names {
+                        let local = local_name_for(name);
+                        if let Some(class_ty) = module_classes.get(name) {
+                            if !ctx.class_types.contains_key(&local) {
+                                ctx.class_types.insert(local.clone(), class_ty.clone());
+                                // Register as error type if flagged
+                                if externals.error_types.contains(name) {
+                                    ctx.error_types.insert(local.clone());
+                                }
+                                // Register constructor
+                                if let Type::Class { fields, methods, .. } = class_ty {
+                                    let ft = if let Some((_, new_ft)) = methods.iter().find(|(n, _)| n == "new") {
+                                        let params: Vec<(String, Type)> = new_ft.params.iter()
+                                            .map(|(n, t, _)| (n.clone(), t.clone()))
+                                            .collect();
+                                        FunctionType::new(params, class_ty.clone())
+                                    } else {
+                                        let params: Vec<(String, Type)> = fields.clone();
+                                        FunctionType::new(params, class_ty.clone())
+                                    };
+                                    ctx.functions.insert(local, ft);
+                                }
+                            }
+                        }
+                    }
+                }
+                if let Some(module_fns) = externals.functions.get(&module_key) {
+                    for name in &names {
+                        let local = local_name_for(name);
+                        if let Some(ft) = module_fns.get(name) {
+                            if !ctx.functions.contains_key(&local) {
+                                ctx.functions.insert(local, ft.clone());
+                            }
+                        }
+                    }
+                }
+                if let Some(module_consts) = externals.constants.get(&module_key) {
+                    for name in &names {
+                        let local = local_name_for(name);
+                        if let Some(const_ty) = module_consts.get(name) {
+                            ctx.scope.define(local, const_ty.clone());
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
