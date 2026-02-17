@@ -12,7 +12,7 @@ todos:
     content: "Phase 10: Borrow-by-Default -- borrow_default, borrow_hardening, borrow_stdlib"
     status: pending
   - id: phase-11
-    content: "Phase 11: Stdlib Deepening -- pure_expansion, intrinsic_expansion, class_deepening, new_modules"
+    content: "Phase 11: Stdlib Deepening -- pure_expansion, new_modules, intrinsic_expansion, class_deepening"
     status: pending
   - id: phase-12
     content: "Phase 12: Async and Ecosystem Foundation -- async, networking_stdlib, typed_serde_core"
@@ -118,9 +118,9 @@ The most critical safety violation. 5 modules, ~15 intrinsics.
 - Regex intrinsics (`re_match`, `re_replace`, `re_findall`, `re_split`) -> `Result[T, RegexError]`
 - Update all `.sifr` wrappers and E2E tests
 
-### milestone_collection_safety: Collection and Math Safety (Priority 3 -- High)
+### milestone_collection_safety: Collection, Math, and Built-in Safety (Priority 3 -- High)
 
-4 modules, ~15 functions.
+4 modules, ~15 functions, plus built-in function safety and math domain error policy.
 
 - `statistics.mean/median/variance/stdev/mode/harmonic_mean` -> `Result[float, StatisticsError]` on empty input
 - `heapq.heappop` -> `Option[T]` on empty heap
@@ -130,6 +130,7 @@ The most critical safety violation. 5 modules, ~15 intrinsics.
 - `list.remove()` / `list.index()` -> `Option`/`Result` instead of panic
 - `min()` / `max()` on empty -> `Option[T]`
 - `sorted()` with floats -> use `total_cmp` instead of `partial_cmp().unwrap()`
+- **Math domain errors (design decision required):** `sqrt(-1)`, `log(0)`, `log(-1)`, `asin(2)`, `acos(2)` currently return NaN/inf silently (matching Rust's `f64` behavior). CPython raises `ValueError`. The architecture's Rule 1 says "Where CPython raises an exception, Sifr returns `Result[T, E]`." Decide one of: (a) return `Result[float, ValueError]` for domain errors (matching architecture/CPython), or (b) document as an explicit divergence ("Sifr follows Rust's IEEE 754 behavior for math domain errors") and add to the Python Divergences table in `architecture.md`. Either choice is valid -- document whichever is chosen. This decision affects `math`'s safety score and the zero-panic gate threshold.
 
 ### milestone_edge_case_safety: Edge Case Validation (Priority 4 -- Moderate)
 
@@ -174,9 +175,10 @@ As defined in [05_borrow_by_default.md](.cursor/plans/main/phases/05_borrow_by_d
 - Mutable borrow exclusivity tracking
 - Escape analysis enforcement: returning or storing a borrowed parameter produces a compiler error with actionable diagnostic ("use `own` or `.clone()`"), not a silent `.clone()` insertion
 - Validate consuming-self method receiver patterns: methods that consume `self` (builder pattern) must correctly emit `self` (move) in codegen, and calling a consuming method on a variable must invalidate it
+- **For-loop element semantics:** Resolve and document whether `for x in items` borrows elements (Rust-like `&T` iteration) or clones them (Python-like independent copies). Architecture contract #2 says "for-loop elements: borrow by default" -- implement this, and add E2E tests proving that mutating `x` inside the loop does not mutate the collection, and that storing `x` beyond the loop body produces a compiler error (escape analysis). Document the final semantics in `architecture.md` under the Borrow/Lifetime contract.
 - Clear error messages for all borrow violations
 - Update all 50 borrowing audit tests
-- New E2E pass/fail tests (including escape-analysis and consuming-self cases)
+- New E2E pass/fail tests (including escape-analysis, consuming-self, and for-loop element cases)
 - Multi-module convention tests
 - Fix the 7 known codegen regressions from the borrowing audit
 
@@ -206,6 +208,21 @@ High-ROI, no new intrinsics needed:
 - `functools`: `reduce`
 - `collections`: `Counter.update`, `Counter.subtract`, `Counter.elements`, `Counter.__add__`/`__sub__`
 - `itertools`: `accumulate`, `compress`, `dropwhile`, `takewhile`, `filterfalse`, `zip_longest`, `count`, `cycle`
+- **Cleanup:** Remove any non-CPython functions that were added during Phase 07 for convenience (e.g., extra helpers in `functools` or `itertools` that don't exist in CPython). The stdlib must be a strict CPython subset -- no invented API surface.
+- **Document API naming divergences in `architecture.md`:** Several stdlib functions intentionally diverge from CPython names due to Rust keyword conflicts (e.g., `sifr.shutil.move_file` instead of `sifr.shutil.move` because `move` is a Rust keyword). Audit all such cases across the stdlib, collect them into a table in the Python Divergences section of `architecture.md` with the format: `| sifr name | CPython name | reason |`. This makes the divergences discoverable and prevents future contributors from "fixing" them or introducing inconsistent workarounds.
+
+### milestone_new_modules: Critical Missing Modules
+
+Placed second because several of these modules (`subprocess`, `sys`, `gzip`, `zipfile`) are needed by subsequent milestones and by ecosystem phases. Delivering them early unblocks downstream work.
+
+- `sifr.subprocess` (wraps `std::process`) -- sync `run(cmd) -> Result[CompletedProcess, Error]` (async Popen added in Phase 12's `milestone_networking_stdlib`)
+- `sifr.sys` -- `argv`, `exit(code)`, `platform`, `version`, `maxsize`
+- `sifr.html` -- `escape(s)`, `unescape(s)`
+- `sifr.configparser` -- `ConfigParser` class
+- `sifr.gzip` -- `compress(data)`, `decompress(data)` (wraps `flate2`)
+- `sifr.zipfile` -- `ZipFile` class (wraps `zip`)
+- `sifr.calendar` -- `isleap`, `weekday`, `monthrange`
+- `sifr.operator` -- `add`, `sub`, `mul`, `itemgetter`
 
 ### milestone_stdlib_intrinsic_expansion: New Intrinsics for Existing Modules
 
@@ -225,17 +242,6 @@ High-ROI, no new intrinsics needed:
 - `re`: `compile` -> `Pattern` class, `match`, `fullmatch`, flags support
 - `logging`: `basicConfig`, `FileHandler`, `Formatter`, level constants
 - `csv`: `reader`/`writer` objects, `DictReader`/`DictWriter`
-
-### milestone_new_modules: Critical Missing Modules
-
-- `sifr.subprocess` (wraps `std::process`) -- sync `run(cmd) -> Result[CompletedProcess, Error]` (async Popen added in Phase 12's `milestone_networking_stdlib`)
-- `sifr.sys` -- `argv`, `exit(code)`, `platform`, `version`, `maxsize`
-- `sifr.html` -- `escape(s)`, `unescape(s)`
-- `sifr.configparser` -- `ConfigParser` class
-- `sifr.gzip` -- `compress(data)`, `decompress(data)` (wraps `flate2`)
-- `sifr.zipfile` -- `ZipFile` class (wraps `zip`)
-- `sifr.calendar` -- `isleap`, `weekday`, `monthrange`
-- `sifr.operator` -- `add`, `sub`, `mul`, `itemgetter`
 
 ---
 
