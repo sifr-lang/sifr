@@ -242,7 +242,7 @@ def main():
         r: str = validate(5)    # auto-unwrapped: compiler inserts ? in HIR
         print(f"ok: {r}")
     except ValidationError as e:
-        print(f"caught: {e.message}")
+        print(f"caught: {e}")                      # Display formats e.message
 ```
 
 **`except` exhaustiveness checking:**
@@ -321,11 +321,44 @@ def pipeline(path: str) -> Result[str, PipelineError]:
 
 **Typed error hierarchies:** All error types are classes that extend `Error`. The `raise` keyword maps to `Err(ErrorInstance)`. `return value` in a `Result`-returning function auto-wraps in `Ok(value)`. Using a non-`Error` type (e.g., `str`, `int`) as the `E` in `Result[T, E]` is a compile-time error.
 
-**Built-in error classes:** Sifr provides a standard set of error classes for common failure modes (e.g., I/O, parsing, validation). These are used by the stdlib and available to user code. `Error` is the root class; all error types extend it.
+**Built-in error classes:** Sifr provides a standard set of error classes for common failure modes (e.g., I/O, parsing, validation). These are used by the stdlib and available to user code. `Error` is the root class with a `message: str` field; all error types extend it and inherit `message`. Error types form a subclass hierarchy — for example, `FileNotFoundError`, `PermissionError`, and `FileExistsError` are subclasses of `IOError`. Catching the parent (`except IOError as e`) catches all subclasses; catching a specific subclass (`except FileNotFoundError as e`) enables fine-grained handling with compile-time exhaustiveness checking. For built-in errors, `message` is auto-populated from Rust's error `Display` (`e.to_string()`). Some errors have additional structured fields alongside `message` (e.g., `JSONDecodeError` has `line: int` and `column: int`). `print(e)` is the idiomatic way to display errors — it formats `self.message` via `Display`.
+
+**User-defined error classes:** User-defined error classes inherit `message: str` from `Error`. The constructor accepts a message string, and `print(e)` formats it via `Display`. Users can add additional fields as needed.
+
+```python
+# Simple user-defined error — inherits message from Error
+class AppError(Error):
+    pass                                       # only has message: str (inherited)
+
+def connect() -> Result[str, AppError]:
+    raise AppError("connection refused")       # message = "connection refused"
+
+try:
+    conn: str = connect()
+except AppError as e:
+    print(e.message)                           # field access: "connection refused"
+    print(e)                                   # Display: "connection refused" (same thing)
+    print(f"failed: {e}")                      # f-string: "failed: connection refused"
+```
+
+```python
+# User-defined error with additional fields
+class DbError(Error):
+    query: str
+    code: int
+
+try:
+    result: str = execute(query)
+except DbError as e:
+    print(e.message)                           # inherited from Error
+    print(e.query)                             # additional field access
+    print(e.code)                              # additional field access
+    print(e)                                   # Display: formats e.message
+```
 
 **Common error type patterns:**
 
-- **Application code:** define a simple error class per module or feature (e.g., `class AppError(Error)`). Use `except Error as e` as a catch-all when fine-grained handling is not needed.
+- **Application code:** define a simple error class per module or feature (e.g., `class AppError(Error)`). The inherited `message` field carries the human-readable text. Use `except Error as e` as a catch-all when fine-grained handling is not needed.
 - **Library code:** define a domain error class (e.g., `class ConfigError(Error)`) and wrap internal errors at API boundaries. Callers only see the domain error type.
 - **Stdlib functions:** return `Result[T, SpecificError]` using the built-in error classes. For example, `read_text(path)` returns `Result[str, IOError]`, `int(s)` returns `Result[int, ParseError]`.
 

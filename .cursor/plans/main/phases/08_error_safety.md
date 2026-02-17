@@ -28,6 +28,8 @@ Create a set of built-in error classes that the compiler recognizes. These are n
 
 Each built-in error class has a `message: str` field. User-defined error classes (`class MyError(Error)`) continue to work as they do today.
 
+> **Note:** In `milestone_error_subclasses` (Phase 09), error types are expanded into a subclass hierarchy (e.g., `FileNotFoundError` extends `IOError`) with compile-time exhaustiveness checking. All errors keep `message: str`; some gain additional structured fields (`line`, `column`, `detail`). See [09_stdlib_safety_remediation.md](09_stdlib_safety_remediation.md).
+
 ### 2. Enforce `E` in `Result[T, E]` Must Extend `Error`
 
 The type checker must verify that the `E` in `Result[T, E]` is a class extending `Error`. `Result[T, str]` becomes a compile error.
