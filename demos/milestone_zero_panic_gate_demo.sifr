@@ -1,0 +1,109 @@
+from sifr.io import read_text
+from sifr.json import json_loads
+from sifr.re import re_match
+from sifr.random import randint
+from sifr.textwrap import wrap
+from sifr.graphlib import topological_sort, CycleError
+from sifr.ipaddress import ip_to_int
+
+def main():
+    print("=== Sifr Safety Verification Gate Demo ===")
+    print("")
+
+    # Section 1: I/O Safety
+    print("--- 1. I/O Safety ---")
+    try:
+        content: str = read_text("nonexistent_file.txt")
+        print(f"File content: {content}")
+    except IOError as e:
+        print(f"read_text(nonexistent) -> IOError: {e.message}")
+    print("")
+
+    # Section 2: Parse Safety
+    print("--- 2. Parse Safety ---")
+    try:
+        data: str = json_loads("{ invalid json }")
+        print(f"Parsed JSON: {data}")
+    except JSONDecodeError as e:
+        print(f"json_loads(invalid) -> JSONDecodeError: {e.message}")
+    print("")
+
+    # Section 3: Regex Safety
+    print("--- 3. Regex Safety ---")
+    try:
+        matched: bool = re_match("[invalid regex", "test")
+        print(f"Regex match result: {matched}")
+    except RegexError as e:
+        print(f"re_match(invalid) -> RegexError: {e.message}")
+    print("")
+
+    # Section 4: Collection Safety
+    print("--- 4. Collection Safety ---")
+    empty: list[int] = []
+    min_val: int | None = min(empty)
+    if min_val is not None:
+        print(f"Min value: {min_val}")
+    else:
+        print("min([]) -> None (safe)")
+
+    max_val: int | None = max(empty)
+    if max_val is not None:
+        print(f"Max value: {max_val}")
+    else:
+        print("max([]) -> None (safe)")
+
+    numbers: list[int] = [1, 2, 3]
+    idx: int | None = numbers.index(99)
+    if idx is not None:
+        print(f"Index found at: {idx}")
+    else:
+        print("[1,2,3].index(99) -> None (safe)")
+    print("")
+
+    # Section 5: Edge Case Validation
+    print("--- 5. Edge Case Validation ---")
+
+    try:
+        rval: int = randint(5, 3)
+        print(f"Random value: {rval}")
+    except ValueError as e:
+        print(f"randint(5, 3) -> ValueError: {e.message}")
+
+    try:
+        wrapped: list[str] = wrap("text", 0)
+        print("Wrapped text: ok")
+    except ValueError as e:
+        print(f"wrap(text, 0) -> ValueError: {e.message}")
+
+    from_n: list[int] = [0, 1, 2]
+    to_n: list[int] = [1, 2, 0]
+    try:
+        sorted_nodes: list[int] = topological_sort(3, from_n, to_n)
+        print("Topologically sorted: ok")
+    except CycleError as e:
+        print(f"topological_sort(cycle) -> CycleError: {e.message}")
+
+    try:
+        ip_int: int = ip_to_int("bad")
+        print(f"IP as int: {ip_int}")
+    except ValueError as e:
+        print(f"ip_to_int(bad) -> ValueError: {e.message}")
+    print("")
+
+    # Section 6: Subscript Safety
+    print("--- 6. Subscript Safety ---")
+    nums: list[int] = [10, 20, 30]
+
+    oob_val: int | None = nums[99]
+    if oob_val is not None:
+        print(f"Value at index 99: {oob_val}")
+    else:
+        print("nums[99] -> None (bounds-checked)")
+
+    nums[99] = 42
+    print(f"nums[99] = 42 -> no-op, list len still {len(nums)}")
+    print("")
+
+    print("=== All operations completed without panicking! ===")
+    print("=== Zero Panic Gate: PASSED ===")
+    print("demo complete!")
