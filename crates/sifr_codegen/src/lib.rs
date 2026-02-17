@@ -645,6 +645,8 @@ struct RustEmitter {
     imported_stdlib_names: HashMap<String, HashSet<String>>,
     /// Temporarily suppress .clone() on field access (for mutating method calls on self.field)
     suppress_field_clone: bool,
+    /// Whether we're inside a generator closure (yield -> return Some(val))
+    in_generator_closure: bool,
 }
 
 impl RustEmitter {
@@ -678,6 +680,7 @@ impl RustEmitter {
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
             suppress_field_clone: false,
+            in_generator_closure: false,
         }
     }
 
@@ -1897,25 +1900,177 @@ impl RustEmitter {
         self.indent += 1;
 
         if is_generator {
-            // Emit the yields accumulator at the start
+            // Lazy generator using std::iter::from_fn.
+            // Pattern: init stmts; while cond: [pre_yield]; yield val; [post_yield]
+            // Becomes: init stmts; from_fn(move || { if cond { pre_yield; let v = val; post_yield; Some(v) } else { None } })
             let yield_ty = if let Type::List(ref elem) = func.return_type {
                 elem.rust_type()
             } else {
-                "i64".to_string() // fallback
+                "i64".to_string()
             };
-            self.write_indent();
-            self.write(&format!("let mut _yields: Vec<{}> = Vec::new();\n", yield_ty));
-        }
 
-        // Body
-        for stmt in &func.body {
-            self.emit_stmt(stmt);
-        }
+            // Separate body into init statements and the while loop
+            let mut init_stmts = Vec::new();
+            let mut while_stmt = None;
+            for stmt in &func.body {
+                if while_stmt.is_none() {
+                    if let HirStmt::While { .. } = stmt {
+                        while_stmt = Some(stmt);
+                    } else {
+                        init_stmts.push(stmt);
+                    }
+                }
+            }
 
-        // If generator, return the accumulated yields as a lazy iterator
-        if is_generator {
+            // Emit init statements (local variable declarations, always mutable)
+            for stmt in &init_stmts {
+                self.emit_generator_init_stmt(stmt);
+            }
+
+            // Emit the lazy iterator
             self.write_indent();
-            self.write("_yields.into_iter()\n");
+            self.write(&format!("std::iter::from_fn(move || -> Option<{}> {{\n", yield_ty));
+            self.indent += 1;
+
+            if let Some(HirStmt::While { condition, body, .. }) = while_stmt {
+                // Check if yield is directly in the while body or nested in an if
+                let has_conditional_yield = !body.iter().any(|s| matches!(s, HirStmt::Yield { .. }))
+                    && body.iter().any(|s| {
+                        if let HirStmt::If { then_body, .. } = s {
+                            body_contains_yield(then_body)
+                        } else {
+                            false
+                        }
+                    });
+
+                if has_conditional_yield {
+                    // Conditional yield: while cond: if test: yield val; post_stmts
+                    // Emit as: while cond { let mut __yielded = None; if test { __yielded = Some(val); } post_stmts; if let Some(v) = __yielded { return Some(v); } }; None
+                    self.write_indent();
+                    self.write("while ");
+                    self.emit_expr(condition);
+                    self.write(" {\n");
+                    self.indent += 1;
+
+                    // Emit __yielded variable
+                    self.write_indent();
+                    self.write(&format!("let mut __yielded: Option<{}> = None;\n", yield_ty));
+
+                    // Emit body with yield replaced by __yielded = Some(val)
+                    for s in body {
+                        if let HirStmt::If { condition: if_cond, then_body, .. } = s {
+                            if body_contains_yield(then_body) {
+                                // Emit the if with yield -> __yielded = Some(val)
+                                self.write_indent();
+                                self.write("if ");
+                                self.emit_expr(if_cond);
+                                self.write(" {\n");
+                                self.indent += 1;
+                                for ts in then_body {
+                                    if let HirStmt::Yield { value } = ts {
+                                        self.write_indent();
+                                        self.write("__yielded = Some(");
+                                        self.emit_expr(value);
+                                        self.write(");\n");
+                                    } else {
+                                        self.emit_stmt(ts);
+                                    }
+                                }
+                                self.indent -= 1;
+                                self.write_indent();
+                                self.write("}\n");
+                            } else {
+                                self.emit_stmt(s);
+                            }
+                        } else {
+                            self.emit_stmt(s);
+                        }
+                    }
+
+                    // Check if a value was yielded
+                    self.write_indent();
+                    self.write("if let Some(__v) = __yielded {\n");
+                    self.indent += 1;
+                    self.write_indent();
+                    self.write("return Some(__v);\n");
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
+
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
+                    // After while loop exits, return None
+                    self.write_indent();
+                    self.write("None\n");
+                } else {
+                    // Simple yield: while cond: pre_yield; yield val; post_yield
+                    // Separate into pre-yield, yield expr, post-yield
+                    let mut pre_yield = Vec::new();
+                    let mut yield_expr = None;
+                    let mut post_yield = Vec::new();
+                    let mut found_yield = false;
+                    for s in body {
+                        if !found_yield {
+                            if let HirStmt::Yield { value } = s {
+                                yield_expr = Some(value);
+                                found_yield = true;
+                            } else {
+                                pre_yield.push(s);
+                            }
+                        } else {
+                            post_yield.push(s);
+                        }
+                    }
+
+                    // Emit: if cond { pre_yield; let v = yield_val; post_yield; Some(v) } else { None }
+                    self.write_indent();
+                    self.write("if ");
+                    self.emit_expr(condition);
+                    self.write(" {\n");
+                    self.indent += 1;
+
+                    for s in &pre_yield {
+                        self.emit_stmt(s);
+                    }
+
+                    if let Some(yexpr) = yield_expr {
+                        self.write_indent();
+                        self.write("let __yield_val = ");
+                        self.emit_expr(yexpr);
+                        self.write(";\n");
+                    }
+
+                    for s in &post_yield {
+                        self.emit_stmt(s);
+                    }
+
+                    self.write_indent();
+                    self.write("Some(__yield_val)\n");
+
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("} else {\n");
+                    self.indent += 1;
+                    self.write_indent();
+                    self.write("None\n");
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
+                }
+            } else {
+                self.write_indent();
+                self.write("None\n");
+            }
+
+            self.indent -= 1;
+            self.write_indent();
+            self.write("})\n");
+        } else {
+            // Non-generator: emit body normally
+            for stmt in &func.body {
+                self.emit_stmt(stmt);
+            }
         }
 
         self.indent -= 1;
@@ -1923,6 +2078,25 @@ impl RustEmitter {
 
         self.current_return_type = None;
         self.mutated_vars.clear();
+    }
+
+    /// Emit a generator initialization statement (always mutable for closure capture)
+    fn emit_generator_init_stmt(&mut self, stmt: &HirStmt) {
+        match stmt {
+            HirStmt::Let { name, ty, value, .. } => {
+                self.write_indent();
+                self.write("let mut ");
+                self.write(name);
+                self.write(": ");
+                self.write(&ty.rust_type());
+                self.write(" = ");
+                self.emit_expr(value);
+                self.write(";\n");
+            }
+            _ => {
+                self.emit_stmt(stmt);
+            }
+        }
     }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
@@ -2708,10 +2882,19 @@ impl RustEmitter {
                 }
             }
             HirStmt::Yield { value } => {
-                self.write_indent();
-                self.write("_yields.push(");
-                self.emit_expr(value);
-                self.write(");\n");
+                if self.in_generator_closure {
+                    // Inside a generator closure: yield becomes return Some(val)
+                    self.write_indent();
+                    self.write("return Some(");
+                    self.emit_expr(value);
+                    self.write(");\n");
+                } else {
+                    // Eager fallback: push to yields vec
+                    self.write_indent();
+                    self.write("_yields.push(");
+                    self.emit_expr(value);
+                    self.write(");\n");
+                }
             }
             HirStmt::With { items, body } => {
                 self.write_indent();

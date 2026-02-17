@@ -50,7 +50,7 @@ Fix:
 
 ## milestone_lazy_iterators: Lazy Iterator Protocol
 
-status: pending
+status: done
 
 **Goal:** Replace the eager generator codegen (`_yields.push()` → return `Vec<T>`) with a proper lazy `Iterator` implementation using state machines. Currently, `yield` in a function collects all values into a `Vec` and returns the full list. This milestone makes generators produce lazy iterators that yield values on demand via `next() -> Option<T>`.
 
