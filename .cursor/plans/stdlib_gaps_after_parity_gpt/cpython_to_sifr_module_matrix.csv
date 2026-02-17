@@ -1,0 +1,297 @@
+module,status,category,sifr_module,coverage_estimate,recommended_phase,design_note
+__future__,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_abc,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_aix_support,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_android_support,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_apple_support,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_ast,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_ast_unparse,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_asyncio,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_bisect,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_blake2,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_bz2,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_codecs,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_codecs_cn,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_codecs_hk,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_codecs_iso2022,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_codecs_jp,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_codecs_kr,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_codecs_tw,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_collections,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_collections_abc,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_colorize,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_compat_pickle,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_contextvars,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_csv,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_ctypes,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_curses,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_curses_panel,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_datetime,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_dbm,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_decimal,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_elementtree,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_frozen_importlib,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_frozen_importlib_external,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_functools,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_gdbm,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_hashlib,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_heapq,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_hmac,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_imp,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_interpchannels,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_interpqueues,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_interpreters,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_io,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_ios_support,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_json,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_locale,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_lsprof,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_lzma,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_markupbase,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_math_integer,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_md5,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_multibytecodec,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_multiprocessing,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_opcode,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_opcode_metadata,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_operator,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_osx_support,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_overlapped,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_pickle,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_posixshmem,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_posixsubprocess,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_py_abc,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_py_warnings,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_pydatetime,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_pydecimal,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_pyio,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_pylong,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_pyrepl,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_queue,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_random,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_remote_debugging,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_scproxy,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_sha1,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_sha2,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_sha3,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_signal,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_sitebuiltins,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_socket,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_sqlite3,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_sre,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_ssl,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_stat,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_statistics,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_string,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_strptime,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_struct,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_suggestions,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_symtable,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_sysconfig,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_thread,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_threading_local,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_tkinter,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_tokenize,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_tracemalloc,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_types,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_typing,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_uuid,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_warnings,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_weakref,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_weakrefset,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_winapi,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_wmi,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_zoneinfo,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+_zstd,missing,cpython_internal,,0%,post-mvp-or-never,CPython/private implementation detail; usually not user-facing API target for sifr.
+abc,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+annotationlib,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+antigravity,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+argparse,implemented_partial,implemented,argparse,~15%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+array,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+ast,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+asyncio,missing,async_concurrency,,0%,phase8-async-runtime,Depends on async/task runtime and concurrency primitives planned after stdlib parity.
+atexit,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+base64,implemented_partial,implemented,base64,~50%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+bdb,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+binascii,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+bisect,implemented_partial,implemented,bisect,~75%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+builtins,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+bz2,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+cProfile,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+calendar,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+cmath,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+cmd,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+code,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+codecs,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+codeop,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+collections,implemented_partial,implemented,collections,~40%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+colorsys,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+compileall,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+compression,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+concurrent,missing,async_concurrency,,0%,phase8-async-runtime,Depends on async/task runtime and concurrency primitives planned after stdlib parity.
+configparser,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+contextlib,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+contextvars,missing,async_concurrency,,0%,phase8-async-runtime,Depends on async/task runtime and concurrency primitives planned after stdlib parity.
+copy,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+copyreg,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+csv,implemented_partial,implemented,csv,~30%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+ctypes,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+curses,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+dataclasses,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+datetime,implemented_partial,implemented,datetime,~15%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+dbm,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+decimal,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+difflib,implemented_partial,implemented,difflib,~20%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+dis,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+doctest,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+email,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+encodings,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+ensurepip,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+enum,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+errno,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+faulthandler,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+fcntl,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+filecmp,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+fileinput,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+fnmatch,implemented_partial,implemented,fnmatch,~50%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+fractions,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+ftplib,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+functools,implemented_partial,implemented,functools,~15%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+gc,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+genericpath,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+getopt,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+getpass,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+gettext,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+glob,implemented_partial,implemented,glob,~20%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+graphlib,implemented_partial,implemented,graphlib,~30%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+grp,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+gzip,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+hashlib,implemented_partial,implemented,hashlib,~40%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+heapq,implemented_partial,implemented,heapq,~60%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+hmac,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+html,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+http,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+idlelib,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+imaplib,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+importlib,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+inspect,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+io,implemented_partial,implemented,io,~35%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+ipaddress,implemented_partial,implemented,ipaddress,~25%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+itertools,implemented_partial,implemented,itertools,~20%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+json,implemented_partial,implemented,json,~60%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+keyword,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+linecache,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+locale,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+logging,implemented_partial,implemented,logging,~15%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+lzma,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+mailbox,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+marshal,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+math,implemented_partial,implemented,math,~85%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+mimetypes,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+mmap,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+modulefinder,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+msvcrt,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+multiprocessing,missing,async_concurrency,,0%,phase8-async-runtime,Depends on async/task runtime and concurrency primitives planned after stdlib parity.
+netrc,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+nt,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+ntpath,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+nturl2path,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+numbers,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+opcode,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+operator,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+optparse,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+os,implemented_partial,implemented,os,~40%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+pathlib,implemented_partial,implemented,pathlib,~15%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+pdb,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+pickle,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+pickletools,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+pkgutil,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+platform,implemented_partial,implemented,platform,~20%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+plistlib,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+poplib,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+posix,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+posixpath,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+pprint,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+profile,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+profiling,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+pstats,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+pty,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+pwd,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+py_compile,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+pyclbr,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+pydoc,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+pydoc_data,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+pyexpat,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+queue,missing,async_concurrency,,0%,phase8-async-runtime,Depends on async/task runtime and concurrency primitives planned after stdlib parity.
+quopri,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+random,implemented_partial,implemented,random,~35%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+re,implemented_partial,implemented,re,~45%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+readline,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+reprlib,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+resource,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+rlcompleter,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+runpy,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+sched,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+secrets,implemented_partial,implemented,secrets,~40%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+select,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+selectors,missing,async_concurrency,,0%,phase8-async-runtime,Depends on async/task runtime and concurrency primitives planned after stdlib parity.
+shelve,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+shlex,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+shutil,implemented_partial,implemented,shutil,~20%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+signal,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+site,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+smtplib,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+socket,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+socketserver,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+sqlite3,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+ssl,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+stat,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+statistics,implemented_partial,implemented,statistics,~50%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+string,implemented_partial,implemented,string,~60%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+stringprep,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+struct,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+subprocess,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+symtable,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+sys,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+sysconfig,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+syslog,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+tabnanny,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+tarfile,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+tempfile,implemented_partial,implemented,tempfile,~25%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+termios,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+textwrap,implemented_partial,implemented,textwrap,~60%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+this,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+threading,missing,async_concurrency,,0%,phase8-async-runtime,Depends on async/task runtime and concurrency primitives planned after stdlib parity.
+time,implemented_partial,implemented,time,~45%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+timeit,implemented_partial,implemented,timeit,~60%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+tkinter,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+token,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+tokenize,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+tomllib,implemented_partial,implemented,tomllib,~50%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+trace,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+traceback,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+tracemalloc,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+tty,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+turtle,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+turtledemo,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+types,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+typing,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+unicodedata,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+unittest,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+urllib,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+uuid,implemented_partial,implemented,uuid,~20%,phase7-hardening,Implemented as sifr stdlib wrapper; parity is partial and still expanding.
+venv,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+warnings,missing,runtime_introspection,,0%,post-mvp-design-review,"Depends on CPython runtime internals, reflection, or tooling model that diverges in sifr."
+wave,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+weakref,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
+webbrowser,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+winreg,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+winsound,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+wsgiref,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+xml,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+xmlrpc,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+zipapp,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+zipfile,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+zipimport,missing,ecosystem_networking_io,,0%,phase8-ecosystem,Large IO/network/framework surface; aligns with later ecosystem wrappers rather than core parity.
+zlib,missing,os_platform_ext,,0%,phase8-ffi-and-platform-wrappers,Requires platform-specific bindings or C-extension parity; better delivered through thin wrappers/FFI.
+zoneinfo,missing,algorithmic_general,,0%,phase8-stdlib-expansion,General-purpose module with no fundamental language blocker; good candidate for future parity milestones.
