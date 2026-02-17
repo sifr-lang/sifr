@@ -2,22 +2,25 @@
 from sifr.io import read_text, write_text, exists, read_lines
 
 def main():
-    # Write a file
-    write_text("/tmp/sifr_test_io.txt", "hello\nworld")
+    try:
+        # Write a file
+        r: None = write_text("/tmp/sifr_test_io.txt", "hello\nworld")
 
-    # Check it exists
-    e: bool = exists("/tmp/sifr_test_io.txt")
-    print(e)
+        # Check it exists
+        e: bool = exists("/tmp/sifr_test_io.txt")
+        print(e)
 
-    # Read it back
-    content: str = read_text("/tmp/sifr_test_io.txt")
-    print(content)
+        # Read it back
+        content: str = read_text("/tmp/sifr_test_io.txt")
+        print(content)
 
-    # Read lines
-    lines: list[str] = read_lines("/tmp/sifr_test_io.txt")
-    print(len(lines))
-    print(lines[0])
-    print(lines[1])
+        # Read lines
+        lines: list[str] = read_lines("/tmp/sifr_test_io.txt")
+        print(len(lines))
+        print(lines[0])
+        print(lines[1])
+    except IOError as e:
+        print("ERROR: " + e.message)
 
     # Check non-existent file
     missing: bool = exists("/tmp/sifr_test_nonexistent_xyz.txt")

@@ -2,9 +2,12 @@
 from sifr.os import run_command, get_args
 
 def main():
-    # Run a simple command
-    result: str = run_command("echo hello_from_shell")
-    print(result)
+    try:
+        # Run a simple command
+        result: str = run_command("echo hello_from_shell")
+        print(result)
+    except IOError as e:
+        print("ERROR: " + e.message)
 
     # Get args (will just be the binary name)
     args: list[str] = get_args()

@@ -402,56 +402,11 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Second pass: emit the actual code
     emitter.emit_module(module);
 
-    let mut result = String::new();
-    if emitter.needs_hashmap {
-        result.push_str("use std::collections::HashMap;\n");
-    }
-    if emitter.needs_hashset {
-        result.push_str("use std::collections::HashSet;\n");
-    }
-    if emitter.needs_hashmap || emitter.needs_hashset {
-        result.push('\n');
-    }
-    if !emitter.enum_defs.is_empty() {
-        result.push_str(&emitter.enum_defs);
-        result.push('\n');
-    }
-
-    // Emit built-in error class struct definitions for any that are referenced
-    // Scan the output for references to built-in error types
-    let user_defined_error_classes: HashSet<String> = module.classes.iter()
-        .filter(|c| c.is_error_type)
-        .map(|c| c.name.clone())
-        .collect();
-    for &error_name in BUILTIN_ERROR_CLASSES {
-        // Only emit if referenced in the generated code AND not user-defined (avoid duplicate)
-        // Use word-boundary-aware matching to avoid false positives
-        // (e.g., "Error" should not match "EmailError" or "std::error::Error")
-        let is_referenced = is_builtin_error_referenced(&emitter.output, error_name);
-        if is_referenced && !user_defined_error_classes.contains(error_name) {
-            result.push_str("#[derive(Debug, Clone)]\n");
-            result.push_str(&format!("struct {} {{\n", error_name));
-            result.push_str("    message: String,\n");
-            result.push_str("}\n\n");
-            result.push_str(&format!("impl {} {{\n", error_name));
-            result.push_str(&format!("    fn new(message: String) -> Self {{ Self {{ message }} }}\n"));
-            result.push_str("}\n\n");
-            result.push_str(&format!("impl std::fmt::Display for {} {{\n", error_name));
-            result.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
-            result.push_str("        write!(f, \"{}\", self.message)\n");
-            result.push_str("    }\n");
-            result.push_str("}\n\n");
-            result.push_str(&format!("impl std::error::Error for {} {{}}\n\n", error_name));
-        }
-    }
-
-    // Prepend compiled stdlib Rust code for used modules
-    // Include transitive sifr.* dependencies in dependency order (deps first)
+    // Build stdlib preamble first so we can check for error type references
     let mut stdlib_preamble = String::new();
     let mut emitted_modules: HashSet<String> = HashSet::new();
     let mut all_needed: Vec<String> = Vec::new();
     for module_name in &emitter.used_stdlib_modules {
-        // Add transitive sifr.* deps before the module itself
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             for dep in deps {
                 if dep.starts_with("sifr.") && !all_needed.contains(dep) {
@@ -469,22 +424,15 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         }
         if let Some(rust_code) = stdlib_code.module_rust_code.get(module_name) {
             if !rust_code.is_empty() {
-                // Filter preamble to only emit functions that are imported or
-                // transitively needed by imported functions. This avoids emitting
-                // wrapper functions with uncompilable types (e.g. Any → Box<dyn Any>).
                 let filtered = if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
-                    // Only include non-intrinsic names (intrinsics are inlined at call sites)
                     let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
                     let pure_sifr_imports: HashSet<String> = imported_names.iter()
                         .filter(|name| !intrinsic_set.map_or(false, |iset| iset.contains(*name)))
                         .cloned()
                         .collect();
                     if pure_sifr_imports.is_empty() {
-                        // User only imports intrinsics — skip the module's Rust code
                         String::new()
                     } else {
-                        // Expand imported names to include __const_ prefixed versions
-                        // (constants like `ascii_lowercase` compile to `__const_ascii_lowercase()`)
                         let mut expanded_imports = pure_sifr_imports.clone();
                         if let Some(const_map) = stdlib_code.module_constants.get(module_name) {
                             for name in &pure_sifr_imports {
@@ -493,11 +441,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                                 }
                             }
                         }
-                        // Filter to only needed functions (imported + their transitive deps)
                         filter_rust_code_to_needed(rust_code, &expanded_imports)
                     }
                 } else {
-                    // Transitive dependency — emit everything
                     rust_code.clone()
                 };
                 if !filtered.trim().is_empty() {
@@ -509,6 +455,49 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             }
         }
     }
+
+    // Now assemble result: imports, enums, error classes, stdlib preamble, main output
+    let mut result = String::new();
+    if emitter.needs_hashmap {
+        result.push_str("use std::collections::HashMap;\n");
+    }
+    if emitter.needs_hashset {
+        result.push_str("use std::collections::HashSet;\n");
+    }
+    if emitter.needs_hashmap || emitter.needs_hashset {
+        result.push('\n');
+    }
+    if !emitter.enum_defs.is_empty() {
+        result.push_str(&emitter.enum_defs);
+        result.push('\n');
+    }
+
+    // Emit built-in error class struct definitions for any that are referenced
+    // Check BOTH the main output AND the stdlib preamble for references
+    let combined_code = format!("{}{}", stdlib_preamble, emitter.output);
+    let user_defined_error_classes: HashSet<String> = module.classes.iter()
+        .filter(|c| c.is_error_type)
+        .map(|c| c.name.clone())
+        .collect();
+    for &error_name in BUILTIN_ERROR_CLASSES {
+        let is_referenced = is_builtin_error_referenced(&combined_code, error_name);
+        if is_referenced && !user_defined_error_classes.contains(error_name) {
+            result.push_str("#[derive(Debug, Clone)]\n");
+            result.push_str(&format!("struct {} {{\n", error_name));
+            result.push_str("    message: String,\n");
+            result.push_str("}\n\n");
+            result.push_str(&format!("impl {} {{\n", error_name));
+            result.push_str(&format!("    fn new(message: String) -> Self {{ Self {{ message }} }}\n"));
+            result.push_str("}\n\n");
+            result.push_str(&format!("impl std::fmt::Display for {} {{\n", error_name));
+            result.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+            result.push_str("        write!(f, \"{}\", self.message)\n");
+            result.push_str("    }\n");
+            result.push_str("}\n\n");
+            result.push_str(&format!("impl std::error::Error for {} {{}}\n\n", error_name));
+        }
+    }
+
     if !stdlib_preamble.is_empty() {
         result.push_str(&stdlib_preamble);
     }
@@ -4966,9 +4955,13 @@ impl RustEmitter {
                 self.write("?");
             }
             HirExpr::OkWrap { value, .. } => {
-                self.write("Ok(");
-                self.emit_expr(value);
-                self.write(")");
+                if matches!(value.as_ref(), HirExpr::NoneLiteral) {
+                    self.write("Ok(())");
+                } else {
+                    self.write("Ok(");
+                    self.emit_expr(value);
+                    self.write(")");
+                }
             }
             HirExpr::ErrWrap { value, .. } => {
                 self.write("Err(");
@@ -5282,14 +5275,14 @@ impl RustEmitter {
             "read_text" => {
                 self.write("std::fs::read_to_string(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap()");
+                self.write(").map_err(|e| IOError { message: e.to_string() })");
             }
             "write_text" => {
                 self.write("std::fs::write(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").unwrap()");
+                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
             }
             "exists" => {
                 self.write("std::path::Path::new(");
@@ -5299,44 +5292,44 @@ impl RustEmitter {
             "read_lines" => {
                 self.write("std::fs::read_to_string(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap().lines().map(|s| s.to_string()).collect::<Vec<String>>()");
+                self.write(").map(|s| s.lines().map(|l| l.to_string()).collect::<Vec<String>>()).map_err(|e| IOError { message: e.to_string() })");
             }
             "append_text" => {
-                self.write("{ use std::io::Write; let mut _f = std::fs::OpenOptions::new().append(true).create(true).open(");
+                self.write("{ use std::io::Write; (|| -> Result<(), IOError> { let mut _f = std::fs::OpenOptions::new().append(true).create(true).open(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap(); write!(_f, \"{}\", ");
+                self.write(").map_err(|e| IOError { message: e.to_string() })?; write!(_f, \"{}\", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").unwrap(); }");
+                self.write(").map_err(|e| IOError { message: e.to_string() })?; Ok(()) })() }");
             }
             "getcwd" => {
-                self.write("std::env::current_dir().unwrap().to_string_lossy().to_string()");
+                self.write("std::env::current_dir().map(|p| p.to_string_lossy().to_string()).map_err(|e| IOError { message: e.to_string() })");
             }
             "listdir" => {
                 self.write("std::fs::read_dir(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap().filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect::<Vec<String>>()");
+                self.write(").map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect::<Vec<String>>()).map_err(|e| IOError { message: e.to_string() })");
             }
             "mkdir" => {
                 self.write("std::fs::create_dir_all(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap()");
+                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
             }
             "rmdir" => {
                 self.write("std::fs::remove_dir(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap()");
+                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
             }
             "remove_file" => {
                 self.write("std::fs::remove_file(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap()");
+                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
             }
             "rename" => {
                 self.write("std::fs::rename(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").unwrap()");
+                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
             }
             "is_file" => {
                 self.write("std::path::Path::new(");
@@ -5349,21 +5342,21 @@ impl RustEmitter {
                 self.write(").is_dir()");
             }
             "copy_file" => {
-                self.write("{ std::fs::copy(");
+                self.write("std::fs::copy(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").unwrap(); }");
+                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
             }
             "walk_dir" => {
-                self.write("{ fn __walk(p: &std::path::Path) -> Vec<String> { let mut r = Vec::new(); if let Ok(entries) = std::fs::read_dir(p) { for e in entries.flatten() { let path = e.path(); r.push(path.display().to_string()); if path.is_dir() { r.extend(__walk(&path)); } } } r } __walk(std::path::Path::new(");
+                self.write("{ fn __walk(p: &std::path::Path) -> Result<Vec<String>, IOError> { let mut r = Vec::new(); let entries = std::fs::read_dir(p).map_err(|e| IOError { message: e.to_string() })?; for e in entries { let e = e.map_err(|e| IOError { message: e.to_string() })?; let path = e.path(); r.push(path.display().to_string()); if path.is_dir() { r.extend(__walk(&path)?); } } Ok(r) } __walk(std::path::Path::new(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(")) }");
             }
             "rmdir_all" => {
                 self.write("std::fs::remove_dir_all(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap()");
+                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
             }
             "gettempdir" => {
                 self.write("std::env::temp_dir().display().to_string()");
@@ -5371,7 +5364,7 @@ impl RustEmitter {
             "makedirs" => {
                 self.write("std::fs::create_dir_all(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap()");
+                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
             }
             // sifr.json
             "json_loads" => {
@@ -5399,9 +5392,9 @@ impl RustEmitter {
             }
             // sifr.os
             "run_command" => {
-                self.write("String::from_utf8(std::process::Command::new(\"sh\").args([\"-c\", ");
+                self.write("(|| -> Result<String, IOError> { let output = std::process::Command::new(\"sh\").args([\"-c\", ");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write("]).output().unwrap().stdout).unwrap().trim().to_string()");
+                self.write("]).output().map_err(|e| IOError { message: e.to_string() })?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
             }
             "get_args" => {
                 self.write("std::env::args().collect::<Vec<String>>()");

@@ -1,12 +1,17 @@
 # sifr.shutil — High-level file operations (wraps _sifr.fs)
+# All operations return Result[None, IOError] for safe error handling.
 from _sifr.fs import copy_file, remove_file, rename, rmdir_all
 
-def copy(src: str, dst: str):
-    copy_file(src, dst)
+def copy(src: str, dst: str) -> Result[None, IOError]:
+    return copy_file(src, dst)
 
-def move_file(src: str, dst: str):
-    copy_file(src, dst)
-    remove_file(src)
+def move_file(src: str, dst: str) -> Result[None, IOError]:
+    try:
+        r1: None = copy_file(src, dst)
+        r2: None = remove_file(src)
+    except IOError as e:
+        raise IOError(e.message)
+    return None
 
-def rmtree(path: str):
-    rmdir_all(path)
+def rmtree(path: str) -> Result[None, IOError]:
+    return rmdir_all(path)

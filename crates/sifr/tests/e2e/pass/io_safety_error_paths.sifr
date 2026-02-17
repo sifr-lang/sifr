@@ -1,0 +1,74 @@
+# Test I/O safety: error paths return IOError instead of panicking
+from sifr.io import read_text, write_text, read_lines
+from sifr.os import listdir, mkdir, rmdir, remove_file, rename, getcwd
+
+def main():
+    # 1. read_text on non-existent file returns IOError
+    try:
+        content: str = read_text("/tmp/sifr_io_safety_nonexistent_file.txt")
+        print("should not reach here")
+    except IOError as e:
+        print("caught read_text IOError")
+
+    # 2. read_lines on non-existent file returns IOError
+    try:
+        lines: list[str] = read_lines("/tmp/sifr_io_safety_nonexistent_file.txt")
+        print("should not reach here")
+    except IOError as e:
+        print("caught read_lines IOError")
+
+    # 3. listdir on non-existent directory returns IOError
+    try:
+        entries: list[str] = listdir("/tmp/sifr_io_safety_nonexistent_dir")
+        print("should not reach here")
+    except IOError as e:
+        print("caught listdir IOError")
+
+    # 4. rmdir on non-existent directory returns IOError
+    try:
+        r: None = rmdir("/tmp/sifr_io_safety_nonexistent_dir")
+        print("should not reach here")
+    except IOError as e:
+        print("caught rmdir IOError")
+
+    # 5. remove_file on non-existent file returns IOError
+    try:
+        r2: None = remove_file("/tmp/sifr_io_safety_nonexistent_file.txt")
+        print("should not reach here")
+    except IOError as e:
+        print("caught remove_file IOError")
+
+    # 6. rename non-existent file returns IOError
+    try:
+        r3: None = rename("/tmp/sifr_io_safety_nonexistent.txt", "/tmp/sifr_io_safety_dest.txt")
+        print("should not reach here")
+    except IOError as e:
+        print("caught rename IOError")
+
+    # 7. Success path: write then read
+    try:
+        w: None = write_text("/tmp/sifr_io_safety_test.txt", "safety works")
+        data: str = read_text("/tmp/sifr_io_safety_test.txt")
+        print(data)
+        cleanup: None = remove_file("/tmp/sifr_io_safety_test.txt")
+    except IOError as e:
+        print("unexpected error: " + e.message)
+
+    # 8. getcwd succeeds
+    try:
+        cwd: str = getcwd()
+        print("getcwd ok")
+    except IOError as e:
+        print("getcwd failed: " + e.message)
+
+    print("all io safety tests passed")
+
+# expect-stdout: caught read_text IOError
+# expect-stdout: caught read_lines IOError
+# expect-stdout: caught listdir IOError
+# expect-stdout: caught rmdir IOError
+# expect-stdout: caught remove_file IOError
+# expect-stdout: caught rename IOError
+# expect-stdout: safety works
+# expect-stdout: getcwd ok
+# expect-stdout: all io safety tests passed

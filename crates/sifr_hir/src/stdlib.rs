@@ -13,6 +13,21 @@ pub struct IntrinsicModule {
     pub constants: HashMap<String, Type>,
 }
 
+/// Helper: construct a built-in error class type (e.g., IOError, ParseError).
+/// Built-in error classes have a single `message: str` field.
+fn error_class(name: &str) -> Type {
+    Type::Class {
+        name: name.to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: vec![],
+    }
+}
+
+/// Helper: construct Result[T, E] where E is a built-in error class.
+fn result_ty(ok: Type, error_name: &str) -> Type {
+    Type::Result(Box::new(ok), Box::new(error_class(error_name)))
+}
+
 /// Look up an intrinsic module by its dotted name (e.g., "_sifr.io").
 /// Returns None if the module is not a known intrinsic module.
 pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
@@ -50,23 +65,23 @@ pub fn is_stdlib_module(module_name: &str) -> bool {
 fn intrinsic_io() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // read_text(path: str) -> str
+    // read_text(path: str) -> Result[str, IOError]
     functions.insert("read_text".to_string(), FunctionType::all_borrow(
         vec![("path".to_string(), Type::Str)],
-        Type::Str,
+        result_ty(Type::Str, "IOError"),
     ));
 
-    // write_text(path: str, content: str) -> None
+    // write_text(path: str, content: str) -> Result[None, IOError]
     functions.insert("write_text".to_string(), FunctionType::all_borrow(vec![
             ("path".to_string(), Type::Str),
             ("content".to_string(), Type::Str),
-        ], Type::None));
+        ], result_ty(Type::None, "IOError")));
 
-    // exists(path: str) -> bool
+    // exists(path: str) -> bool  (infallible — just checks existence)
     functions.insert("exists".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
 
-    // read_lines(path: str) -> list[str]
-    functions.insert("read_lines".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
+    // read_lines(path: str) -> Result[list[str], IOError]
+    functions.insert("read_lines".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
 
     IntrinsicModule {
         functions,
@@ -424,8 +439,8 @@ fn intrinsic_sys() -> IntrinsicModule {
             ("value".to_string(), Type::Str),
         ], Type::None));
 
-    // run_command(cmd: str) -> str
-    functions.insert("run_command".to_string(), FunctionType::all_borrow(vec![("cmd".to_string(), Type::Str)], Type::Str));
+    // run_command(cmd: str) -> Result[str, IOError]
+    functions.insert("run_command".to_string(), FunctionType::all_borrow(vec![("cmd".to_string(), Type::Str)], result_ty(Type::Str, "IOError")));
 
     // get_args() -> list[str]
     functions.insert("get_args".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))));
@@ -440,74 +455,74 @@ fn intrinsic_sys() -> IntrinsicModule {
 fn intrinsic_fs() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // read_text(path: str) -> str
+    // read_text(path: str) -> Result[str, IOError]
     functions.insert("read_text".to_string(), FunctionType::all_borrow(
         vec![("path".to_string(), Type::Str)],
-        Type::Str,
+        result_ty(Type::Str, "IOError"),
     ));
 
-    // write_text(path: str, content: str) -> None
+    // write_text(path: str, content: str) -> Result[None, IOError]
     functions.insert("write_text".to_string(), FunctionType::all_borrow(vec![
             ("path".to_string(), Type::Str),
             ("content".to_string(), Type::Str),
-        ], Type::None));
+        ], result_ty(Type::None, "IOError")));
 
-    // exists(path: str) -> bool
+    // exists(path: str) -> bool  (infallible)
     functions.insert("exists".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
 
-    // read_lines(path: str) -> list[str]
-    functions.insert("read_lines".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
+    // read_lines(path: str) -> Result[list[str], IOError]
+    functions.insert("read_lines".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
 
-    // append_text(path: str, content: str) -> None
+    // append_text(path: str, content: str) -> Result[None, IOError]
     functions.insert("append_text".to_string(), FunctionType::all_borrow(vec![
             ("path".to_string(), Type::Str),
             ("content".to_string(), Type::Str),
-        ], Type::None));
+        ], result_ty(Type::None, "IOError")));
 
-    // getcwd() -> str
-    functions.insert("getcwd".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    // getcwd() -> Result[str, IOError]
+    functions.insert("getcwd".to_string(), FunctionType::all_borrow(vec![], result_ty(Type::Str, "IOError")));
 
-    // listdir(path: str) -> list[str]
-    functions.insert("listdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
+    // listdir(path: str) -> Result[list[str], IOError]
+    functions.insert("listdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
 
-    // mkdir(path: str) -> None
-    functions.insert("mkdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+    // mkdir(path: str) -> Result[None, IOError]
+    functions.insert("mkdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
 
-    // rmdir(path: str) -> None
-    functions.insert("rmdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+    // rmdir(path: str) -> Result[None, IOError]
+    functions.insert("rmdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
 
-    // remove_file(path: str) -> None
-    functions.insert("remove_file".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+    // remove_file(path: str) -> Result[None, IOError]
+    functions.insert("remove_file".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
 
-    // rename(src: str, dst: str) -> None
+    // rename(src: str, dst: str) -> Result[None, IOError]
     functions.insert("rename".to_string(), FunctionType::all_borrow(vec![
             ("src".to_string(), Type::Str),
             ("dst".to_string(), Type::Str),
-        ], Type::None));
+        ], result_ty(Type::None, "IOError")));
 
-    // is_file(path: str) -> bool
+    // is_file(path: str) -> bool  (infallible)
     functions.insert("is_file".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
 
-    // is_dir(path: str) -> bool
+    // is_dir(path: str) -> bool  (infallible)
     functions.insert("is_dir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::Bool));
 
-    // copy_file(src: str, dst: str) -> None
+    // copy_file(src: str, dst: str) -> Result[None, IOError]
     functions.insert("copy_file".to_string(), FunctionType::all_borrow(vec![
             ("src".to_string(), Type::Str),
             ("dst".to_string(), Type::Str),
-        ], Type::None));
+        ], result_ty(Type::None, "IOError")));
 
-    // walk_dir(path: str) -> list[str] (recursive directory listing)
-    functions.insert("walk_dir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Str))));
+    // walk_dir(path: str) -> Result[list[str], IOError]
+    functions.insert("walk_dir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
 
-    // rmdir_all(path: str) -> None (recursive directory removal)
-    functions.insert("rmdir_all".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+    // rmdir_all(path: str) -> Result[None, IOError]
+    functions.insert("rmdir_all".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
 
-    // gettempdir() -> str
+    // gettempdir() -> str  (infallible — reads env/system temp)
     functions.insert("gettempdir".to_string(), FunctionType::all_borrow(vec![], Type::Str));
 
-    // makedirs(path: str) -> None
-    functions.insert("makedirs".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::None));
+    // makedirs(path: str) -> Result[None, IOError]
+    functions.insert("makedirs".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
 
     IntrinsicModule {
         functions,

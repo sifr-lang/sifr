@@ -1,4 +1,5 @@
 # sifr.tempfile — Temporary file and directory creation (wraps _sifr.fs + _sifr.crypto)
+# Operations return Result[str, IOError] for safe error handling.
 from _sifr.fs import mkdir, write_text, gettempdir
 from _sifr.crypto import random_int
 
@@ -10,12 +11,18 @@ def mktemp_path(prefix: str) -> str:
     suffix: str = _random_suffix()
     return "/tmp/" + prefix + suffix
 
-def mkstemp(prefix: str) -> str:
+def mkstemp(prefix: str) -> Result[str, IOError]:
     path: str = mktemp_path(prefix)
-    write_text(path, "")
+    try:
+        wrt: None = write_text(path, "")
+    except IOError as e:
+        raise IOError(e.message)
     return path
 
-def mkdtemp(prefix: str) -> str:
+def mkdtemp(prefix: str) -> Result[str, IOError]:
     path: str = mktemp_path(prefix)
-    mkdir(path)
+    try:
+        md: None = mkdir(path)
+    except IOError as e:
+        raise IOError(e.message)
     return path

@@ -1,0 +1,134 @@
+# Demo: milestone_io_safety
+# File I/O operations now return Result[T, IOError] instead of panicking.
+# All error paths are handled via try/except with proper IOError types.
+
+from sifr.io import read_text, write_text, exists, read_lines, append_text
+from sifr.os import mkdir, rmdir, remove_file, rename, listdir, getcwd, run_command
+from sifr.shutil import copy, rmtree
+
+# --- 1. Safe file write and read ---
+
+def demo_safe_read_write():
+    print("=== Safe File Read/Write ===")
+    try:
+        w: None = write_text("/tmp/sifr_io_demo.txt", "hello from sifr")
+        content: str = read_text("/tmp/sifr_io_demo.txt")
+        print(f"read: {content}")
+    except IOError as e:
+        print(f"error: {e.message}")
+
+# --- 2. Reading a non-existent file returns IOError (no panic!) ---
+
+def demo_file_not_found():
+    print("=== File Not Found (no panic) ===")
+    try:
+        data: str = read_text("/tmp/sifr_io_demo_missing_file.txt")
+        print("should not reach here")
+    except IOError as e:
+        print(f"caught IOError: {e.message}")
+
+# --- 3. Directory operations with error handling ---
+
+def demo_directory_ops():
+    print("=== Directory Operations ===")
+    try:
+        m: None = mkdir("/tmp/sifr_io_demo_dir")
+        w: None = write_text("/tmp/sifr_io_demo_dir/test.txt", "inside dir")
+        entries: list[str] = listdir("/tmp/sifr_io_demo_dir")
+        print(f"entries: {len(entries)}")
+
+        content: str = read_text("/tmp/sifr_io_demo_dir/test.txt")
+        print(f"file in dir: {content}")
+    except IOError as e:
+        print(f"error: {e.message}")
+
+    # Listing a non-existent directory returns IOError
+    try:
+        bad_entries: list[str] = listdir("/tmp/sifr_io_demo_nonexistent_xyz")
+        print("should not reach here")
+    except IOError as e:
+        print(f"caught listdir IOError: {e.message}")
+
+# --- 4. File copy and move with error handling ---
+
+def demo_copy_and_cleanup():
+    print("=== Copy and Cleanup ===")
+    try:
+        c: None = copy("/tmp/sifr_io_demo.txt", "/tmp/sifr_io_demo_copy.txt")
+        copy_content: str = read_text("/tmp/sifr_io_demo_copy.txt")
+        print(f"copy: {copy_content}")
+    except IOError as e:
+        print(f"error: {e.message}")
+
+    # Cleanup
+    try:
+        r1: None = remove_file("/tmp/sifr_io_demo.txt")
+        r2: None = remove_file("/tmp/sifr_io_demo_copy.txt")
+        r3: None = rmtree("/tmp/sifr_io_demo_dir")
+    except IOError as e:
+        print(f"cleanup error: {e.message}")
+
+# --- 5. Read lines with error handling ---
+
+def demo_read_lines():
+    print("=== Read Lines ===")
+    try:
+        w: None = write_text("/tmp/sifr_io_demo_lines.txt", "line1\nline2\nline3")
+        lines: list[str] = read_lines("/tmp/sifr_io_demo_lines.txt")
+        print(f"line count: {len(lines)}")
+        r: None = remove_file("/tmp/sifr_io_demo_lines.txt")
+    except IOError as e:
+        print(f"error: {e.message}")
+
+# --- 6. Append text with error handling ---
+
+def demo_append():
+    print("=== Append Text ===")
+    try:
+        w1: None = write_text("/tmp/sifr_io_demo_append.txt", "first")
+        a: None = append_text("/tmp/sifr_io_demo_append.txt", " second")
+        content: str = read_text("/tmp/sifr_io_demo_append.txt")
+        print(f"appended: {content}")
+        r: None = remove_file("/tmp/sifr_io_demo_append.txt")
+    except IOError as e:
+        print(f"error: {e.message}")
+
+# --- 7. getcwd always works ---
+
+def demo_getcwd():
+    print("=== Get Current Directory ===")
+    try:
+        cwd: str = getcwd()
+        print("getcwd succeeded")
+    except IOError as e:
+        print(f"getcwd error: {e.message}")
+
+# --- Entry point ---
+
+def main():
+    demo_safe_read_write()
+    demo_file_not_found()
+    demo_directory_ops()
+    demo_copy_and_cleanup()
+    demo_read_lines()
+    demo_append()
+    demo_getcwd()
+    print("=== All I/O safety demos passed ===")
+
+# expect-stdout: === Safe File Read/Write ===
+# expect-stdout: read: hello from sifr
+# expect-stdout: === File Not Found (no panic) ===
+# expect-stdout: caught IOError: No such file or directory (os error 2)
+# expect-stdout: === Directory Operations ===
+# expect-stdout: entries: 1
+# expect-stdout: file in dir: inside dir
+# expect-stdout: caught listdir IOError: No such file or directory (os error 2)
+# expect-stdout: === Copy and Cleanup ===
+# expect-stdout: copy: hello from sifr
+# expect-stdout: === Read Lines ===
+# expect-stdout: line count: 3
+# expect-stdout: === Append Text ===
+# expect-stdout: appended: first second
+# expect-stdout: === Get Current Directory ===
+# expect-stdout: getcwd succeeded
+# expect-stdout: === All I/O safety demos passed ===

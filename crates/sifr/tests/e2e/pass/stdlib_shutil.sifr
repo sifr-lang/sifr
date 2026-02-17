@@ -4,33 +4,36 @@ from sifr.io import write_text, read_text, exists
 from sifr.os import run_command
 
 def main():
-    # Setup
-    run_command("mkdir -p /tmp/sifr_test_shutil")
-    write_text("/tmp/sifr_test_shutil/src.txt", "hello shutil")
+    try:
+        # Setup
+        r0: str = run_command("mkdir -p /tmp/sifr_test_shutil")
+        r1: None = write_text("/tmp/sifr_test_shutil/src.txt", "hello shutil")
 
-    # Test copy
-    copy("/tmp/sifr_test_shutil/src.txt", "/tmp/sifr_test_shutil/dst.txt")
-    content: str = read_text("/tmp/sifr_test_shutil/dst.txt")
-    print(content)
+        # Test copy
+        r2: None = copy("/tmp/sifr_test_shutil/src.txt", "/tmp/sifr_test_shutil/dst.txt")
+        content: str = read_text("/tmp/sifr_test_shutil/dst.txt")
+        print(content)
 
-    # Source still exists after copy
-    print(exists("/tmp/sifr_test_shutil/src.txt"))
+        # Source still exists after copy
+        print(exists("/tmp/sifr_test_shutil/src.txt"))
 
-    # Test move
-    write_text("/tmp/sifr_test_shutil/moveme.txt", "moved")
-    move_file("/tmp/sifr_test_shutil/moveme.txt", "/tmp/sifr_test_shutil/moved.txt")
-    moved_content: str = read_text("/tmp/sifr_test_shutil/moved.txt")
-    print(moved_content)
-    print(exists("/tmp/sifr_test_shutil/moveme.txt"))
+        # Test move
+        r3: None = write_text("/tmp/sifr_test_shutil/moveme.txt", "moved")
+        r4: None = move_file("/tmp/sifr_test_shutil/moveme.txt", "/tmp/sifr_test_shutil/moved.txt")
+        moved_content: str = read_text("/tmp/sifr_test_shutil/moved.txt")
+        print(moved_content)
+        print(exists("/tmp/sifr_test_shutil/moveme.txt"))
 
-    # Test rmtree
-    run_command("mkdir -p /tmp/sifr_test_shutil/subdir")
-    write_text("/tmp/sifr_test_shutil/subdir/file.txt", "nested")
-    rmtree("/tmp/sifr_test_shutil/subdir")
-    print(exists("/tmp/sifr_test_shutil/subdir"))
+        # Test rmtree
+        r5: str = run_command("mkdir -p /tmp/sifr_test_shutil/subdir")
+        r6: None = write_text("/tmp/sifr_test_shutil/subdir/file.txt", "nested")
+        r7: None = rmtree("/tmp/sifr_test_shutil/subdir")
+        print(exists("/tmp/sifr_test_shutil/subdir"))
 
-    # Cleanup
-    run_command("rm -rf /tmp/sifr_test_shutil")
+        # Cleanup
+        r8: str = run_command("rm -rf /tmp/sifr_test_shutil")
+    except IOError as e:
+        print("ERROR: " + e.message)
 
 # expect-stdout: hello shutil
 # expect-stdout: true

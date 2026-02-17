@@ -4,17 +4,20 @@ from sifr.io import exists
 from sifr.os import run_command
 
 def main():
-    # mkstemp creates a temp file
-    path: str = mkstemp("sifr_test_")
-    print(exists(path))
+    try:
+        # mkstemp creates a temp file
+        path: str = mkstemp("sifr_test_")
+        print(exists(path))
 
-    # mkdtemp creates a temp directory
-    dpath: str = mkdtemp("sifr_testd_")
-    print(exists(dpath))
+        # mkdtemp creates a temp directory
+        dpath: str = mkdtemp("sifr_testd_")
+        print(exists(dpath))
 
-    # Cleanup
-    run_command("rm -f " + path)
-    run_command("rm -rf " + dpath)
+        # Cleanup
+        r1: str = run_command("rm -f " + path)
+        r2: str = run_command("rm -rf " + dpath)
+    except IOError as e:
+        print("ERROR: " + e.message)
 
 # expect-stdout: true
 # expect-stdout: true

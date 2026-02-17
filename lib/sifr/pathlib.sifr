@@ -1,4 +1,5 @@
 # sifr.pathlib — Path manipulation (pure Sifr + intrinsics)
+# I/O operations return Result[T, IOError] for safe error handling.
 from _sifr.fs import exists, is_file, is_dir, read_text, write_text, mkdir
 
 def join_path(base: str, child: str) -> str:
@@ -92,14 +93,14 @@ class Path:
     def is_absolute(self) -> bool:
         return is_absolute(self._path)
 
-    def read_text(self) -> str:
+    def read_text(self) -> Result[str, IOError]:
         return read_text(self._path)
 
-    def write_text(self, content: str) -> None:
-        write_text(self._path, content)
+    def write_text(self, content: str) -> Result[None, IOError]:
+        return write_text(self._path, content)
 
-    def mkdir(self) -> None:
-        mkdir(self._path)
+    def mkdir(self) -> Result[None, IOError]:
+        return mkdir(self._path)
 
     def joinpath(self, child: str) -> str:
         return join_path(self._path, child)
