@@ -2,7 +2,7 @@
 from _sifr.json import json_loads, json_dumps
 
 # CPython-compatible aliases
-def loads(s: str) -> str:
+def loads(s: str) -> Result[str, JSONDecodeError]:
     return json_loads(s)
 
 # Note: dumps(obj: Any) cannot be a wrapper function because Any → Box<dyn Any>

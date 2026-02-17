@@ -2,9 +2,12 @@
 from sifr.json import json_loads, json_dumps
 
 def main():
-    # Parse a JSON string
-    data: str = json_loads("{\"name\":\"sifr\"}")
-    print(data)
+    try:
+        # Parse a JSON string
+        data: str = json_loads("{\"name\":\"sifr\"}")
+        print(data)
+    except JSONDecodeError as e:
+        print("unexpected error: " + e.message)
 
     # Dumps serializes to JSON (strings get quoted)
     output: str = json_dumps("hello")

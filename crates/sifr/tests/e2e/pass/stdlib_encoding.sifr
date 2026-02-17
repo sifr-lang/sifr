@@ -7,8 +7,11 @@ def main():
     print(encoded)
 
     # Decode
-    decoded: str = base64_decode("SGVsbG8sIFdvcmxkIQ==")
-    print(decoded)
+    try:
+        decoded: str = base64_decode("SGVsbG8sIFdvcmxkIQ==")
+        print(decoded)
+    except ParseError as e:
+        print("unexpected error: " + e.message)
 
 # expect-stdout: SGVsbG8sIFdvcmxkIQ==
 # expect-stdout: Hello, World!

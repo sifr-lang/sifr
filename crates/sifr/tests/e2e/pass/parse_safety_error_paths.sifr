@@ -1,0 +1,109 @@
+# Test parse safety error paths — all parse/decode intrinsics return Result
+from sifr.json import json_loads
+from sifr.tomllib import loads
+from sifr.re import re_match
+from sifr.base64 import base64_decode
+from sifr.bytes import decode_utf8, bytes_from_hex
+
+def main():
+    # 1. JSON: invalid input returns JSONDecodeError
+    try:
+        val: str = json_loads("invalid json")
+        print("should not reach here")
+    except JSONDecodeError as e:
+        print("caught JSONDecodeError")
+
+    # 2. JSON: valid input succeeds
+    try:
+        data: str = json_loads("{\"ok\":true}")
+        print(f"json ok: {data}")
+    except JSONDecodeError as e:
+        print("unexpected: " + e.message)
+
+    # 3. TOML: invalid input returns TOMLDecodeError
+    try:
+        tval: str = loads("invalid [toml")
+        print("should not reach here")
+    except TOMLDecodeError as e:
+        print("caught TOMLDecodeError")
+
+    # 4. TOML: valid input succeeds
+    try:
+        tdata: str = loads("key = \"value\"")
+        print(len(tdata) > 0)
+    except TOMLDecodeError as e:
+        print("unexpected: " + e.message)
+
+    # 5. Regex: invalid pattern returns RegexError
+    try:
+        matched: bool = re_match("[invalid", "text")
+        print("should not reach here")
+    except RegexError as e:
+        print("caught RegexError")
+
+    # 6. Regex: valid pattern succeeds
+    try:
+        matched2: bool = re_match("[a-z]+", "hello")
+        print(f"regex ok: {matched2}")
+    except RegexError as e:
+        print("unexpected: " + e.message)
+
+    # 7. Base64: invalid input returns ParseError
+    try:
+        decoded: str = base64_decode("not valid base64!!!")
+        print("should not reach here")
+    except ParseError as e:
+        print("caught base64 ParseError")
+
+    # 8. Base64: valid input succeeds
+    try:
+        decoded2: str = base64_decode("aGVsbG8=")
+        print(f"base64 ok: {decoded2}")
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    # 9. UTF-8: invalid bytes returns ParseError
+    try:
+        bad_bytes: list[int] = [255, 254, 253]
+        text: str = decode_utf8(bad_bytes)
+        print("should not reach here")
+    except ParseError as e:
+        print("caught utf8 ParseError")
+
+    # 10. UTF-8: valid bytes succeeds
+    try:
+        good_bytes: list[int] = [104, 105]
+        text2: str = decode_utf8(good_bytes)
+        print(f"utf8 ok: {text2}")
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    # 11. bytes_from_hex: invalid hex returns ParseError
+    try:
+        bad_hex: list[int] = bytes_from_hex("ZZZZ")
+        print("should not reach here")
+    except ParseError as e:
+        print("caught hex ParseError")
+
+    # 12. bytes_from_hex: valid hex succeeds
+    try:
+        good_hex: list[int] = bytes_from_hex("48")
+        print(f"hex ok: {good_hex[0]}")
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    print("all parse safety error paths passed")
+
+# expect-stdout: caught JSONDecodeError
+# expect-stdout: json ok: {"ok":true}
+# expect-stdout: caught TOMLDecodeError
+# expect-stdout: true
+# expect-stdout: caught RegexError
+# expect-stdout: regex ok: true
+# expect-stdout: caught base64 ParseError
+# expect-stdout: base64 ok: hello
+# expect-stdout: caught utf8 ParseError
+# expect-stdout: utf8 ok: hi
+# expect-stdout: caught hex ParseError
+# expect-stdout: hex ok: 72
+# expect-stdout: all parse safety error paths passed

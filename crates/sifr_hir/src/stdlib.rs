@@ -93,8 +93,8 @@ fn intrinsic_io() -> IntrinsicModule {
 fn intrinsic_json() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // json_loads(s: str) -> str  (returns JSON as string for now)
-    functions.insert("json_loads".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+    // json_loads(s: str) -> Result[str, JSONDecodeError]
+    functions.insert("json_loads".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "JSONDecodeError")));
 
     // json_dumps(obj: Any) -> str
     functions.insert("json_dumps".to_string(), FunctionType::all_borrow(vec![("obj".to_string(), Type::Any)], Type::Str));
@@ -383,14 +383,14 @@ fn intrinsic_bytes() -> IntrinsicModule {
     // encode_utf8(s: str) -> list[int]
     functions.insert("encode_utf8".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
 
-    // decode_utf8(bytes: list[int]) -> str
-    functions.insert("decode_utf8".to_string(), FunctionType::all_borrow(vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))], Type::Str));
+    // decode_utf8(bytes: list[int]) -> Result[str, ParseError]
+    functions.insert("decode_utf8".to_string(), FunctionType::all_borrow(vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))], result_ty(Type::Str, "ParseError")));
 
     // bytes_to_hex(bytes: list[int]) -> str
     functions.insert("bytes_to_hex".to_string(), FunctionType::all_borrow(vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))], Type::Str));
 
-    // bytes_from_hex(s: str) -> list[int]
-    functions.insert("bytes_from_hex".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
+    // bytes_from_hex(s: str) -> Result[list[int], ParseError]
+    functions.insert("bytes_from_hex".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Int)), "ParseError")));
 
     IntrinsicModule {
         functions,
@@ -555,8 +555,8 @@ fn intrinsic_crypto() -> IntrinsicModule {
     // base64_encode(s: str) -> str
     functions.insert("base64_encode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
-    // base64_decode(s: str) -> str
-    functions.insert("base64_decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+    // base64_decode(s: str) -> Result[str, ParseError]
+    functions.insert("base64_decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "ParseError")));
 
     // random_uniform(min: float, max: float) -> float
     functions.insert("random_uniform".to_string(), FunctionType::all_borrow(vec![
@@ -573,8 +573,8 @@ fn intrinsic_crypto() -> IntrinsicModule {
     // urlsafe_b64encode(s: str) -> str
     functions.insert("urlsafe_b64encode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
 
-    // urlsafe_b64decode(s: str) -> str
-    functions.insert("urlsafe_b64decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+    // urlsafe_b64decode(s: str) -> Result[str, ParseError]
+    functions.insert("urlsafe_b64decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "ParseError")));
 
     IntrinsicModule {
         functions,
@@ -586,50 +586,50 @@ fn intrinsic_crypto() -> IntrinsicModule {
 fn intrinsic_regex() -> IntrinsicModule {
     let mut functions = HashMap::new();
 
-    // re_match(pattern: str, text: str) -> bool
+    // re_match(pattern: str, text: str) -> Result[bool, RegexError]
     functions.insert("re_match".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ], Type::Bool));
+        ], result_ty(Type::Bool, "RegexError")));
 
-    // re_find(pattern: str, text: str) -> str | None
+    // re_find(pattern: str, text: str) -> Result[str | None, RegexError]
     functions.insert("re_find".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ], Type::Union(vec![Type::Str, Type::None])));
+        ], result_ty(Type::Union(vec![Type::Str, Type::None]), "RegexError")));
 
-    // re_replace(pattern: str, replacement: str, text: str) -> str
+    // re_replace(pattern: str, replacement: str, text: str) -> Result[str, RegexError]
     functions.insert("re_replace".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("replacement".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ], Type::Str));
+        ], result_ty(Type::Str, "RegexError")));
 
-    // re_findall(pattern: str, text: str) -> list[str]
+    // re_findall(pattern: str, text: str) -> Result[list[str], RegexError]
     functions.insert("re_findall".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ], Type::List(Box::new(Type::Str))));
+        ], result_ty(Type::List(Box::new(Type::Str)), "RegexError")));
 
-    // re_split(pattern: str, text: str) -> list[str]
+    // re_split(pattern: str, text: str) -> Result[list[str], RegexError]
     functions.insert("re_split".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ], Type::List(Box::new(Type::Str))));
+        ], result_ty(Type::List(Box::new(Type::Str)), "RegexError")));
 
-    // re_find_start(pattern: str, text: str) -> int
+    // re_find_start(pattern: str, text: str) -> Result[int, RegexError]
     // Returns the start index of the first match, or -1 if no match
     functions.insert("re_find_start".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ], Type::Int));
+        ], result_ty(Type::Int, "RegexError")));
 
-    // re_find_end(pattern: str, text: str) -> int
+    // re_find_end(pattern: str, text: str) -> Result[int, RegexError]
     // Returns the end index of the first match, or -1 if no match
     functions.insert("re_find_end".to_string(), FunctionType::all_borrow(vec![
             ("pattern".to_string(), Type::Str),
             ("text".to_string(), Type::Str),
-        ], Type::Int));
+        ], result_ty(Type::Int, "RegexError")));
 
     IntrinsicModule {
         functions,
@@ -660,8 +660,8 @@ fn intrinsic_platform() -> IntrinsicModule {
 /// _sifr.toml — TOML parsing intrinsics
 fn intrinsic_toml() -> IntrinsicModule {
     let mut functions = HashMap::new();
-    // toml_parse(text: str) -> str (JSON-encoded TOML data)
-    functions.insert("toml_parse".to_string(), FunctionType::all_borrow(vec![("text".to_string(), Type::Str)], Type::Str));
+    // toml_parse(text: str) -> Result[str, TOMLDecodeError]
+    functions.insert("toml_parse".to_string(), FunctionType::all_borrow(vec![("text".to_string(), Type::Str)], result_ty(Type::Str, "TOMLDecodeError")));
     IntrinsicModule { functions, constants: HashMap::new() }
 }
 
