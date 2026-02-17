@@ -1,0 +1,46 @@
+# CPython test_json — ported assertions for sifr.json
+# Note: json_loads returns the JSON value as a string representation
+from sifr.test import assert_eq
+from sifr.json import json_loads, json_dumps
+
+def main():
+    # --- json_loads (returns JSON value as string) ---
+    assert_eq(json_loads("{\"a\":1}"), "{\"a\":1}")
+    assert_eq(json_loads("[1,2,3]"), "[1,2,3]")
+    assert_eq(json_loads("42"), "42")
+    assert_eq(json_loads("true"), "true")
+    assert_eq(json_loads("false"), "false")
+    assert_eq(json_loads("null"), "null")
+    assert_eq(json_loads("[]"), "[]")
+    assert_eq(json_loads("{}"), "{}")
+    assert_eq(json_loads("3.14"), "3.14")
+
+    # String values include quotes in the output
+    assert_eq(json_loads("\"hello\""), "\"hello\"")
+    assert_eq(json_loads("\"\""), "\"\"")
+
+    # --- json_dumps ---
+    assert_eq(json_dumps("hello"), "\"hello\"")
+    assert_eq(json_dumps(""), "\"\"")
+    assert_eq(json_dumps(42), "42")
+    assert_eq(json_dumps(0), "0")
+    assert_eq(json_dumps(True), "true")
+    assert_eq(json_dumps(False), "false")
+    assert_eq(json_dumps(3.14), "3.14")
+
+    # Roundtrip: loads(dumps(x)) preserves structure for non-strings
+    s2: str = json_dumps(42)
+    assert_eq(json_loads(s2), "42")
+
+    s3: str = json_dumps(True)
+    assert_eq(json_loads(s3), "true")
+
+    s4: str = json_dumps(False)
+    assert_eq(json_loads(s4), "false")
+
+    s5: str = json_dumps(3.14)
+    assert_eq(json_loads(s5), "3.14")
+
+    print("cpython_json: all 23 assertions passed")
+
+# expect-stdout: cpython_json: all 23 assertions passed

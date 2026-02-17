@@ -1,0 +1,72 @@
+# CPython test_fnmatch.py — ported assertions for sifr.fnmatch
+from sifr.test import assert_eq, assert_true, assert_false
+from sifr.fnmatch import fnmatch, fnmatch_filter, fnmatchcase
+
+def main():
+    # --- fnmatch ---
+    assert_true(fnmatch("abc", "abc"))
+    assert_true(fnmatch("abc", "???"))
+    assert_true(fnmatch("abc", "*"))
+    assert_true(fnmatch("abc", "a*"))
+    assert_true(fnmatch("abc", "*c"))
+    assert_true(fnmatch("abc", "a*c"))
+    assert_false(fnmatch("abc", "ab"))
+    assert_false(fnmatch("a", "??"))
+    assert_false(fnmatch("a", "b"))
+    assert_true(fnmatch("", ""))
+    assert_true(fnmatch("", "*"))
+    assert_false(fnmatch("", "?"))
+
+    # --- fnmatchcase ---
+    assert_true(fnmatchcase("abc", "abc"))
+    assert_false(fnmatchcase("AbC", "abc"))
+    assert_false(fnmatchcase("abc", "AbC"))
+    assert_true(fnmatchcase("AbC", "AbC"))
+    assert_true(fnmatchcase("abc", "a*"))
+    assert_false(fnmatchcase("ABC", "a*"))
+
+    # --- fnmatch_filter ---
+    names: list[str] = ["Python", "Ruby", "Perl", "Tcl"]
+    r1: list[str] = fnmatch_filter(names, "P*")
+    assert_eq(len(r1), 2)
+    print(r1)
+
+    r2: list[str] = fnmatch_filter(names, "R*")
+    assert_eq(len(r2), 1)
+
+    r3: list[str] = fnmatch_filter(names, "X*")
+    assert_eq(len(r3), 0)
+
+    files: list[str] = ["test.py", "test.rb", "test.js", "main.py"]
+    r4: list[str] = fnmatch_filter(files, "*.py")
+    assert_eq(len(r4), 2)
+    print(r4)
+
+    # --- More fnmatch patterns ---
+    assert_true(fnmatch("foo.bar", "foo.*"))
+    assert_true(fnmatch("foo.bar", "*.bar"))
+    assert_false(fnmatch("foo.bar", "*.baz"))
+    assert_true(fnmatch("test123", "test???"))
+    assert_true(fnmatch("test123", "test*"))
+    assert_false(fnmatch("test123", "test?"))
+    assert_true(fnmatch("a.b.c", "a.*.*"))
+    assert_true(fnmatch("hello", "?ello"))
+    assert_true(fnmatch("hello", "hell?"))
+    assert_false(fnmatch("hello", "hell"))
+
+    # --- More fnmatch_filter ---
+    all_files: list[str] = ["a.txt", "b.txt", "c.py", "d.py", "e.rs"]
+    txt: list[str] = fnmatch_filter(all_files, "*.txt")
+    assert_eq(len(txt), 2)
+    py: list[str] = fnmatch_filter(all_files, "*.py")
+    assert_eq(len(py), 2)
+    rs: list[str] = fnmatch_filter(all_files, "*.rs")
+    assert_eq(len(rs), 1)
+    all_match: list[str] = fnmatch_filter(all_files, "*")
+    assert_eq(len(all_match), 5)
+
+    print("cpython_fnmatch: all 40 assertions passed")
+
+# expect-stdout: ["Python", "Perl"]
+# expect-stdout: ["test.py", "main.py"]
+# expect-stdout: cpython_fnmatch: all 40 assertions passed

@@ -1,0 +1,107 @@
+# CPython test_math.py — additional ported assertions for edge cases
+from sifr.test import assert_eq, assert_true, assert_false, assert_almost_eq
+from sifr.math import (
+    sqrt, floor, ceil, fabs, log, log2, log10, exp, sin, cos, tan,
+    asin, acos, atan, atan2, pow_val, factorial, gcd, lcm,
+    isnan, isinf, copysign, hypot, trunc, degrees, radians,
+    isfinite, fmod, pi, e, tau, inf, nan, isclose, comb, perm, prod
+)
+
+def main():
+    # --- More trig edge cases ---
+    assert_almost_eq(sin(pi / 6.0), 0.5, 0.0001)
+    assert_almost_eq(cos(pi / 3.0), 0.5, 0.0001)
+    assert_almost_eq(sin(pi / 4.0), 0.7071, 0.001)
+    assert_almost_eq(cos(pi / 4.0), 0.7071, 0.001)
+
+    # --- More exp/log edge cases ---
+    assert_almost_eq(exp(2.0), 7.3890, 0.001)
+    assert_almost_eq(log(10.0), 2.3025, 0.001)
+    assert_almost_eq(log2(16.0), 4.0, 0.0001)
+    assert_almost_eq(log2(32.0), 5.0, 0.0001)
+    assert_almost_eq(log10(1000.0), 3.0, 0.0001)
+    assert_almost_eq(log10(10000.0), 4.0, 0.0001)
+
+    # --- More sqrt ---
+    assert_almost_eq(sqrt(16.0), 4.0, 0.0001)
+    assert_almost_eq(sqrt(25.0), 5.0, 0.0001)
+    assert_almost_eq(sqrt(100.0), 10.0, 0.0001)
+    assert_almost_eq(sqrt(0.25), 0.5, 0.0001)
+
+    # --- More power ---
+    assert_almost_eq(pow_val(3.0, 3.0), 27.0, 0.0001)
+    assert_almost_eq(pow_val(10.0, 0.0), 1.0, 0.0001)
+    assert_almost_eq(pow_val(4.0, 0.5), 2.0, 0.0001)
+    assert_almost_eq(pow_val(27.0, 1.0 / 3.0), 3.0, 0.0001)
+
+    # --- More factorial ---
+    assert_eq(factorial(2), 2)
+    assert_eq(factorial(3), 6)
+    assert_eq(factorial(4), 24)
+    assert_eq(factorial(6), 720)
+    assert_eq(factorial(7), 5040)
+    assert_eq(factorial(8), 40320)
+
+    # --- More GCD ---
+    assert_eq(gcd(48, 18), 6)
+    assert_eq(gcd(100, 75), 25)
+    assert_eq(gcd(17, 13), 1)
+    assert_eq(gcd(36, 24), 12)
+    assert_eq(gcd(7, 7), 7)
+
+    # --- More LCM ---
+    assert_eq(lcm(3, 4), 12)
+    assert_eq(lcm(6, 8), 24)
+    assert_eq(lcm(12, 18), 36)
+    assert_eq(lcm(7, 11), 77)
+
+    # --- More combinatorics ---
+    assert_eq(comb(6, 2), 15)
+    assert_eq(comb(6, 3), 20)
+    assert_eq(comb(10, 5), 252)
+    assert_eq(comb(7, 1), 7)
+    assert_eq(perm(4, 2), 12)
+    assert_eq(perm(6, 3), 120)
+    assert_eq(perm(3, 3), 6)
+
+    # --- More copysign ---
+    assert_almost_eq(copysign(5.0, -1.0), -5.0, 0.0001)
+    assert_almost_eq(copysign(-5.0, 1.0), 5.0, 0.0001)
+    assert_almost_eq(copysign(-5.0, -1.0), -5.0, 0.0001)
+
+    # --- More hypot ---
+    assert_almost_eq(hypot(8.0, 15.0), 17.0, 0.0001)
+    assert_almost_eq(hypot(7.0, 24.0), 25.0, 0.0001)
+    assert_almost_eq(hypot(1.0, 1.0), 1.4142, 0.001)
+
+    # --- More degrees/radians ---
+    assert_almost_eq(degrees(0.0), 0.0, 0.0001)
+    assert_almost_eq(degrees(pi / 4.0), 45.0, 0.0001)
+    assert_almost_eq(degrees(pi / 6.0), 30.0, 0.0001)
+    assert_almost_eq(radians(0.0), 0.0, 0.0001)
+    assert_almost_eq(radians(45.0), pi / 4.0, 0.0001)
+    assert_almost_eq(radians(30.0), pi / 6.0, 0.0001)
+    assert_almost_eq(radians(360.0), 2.0 * pi, 0.0001)
+
+    # --- More fmod ---
+    assert_almost_eq(fmod(5.0, 3.0), 2.0, 0.0001)
+    assert_almost_eq(fmod(10.0, 4.0), 2.0, 0.0001)
+    assert_almost_eq(fmod(7.0, 7.0), 0.0, 0.0001)
+
+    # --- More isclose ---
+    assert_true(isclose(1.0, 1.0, 0.0))
+    assert_false(isclose(1.0, 1.1, 0.01))
+    assert_true(isclose(100.0, 100.001, 0.01))
+    assert_false(isclose(1.0, 2.0, 0.1))
+
+    # --- Product with different inputs ---
+    nums2: list[int] = [2, 3, 4]
+    assert_eq(prod(nums2), 24)
+    nums3: list[int] = [1, 1, 1, 1]
+    assert_eq(prod(nums3), 1)
+    nums4: list[int] = [10, 10]
+    assert_eq(prod(nums4), 100)
+
+    print("cpython_math_extended: all 73 assertions passed")
+
+# expect-stdout: cpython_math_extended: all 73 assertions passed

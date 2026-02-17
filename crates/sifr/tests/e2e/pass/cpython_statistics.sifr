@@ -1,0 +1,97 @@
+# CPython test_statistics.py — ported assertions for sifr.statistics
+from sifr.test import assert_eq, assert_almost_eq, assert_true
+
+from sifr.statistics import (
+    mean, median, variance, pvariance, stdev, pstdev,
+    fmean, harmonic_mean, geometric_mean, median_low, median_high, mode
+)
+
+def main():
+    # --- mean ---
+    data1: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
+    assert_almost_eq(mean(data1), 3.0, 0.0001)
+
+    data2: list[float] = [0.0, 1.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0, 5.0, 6.0, 7.0, 7.0, 7.0, 7.0, 8.0, 9.0]
+    assert_almost_eq(mean(data2), 4.8125, 0.0001)
+
+    data3: list[float] = [17.25, 19.75, 20.0, 21.5, 21.75, 23.25, 25.125, 27.5]
+    assert_almost_eq(mean(data3), 22.015625, 0.0001)
+
+    single: list[float] = [42.0]
+    assert_almost_eq(mean(single), 42.0, 0.0001)
+
+    # --- fmean ---
+    assert_almost_eq(fmean(data1), 3.0, 0.0001)
+
+    # --- median ---
+    even: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    assert_almost_eq(median(even), 3.5, 0.0001)
+
+    odd: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 9.0]
+    assert_almost_eq(median(odd), 4.0, 0.0001)
+
+    single_med: list[float] = [7.0]
+    assert_almost_eq(median(single_med), 7.0, 0.0001)
+
+    # --- median_low / median_high ---
+    assert_almost_eq(median_low(even), 3.0, 0.0001)
+    assert_almost_eq(median_high(even), 4.0, 0.0001)
+    assert_almost_eq(median_low(odd), 4.0, 0.0001)
+    assert_almost_eq(median_high(odd), 4.0, 0.0001)
+
+    # --- variance / stdev ---
+    assert_almost_eq(variance(data1), 2.5, 0.0001)
+    assert_almost_eq(stdev(data1), 1.5811, 0.001)
+
+    # --- pvariance / pstdev ---
+    assert_almost_eq(pvariance(data1), 2.0, 0.0001)
+    assert_almost_eq(pstdev(data1), 1.4142, 0.001)
+
+    # Variance of constant data
+    constant: list[float] = [5.0, 5.0, 5.0, 5.0]
+    assert_almost_eq(variance(constant), 0.0, 0.0001)
+    assert_almost_eq(pvariance(constant), 0.0, 0.0001)
+
+    # --- mode ---
+    mode_data: list[int] = [1, 1, 2, 3, 3, 3, 4]
+    assert_eq(mode(mode_data), 3)
+
+    mode_data2: list[int] = [1, 2, 2, 3, 3, 3]
+    assert_eq(mode(mode_data2), 3)
+
+    # --- geometric_mean ---
+    geo1: list[float] = [4.0, 9.0]
+    assert_almost_eq(geometric_mean(geo1), 6.0, 0.0001)
+
+    geo2: list[float] = [54.0, 24.0, 36.0]
+    assert_almost_eq(geometric_mean(geo2), 36.0, 0.01)
+
+    geo3: list[float] = [17.625]
+    assert_almost_eq(geometric_mean(geo3), 17.625, 0.0001)
+
+    # --- harmonic_mean ---
+    hm1: list[float] = [2.0, 4.0, 4.0, 8.0, 16.0, 16.0]
+    assert_almost_eq(harmonic_mean(hm1), 4.8, 0.01)
+
+    hm2: list[float] = [0.25, 0.5, 1.0, 1.0]
+    assert_almost_eq(harmonic_mean(hm2), 0.5, 0.01)
+
+    hm3: list[float] = [1.0]
+    assert_almost_eq(harmonic_mean(hm3), 1.0, 0.0001)
+
+    # --- Two-element data ---
+    two: list[float] = [1.0, 3.0]
+    assert_almost_eq(mean(two), 2.0, 0.0001)
+    assert_almost_eq(median(two), 2.0, 0.0001)
+    assert_almost_eq(variance(two), 2.0, 0.0001)
+    assert_almost_eq(stdev(two), 1.4142, 0.001)
+
+    # --- Large uniform data ---
+    uniform: list[float] = [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+    assert_almost_eq(mean(uniform), 10.0, 0.0001)
+    assert_almost_eq(median(uniform), 10.0, 0.0001)
+    assert_almost_eq(stdev(uniform), 0.0, 0.0001)
+
+    print("cpython_statistics: all 42 assertions passed")
+
+# expect-stdout: cpython_statistics: all 42 assertions passed

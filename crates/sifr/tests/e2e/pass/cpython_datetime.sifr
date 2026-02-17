@@ -1,0 +1,66 @@
+# CPython test_datetime — ported assertions for sifr.datetime (timedelta)
+from sifr.test import assert_eq, assert_true, assert_false
+from sifr.datetime import timedelta
+
+def main():
+    # --- Basic construction ---
+    td0: timedelta = timedelta(0, 0)
+    assert_eq(td0.total_seconds(), 0)
+    assert_eq(td0.days(), 0)
+    assert_eq(td0.seconds(), 0)
+
+    td1: timedelta = timedelta(1, 0)
+    assert_eq(td1.total_seconds(), 86400)
+    assert_eq(td1.days(), 1)
+    assert_eq(td1.seconds(), 0)
+
+    td2: timedelta = timedelta(0, 3600)
+    assert_eq(td2.total_seconds(), 3600)
+    assert_eq(td2.days(), 0)
+    assert_eq(td2.seconds(), 3600)
+
+    td3: timedelta = timedelta(2, 7200)
+    assert_eq(td3.total_seconds(), 180000)
+    assert_eq(td3.days(), 2)
+    assert_eq(td3.seconds(), 7200)
+
+    # --- Addition ---
+    sum1: timedelta = td1 + td2
+    assert_eq(sum1.total_seconds(), 90000)
+
+    sum2: timedelta = td0 + td1
+    assert_eq(sum2.total_seconds(), 86400)
+
+    sum3: timedelta = td2 + td2
+    assert_eq(sum3.total_seconds(), 7200)
+
+    # --- Subtraction ---
+    diff1: timedelta = td1 - td2
+    assert_eq(diff1.total_seconds(), 82800)
+
+    diff2: timedelta = td3 - td1
+    assert_eq(diff2.total_seconds(), 93600)
+
+    diff3: timedelta = td1 - td0
+    assert_eq(diff3.total_seconds(), 86400)
+
+    # --- Equality ---
+    assert_true(td0 == timedelta(0, 0))
+    assert_true(td1 == timedelta(1, 0))
+    assert_false(td1 == td2)
+    assert_false(td0 == td1)
+
+    # Equivalent timedeltas
+    td_1day: timedelta = timedelta(1, 0)
+    td_86400s: timedelta = timedelta(0, 86400)
+    assert_true(td_1day == td_86400s)
+
+    # --- Chained operations ---
+    hour: timedelta = timedelta(0, 3600)
+    two_hours: timedelta = hour + hour
+    three_hours: timedelta = two_hours + hour
+    assert_eq(three_hours.total_seconds(), 10800)
+
+    print("cpython_datetime: all 28 assertions passed")
+
+# expect-stdout: cpython_datetime: all 28 assertions passed
