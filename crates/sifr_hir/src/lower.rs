@@ -56,6 +56,8 @@ struct LowerCtx {
     try_block_error_types: std::collections::HashSet<String>,
     /// Set of class names that are error types (class Foo(Error))
     error_types: std::collections::HashSet<String>,
+    /// Map of parent error type -> list of known child error types (for exhaustiveness checking)
+    error_hierarchy: HashMap<String, Vec<String>>,
     /// Set of function names that have *args (vararg) parameters
     vararg_functions: std::collections::HashSet<String>,
     /// Set of registered type variable names (e.g., T, K, V from TypeVar declarations)
@@ -81,6 +83,7 @@ impl LowerCtx {
             in_try_block: false,
             try_block_error_types: std::collections::HashSet::new(),
             error_types: std::collections::HashSet::new(),
+            error_hierarchy: HashMap::new(),
             vararg_functions: std::collections::HashSet::new(),
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
@@ -250,6 +253,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                     name: class_name,
                     fields: Vec::new(),
                     methods: Vec::new(),
+                    parent_class: None,
                 });
             }
         }
@@ -709,7 +713,20 @@ fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut Low
     }
 }
 
-/// Check if a class definition has `(Error)` as its base class.
+/// Check if a class definition extends an error class (Error or any registered error type).
+fn is_error_class_with_ctx(class_def: &StmtClassDef, error_types: &std::collections::HashSet<String>) -> bool {
+    for base in class_def.bases() {
+        if let Expr::Name(n) = base {
+            let base_name = n.id.as_str();
+            if base_name == "Error" || error_types.contains(base_name) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Check if a class definition has `(Error)` as its base class (legacy, for contexts without error_types).
 fn is_error_class(class_def: &StmtClassDef) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
@@ -938,6 +955,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         name: class_name.clone(),
         fields: vec![],
         methods: vec![],
+        parent_class: None,
     });
 
     for stmt in &class_def.body {
@@ -1024,6 +1042,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         name: class_name.clone(),
         fields: fields.clone(),
         methods: methods.clone(),
+        parent_class: None,
     };
 
     // Update the constructor function to return the class type
@@ -1375,34 +1394,158 @@ fn register_builtins(ctx: &mut LowerCtx) {
 
     // Register built-in error classes.
     // These are compiler built-ins (like int, str, bool) — available without imports.
-    // Each has a `message: str` field and a constructor that accepts a single string.
-    let builtin_error_classes = [
-        "Error",
-        "IOError",
-        "ParseError",
-        "ValueError",
-        "DivisionError",
-        "KeyError",
-        "JSONDecodeError",
-        "TOMLDecodeError",
-        "RegexError",
-    ];
-    for &error_name in &builtin_error_classes {
+    // Error hierarchy: Error -> {IOError, ParseError, ValueError, ...}
+    //                  IOError -> {FileNotFoundError, PermissionError, ...}
+
+    // --- Base error class ---
+    {
+        let msg_fields = vec![("message".to_string(), Type::Str)];
+        let class_ty = Type::Class {
+            name: "Error".to_string(),
+            fields: msg_fields.clone(),
+            methods: vec![],
+            parent_class: None,
+        };
+        ctx.class_types.insert("Error".to_string(), class_ty.clone());
+        ctx.error_types.insert("Error".to_string());
+        ctx.functions.insert("Error".to_string(), FunctionType::new(
+            vec![("message".to_string(), Type::Str)],
+            class_ty,
+        ));
+    }
+
+    // --- Mid-level error classes (parent: Error) ---
+    // IOError has an extra `kind` field for subclass dispatch; constructor accepts only message
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("kind".to_string(), Type::Str),
+        ];
+        let class_ty = Type::Class {
+            name: "IOError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types.insert("IOError".to_string(), class_ty.clone());
+        ctx.error_types.insert("IOError".to_string());
+        ctx.functions.insert("IOError".to_string(), FunctionType::new(
+            vec![("message".to_string(), Type::Str)],
+            class_ty,
+        ));
+    }
+    let other_mid_level_errors = ["ParseError", "ValueError", "DivisionError", "KeyError"];
+    for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
             name: error_name.to_string(),
             fields: fields.clone(),
             methods: vec![],
+            parent_class: Some("Error".to_string()),
         };
         ctx.class_types.insert(error_name.to_string(), class_ty.clone());
         ctx.error_types.insert(error_name.to_string());
-        // Register constructor: ErrorName("message") -> ErrorName
-        let ft = FunctionType::new(
+        ctx.functions.insert(error_name.to_string(), FunctionType::new(
             vec![("message".to_string(), Type::Str)],
             class_ty,
-        );
-        ctx.functions.insert(error_name.to_string(), ft);
+        ));
     }
+
+    // --- IOError subclasses (parent: IOError) ---
+    let io_subclasses = [
+        "FileNotFoundError", "PermissionError", "FileExistsError",
+        "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
+    ];
+    for &error_name in &io_subclasses {
+        let fields = vec![("message".to_string(), Type::Str)];
+        let class_ty = Type::Class {
+            name: error_name.to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("IOError".to_string()),
+        };
+        ctx.class_types.insert(error_name.to_string(), class_ty.clone());
+        ctx.error_types.insert(error_name.to_string());
+        ctx.functions.insert(error_name.to_string(), FunctionType::new(
+            vec![("message".to_string(), Type::Str)],
+            class_ty,
+        ));
+    }
+
+    // --- JSONDecodeError (parent: Error, extra fields: line, column) ---
+    // Constructor accepts only message; line/column are populated by intrinsics
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("line".to_string(), Type::Int),
+            ("column".to_string(), Type::Int),
+        ];
+        let class_ty = Type::Class {
+            name: "JSONDecodeError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types.insert("JSONDecodeError".to_string(), class_ty.clone());
+        ctx.error_types.insert("JSONDecodeError".to_string());
+        ctx.functions.insert("JSONDecodeError".to_string(), FunctionType::new(
+            vec![("message".to_string(), Type::Str)],
+            class_ty,
+        ));
+    }
+
+    // --- TOMLDecodeError (parent: Error, extra fields: line, column) ---
+    // Constructor accepts only message; line/column are populated by intrinsics
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("line".to_string(), Type::Int),
+            ("column".to_string(), Type::Int),
+        ];
+        let class_ty = Type::Class {
+            name: "TOMLDecodeError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types.insert("TOMLDecodeError".to_string(), class_ty.clone());
+        ctx.error_types.insert("TOMLDecodeError".to_string());
+        ctx.functions.insert("TOMLDecodeError".to_string(), FunctionType::new(
+            vec![("message".to_string(), Type::Str)],
+            class_ty,
+        ));
+    }
+
+    // --- RegexError (parent: Error, extra field: detail) ---
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("detail".to_string(), Type::Str),
+        ];
+        let class_ty = Type::Class {
+            name: "RegexError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types.insert("RegexError".to_string(), class_ty.clone());
+        ctx.error_types.insert("RegexError".to_string());
+        // Constructor accepts only message; detail is populated by intrinsics
+        ctx.functions.insert("RegexError".to_string(), FunctionType::new(
+            vec![("message".to_string(), Type::Str)],
+            class_ty,
+        ));
+    }
+
+    // Build error hierarchy for exhaustiveness checking
+    ctx.error_hierarchy.insert("IOError".to_string(), vec![
+        "FileNotFoundError".to_string(),
+        "PermissionError".to_string(),
+        "FileExistsError".to_string(),
+        "IsADirectoryError".to_string(),
+        "NotADirectoryError".to_string(),
+        "DirectoryNotEmptyError".to_string(),
+    ]);
 }
 
 fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
@@ -2052,6 +2195,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                                 name: "Error".to_string(),
                                 fields: vec![("message".to_string(), Type::Str)],
                                 methods: vec![],
+                                parent_class: None,
                             })
                         } else if let Some(class_ty) = ctx.class_types.get(et) {
                             class_ty.clone()
@@ -2061,6 +2205,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                                 name: et.clone(),
                                 fields: vec![("message".to_string(), Type::Str)],
                                 methods: vec![],
+                                parent_class: None,
                             }
                         }
                     } else {
@@ -2069,6 +2214,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                             name: "Error".to_string(),
                             fields: vec![("message".to_string(), Type::Str)],
                             methods: vec![],
+                            parent_class: None,
                         })
                     };
                     ctx.scope.define(var_name.clone(), error_var_ty);
@@ -2089,9 +2235,30 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             }
 
             // Exhaustiveness checking: if no catch-all, all error types must be covered
+            // A parent type covers all its children (e.g., except IOError covers FileNotFoundError)
+            // Subclasses partially cover their parent (e.g., except FileNotFoundError covers IOError::FileNotFound)
             if !has_catch_all && !try_error_types.is_empty() {
+                // Expand covered_types: if a parent is covered, all its children are covered
+                let mut expanded_covered = covered_types.clone();
+                for covered in &covered_types {
+                    if let Some(children) = ctx.error_hierarchy.get(covered) {
+                        for child in children {
+                            expanded_covered.insert(child.clone());
+                        }
+                    }
+                }
+                // Check if subclasses fully cover their parent
+                // If all children of a parent are covered, the parent is covered
+                for (parent, children) in &ctx.error_hierarchy {
+                    if try_error_types.contains(parent) && !expanded_covered.contains(parent) {
+                        let all_children_covered = children.iter().all(|c| expanded_covered.contains(c));
+                        if all_children_covered {
+                            expanded_covered.insert(parent.clone());
+                        }
+                    }
+                }
                 let uncovered: Vec<String> = try_error_types.iter()
-                    .filter(|et| !covered_types.contains(*et))
+                    .filter(|et| !expanded_covered.contains(*et))
                     .cloned()
                     .collect();
                 if !uncovered.is_empty() {
@@ -3620,6 +3787,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 name: "ParseError".to_string(),
                 fields: vec![("message".to_string(), Type::Str)],
                 methods: vec![],
+                parent_class: None,
             });
             Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
         } else {
@@ -3648,6 +3816,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 name: "ParseError".to_string(),
                 fields: vec![("message".to_string(), Type::Str)],
                 methods: vec![],
+                parent_class: None,
             });
             Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
         } else {

@@ -1,0 +1,91 @@
+# Demo: milestone_error_subclasses
+# Error subclass hierarchy enables compile-time checked fine-grained error handling.
+# The type tells you the error kind; the message tells you the details.
+# print(e) is the idiomatic way to display errors.
+
+from sifr.io import read_text, write_text
+from sifr.os import listdir, mkdir, rmdir
+from sifr.json import loads
+from sifr.re import re_match
+
+def demo_specific_subclass():
+    print("=== 1. Specific Subclass Handling ===")
+    try:
+        content: str = read_text("/nonexistent/file.txt")
+    except FileNotFoundError as e:
+        print(f"FileNotFoundError: {e.message}")
+    except IOError as e:
+        print(f"Other IOError: {e.message}")
+    print("FileNotFoundError caught by specific handler")
+
+def demo_parent_catch_all():
+    print("=== 2. Parent Catch-All ===")
+    try:
+        content: str = read_text("/nonexistent/file.txt")
+    except IOError as e:
+        print(f"IOError (catches all subclasses): {e.message}")
+        print(f"Error kind: {e.kind}")
+    print("IOError parent catches FileNotFoundError")
+
+def demo_json_fields():
+    print("=== 3. JSONDecodeError with line/column ===")
+    try:
+        result: str = loads("{bad json")
+    except JSONDecodeError as e:
+        print(f"JSONDecodeError: {e.message}")
+        print(f"Line: {e.line}, Column: {e.column}")
+    print("Extra fields provide structured error data")
+
+def demo_regex_fields():
+    print("=== 4. RegexError with detail ===")
+    try:
+        m: bool = re_match("[unclosed", "test")
+    except RegexError as e:
+        print(f"RegexError: {e.message}")
+        print(f"Detail: {e.detail}")
+    print("RegexError carries detailed diagnostic info")
+
+def demo_mixed_families():
+    print("=== 5. Mixed Error Families ===")
+    try:
+        data: str = read_text("/nonexistent/data.json")
+    except FileNotFoundError as e:
+        print(f"FileNotFoundError: {e.message}")
+    except IOError as e:
+        print(f"Other IOError: {e.message}")
+    except JSONDecodeError as e:
+        print(f"JSONDecodeError: {e.message}")
+    print("Multiple error families in one try block")
+
+def demo_print_display():
+    print("=== 6. print(e) via Display ===")
+    try:
+        content: str = read_text("/nonexistent/file.txt")
+    except IOError as e:
+        print(e)
+    print("print(e) formats via Display (same as e.message)")
+
+def demo_user_defined_error():
+    print("=== 7. User-Defined Error ===")
+    try:
+        raise ValueError("connection timed out after 30s")
+    except ValueError as e:
+        print(f"ValueError: {e.message}")
+    print("User-defined errors inherit message from Error")
+
+def main():
+    demo_specific_subclass()
+    print("")
+    demo_parent_catch_all()
+    print("")
+    demo_json_fields()
+    print("")
+    demo_regex_fields()
+    print("")
+    demo_mixed_families()
+    print("")
+    demo_print_display()
+    print("")
+    demo_user_defined_error()
+    print("")
+    print("=== All error subclass demos passed ===")

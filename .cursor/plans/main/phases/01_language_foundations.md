@@ -937,6 +937,8 @@ class IOError(AppError):
     path: str
 ```
 
+> **Note:** In `milestone_error_subclasses` (Phase 09), built-in error types are expanded into a subclass hierarchy (e.g., `FileNotFoundError` extends `IOError`) with compile-time exhaustiveness checking. All errors keep `message: str`; some gain additional structured fields. See [09_stdlib_safety_remediation.md](09_stdlib_safety_remediation.md).
+
 **Codegen:** Error types generate Rust enums (not structs with inheritance). `AppError` becomes `enum AppError { ValueError(ValueError), IOError(IOError) }`. The `Error` protocol maps to Rust's `std::error::Error` trait.
 
 ### Safety Boundary (No-Panic Guarantee)

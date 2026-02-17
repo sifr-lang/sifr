@@ -196,6 +196,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                     name: class.name.clone(),
                     fields: class.fields.clone(),
                     methods,
+                    parent_class: None,
                 };
                 class_exports.insert(class.name.clone(), class_ty);
                 // Track error types for cross-module import resolution
@@ -544,6 +545,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
                     name: class.name.clone(),
                     fields: class.fields.clone(),
                     methods,
+                    parent_class: None,
                 };
                 class_exports.insert(class.name.clone(), class_ty);
             }
