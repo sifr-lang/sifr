@@ -6,7 +6,7 @@ todos:
     content: "Phase 08: Error Safety -- milestone_error_safety + milestone_error_safety_stdlib_types"
     status: pending
   - id: phase-09
-    content: "Phase 09: Stdlib Safety Remediation -- io_safety, parse_safety, collection_safety, edge_case_safety"
+    content: "Phase 09: Stdlib Safety Remediation -- io_safety, parse_safety, collection_safety, edge_case_safety, zero_panic_gate"
     status: pending
   - id: phase-10
     content: "Phase 10: Borrow-by-Default -- borrow_default, borrow_hardening, borrow_stdlib"
@@ -15,10 +15,10 @@ todos:
     content: "Phase 11: Stdlib Deepening -- pure_expansion, intrinsic_expansion, class_deepening, new_modules"
     status: pending
   - id: phase-12
-    content: "Phase 12: Async and Ecosystem Foundation -- async, networking_stdlib, typed_serde"
+    content: "Phase 12: Async and Ecosystem Foundation -- async, networking_stdlib, typed_serde_core"
     status: pending
   - id: phase-13
-    content: "Phase 13: Web Stack -- web_db, web_typed, crypto_auth, web_production, web_services, data_processing"
+    content: "Phase 13: Web Stack -- web_db, typed_web_extractors, crypto_auth, web_production, web_services, data_processing"
     status: pending
   - id: phase-14
     content: "Phase 14: Polish and Tooling -- metaprogramming, ffi, package_mgmt, dev_tooling, ecosystem"
@@ -47,6 +47,7 @@ flowchart TD
     P07["Phase 07: Stdlib Parity (DONE)"]
     P08["Phase 08: Error Safety"]
     P09["Phase 09: Stdlib Safety Remediation"]
+    Gate["Zero Panic Gate"]
     P10["Phase 10: Borrow-by-Default"]
     P11["Phase 11: Stdlib Deepening"]
     P12["Phase 12: Async and Ecosystem"]
@@ -55,7 +56,8 @@ flowchart TD
 
     P07 --> P08
     P08 --> P09
-    P09 --> P10
+    P09 --> Gate
+    Gate --> P10
     P10 --> P11
     P11 --> P12
     P12 --> P13
@@ -107,11 +109,11 @@ The most critical safety violation. 5 modules, ~15 intrinsics.
 
 ### milestone_parse_safety: Parse/Decode Safety (Priority 2 -- Critical)
 
-5 modules, ~8 intrinsics.
+5 modules, ~8 intrinsics. Uses the specific error types defined in Phase 08 -- not generic `ParseError` -- so that exhaustiveness checking can distinguish between different parse failure sources in the same `try` block.
 
-- `json_loads` -> `Result[str, ParseError]`
-- `toml_parse` -> `Result[str, ParseError]`
-- `base64_decode` / `urlsafe_b64decode` -> `Result[str, ParseError]`
+- `json_loads` -> `Result[str, JSONDecodeError]`
+- `toml_parse` -> `Result[str, TOMLDecodeError]`
+- `base64_decode` / `urlsafe_b64decode` -> `Result[str, ParseError]` (generic is fine here -- no module-specific error type needed for base64)
 - `decode_utf8` / `bytes_from_hex` -> `Result[str, ParseError]`
 - Regex intrinsics (`re_match`, `re_replace`, `re_findall`, `re_split`) -> `Result[T, RegexError]`
 - Update all `.sifr` wrappers and E2E tests
@@ -141,6 +143,16 @@ The most critical safety violation. 5 modules, ~15 intrinsics.
 - `datetime.from_timestamp(invalid)` -> return `Result`
 - `SubscriptAssign` (`x[i] = val`) -> bounds check instead of panic
 
+### milestone_zero_panic_gate: Safety Verification Gate
+
+Systematic verification that the safety remediation is complete. This is a hard quality gate -- Phase 10 cannot start until this passes.
+
+- Audit all codegen intrinsic emission paths in `crates/sifr_codegen/src/lib.rs` -- assert zero `.unwrap()` calls on user-facing operations (the only acceptable `.unwrap()` is on compiler-internal invariants that cannot fail)
+- Add a CI lint that greps for `.unwrap()` in intrinsic codegen blocks and fails if any are found on `Result`/`Option` values from external operations (file I/O, parsing, collection access)
+- Run the full stdlib safety audit script against all 37 modules and produce an updated safety score -- every module must score 7/10 or higher (up from the current state where 12 modules score below 5/10)
+- E2E test: a program that calls every fallible stdlib function with invalid input must compile and run without panicking, handling all errors via `try`/`except`
+- Update `audit/STDLIB_PARITY_MASTER_REPORT.md` with post-remediation safety scores
+
 ---
 
 ## Phase 10: Borrow-by-Default
@@ -157,12 +169,14 @@ As defined in [05_borrow_by_default.md](.cursor/plans/main/phases/05_borrow_by_d
 - Update all call paths (regular, Callable, method) to convention-aware logic
 - Codegen emits `&T` / `&mut T` / `T` based on convention
 
-### milestone_borrow_hardening: Exclusivity and Diagnostics
+### milestone_borrow_hardening: Exclusivity, Escape Analysis, and Diagnostics
 
 - Mutable borrow exclusivity tracking
-- Clear error messages for borrow violations
+- Escape analysis enforcement: returning or storing a borrowed parameter produces a compiler error with actionable diagnostic ("use `own` or `.clone()`"), not a silent `.clone()` insertion
+- Validate consuming-self method receiver patterns: methods that consume `self` (builder pattern) must correctly emit `self` (move) in codegen, and calling a consuming method on a variable must invalidate it
+- Clear error messages for all borrow violations
 - Update all 50 borrowing audit tests
-- New E2E pass/fail tests
+- New E2E pass/fail tests (including escape-analysis and consuming-self cases)
 - Multi-module convention tests
 - Fix the 7 known codegen regressions from the borrowing audit
 
@@ -214,7 +228,7 @@ High-ROI, no new intrinsics needed:
 
 ### milestone_new_modules: Critical Missing Modules
 
-- `sifr.subprocess` (wraps `std::process`) -- `run(cmd) -> Result[CompletedProcess, Error]`
+- `sifr.subprocess` (wraps `std::process`) -- sync `run(cmd) -> Result[CompletedProcess, Error]` (async Popen added in Phase 12's `milestone_networking_stdlib`)
 - `sifr.sys` -- `argv`, `exit(code)`, `platform`, `version`, `maxsize`
 - `sifr.html` -- `escape(s)`, `unescape(s)`
 - `sifr.configparser` -- `ConfigParser` class
@@ -243,16 +257,20 @@ As defined in the original [08_ecosystem.md](.cursor/plans/main/phases/08_ecosys
 
 ### milestone_networking_stdlib: Networking Standard Library
 
-- `sifr.subprocess` -- full Popen API (async)
+- `sifr.subprocess` -- async Popen API (extends the sync `run()` from Phase 11's `milestone_new_modules` with async process management)
 - `sifr.socket` -- TCP/UDP
 - `sifr.http` -- HTTP client (wraps `reqwest`)
 - `sifr.url` -- URL parsing
 
-### milestone_typed_serde: Typed Serialization
+### milestone_typed_serde_core: Typed Serialization (Core)
+
+Web-independent typed serialization. This does NOT include web extractors -- those depend on the web framework and are delivered in Phase 13.
 
 - Auto-derive `Serialize`/`Deserialize` on all classes
-- `dumps(obj)` / `loads(s, T)` for typed JSON roundtrip
-- Foundation for web request/response typing
+- `dumps(obj)` serializes any class to JSON string
+- `loads(s, T)` deserializes JSON string to typed class, returns `Result[T, JSONDecodeError]`
+- Nested classes, lists, dicts, optionals, unions serialize correctly
+- E2E tests for typed JSON roundtrip independent of any web framework
 
 ---
 
@@ -264,7 +282,9 @@ As defined in the original [08_ecosystem.md](.cursor/plans/main/phases/08_ecosys
 - `sifr.db.sqlite` (wraps `rusqlite`) -- embedded SQLite
 - `sifr.db` (wraps `sqlx`) -- async PostgreSQL/MySQL/SQLite
 
-### milestone_web_typed: Typed Web Extractors
+### milestone_typed_web_extractors: Typed Web Extractors
+
+Depends on both `milestone_web_db` (web framework must exist) and `milestone_typed_serde_core` (auto-serde must exist). This is the web-dependent half of typed serialization.
 
 - `Json[T]`, `Path[T]`, `Query[T]`, `Form[T]` extractors
 - `UploadFile`, `Multipart` file uploads
@@ -318,25 +338,34 @@ As defined in the original [08_ecosystem.md](.cursor/plans/main/phases/08_ecosys
 
 **Phase 08 (Error Safety) before Phase 09 (Stdlib Safety Remediation):** You cannot make intrinsics return `Result[T, IOError]` if the compiler doesn't enforce that `IOError` extends `Error`, doesn't do exhaustiveness checking, and all existing tests use `Result[T, str]`. The compiler infrastructure must come first.
 
-**Phase 09 (Stdlib Safety Remediation) before Phase 10 (Borrow-by-Default):** Both touch the same codegen paths (`stdlib.rs`, `lib.rs`). Fixing safety first means borrow-by-default works on non-panicking code. Also, borrow-by-default will change how stdlib wrappers pass arguments -- it's cleaner to fix safety on the current convention, then change the convention.
+**Phase 09 (Stdlib Safety Remediation) before Phase 10 (Borrow-by-Default):** Both touch the same codegen paths (`stdlib.rs`, `lib.rs`). Fixing safety first means borrow-by-default works on non-panicking code. Also, borrow-by-default will change how stdlib wrappers pass arguments -- it's cleaner to fix safety on the current convention, then change the convention. The zero-panic gate at the end of Phase 09 ensures no safety regressions leak into subsequent phases.
 
 **Phase 10 (Borrow-by-Default) before Phase 11 (Stdlib Deepening):** New stdlib functions should be written with the final ownership model from day one. Writing 50+ new functions with move-by-default and then retrofitting `mut`/`own` is wasteful.
 
 **Phase 11 (Stdlib Deepening) before Phase 12 (Async):** The async runtime and web framework will use stdlib functions heavily. Having a deep, safe, correctly-owned stdlib means fewer surprises when building async features on top.
 
-**Phase 12 (Async) before Phase 13 (Web Stack):** The web framework requires async I/O. Typed serde is needed for web request/response typing.
+**Phase 12 (Async) before Phase 13 (Web Stack):** The web framework requires async I/O. Typed serde core (auto-derive `Serialize`/`Deserialize`, typed `dumps`/`loads`) is web-independent and lands here. Web-specific extractors (`Json[T]`, `Path[T]`, etc.) depend on the web framework and land in Phase 13.
 
 **Phase 13 (Web Stack) before Phase 14 (Polish):** The web stack is the primary use case. Tooling and ecosystem features are polish that benefits from a stable, feature-complete language.
+
+## Error Taxonomy Policy
+
+Phase 08 defines both generic and module-specific error types. The policy for which to use:
+
+- **Module-specific error types** (`JSONDecodeError`, `TOMLDecodeError`, `RegexError`, `StatisticsError`, `CycleError`) are used when the error source is a distinct domain and users benefit from catching it specifically in exhaustiveness checking. These are compiler built-ins available without imports.
+- **Generic error types** (`ParseError`, `ValueError`, `IOError`) are used for operations where the failure mode is common across domains (e.g., base64 decoding, hex parsing, string-to-number conversion) and fine-grained distinction adds no value.
+- **Rule of thumb:** if two different fallible calls in the same `try` block could fail with the same error type but the user would want to handle them differently, they need distinct error types.
 
 ## Key Differences from Original Roadmap
 
 
-| Original                                 | Revised                         | Reason                                                        |
-| ---------------------------------------- | ------------------------------- | ------------------------------------------------------------- |
-| Phase 05 (Borrow-by-Default) was skipped | Moved to Phase 10, after safety | Safety must be fixed first; borrow changes touch same codegen |
-| Phase 08 jumped straight to Async/Web    | Phase 08 is now Error Safety    | Cannot build ecosystem on panicking stdlib                    |
-| Stdlib safety was not a phase            | Phase 09 is dedicated to it     | 40+ panic paths is a critical gap                             |
-| Stdlib deepening was not planned         | Phase 11 adds it                | 38% parity is too low for ecosystem work                      |
-| 2 ecosystem phases (08, 09)              | 3 phases (12, 13, 14)           | More granular; async foundation separate from web stack       |
+| Original                                 | Revised                                  | Reason                                                        |
+| ---------------------------------------- | ---------------------------------------- | ------------------------------------------------------------- |
+| Phase 05 (Borrow-by-Default) was skipped | Moved to Phase 10, after safety          | Safety must be fixed first; borrow changes touch same codegen |
+| Phase 08 jumped straight to Async/Web    | Phase 08 is now Error Safety             | Cannot build ecosystem on panicking stdlib                    |
+| Stdlib safety was not a phase            | Phase 09 is dedicated to it + zero-panic gate | 40+ panic paths is a critical gap; gate prevents regressions  |
+| Stdlib deepening was not planned         | Phase 11 adds it                         | 38% parity is too low for ecosystem work                      |
+| 2 ecosystem phases (08, 09)              | 3 phases (12, 13, 14)                    | More granular; async foundation separate from web stack       |
+| typed_serde was monolithic               | Split: core (Phase 12) + web extractors (Phase 13) | Core serde is web-independent; extractors depend on web framework |
 
 
