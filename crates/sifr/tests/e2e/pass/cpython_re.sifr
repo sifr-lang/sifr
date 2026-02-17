@@ -1,6 +1,8 @@
 # CPython test_re.py — ported assertions for sifr.re
+# Uses CPython-compatible names: search, sub, findall, split (new aliases)
+# re_match has no alias (match is a Python keyword), so it stays as re_match
 from sifr.test import assert_eq, assert_true, assert_false
-from sifr.re import re_match, re_find, re_replace, re_findall, re_split, search, sub, findall, split
+from sifr.re import re_match, search, sub, findall, split
 
 def main():
     # --- re_match (returns bool) ---

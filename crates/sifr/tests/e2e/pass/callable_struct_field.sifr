@@ -1,5 +1,7 @@
 # expect-stdout: 42
-# Tests: class with a Callable field compiles correctly
+# expect-stdout: 42
+# expect-stdout: 15
+# Tests: class with a Callable field compiles correctly AND can be called
 
 from typing import Callable
 
@@ -14,6 +16,15 @@ class Config:
 def double(x: int) -> int:
     return x * 2
 
+def add_ten(x: int) -> int:
+    return x + 10
+
 def main():
     c: Config = Config(42, double)
     print(c.value)
+    # Call the Callable field — this should invoke double(21) = 42
+    result: int = c.callback(21)
+    print(result)
+    # Test with a different callback
+    c2: Config = Config(5, add_ten)
+    print(c2.callback(c2.value))

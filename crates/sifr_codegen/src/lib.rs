@@ -78,6 +78,9 @@ pub struct StdlibCode {
     /// E.g., sifr.secrets depends on _sifr.crypto, so when user imports sifr.secrets,
     /// the Cargo dependencies for _sifr.crypto (rand) must be included.
     pub transitive_deps: HashMap<String, HashSet<String>>,
+    /// Map of module_name -> set of function names that are generators (contain yield).
+    /// Used to emit .collect() when assigning generator results to list[T] in user code.
+    pub generator_functions: HashMap<String, HashSet<String>>,
 }
 
 impl Default for StdlibCode {
@@ -88,6 +91,7 @@ impl Default for StdlibCode {
             module_constants: HashMap::new(),
             func_signatures: HashMap::new(),
             transitive_deps: HashMap::new(),
+            generator_functions: HashMap::new(),
         }
     }
 }
@@ -333,6 +337,14 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     if key.starts_with(&prefix) {
                         emitter.func_signatures.insert(key.clone(), sig.clone());
                     }
+                }
+            }
+        }
+        // Pre-register stdlib generator functions so .collect() is emitted at call sites
+        if let Some(gen_set) = stdlib_code.generator_functions.get(&import.module) {
+            for name in &import.names {
+                if gen_set.contains(name) {
+                    emitter.generator_functions.insert(name.clone());
                 }
             }
         }
@@ -3753,30 +3765,48 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".len() as i64");
             }
-            (Type::Class { name: ref class_name, .. }, _) => {
-                // Class instance method call -- use convention-aware argument emission
-                self.emit_expr(object);
-                self.write(&format!(".{}(", method));
-                // Look up method conventions from func_signatures
-                let method_key = format!("{}::{}", class_name, method);
-                let method_info = self.func_signatures.get(&method_key).cloned();
-                for (i, arg) in args.iter().enumerate() {
-                    if i > 0 {
-                        self.write(", ");
-                    }
-                    if let Some((ref params, _)) = method_info {
-                        // Method params skip self, so param index i corresponds to params[i]
-                        // (self is not in func_signatures params)
-                        if let Some((param_ty, convention)) = params.get(i) {
-                            self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
-                            self.emit_expr(arg);
-                            continue;
+            (Type::Class { name: ref class_name, fields, methods, .. }, _) => {
+                // Check if this is a callable field invocation (not a real method)
+                let is_callable_field = !methods.iter().any(|(n, _)| n == method)
+                    && fields.iter().any(|(n, t)| n == method && matches!(t, Type::Callable(..)));
+
+                if is_callable_field {
+                    // Callable field: emit (obj.field)(args) instead of obj.method(args)
+                    self.write("(");
+                    self.emit_expr(object);
+                    self.write(&format!(".{})(", method));
+                    for (i, arg) in args.iter().enumerate() {
+                        if i > 0 {
+                            self.write(", ");
                         }
+                        self.emit_expr(arg);
                     }
-                    // Fallback: emit as-is
-                    self.emit_expr(arg);
+                    self.write(")");
+                } else {
+                    // Regular class instance method call -- use convention-aware argument emission
+                    self.emit_expr(object);
+                    self.write(&format!(".{}(", method));
+                    // Look up method conventions from func_signatures
+                    let method_key = format!("{}::{}", class_name, method);
+                    let method_info = self.func_signatures.get(&method_key).cloned();
+                    for (i, arg) in args.iter().enumerate() {
+                        if i > 0 {
+                            self.write(", ");
+                        }
+                        if let Some((ref params, _)) = method_info {
+                            // Method params skip self, so param index i corresponds to params[i]
+                            // (self is not in func_signatures params)
+                            if let Some((param_ty, convention)) = params.get(i) {
+                                self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
+                                self.emit_expr(arg);
+                                continue;
+                            }
+                        }
+                        // Fallback: emit as-is
+                        self.emit_expr(arg);
+                    }
+                    self.write(")");
                 }
-                self.write(")");
             }
             _ => {
                 // Fallback: emit as-is
@@ -6259,7 +6289,7 @@ fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
 }
 
 /// Check if a function body contains any yield statements (making it a generator).
-fn body_contains_yield(stmts: &[HirStmt]) -> bool {
+pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
     for stmt in stmts {
         match stmt {
             HirStmt::Yield { .. } => return true,
