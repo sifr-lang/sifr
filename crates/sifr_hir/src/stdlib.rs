@@ -20,6 +20,7 @@ fn error_class(name: &str) -> Type {
         name: name.to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: vec![],
+        parent_class: None,
     }
 }
 

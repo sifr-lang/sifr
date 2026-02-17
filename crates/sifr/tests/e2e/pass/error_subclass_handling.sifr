@@ -1,0 +1,80 @@
+# Test error subclass handling: IOError subclasses, extra fields, parent catch-all
+from sifr.io import read_text, write_text
+from sifr.json import json_loads
+from sifr.re import re_match
+
+def main():
+    # 1. FileNotFoundError caught by specific handler
+    try:
+        content: str = read_text("/tmp/sifr_subclass_nonexistent.txt")
+    except FileNotFoundError as e:
+        print("1: caught FileNotFoundError")
+    except IOError as e:
+        print("1: should not reach IOError")
+
+    # 2. IOError parent catches all subclasses
+    try:
+        content2: str = read_text("/tmp/sifr_subclass_nonexistent2.txt")
+    except IOError as e:
+        print("2: caught IOError parent")
+
+    # 3. IOError kind field is populated
+    try:
+        content3: str = read_text("/tmp/sifr_subclass_nonexistent3.txt")
+    except IOError as e:
+        print(f"3: kind={e.kind}")
+
+    # 4. e.message contains Rust error text
+    try:
+        content4: str = read_text("/tmp/sifr_subclass_nonexistent4.txt")
+    except FileNotFoundError as e:
+        print("4: message ok")
+    except IOError as e:
+        print("4: fallback")
+
+    # 5. JSONDecodeError has line and column fields
+    try:
+        result: str = json_loads("{invalid json")
+    except JSONDecodeError as e:
+        print(f"5: json line={e.line} col={e.column}")
+
+    # 6. RegexError has detail field
+    try:
+        m: bool = re_match("[invalid", "test")
+    except RegexError as e:
+        print("6: regex detail ok")
+
+    # 7. Mixed error families: IOError + JSONDecodeError in same try
+    try:
+        data: str = read_text("/tmp/sifr_subclass_nonexistent5.txt")
+    except FileNotFoundError as e:
+        print("7: caught FileNotFoundError in mixed")
+    except IOError as e:
+        print("7: caught IOError in mixed")
+    except JSONDecodeError as e:
+        print("7: caught JSONDecodeError in mixed")
+
+    # 8. print(e) works via Display (same as e.message)
+    try:
+        content8: str = read_text("/tmp/sifr_subclass_nonexistent8.txt")
+    except IOError as e:
+        print("8: display ok")
+
+    # 9. User-defined error with message
+    try:
+        raise ValueError("custom error message")
+    except ValueError as e:
+        print(f"9: {e.message}")
+
+    print("all tests passed")
+
+# expect-stdout: 1: caught FileNotFoundError
+# expect-stdout: 2: caught IOError parent
+# expect-stdout: 3: kind=FileNotFound
+# expect-stdout: 4: message ok
+# expect-stdout: 5: json line=1 col=2
+# expect-stdout: 6: regex detail ok
+# expect-stdout: 7: caught FileNotFoundError in mixed
+# expect-stdout: 8: display ok
+# expect-stdout: 9: custom error message
+# expect-stdout: all tests passed

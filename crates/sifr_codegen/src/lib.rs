@@ -10,6 +10,13 @@ use std::collections::{HashMap, HashSet};
 const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "Error", "IOError", "ParseError", "ValueError", "DivisionError",
     "KeyError", "JSONDecodeError", "TOMLDecodeError", "RegexError",
+    "FileNotFoundError", "PermissionError", "FileExistsError",
+    "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
+];
+
+const IO_ERROR_SUBCLASSES: &[&str] = &[
+    "FileNotFoundError", "PermissionError", "FileExistsError",
+    "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
 ];
 
 /// Check if a built-in error class name is referenced in the generated Rust code.
@@ -479,16 +486,68 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         .filter(|c| c.is_error_type)
         .map(|c| c.name.clone())
         .collect();
+    // Emit IOError with kind field and __io_err helper
+    let io_error_referenced = is_builtin_error_referenced(&combined_code, "IOError")
+        || IO_ERROR_SUBCLASSES.iter().any(|s| is_builtin_error_referenced(&combined_code, s));
+    if io_error_referenced && !user_defined_error_classes.contains("IOError") {
+        result.push_str("#[derive(Debug, Clone)]\n");
+        result.push_str("struct IOError {\n");
+        result.push_str("    message: String,\n");
+        result.push_str("    kind: String,\n");
+        result.push_str("}\n\n");
+        result.push_str("impl IOError {\n");
+        result.push_str("    fn new(message: String) -> Self { Self { message, kind: \"Other\".to_string() } }\n");
+        result.push_str("}\n\n");
+        result.push_str("impl std::fmt::Display for IOError {\n");
+        result.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+        result.push_str("        write!(f, \"{}\", self.message)\n");
+        result.push_str("    }\n");
+        result.push_str("}\n\n");
+        result.push_str("impl std::error::Error for IOError {}\n\n");
+        result.push_str("fn __io_err(e: std::io::Error) -> IOError {\n");
+        result.push_str("    let msg = e.to_string();\n");
+        result.push_str("    let kind = match e.kind() {\n");
+        result.push_str("        std::io::ErrorKind::NotFound => \"FileNotFound\",\n");
+        result.push_str("        std::io::ErrorKind::PermissionDenied => \"PermissionDenied\",\n");
+        result.push_str("        std::io::ErrorKind::AlreadyExists => \"FileExists\",\n");
+        result.push_str("        _ => \"Other\",\n");
+        result.push_str("    };\n");
+        result.push_str("    IOError { message: msg, kind: kind.to_string() }\n");
+        result.push_str("}\n\n");
+    }
+
+    // Other error types as structs
     for &error_name in BUILTIN_ERROR_CLASSES {
+        // Skip IOError and its subclasses (handled above)
+        if error_name == "IOError" || IO_ERROR_SUBCLASSES.contains(&error_name) {
+            continue;
+        }
         let is_referenced = is_builtin_error_referenced(&combined_code, error_name);
         if is_referenced && !user_defined_error_classes.contains(error_name) {
             result.push_str("#[derive(Debug, Clone)]\n");
             result.push_str(&format!("struct {} {{\n", error_name));
             result.push_str("    message: String,\n");
+            if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
+                result.push_str("    line: i64,\n");
+                result.push_str("    column: i64,\n");
+            } else if error_name == "RegexError" {
+                result.push_str("    detail: String,\n");
+            }
             result.push_str("}\n\n");
-            result.push_str(&format!("impl {} {{\n", error_name));
-            result.push_str(&format!("    fn new(message: String) -> Self {{ Self {{ message }} }}\n"));
-            result.push_str("}\n\n");
+            // Add new() constructor that accepts only message, defaulting extra fields
+            if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
+                result.push_str(&format!("impl {} {{\n", error_name));
+                result.push_str("    fn new(message: String) -> Self { Self { message, line: 0, column: 0 } }\n");
+                result.push_str("}\n\n");
+            } else if error_name == "RegexError" {
+                result.push_str(&format!("impl {} {{\n", error_name));
+                result.push_str("    fn new(message: String) -> Self { Self { message, detail: String::new() } }\n");
+                result.push_str("}\n\n");
+            } else {
+                result.push_str(&format!("impl {} {{\n", error_name));
+                result.push_str("    fn new(message: String) -> Self { Self { message } }\n");
+                result.push_str("}\n\n");
+            }
             result.push_str(&format!("impl std::fmt::Display for {} {{\n", error_name));
             result.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
             result.push_str("        write!(f, \"{}\", self.message)\n");
@@ -952,6 +1011,10 @@ impl RustEmitter {
             {
                 self.display_classes.insert(class.name.clone());
             }
+        }
+        // Built-in error types all have Display impls (formatting self.message)
+        for &error_name in BUILTIN_ERROR_CLASSES {
+            self.display_classes.insert(error_name.to_string());
         }
 
         // Pre-scan: collect parent field info for inheritance
@@ -2759,15 +2822,40 @@ impl RustEmitter {
                 }
             }
             HirStmt::TryExcept { body, handlers, body_error_types } => {
-                // Collect distinct error types from handlers and body
+                // Helper: map IOError subclass names to their Rust kind string
+                fn io_subclass_kind(name: &str) -> Option<&'static str> {
+                    match name {
+                        "FileNotFoundError" => Some("FileNotFound"),
+                        "PermissionError" => Some("PermissionDenied"),
+                        "FileExistsError" => Some("FileExists"),
+                        "IsADirectoryError" => Some("IsADirectory"),
+                        "NotADirectoryError" => Some("NotADirectory"),
+                        "DirectoryNotEmptyError" => Some("DirectoryNotEmpty"),
+                        _ => None,
+                    }
+                }
+
+                // Map IOError subclass names to their parent type for Rust codegen
+                fn rust_error_type(name: &str) -> &str {
+                    if io_subclass_kind(name).is_some() {
+                        "IOError"
+                    } else {
+                        name
+                    }
+                }
+
+                // Collect distinct Rust error types from handlers and body
                 let mut error_type_names: Vec<String> = Vec::new();
                 let mut has_catch_all = false;
                 for handler in handlers {
                     if let Some(ref et) = handler.error_type {
                         if et == "Error" {
                             has_catch_all = true;
-                        } else if !error_type_names.contains(et) {
-                            error_type_names.push(et.clone());
+                        } else {
+                            let rust_ty = rust_error_type(et).to_string();
+                            if !error_type_names.contains(&rust_ty) {
+                                error_type_names.push(rust_ty);
+                            }
                         }
                     } else {
                         has_catch_all = true;
@@ -2776,11 +2864,19 @@ impl RustEmitter {
                 // If catch-all only (no specific handlers), use body error types
                 if error_type_names.is_empty() && has_catch_all {
                     for et in body_error_types {
-                        if et != "Error" && !error_type_names.contains(et) {
-                            error_type_names.push(et.clone());
+                        if et != "Error" {
+                            let rust_ty = rust_error_type(et).to_string();
+                            if !error_type_names.contains(&rust_ty) {
+                                error_type_names.push(rust_ty);
+                            }
                         }
                     }
                 }
+
+                // Check if any handler catches an IOError subclass specifically
+                let has_io_subclass_handler = handlers.iter().any(|h| {
+                    h.error_type.as_ref().map_or(false, |et| io_subclass_kind(et).is_some())
+                });
 
                 let needs_enum = error_type_names.len() > 1;
 
@@ -2799,8 +2895,6 @@ impl RustEmitter {
                         self.write_indent();
                         self.write(&format!("{}({}),\n", et, et));
                     }
-                    // If there's a catch-all, we need a variant for "other" errors
-                    // In practice, the catch-all covers all remaining error types
                     self.indent -= 1;
                     self.write_indent();
                     self.write("}\n");
@@ -2841,16 +2935,31 @@ impl RustEmitter {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
                                 self.write(&format!("Err({}) => {{\n", var_name));
-                                // For catch-all, we need to extract the message from whichever variant
-                                // Since all error types have a `message` field, shadow the variable
                                 if handler.name.is_some() {
                                     self.indent += 1;
                                     self.write_indent();
-                                    // Re-bind to extract inner value for catch-all
-                                    // Actually, just use the enum value as-is; the handler body accesses .message
-                                    // We need to handle this differently - bind the inner value
                                     self.indent -= 1;
                                 }
+                            } else if let Some(kind) = io_subclass_kind(et) {
+                                // IOError subclass: match on the parent enum variant with a guard
+                                let var_name = handler.name.as_deref().unwrap_or("_e");
+                                self.write_indent();
+                                self.write(&format!(
+                                    "Err({}::IOError(ref {})) if {}.kind == \"{}\" => {{\n",
+                                    enum_name, var_name, var_name, kind
+                                ));
+                                // Clone the variable so handler body can use it as owned
+                                if handler.name.is_some() {
+                                    self.indent += 1;
+                                    self.write_indent();
+                                    self.write(&format!("let {} = {}.clone();\n", var_name, var_name));
+                                    self.indent -= 1;
+                                }
+                            } else if et == "IOError" && has_io_subclass_handler {
+                                // IOError parent catch-all (when subclass handlers exist)
+                                let var_name = handler.name.as_deref().unwrap_or("_e");
+                                self.write_indent();
+                                self.write(&format!("Err({}::IOError({})) => {{\n", enum_name, var_name));
                             } else {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
@@ -2876,13 +2985,20 @@ impl RustEmitter {
                     self.write("}\n");
                 } else {
                     // Single error type: use simple codegen
-                    // Prefer body error types (concrete) over handler-declared types (may be catch-all Error)
                     let error_rust_type = if let Some(first_body_err) = error_type_names.first() {
                         first_body_err.clone()
                     } else {
                         handlers.first()
                             .and_then(|h| h.error_resolved_type.as_ref())
-                            .map(|t| t.rust_type())
+                            .map(|t| {
+                                let rt = t.rust_type();
+                                // Map IOError subclass resolved types to IOError
+                                if io_subclass_kind(&rt).is_some() {
+                                    "IOError".to_string()
+                                } else {
+                                    rt
+                                }
+                            })
                             .unwrap_or_else(|| "String".to_string())
                     };
 
@@ -2900,21 +3016,68 @@ impl RustEmitter {
                     self.indent += 1;
                     self.write_indent();
                     self.write("Ok(()) => {}\n");
-                    for handler in handlers {
-                        self.write_indent();
-                        if let Some(ref name) = handler.name {
-                            self.write(&format!("Err({}) => {{\n", name));
-                        } else {
-                            self.write("Err(_e) => {\n");
+
+                    if has_io_subclass_handler && error_rust_type == "IOError" {
+                        // IOError with subclass dispatch: use guard-based matching
+                        for handler in handlers {
+                            if let Some(ref et) = handler.error_type {
+                                if et == "Error" || et == "IOError" {
+                                    // Parent catch-all
+                                    let var_name = handler.name.as_deref().unwrap_or("_e");
+                                    self.write_indent();
+                                    self.write(&format!("Err({}) => {{\n", var_name));
+                                } else if let Some(kind) = io_subclass_kind(et) {
+                                    // Subclass match with guard
+                                    let var_name = handler.name.as_deref().unwrap_or("_e");
+                                    self.write_indent();
+                                    self.write(&format!(
+                                        "Err(ref {}) if {}.kind == \"{}\" => {{\n",
+                                        var_name, var_name, kind
+                                    ));
+                                    // Clone the variable so handler body can use it as owned
+                                    if handler.name.is_some() {
+                                        self.indent += 1;
+                                        self.write_indent();
+                                        self.write(&format!("let {} = {}.clone();\n", var_name, var_name));
+                                        self.indent -= 1;
+                                    }
+                                } else {
+                                    let var_name = handler.name.as_deref().unwrap_or("_e");
+                                    self.write_indent();
+                                    self.write(&format!("Err({}) => {{\n", var_name));
+                                }
+                            } else {
+                                let var_name = handler.name.as_deref().unwrap_or("_e");
+                                self.write_indent();
+                                self.write(&format!("Err({}) => {{\n", var_name));
+                            }
+                            self.indent += 1;
+                            for stmt in &handler.body {
+                                self.emit_stmt(stmt);
+                            }
+                            self.indent -= 1;
+                            self.write_indent();
+                            self.write("}\n");
                         }
-                        self.indent += 1;
-                        for stmt in &handler.body {
-                            self.emit_stmt(stmt);
+                    } else {
+                        // No subclass dispatch needed — simple match
+                        for handler in handlers {
+                            self.write_indent();
+                            if let Some(ref name) = handler.name {
+                                self.write(&format!("Err({}) => {{\n", name));
+                            } else {
+                                self.write("Err(_e) => {\n");
+                            }
+                            self.indent += 1;
+                            for stmt in &handler.body {
+                                self.emit_stmt(stmt);
+                            }
+                            self.indent -= 1;
+                            self.write_indent();
+                            self.write("}\n");
                         }
-                        self.indent -= 1;
-                        self.write_indent();
-                        self.write("}\n");
                     }
+
                     self.indent -= 1;
                     self.write_indent();
                     self.write("}\n");
@@ -4910,6 +5073,28 @@ impl RustEmitter {
                 }
             }
             HirExpr::ConstructorCall { class_name, args, .. } => {
+                // IOError subclasses map to IOError with a specific kind field
+                let io_subclass_kind = match class_name.as_str() {
+                    "FileNotFoundError" => Some("FileNotFound"),
+                    "PermissionError" => Some("PermissionDenied"),
+                    "FileExistsError" => Some("FileExists"),
+                    "IsADirectoryError" => Some("IsADirectory"),
+                    "NotADirectoryError" => Some("NotADirectory"),
+                    "DirectoryNotEmptyError" => Some("DirectoryNotEmpty"),
+                    _ => None,
+                };
+                if let Some(kind) = io_subclass_kind {
+                    // Emit: IOError { message: <arg>.to_string(), kind: "<kind>".to_string() }
+                    self.write("IOError { message: ");
+                    if !args.is_empty() {
+                        self.emit_expr(&args[0]);
+                        self.write(".to_string()");
+                    } else {
+                        self.write("String::new()");
+                    }
+                    self.write(&format!(", kind: \"{}\".to_string() }}", kind));
+                    return;
+                }
                 self.write(class_name);
                 self.write("::new(");
                 let field_names = self.class_field_order.get(class_name).cloned();
@@ -5275,14 +5460,14 @@ impl RustEmitter {
             "read_text" => {
                 self.write("std::fs::read_to_string(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map_err(__io_err)");
             }
             "write_text" => {
                 self.write("std::fs::write(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|_| ()).map_err(__io_err)");
             }
             "exists" => {
                 self.write("std::path::Path::new(");
@@ -5292,44 +5477,44 @@ impl RustEmitter {
             "read_lines" => {
                 self.write("std::fs::read_to_string(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|s| s.lines().map(|l| l.to_string()).collect::<Vec<String>>()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|s| s.lines().map(|l| l.to_string()).collect::<Vec<String>>()).map_err(__io_err)");
             }
             "append_text" => {
                 self.write("{ use std::io::Write; (|| -> Result<(), IOError> { let mut _f = std::fs::OpenOptions::new().append(true).create(true).open(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(|e| IOError { message: e.to_string() })?; write!(_f, \"{}\", ");
+                self.write(").map_err(__io_err)?; write!(_f, \"{}\", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_err(|e| IOError { message: e.to_string() })?; Ok(()) })() }");
+                self.write(").map_err(__io_err)?; Ok(()) })() }");
             }
             "getcwd" => {
-                self.write("std::env::current_dir().map(|p| p.to_string_lossy().to_string()).map_err(|e| IOError { message: e.to_string() })");
+                self.write("std::env::current_dir().map(|p| p.to_string_lossy().to_string()).map_err(__io_err)");
             }
             "listdir" => {
                 self.write("std::fs::read_dir(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect::<Vec<String>>()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect::<Vec<String>>()).map_err(__io_err)");
             }
             "mkdir" => {
                 self.write("std::fs::create_dir_all(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|_| ()).map_err(__io_err)");
             }
             "rmdir" => {
                 self.write("std::fs::remove_dir(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|_| ()).map_err(__io_err)");
             }
             "remove_file" => {
                 self.write("std::fs::remove_file(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|_| ()).map_err(__io_err)");
             }
             "rename" => {
                 self.write("std::fs::rename(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|_| ()).map_err(__io_err)");
             }
             "is_file" => {
                 self.write("std::path::Path::new(");
@@ -5346,17 +5531,17 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|_| ()).map_err(__io_err)");
             }
             "walk_dir" => {
-                self.write("{ fn __walk(p: &std::path::Path) -> Result<Vec<String>, IOError> { let mut r = Vec::new(); let entries = std::fs::read_dir(p).map_err(|e| IOError { message: e.to_string() })?; for e in entries { let e = e.map_err(|e| IOError { message: e.to_string() })?; let path = e.path(); r.push(path.display().to_string()); if path.is_dir() { r.extend(__walk(&path)?); } } Ok(r) } __walk(std::path::Path::new(");
+                self.write("{ fn __walk(p: &std::path::Path) -> Result<Vec<String>, IOError> { let mut r = Vec::new(); let entries = std::fs::read_dir(p).map_err(__io_err)?; for e in entries { let e = e.map_err(__io_err)?; let path = e.path(); r.push(path.display().to_string()); if path.is_dir() { r.extend(__walk(&path)?); } } Ok(r) } __walk(std::path::Path::new(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(")) }");
             }
             "rmdir_all" => {
                 self.write("std::fs::remove_dir_all(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|_| ()).map_err(__io_err)");
             }
             "gettempdir" => {
                 self.write("std::env::temp_dir().display().to_string()");
@@ -5364,13 +5549,13 @@ impl RustEmitter {
             "makedirs" => {
                 self.write("std::fs::create_dir_all(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(|e| IOError { message: e.to_string() })");
+                self.write(").map(|_| ()).map_err(__io_err)");
             }
             // sifr.json
             "json_loads" => {
                 self.write("serde_json::from_str::<serde_json::Value>(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|v| v.to_string()).map_err(|e| JSONDecodeError { message: e.to_string() })");
+                self.write(").map(|v| v.to_string()).map_err(|e| JSONDecodeError { message: e.to_string(), line: e.line() as i64, column: e.column() as i64 })");
             }
             "json_dumps" => {
                 self.write("serde_json::to_string(&");
@@ -5394,7 +5579,7 @@ impl RustEmitter {
             "run_command" => {
                 self.write("(|| -> Result<String, IOError> { let output = std::process::Command::new(\"sh\").args([\"-c\", ");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write("]).output().map_err(|e| IOError { message: e.to_string() })?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
+                self.write("]).output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
             }
             "get_args" => {
                 self.write("std::env::args().collect::<Vec<String>>()");
@@ -5840,14 +6025,14 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").map(|re| re.is_match(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(")).map_err(|e| RegexError { message: e.to_string() })");
+                self.write(")).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
             }
             "re_find" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").map(|re| re.find(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|m| m.as_str().to_string())).map_err(|e| RegexError { message: e.to_string() })");
+                self.write(").map(|m| m.as_str().to_string())).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
             }
             "re_replace" => {
                 self.write("regex::Regex::new(");
@@ -5856,35 +6041,35 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[2]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").to_string()).map_err(|e| RegexError { message: e.to_string() })");
+                self.write(").to_string()).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
             }
             "re_findall" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").map(|re| re.find_iter(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|m| m.as_str().to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string() })");
+                self.write(").map(|m| m.as_str().to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
             }
             "re_split" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").map(|re| re.split(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|s| s.to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string() })");
+                self.write(").map(|s| s.to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
             }
             "re_find_start" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").map(|re| re.find(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_or(-1_i64, |m| m.start() as i64)).map_err(|e| RegexError { message: e.to_string() })");
+                self.write(").map_or(-1_i64, |m| m.start() as i64)).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
             }
             "re_find_end" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").map(|re| re.find(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_or(-1_i64, |m| m.end() as i64)).map_err(|e| RegexError { message: e.to_string() })");
+                self.write(").map_or(-1_i64, |m| m.end() as i64)).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
             }
             // sifr.hash
             "sha256" => {
@@ -5946,7 +6131,7 @@ impl RustEmitter {
             "toml_parse" => {
                 self.write("{ let __toml_str = ");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write("; __toml_str.parse::<toml::Value>().map(|v| format!(\"{}\", v)).map_err(|e| TOMLDecodeError { message: e.to_string() }) }");
+                self.write("; __toml_str.parse::<toml::Value>().map(|v| format!(\"{}\", v)).map_err(|e| TOMLDecodeError { message: e.to_string(), line: 0, column: 0 }) }");
             }
             // sifr.datetime
             "datetime_now" => {

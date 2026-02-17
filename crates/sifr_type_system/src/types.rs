@@ -61,6 +61,7 @@ pub enum Type {
         name: String,
         fields: Vec<(String, Type)>,
         methods: Vec<(String, FunctionType)>,
+        parent_class: Option<String>,
     },
 
     // --- milestone_protocols: Protocols, Operators, Discriminated Unions ---
@@ -530,8 +531,23 @@ impl Type {
             (Self::Tuple(a), Self::Tuple(b)) => {
                 a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))
             }
-            // Class types: nominal typing -- same name means same type
-            (Self::Class { name: a, .. }, Self::Class { name: b, .. }) => a == b,
+            // Class types: nominal typing with inheritance support
+            (Self::Class { name: a, parent_class: ref parent_a, .. }, Self::Class { name: b, .. }) => {
+                if a == b {
+                    return true;
+                }
+                // Child class is assignable to parent class
+                if let Some(ref parent) = parent_a {
+                    if parent == b {
+                        return true;
+                    }
+                    // Grandparent: if target is "Error", any class with a parent is an error class
+                    if b == "Error" {
+                        return true;
+                    }
+                }
+                false
+            }
             // Result types: covariant in both T and E
             (Self::Result(ok_a, err_a), Self::Result(ok_b, err_b)) => {
                 ok_a.is_assignable_to(ok_b) && err_a.is_assignable_to(err_b)

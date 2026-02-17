@@ -99,6 +99,7 @@ Sifr intentionally diverges from CPython in several areas to achieve compile-tim
 | `list.index(x)` raises `ValueError` if x not in list | `list.index(x)` returns `int \| None` (Option); `None` if not found | Safe by default; callers handle absence via pattern matching | milestone_collection_safety |
 | `min([])`/`max([])` raise `ValueError` on empty | `min(list)`/`max(list)` return `T \| None`; `None` on empty list | Safe by default; absence is a value, not an error | milestone_collection_safety |
 | `set.pop()` raises `KeyError` on empty set | `set.pop()` returns `T \| None`; `None` on empty set | Consistent with safe collection semantics | milestone_collection_safety |
+| Error subclass fields | Only `message` via `str(e)` | `message: str` + typed fields (`line`, `column`, `detail`) | Structured error data without string parsing | milestone_error_subclasses |
 
 
 **Migration note:** code that relies heavily on exception propagation, import-time side effects, arbitrary-precision integers, or runtime reflection will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
@@ -321,7 +322,63 @@ def pipeline(path: str) -> Result[str, PipelineError]:
 
 **Typed error hierarchies:** All error types are classes that extend `Error`. The `raise` keyword maps to `Err(ErrorInstance)`. `return value` in a `Result`-returning function auto-wraps in `Ok(value)`. Using a non-`Error` type (e.g., `str`, `int`) as the `E` in `Result[T, E]` is a compile-time error.
 
-**Built-in error classes:** Sifr provides a standard set of error classes for common failure modes (e.g., I/O, parsing, validation). These are used by the stdlib and available to user code. `Error` is the root class with a `message: str` field; all error types extend it and inherit `message`. Error types form a subclass hierarchy — for example, `FileNotFoundError`, `PermissionError`, and `FileExistsError` are subclasses of `IOError`. Catching the parent (`except IOError as e`) catches all subclasses; catching a specific subclass (`except FileNotFoundError as e`) enables fine-grained handling with compile-time exhaustiveness checking. For built-in errors, `message` is auto-populated from Rust's error `Display` (`e.to_string()`). Some errors have additional structured fields alongside `message` (e.g., `JSONDecodeError` has `line: int` and `column: int`). `print(e)` is the idiomatic way to display errors — it formats `self.message` via `Display`.
+**Built-in error classes:** Sifr provides a standard set of error classes for common failure modes (e.g., I/O, parsing, validation). These are used by the stdlib and available to user code.
+
+#### Error Hierarchy
+
+All errors have `message: str` populated from Rust's `Display` (for built-ins) or the constructor (for user-defined errors). `print(e)` is the idiomatic way to display error messages.
+
+**Design Principles:**
+1. The type tells you the error kind; the message tells you the details
+2. All errors have `message: str` — inherited from the base `Error` class
+3. `print(e)` is the idiomatic way to display errors (via `Display` which formats `self.message`)
+4. Additional structured fields where Rust provides data the developer can't know in advance
+5. Subclasses at Sifr level = `kind` field dispatch at Rust level
+
+**Error Type Reference:**
+
+| Sifr type | Parent | Fields | Rust source |
+|---|---|---|---|
+| `Error` | — | `message: str` | Base class |
+| `IOError` | `Error` | `message: str`, `kind: str` | `std::io::Error` |
+| `FileNotFoundError` | `IOError` | `message: str` | `io::ErrorKind::NotFound` |
+| `PermissionError` | `IOError` | `message: str` | `io::ErrorKind::PermissionDenied` |
+| `FileExistsError` | `IOError` | `message: str` | `io::ErrorKind::AlreadyExists` |
+| `IsADirectoryError` | `IOError` | `message: str` | `io::ErrorKind::IsADirectory` |
+| `NotADirectoryError` | `IOError` | `message: str` | `io::ErrorKind::NotADirectory` |
+| `DirectoryNotEmptyError` | `IOError` | `message: str` | `io::ErrorKind::DirectoryNotEmpty` |
+| `ParseError` | `Error` | `message: str` | `ParseIntError`, `FromUtf8Error`, etc. |
+| `ValueError` | `Error` | `message: str` | Manually constructed |
+| `DivisionError` | `Error` | `message: str` | Compiler-generated |
+| `KeyError` | `Error` | `message: str` | Compiler-generated |
+| `JSONDecodeError` | `Error` | `message: str`, `line: int`, `column: int` | `serde_json::Error` |
+| `TOMLDecodeError` | `Error` | `message: str`, `line: int`, `column: int` | `toml::de::Error` |
+| `RegexError` | `Error` | `message: str`, `detail: str` | `regex::Error` |
+
+**Exhaustiveness with Subclasses:**
+
+```python
+# Specific subclass handling
+try:
+    content: str = read_text("data.txt")
+except FileNotFoundError as e:
+    print(f"File not found: {e.message}")
+except IOError as e:
+    print(f"Other I/O error: {e.message}")
+
+# Parent catches all subclasses
+try:
+    content: str = read_text("data.txt")
+except IOError as e:
+    print(f"Any I/O error: {e.message}")
+    print(f"Error kind: {e.kind}")
+```
+
+**Codegen: subclasses = enum variants via kind field:**
+- At the Sifr level, `FileNotFoundError` looks like a subclass of `IOError`
+- At the Rust level, `IOError` is a struct with a `kind: String` field
+- `except FileNotFoundError` generates a guard: `Err(ref e) if e.kind == "FileNotFound"`
+- `except IOError` catches all variants (no guard)
 
 **User-defined error classes:** User-defined error classes inherit `message: str` from `Error`. The constructor accepts a message string, and `print(e)` formats it via `Display`. Users can add additional fields as needed.
 
