@@ -29,22 +29,25 @@ class Match:
 
 # CPython-compatible aliases
 # Note: match is skipped (Python keyword)
-def search(pattern: str, text: str) -> str | None:
+def search(pattern: str, text: str) -> Result[str | None, RegexError]:
     return re_find(pattern, text)
 
-def search_match(pattern: str, text: str) -> Match | None:
-    found: str | None = re_find(pattern, text)
-    if found is not None:
-        s: int = re_find_start(pattern, text)
-        e: int = re_find_end(pattern, text)
-        return Match(found, s, e)
-    return None
+def search_match(pattern: str, text: str) -> Result[Match | None, RegexError]:
+    try:
+        found: str | None = re_find(pattern, text)
+        if found is not None:
+            s: int = re_find_start(pattern, text)
+            e: int = re_find_end(pattern, text)
+            return Match(found, s, e)
+        return None
+    except RegexError as e:
+        raise RegexError(e.message)
 
-def sub(pattern: str, replacement: str, text: str) -> str:
+def sub(pattern: str, replacement: str, text: str) -> Result[str, RegexError]:
     return re_replace(pattern, replacement, text)
 
-def findall(pattern: str, text: str) -> list[str]:
+def findall(pattern: str, text: str) -> Result[list[str], RegexError]:
     return re_findall(pattern, text)
 
-def split(pattern: str, text: str) -> list[str]:
+def split(pattern: str, text: str) -> Result[list[str], RegexError]:
     return re_split(pattern, text)

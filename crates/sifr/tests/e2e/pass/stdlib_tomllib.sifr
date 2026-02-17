@@ -2,8 +2,11 @@
 from sifr.tomllib import loads
 
 def main():
-    toml_text: str = "name = \"test\"\nversion = 42"
-    result: str = loads(toml_text)
-    print(len(result) > 0)
+    try:
+        toml_text: str = "name = \"test\"\nversion = 42"
+        result: str = loads(toml_text)
+        print(len(result) > 0)
+    except TOMLDecodeError as e:
+        print("unexpected error: " + e.message)
 
 # expect-stdout: true

@@ -17,8 +17,11 @@ def main():
 
     # sifr.base64 wraps _sifr.crypto intrinsics
     encoded: str = base64_encode("hello")
-    decoded: str = base64_decode(encoded)
-    print(decoded)
+    try:
+        decoded: str = base64_decode(encoded)
+        print(decoded)
+    except ParseError as e:
+        print("unexpected error: " + e.message)
 
     print("intrinsics block test passed")
 

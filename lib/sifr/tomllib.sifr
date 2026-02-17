@@ -1,10 +1,10 @@
 # sifr.tomllib — TOML parsing (wraps _sifr.toml + _sifr.fs)
-# loads() returns str (parse safety handled in milestone_parse_safety).
-# load() returns Result because it reads from disk.
+# loads() returns Result[str, TOMLDecodeError] — parse can fail on invalid TOML.
+# load() returns Result[str, IOError] — read can fail on missing file.
 from _sifr.toml import toml_parse
 from _sifr.fs import read_text
 
-def loads(text: str) -> str:
+def loads(text: str) -> Result[str, TOMLDecodeError]:
     return toml_parse(text)
 
 def load(path: str) -> Result[str, IOError]:
@@ -12,4 +12,8 @@ def load(path: str) -> Result[str, IOError]:
         content: str = read_text(path)
     except IOError as e:
         raise IOError(e.message)
-    return toml_parse(content)
+    try:
+        result: str = toml_parse(content)
+    except TOMLDecodeError as e:
+        raise IOError(e.message)
+    return result

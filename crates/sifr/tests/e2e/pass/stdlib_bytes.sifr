@@ -2,21 +2,25 @@
 from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
 
 def main():
-    # Encode string to bytes
-    data: list[int] = encode_utf8("hello")
-    print(len(data))
+    try:
+        # Encode string to bytes
+        data: list[int] = encode_utf8("hello")
+        print(len(data))
 
-    # Decode bytes back to string
-    text: str = decode_utf8(encode_utf8("hello"))
-    print(text)
+        # Decode bytes back to string
+        text: str = decode_utf8(encode_utf8("hello"))
+        print(text)
 
-    # Hex encoding
-    hex_str: str = bytes_to_hex(encode_utf8("hello"))
-    print(hex_str)
+        # Hex encoding
+        hex_str: str = bytes_to_hex(encode_utf8("hello"))
+        print(hex_str)
 
-    # Hex decoding
-    result: str = decode_utf8(bytes_from_hex("68656c6c6f"))
-    print(result)
+        # Hex decoding
+        hex_bytes: list[int] = bytes_from_hex("68656c6c6f")
+        result: str = decode_utf8(hex_bytes)
+        print(result)
+    except ParseError as e:
+        print("unexpected error: " + e.message)
 
 # expect-stdout: 5
 # expect-stdout: hello

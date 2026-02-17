@@ -5370,12 +5370,12 @@ impl RustEmitter {
             "json_loads" => {
                 self.write("serde_json::from_str::<serde_json::Value>(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap().to_string()");
+                self.write(").map(|v| v.to_string()).map_err(|e| JSONDecodeError { message: e.to_string() })");
             }
             "json_dumps" => {
                 self.write("serde_json::to_string(&");
                 self.emit_expr(&args[0]);
-                self.write(").unwrap()");
+                self.write(").unwrap_or_default()");
             }
             // sifr.env
             "env_get" => {
@@ -5781,16 +5781,16 @@ impl RustEmitter {
             "decode_utf8" => {
                 self.write("String::from_utf8(");
                 self.emit_expr(&args[0]);
-                self.write(".iter().map(|b| *b as u8).collect::<Vec<u8>>()).unwrap()");
+                self.write(".iter().map(|b| *b as u8).collect::<Vec<u8>>()).map_err(|e| ParseError { message: e.to_string() })");
             }
             "bytes_to_hex" => {
                 self.emit_expr(&args[0]);
                 self.write(".iter().map(|b| format!(\"{:02x}\", *b as u8)).collect::<Vec<String>>().join(\"\")");
             }
             "bytes_from_hex" => {
-                self.write("{ let s = ");
+                self.write("(|| -> Result<Vec<i64>, ParseError> { let s = ");
                 self.emit_expr(&args[0]);
-                self.write("; (0..s.len()).step_by(2).map(|i| i64::from_str_radix(&s[i..i+2], 16).unwrap()).collect::<Vec<i64>>() }");
+                self.write("; let mut result = Vec::new(); let mut i = 0; while i < s.len() { if i + 2 > s.len() { return Err(ParseError { message: format!(\"invalid hex string at position {}\", i) }); } result.push(i64::from_str_radix(&s[i..i+2], 16).map_err(|e| ParseError { message: e.to_string() })?); i += 2; } Ok(result) })()");
             }
             // sifr.time
             "time_now" => {
@@ -5838,53 +5838,53 @@ impl RustEmitter {
             "re_match" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap().is_match(");
+                self.write(").map(|re| re.is_match(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(")");
+                self.write(")).map_err(|e| RegexError { message: e.to_string() })");
             }
             "re_find" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap().find(");
+                self.write(").map(|re| re.find(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|m| m.as_str().to_string())");
+                self.write(").map(|m| m.as_str().to_string())).map_err(|e| RegexError { message: e.to_string() })");
             }
             "re_replace" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap().replace_all(");
+                self.write(").map(|re| re.replace_all(");
                 self.emit_expr_as_str_ref(&args[2]);
                 self.write(", ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").to_string()");
+                self.write(").to_string()).map_err(|e| RegexError { message: e.to_string() })");
             }
             "re_findall" => {
-                self.write("{ let re = regex::Regex::new(");
+                self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap(); re.find_iter(");
+                self.write(").map(|re| re.find_iter(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|m| m.as_str().to_string()).collect::<Vec<String>>() }");
+                self.write(").map(|m| m.as_str().to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string() })");
             }
             "re_split" => {
-                self.write("{ let re = regex::Regex::new(");
+                self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap(); re.split(");
+                self.write(").map(|re| re.split(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|s| s.to_string()).collect::<Vec<String>>() }");
+                self.write(").map(|s| s.to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string() })");
             }
             "re_find_start" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap().find(");
+                self.write(").map(|re| re.find(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_or(-1_i64, |m| m.start() as i64)");
+                self.write(").map_or(-1_i64, |m| m.start() as i64)).map_err(|e| RegexError { message: e.to_string() })");
             }
             "re_find_end" => {
                 self.write("regex::Regex::new(");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap().find(");
+                self.write(").map(|re| re.find(");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_or(-1_i64, |m| m.end() as i64)");
+                self.write(").map_or(-1_i64, |m| m.end() as i64)).map_err(|e| RegexError { message: e.to_string() })");
             }
             // sifr.hash
             "sha256" => {
@@ -5904,9 +5904,9 @@ impl RustEmitter {
                 self.write(") }");
             }
             "base64_decode" => {
-                self.write("{ use base64::Engine; String::from_utf8(base64::engine::general_purpose::STANDARD.decode(");
+                self.write("(|| -> Result<String, ParseError> { use base64::Engine; let bytes = base64::engine::general_purpose::STANDARD.decode(");
                 self.emit_expr_as_bytes(&args[0]);
-                self.write(").unwrap()).unwrap() }");
+                self.write(").map_err(|e| ParseError { message: e.to_string() })?; String::from_utf8(bytes).map_err(|e| ParseError { message: e.to_string() }) })()");
             }
             "sha1" => {
                 self.write("{ use sha1::Digest; format!(\"{:x}\", sha1::Sha1::digest(");
@@ -5924,9 +5924,9 @@ impl RustEmitter {
                 self.write(") }");
             }
             "urlsafe_b64decode" => {
-                self.write("{ use base64::Engine; String::from_utf8(base64::engine::general_purpose::URL_SAFE.decode(");
+                self.write("(|| -> Result<String, ParseError> { use base64::Engine; let bytes = base64::engine::general_purpose::URL_SAFE.decode(");
                 self.emit_expr_as_bytes(&args[0]);
-                self.write(").unwrap()).unwrap() }");
+                self.write(").map_err(|e| ParseError { message: e.to_string() })?; String::from_utf8(bytes).map_err(|e| ParseError { message: e.to_string() }) })()");
             }
             // sifr.uuid
             "uuid4" => {
@@ -5946,7 +5946,7 @@ impl RustEmitter {
             "toml_parse" => {
                 self.write("{ let __toml_str = ");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __val: toml::Value = __toml_str.parse().unwrap(); format!(\"{}\", __val) }");
+                self.write("; __toml_str.parse::<toml::Value>().map(|v| format!(\"{}\", v)).map_err(|e| TOMLDecodeError { message: e.to_string() }) }");
             }
             // sifr.datetime
             "datetime_now" => {
