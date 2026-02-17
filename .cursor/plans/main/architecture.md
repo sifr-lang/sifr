@@ -13,7 +13,7 @@ The end goal is a language capable of building web applications and general-purp
 Sifr's core guarantee: **if it compiles, it works.** The language is designed so that a successfully compiled program will not crash at runtime under normal conditions. This guarantee is **fully enforced from milestone_safe_indexing onward** -- earlier milestones use panic-based indexing as a bootstrap mechanism until `Option`/`Result` types are available. The principles are:
 
 - **No panics in user code.** Sifr programs never panic during normal execution. Every operation that can fail returns `Result[T, E]` or `Option[T]`, forcing the caller to handle the failure case at compile time.
-- **Mandatory error handling.** `Result` and `Option` values are `#[must_use]`. Ignoring a `Result` returned by a function is a **compile-time error**. The programmer must either handle the error (`match`, `try`/`except`), propagate it (`?`), or explicitly discard it (`let _ = ...`).
+- **Mandatory error handling.** `Result` and `Option` values are `#[must_use]`. Ignoring a `Result` returned by a function is a **compile-time error**. The programmer must either handle the error (`try`/`except`) or explicitly discard it (`_ = ...`). There is no user-facing `?` operator -- the compiler handles error propagation internally via `try`/`except` auto-unwrap (see contract #3).
 - **All fallible operations return `Result` or `Option`.** This includes:
   - Indexing (`x[i]` returns `Option[T]`)
   - Division (`a / b` returns `Result[T, DivisionError]` when the divisor is not provably non-zero)
@@ -22,7 +22,7 @@ Sifr's core guarantee: **if it compiles, it works.** The language is designed so
   - Integer overflow (panics in debug, wraps in release -- matches Rust; opt-in checked mode deferred)
 - `**assert` is the only panic.** The `assert` statement is a programmer invariant check -- it generates `panic!()` and is intentionally unrecoverable. It exists to catch programmer bugs (violated assumptions), not to handle runtime errors. It is the one escape hatch from the no-panic guarantee.
 - **Panic = unrecoverable system failure.** Beyond `assert`, panics only occur from truly unrecoverable situations: stack overflow, double panic, or hardware failure. These are never part of normal control flow.
-- **Exceptions are not errors.** Sifr does not use Python's exception model. There is no stack unwinding, no `try`/`except` for control flow. The `try`/`except` syntax is reinterpreted as pattern matching on `Result` values. `raise` is syntax sugar for returning `Err(...)`.
+- **Exceptions are not errors.** Sifr does not use Python's exception model. There is no stack unwinding, no exception propagation. The `try`/`except` syntax is reinterpreted as pattern matching on `Result` values with **compiler-enforced exhaustiveness checking** on error types. `raise` is syntax sugar for returning `Err(...)`. `return value` in a `Result`-returning function auto-wraps in `Ok(...)`.
 
 This philosophy means that a Sifr programmer who handles all `Result` and `Option` values (which the compiler enforces) can be confident their program will not crash at runtime.
 
@@ -78,7 +78,7 @@ Sifr intentionally diverges from CPython in several areas to achieve compile-tim
 
 | Python Behavior                                        | Sifr Behavior                                                                                                        | Rationale                                                                                 | Milestone                                      |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` | Compile-time error handling eliminates unhandled exceptions at runtime                    | milestone_error_handling                       |
+| Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` with compiler-enforced exhaustiveness checking on error types; no `?` operator in user code; `raise` maps to `Err(...)`, `return` auto-wraps in `Ok(...)` | Compile-time error handling eliminates unhandled exceptions at runtime; exhaustiveness checking ensures all error types are covered | milestone_error_handling, milestone_error_exhaustiveness |
 | `IndexError` on out-of-bounds access                   | `x[i]` returns `Option[T]` (no panic)                                                                                | Safe indexing -- no runtime crashes from bad indices                                      | milestone_safe_indexing                        |
 | `KeyError` on missing dict key                         | `d[key]` returns `Option[V]` (no panic)                                                                              | Safe access -- caller must handle missing keys                                            | milestone_safe_indexing                        |
 | Arbitrary-precision integers                           | `i64` arithmetic; overflow panics in debug, wraps in release (matches Rust)                                          | Predictable performance; matches Rust's default behavior                                  | milestone_error_handling                       |
@@ -196,53 +196,133 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
 - milestone_async: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
 - Post-milestone_protocols: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
 
-### 3. Error Semantics Matrix
+### 3. Error Semantics
 
-Sifr replaces Python's exception model with Rust's `Result`/`Option` model (milestone_error_handling). This contract defines how errors behave across different contexts. **All fallible operations return `Result` or `Option`; the compiler enforces handling via `#[must_use]`.**
+Sifr replaces Python's exception model with Rust's `Result`/`Option` model (milestone_error_handling). **All fallible operations return `Result` or `Option`; the compiler enforces handling via `#[must_use]`.** The only user-facing error handling mechanism is `try`/`except` -- there is no user-facing `?` operator. The compiler uses `?` internally (as an HIR node) when auto-unwrapping `Result` values inside `try` blocks.
 
 **Contract:**
 
+**Error mechanism matrix:**
 
-| Context                          | Error mechanism                   | Propagation                             | Codegen                                                    |
-| -------------------------------- | --------------------------------- | --------------------------------------- | ---------------------------------------------------------- |
-| Sync function                    | `Result[T, E]` return             | `?` operator or explicit `match`        | `Result<T, E>`                                             |
-| Async function (milestone_async) | `Result[T, E]` return             | `?` operator (works across `.await`)    | `Result<T, E>`                                             |
-| `try`/`except` block             | Pattern match on `Result`         | `except` arms match error variants      | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
-| Indexing                         | `Option[T]` return                | `?` or `match`                          | `.get(i).cloned()` / `.chars().nth(i)`                     |
-| Division                         | `Result[T, DivisionError]`        | `?` or `match`                          | Checked division with zero-check                           |
-| Integer overflow                 | Panic in debug, wrap in release   | N/A (matches Rust default behavior)     | Default Rust arithmetic (opt-in checked mode deferred)     |
-| Type conversion                  | `Result[T, ParseError]`           | `?` or `match`                          | `.parse::<T>()`                                            |
-| Unused `Result`                  | **Compile-time error**            | Must handle or `let _ = ...` to discard | `#[must_use]` attribute on `Result`                        |
-| Rust FFI (milestone_ffi)         | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points | Panic -> `Result::Err` conversion                          |
-| C FFI (milestone_ffi)            | Crashes are non-recoverable       | Safe wrappers validate inputs           | Process terminates on segfault/abort                       |
-| `assert` statement               | Panic (programmer invariant only) | Not catchable                           | `assert!()` or `panic!()`                                  |
-| Main function                    | `Result` printed as exit code     | Non-zero exit on `Err`                  | `fn main() -> Result<(), Box<dyn Error>>`                  |
+| Context                          | Error mechanism                   | Handling                                                    | Codegen                                                    |
+| -------------------------------- | --------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
+| Sync function                    | `Result[T, E]` return             | `try`/`except` with exhaustiveness checking                 | `Result<T, E>`                                             |
+| Async function (milestone_async) | `Result[T, E]` return             | `try`/`except` (same rules, works across `.await`)          | `Result<T, E>`                                             |
+| `try`/`except` block             | Pattern match on `Result`         | `except` arms match error types; compiler checks coverage   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
+| Indexing                         | `Option[T]` return                | Type narrowing (`if val is not None`)                       | `.get(i).cloned()` / `.chars().nth(i)`                     |
+| Division                         | `Result[T, DivisionError]`        | `try`/`except`                                              | Checked division with zero-check                           |
+| Integer overflow                 | Panic in debug, wrap in release   | N/A (matches Rust default behavior)                         | Default Rust arithmetic (opt-in checked mode deferred)     |
+| Type conversion                  | `Result[T, ParseError]`           | `try`/`except`                                              | `.parse::<T>()`                                            |
+| Unused `Result`                  | **Compile-time error**            | Must handle via `try`/`except` or discard with `_ = ...`    | `#[must_use]` attribute on `Result`                        |
+| Rust FFI (milestone_ffi)         | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points                     | Panic -> `Result::Err` conversion                          |
+| C FFI (milestone_ffi)            | Crashes are non-recoverable       | Safe wrappers validate inputs                               | Process terminates on segfault/abort                       |
+| `assert` statement               | Panic (programmer invariant only) | Not catchable                                               | `assert!()` or `panic!()`                                  |
+| Main function                    | `Result` printed as exit code     | Non-zero exit on `Err`                                      | `fn main() -> Result<(), Box<dyn Error>>`                  |
 
+**`try`/`except` semantics and auto-unwrap:**
 
-`**except` arm matching semantics:**
+Inside a `try` block, when a `Result`-returning function is called and the result is assigned to a non-`Result` variable, the compiler **auto-unwraps** the `Result`. If the call returns `Err`, execution jumps to the matching `except` arm. No explicit `?` is needed in user code:
 
 ```python
-try:
-    result = parse_int(s)?
-except ValueError as e:
-    print(f"Bad value: {e}")
-except IOError as e:
-    print(f"IO failed: {e}")
+class ValidationError(Error):
+    message: str
+
+def validate(x: int) -> Result[str, ValidationError]:
+    if x > 0:
+        return "positive"                          # auto-wrapped in Ok("positive")
+    raise ValidationError("must be positive")      # maps to return Err(ValidationError {...})
+
+def main():
+    try:
+        r: str = validate(5)    # auto-unwrapped: compiler inserts ? in HIR
+        print(f"ok: {r}")
+    except ValidationError as e:
+        print(f"caught: {e.message}")
 ```
 
-This generates:
+**`except` exhaustiveness checking:**
 
-```rust
-match parse_int(s) {
-    Ok(result) => { /* ... */ }
-    Err(e) => match e {
-        AppError::ValueError(e) => { println!("Bad value: {}", e); }
-        AppError::IOError(e) => { println!("IO failed: {}", e); }
-    }
-}
+The compiler enforces that all error types from fallible calls inside a `try` block are covered by the `except` arms. The rules are:
+
+1. **`except Error as e`** is the catch-all. All error types are classes that extend `Error`. Since `Error` is the root of the error hierarchy, this covers every possible error type. The compiler is satisfied -- no further checking needed.
+2. **`except SpecificError as e`** triggers exhaustiveness checking. The compiler collects every error type from every `Result`-returning call in the `try` block and verifies that each one is covered by some `except` arm.
+3. **Mixing is allowed.** Specific `except` arms are checked first; an `except Error as e` arm at the end covers all remaining uncovered types. This mirrors Python's `except` ordering (specific before general).
+4. **Each `try` block is checked independently.** Nested or sequential `try` blocks each have their own exhaustiveness scope.
+5. **Uncovered error types are a compile error.** If any error type from a fallible call is not covered by an `except` arm, the compiler emits a diagnostic listing the uncovered types and the calls that produce them.
+
+**Error type constraint:** The `E` in `Result[T, E]` must always be a class that extends `Error`. Primitive types like `str` are not valid error types. This ensures every error has a structured type that the compiler can track for exhaustiveness checking, and that `except Error as e` is a true catch-all.
+
+**Example -- catch-all (compiler satisfied):**
+
+```python
+class ProcessError(Error):
+    message: str
+
+def process(path: str) -> Result[str, ProcessError]:
+    try:
+        content: str = read_text(path)           # can fail with IOError
+        config: dict = parse_toml(content)       # can fail with TOMLDecodeError
+        return config["name"]
+    except Error as e:
+        raise ProcessError(f"pipeline failed: {e}")   # catches everything
 ```
 
-**Typed error hierarchies:** Error types are classes (milestone_classes) that implement an `Error` protocol. The `raise` keyword maps to `Err(ErrorType::new(...))`. Error types compose via union: `Result[int, ValueError | IOError]`.
+**Example -- specific handling (compiler enforces exhaustiveness):**
+
+```python
+class ProcessError(Error):
+    message: str
+
+def process(path: str) -> Result[str, ProcessError]:
+    try:
+        content: str = read_text(path)           # IOError
+        config: dict = parse_toml(content)       # TOMLDecodeError
+        return config["name"]
+    except IOError as e:
+        raise ProcessError(f"read failed: {e}")
+    except TOMLDecodeError as e:
+        raise ProcessError(f"parse failed: {e}")
+```
+
+If the developer omits `except TOMLDecodeError`, the compiler emits:
+
+```
+error[S0042]: unhandled error type in try block
+  --> process.sifr:4:22
+   |
+4  |         config: dict = parse_toml(content)
+   |                        ^^^^^^^^^^^^^^^^^^^ can fail with TOMLDecodeError
+   |
+   = help: add `except TOMLDecodeError as e`, or use `except Error as e` to catch all
+```
+
+**Example -- mixed (specific + catch-all):**
+
+```python
+class PipelineError(Error):
+    message: str
+
+def pipeline(path: str) -> Result[str, PipelineError]:
+    try:
+        content: str = read_text(path)              # IOError
+        config: dict = parse_toml(content)          # TOMLDecodeError
+        validated: int = validate_range(x, 0, 100)  # ValidationError
+        return "done"
+    except IOError as e:
+        raise PipelineError(f"io: {e}")             # handles IOError specifically
+    except Error as e:
+        raise PipelineError(f"other: {e}")          # covers TOMLDecodeError, ValidationError
+```
+
+**Typed error hierarchies:** All error types are classes that extend `Error`. The `raise` keyword maps to `Err(ErrorInstance)`. `return value` in a `Result`-returning function auto-wraps in `Ok(value)`. Using a non-`Error` type (e.g., `str`, `int`) as the `E` in `Result[T, E]` is a compile-time error.
+
+**Built-in error classes:** Sifr provides a standard set of error classes for common failure modes (e.g., I/O, parsing, validation). These are used by the stdlib and available to user code. `Error` is the root class; all error types extend it.
+
+**Common error type patterns:**
+
+- **Application code:** define a simple error class per module or feature (e.g., `class AppError(Error)`). Use `except Error as e` as a catch-all when fine-grained handling is not needed.
+- **Library code:** define a domain error class (e.g., `class ConfigError(Error)`) and wrap internal errors at API boundaries. Callers only see the domain error type.
+- **Stdlib functions:** return `Result[T, SpecificError]` using the built-in error classes. For example, `read_text(path)` returns `Result[str, IOError]`, `int(s)` returns `Result[int, ParseError]`.
 
 ### 4. Package Resolver and Reproducibility (milestone_imports/milestone_package_mgmt)
 
