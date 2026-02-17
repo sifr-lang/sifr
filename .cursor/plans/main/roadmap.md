@@ -12,7 +12,7 @@
 | 6 | Stdlib Architecture | 6 (intrinsics → stdlib_classes) | completed | Stdlib rewritten as .sifr files, 37+ modules, class-in-stdlib pipeline |
 | 7 | Stdlib Parity | 7 (compiler_hardening → cpython_tests) | completed | Import errors, `with` protocol, `Callable` fix, lazy iterators, generic stdlib, ~50 new functions, CPython-aligned names, 6 new classes, `datetime` operator overloading, ~500 CPython test assertions |
 | 8 | Error Safety | 2 (error_safety, error_safety_stdlib_types) | completed | Built-in error classes, exhaustiveness checking on `except` arms, `Result[T, str]` eliminated, module-specific error type export pipeline |
-| 9 | Stdlib Safety Remediation | 5 (io_safety → zero_panic_gate) | completed | All ~45+ `.unwrap()` panic paths fixed, zero-panic gate enforced, safety scores 7/10+ per module |
+| 9 | Stdlib Safety Remediation | 6 (io_safety → zero_panic_gate → error_subclasses) | in progress | All ~45+ `.unwrap()` panic paths fixed, zero-panic gate enforced, safety scores 7/10+ per module, error subclass hierarchy (FileNotFoundError etc.) for compile-time checked fine-grained error handling |
 | 10 | Borrow-by-Default | 3 (borrow_default, borrow_hardening, borrow_stdlib) | pending | Borrow-by-default params, exclusivity, escape analysis, consuming-self, for-loop semantics, stdlib ownership patterns |
 | 11 | Stdlib Deepening | 4 (pure_expansion → class_deepening) | pending | ~38% → deep CPython parity, 8 new modules, `open()` built-in, `datetime`/`deque`/`Pattern` classes, API naming divergences documented |
 | 12 | Async and Ecosystem Foundation | 3 (async, networking_stdlib, typed_serde_core) | pending | Async runtime, networking stdlib, web-independent typed serialization |
@@ -49,7 +49,9 @@
 
 8. **Stdlib Safety Remediation → Borrow-by-Default**: Both touch the same codegen paths (`stdlib.rs`,
    `lib.rs`). Fixing safety first means borrow-by-default works on non-panicking code. The
-   zero-panic gate ensures the foundation is solid before changing the parameter passing convention.
+   zero-panic gate ensures the foundation is solid. Error subclasses (`FileNotFoundError`, etc.)
+   then refine the error types into a CPython-aligned hierarchy with compile-time exhaustiveness
+   checking at sub-error granularity, before the parameter passing convention changes.
 
 9. **Borrow-by-Default → Stdlib Deepening**: New stdlib functions should be written with the final
    ownership model from day one. Writing 50+ new functions with move-by-default and then
@@ -144,6 +146,7 @@ flowchart TD
         milestone_collection_safety["milestone_collection_safety: Collection Safety\nEmpty collection handling,\nmath domain errors"]
         milestone_edge_case_safety["milestone_edge_case_safety: Edge Cases\nInput validation, bounds checks,\ncycle detection"]
         milestone_zero_panic_gate["milestone_zero_panic_gate: Zero Panic Gate\nCI lint, safety audit 7/10+,\ncomprehensive E2E test"]
+        milestone_error_subclasses["milestone_error_subclasses: Error Subclasses\nFileNotFoundError, PermissionError,\nenum variants, inheritance subtyping"]
     end
     subgraph phaseBorrow [Borrow-by-Default]
         milestone_borrow_default["milestone_borrow_default: Borrow Default\nParamConvention enum,\nmut/own syntax, codegen"]
@@ -196,7 +199,7 @@ flowchart TD
     milestone_cpython_tests --> milestone_error_safety --> milestone_error_safety_stdlib_types
     milestone_error_safety_stdlib_types --> milestone_io_safety --> milestone_parse_safety --> milestone_collection_safety
     milestone_collection_safety --> milestone_edge_case_safety --> milestone_zero_panic_gate
-    milestone_zero_panic_gate --> milestone_borrow_default --> milestone_borrow_hardening --> milestone_borrow_stdlib
+    milestone_zero_panic_gate --> milestone_error_subclasses --> milestone_borrow_default --> milestone_borrow_hardening --> milestone_borrow_stdlib
     milestone_borrow_stdlib --> milestone_stdlib_pure_expansion --> milestone_new_modules
     milestone_new_modules --> milestone_stdlib_intrinsic_expansion --> milestone_stdlib_class_deepening
     milestone_stdlib_class_deepening --> milestone_async --> milestone_networking_stdlib --> milestone_typed_serde_core
@@ -217,7 +220,7 @@ After the Stdlib Parity phase, the compiler produces clear "unknown module" erro
 
 After the Error Safety phase, the compiler enforces that all `Result` error types must be classes extending `Error`, `Result[T, str]` is a compile error, and `except` arms are exhaustiveness-checked against all error types from the `try` body. Built-in error classes (`IOError`, `ParseError`, `ValueError`, etc.) are available without imports. Module-specific error types (`StatisticsError`, `CycleError`) are exportable from stdlib `.sifr` files.
 
-After the Stdlib Safety Remediation phase, all ~45+ `.unwrap()` panic paths in intrinsics are eliminated. Every file I/O, parse/decode, collection, and edge case operation returns `Result` or `Option` with proper error types. The zero-panic gate enforces that no panic-inducing patterns remain in user-facing codegen, every module scores 7/10+ on the safety audit, and a comprehensive E2E test proves no stdlib function panics on invalid input.
+After the Stdlib Safety Remediation phase, all ~45+ `.unwrap()` panic paths in intrinsics are eliminated. Every file I/O, parse/decode, collection, and edge case operation returns `Result` or `Option` with proper error types. Error subclasses (`FileNotFoundError`, `PermissionError`, `FileExistsError`, `IsADirectoryError`, `NotADirectoryError`) enable compile-time exhaustiveness checking at sub-error granularity — developers can handle specific I/O failure modes without string matching, and the compiler enforces coverage. The zero-panic gate enforces that no panic-inducing patterns remain in user-facing codegen, every module scores 7/10+ on the safety audit, and a comprehensive E2E test proves no stdlib function panics on invalid input.
 
 After the Borrow-by-Default phase, Sifr uses borrow-by-default for function parameters with explicit `mut`/`own` opt-in. Escape analysis prevents silent `.clone()` insertion. Consuming-self method receivers work correctly. For-loop element semantics are resolved and documented. The 7 known codegen regressions are fixed. Stdlib functions (`heapq`, `bisect`) use `mut` parameters, proving the model works in real code.
 

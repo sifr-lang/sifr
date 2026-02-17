@@ -1,6 +1,6 @@
 # Borrow-by-Default
 
-**Why now:** Safety remediation is done. The codegen no longer panics. Now we can safely change the parameter passing convention without worrying about interacting with broken safety paths.
+**Why now:** Safety remediation is done. The codegen no longer panics. Error types have been refined into a CPython-aligned subclass hierarchy with compile-time exhaustiveness checking. Now we can safely change the parameter passing convention without worrying about interacting with broken safety paths or incomplete error type infrastructure.
 
 This phase changes Sifr's function parameter passing from move-by-default to borrow-by-default. Function arguments are immutably borrowed (`&T`) by default, with opt-in `mut` (mutable borrow, `&mut T`) and `own` (ownership transfer, `T`) keywords.
 
@@ -12,7 +12,7 @@ status: pending
 
 **Goal:** Change Sifr's function parameter passing from move-by-default to borrow-by-default. This is the core language change.
 
-**Depends on:** milestone_zero_panic_gate (safety remediation must be complete)
+**Depends on:** milestone_error_subclasses (Phase 09 safety remediation and error hierarchy must be complete)
 
 As defined in [05_borrow_by_default.md](05_borrow_by_default.md) (original detailed plan):
 
