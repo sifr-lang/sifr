@@ -150,7 +150,7 @@ Systematic verification that the safety remediation is complete. This is a hard 
 
 - Audit all codegen intrinsic emission paths in `crates/sifr_codegen/src/lib.rs` -- assert zero `.unwrap()` calls on user-facing operations (the only acceptable `.unwrap()` is on compiler-internal invariants that cannot fail)
 - Add a CI lint that greps for `.unwrap()` in intrinsic codegen blocks and fails if any are found on `Result`/`Option` values from external operations (file I/O, parsing, collection access)
-- Run the full stdlib safety audit script against all 37 modules and produce an updated safety score -- every module must score 7/10 or higher (up from the current state where 12 modules score below 5/10)
+- Run the full stdlib safety audit script against all 37 modules and produce an updated safety score -- every module must score 7/10 or higher (up from the current state where 12 modules score below 5/10). Modules with documented divergences (e.g., math domain errors if option (b) is chosen in `milestone_collection_safety`) are scored against the documented behavior, not the CPython behavior -- a deliberate, documented design choice does not count as a safety violation.
 - E2E test: a program that calls every fallible stdlib function with invalid input must compile and run without panicking, handling all errors via `try`/`except`
 - Update `audit/STDLIB_PARITY_MASTER_REPORT.md` with post-remediation safety scores
 
@@ -236,6 +236,7 @@ Placed second because several of these modules (`subprocess`, `sys`, `gzip`, `zi
 
 ### milestone_stdlib_class_deepening: Class API Enhancements
 
+- `open()` built-in with file object protocol (`read`, `write`, `readline`, context manager support) -- prerequisite for `csv.reader`/`csv.writer` and `logging.FileHandler`
 - `collections.deque` class
 - `datetime`: full `datetime` class (not string-based), `date`, `time`, `timezone` classes
 - `pathlib.Path`: add `resolve`, `glob`, `rglob`, `iterdir`, `unlink`, `rmdir`, `touch`, `with_name`, `with_suffix`
