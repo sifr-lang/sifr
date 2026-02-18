@@ -1,6 +1,6 @@
 # CPython test_itertools — ported assertions for sifr.itertools
 from sifr.test import assert_eq
-from sifr.itertools import chain, repeat_val, take, flatten, enumerate_list, pairwise, batched, islice
+from sifr.itertools import chain, repeat, take, flatten, pairwise, batched, islice
 
 def main():
     # --- chain ---
@@ -19,16 +19,16 @@ def main():
     c4: list[int] = chain(empty, empty)
     assert_eq(len(c4), 0)
 
-    # --- repeat_val ---
-    r1: list[int] = repeat_val(42, 5)
+    # --- repeat ---
+    r1: list[int] = repeat(42, 5)
     assert_eq(len(r1), 5)
     print(r1)
 
-    r2: list[int] = repeat_val(0, 3)
+    r2: list[int] = repeat(0, 3)
     assert_eq(len(r2), 3)
     print(r2)
 
-    r3: list[int] = repeat_val(1, 0)
+    r3: list[int] = repeat(1, 0)
     assert_eq(len(r3), 0)
 
     # --- take ---
@@ -52,12 +52,6 @@ def main():
     empty_nested: list[list[int]] = [[], [], []]
     flat2: list[int] = flatten(empty_nested)
     assert_eq(len(flat2), 0)
-
-    # --- enumerate_list ---
-    items: list[str] = ["a", "b", "c"]
-    en: list[int] = enumerate_list(items)
-    assert_eq(len(en), 3)
-    print(en)
 
     # --- pairwise ---
     pw_data: list[int] = [1, 2, 3, 4]
@@ -86,15 +80,14 @@ def main():
     sl3: list[int] = islice(sl_data, 10)
     assert_eq(len(sl3), 5)
 
-    print("cpython_itertools: all 24 assertions passed")
+    print("cpython_itertools: all 22 assertions passed")
 
 # expect-stdout: [1, 2, 3, 4, 5, 6]
 # expect-stdout: [42, 42, 42, 42, 42]
 # expect-stdout: [0, 0, 0]
 # expect-stdout: [10, 20, 30]
 # expect-stdout: [1, 2, 3, 4, 5]
-# expect-stdout: [0, 1, 2]
 # expect-stdout: [[1, 2], [2, 3], [3, 4]]
 # expect-stdout: [[1, 2], [3, 4], [5]]
 # expect-stdout: [10, 20, 30]
-# expect-stdout: cpython_itertools: all 24 assertions passed
+# expect-stdout: cpython_itertools: all 22 assertions passed

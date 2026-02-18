@@ -1,15 +1,7 @@
 # sifr.itertools — Iterator building blocks (pure Sifr)
-# Note: Higher-order functions (map, filter, groupby) require callable support.
-# This module provides functions that work with the current type system.
-#
-# Functions that can use lazy generators (yield) do so. Functions that require
-# list indexing (which returns Option<T>) or for-loop iteration remain eager
-# because the generator codegen doesn't yet handle Option unwrapping in yield
-# expressions or for-loop-based generators.
+# CPython-compatible functions only.
 
 def chain(a: list[int], b: list[int]) -> list[int]:
-    # Borrow both lists and return a new combined list.
-    # Callers retain ownership of a and b after the call.
     result: list[int] = []
     for val in a:
         result.append(val)
@@ -17,16 +9,7 @@ def chain(a: list[int], b: list[int]) -> list[int]:
         result.append(val2)
     return result
 
-def chain_own(own a: list[int], own b: list[int]) -> list[int]:
-    # Consume both lists and return the combined result.
-    # Ownership of a and b is transferred -- they cannot be used after this call.
-    # More efficient than chain() because it extends a directly (no extra allocation).
-    for val in b:
-        a.append(val)
-    return a
-
 def chain_str(a: list[str], b: list[str]) -> list[str]:
-    # Eager: uses for-loop iteration
     result: list[str] = []
     for val in a:
         result.append(val)
@@ -34,21 +17,13 @@ def chain_str(a: list[str], b: list[str]) -> list[str]:
         result.append(val2)
     return result
 
-def chain_str_own(own a: list[str], own b: list[str]) -> list[str]:
-    # Consume both string lists and return the combined result.
-    for val in b:
-        a.append(val)
-    return a
-
-def repeat_val(value: int, times: int) -> list[int]:
-    # Lazy generator: simple while+yield pattern
+def repeat(value: int, times: int) -> list[int]:
     i: int = 0
     while i < times:
         yield value
         i = i + 1
 
 def take(n: int, data: list[int]) -> list[int]:
-    # Eager: list indexing returns Option<T>, incompatible with yield
     result: list[int] = []
     i: int = 0
     while i < n:
@@ -61,25 +36,13 @@ def take(n: int, data: list[int]) -> list[int]:
     return result
 
 def flatten(lists: list[list[int]]) -> list[int]:
-    # Eager: nested for-loop iteration
     result: list[int] = []
     for inner in lists:
         for val in inner:
             result.append(val)
     return result
 
-def enumerate_list(data: list[str]) -> list[int]:
-    # Eager: references borrowed parameter inside loop condition,
-    # which conflicts with move closure in generator codegen
-    result: list[int] = []
-    i: int = 0
-    while i < len(data):
-        result.append(i)
-        i = i + 1
-    return result
-
 def pairwise(data: list[int]) -> list[list[int]]:
-    # Eager: list indexing returns Option<T>, incompatible with yield
     result: list[list[int]] = []
     i: int = 0
     while i < len(data) - 1:
@@ -97,7 +60,6 @@ def pairwise(data: list[int]) -> list[list[int]]:
 def batched(data: list[int], n: int) -> Result[list[list[int]], ValueError]:
     if n <= 0:
         raise ValueError("batched: n must be > 0")
-    # Eager: nested while loop + list indexing
     result: list[list[int]] = []
     i: int = 0
     while i < len(data):
@@ -114,13 +76,136 @@ def batched(data: list[int], n: int) -> Result[list[list[int]], ValueError]:
     return result
 
 def islice(data: list[int], stop: int) -> list[int]:
-    # Eager: list indexing returns Option<T>, incompatible with yield
     result: list[int] = []
     i: int = 0
     while i < stop:
         if i >= len(data):
             return result
         val: int | None = data[i]
+        if val is not None:
+            result.append(val)
+        i = i + 1
+    return result
+
+def accumulate(data: list[int]) -> list[int]:
+    # Running sum of data (matches CPython itertools.accumulate default operator=add).
+    result: list[int] = []
+    total: int = 0
+    for val in data:
+        total = total + val
+        result.append(total)
+    return result
+
+def accumulate_float(data: list[float]) -> list[float]:
+    result: list[float] = []
+    total: float = 0.0
+    for val in data:
+        total = total + val
+        result.append(total)
+    return result
+
+def compress(data: list[int], selectors: list[bool]) -> list[int]:
+    # Return elements of data where corresponding selector is True.
+    result: list[int] = []
+    i: int = 0
+    while i < len(data):
+        if i >= len(selectors):
+            return result
+        sel: bool | None = selectors[i]
+        val: int | None = data[i]
+        if sel is not None:
+            if val is not None:
+                if sel:
+                    result.append(val)
+        i = i + 1
+    return result
+
+def dropwhile(threshold: int, data: list[int]) -> list[int]:
+    # Drop elements while they are less than threshold, then return the rest.
+    # Approximates CPython's dropwhile(pred, iterable) with a simple predicate.
+    result: list[int] = []
+    dropping: bool = True
+    for val in data:
+        if dropping:
+            if val >= threshold:
+                dropping = False
+                result.append(val)
+        else:
+            result.append(val)
+    return result
+
+def takewhile(threshold: int, data: list[int]) -> list[int]:
+    # Take elements while they are less than threshold.
+    # Approximates CPython's takewhile(pred, iterable) with a simple predicate.
+    result: list[int] = []
+    for val in data:
+        if val >= threshold:
+            return result
+        result.append(val)
+    return result
+
+def filterfalse(threshold: int, data: list[int]) -> list[int]:
+    # Return elements where val >= threshold (i.e., where predicate val < threshold is False).
+    # Approximates CPython's filterfalse(pred, iterable) with a simple predicate.
+    result: list[int] = []
+    for val in data:
+        if val >= threshold:
+            result.append(val)
+    return result
+
+def zip_longest(a: list[int], b: list[int], fill: int) -> list[list[int]]:
+    # Zip two lists, filling shorter one with fill value.
+    result: list[list[int]] = []
+    len_a: int = len(a)
+    len_b: int = len(b)
+    max_len: int = len_a
+    if len_b > max_len:
+        max_len = len_b
+    i: int = 0
+    while i < max_len:
+        pair: list[int] = []
+        if i < len_a:
+            va: int | None = a[i]
+            if va is not None:
+                pair.append(va)
+            else:
+                pair.append(fill)
+        else:
+            pair.append(fill)
+        if i < len_b:
+            vb: int | None = b[i]
+            if vb is not None:
+                pair.append(vb)
+            else:
+                pair.append(fill)
+        else:
+            pair.append(fill)
+        result.append(pair)
+        i = i + 1
+    return result
+
+def count_from(start: int, step: int, n: int) -> list[int]:
+    # Generate n values starting from start with given step.
+    # Approximates CPython's itertools.count(start, step) as a finite list.
+    result: list[int] = []
+    i: int = 0
+    val: int = start
+    while i < n:
+        result.append(val)
+        val = val + step
+        i = i + 1
+    return result
+
+def cycle(data: list[int], n: int) -> list[int]:
+    # Cycle through data n times total (n elements returned).
+    # Approximates CPython's itertools.cycle(iterable) as a finite list.
+    result: list[int] = []
+    if len(data) == 0:
+        return result
+    i: int = 0
+    while i < n:
+        idx: int = i % len(data)
+        val: int | None = data[idx]
         if val is not None:
             result.append(val)
         i = i + 1

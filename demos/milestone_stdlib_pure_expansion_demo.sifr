@@ -1,0 +1,216 @@
+# milestone_stdlib_pure_expansion demo
+# Demonstrates: new math functions, statistics with Result types,
+# random additions, functools.reduce, new itertools, Counter enhancements,
+# and API naming divergences documented in architecture.md.
+
+from sifr.math import acosh, asinh, atanh, isqrt, dist, fsum
+from sifr.statistics import (
+    mean, median, variance, stdev, mode, multimode,
+    quantiles, covariance, correlation, linear_regression, StatisticsError
+)
+from sifr.random import shuffle, sample, randrange, gauss
+from sifr.functools import reduce
+from sifr.itertools import (
+    accumulate, compress, dropwhile, takewhile, filterfalse,
+    zip_longest, count_from, cycle
+)
+from sifr.collections import Counter, from_list, counter_add, counter_sub
+
+def add(a: int, b: int) -> int:
+    return a + b
+
+def mul(a: int, b: int) -> int:
+    return a * b
+
+def main():
+    # --- New math functions ---
+    print("=== math additions ===")
+    print("acosh(1.0) = " + str(acosh(1.0)))
+    print("asinh(0.0) = " + str(asinh(0.0)))
+    print("atanh(0.0) = " + str(atanh(0.0)))
+    print("isqrt(17) = " + str(isqrt(17)))
+    p: list[float] = [0.0, 0.0]
+    q: list[float] = [3.0, 4.0]
+    print("dist([0,0],[3,4]) = " + str(dist(p, q)))
+    data_fsum: list[float] = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    print("fsum(10x0.1) = " + str(fsum(data_fsum)))
+
+    # --- Statistics with Result types (Phase 09 carryover fixed) ---
+    print("=== statistics (Result[float, StatisticsError]) ===")
+    data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
+    try:
+        m: float = mean(data)
+        print("mean = " + str(m))
+        med: float = median(data)
+        print("median = " + str(med))
+        v: float = variance(data)
+        print("variance = " + str(v))
+        s: float = stdev(data)
+        print("stdev = " + str(s))
+
+        idata: list[int] = [1, 2, 2, 3, 3, 3]
+        mo: int = mode(idata)
+        print("mode = " + str(mo))
+
+        mm: list[int] = multimode([1, 2, 2, 3, 3])
+        print("multimode len = " + str(len(mm)))
+
+        qs: list[float] = quantiles(data, 4)
+        print("quartiles count = " + str(len(qs)))
+
+        x: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
+        y: list[float] = [2.0, 4.0, 6.0, 8.0, 10.0]
+        cov: float = covariance(x, y)
+        print("covariance = " + str(cov))
+        r: float = correlation(x, y)
+        print("correlation = " + str(r))
+
+        lr: list[float] = linear_regression(x, y)
+        slope: float | None = lr[0]
+        intercept: float | None = lr[1]
+        if slope is not None:
+            print("slope = " + str(slope))
+        if intercept is not None:
+            print("intercept = " + str(intercept))
+    except StatisticsError as e:
+        print("error: " + e.message)
+
+    # Error case: empty data raises StatisticsError
+    try:
+        empty: list[float] = []
+        bad: float = mean(empty)
+    except StatisticsError as e:
+        print("empty mean error: " + e.message)
+
+    # --- Random additions ---
+    print("=== random additions ===")
+    items: list[int] = [1, 2, 3, 4, 5]
+    shuffled: list[int] = shuffle(items)
+    print("shuffle len = " + str(len(shuffled)))
+
+    try:
+        s3: list[int] = sample(items, 3)
+        print("sample(3) len = " + str(len(s3)))
+    except ValueError as e:
+        print("sample error: " + e.message)
+
+    try:
+        rr: int = randrange(0, 100, 5)
+        print("randrange in range = " + str(rr >= 0))
+    except ValueError as e:
+        print("randrange error: " + e.message)
+
+    g: float = gauss(0.0, 1.0)
+    print("gauss sample is float = True")
+
+    # --- functools.reduce ---
+    print("=== functools.reduce ===")
+    nums: list[int] = [1, 2, 3, 4, 5]
+    total: int = reduce(add, nums, 0)
+    print("reduce(add) = " + str(total))
+    product: int = reduce(mul, nums, 1)
+    print("reduce(mul) = " + str(product))
+
+    # --- New itertools functions ---
+    print("=== itertools additions ===")
+    idata2: list[int] = [1, 2, 3, 4, 5]
+
+    acc: list[int] = accumulate(idata2)
+    print("accumulate = " + str(acc))
+
+    sel: list[bool] = [True, False, True, False, True]
+    comp: list[int] = compress(idata2, sel)
+    print("compress = " + str(comp))
+
+    dw: list[int] = dropwhile(3, idata2)
+    print("dropwhile(<3) = " + str(dw))
+
+    tw: list[int] = takewhile(3, idata2)
+    print("takewhile(<3) = " + str(tw))
+
+    ff: list[int] = filterfalse(3, idata2)
+    print("filterfalse(<3) = " + str(ff))
+
+    a: list[int] = [1, 2, 3]
+    b: list[int] = [4, 5]
+    zl: list[list[int]] = zip_longest(a, b, 0)
+    print("zip_longest len = " + str(len(zl)))
+
+    cf: list[int] = count_from(0, 2, 5)
+    print("count_from(0,2,5) = " + str(cf))
+
+    cyc: list[int] = cycle([1, 2, 3], 7)
+    print("cycle([1,2,3], 7) = " + str(cyc))
+
+    # --- Counter enhancements ---
+    print("=== Counter enhancements ===")
+    c1: Counter = from_list(["a", "b", "a", "c"])
+    c2: Counter = from_list(["b", "c", "d"])
+    c1.update(c2)
+    print("after update: a=" + str(c1.get("a")) + " b=" + str(c1.get("b")))
+
+    c3: Counter = from_list(["x", "x", "y"])
+    c4: Counter = from_list(["x"])
+    c3.subtract(c4)
+    print("after subtract: x=" + str(c3.get("x")))
+
+    c5: Counter = from_list(["a", "a", "b"])
+    elems: list[str] = c5.elements()
+    print("elements len = " + str(len(elems)))
+
+    ca: Counter = from_list(["a", "b"])
+    cb: Counter = from_list(["b", "c"])
+    cc: Counter = counter_add(ca, cb)
+    print("counter_add b = " + str(cc.get("b")))
+
+    cd: Counter = from_list(["a", "a", "b"])
+    ce: Counter = from_list(["a"])
+    cf2: Counter = counter_sub(cd, ce)
+    print("counter_sub a = " + str(cf2.get("a")))
+
+    print("=== milestone_stdlib_pure_expansion: all features demonstrated ===")
+
+# expect-stdout: === math additions ===
+# expect-stdout: acosh(1.0) = 0
+# expect-stdout: asinh(0.0) = 0
+# expect-stdout: atanh(0.0) = 0
+# expect-stdout: isqrt(17) = 4
+# expect-stdout: dist([0,0],[3,4]) = 5
+# expect-stdout: fsum(10x0.1) = 0.9999999999999999
+# expect-stdout: === statistics (Result[float, StatisticsError]) ===
+# expect-stdout: mean = 3
+# expect-stdout: median = 3
+# expect-stdout: variance = 2.5
+# expect-stdout: stdev = 1.5811388300841898
+# expect-stdout: mode = 3
+# expect-stdout: multimode len = 2
+# expect-stdout: quartiles count = 3
+# expect-stdout: covariance = 5
+# expect-stdout: correlation = 0.9999999999999998
+# expect-stdout: slope = 2
+# expect-stdout: intercept = 0
+# expect-stdout: empty mean error: mean requires at least one data point
+# expect-stdout: === random additions ===
+# expect-stdout: shuffle len = 5
+# expect-stdout: sample(3) len = 3
+# expect-stdout: randrange in range = true
+# expect-stdout: gauss sample is float = True
+# expect-stdout: === functools.reduce ===
+# expect-stdout: reduce(add) = 15
+# expect-stdout: reduce(mul) = 120
+# expect-stdout: === itertools additions ===
+# expect-stdout: accumulate = [1, 3, 6, 10, 15]
+# expect-stdout: compress = [1, 3, 5]
+# expect-stdout: dropwhile(<3) = [3, 4, 5]
+# expect-stdout: takewhile(<3) = [1, 2]
+# expect-stdout: filterfalse(<3) = [3, 4, 5]
+# expect-stdout: zip_longest len = 3
+# expect-stdout: count_from(0,2,5) = [0, 2, 4, 6, 8]
+# expect-stdout: cycle([1,2,3], 7) = [1, 2, 3, 1, 2, 3, 1]
+# expect-stdout: === Counter enhancements ===
+# expect-stdout: after update: a=2 b=2
+# expect-stdout: after subtract: x=1
+# expect-stdout: elements len = 3
+# expect-stdout: counter_add b = 2
+# expect-stdout: counter_sub a = 1
+# expect-stdout: === milestone_stdlib_pure_expansion: all features demonstrated ===

@@ -1,9 +1,12 @@
 # Test expanded sifr.statistics functions
-from sifr.statistics import mode
+from sifr.statistics import mode, StatisticsError
 
 def main():
-    data: list[int] = [1, 2, 2, 3, 3, 3, 4]
-    m: int = mode(data)
-    print(m)
+    try:
+        data: list[int] = [1, 2, 2, 3, 3, 3, 4]
+        m: int = mode(data)
+        print(m)
+    except StatisticsError as e:
+        print(e.message)
 
 # expect-stdout: 3

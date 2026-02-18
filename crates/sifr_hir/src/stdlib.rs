@@ -213,6 +213,24 @@ fn intrinsic_math() -> IntrinsicModule {
     // isfinite(x: float) -> bool
     functions.insert("isfinite".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Bool));
 
+    // acosh(x: float) -> float
+    functions.insert("acosh".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // asinh(x: float) -> float
+    functions.insert("asinh".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // atanh(x: float) -> float
+    functions.insert("atanh".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // isqrt(n: int) -> int
+    functions.insert("isqrt".to_string(), FunctionType::all_borrow(vec![("n".to_string(), Type::Int)], Type::Int));
+
+    // dist(p: list[float], q: list[float]) -> float
+    functions.insert("dist".to_string(), FunctionType::all_borrow(vec![("p".to_string(), Type::List(Box::new(Type::Float))), ("q".to_string(), Type::List(Box::new(Type::Float)))], Type::Float));
+
+    // fsum(data: list[float]) -> float
+    functions.insert("fsum".to_string(), FunctionType::all_borrow(vec![("data".to_string(), Type::List(Box::new(Type::Float)))], Type::Float));
+
     // Constants
     constants.insert("pi".to_string(), Type::Float);
     constants.insert("e".to_string(), Type::Float);
@@ -576,6 +594,28 @@ fn intrinsic_crypto() -> IntrinsicModule {
 
     // urlsafe_b64decode(s: str) -> Result[str, ParseError]
     functions.insert("urlsafe_b64decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "ParseError")));
+
+    // random_shuffle(items: list[int]) -> list[int]
+    functions.insert("random_shuffle".to_string(), FunctionType::all_borrow(vec![("items".to_string(), Type::List(Box::new(Type::Int)))], Type::List(Box::new(Type::Int))));
+
+    // random_sample(items: list[int], k: int) -> Result[list[int], ValueError]
+    functions.insert("random_sample".to_string(), FunctionType::all_borrow(vec![
+            ("items".to_string(), Type::List(Box::new(Type::Int))),
+            ("k".to_string(), Type::Int),
+        ], result_ty(Type::List(Box::new(Type::Int)), "ValueError")));
+
+    // random_randrange(start: int, stop: int, step: int) -> Result[int, ValueError]
+    functions.insert("random_randrange".to_string(), FunctionType::all_borrow(vec![
+            ("start".to_string(), Type::Int),
+            ("stop".to_string(), Type::Int),
+            ("step".to_string(), Type::Int),
+        ], result_ty(Type::Int, "ValueError")));
+
+    // random_gauss(mu: float, sigma: float) -> float
+    functions.insert("random_gauss".to_string(), FunctionType::all_borrow(vec![
+            ("mu".to_string(), Type::Float),
+            ("sigma".to_string(), Type::Float),
+        ], Type::Float));
 
     IntrinsicModule {
         functions,

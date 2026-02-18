@@ -1,7 +1,6 @@
 # sifr.random — Random number generation
-from _sifr.crypto import random_int, random_float, random_choice, random_uniform
+from _sifr.crypto import random_int, random_float, random_choice, random_uniform, random_shuffle, random_sample, random_randrange, random_gauss
 
-# CPython-compatible aliases
 def randint(min: int, max: int) -> Result[int, ValueError]:
     if min > max:
         raise ValueError("randint: min must be <= max")
@@ -10,8 +9,17 @@ def randint(min: int, max: int) -> Result[int, ValueError]:
 def random() -> float:
     return random_float()
 
-# Note: choice(items: list[Any]) cannot be a wrapper function because Any → Box<dyn Any>
-# doesn't implement Clone in Rust. Users should import random_choice directly.
-
 def uniform(min: float, max: float) -> float:
     return random_uniform(min, max)
+
+def shuffle(items: list[int]) -> list[int]:
+    return random_shuffle(items)
+
+def sample(items: list[int], k: int) -> Result[list[int], ValueError]:
+    return random_sample(items, k)
+
+def randrange(start: int, stop: int, step: int) -> Result[int, ValueError]:
+    return random_randrange(start, stop, step)
+
+def gauss(mu: float, sigma: float) -> float:
+    return random_gauss(mu, sigma)

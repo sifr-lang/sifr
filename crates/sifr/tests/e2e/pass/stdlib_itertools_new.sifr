@@ -1,0 +1,59 @@
+# Test new itertools functions: accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, count_from, cycle
+from sifr.itertools import accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, count_from, cycle
+from sifr.test import assert_eq
+
+def main():
+    # accumulate
+    data: list[int] = [1, 2, 3, 4, 5]
+    acc: list[int] = accumulate(data)
+    assert_eq(len(acc), 5)
+    last: int | None = acc[4]
+    if last is not None:
+        assert_eq(last, 15)
+
+    # compress
+    selectors: list[bool] = [True, False, True, False, True]
+    comp: list[int] = compress(data, selectors)
+    assert_eq(len(comp), 3)
+
+    # dropwhile (drop while < 3)
+    dw: list[int] = dropwhile(3, data)
+    assert_eq(len(dw), 3)
+
+    # takewhile (take while < 3)
+    tw: list[int] = takewhile(3, data)
+    assert_eq(len(tw), 2)
+
+    # filterfalse (keep where >= 3)
+    ff: list[int] = filterfalse(3, data)
+    assert_eq(len(ff), 3)
+
+    # zip_longest
+    a: list[int] = [1, 2, 3]
+    b: list[int] = [4, 5]
+    zl: list[list[int]] = zip_longest(a, b, 0)
+    assert_eq(len(zl), 3)
+
+    # count_from
+    cf: list[int] = count_from(0, 2, 5)
+    assert_eq(len(cf), 5)
+    first: int | None = cf[0]
+    if first is not None:
+        assert_eq(first, 0)
+    second: int | None = cf[1]
+    if second is not None:
+        assert_eq(second, 2)
+
+    # cycle
+    cyc: list[int] = cycle([1, 2, 3], 7)
+    assert_eq(len(cyc), 7)
+    c0: int | None = cyc[0]
+    if c0 is not None:
+        assert_eq(c0, 1)
+    c3: int | None = cyc[3]
+    if c3 is not None:
+        assert_eq(c3, 1)
+
+    print("stdlib_itertools_new: all tests passed")
+
+# expect-stdout: stdlib_itertools_new: all tests passed

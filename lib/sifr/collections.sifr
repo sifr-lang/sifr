@@ -4,7 +4,6 @@ from _sifr.collections import new_set, set_from_list, set_add, set_contains, set
 class Counter:
     # A multiset (bag) mapping elements to their counts.
     # Backed by a native dict[str, int] field.
-    # Methods that modify counts use self.counts[key] = val (in-place dict mutation).
     counts: dict[str, int]
 
     def __init__(self, counts: dict[str, int]):
@@ -30,14 +29,10 @@ class Counter:
         return total
 
     def most_common(self, n: int) -> list[str]:
-        # Return top-n keys sorted by count descending.
-        # Uses a simple selection sort on the keys.
         all_keys: list[str] = self.counts.keys()
-        # Collect and sort by count descending (bubble sort for simplicity)
         result: list[str] = []
         for k in all_keys:
             result.append(k)
-        # Sort by count descending (bubble sort)
         sz: int = len(result)
         i: int = 0
         while i < sz:
@@ -60,7 +55,6 @@ class Counter:
                             result[j] = ki
                 j = j + 1
             i = i + 1
-        # Take top n
         top: list[str] = []
         count: int = 0
         while count < n:
@@ -77,6 +71,90 @@ class Counter:
 
     def values(self) -> list[int]:
         return self.counts.values()
+
+    def update(self, other: Counter) -> None:
+        # Add counts from other into self.
+        for key in other.counts.keys():
+            other_val: int | None = other.counts[key]
+            if other_val is not None:
+                existing: int | None = self.counts[key]
+                if existing is not None:
+                    self.counts[key] = existing + other_val
+                else:
+                    self.counts[key] = other_val
+
+    def subtract(self, other: Counter) -> None:
+        # Subtract counts of other from self (counts can go negative).
+        for key in other.counts.keys():
+            other_val: int | None = other.counts[key]
+            if other_val is not None:
+                existing: int | None = self.counts[key]
+                if existing is not None:
+                    self.counts[key] = existing - other_val
+                else:
+                    self.counts[key] = 0 - other_val
+
+    def elements(self) -> list[str]:
+        # Return list of elements repeated by their count (positive counts only).
+        # Uses repeated append with index-based key lookup to avoid move issues.
+        result: list[str] = []
+        all_keys: list[str] = self.counts.keys()
+        ki: int = 0
+        while ki < len(all_keys):
+            key_opt: str | None = all_keys[ki]
+            if key_opt is not None:
+                cnt: int | None = self.counts[key_opt]
+                if cnt is not None:
+                    i: int = 0
+                    while i < cnt:
+                        key_copy: str | None = all_keys[ki]
+                        if key_copy is not None:
+                            result.append(key_copy)
+                        i = i + 1
+            ki = ki + 1
+        return result
+
+
+def counter_add(a: Counter, b: Counter) -> Counter:
+    # Return new Counter with sums of counts (only positive results).
+    # CPython: Counter.__add__(other)
+    new_counts: dict[str, int] = {}
+    for key in a.counts.keys():
+        a_val: int | None = a.counts[key]
+        if a_val is not None:
+            b_val: int | None = b.counts[key]
+            b_count: int = 0
+            if b_val is not None:
+                b_count = b_val
+            total: int = a_val + b_count
+            if total > 0:
+                new_counts[key] = total
+    for key2 in b.counts.keys():
+        already: int | None = new_counts[key2]
+        if already is None:
+            b_val2: int | None = b.counts[key2]
+            if b_val2 is not None:
+                if b_val2 > 0:
+                    new_counts[key2] = b_val2
+    return Counter(new_counts)
+
+
+def counter_sub(a: Counter, b: Counter) -> Counter:
+    # Return new Counter with differences (only positive results kept).
+    # CPython: Counter.__sub__(other)
+    new_counts: dict[str, int] = {}
+    for key in a.counts.keys():
+        a_val: int | None = a.counts[key]
+        if a_val is not None:
+            b_val: int | None = b.counts[key]
+            b_count: int = 0
+            if b_val is not None:
+                b_count = b_val
+            diff: int = a_val - b_count
+            if diff > 0:
+                new_counts[key] = diff
+    return Counter(new_counts)
+
 
 def from_list(items: list[str]) -> Counter:
     counts: dict[str, int] = {}
