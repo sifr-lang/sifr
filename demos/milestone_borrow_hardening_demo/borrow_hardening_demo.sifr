@@ -5,6 +5,9 @@
 # - Correct move tracking with own keyword
 # - Borrowed params in loops and branches
 # - Copy types always pass by value
+# - mut params for in-place mutation
+# - For-loop element semantics (elements are independent copies)
+# - Escape analysis (returning/storing borrowed params produces errors)
 
 # --- Section 1: Borrow-by-default basics ---
 # Functions borrow by default, caller retains ownership
@@ -76,3 +79,6 @@ def main():
         loop_total = loop_total + get_sum(loop_data)
     print(loop_total)  # 90 (30 * 3)
     print(loop_data)   # [5, 10, 15] -- still usable after loop
+
+    # Section 6: mut params for in-place mutation
+    # (See also: exclusivity_error_demo.sifr for the error case)

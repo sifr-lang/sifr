@@ -1,0 +1,21 @@
+# Test: for-loop elements are independent copies (Python-like semantics).
+# Modifying the loop variable does not modify the original collection.
+# The collection remains fully usable after the loop.
+# expect-stdout: [1, 2, 3]
+# expect-stdout: [2, 4, 6]
+# expect-stdout: [1, 2, 3]
+
+def double_elements(items: list[int]) -> list[int]:
+    result: list[int] = []
+    for x in items:
+        doubled: int = x * 2
+        result.append(doubled)
+    return result
+
+def main():
+    data: list[int] = [1, 2, 3]
+    print(data)
+    doubled: list[int] = double_elements(data)
+    print(doubled)
+    # data is unchanged -- loop variable was an independent copy
+    print(data)

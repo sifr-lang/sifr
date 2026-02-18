@@ -1,0 +1,12 @@
+# expect-error: cannot store borrowed parameter
+# Test: storing a borrowed parameter into a local variable should produce a compile error.
+# The parameter `items` is borrowed by default (&Vec<i64>),
+# so it cannot be stored (would escape the borrow).
+
+def store_it(items: list[int]) -> list[int]:
+    stored: list[int] = items  # ERROR: cannot store borrowed parameter
+    return stored
+
+def main():
+    data: list[int] = [1, 2, 3]
+    result: list[int] = store_it(data)

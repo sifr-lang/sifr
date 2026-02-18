@@ -1,0 +1,18 @@
+# Test: mut keyword enables mutable borrow of Move-type parameters.
+# The function can modify the collection in-place.
+# expect-stdout: [3, 1, 2]
+# expect-stdout: [1, 2, 3]
+# expect-stdout: [3, 1, 2]
+
+def sort_inplace(mut items: list[int]):
+    items.sort()  # mutates in-place via &mut Vec<i64>
+
+def main():
+    # nums needs to be mutable to pass as mut param
+    nums: list[int] = [3, 1, 2]
+    print(nums)   # [3, 1, 2] -- before sort
+    sort_inplace(nums)
+    print(nums)   # [1, 2, 3] -- sorted in-place!
+    # After in-place sort, nums is modified
+    other: list[int] = [3, 1, 2]
+    print(other)  # [3, 1, 2] -- unrelated, not sorted
