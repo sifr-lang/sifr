@@ -6,7 +6,7 @@
 
 ## milestone_error_safety: Error Class Enforcement and Exhaustiveness Checking
 
-status: pending
+status: done
 
 **Goal:** Make the sifr compiler enforce the error handling model defined in architecture.md contract #3. After this milestone, all `Result` error types must be classes extending `Error`, `str` is no longer a valid error type, and the compiler performs exhaustiveness checking on `except` arms.
 
