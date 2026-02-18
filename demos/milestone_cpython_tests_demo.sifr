@@ -4,7 +4,7 @@
 
 from sifr.test import assert_eq, assert_true, assert_false, assert_almost_eq
 from sifr.math import sqrt, pi, sin, cos, factorial, gcd, lcm, comb, isclose
-from sifr.statistics import mean, median, stdev
+from sifr.statistics import mean, median, stdev, StatisticsError
 from sifr.re import re_match, findall, sub, split
 from sifr.fnmatch import fnmatch, fnmatch_filter
 from sifr.bisect import bisect_left, bisect_right
@@ -13,7 +13,7 @@ from sifr.textwrap import wrap, fill
 from sifr.json import json_loads, json_dumps
 from sifr.string import capwords, ascii_lowercase
 from sifr.collections import new_set, set_add, set_len, Counter, from_list
-from sifr.itertools import chain, repeat_val, take, flatten
+from sifr.itertools import chain, repeat, take, flatten
 from sifr.pathlib import basename, dirname, extension
 from sifr.datetime import timedelta
 
@@ -31,9 +31,15 @@ def main():
 
     # ===== statistics =====
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
-    assert_almost_eq(mean(data), 3.0, 0.0001)
-    assert_almost_eq(median(data), 3.0, 0.0001)
-    assert_almost_eq(stdev(data), 1.5811, 0.001)
+    try:
+        m_val: float = mean(data)
+        assert_almost_eq(m_val, 3.0, 0.0001)
+        med_val: float = median(data)
+        assert_almost_eq(med_val, 3.0, 0.0001)
+        sd_val: float = stdev(data)
+        assert_almost_eq(sd_val, 1.5811, 0.001)
+    except StatisticsError as se:
+        print(f"statistics error: {se.message}")
     print("statistics: OK")
 
     # ===== re =====
@@ -112,7 +118,7 @@ def main():
     b: list[int] = [3, 4]
     ch: list[int] = chain(a, b)
     assert_eq(len(ch), 4)
-    rep: list[int] = repeat_val(7, 3)
+    rep: list[int] = repeat(7, 3)
     assert_eq(len(rep), 3)
     tk: list[int] = take(2, ch)
     assert_eq(len(tk), 2)

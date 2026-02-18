@@ -27,7 +27,7 @@
 # expect-stdout: Done!
 
 from sifr.math import factorial, gcd, lcm, comb, perm, prod, exp, isfinite
-from sifr.statistics import harmonic_mean, median_low, median_high
+from sifr.statistics import harmonic_mean, median_low, median_high, StatisticsError
 from sifr.string import capwords
 from sifr.pathlib import stem, is_absolute
 from sifr.bisect import bisect_left
@@ -47,10 +47,16 @@ def main():
 
     print("=== Statistics Functions ===")
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
-    print("harmonic_mean = " + str(harmonic_mean(data)))
     even: list[float] = [1.0, 2.0, 3.0, 4.0]
-    print("median_low = " + str(median_low(even)))
-    print("median_high = " + str(median_high(even)))
+    try:
+        hm: float = harmonic_mean(data)
+        ml: float = median_low(even)
+        mh: float = median_high(even)
+        print("harmonic_mean = " + str(hm))
+        print("median_low = " + str(ml))
+        print("median_high = " + str(mh))
+    except StatisticsError as se:
+        print("statistics error: " + se.message)
 
     print("=== String Functions ===")
     print("capwords = " + capwords("hello world test"))

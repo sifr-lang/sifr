@@ -2,7 +2,7 @@
 # Fixes three gaps caused by out-of-order milestone execution in Phase 7.
 
 from typing import Callable
-from sifr.itertools import repeat_val, chain, take
+from sifr.itertools import repeat, chain, take
 from sifr.json import loads
 from sifr.re import search, sub, findall, split
 
@@ -26,11 +26,11 @@ def main():
     # ─── Gap 1: Lazy itertools ───────────────────────────────────────
     # repeat_val is now a lazy generator (uses yield instead of list+append).
     # When assigned to list[int], .collect() is automatically emitted.
-    repeated: list[int] = repeat_val(7, 3)
+    repeated: list[int] = repeat(7, 3)
     print(repeated)
 
     # Lazy generators work in for-loops too (no full materialization)
-    for val in repeat_val(42, 2):
+    for val in repeat(42, 2):
         print(val)
 
     # Eager functions (chain, take) remain eager due to codegen limitations

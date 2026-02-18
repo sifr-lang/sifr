@@ -8,7 +8,7 @@
 # expect-stdout: population stdev = 2
 # expect-stdout: All assertions passed!
 
-from sifr.statistics import mean, variance, pvariance, stdev, pstdev
+from sifr.statistics import mean, variance, pvariance, stdev, pstdev, StatisticsError
 from sifr.test import assert_almost_eq, assert_gt, assert_lt
 
 def main():
@@ -17,29 +17,28 @@ def main():
     # ============================================================
     data: list[float] = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
 
-    m: float = mean(data)
-    print("mean = " + str(m))
-
-    sv: float = variance(data)
-    print("sample variance = " + str(sv))
-
-    pv: float = pvariance(data)
-    print("population variance = " + str(pv))
-
-    sd: float = stdev(data)
-    print("sample stdev = " + str(sd))
-
-    pd: float = pstdev(data)
-    print("population stdev = " + str(pd))
+    try:
+        m: float = mean(data)
+        sv: float = variance(data)
+        pv: float = pvariance(data)
+        sd: float = stdev(data)
+        pd: float = pstdev(data)
+        print("mean = " + str(m))
+        print("sample variance = " + str(sv))
+        print("population variance = " + str(pv))
+        print("sample stdev = " + str(sd))
+        print("population stdev = " + str(pd))
+        assert_almost_eq(m, 5.0, 0.001)
+        assert_almost_eq(sv, 4.571, 0.01)
+        assert_almost_eq(pv, 4.0, 0.001)
+        assert_almost_eq(sd, 2.138, 0.01)
+        assert_almost_eq(pd, 2.0, 0.001)
+    except StatisticsError as e:
+        print("statistics error: " + e.message)
 
     # ============================================================
     # Part 2: New test assertion intrinsics
     # ============================================================
-
-    # assert_almost_eq: compare floats with tolerance
-    assert_almost_eq(m, 5.0, 0.001)
-    assert_almost_eq(sv, 4.571, 0.01)
-    assert_almost_eq(pv, 4.0, 0.001)
 
     # assert_gt / assert_lt: range-based assertions
     assert_gt(10, 5)

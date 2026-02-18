@@ -8,7 +8,7 @@
 
 from sifr.heapq import heapify, heappush, heappop, nsmallest, nlargest
 from sifr.bisect import bisect_left, bisect_right, insort_left, insort_right
-from sifr.itertools import chain, chain_own
+from sifr.itertools import chain
 from sifr.collections import Counter, from_list
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ def demo_bisect() -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def demo_itertools() -> None:
-    print("=== Section 3: itertools chain vs chain_own ===")
+    print("=== Section 3: itertools chain ===")
 
     a: list[int] = [1, 2, 3]
     b: list[int] = [4, 5, 6]
@@ -110,12 +110,11 @@ def demo_itertools() -> None:
     print("b still usable:")
     print(len(b))
 
-    # chain_own(own a, own b): consumes both, returns combined list
-    # More efficient: extends a directly (no extra allocation)
+    # chain again to show reuse
     x: list[int] = [10, 20, 30]
     y: list[int] = [40, 50, 60]
-    combined: list[int] = chain_own(x, y)
-    print("chain_own (consume both):")
+    combined: list[int] = chain(x, y)
+    print("chain result:")
     print(combined)
 
 # ─────────────────────────────────────────────────────────────────────────────
