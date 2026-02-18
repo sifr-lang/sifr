@@ -1,0 +1,16 @@
+# expect-stdout: [INFO] myapp: hello world
+# expect-stdout: [WARNING] myapp: watch out
+# expect-stdout: [ERROR] myapp: something failed
+# expect-stdout: level constants ok = true
+
+from sifr.logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL, Logger
+
+def main():
+    logger: Logger = getLogger("myapp")
+    logger.set_level(INFO)
+    logger.info("hello world")
+    logger.warning("watch out")
+    logger.error("something failed")
+    logger.debug("this should not print")
+
+    print("level constants ok = " + str(DEBUG == 10 and INFO == 20 and WARNING == 30 and ERROR == 40 and CRITICAL == 50))

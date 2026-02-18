@@ -413,6 +413,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut stdlib_preamble = String::new();
     let mut emitted_modules: HashSet<String> = HashSet::new();
     let mut all_needed: Vec<String> = Vec::new();
+    let mut stdlib_needs_hashmap = false;
+    let mut stdlib_needs_hashset = false;
     for module_name in &emitter.used_stdlib_modules {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             for dep in deps {
@@ -454,9 +456,26 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     rust_code.clone()
                 };
                 if !filtered.trim().is_empty() {
-                    stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
-                    stdlib_preamble.push_str(&filtered);
-                    stdlib_preamble.push('\n');
+                    // Track and strip per-module use imports; they'll be emitted once at the top
+                    if filtered.contains("use std::collections::HashMap;") {
+                        stdlib_needs_hashmap = true;
+                    }
+                    if filtered.contains("use std::collections::HashSet;") {
+                        stdlib_needs_hashset = true;
+                    }
+                    let stripped: String = filtered.lines()
+                        .filter(|l| {
+                            let t = l.trim();
+                            t != "use std::collections::HashMap;"
+                                && t != "use std::collections::HashSet;"
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    if !stripped.trim().is_empty() {
+                        stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
+                        stdlib_preamble.push_str(&stripped);
+                        stdlib_preamble.push('\n');
+                    }
                 }
                 emitted_modules.insert(module_name.clone());
             }
@@ -464,18 +483,17 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     // Now assemble result: imports, enums, error classes, stdlib preamble, main output
-    // Suppress user-level use statements if the stdlib preamble already emits them
-    // (avoids duplicate `use std::collections::HashMap;` when stdlib uses dicts).
-    let stdlib_has_hashmap = stdlib_preamble.contains("use std::collections::HashMap;");
-    let stdlib_has_hashset = stdlib_preamble.contains("use std::collections::HashSet;");
+    // Emit HashMap/HashSet imports once at the top if needed by user code or any stdlib module.
+    let needs_hashmap = emitter.needs_hashmap || stdlib_needs_hashmap;
+    let needs_hashset = emitter.needs_hashset || stdlib_needs_hashset;
     let mut result = String::new();
-    if emitter.needs_hashmap && !stdlib_has_hashmap {
+    if needs_hashmap {
         result.push_str("use std::collections::HashMap;\n");
     }
-    if emitter.needs_hashset && !stdlib_has_hashset {
+    if needs_hashset {
         result.push_str("use std::collections::HashSet;\n");
     }
-    if (emitter.needs_hashmap && !stdlib_has_hashmap) || (emitter.needs_hashset && !stdlib_has_hashset) {
+    if needs_hashmap || needs_hashset {
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -6419,6 +6437,22 @@ impl RustEmitter {
                 self.write("{ let __x: f64 = ");
                 self.emit_expr(&args[0]);
                 self.write("; let __bits = __x.abs().to_bits(); f64::from_bits(if __bits == 0 { 1 } else { __bits & 0xfff0000000000000 }) - f64::from_bits(((__bits & 0xfff0000000000000) - 0x0010000000000000).max(0)) }");
+            }
+            // sifr.pathlib new intrinsics
+            "touch" => {
+                self.write("std::fs::OpenOptions::new().create(true).write(true).open(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").map(|_| ()).map_err(__io_err)");
+            }
+            "resolve_path" => {
+                self.write("std::fs::canonicalize(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").map(|p| p.to_string_lossy().to_string()).map_err(__io_err)");
+            }
+            "iterdir" => {
+                self.write("(|| -> Result<Vec<String>, IOError> { let __entries = std::fs::read_dir(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").map_err(__io_err)?; Ok(__entries.filter_map(|e| e.ok().map(|e| e.path().to_string_lossy().to_string())).collect()) })()");
             }
             // sifr.os new intrinsics
             "chdir" => {

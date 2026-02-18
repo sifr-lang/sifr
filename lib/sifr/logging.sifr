@@ -1,49 +1,108 @@
 # sifr.logging — Simple logging with level filtering
 from _sifr.time import time_now
+from _sifr.fs import append_text
+
+# Log level constants (CPython-compatible)
+DEBUG: int = 10
+INFO: int = 20
+WARNING: int = 30
+ERROR: int = 40
+CRITICAL: int = 50
+NOTSET: int = 0
 
 # Log levels: DEBUG=10, INFO=20, WARNING=30, ERROR=40, CRITICAL=50
-def log_info(msg: str):
+def log_info(msg: str) -> None:
     print("[INFO] " + msg)
 
-def log_warn(msg: str):
+def log_warn(msg: str) -> None:
     print("[WARN] " + msg)
 
-def log_error(msg: str):
+def log_error(msg: str) -> None:
     print("[ERROR] " + msg)
 
-def log_debug(msg: str):
+def log_debug(msg: str) -> None:
     print("[DEBUG] " + msg)
+
+
+class Formatter:
+    _fmt: str
+
+    def __init__(self, fmt: str) -> None:
+        self._fmt = fmt
+
+    def format(self, level: str, name: str, msg: str) -> str:
+        result: str = self._fmt
+        result = result.replace("%(levelname)s", level)
+        result = result.replace("%(name)s", name)
+        result = result.replace("%(message)s", msg)
+        return result
+
+
+class FileHandler:
+    _path: str
+    _formatter: Formatter
+
+    def __init__(self, path: str) -> None:
+        self._path = path
+        self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
+
+    def set_formatter(self, fmt: Formatter) -> None:
+        self._formatter = fmt
+
+    def emit(self, level: str, name: str, msg: str) -> None:
+        line: str = self._formatter.format(level, name, msg) + "\n"
+        try:
+            _: None = append_text(self._path, line)
+        except IOError as e:
+            pass
+
 
 class Logger:
     _name: str
     _level: int
+    _log_path: str
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self._name = name
         self._level = 20
+        self._log_path = ""
 
     def set_level(self, level: int) -> None:
         self._level = level
 
+    def set_file(self, path: str) -> None:
+        self._log_path = path + ""
+
+    def _emit(self, level: str, level_num: int, msg: str) -> None:
+        if self._level <= level_num:
+            line: str = "[" + level + "] " + self._name + ": " + msg
+            print(line)
+            if self._log_path != "":
+                try:
+                    _: None = append_text(self._log_path, line + "\n")
+                except IOError as e:
+                    pass
+
     def debug(self, msg: str) -> None:
-        if self._level <= 10:
-            print("[DEBUG] " + self._name + ": " + msg)
+        self._emit("DEBUG", 10, msg)
 
     def info(self, msg: str) -> None:
-        if self._level <= 20:
-            print("[INFO] " + self._name + ": " + msg)
+        self._emit("INFO", 20, msg)
 
     def warning(self, msg: str) -> None:
-        if self._level <= 30:
-            print("[WARNING] " + self._name + ": " + msg)
+        self._emit("WARNING", 30, msg)
 
     def error(self, msg: str) -> None:
-        if self._level <= 40:
-            print("[ERROR] " + self._name + ": " + msg)
+        self._emit("ERROR", 40, msg)
 
     def critical(self, msg: str) -> None:
-        if self._level <= 50:
-            print("[CRITICAL] " + self._name + ": " + msg)
+        self._emit("CRITICAL", 50, msg)
+
 
 def getLogger(name: str) -> Logger:
     return Logger(name)
+
+
+def basicConfig(level: int) -> None:
+    # Set the root logger level (no-op in this simplified implementation).
+    pass

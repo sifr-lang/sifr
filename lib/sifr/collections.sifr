@@ -165,3 +165,99 @@ def from_list(items: list[str]) -> Counter:
         else:
             counts[item] = 1
     return Counter(counts)
+
+
+class deque:
+    # A double-ended queue backed by a list[int].
+    # Supports O(1) append/appendleft and pop/popleft.
+    _data: list[int]
+    _maxlen: int
+
+    def __init__(self, maxlen: int) -> None:
+        self._data = []
+        self._maxlen = maxlen
+
+    def append(self, val: int) -> None:
+        self._data.append(val)
+        if self._maxlen > 0 and len(self._data) > self._maxlen:
+            # Remove from front
+            new_data: list[int] = []
+            for i, v in enumerate(self._data):
+                if i > 0:
+                    new_data.append(v)
+            self._data = new_data
+
+    def appendleft(self, val: int) -> None:
+        new_data: list[int] = [val]
+        for v in self._data:
+            new_data.append(v)
+        if self._maxlen > 0 and len(new_data) > self._maxlen:
+            # Trim from right
+            trimmed: list[int] = []
+            for i, v in enumerate(new_data):
+                if i < self._maxlen:
+                    trimmed.append(v)
+            self._data = trimmed
+        else:
+            self._data = new_data
+
+    def pop(self) -> int:
+        result: int = 0
+        if len(self._data) > 0:
+            last_idx: int = len(self._data) - 1
+            new_data: list[int] = []
+            for i, v in enumerate(self._data):
+                if i == last_idx:
+                    result = v
+                else:
+                    new_data.append(v)
+            self._data = new_data
+        return result
+
+    def popleft(self) -> int:
+        result: int = 0
+        if len(self._data) > 0:
+            new_data: list[int] = []
+            for i, v in enumerate(self._data):
+                if i == 0:
+                    result = v
+                else:
+                    new_data.append(v)
+            self._data = new_data
+        return result
+
+    def len(self) -> int:
+        return len(self._data)
+
+    def to_list(self) -> list[int]:
+        result: list[int] = []
+        for v in self._data:
+            result.append(v)
+        return result
+
+    def clear(self) -> None:
+        self._data = []
+
+    def extend(self, items: list[int]) -> None:
+        for v in items:
+            self._data.append(v)
+        if self._maxlen > 0 and len(self._data) > self._maxlen:
+            new_data: list[int] = []
+            start: int = len(self._data) - self._maxlen
+            for i, v in enumerate(self._data):
+                if i >= start:
+                    new_data.append(v)
+            self._data = new_data
+
+    def extendleft(self, items: list[int]) -> None:
+        for v in items:
+            new_data: list[int] = [v]
+            for existing in self._data:
+                new_data.append(existing)
+            self._data = new_data
+        if self._maxlen > 0 and len(self._data) > self._maxlen:
+            trimmed: list[int] = []
+            for i, v in enumerate(self._data):
+                if i < self._maxlen:
+                    trimmed.append(v)
+            self._data = trimmed

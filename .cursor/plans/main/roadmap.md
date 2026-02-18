@@ -14,7 +14,7 @@
 | 8 | Error Safety | 2 (error_safety, error_safety_stdlib_types) | completed | Built-in error classes, exhaustiveness checking on `except` arms, `Result[T, str]` eliminated, module-specific error type export pipeline |
 | 9 | Stdlib Safety Remediation | 6 (io_safety → zero_panic_gate → error_subclasses) | in progress | All ~45+ `.unwrap()` panic paths fixed, zero-panic gate enforced, safety scores 7/10+ per module, error subclass hierarchy (FileNotFoundError etc.) for compile-time checked fine-grained error handling |
 | 10 | Borrow-by-Default | 3 (borrow_default, borrow_hardening, borrow_stdlib) | pending | Borrow-by-default params, exclusivity, escape analysis, consuming-self, for-loop semantics, stdlib ownership patterns |
-| 11 | Stdlib Deepening | 4 (pure_expansion → class_deepening) | pending | ~38% → deep CPython parity, 8 new modules, `open()` built-in, `datetime`/`deque`/`Pattern` classes, API naming divergences documented |
+| 11 | Stdlib Deepening | 4 (pure_expansion → class_deepening) | completed | ~38% → deep CPython parity, 8 new modules, `datetime`/`deque`/`Pattern` classes, API naming divergences documented |
 | 12 | Async and Ecosystem Foundation | 3 (async, networking_stdlib, typed_serde_core) | pending | Async runtime, networking stdlib, web-independent typed serialization |
 | 13 | Web Stack | 6 (web_db → data_processing) | pending | Web framework, database, typed extractors, auth, production features, Redis, S3, email, data processing |
 | 14 | Polish and Tooling | 5 (metaprogramming → ecosystem) | pending | FFI, package management, LSP, formatter, REPL |

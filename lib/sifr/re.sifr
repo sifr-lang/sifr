@@ -51,3 +51,40 @@ def findall(pattern: str, text: str) -> Result[list[str], RegexError]:
 
 def split(pattern: str, text: str) -> Result[list[str], RegexError]:
     return re_split(pattern, text)
+
+
+class Pattern:
+    # A compiled regular expression pattern.
+    _pattern: str
+
+    def __init__(self, pattern: str) -> None:
+        self._pattern = pattern
+
+    def search(self, text: str) -> Result[str | None, RegexError]:
+        return re_find(self._pattern, text)
+
+    def is_match(self, text: str) -> Result[bool, RegexError]:
+        # CPython: Pattern.match — renamed is_match due to Rust keyword conflict
+        return re_match(self._pattern, text)
+
+    def sub(self, replacement: str, text: str) -> Result[str, RegexError]:
+        return re_replace(self._pattern, replacement, text)
+
+    def findall(self, text: str) -> Result[list[str], RegexError]:
+        return re_findall(self._pattern, text)
+
+    def split(self, text: str) -> Result[list[str], RegexError]:
+        return re_split(self._pattern, text)
+
+    def pattern(self) -> str:
+        return self._pattern + ""
+
+
+def compile(pattern: str) -> Pattern:
+    return Pattern(pattern)
+
+
+def fullmatch(pattern: str, text: str) -> Result[bool, RegexError]:
+    # Match the entire string against the pattern.
+    anchored: str = "^" + pattern + "$"
+    return re_match(anchored, text)

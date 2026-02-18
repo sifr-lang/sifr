@@ -121,6 +121,7 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.os.remove_file` | `os.remove` | `remove` is used as a method name on collections; `remove_file` avoids ambiguity |
 | `sifr.random.shuffle` | `random.shuffle` | CPython-compatible name; returns a new shuffled list (Sifr is immutable-by-default) instead of mutating in place |
 | `sifr.operator.mod_val` | `operator.mod` | `mod` is a Rust keyword |
+| `sifr.re.Pattern.is_match` | `re.Pattern.match` | `match` is a Rust keyword |
 
 ## Compiler Pipeline
 

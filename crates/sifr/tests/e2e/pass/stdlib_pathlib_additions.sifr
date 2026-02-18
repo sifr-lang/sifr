@@ -1,0 +1,27 @@
+# expect-stdout: with_name = /tmp/newname.txt
+# expect-stdout: with_suffix = /tmp/myfile.csv
+# expect-stdout: touch ok = true
+# expect-stdout: exists after touch = true
+# expect-stdout: unlink ok = true
+
+from sifr.pathlib import Path
+
+def main():
+    p: Path = Path("/tmp/myfile.txt")
+    print("with_name = " + p.with_name("newname.txt"))
+    print("with_suffix = " + p.with_suffix(".csv"))
+
+    tmp: Path = Path("/tmp/sifr_pathlib_test.txt")
+    try:
+        _t: None = tmp.touch()
+        print("touch ok = true")
+    except IOError as e:
+        print("touch error: " + e.message)
+
+    print("exists after touch = " + str(tmp.exists()))
+
+    try:
+        _u: None = tmp.unlink()
+        print("unlink ok = true")
+    except IOError as e:
+        print("unlink error: " + e.message)

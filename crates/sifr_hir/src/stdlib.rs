@@ -606,6 +606,15 @@ fn intrinsic_fs() -> IntrinsicModule {
     // makedirs(path: str) -> Result[None, IOError]
     functions.insert("makedirs".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
 
+    // touch(path: str) -> Result[None, IOError] (create file if not exists)
+    functions.insert("touch".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
+
+    // resolve_path(path: str) -> Result[str, IOError] (canonicalize path)
+    functions.insert("resolve_path".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::Str, "IOError")));
+
+    // iterdir(path: str) -> Result[list[str], IOError] (list directory entries as full paths)
+    functions.insert("iterdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
+
     // chdir(path: str) -> Result[None, IOError]
     functions.insert("chdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
 

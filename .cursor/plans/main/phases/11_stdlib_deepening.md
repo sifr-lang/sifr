@@ -102,7 +102,7 @@ status: completed
 
 ## milestone_stdlib_class_deepening: Class API Enhancements
 
-status: pending
+status: completed
 
 **Goal:** Add class-based APIs to existing modules and introduce the `open()` built-in with file object protocol.
 

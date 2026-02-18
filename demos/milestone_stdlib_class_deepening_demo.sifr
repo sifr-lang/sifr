@@ -1,0 +1,98 @@
+# Demo: milestone_stdlib_class_deepening
+# Demonstrates class-based APIs: collections.deque, datetime, pathlib.Path,
+# re.Pattern, logging.Logger, csv reader/writer
+
+from sifr.collections import deque
+from sifr.datetime import datetime, date
+from sifr.pathlib import Path
+from sifr.re import compile, fullmatch, Pattern
+from sifr.logging import getLogger, DEBUG, INFO, WARNING, Logger
+from sifr.csv import reader, writer, DictReader, DictWriter
+
+def main():
+    # --- collections.deque ---
+    d: deque = deque(3)
+    d.append(1)
+    d.append(2)
+    d.append(3)
+    d.append(4)
+    print("deque len (maxlen=3) = " + str(d.len()))
+    print("deque popleft = " + str(d.popleft()))
+
+    # --- datetime ---
+    dt: datetime = datetime(2024, 6, 15, 9, 30, 0)
+    print("datetime isoformat = " + dt.isoformat())
+    print("datetime year = " + str(dt.year))
+
+    today: date = date(2024, 6, 15)
+    print("date isoformat = " + today.isoformat())
+
+    # --- pathlib.Path ---
+    p: Path = Path("/tmp/demo_file.txt")
+    try:
+        _: None = p.touch()
+        print("path touch ok = true")
+        print("path exists = " + str(p.exists()))
+        _2: None = p.unlink()
+        print("path unlink ok = true")
+    except IOError as e:
+        print("path error: " + e.message)
+
+    p2: Path = Path("/tmp/myfile.txt")
+    print("with_suffix = " + p2.with_suffix(".csv"))
+    print("with_name = " + p2.with_name("other.txt"))
+
+    # --- re.Pattern ---
+    try:
+        pat: Pattern = compile("\\d+")
+        m: bool = pat.is_match("abc123")
+        print("pattern is_match = " + str(m))
+        found: str | None = pat.search("hello 42 world")
+        if found is not None:
+            print("pattern search found = " + str(len(found) > 0))
+        nums: list[str] = pat.findall("1 plus 2 equals 3")
+        print("pattern findall count = " + str(len(nums)))
+        try:
+            fm_val: bool = fullmatch("\\d+", "12345")
+            print("fullmatch digits = " + str(fm_val))
+        except RegexError as e2:
+            print("fullmatch error: " + e2.message)
+    except RegexError as e:
+        print("regex error: " + e.message)
+
+    # --- logging.Logger ---
+    log: Logger = getLogger("demo")
+    log.set_level(DEBUG)
+    log.debug("debug message")
+    log.info("info message")
+    log.warning("warning message")
+
+    # --- csv reader/writer ---
+    csv_text: str = "name,age\nalice,30\nbob,25"
+    r: reader = reader(csv_text)
+    all_rows: list[list[str]] = r.rows()
+    print("csv rows = " + str(len(all_rows)))
+
+    w: writer = writer()
+    row1: list[str] = ["x", "y"]
+    row2: list[str] = ["1", "2"]
+    w.writerow(row1)
+    w.writerow(row2)
+    out: str = w.getvalue()
+    print("csv writer output = " + out)
+
+    # --- csv DictReader/DictWriter ---
+    dr: DictReader = DictReader("name,score\nalice,95\nbob,87")
+    headers: list[str] = dr.fieldnames()
+    first_header: str | None = headers[0]
+    if first_header is not None:
+        print("dictreader headers = " + first_header)
+    dict_rows: list[dict[str, str]] = dr.rows()
+    print("dictreader row count = " + str(len(dict_rows)))
+
+    dw: DictWriter = DictWriter(["name", "score"])
+    dw.writeheader()
+    row_data: dict[str, str] = {"name": "charlie", "score": "91"}
+    dw.writerow(row_data)
+    dw_out: str = dw.getvalue()
+    print("dictwriter output = " + dw_out)

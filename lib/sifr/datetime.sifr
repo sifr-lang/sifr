@@ -41,3 +41,100 @@ class timedelta:
 
     def __eq__(self, other: timedelta) -> bool:
         return self.total_seconds() == other.total_seconds()
+
+
+class datetime:
+    # A full datetime class with year, month, day, hour, minute, second.
+    year: int
+    month: int
+    day: int
+    hour: int
+    minute: int
+    second: int
+
+    def __init__(self, year: int, month: int, day: int, hour: int, minute: int, second: int) -> None:
+        self.year = year
+        self.month = month
+        self.day = day
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+
+    def isoformat(self) -> str:
+        # Returns ISO 8601 format: YYYY-MM-DDTHH:MM:SS
+        y: str = str(self.year)
+        mo: str = str(self.month)
+        if len(mo) < 2:
+            mo = "0" + mo
+        d: str = str(self.day)
+        if len(d) < 2:
+            d = "0" + d
+        h: str = str(self.hour)
+        if len(h) < 2:
+            h = "0" + h
+        mi: str = str(self.minute)
+        if len(mi) < 2:
+            mi = "0" + mi
+        s: str = str(self.second)
+        if len(s) < 2:
+            s = "0" + s
+        return y + "-" + mo + "-" + d + "T" + h + ":" + mi + ":" + s
+
+    def timestamp(self) -> int:
+        # Approximate Unix timestamp (ignores timezone, uses Gregorian calendar).
+        # Days from 1970-01-01 to year-month-day
+        days: int = 0
+        y: int = 1970
+        while y < self.year:
+            if (y % 4 == 0 and y % 100 != 0) or (y % 400 == 0):
+                days = days + 366
+            else:
+                days = days + 365
+            y = y + 1
+        month_days: list[int] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        is_leap: bool = (self.year % 4 == 0 and self.year % 100 != 0) or (self.year % 400 == 0)
+        m: int = 1
+        while m < self.month:
+            md: int = 0
+            for i, v in enumerate(month_days):
+                if i == m - 1:
+                    md = v
+            if m == 2 and is_leap:
+                md = 29
+            days = days + md
+            m = m + 1
+        days = days + self.day - 1
+        return days * 86400 + self.hour * 3600 + self.minute * 60 + self.second
+
+    def __eq__(self, other: datetime) -> bool:
+        return self.year == other.year and self.month == other.month and self.day == other.day and self.hour == other.hour and self.minute == other.minute and self.second == other.second
+
+    def __str__(self) -> str:
+        return self.isoformat()
+
+
+class date:
+    year: int
+    month: int
+    day: int
+
+    def __init__(self, year: int, month: int, day: int) -> None:
+        self.year = year
+        self.month = month
+        self.day = day
+
+    def isoformat(self) -> str:
+        y: str = str(self.year)
+        mo: str = str(self.month)
+        if len(mo) < 2:
+            mo = "0" + mo
+        d: str = str(self.day)
+        if len(d) < 2:
+            d = "0" + d
+        return y + "-" + mo + "-" + d
+
+    def __eq__(self, other: date) -> bool:
+        return self.year == other.year and self.month == other.month and self.day == other.day
+
+    def __str__(self) -> str:
+        return self.isoformat()
