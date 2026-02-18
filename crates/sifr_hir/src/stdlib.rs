@@ -234,6 +234,33 @@ fn intrinsic_math() -> IntrinsicModule {
     // fsum(data: list[float]) -> float
     functions.insert("fsum".to_string(), FunctionType::all_borrow(vec![("data".to_string(), Type::List(Box::new(Type::Float)))], Type::Float));
 
+    // erf(x: float) -> float
+    functions.insert("erf".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // erfc(x: float) -> float
+    functions.insert("erfc".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // gamma(x: float) -> float
+    functions.insert("gamma".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // lgamma(x: float) -> float
+    functions.insert("lgamma".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // frexp(x: float) -> list[float] ([mantissa, exponent_as_float])
+    functions.insert("frexp".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::List(Box::new(Type::Float))));
+
+    // ldexp(m: float, e: int) -> float
+    functions.insert("ldexp".to_string(), FunctionType::all_borrow(vec![("m".to_string(), Type::Float), ("e".to_string(), Type::Int)], Type::Float));
+
+    // modf(x: float) -> list[float] ([fractional_part, integer_part])
+    functions.insert("modf".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::List(Box::new(Type::Float))));
+
+    // nextafter(x: float, y: float) -> float
+    functions.insert("nextafter".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
+
+    // ulp(x: float) -> float
+    functions.insert("ulp".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
     // Constants
     constants.insert("pi".to_string(), Type::Float);
     constants.insert("e".to_string(), Type::Float);
@@ -442,6 +469,18 @@ fn intrinsic_time() -> IntrinsicModule {
     // monotonic() -> float (guaranteed non-decreasing clock for timeouts)
     functions.insert("monotonic".to_string(), FunctionType::all_borrow(vec![], Type::Float));
 
+    // strptime(s: str, fmt: str) -> Result[str, ValueError] (parse time string, return ISO datetime)
+    functions.insert("strptime".to_string(), FunctionType::all_borrow(vec![
+        ("s".to_string(), Type::Str),
+        ("fmt".to_string(), Type::Str),
+    ], result_ty(Type::Str, "ValueError")));
+
+    // gmtime(epoch: float) -> str (UTC time as ISO string)
+    functions.insert("gmtime".to_string(), FunctionType::all_borrow(vec![("epoch".to_string(), Type::Float)], Type::Str));
+
+    // localtime(epoch: float) -> str (local time as ISO string)
+    functions.insert("localtime".to_string(), FunctionType::all_borrow(vec![("epoch".to_string(), Type::Float)], Type::Str));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -567,6 +606,24 @@ fn intrinsic_fs() -> IntrinsicModule {
     // makedirs(path: str) -> Result[None, IOError]
     functions.insert("makedirs".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
 
+    // chdir(path: str) -> Result[None, IOError]
+    functions.insert("chdir".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
+
+    // getpid() -> int
+    functions.insert("getpid".to_string(), FunctionType::all_borrow(vec![], Type::Int));
+
+    // cpu_count() -> int
+    functions.insert("cpu_count".to_string(), FunctionType::all_borrow(vec![], Type::Int));
+
+    // stat_size(path: str) -> Result[int, IOError] (file size in bytes)
+    functions.insert("stat_size".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::Int, "IOError")));
+
+    // which(name: str) -> str | None (find executable in PATH)
+    functions.insert("which".to_string(), FunctionType::all_borrow(vec![("name".to_string(), Type::Str)], Type::Union(vec![Type::Str, Type::None])));
+
+    // disk_usage(path: str) -> list[int] ([total, used, free] in bytes)
+    functions.insert("disk_usage".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -640,6 +697,24 @@ fn intrinsic_crypto() -> IntrinsicModule {
             ("mu".to_string(), Type::Float),
             ("sigma".to_string(), Type::Float),
         ], Type::Float));
+
+    // sha224(s: str) -> str (hex digest)
+    functions.insert("sha224".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // sha384(s: str) -> str (hex digest)
+    functions.insert("sha384".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // blake2b(s: str) -> str (hex digest)
+    functions.insert("blake2b".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // blake2s(s: str) -> str (hex digest)
+    functions.insert("blake2s".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // b32encode(s: str) -> str
+    functions.insert("b32encode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // b32decode(s: str) -> Result[str, ParseError]
+    functions.insert("b32decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "ParseError")));
 
     IntrinsicModule {
         functions,
@@ -719,6 +794,12 @@ fn intrinsic_platform() -> IntrinsicModule {
     functions.insert("platform_arch".to_string(), FunctionType::all_borrow(vec![], Type::Str));
     // platform_node() -> str (hostname)
     functions.insert("platform_node".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    // platform_release() -> str (OS release version)
+    functions.insert("platform_release".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    // platform_version() -> str (OS version string)
+    functions.insert("platform_version".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    // platform_processor() -> str (processor type)
+    functions.insert("platform_processor".to_string(), FunctionType::all_borrow(vec![], Type::Str));
     IntrinsicModule { functions, constants: HashMap::new() }
 }
 

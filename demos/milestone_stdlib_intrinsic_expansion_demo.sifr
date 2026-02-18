@@ -1,0 +1,120 @@
+# milestone_stdlib_intrinsic_expansion_demo.sifr
+# Demonstrates all new intrinsics added in milestone_stdlib_intrinsic_expansion
+
+# expect-stdout: === math new intrinsics ===
+# expect-stdout: erf near 0 = true
+# expect-stdout: erfc near 1 = true
+# expect-stdout: gamma(5) > 23 = true
+# expect-stdout: lgamma(5) > 3 = true
+# expect-stdout: frexp(8.0) mantissa = 0.5
+# expect-stdout: ldexp(0.5, 4) = 8
+# expect-stdout: modf(3.7) frac > 0 = true
+# expect-stdout: nextafter(1.0, 2.0) > 1.0 = true
+# expect-stdout: ulp(1.0) > 0 = true
+# expect-stdout: === os new intrinsics ===
+# expect-stdout: pid > 0 = true
+# expect-stdout: cpu_count >= 1 = true
+# expect-stdout: === hashlib new intrinsics ===
+# expect-stdout: sha224 len = 56
+# expect-stdout: sha384 len = 96
+# expect-stdout: blake2b len = 128
+# expect-stdout: blake2s len = 64
+# expect-stdout: === platform new intrinsics ===
+# expect-stdout: system len > 0 = true
+# expect-stdout: machine len > 0 = true
+# expect-stdout: processor len > 0 = true
+# expect-stdout: === time new intrinsics ===
+# expect-stdout: gmtime len > 0 = true
+# expect-stdout: localtime len > 0 = true
+# expect-stdout: strptime ok = true
+# expect-stdout: === base64 new intrinsics ===
+# expect-stdout: b32encode len > 0 = true
+# expect-stdout: b32decode = hello world
+# expect-stdout: === shutil new intrinsics ===
+# expect-stdout: disk_total > 0 = true
+
+from sifr.math import erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp
+from sifr.os import getpid, cpu_count
+from sifr.hashlib import sha224, sha384, blake2b, blake2s
+from sifr.platform import system, machine, processor
+from sifr.time import gmtime, localtime, strptime
+from sifr.base64 import b32encode, b32decode
+from sifr.shutil import disk_usage
+
+def demo_math() -> None:
+    print("=== math new intrinsics ===")
+    e0: float = erf(0.0)
+    print("erf near 0 = " + str(e0 < 0.001 and e0 > -0.001))
+    ec0: float = erfc(0.0)
+    print("erfc near 1 = " + str(ec0 > 0.999 and ec0 < 1.001))
+    g: float = gamma(5.0)
+    print("gamma(5) > 23 = " + str(g > 23.0))
+    lg: float = lgamma(5.0)
+    print("lgamma(5) > 3 = " + str(lg > 3.0))
+    fp: list[float] = frexp(8.0)
+    print("frexp(8.0) mantissa = " + str(fp[0]))
+    ld: float = ldexp(0.5, 4)
+    print("ldexp(0.5, 4) = " + str(ld))
+    md: list[float] = modf(3.7)
+    print("modf(3.7) frac > 0 = " + str(md[0] > 0.0))
+    na: float = nextafter(1.0, 2.0)
+    print("nextafter(1.0, 2.0) > 1.0 = " + str(na > 1.0))
+    u: float = ulp(1.0)
+    print("ulp(1.0) > 0 = " + str(u > 0.0))
+
+def demo_os() -> None:
+    print("=== os new intrinsics ===")
+    pid: int = getpid()
+    print("pid > 0 = " + str(pid > 0))
+    cpus: int = cpu_count()
+    print("cpu_count >= 1 = " + str(cpus >= 1))
+
+def demo_hashlib() -> None:
+    print("=== hashlib new intrinsics ===")
+    s: str = "hello"
+    print("sha224 len = " + str(len(sha224(s))))
+    print("sha384 len = " + str(len(sha384(s))))
+    print("blake2b len = " + str(len(blake2b(s))))
+    print("blake2s len = " + str(len(blake2s(s))))
+
+def demo_platform() -> None:
+    print("=== platform new intrinsics ===")
+    print("system len > 0 = " + str(len(system()) > 0))
+    print("machine len > 0 = " + str(len(machine()) > 0))
+    print("processor len > 0 = " + str(len(processor()) > 0))
+
+def demo_time() -> None:
+    print("=== time new intrinsics ===")
+    gmt: str = gmtime(0.0)
+    print("gmtime len > 0 = " + str(len(gmt) > 0))
+    lt: str = localtime(0.0)
+    print("localtime len > 0 = " + str(len(lt) > 0))
+    try:
+        parsed: str = strptime("2024-01-15 10:30:00", "%Y-%m-%d %H:%M:%S")
+        print("strptime ok = " + str(len(parsed) > 0))
+    except ValueError as e:
+        print("strptime error: " + e.message)
+
+def demo_base64() -> None:
+    print("=== base64 new intrinsics ===")
+    encoded: str = b32encode("hello world")
+    print("b32encode len > 0 = " + str(len(encoded) > 0))
+    try:
+        decoded: str = b32decode(encoded)
+        print("b32decode = " + decoded)
+    except ParseError as e:
+        print("b32decode error: " + e.message)
+
+def demo_shutil() -> None:
+    print("=== shutil new intrinsics ===")
+    usage: list[int] = disk_usage("/")
+    print("disk_total > 0 = " + str(usage[0] > 0))
+
+def main():
+    demo_math()
+    demo_os()
+    demo_hashlib()
+    demo_platform()
+    demo_time()
+    demo_base64()
+    demo_shutil()

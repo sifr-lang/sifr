@@ -1,2 +1,2 @@
 # sifr.hashlib — Hashing functions (renamed from sifr.hash)
-from _sifr.crypto import sha256, md5, sha1, sha512
+from _sifr.crypto import sha256, md5, sha1, sha512, sha224, sha384, blake2b, blake2s
