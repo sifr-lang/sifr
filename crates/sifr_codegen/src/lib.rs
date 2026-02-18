@@ -1661,7 +1661,7 @@ impl RustEmitter {
         self.current_return_type = Some(method.return_type.clone());
 
         // Pre-scan: collect mutated variables so we know which need `mut`
-        self.mutated_vars = collect_mutated_vars(&method.body);
+        self.mutated_vars = collect_mutated_vars_with_sigs(&method.body, &self.func_signatures);
 
         self.write_indent();
         let pub_prefix = if self.pub_mode { "pub " } else { "" };
@@ -1934,8 +1934,9 @@ impl RustEmitter {
         // Track the current function's return type for Option wrapping
         self.current_return_type = Some(func.return_type.clone());
 
-        // Pre-scan: collect mutated variables so we know which need `mut`
-        self.mutated_vars = collect_mutated_vars(&func.body);
+        // Pre-scan: collect mutated variables so we know which need `mut`.
+        // Use func_signatures to detect variables passed to mut params (need `let mut`).
+        self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
 
         // Track borrowed parameters for dereference in comparisons
         self.borrowed_params.clear();
@@ -6760,11 +6761,17 @@ const MUTATING_METHODS: &[&str] = &[
 /// - `HirStmt::Delete` on the variable
 fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
     let mut mutated = HashSet::new();
-    collect_mutated_vars_inner(stmts, &mut mutated);
+    collect_mutated_vars_inner(stmts, &mut mutated, None);
     mutated
 }
 
-fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) {
+fn collect_mutated_vars_with_sigs(stmts: &[HirStmt], func_signatures: &HashMap<String, (Vec<(Type, ParamConvention)>, Type)>) -> HashSet<String> {
+    let mut mutated = HashSet::new();
+    collect_mutated_vars_inner(stmts, &mut mutated, Some(func_signatures));
+    mutated
+}
+
+fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, func_signatures: Option<&HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>) {
     for stmt in stmts {
         match stmt {
             HirStmt::Assign { name, .. } => {
@@ -6774,43 +6781,43 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) 
                 mutated.insert(name.clone());
             }
             HirStmt::Expr { expr } => {
-                collect_mutated_vars_in_expr(expr, mutated);
+                collect_mutated_vars_in_expr(expr, mutated, func_signatures);
             }
             HirStmt::Let { value, .. } => {
                 // Scan the value expression for mutating method calls
-                collect_mutated_vars_in_expr(value, mutated);
+                collect_mutated_vars_in_expr(value, mutated, func_signatures);
             }
             HirStmt::Return { value: Some(expr) } => {
-                collect_mutated_vars_in_expr(expr, mutated);
+                collect_mutated_vars_in_expr(expr, mutated, func_signatures);
             }
             HirStmt::If { condition, then_body, elif_clauses, else_body } => {
-                collect_mutated_vars_in_expr(condition, mutated);
-                collect_mutated_vars_inner(then_body, mutated);
+                collect_mutated_vars_in_expr(condition, mutated, func_signatures);
+                collect_mutated_vars_inner(then_body, mutated, func_signatures);
                 for (cond, body) in elif_clauses {
-                    collect_mutated_vars_in_expr(cond, mutated);
-                    collect_mutated_vars_inner(body, mutated);
+                    collect_mutated_vars_in_expr(cond, mutated, func_signatures);
+                    collect_mutated_vars_inner(body, mutated, func_signatures);
                 }
                 if let Some(body) = else_body {
-                    collect_mutated_vars_inner(body, mutated);
+                    collect_mutated_vars_inner(body, mutated, func_signatures);
                 }
             }
             HirStmt::While { condition, body, else_body } => {
-                collect_mutated_vars_in_expr(condition, mutated);
-                collect_mutated_vars_inner(body, mutated);
+                collect_mutated_vars_in_expr(condition, mutated, func_signatures);
+                collect_mutated_vars_inner(body, mutated, func_signatures);
                 if let Some(eb) = else_body {
-                    collect_mutated_vars_inner(eb, mutated);
+                    collect_mutated_vars_inner(eb, mutated, func_signatures);
                 }
             }
             HirStmt::For { body, else_body, .. } => {
-                collect_mutated_vars_inner(body, mutated);
+                collect_mutated_vars_inner(body, mutated, func_signatures);
                 if let Some(eb) = else_body {
-                    collect_mutated_vars_inner(eb, mutated);
+                    collect_mutated_vars_inner(eb, mutated, func_signatures);
                 }
             }
             HirStmt::TryExcept { body, handlers, .. } => {
-                collect_mutated_vars_inner(body, mutated);
+                collect_mutated_vars_inner(body, mutated, func_signatures);
                 for handler in handlers {
-                    collect_mutated_vars_inner(&handler.body, mutated);
+                    collect_mutated_vars_inner(&handler.body, mutated, func_signatures);
                 }
             }
             HirStmt::SubscriptAssign { object, .. } => {
@@ -6831,20 +6838,20 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>) 
                 }
             }
             HirStmt::Yield { value } => {
-                collect_mutated_vars_in_expr(value, mutated);
+                collect_mutated_vars_in_expr(value, mutated, func_signatures);
             }
             HirStmt::With { items, body, .. } => {
                 for (_, value, _) in items {
-                    collect_mutated_vars_in_expr(value, mutated);
+                    collect_mutated_vars_in_expr(value, mutated, func_signatures);
                 }
-                collect_mutated_vars_inner(body, mutated);
+                collect_mutated_vars_inner(body, mutated, func_signatures);
             }
             _ => {}
         }
     }
 }
 
-fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>) {
+fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>, func_signatures: Option<&HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>) {
     match expr {
         HirExpr::MethodCall { object, method, args, .. } => {
             if MUTATING_METHODS.contains(&method.as_str()) {
@@ -6859,47 +6866,59 @@ fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>) {
                 }
             }
             // Recurse into sub-expressions
-            collect_mutated_vars_in_expr(object, mutated);
+            collect_mutated_vars_in_expr(object, mutated, func_signatures);
             for arg in args {
-                collect_mutated_vars_in_expr(arg, mutated);
+                collect_mutated_vars_in_expr(arg, mutated, func_signatures);
             }
         }
-        HirExpr::Call { args, .. } => {
+        HirExpr::Call { func, args, .. } => {
+            // Mark variables passed to MutBorrow params as mutated (need `let mut` in Rust)
+            if let Some(sigs) = func_signatures {
+                if let Some((param_convs, _)) = sigs.get(func) {
+                    for (i, arg) in args.iter().enumerate() {
+                        if let Some((_, ParamConvention::MutBorrow)) = param_convs.get(i) {
+                            if let HirExpr::Name { name, .. } = arg {
+                                mutated.insert(name.clone());
+                            }
+                        }
+                    }
+                }
+            }
             for arg in args {
-                collect_mutated_vars_in_expr(arg, mutated);
+                collect_mutated_vars_in_expr(arg, mutated, func_signatures);
             }
         }
         HirExpr::BinOp { left, right, .. } => {
-            collect_mutated_vars_in_expr(left, mutated);
-            collect_mutated_vars_in_expr(right, mutated);
+            collect_mutated_vars_in_expr(left, mutated, func_signatures);
+            collect_mutated_vars_in_expr(right, mutated, func_signatures);
         }
         HirExpr::UnaryOp { operand, .. } => {
-            collect_mutated_vars_in_expr(operand, mutated);
+            collect_mutated_vars_in_expr(operand, mutated, func_signatures);
         }
         HirExpr::Compare { left, comparators, .. } => {
-            collect_mutated_vars_in_expr(left, mutated);
+            collect_mutated_vars_in_expr(left, mutated, func_signatures);
             for c in comparators {
-                collect_mutated_vars_in_expr(c, mutated);
+                collect_mutated_vars_in_expr(c, mutated, func_signatures);
             }
         }
         HirExpr::BoolOp { values, .. } => {
             for v in values {
-                collect_mutated_vars_in_expr(v, mutated);
+                collect_mutated_vars_in_expr(v, mutated, func_signatures);
             }
         }
         HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
-            collect_mutated_vars_in_expr(condition, mutated);
-            collect_mutated_vars_in_expr(then_expr, mutated);
-            collect_mutated_vars_in_expr(else_expr, mutated);
+            collect_mutated_vars_in_expr(condition, mutated, func_signatures);
+            collect_mutated_vars_in_expr(then_expr, mutated, func_signatures);
+            collect_mutated_vars_in_expr(else_expr, mutated, func_signatures);
         }
         HirExpr::Index { object, index, .. } => {
-            collect_mutated_vars_in_expr(object, mutated);
-            collect_mutated_vars_in_expr(index, mutated);
+            collect_mutated_vars_in_expr(object, mutated, func_signatures);
+            collect_mutated_vars_in_expr(index, mutated, func_signatures);
         }
         HirExpr::FString { parts, .. } => {
             for part in parts {
                 if let HirFStringPart::Expr(e) = part {
-                    collect_mutated_vars_in_expr(e, mutated);
+                    collect_mutated_vars_in_expr(e, mutated, func_signatures);
                 }
             }
         }
