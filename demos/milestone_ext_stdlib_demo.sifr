@@ -39,11 +39,16 @@ def main():
     # 3. sifr.re — Regular expressions
     # ----------------------------------------------------------
     print("=== sifr.re ===")
-    print(f"Match digits in 'hello 42': {re_match('[0-9]+', 'hello 42')}")
-    found: str | None = re_find("[0-9]+", "price is $42.99")
-    if found is not None:
-        print(f"Found: {found}")
-    print(f"Replace: {re_replace('[0-9]+', 'N', 'a1b2c3')}")
+    try:
+        matched: bool = re_match("[0-9]+", "hello 42")
+        print(f"Match digits in 'hello 42': {matched}")
+        found: str | None = re_find("[0-9]+", "price is $42.99")
+        if found is not None:
+            print(f"Found: {found}")
+        replaced: str = re_replace("[0-9]+", "N", "a1b2c3")
+        print(f"Replace: {replaced}")
+    except RegexError as err:
+        print(f"regex error: {err.message}")
 
     # ----------------------------------------------------------
     # 4. sifr.hashlib — Cryptographic hashing
@@ -58,6 +63,10 @@ def main():
     print("=== sifr.base64 ===")
     encoded: str = base64_encode("Hello, Sifr!")
     print(f"Base64 encode: {encoded}")
-    print(f"Base64 decode: {base64_decode(encoded)}")
+    try:
+        decoded_b64: str = base64_decode(encoded)
+        print(f"Base64 decode: {decoded_b64}")
+    except ParseError as err:
+        print(f"base64 error: {err.message}")
 
     print("=== Demo complete ===")

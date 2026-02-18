@@ -38,8 +38,8 @@ def main():
     print(c.get("date"))
     print(c.total())
 
-    # ─── 6. Direct construction with JSON-encoded data ───
-    c2: Counter = Counter("{\"x\":10,\"y\":20}")
+    # ─── 6. Direct construction with a pre-built dict ───
+    c2: Counter = Counter({"x": 10, "y": 20})
     print(c2.get("x"))
     print(c2.get("y"))
     print(c2.total())

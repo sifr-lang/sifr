@@ -6,7 +6,7 @@ from sifr.time import perf_counter, monotonic
 from sifr.timeit import default_timer, timeit, repeat
 from sifr.glob import glob
 from sifr.shutil import copy, move_file, rmtree
-from sifr.tomllib import loads, load
+from sifr.tomllib import loads
 from sifr.io import write_text, read_text, exists
 from sifr.os import run_command
 
@@ -41,36 +41,50 @@ def main():
 
     # ── 3. glob (renamed from glob_match) ──
     print("=== glob ===")
-    run_command("mkdir -p /tmp/sifr_polish_demo")
-    write_text("/tmp/sifr_polish_demo/a.txt", "aaa")
-    write_text("/tmp/sifr_polish_demo/b.txt", "bbb")
-    write_text("/tmp/sifr_polish_demo/c.csv", "1,2")
+    try:
+        _r1: str = run_command("mkdir -p /tmp/sifr_polish_demo")
+        _w1: None = write_text("/tmp/sifr_polish_demo/a.txt", "aaa")
+        _w2: None = write_text("/tmp/sifr_polish_demo/b.txt", "bbb")
+        _w3: None = write_text("/tmp/sifr_polish_demo/c.csv", "1,2")
+    except IOError as err:
+        print(f"setup error: {err.message}")
     matches: list[str] = glob("/tmp/sifr_polish_demo", "*.txt")
     print(len(matches))
 
     # ── 4. shutil (copy, move_file, rmtree) ──
     print("=== shutil ===")
-    copy("/tmp/sifr_polish_demo/a.txt", "/tmp/sifr_polish_demo/a_copy.txt")
+    try:
+        _cp: None = copy("/tmp/sifr_polish_demo/a.txt", "/tmp/sifr_polish_demo/a_copy.txt")
+    except IOError as err:
+        print(f"copy error: {err.message}")
     print(exists("/tmp/sifr_polish_demo/a_copy.txt"))
 
-    move_file("/tmp/sifr_polish_demo/a_copy.txt", "/tmp/sifr_polish_demo/a_moved.txt")
+    try:
+        _mv: None = move_file("/tmp/sifr_polish_demo/a_copy.txt", "/tmp/sifr_polish_demo/a_moved.txt")
+    except IOError as err:
+        print(f"move error: {err.message}")
     print(exists("/tmp/sifr_polish_demo/a_moved.txt"))
     print(exists("/tmp/sifr_polish_demo/a_copy.txt"))
 
-    run_command("mkdir -p /tmp/sifr_polish_demo/sub")
-    write_text("/tmp/sifr_polish_demo/sub/nested.txt", "nested")
-    rmtree("/tmp/sifr_polish_demo/sub")
+    try:
+        _r2: str = run_command("mkdir -p /tmp/sifr_polish_demo/sub")
+        _w4: None = write_text("/tmp/sifr_polish_demo/sub/nested.txt", "nested")
+        _rm: None = rmtree("/tmp/sifr_polish_demo/sub")
+    except IOError as err:
+        print(f"rmtree error: {err.message}")
     print(exists("/tmp/sifr_polish_demo/sub"))
 
-    # ── 5. tomllib.load (new) ──
+    # ── 5. tomllib.loads ──
     print("=== tomllib ===")
-    write_text("/tmp/sifr_polish_demo/test.toml", "name = \"sifr\"\nversion = 1")
-    parsed: str = load("/tmp/sifr_polish_demo/test.toml")
-    print(len(parsed) > 0)
-
-    inline: str = loads("key = \"value\"")
-    print(len(inline) > 0)
+    try:
+        inline: str = loads("key = \"value\"")
+        print(len(inline) > 0)
+    except TOMLDecodeError as err:
+        print(f"toml loads error: {err.message}")
 
     # Cleanup
-    run_command("rm -rf /tmp/sifr_polish_demo")
+    try:
+        _cleanup: str = run_command("rm -rf /tmp/sifr_polish_demo")
+    except IOError as err:
+        print(f"cleanup error: {err.message}")
     print("=== Done ===")

@@ -42,21 +42,24 @@ def main():
 
     # ─── Gap 2: CPython-compatible names ─────────────────────────────
     # json: loads (alias for json_loads)
-    parsed: str = loads("{\"key\": 42}")
-    print(parsed)
+    try:
+        parsed: str = loads("{\"key\": 42}")
+        print(parsed)
+    except JSONDecodeError as err:
+        print(f"json error: {err.message}")
 
     # re: search, sub, findall, split (aliases for re_find, re_replace, etc.)
-    found: str | None = search("\\d+", "abc123")
-    print(found)
-
-    replaced: str = sub("\\d", "X", "a1b2c3")
-    print(replaced)
-
-    words: list[str] = findall("\\w+", "hello world")
-    print(words)
-
-    parts: list[str] = split(",", "a,b,c")
-    print(parts)
+    try:
+        found: str | None = search("\\d+", "abc123")
+        print(found)
+        replaced: str = sub("\\d", "X", "a1b2c3")
+        print(replaced)
+        words: list[str] = findall("\\w+", "hello world")
+        print(words)
+        parts: list[str] = split(",", "a,b,c")
+        print(parts)
+    except RegexError as err:
+        print(f"regex error: {err.message}")
 
     # ─── Gap 3: Callable field invocation ────────────────────────────
     p: Processor = Processor("tripler", triple)

@@ -7,7 +7,7 @@
 # ============================================================
 
 from sifr.collections import set_from_list, set_add, set_contains, set_len, set_union, set_intersection
-from sifr.collections import counter_from_list, counter_get
+from sifr.collections import Counter, from_list
 from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
 
 def main():
@@ -35,9 +35,11 @@ def main():
     # ----------------------------------------------------------
     print("=== Counter ===")
 
-    print(f"apple count: {counter_get(counter_from_list(['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']), 'apple')}")
-    print(f"banana count: {counter_get(counter_from_list(['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']), 'banana')}")
-    print(f"cherry count: {counter_get(counter_from_list(['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']), 'cherry')}")
+    fruits: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+    fruit_counter: Counter = from_list(fruits)
+    print(f"apple count: {fruit_counter.get('apple')}")
+    print(f"banana count: {fruit_counter.get('banana')}")
+    print(f"cherry count: {fruit_counter.get('cherry')}")
 
     # ----------------------------------------------------------
     # 3. Bytes / Binary Data
@@ -48,12 +50,21 @@ def main():
     print(f"'hello' encoded: {len(encode_utf8('hello'))} bytes")
 
     # Roundtrip: encode then decode
-    print(f"Roundtrip: {decode_utf8(encode_utf8('Sifr'))}")
+    try:
+        roundtrip: str = decode_utf8(encode_utf8("Sifr"))
+        print(f"Roundtrip: {roundtrip}")
+    except ParseError as err:
+        print(f"decode error: {err.message}")
 
     # Hex encoding
     print(f"'hello' as hex: {bytes_to_hex(encode_utf8('hello'))}")
 
     # Hex decoding
-    print(f"Hex '536966' decoded: {decode_utf8(bytes_from_hex('536966'))}")
+    try:
+        hex_bytes: list[int] = bytes_from_hex("536966")
+        decoded: str = decode_utf8(hex_bytes)
+        print(f"Hex '536966' decoded: {decoded}")
+    except ParseError as err:
+        print(f"hex error: {err.message}")
 
     print("=== Demo complete ===")

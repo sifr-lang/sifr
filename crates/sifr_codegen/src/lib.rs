@@ -464,14 +464,18 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     // Now assemble result: imports, enums, error classes, stdlib preamble, main output
+    // Suppress user-level use statements if the stdlib preamble already emits them
+    // (avoids duplicate `use std::collections::HashMap;` when stdlib uses dicts).
+    let stdlib_has_hashmap = stdlib_preamble.contains("use std::collections::HashMap;");
+    let stdlib_has_hashset = stdlib_preamble.contains("use std::collections::HashSet;");
     let mut result = String::new();
-    if emitter.needs_hashmap {
+    if emitter.needs_hashmap && !stdlib_has_hashmap {
         result.push_str("use std::collections::HashMap;\n");
     }
-    if emitter.needs_hashset {
+    if emitter.needs_hashset && !stdlib_has_hashset {
         result.push_str("use std::collections::HashSet;\n");
     }
-    if emitter.needs_hashmap || emitter.needs_hashset {
+    if (emitter.needs_hashmap && !stdlib_has_hashmap) || (emitter.needs_hashset && !stdlib_has_hashset) {
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {

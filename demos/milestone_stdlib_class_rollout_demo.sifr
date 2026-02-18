@@ -1,7 +1,7 @@
 # Milestone: stdlib_class_rollout — Expand Class-Based APIs
 # Demonstrates 6 new class-based APIs from stdlib
 
-from sifr.graphlib import TopologicalSorter
+from sifr.graphlib import TopologicalSorter, CycleError
 from sifr.pathlib import Path
 from sifr.logging import getLogger, Logger
 from sifr.re import Match
@@ -14,10 +14,13 @@ def main():
     ts: TopologicalSorter = TopologicalSorter()
     ts.add(1, 0)
     ts.add(2, 1)
-    order: list[int] = ts.static_order()
-    print(order[0])
-    print(order[1])
-    print(order[2])
+    try:
+        order: list[int] = ts.static_order()
+        print(order[0])
+        print(order[1])
+        print(order[2])
+    except CycleError as err:
+        print(f"cycle error: {err.message}")
 
     # 2. Path — file path manipulation
     print("=== Path ===")

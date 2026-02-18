@@ -21,8 +21,11 @@ def main():
     # --- sifr.base64: b64encode / b64decode ---
     encoded: str = b64encode("Hello, Sifr!")
     print(encoded)
-    decoded: str = b64decode(encoded)
-    print(decoded)
+    try:
+        decoded: str = b64decode(encoded)
+        print(decoded)
+    except ParseError as err:
+        print(f"base64 error: {err.message}")
 
     # --- sifr.random: randint, random, uniform ---
     try:
@@ -54,19 +57,25 @@ def main():
     print(len(matched))
 
     # --- sifr.re: search, findall, split, sub ---
-    found: str | None = search("[0-9]+", "hello 42 world")
-    if found is not None:
-        print(found)
-    all_nums: list[str] = findall("[0-9]+", "abc123def456ghi789")
-    print(len(all_nums))
-    parts: list[str] = split(",", "a,b,c,d")
-    print(len(parts))
-    replaced: str = sub("[0-9]+", "NUM", "item1 and item2")
-    print(replaced)
+    try:
+        found: str | None = search("[0-9]+", "hello 42 world")
+        if found is not None:
+            print(found)
+        all_nums: list[str] = findall("[0-9]+", "abc123def456ghi789")
+        print(len(all_nums))
+        parts: list[str] = split(",", "a,b,c,d")
+        print(len(parts))
+        replaced: str = sub("[0-9]+", "NUM", "item1 and item2")
+        print(replaced)
+    except RegexError as err:
+        print(f"regex error: {err.message}")
 
     # --- sifr.json: loads (CPython alias), json_dumps (Any-typed, inline only) ---
-    data: str = loads("{\"key\":\"value\"}")
-    print(data)
+    try:
+        data: str = loads("{\"key\":\"value\"}")
+        print(data)
+    except JSONDecodeError as err:
+        print(f"json error: {err.message}")
     out: str = json_dumps("hello")
     print(out)
 

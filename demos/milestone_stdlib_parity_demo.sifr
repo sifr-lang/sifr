@@ -28,12 +28,18 @@ def main():
     assert_true(isnan(nan))
 
     # os -- getcwd
-    cwd: str = getcwd()
-    assert_true(len(cwd) > 0)
+    try:
+        cwd: str = getcwd()
+        assert_true(len(cwd) > 0)
+    except IOError as err:
+        print(f"getcwd error: {err.message}")
 
     # re -- findall
-    matches: list[str] = re_findall("[0-9]+", "abc123def456")
-    assert_eq(len(matches), 2)
+    try:
+        matches: list[str] = re_findall("[0-9]+", "abc123def456")
+        assert_eq(len(matches), 2)
+    except RegexError as err:
+        print(f"regex error: {err.message}")
 
     # Part B: New modules
     # graphlib -- topological sort
@@ -78,8 +84,11 @@ def main():
     assert_true(end >= start)
 
     # tomllib -- TOML parsing
-    toml_result: str = loads("key = \"value\"")
-    assert_true(len(toml_result) > 0)
+    try:
+        toml_result: str = loads("key = \"value\"")
+        assert_true(len(toml_result) > 0)
+    except TOMLDecodeError as err:
+        print(f"toml error: {err.message}")
 
     # datetime -- date/time
     dt_now: str = now()

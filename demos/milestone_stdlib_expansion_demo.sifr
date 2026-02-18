@@ -38,13 +38,14 @@ def main():
     avg: float = mean(data2)
     assert_true(avg == 4.0)
 
-    # sifr.heapq — heap operations
+    # sifr.heapq — heap operations (in-place mut params)
     heap: list[int] = []
-    heap = heappush(heap, 5)
-    heap = heappush(heap, 1)
-    heap = heappush(heap, 3)
-    top: int = heappop(heap)
-    assert_eq(top, 1)
+    heappush(heap, 5)
+    heappush(heap, 1)
+    heappush(heap, 3)
+    top: int | None = heappop(heap)
+    if top is not None:
+        assert_eq(top, 1)
     small: list[int] = nsmallest(2, [9, 3, 7, 1])
     assert_eq(len(small), 2)
 

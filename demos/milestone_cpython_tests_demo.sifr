@@ -12,7 +12,7 @@ from sifr.heapq import heapify, heappush, heappop
 from sifr.textwrap import wrap, fill
 from sifr.json import json_loads, json_dumps
 from sifr.string import capwords, ascii_lowercase
-from sifr.collections import new_set, set_add, set_len, counter_from_list, counter_get
+from sifr.collections import new_set, set_add, set_len, Counter, from_list
 from sifr.itertools import chain, repeat_val, take, flatten
 from sifr.pathlib import basename, dirname, extension
 from sifr.datetime import timedelta
@@ -37,11 +37,17 @@ def main():
     print("statistics: OK")
 
     # ===== re =====
-    assert_true(re_match("hello", "hello world"))
-    assert_false(re_match("xyz", "hello"))
-    r: list[str] = findall("\\d+", "a1b2c3")
-    assert_eq(len(r), 3)
-    assert_eq(sub("\\d", "X", "a1b2"), "aXbX")
+    try:
+        match_result: bool = re_match("hello", "hello world")
+        assert_true(match_result)
+        no_match: bool = re_match("xyz", "hello")
+        assert_false(no_match)
+        r: list[str] = findall("\\d+", "a1b2c3")
+        assert_eq(len(r), 3)
+        subbed: str = sub("\\d", "X", "a1b2")
+        assert_eq(subbed, "aXbX")
+    except RegexError as err:
+        print(f"re error: {err.message}")
     print("re: OK")
 
     # ===== fnmatch =====
@@ -60,9 +66,10 @@ def main():
 
     # ===== heapq =====
     h: list[int] = [5, 3, 1, 4, 2]
-    h = heapify(h)
-    val: int = heappop(h)
-    assert_eq(val, 1)
+    heapify(h)
+    val: int | None = heappop(h)
+    if val is not None:
+        assert_eq(val, 1)
     print("heapq: OK")
 
     # ===== textwrap =====
@@ -76,7 +83,11 @@ def main():
         print(f"textwrap error: {e.message}")
 
     # ===== json =====
-    assert_eq(json_loads("42"), "42")
+    try:
+        json_val: str = json_loads("42")
+        assert_eq(json_val, "42")
+    except JSONDecodeError as err:
+        print(f"json error: {err.message}")
     assert_eq(json_dumps("hello"), "\"hello\"")
     assert_eq(json_dumps(True), "true")
     print("json: OK")
@@ -92,8 +103,8 @@ def main():
     s = set_add(s, 2)
     assert_eq(set_len(s), 2)
     words: list[str] = ["a", "b", "a", "a"]
-    c: str = counter_from_list(words)
-    assert_eq(counter_get(c, "a"), 3)
+    c: Counter = from_list(words)
+    assert_eq(c.get("a"), 3)
     print("collections: OK")
 
     # ===== itertools =====
