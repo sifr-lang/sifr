@@ -17,8 +17,8 @@
 | 11 | Stdlib Deepening | 4 (pure_expansion → class_deepening) | completed | ~38% → deep CPython parity, 8 new modules, `datetime`/`deque`/`Pattern` classes, API naming divergences documented |
 | 12 | Stdlib Remediation | 1 (stdlib_remediation) | pending | `open()` built-in, `datetime.time`/`timezone`, `CompletedProcess`, `Path.glob`, `re` flags, minor gaps |
 | 13 | Type System Completion | 5 (auto_init → stdlib_generic_rewrite) | pending | Auto-init, user-facing generics, pattern matching, enums, generic stdlib |
-| 14 | Async and Ecosystem Foundation | 3 (async, networking_stdlib, typed_serde_core) | pending | Async runtime, networking stdlib, web-independent typed serialization |
-| 15 | Web Stack | 6 (web_db → data_processing) | pending | Web framework, database, typed extractors, auth, production features, Redis, S3, email, data processing |
+| 14 | Async and Ecosystem Foundation | 5 (async_core → async_advanced) | pending | Async runtime, typed serde, networking stdlib, sync primitives, async generators |
+| 15 | Web Stack | 7 (web_framework → data_processing) | pending | Web framework, database, typed extractors, auth, production features, Redis, S3, email, data processing |
 | 16 | Polish and Tooling | 5 (metaprogramming → ecosystem) | pending | FFI, package management, LSP, formatter, REPL |
 
 ## Ordering Rationale
@@ -75,10 +75,16 @@
 12. **Type System Completion → Async and Ecosystem Foundation**: The async runtime and web framework
     will use generic stdlib functions, pattern matching for error handling, and enum types for
     state machines. Having a complete type system and generic stdlib means fewer surprises
-    when building async features on top. Typed serde core (web-independent) lands here.
+    when building async features on top. The async phase is split into 5 milestones: async core
+    (minimum viable async), typed serde (web-independent, placed before networking so the HTTP
+    client can return typed responses from day one), networking stdlib, sync primitives
+    (Lock/Channel/Semaphore + Send/Sync checking), and advanced async (async with, generators).
 
 13. **Async and Ecosystem Foundation → Web Stack**: The web framework requires async I/O. Web-specific
     extractors (`Json[T]`, `Path[T]`, etc.) depend on both the web framework and typed serde core.
+    The web stack splits web framework and database into separate milestones — database access
+    is independent and can be used by CLI tools without a web framework. Data processing
+    (`sifr.data` with Polars) depends only on typed serde and async, not the web stack.
 
 14. **Web Stack → Polish and Tooling**: The web stack is the primary use case. Tooling and ecosystem
     features are polish that benefits from a stable, feature-complete language.
@@ -186,12 +192,15 @@ flowchart TD
         milestone_stdlib_generic_rewrite["milestone_stdlib_generic_rewrite: Generic Stdlib\nitertools/functools/collections/\nheapq generic rewrite"]
     end
     subgraph phaseAsync [Async and Ecosystem]
-        milestone_async["milestone_async: Async Runtime\nasync/await, tokio,\ntasks, streams"]
-        milestone_networking_stdlib["milestone_networking_stdlib: Networking Stdlib\nsocket, http, subprocess async,\nurl parsing"]
+        milestone_async_core["milestone_async_core: Async Core\nasync/await, tokio,\ntask spawn/sleep/timeout"]
         milestone_typed_serde_core["milestone_typed_serde_core: Typed Serde\nAuto serde, dumps/loads,\nweb-independent"]
+        milestone_networking_stdlib["milestone_networking_stdlib: Networking Stdlib\nsocket, http, subprocess async,\nurl parsing"]
+        milestone_async_sync["milestone_async_sync: Async Sync\nLock, Channel, Semaphore,\nSend/Sync checking"]
+        milestone_async_advanced["milestone_async_advanced: Async Advanced\nasync with, async generators,\nasync comprehensions"]
     end
     subgraph phaseWebStack [Web Stack]
-        milestone_web_db["milestone_web_db: Web + Database\naxum, rusqlite, sqlx"]
+        milestone_web_framework["milestone_web_framework: Web Framework\naxum routing, middleware,\ndecorators, shutdown"]
+        milestone_database["milestone_database: Database\nSQLite, sqlx, pools,\ntransactions, migrations"]
         milestone_typed_web_extractors["milestone_typed_web_extractors: Web Extractors\nJson/Path/Query/Form,\nfile uploads, 422"]
         milestone_crypto_auth["milestone_crypto_auth: Crypto + Auth\nArgon2, JWT, AES-GCM, HMAC"]
         milestone_web_production["milestone_web_production: Production Web\nJSON logging, tracing,\nrate limiting, CORS"]
@@ -231,10 +240,15 @@ flowchart TD
     milestone_stdlib_class_deepening --> milestone_stdlib_remediation
     milestone_stdlib_remediation --> milestone_auto_init --> milestone_generics_v2 --> milestone_pattern_matching
     milestone_pattern_matching --> milestone_enums --> milestone_stdlib_generic_rewrite
-    milestone_stdlib_generic_rewrite --> milestone_async --> milestone_networking_stdlib --> milestone_typed_serde_core
-    milestone_typed_serde_core --> milestone_web_db --> milestone_typed_web_extractors --> milestone_crypto_auth
-    milestone_crypto_auth --> milestone_web_production --> milestone_web_services --> milestone_data_processing
-    milestone_data_processing --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
+    milestone_stdlib_generic_rewrite --> milestone_async_core --> milestone_typed_serde_core
+    milestone_typed_serde_core --> milestone_networking_stdlib --> milestone_async_sync --> milestone_async_advanced
+    milestone_async_core --> milestone_web_framework
+    milestone_typed_serde_core --> milestone_web_framework
+    milestone_async_core --> milestone_database
+    milestone_web_framework --> milestone_typed_web_extractors --> milestone_crypto_auth
+    milestone_crypto_auth --> milestone_web_production --> milestone_web_services
+    milestone_typed_serde_core --> milestone_data_processing
+    milestone_web_services --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
 ```
 
 ## Progress Narrative
@@ -259,8 +273,8 @@ After the Stdlib Remediation phase, all gaps from the Phase 11 gap analysis are 
 
 After the Type System Completion phase, Sifr's type system is fully expressive. Classes auto-generate `__init__`, `__eq__`, and `__str__` from field declarations (eliminating the most common boilerplate). User-facing generics are complete — generic classes with field/method substitution, type parameter inference, protocol bounds, and generic type aliases all work. `match`/`case` provides exhaustiveness-checked pattern matching on union types, literal unions, optional types, and class unions. Simple enum types provide namespaced constants with exhaustive matching. The entire stdlib is rewritten with generics: `itertools`, `functools`, `collections.Counter[T]`, `collections.deque[T]`, `heapq`, `bisect`, `random`, and `test` all use generic type parameters. Type-specific duplicates (`chain_str`, `accumulate_float`) are deleted. `Counter` has operator overloads and works for any hashable type. `deque` is backed by `VecDeque` intrinsics with O(1) front operations. `None` works as a standalone value and type.
 
-After the Async and Ecosystem Foundation phase, Sifr has an async runtime (Tokio-backed), networking stdlib modules, and web-independent typed serialization (`dumps`/`loads` with auto-derived serde).
+After the Async and Ecosystem Foundation phase, Sifr has a full async story. The core async runtime (Tokio-backed) supports `async def`/`await`, task spawning, sleep, and timeouts. Web-independent typed serialization (`dumps`/`loads` with auto-derived serde) enables typed JSON roundtrips. Networking stdlib modules (HTTP client, sockets, subprocess async, URL parsing) use typed serde for response parsing. Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking at spawn boundaries enable safe concurrent code. Advanced async features (async with, async generators, async comprehensions) complete the story.
 
-After the Web Stack phase, Sifr can build production web applications with databases, typed extractors, auth, Redis, S3, email, and data processing.
+After the Web Stack phase, Sifr can build production web applications. The web framework (axum wrapper) and database access (SQLite + sqlx) are separate milestones — database-backed CLI tools work without a web framework. Typed extractors, auth, production features (logging, tracing, rate limiting, CORS), and external services (Redis, S3, email) layer on top. Data processing (Polars DataFrames) is independent of the web stack — it depends only on typed serde and the async runtime.
 
 After the Polish and Tooling phase, it is a complete language ecosystem with compile-time metaprogramming, FFI, package management, IDE support, and a REPL.

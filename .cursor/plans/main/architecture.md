@@ -224,7 +224,7 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
 - milestone_borrow_default: implement ParamConvention and borrow-by-default codegen
 - milestone_borrow_hardening: implement exclusivity checking and error diagnostics
 - milestone_generics: implement closure capture inference
-- milestone_async: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
+- milestone_async_sync: implement async capture rules (closures sent across `.await` points must be `Send + 'static`)
 - Post-milestone_protocols: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
 
 ### 3. Error Semantics
@@ -238,7 +238,7 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (mile
 | Context                          | Error mechanism                   | Handling                                                    | Codegen                                                    |
 | -------------------------------- | --------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | Sync function                    | `Result[T, E]` return             | `try`/`except` with exhaustiveness checking                 | `Result<T, E>`                                             |
-| Async function (milestone_async) | `Result[T, E]` return             | `try`/`except` (same rules, works across `.await`)          | `Result<T, E>`                                             |
+| Async function (milestone_async_core) | `Result[T, E]` return             | `try`/`except` (same rules, works across `.await`)          | `Result<T, E>`                                             |
 | `try`/`except` block             | Pattern match on `Result`         | `except` arms match error types; compiler checks coverage   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
 | Indexing                         | `Option[T]` return                | Type narrowing (`if val is not None`)                       | `.get(i).cloned()` / `.chars().nth(i)`                     |
 | Division                         | `Result[T, DivisionError]`        | `try`/`except`                                              | Checked division with zero-check                           |
@@ -516,13 +516,13 @@ Sifr must define which types can cross thread/task boundaries. This extends the 
 - **Auto-derived Send/Sync:** Sifr types are `Send` and `Sync` when all their fields are `Send` and `Sync` (matches Rust's auto-derivation). The compiler tracks this automatically.
 - **Spawn boundaries are checked:** when a value is sent to a spawned task (`sifr.task.spawn`) or thread, the compiler verifies the value is `Send`. If not, it emits a clear error explaining which field is not sendable.
 - **No silent upgrades:** the compiler does NOT auto-upgrade `Rc` to `Arc` or `RefCell` to `Mutex`. If a non-sendable type is used across a task boundary, the programmer must fix it explicitly.
-- **Shared mutable state across tasks:** requires explicit primitives (deferred to milestone_async). The compiler rejects sharing mutable references across task boundaries without synchronization.
+- **Shared mutable state across tasks:** requires explicit primitives (deferred to milestone_async_sync). The compiler rejects sharing mutable references across task boundaries without synchronization.
 - **Single-threaded by default:** code that does not use `async` or `spawn` has no concurrency overhead. `Rc` and `RefCell` are used internally only when appropriate for single-threaded code.
 
 **Milestone responsibilities:**
 
-- milestone_async: implement Send/Sync checking at spawn boundaries
-- milestone_async: provide `sifr.sync.Lock` (maps to `Arc<Mutex<T>>`) and `sifr.sync.Channel` for explicit cross-task sharing
+- milestone_async_sync: implement Send/Sync checking at spawn boundaries
+- milestone_async_sync: provide `sifr.sync.Lock` (maps to `Arc<Mutex<T>>`) and `sifr.sync.Channel` for explicit cross-task sharing
 
 ### 9. Destruction and Cleanup Semantics
 

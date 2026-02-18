@@ -4,61 +4,40 @@
 
 ---
 
-## milestone_async: Async Runtime
+## milestone_async_core: Async Runtime Core
 
 status: pending
 
-**Goal:** Add async/await language support. This is a language feature milestone — it adds the async primitives that the web framework builds on.
+**Goal:** Add the minimum viable async language support: `async def`/`await` syntax, Tokio runtime auto-bundling, and basic task spawning. This is the foundational compiler feature that all other async milestones build on.
 
 **Depends on:** milestone_stdlib_generic_rewrite (Phase 13 must be complete — the type system and generic stdlib provide the foundation for async features)
 
 ### Language Features
 
 - `async def` / `await` -> Rust `async fn` / `.await`
-- Tokio runtime auto-bundled
-- `sifr.task`: spawn, sleep, timeouts
-- `sifr.net`: TCP/UDP sockets (async)
-- `async with`, async generators
-- `sifr.sync`: Lock, Channel, Semaphore
-- Send/Sync checking at spawn boundaries (leverages borrow-by-default from Phase 10)
+- Tokio runtime auto-bundled when any `async def` is used
+- `sifr.task`: `spawn`, `sleep`, `timeout`
+- `try`/`except` auto-unwrap works across `.await` points (the compiler inserts `?` in HIR for `Result`-returning async calls inside `try` blocks, same as sync — no user-facing `?` operator)
 
-### Definition of Done (milestone_async)
+### Compiler Changes
+
+- Parser: `async def` already parsed (Python syntax). Validate `await` only appears inside `async def`.
+- HIR: new `HirAwait` node. Async functions produce `Future` types.
+- Type checker: `await` on a non-`Future` type is a compile error. `Result` auto-unwrap inside `try` blocks works across `.await` boundaries.
+- Codegen: `async def` emits `async fn`. `await` emits `.await`. Main function with async calls gets `#[tokio::main]`.
+
+### Definition of Done (milestone_async_core)
 
 - `async def` compiles to Rust `async fn`
 - `await` compiles to `.await`
 - Tokio runtime is automatically bundled when async is used
-- `?` operator works across `.await` points
-- Async closures captured across `.await` are checked for `Send + 'static`
+- `try`/`except` auto-unwrap works across `.await` points (compiler-internal `?` in HIR, not user-facing)
 - `sifr.task.spawn` works for concurrent tasks
-- `async with` works for async context managers
-- Async generators (`yield` in `async def`) produce async iterators
-- `sifr.sync.Lock`, `sifr.sync.Channel`, `sifr.sync.Semaphore` work for cross-task coordination
-- E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, async_with_basic, async_generator_basic, lock_basic, channel_basic
-- Milestone demo in `./demos/milestone_async_demo.sifr`
-
----
-
-## milestone_networking_stdlib: Networking Standard Library
-
-status: pending
-
-**Goal:** Add networking-related stdlib modules that depend on the async runtime.
-
-**Depends on:** milestone_async (async runtime must exist)
-
-### Modules
-
-- `sifr.subprocess` — async Popen API (extends the sync `run()` from Phase 11's `milestone_new_modules` with async process management)
-- `sifr.socket` — TCP/UDP
-- `sifr.http` — HTTP client (wraps `reqwest`)
-- `sifr.url` — URL parsing
-
-### Definition of Done (milestone_networking_stdlib)
-
-- Each networking module compiles and works with async I/O
-- All fallible operations return `Result` or `Option`
-- E2E pass tests: subprocess_async, socket_tcp, http_get, url_parse
-- Integration with the async runtime (tokio) is seamless
+- `sifr.task.sleep` works for async delays
+- `sifr.task.timeout` wraps an async call with a deadline
+- All existing E2E tests still pass (no regressions)
+- E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, task_sleep, task_timeout
+- Milestone demo in `./demos/milestone_async_core_demo.sifr`
 
 ---
 
@@ -66,9 +45,9 @@ status: pending
 
 status: pending
 
-**Goal:** Web-independent typed serialization. This does NOT include web extractors — those depend on the web framework and are delivered in Phase 15.
+**Goal:** Web-independent typed serialization. This does NOT include web extractors — those depend on the web framework and are delivered in Phase 15. Typed serde is placed before networking because the HTTP client benefits from typed response parsing from day one.
 
-**Depends on:** milestone_networking_stdlib (networking modules should exist; typed serde benefits from the full async foundation)
+**Depends on:** milestone_async_core (async runtime must exist for async-compatible serde patterns; generics from Phase 13 enable `loads(s, T)`)
 
 ### Work Items
 
@@ -89,8 +68,87 @@ status: pending
 
 ---
 
+## milestone_networking_stdlib: Networking Standard Library
+
+status: pending
+
+**Goal:** Add networking-related stdlib modules that depend on the async runtime. The HTTP client can use typed serde for response parsing since `milestone_typed_serde_core` is now complete.
+
+**Depends on:** milestone_typed_serde_core (typed serde enables typed HTTP response parsing)
+
+### Modules
+
+- `sifr.subprocess` — async Popen API (extends the sync `run()` from Phase 11's `milestone_new_modules` with async process management)
+- `sifr.socket` — TCP/UDP sockets (async)
+- `sifr.http` — HTTP client (wraps `reqwest`), returns typed responses via `loads(response_body, T)`
+- `sifr.url` — URL parsing
+
+### Definition of Done (milestone_networking_stdlib)
+
+- Each networking module compiles and works with async I/O
+- All fallible operations return `Result` or `Option`
+- `sifr.http` supports typed JSON response parsing via `loads`
+- E2E pass tests: subprocess_async, socket_tcp, http_get, http_typed_response, url_parse
+- Integration with the async runtime (tokio) is seamless
+
+---
+
+## milestone_async_sync: Async Synchronization Primitives
+
+status: pending
+
+**Goal:** Add cross-task synchronization primitives and Send/Sync checking at spawn boundaries. These are needed for production async code but are not required for basic async functionality.
+
+**Depends on:** milestone_networking_stdlib (networking modules exercise async patterns that synchronization primitives protect)
+
+### Work Items
+
+- `sifr.sync.Lock` — maps to `Arc<Mutex<T>>`, async-aware
+- `sifr.sync.Channel` — maps to `tokio::sync::mpsc`, typed channels
+- `sifr.sync.Semaphore` — maps to `tokio::sync::Semaphore`
+- Send/Sync checking at spawn boundaries: when a value is sent to `sifr.task.spawn`, the compiler verifies the value is `Send`. If not, it emits a clear error explaining which field is not sendable (leverages borrow-by-default from Phase 10)
+- Async closures captured across `.await` are checked for `Send + 'static`
+
+### Definition of Done (milestone_async_sync)
+
+- `sifr.sync.Lock` works for shared mutable state across tasks
+- `sifr.sync.Channel` works for typed message passing between tasks
+- `sifr.sync.Semaphore` works for concurrency limiting
+- Send/Sync checking at spawn boundaries produces clear diagnostics
+- Async closures are checked for `Send + 'static`
+- E2E pass tests: lock_basic, channel_basic, semaphore_basic, send_sync_check
+- E2E fail tests: non_send_spawn (clear error for non-Send type in spawn)
+
+---
+
+## milestone_async_advanced: Advanced Async Features
+
+status: pending
+
+**Goal:** Add advanced async features that build on the core runtime and sync primitives. These are powerful but not needed for basic async applications.
+
+**Depends on:** milestone_async_sync (sync primitives must exist for advanced patterns)
+
+### Work Items
+
+- `async with` — async context managers (`__aenter__` / `__aexit__`)
+- Async generators — `yield` inside `async def` produces async iterators
+- Async comprehensions — `[await x async for x in stream]`
+
+### Definition of Done (milestone_async_advanced)
+
+- `async with` works for async context managers
+- Async generators (`yield` in `async def`) produce async iterators
+- Async comprehensions compile correctly
+- E2E pass tests: async_with_basic, async_generator_basic, async_comprehension
+- Milestone demo in `./demos/milestone_async_advanced_demo.sifr`
+
+---
+
 ## Milestone Ordering
 
-- **milestone_async first:** The async runtime must exist before networking modules that require async I/O.
-- **milestone_networking_stdlib second:** Networking modules bridge sync stdlib and web framework.
-- **milestone_typed_serde_core third:** Typed serialization is web-independent but benefits from the full async/networking foundation being in place.
+- **milestone_async_core first:** The async runtime must exist before anything else. This is the minimum viable async — `async def`/`await`, Tokio, basic task spawning.
+- **milestone_typed_serde_core second:** Typed serialization is web-independent and doesn't need networking. Placing it before networking means the HTTP client can return typed responses from day one.
+- **milestone_networking_stdlib third:** Networking modules (HTTP, sockets, subprocess async) depend on the async runtime and benefit from typed serde for response parsing.
+- **milestone_async_sync fourth:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking are needed for production async code but not for basic async functionality.
+- **milestone_async_advanced last:** Advanced features (async with, async generators, async comprehensions) build on everything above and are not needed for the web stack.

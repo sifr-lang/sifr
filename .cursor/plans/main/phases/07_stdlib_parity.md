@@ -302,7 +302,7 @@ The plan says Callable-as-struct-field should unblock `argparse.ArgumentParser`,
 ## Milestone Ordering
 
 ```
-milestone_stdlib_classes (done, Phase 6) → milestone_compiler_hardening → milestone_lazy_iterators → milestone_test_infra → milestone_stdlib_functions → milestone_stdlib_naming → milestone_stdlib_class_rollout → milestone_cpython_tests → milestone_async (Phase 8)
+milestone_stdlib_classes (done, Phase 6) → milestone_compiler_hardening → milestone_lazy_iterators → milestone_test_infra → milestone_stdlib_functions → milestone_stdlib_naming → milestone_stdlib_class_rollout → milestone_cpython_tests → milestone_error_safety (Phase 8)
 ```
 
 Why this order:

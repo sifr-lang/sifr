@@ -10,7 +10,7 @@ status: pending
 
 **Goal:** Support compile-time code generation and advanced decorators.
 
-**Depends on:** milestone_data_processing (the full language and web stack should be complete)
+**Depends on:** milestone_web_services (the full language and web stack should be complete)
 
 ### Work Items
 

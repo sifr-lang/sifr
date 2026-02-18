@@ -424,7 +424,7 @@ These depend on async, networking, or threading -- features that come after this
 - `threading`, `queue`, `multiprocessing`, `concurrent` -- concurrency primitives
 - `selectors` -- I/O multiplexing (async runtime internal)
 - `subprocess` -- full Popen API needs async; partially covered by `os.run_command`
-- `sqlite3` -- in `milestone_web_db` roadmap
+- `sqlite3` -- in `milestone_database` roadmap
 - `xml`, `html` -- parsing libraries (add during web milestone)
 - `email` -- in `milestone_email` roadmap
 - `gzip`, `bz2`, `lzma`, `zipfile`, `tarfile` -- compression (needs Rust crate bindings, add on demand)

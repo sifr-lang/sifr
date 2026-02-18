@@ -4,36 +4,56 @@ This phase makes Sifr a practical language for building production web applicati
 
 ---
 
-## milestone_web_db: Web Framework and Database
+## milestone_web_framework: Web Framework
 
 status: pending
 
-**Goal:** Enable production web applications and database-backed services.
+**Goal:** Enable web applications with a Pythonic API over axum.
 
-**Depends on:** milestone_async (async runtime), milestone_networking_stdlib (HTTP client), milestone_typed_serde_core (typed serialization for request/response)
+**Depends on:** milestone_async_core (async runtime), milestone_typed_serde_core (typed serialization for request/response)
 
-### Web Framework (`sifr.web`)
+### Work Items
 
 Thin wrapper around `axum`:
 
 - Routing, request/response, middleware
+- Decorator-based routing (`@app.get("/")`, `@app.post("/")`)
 - Graceful shutdown, health checks
 - Static files, WebSockets
 
-### Database (`sifr.db`)
+### Definition of Done (milestone_web_framework)
+
+- `sifr.web` routes compile to axum handlers
+- Decorator-based routing (`@app.get("/")`) works
+- Graceful shutdown and health checks work
+- Static file serving works
+- E2E pass tests: web_hello, web_routing, web_middleware, graceful_shutdown, health_check
+- Milestone demo in `./demos/milestone_web_framework_demo.sifr`
+
+---
+
+## milestone_database: Database Access
+
+status: pending
+
+**Goal:** Enable database-backed applications — both embedded SQLite for simple use cases and async PostgreSQL/MySQL for production.
+
+**Depends on:** milestone_async_core (async runtime for sqlx connection pools)
+
+### Work Items
 
 - `sifr.db.sqlite` (wraps `rusqlite`) — embedded SQLite, synchronous API
 - `sifr.db` (wraps `sqlx`) — async PostgreSQL/MySQL/SQLite with connection pools, typed queries, transactions, migrations
 
-### Definition of Done (milestone_web_db)
+### Definition of Done (milestone_database)
 
-- `sifr.web` routes compile to axum handlers
-- Decorator-based routing (`@app.get("/")`) works
 - `sifr.db.sqlite` embedded SQLite works (open, execute, query, transactions)
 - `sifr.db` connects to PostgreSQL/SQLite via sqlx
-- Graceful shutdown and health checks work
-- E2E pass tests: web_hello, sqlite_basic, db_query, graceful_shutdown, health_check
-- Milestone demo in `./demos/milestone_web_db_demo.sifr`
+- Connection pooling works
+- Typed query results work (leverages generics from Phase 13)
+- Transactions and migrations work
+- E2E pass tests: sqlite_basic, sqlite_transactions, db_query, db_pool, db_migrations
+- Milestone demo in `./demos/milestone_database_demo.sifr`
 
 ---
 
@@ -43,7 +63,7 @@ status: pending
 
 **Goal:** Provide typed request/response handling in `sifr.web`. This is the web-dependent half of typed serialization.
 
-**Depends on:** milestone_web_db (web framework must exist), milestone_typed_serde_core (auto-serde must exist)
+**Depends on:** milestone_web_framework (web framework must exist), milestone_typed_serde_core (auto-serde must exist)
 
 ### Work Items
 
@@ -137,7 +157,7 @@ status: pending
 
 **Goal:** Enable data science and data engineering workflows.
 
-**Depends on:** milestone_web_services (full web stack should be complete)
+**Depends on:** milestone_typed_serde_core (typed serialization for CSV/Parquet type mapping), milestone_async_core (async runtime for potential lazy evaluation)
 
 ### Work Items
 
@@ -155,9 +175,10 @@ status: pending
 
 ## Milestone Ordering
 
-- **milestone_web_db first:** The web framework and database are the core of the web stack.
-- **milestone_typed_web_extractors second:** Typed extractors depend on both the web framework and typed serde core.
-- **milestone_crypto_auth third:** Authentication depends on typed serialization for JWT payloads.
-- **milestone_web_production fourth:** Production features layer on top of the web framework and auth.
-- **milestone_web_services fifth:** External services (Redis, S3, email) build on the full web stack.
-- **milestone_data_processing last:** Data processing is independent of web infrastructure.
+- **milestone_web_framework first:** The web framework is the core of the web stack. Depends on async runtime and typed serde.
+- **milestone_database second:** Database access depends on the async runtime for connection pools. Independent of the web framework — a CLI tool can use `sifr.db` without `sifr.web`.
+- **milestone_typed_web_extractors third:** Typed extractors depend on both the web framework and typed serde core.
+- **milestone_crypto_auth fourth:** Authentication depends on typed serialization for JWT payloads.
+- **milestone_web_production fifth:** Production features layer on top of the web framework and auth.
+- **milestone_web_services sixth:** External services (Redis, S3, email) build on the full web stack.
+- **milestone_data_processing independent:** Data processing depends only on typed serde and the async runtime — NOT on the web stack. It can proceed in parallel with web milestones or after them.

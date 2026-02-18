@@ -345,7 +345,7 @@ def chain(a, b):
 
 Codegen: `yield from sub` desugars to `for item in sub: yield item` -- the sub-generator is iterated and each value is yielded. This compiles to chaining the sub-iterator's state machine into the parent's state machine.
 
-**Scope:** this milestone covers sync generators only. Async generators (`async for`, `yield` in `async def`) are deferred to milestone_async.
+**Scope:** this milestone covers sync generators only. Async generators (`async for`, `yield` in `async def`) are deferred to milestone_async_advanced.
 
 ### `with` Statement (Context Managers)
 
@@ -384,7 +384,7 @@ with open("file.txt") as f:
 
 status: completed
 
-**Goal:** Add function decorator support and variadic arguments (`*args`/`**kwargs`) -- the two features needed for milestone_web_db's web routing (`@app.get("/")`, `@app.post("/users")`). Generic decorators require `*args`/`**kwargs` to wrap functions with arbitrary signatures. Full metaprogramming decorators (`@dataclass`, custom compile-time transforms) remain in milestone_metaprogramming.
+**Goal:** Add function decorator support and variadic arguments (`*args`/`**kwargs`) -- the two features needed for milestone_web_framework's web routing (`@app.get("/")`, `@app.post("/users")`). Generic decorators require `*args`/`**kwargs` to wrap functions with arbitrary signatures. Full metaprogramming decorators (`@dataclass`, custom compile-time transforms) remain in milestone_metaprogramming.
 
 ### Language Features
 

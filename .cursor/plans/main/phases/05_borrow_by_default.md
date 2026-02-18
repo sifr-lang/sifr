@@ -212,7 +212,7 @@ Add tests that verify conventions survive across module boundaries:
 
 ### Concurrency Enablement
 
-This milestone completes the foundation for fearless concurrency in `milestone_async`:
+This milestone completes the foundation for fearless concurrency in `milestone_async_core`:
 
 - **Spawning tasks requires `own`**: `asyncio.spawn(process(own data))` -- ownership transfer is explicit and visible at the call site
 - **Borrowed values cannot cross task boundaries**: the compiler rejects `&T` in spawned closures because borrows are not `'static`
@@ -243,6 +243,6 @@ This milestone completes the foundation for fearless concurrency in `milestone_a
 The milestones within this phase are ordered as follows:
 
 - **milestone_phase_fixes before milestone_borrow_default:** The language must be fully hardened before changing the default parameter passing convention. Borrow-by-default is a semantic change that affects every user-defined function -- it must build on a stable foundation.
-- **milestone_borrow_default before milestone_async:** Borrow-by-default is a prerequisite for fearless concurrency. The `own` keyword makes ownership transfer explicit at task spawn boundaries. Without it, milestone_async would need to re-implement parameter convention logic.
+- **milestone_borrow_default before milestone_async_core:** Borrow-by-default is a prerequisite for fearless concurrency. The `own` keyword makes ownership transfer explicit at task spawn boundaries. Without it, milestone_async_core would need to re-implement parameter convention logic.
 - **milestone_borrow_hardening after milestone_borrow_default:** Exclusivity checking and error messages build on the working borrow-by-default codegen. Tests validate the complete model.
 - **milestone_borrow_hardening before milestone_intrinsics:** The ownership model must be fully hardened (with exclusivity enforcement) before rewriting the stdlib architecture. Stdlib `.sifr` files must be written against the final borrow-by-default semantics -- retrofitting convention annotations after the fact would be error-prone and wasteful.
