@@ -1,0 +1,13 @@
+# expect-stdout: sha224 len = 56
+# expect-stdout: sha384 len = 96
+# expect-stdout: blake2b len = 128
+# expect-stdout: blake2s len = 64
+
+from sifr.hashlib import sha224, sha384, blake2b, blake2s
+
+def main():
+    s: str = "hello"
+    print("sha224 len = " + str(len(sha224(s))))
+    print("sha384 len = " + str(len(sha384(s))))
+    print("blake2b len = " + str(len(blake2b(s))))
+    print("blake2s len = " + str(len(blake2s(s))))

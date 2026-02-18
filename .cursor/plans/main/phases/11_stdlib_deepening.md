@@ -76,7 +76,7 @@ status: completed
 
 ## milestone_stdlib_intrinsic_expansion: New Intrinsics for Existing Modules
 
-status: pending
+status: completed
 
 **Goal:** Add new Rust intrinsics to deepen existing stdlib modules.
 

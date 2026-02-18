@@ -687,6 +687,7 @@ edition = "2021"
                     deps.push("sha2 = \"0.10\"".to_string());
                     deps.push("md5 = \"0.7\"".to_string());
                     deps.push("sha1 = \"0.10\"".to_string());
+                    deps.push("blake2 = \"0.10\"".to_string());
                 }
             }
             "sifr.encoding" | "sifr.base64" => {
@@ -6368,6 +6369,143 @@ impl RustEmitter {
                 self.write("{ let __ts = ");
                 self.emit_expr(&args[0]);
                 self.write(" as i64; chrono::DateTime::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).ok_or_else(|| ValueError { message: \"invalid timestamp\".to_string() }) }");
+            }
+            // sifr.math new intrinsics
+            "erf" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __t = 1.0 / (1.0 + 0.3275911 * __x.abs()); let __poly = __t * (0.254829592 + __t * (-0.284496736 + __t * (1.421413741 + __t * (-1.453152027 + __t * 1.061405429)))); let __r = 1.0 - __poly * (-__x * __x).exp(); if __x >= 0.0 { __r } else { -__r } }");
+            }
+            "erfc" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __t = 1.0 / (1.0 + 0.3275911 * __x.abs()); let __poly = __t * (0.254829592 + __t * (-0.284496736 + __t * (1.421413741 + __t * (-1.453152027 + __t * 1.061405429)))); let __r = __poly * (-__x * __x).exp(); if __x >= 0.0 { __r } else { 2.0 - __r } }");
+            }
+            "gamma" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; if __x <= 0.0 && __x == __x.floor() { f64::INFINITY } else { let __g = 7usize; let __c = [0.99999999999980993f64, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7]; let __z = if __x < 0.5 { let __y = std::f64::consts::PI / ((__x * std::f64::consts::PI).sin() * { let __xn = 1.0 - __x; let mut __s = __c[0]; for __i in 1..=__g+1 { __s += __c[__i] / (__xn + __i as f64 - 1.0); } let __t2 = __xn + __g as f64 - 0.5; (2.0 * std::f64::consts::PI).sqrt() * __t2.powf(__xn - 0.5) * (-__t2).exp() * __s }); __y } else { let __xm = __x - 1.0; let mut __s = __c[0]; for __i in 1..=__g+1 { __s += __c[__i] / (__xm + __i as f64); } let __t2 = __xm + __g as f64 + 0.5; (2.0 * std::f64::consts::PI).sqrt() * __t2.powf(__xm + 0.5) * (-__t2).exp() * __s }; __z } }");
+            }
+            "lgamma" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; if __x <= 0.0 && __x == __x.floor() { f64::INFINITY } else { let __g = 7usize; let __c = [0.99999999999980993f64, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7]; let __xm = if __x < 0.5 { 1.0 - __x } else { __x - 1.0 }; let mut __s = __c[0]; for __i in 1..=__g+1 { __s += __c[__i] / (__xm + __i as f64); } let __t2 = __xm + __g as f64 + 0.5; let __r = (2.0 * std::f64::consts::PI).sqrt().ln() + (__xm + 0.5) * __t2.ln() - __t2 + __s.ln(); if __x < 0.5 { (std::f64::consts::PI / ((__x * std::f64::consts::PI).sin() * __r.exp())).abs().ln() } else { __r } } }");
+            }
+            "frexp" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; if __x == 0.0 { vec![0.0f64, 0.0] } else { let __bits = __x.to_bits(); let __exp = ((__bits >> 52) & 0x7ff) as i64 - 1022; let __mant = f64::from_bits((__bits & 0x800fffffffffffff) | 0x3fe0000000000000); vec![__mant, __exp as f64] } }");
+            }
+            "ldexp" => {
+                self.write("{ let __m: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __e: i64 = ");
+                self.emit_expr(&args[1]);
+                self.write("; __m * (2.0f64).powi(__e as i32) }");
+            }
+            "modf" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __frac = __x.fract(); let __int = __x.trunc(); vec![__frac, __int] }");
+            }
+            "nextafter" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __y: f64 = ");
+                self.emit_expr(&args[1]);
+                self.write("; if __x == __y { __y } else if __x < __y { f64::from_bits(__x.to_bits() + 1) } else { f64::from_bits(__x.to_bits() - 1) } }");
+            }
+            "ulp" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __bits = __x.abs().to_bits(); f64::from_bits(if __bits == 0 { 1 } else { __bits & 0xfff0000000000000 }) - f64::from_bits(((__bits & 0xfff0000000000000) - 0x0010000000000000).max(0)) }");
+            }
+            // sifr.os new intrinsics
+            "chdir" => {
+                self.write("std::env::set_current_dir(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").map_err(__io_err)");
+            }
+            "getpid" => {
+                self.write("std::process::id() as i64");
+            }
+            "cpu_count" => {
+                self.write("{ let __n = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1); __n as i64 }");
+            }
+            "stat_size" => {
+                self.write("std::fs::metadata(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").map(|m| m.len() as i64).map_err(__io_err)");
+            }
+            "which" => {
+                self.write("{ let __name = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; std::env::var(\"PATH\").ok().and_then(|__path| __path.split(':').map(|d| std::path::Path::new(d).join(__name)).find(|p| p.is_file()).map(|p| p.to_string_lossy().to_string())) }");
+            }
+            "disk_usage" => {
+                self.write("{ let __path = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __stat = std::fs::metadata(__path); match __stat { Ok(_) => { let __out = std::process::Command::new(\"df\").args([\"-k\", __path]).output(); match __out { Ok(__o) => { let __s = String::from_utf8_lossy(&__o.stdout); let __lines: Vec<&str> = __s.lines().collect(); if __lines.len() >= 2 { let __parts: Vec<&str> = __lines[1].split_whitespace().collect(); if __parts.len() >= 4 { let __total = __parts[1].parse::<i64>().unwrap_or(0) * 1024; let __used = __parts[2].parse::<i64>().unwrap_or(0) * 1024; let __free = __parts[3].parse::<i64>().unwrap_or(0) * 1024; vec![__total, __used, __free] } else { vec![0i64, 0, 0] } } else { vec![0i64, 0, 0] } }, Err(_) => vec![0i64, 0, 0] } }, Err(_) => vec![0i64, 0, 0] } }");
+            }
+            // sifr.hashlib new intrinsics
+            "sha224" => {
+                self.write("{ use sha2::Digest; let mut __h = sha2::Sha224::new(); __h.update(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(".as_bytes()); format!(\"{:x}\", __h.finalize()) }");
+            }
+            "sha384" => {
+                self.write("{ use sha2::Digest; let mut __h = sha2::Sha384::new(); __h.update(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(".as_bytes()); format!(\"{:x}\", __h.finalize()) }");
+            }
+            "blake2b" => {
+                self.write("{ use blake2::{Blake2b512, Digest}; let mut __h = Blake2b512::new(); __h.update(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(".as_bytes()); format!(\"{:x}\", __h.finalize()) }");
+            }
+            "blake2s" => {
+                self.write("{ use blake2::{Blake2s256, Digest}; let mut __h = Blake2s256::new(); __h.update(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(".as_bytes()); format!(\"{:x}\", __h.finalize()) }");
+            }
+            // sifr.base64 new intrinsics
+            "b32encode" => {
+                self.write("{ let __b32_alpha = b\"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\"; let __data = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(".as_bytes(); let mut __out = String::new(); let mut __i = 0usize; while __i < __data.len() { let __b0 = __data[__i] as u64; let __b1 = if __i+1 < __data.len() { __data[__i+1] as u64 } else { 0 }; let __b2 = if __i+2 < __data.len() { __data[__i+2] as u64 } else { 0 }; let __b3 = if __i+3 < __data.len() { __data[__i+3] as u64 } else { 0 }; let __b4 = if __i+4 < __data.len() { __data[__i+4] as u64 } else { 0 }; let __buf = (__b0<<32)|(__b1<<24)|(__b2<<16)|(__b3<<8)|__b4; let __n = ((__data.len() - __i).min(5)) as u64; for __j in 0..8u64 { if __j < (__n*8+4)/5 { __out.push(__b32_alpha[((__buf >> (35 - __j*5)) & 0x1f) as usize] as char); } else { __out.push('='); } } __i += 5; } __out }");
+            }
+            "b32decode" => {
+                self.write("(|| -> Result<String, ParseError> { let __b32_alpha = b\"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\"; let __s = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __s = __s.trim_end_matches('='); let mut __bits = 0u64; let mut __bit_count = 0u32; let mut __out: Vec<u8> = Vec::new(); for __c in __s.chars() { let __val = __b32_alpha.iter().position(|&b| b as char == __c.to_ascii_uppercase()).ok_or_else(|| ParseError { message: format!(\"invalid base32 char: {}\", __c) })? as u64; __bits = (__bits << 5) | __val; __bit_count += 5; if __bit_count >= 8 { __bit_count -= 8; __out.push(((__bits >> __bit_count) & 0xff) as u8); } } String::from_utf8(__out).map_err(|e| ParseError { message: e.to_string() }) })()");
+            }
+            // sifr.platform new intrinsics
+            "platform_release" => {
+                self.write("{ std::process::Command::new(\"uname\").arg(\"-r\").output().map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default() }");
+            }
+            "platform_version" => {
+                self.write("{ std::process::Command::new(\"uname\").arg(\"-v\").output().map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default() }");
+            }
+            "platform_processor" => {
+                self.write("std::env::consts::ARCH.to_string()");
+            }
+            // sifr.time new intrinsics
+            "strptime" => {
+                self.write("(|| -> Result<String, ValueError> { use chrono::NaiveDateTime; let __s = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __fmt = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; NaiveDateTime::parse_from_str(__s, __fmt).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).map_err(|e| ValueError { message: e.to_string() }) })()");
+            }
+            "gmtime" => {
+                self.write("{ use chrono::{DateTime, Utc}; let __ts = ");
+                self.emit_expr(&args[0]);
+                self.write(" as i64; DateTime::<Utc>::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).unwrap_or_default() }");
+            }
+            "localtime" => {
+                self.write("{ use chrono::{DateTime, Utc, Local}; let __ts = ");
+                self.emit_expr(&args[0]);
+                self.write(" as i64; DateTime::<Utc>::from_timestamp(__ts, 0).map(|dt| dt.with_timezone(&Local).format(\"%Y-%m-%dT%H:%M:%S\").to_string()).unwrap_or_default() }");
             }
             // sifr.sys extras
             "sys_exit" => {

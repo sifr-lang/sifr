@@ -102,6 +102,7 @@ edition = "2021"
                 if !deps.contains(&"sha2 = \"0.10\"") {
                     deps.push("sha2 = \"0.10\"");
                     deps.push("md5 = \"0.7\"");
+                    deps.push("blake2 = \"0.10\"");
                 }
             }
             "sifr.encoding" | "sifr.base64" => {

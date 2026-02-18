@@ -1,5 +1,5 @@
 # sifr.platform — Platform information
-from _sifr.platform import platform_system, platform_arch, platform_node
+from _sifr.platform import platform_system, platform_arch, platform_node, platform_release, platform_version, platform_processor
 
 # CPython-compatible aliases
 def system() -> str:
@@ -7,3 +7,15 @@ def system() -> str:
 
 def machine() -> str:
     return platform_arch()
+
+def node() -> str:
+    return platform_node()
+
+def release() -> str:
+    return platform_release()
+
+def version() -> str:
+    return platform_version()
+
+def processor() -> str:
+    return platform_processor()
