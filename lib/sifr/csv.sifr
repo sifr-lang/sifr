@@ -32,3 +32,162 @@ def format_csv(rows: list[list[str]]) -> str:
         result = result + format_row(row)
         i = i + 1
     return result
+
+
+class reader:
+    # CSV reader object that parses text line by line.
+    _rows: list[list[str]]
+    _pos: int
+
+    def __init__(self, text: str) -> None:
+        self._rows = parse_csv(text)
+        self._pos = 0
+
+    def __next__(self) -> list[str] | None:
+        if self._pos >= len(self._rows):
+            return None
+        row: list[str] = []
+        pos: int = self._pos
+        for i, v in enumerate(self._rows):
+            if i == pos:
+                for cell in v:
+                    row.append(cell)
+        self._pos = pos + 1
+        return row
+
+    def rows(self) -> list[list[str]]:
+        result: list[list[str]] = []
+        for row in self._rows:
+            copy: list[str] = []
+            for cell in row:
+                copy.append(cell)
+            result.append(copy)
+        return result
+
+    def line_num(self) -> int:
+        return self._pos
+
+
+class writer:
+    # CSV writer object that accumulates rows.
+    _rows: list[list[str]]
+
+    def __init__(self) -> None:
+        self._rows = []
+
+    def writerow(self, row: list[str]) -> None:
+        new_rows: list[list[str]] = []
+        for existing in self._rows:
+            copy_e: list[str] = []
+            for v in existing:
+                copy_e.append(v)
+            new_rows.append(copy_e)
+        copy: list[str] = []
+        for v in row:
+            copy.append(v)
+        new_rows.append(copy)
+        self._rows = new_rows
+
+    def writerows(self, rows: list[list[str]]) -> None:
+        new_rows: list[list[str]] = []
+        for existing in self._rows:
+            copy_e: list[str] = []
+            for v in existing:
+                copy_e.append(v)
+            new_rows.append(copy_e)
+        for row in rows:
+            copy: list[str] = []
+            for v in row:
+                copy.append(v)
+            new_rows.append(copy)
+        self._rows = new_rows
+
+    def getvalue(self) -> str:
+        return format_csv(self._rows)
+
+
+class DictReader:
+    # CSV reader that returns rows as dict[str, str] using header row as keys.
+    _headers: list[str]
+    _rows: list[list[str]]
+    _pos: int
+
+    def __init__(self, text: str) -> None:
+        all_rows: list[list[str]] = parse_csv(text)
+        headers: list[str] = []
+        data_rows: list[list[str]] = []
+        for i, v in enumerate(all_rows):
+            if i == 0:
+                for h in v:
+                    headers.append(h)
+            else:
+                copy_r: list[str] = []
+                for cell in v:
+                    copy_r.append(cell)
+                data_rows.append(copy_r)
+        self._headers = headers
+        self._rows = data_rows
+        self._pos = 0
+
+    def fieldnames(self) -> list[str]:
+        result: list[str] = []
+        for h in self._headers:
+            result.append(h)
+        return result
+
+    def rows(self) -> list[dict[str, str]]:
+        result: list[dict[str, str]] = []
+        for row in self._rows:
+            d: dict[str, str] = {}
+            for i, key in enumerate(self._headers):
+                for j, val in enumerate(row):
+                    if i == j:
+                        d[key + ""] = val + ""
+            result.append(d)
+        return result
+
+
+class DictWriter:
+    # CSV writer that writes rows from dict[str, str].
+    _headers: list[str]
+    _rows: list[list[str]]
+
+    def __init__(self, fieldnames: list[str]) -> None:
+        copy_fn: list[str] = []
+        for h in fieldnames:
+            copy_fn.append(h)
+        self._headers = copy_fn
+        self._rows = []
+
+    def writeheader(self) -> None:
+        new_rows: list[list[str]] = []
+        for existing in self._rows:
+            copy_e: list[str] = []
+            for v in existing:
+                copy_e.append(v)
+            new_rows.append(copy_e)
+        copy: list[str] = []
+        for h in self._headers:
+            copy.append(h)
+        new_rows.append(copy)
+        self._rows = new_rows
+
+    def writerow(self, row: dict[str, str]) -> None:
+        new_rows: list[list[str]] = []
+        for existing in self._rows:
+            copy_e: list[str] = []
+            for v in existing:
+                copy_e.append(v)
+            new_rows.append(copy_e)
+        data: list[str] = []
+        for key in self._headers:
+            val: str | None = row[key + ""]
+            if val is not None:
+                data.append(val + "")
+            else:
+                data.append("")
+        new_rows.append(data)
+        self._rows = new_rows
+
+    def getvalue(self) -> str:
+        return format_csv(self._rows)

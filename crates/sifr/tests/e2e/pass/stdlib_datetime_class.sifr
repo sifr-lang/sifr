@@ -1,25 +1,20 @@
-# Test timedelta class
-from sifr.datetime import timedelta
+# expect-stdout: isoformat = 2024-01-15T10:30:00
+# expect-stdout: year = 2024
+# expect-stdout: month = 1
+# expect-stdout: day = 15
+# expect-stdout: timestamp > 0 = true
+# expect-stdout: date isoformat = 2024-01-15
+
+from sifr.datetime import datetime, date
 
 def main():
-    td1: timedelta = timedelta(1, 3600)
-    print(td1.total_seconds())
-    print(td1.days())
-    print(td1.seconds())
+    dt: datetime = datetime(2024, 1, 15, 10, 30, 0)
+    print("isoformat = " + dt.isoformat())
+    print("year = " + str(dt.year))
+    print("month = " + str(dt.month))
+    print("day = " + str(dt.day))
+    ts: int = dt.timestamp()
+    print("timestamp > 0 = " + str(ts > 0))
 
-    td2: timedelta = timedelta(0, 7200)
-    td3: timedelta = td1 + td2
-    print(td3.total_seconds())
-
-    td4: timedelta = td1 - td2
-    print(td4.total_seconds())
-
-    td5: timedelta = timedelta(1, 3600)
-    print(td1 == td5)
-
-# expect-stdout: 90000
-# expect-stdout: 1
-# expect-stdout: 3600
-# expect-stdout: 97200
-# expect-stdout: 82800
-# expect-stdout: true
+    d: date = date(2024, 1, 15)
+    print("date isoformat = " + d.isoformat())
