@@ -1,0 +1,161 @@
+# milestone_borrow_stdlib demo
+# Demonstrates Sifr's borrow-by-default model applied to the standard library.
+#
+# Three ownership conventions:
+#   (default)    -- borrow: caller retains ownership, function reads only
+#   mut param    -- mutable borrow: function modifies in-place, caller retains ownership
+#   own param    -- ownership transfer: function consumes the value
+
+from sifr.heapq import heapify, heappush, heappop, nsmallest, nlargest
+from sifr.bisect import bisect_left, bisect_right, insort_left, insort_right
+from sifr.itertools import chain, chain_own
+from sifr.collections import Counter, from_list
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Section 1: heapq -- in-place operations with mut parameters
+# ─────────────────────────────────────────────────────────────────────────────
+
+def demo_heapq() -> None:
+    print("=== Section 1: heapq with mut params ===")
+
+    # heapify(mut data) -- converts list to min-heap in-place
+    data: list[int] = [5, 3, 8, 1, 2, 7, 4]
+    heapify(data)
+    # data is now a valid min-heap (root is the minimum)
+    print("heapified (min at root):")
+    min_val: int | None = data[0]
+    if min_val is not None:
+        print(min_val)  # prints 1
+
+    # heappush(mut heap, item) -- push onto heap in-place
+    heappush(data, 0)
+    print("after push(0), new min:")
+    new_min: int | None = data[0]
+    if new_min is not None:
+        print(new_min)  # prints 0
+
+    # heappop(mut heap) -- pop minimum in-place
+    popped: int | None = heappop(data)
+    if popped is not None:
+        print("popped:")
+        print(popped)  # prints 0
+
+    # data is still owned and usable by caller
+    print("remaining size:")
+    print(len(data))  # prints 7
+
+    # nsmallest / nlargest: borrow data, return new list
+    items: list[int] = [9, 3, 7, 1, 5, 6, 2, 8, 4]
+    small3: list[int] = nsmallest(3, items)
+    large3: list[int] = nlargest(3, items)
+    print("3 smallest:")
+    print(small3)
+    print("3 largest:")
+    print(large3)
+    # items is still intact (borrowed, not consumed)
+    print("items still valid, length:")
+    print(len(items))
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Section 2: bisect -- in-place sorted insert with mut parameters
+# ─────────────────────────────────────────────────────────────────────────────
+
+def demo_bisect() -> None:
+    print("=== Section 2: bisect insort with mut params ===")
+
+    sorted_ints: list[int] = [1, 3, 5, 7, 9]
+
+    # bisect_left / bisect_right: borrow list, return insertion position
+    pos_left: int = bisect_left(sorted_ints, 6)
+    pos_right: int = bisect_right(sorted_ints, 5)
+    print("insert 6 at position (left):")
+    print(pos_left)
+    print("insert after 5 at position (right):")
+    print(pos_right)
+
+    # insort_left(mut a, x): insert in-place, maintaining sorted order
+    insort_left(sorted_ints, 6)
+    print("after insort_left(6):")
+    print(sorted_ints)
+
+    # insort_right(mut a, x): insert in-place (after duplicates)
+    data: list[int] = [1, 2, 2, 3]
+    insort_right(data, 2)
+    print("after insort_right(2) with duplicates:")
+    print(data)
+
+    # Caller retains ownership of sorted_ints -- can insert more
+    insort_left(sorted_ints, 0)
+    insort_right(sorted_ints, 10)
+    print("after more inserts:")
+    print(sorted_ints)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Section 3: itertools -- chain (borrow) vs chain_own (ownership transfer)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def demo_itertools() -> None:
+    print("=== Section 3: itertools chain vs chain_own ===")
+
+    a: list[int] = [1, 2, 3]
+    b: list[int] = [4, 5, 6]
+
+    # chain(a, b): borrows both, returns a new combined list
+    # a and b remain usable after the call
+    result: list[int] = chain(a, b)
+    print("chain (borrow both):")
+    print(result)
+    print("a still usable:")
+    print(len(a))
+    print("b still usable:")
+    print(len(b))
+
+    # chain_own(own a, own b): consumes both, returns combined list
+    # More efficient: extends a directly (no extra allocation)
+    x: list[int] = [10, 20, 30]
+    y: list[int] = [40, 50, 60]
+    combined: list[int] = chain_own(x, y)
+    print("chain_own (consume both):")
+    print(combined)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Section 4: Counter -- native dict[str, int] (no JSON workaround)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def demo_counter() -> None:
+    print("=== Section 4: Counter with native dict[str, int] ===")
+
+    words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+    c: Counter = from_list(words)
+
+    print("apple count:")
+    print(c.get("apple"))
+    print("banana count:")
+    print(c.get("banana"))
+    print("missing key returns 0:")
+    print(c.get("missing"))
+    print("total elements:")
+    print(c.total())
+
+    # In-place increment uses self.counts[key] = val + 1 (AttributeSubscriptAssign)
+    c.increment("cherry")
+    c.increment("cherry")
+    print("cherry after 2 increments:")
+    print(c.get("cherry"))
+
+    # most_common returns top keys by count
+    top: list[str] = c.most_common(1)
+    print("top 1 most common:")
+    print(top)
+
+    # keys and values
+    keys: list[str] = c.keys()
+    print("unique keys count:")
+    print(len(keys))
+
+def main() -> None:
+    demo_heapq()
+    demo_bisect()
+    demo_itertools()
+    demo_counter()
+    print("=== milestone_borrow_stdlib demo complete ===")

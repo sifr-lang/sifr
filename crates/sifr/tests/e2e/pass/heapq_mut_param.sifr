@@ -1,0 +1,21 @@
+# Test heapq in-place API -- mut parameter borrow-by-default
+from sifr.heapq import heapify, heappush, heappop
+
+def main():
+    # heapify in-place: data remains valid and usable after call
+    data: list[int] = [5, 3, 8, 1, 2, 7, 4]
+    heapify(data)
+
+    # heappush in-place: heap grows
+    heappush(data, 0)
+
+    # heappop in-place: extracts minimum
+    min_val: int | None = heappop(data)
+    if min_val is not None:
+        print(min_val)
+
+    # Verify callers retain ownership of data list
+    print(len(data))
+
+# expect-stdout: 0
+# expect-stdout: 7

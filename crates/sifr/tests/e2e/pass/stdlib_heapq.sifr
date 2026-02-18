@@ -1,29 +1,29 @@
-# Test sifr.heapq module
+# Test sifr.heapq module -- in-place API (mut parameters)
 from sifr.heapq import heappush, heappop, heapify, nsmallest, nlargest
 
 def main():
-    # heappush and heappop
+    # In-place heappush and heappop (mut params)
     heap: list[int] = []
-    heap = heappush(heap, 5)
-    heap = heappush(heap, 1)
-    heap = heappush(heap, 3)
+    heappush(heap, 5)
+    heappush(heap, 1)
+    heappush(heap, 3)
     val: int | None = heappop(heap)
     if val is not None:
         print(val)
 
-    # heapify
+    # In-place heapify (mut param)
     data: list[int] = [4, 2, 7, 1, 5]
-    data = heapify(data)
+    heapify(data)
     top: int | None = heappop(data)
     if top is not None:
         print(top)
 
-    # nsmallest
+    # nsmallest (borrows data, returns new list)
     items: list[int] = [9, 3, 7, 1, 5]
     small: list[int] = nsmallest(3, items)
     print(small)
 
-    # nlargest
+    # nlargest (borrows data, returns new list)
     big: list[int] = nlargest(2, items)
     print(big)
 
