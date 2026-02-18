@@ -777,6 +777,10 @@ struct RustEmitter {
     in_generator_closure: bool,
     /// Counter for generating unique try-block error enum names
     try_enum_counter: usize,
+    /// Map from variable name -> Callable parameter (type, convention) list.
+    /// Populated per-function from params and locals with Callable types.
+    /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
+    callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
 }
 
 impl RustEmitter {
@@ -812,6 +816,7 @@ impl RustEmitter {
             suppress_field_clone: false,
             in_generator_closure: false,
             try_enum_counter: 0,
+            callable_var_conventions: HashMap::new(),
         }
     }
 
@@ -1934,11 +1939,21 @@ impl RustEmitter {
 
         // Track borrowed parameters for dereference in comparisons
         self.borrowed_params.clear();
+        // Track Callable-typed params/locals so we can emit correct borrow prefixes when calling them
+        self.callable_var_conventions.clear();
         for param in &func.params {
             if param.convention == ParamConvention::Borrow
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.borrowed_params.insert(param.name.clone());
+            }
+            // Register Callable-typed params for convention-aware call emission
+            if let Type::Callable(ref param_types, ref conventions, _) = param.ty {
+                let conv_list: Vec<(Type, ParamConvention)> = param_types.iter()
+                    .zip(conventions.iter())
+                    .map(|(t, c)| (t.clone(), *c))
+                    .collect();
+                self.callable_var_conventions.insert(param.name.clone(), conv_list);
             }
         }
 
@@ -4171,6 +4186,10 @@ impl RustEmitter {
     /// Copy types never get a borrow prefix (they're passed by value),
     /// unless the parameter type is a TypeVar (generic), in which case we always borrow.
     fn emit_borrow_prefix(&mut self, convention: ParamConvention, arg_ty: &Type, param_ty: Option<&Type>) {
+        self.emit_borrow_prefix_for_name(convention, arg_ty, param_ty, None);
+    }
+
+    fn emit_borrow_prefix_for_name(&mut self, convention: ParamConvention, arg_ty: &Type, param_ty: Option<&Type>, arg_name: Option<&str>) {
         // If the parameter type is a TypeVar, always emit the borrow prefix
         // because the generated Rust signature uses &T for borrowed TypeVar params
         let is_generic_param = param_ty.map_or(false, |t| matches!(t, Type::TypeVar(_)));
@@ -4178,6 +4197,15 @@ impl RustEmitter {
         // unless the parameter is generic (TypeVar)
         if !is_generic_param && arg_ty.ownership() == sifr_type_system::OwnershipKind::Copy {
             return;
+        }
+        // If the argument is already a borrowed parameter (&T), don't add another borrow.
+        // This handles the case where a Callable call passes a borrowed param:
+        //   fn apply(f: Callable[[list[int]], int], items: &Vec<i64>) { f(items) }
+        // Here items is already &Vec<i64>, so we pass it as-is (no extra &).
+        if let Some(name) = arg_name {
+            if self.borrowed_params.contains(name) && convention == ParamConvention::Borrow {
+                return; // already &T, no additional borrow needed
+            }
         }
         match convention {
             ParamConvention::Borrow => self.write("&"),
@@ -4757,8 +4785,12 @@ impl RustEmitter {
                 } else {
                     self.write(func);
                     self.write("(");
-                    // Look up param types and conventions to wrap union enum arguments
-                    let param_info: Option<Vec<(Type, ParamConvention)>> = self.func_signatures.get(func).map(|(pts, _)| pts.clone());
+                    // Look up param types and conventions to wrap union enum arguments.
+                    // First check func_signatures (regular functions), then callable_var_conventions
+                    // (Callable-typed parameters/locals whose conventions are tracked per-function).
+                    let param_info: Option<Vec<(Type, ParamConvention)>> = self.func_signatures.get(func)
+                        .map(|(pts, _)| pts.clone())
+                        .or_else(|| self.callable_var_conventions.get(func).cloned());
                     for (i, arg) in args.iter().enumerate() {
                         if i > 0 {
                             self.write(", ");
@@ -4806,8 +4838,15 @@ impl RustEmitter {
                                     self.write(")");
                                     continue;
                                 }
-                                // Convention-aware borrow prefix for regular arguments
-                                self.emit_borrow_prefix(convention, arg.ty(), Some(param_ty));
+                                // Convention-aware borrow prefix for regular arguments.
+                                // Pass the arg name (if it's a Name expr) so we can detect
+                                // already-borrowed parameters and avoid double-borrowing.
+                                let arg_name_opt = if let HirExpr::Name { name, .. } = arg {
+                                    Some(name.as_str())
+                                } else {
+                                    None
+                                };
+                                self.emit_borrow_prefix_for_name(convention, arg.ty(), Some(param_ty), arg_name_opt);
                                 self.emit_expr(arg);
                                 continue;
                             }

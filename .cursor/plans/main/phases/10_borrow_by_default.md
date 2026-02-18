@@ -8,7 +8,7 @@ This phase changes Sifr's function parameter passing from move-by-default to bor
 
 ## milestone_borrow_default: Borrow-by-Default Parameter Passing
 
-status: pending
+status: completed
 
 **Goal:** Change Sifr's function parameter passing from move-by-default to borrow-by-default. This is the core language change.
 

@@ -12,6 +12,12 @@ status: pending
 
 **Depends on:** milestone_borrow_stdlib (new functions should be written with the final ownership model)
 
+### Fix Existing Return Types (Phase 09 Carryover)
+
+The following existing `statistics` functions were implemented in Phase 09 (`milestone_collection_safety`) with safe defaults (`return 0.0` on empty input) instead of the specified `Result[float, StatisticsError]` return type. Fix them here alongside the new `statistics` additions:
+
+- `statistics.mean`, `statistics.median`, `statistics.variance`, `statistics.stdev`, `statistics.mode`, `statistics.harmonic_mean` -> change return type from `float` to `Result[float, StatisticsError]`, raising `StatisticsError` on empty/invalid input (matching CPython's behavior). `StatisticsError` is already defined and registered in HIR — only the `.sifr` wrapper signatures and return paths need updating.
+
 ### New Functions
 
 - `math`: `acosh`, `asinh`, `atanh`, `isqrt`, `dist`, `fsum`
@@ -32,6 +38,7 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 ### Definition of Done (milestone_stdlib_pure_expansion)
 
 - All listed functions implemented and tested
+- Existing `statistics` functions return `Result[float, StatisticsError]` (Phase 09 carryover fixed)
 - Non-CPython functions removed
 - API naming divergence table added to `architecture.md`
 - E2E tests for all new functions
