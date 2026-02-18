@@ -1,4 +1,4 @@
-# Test sifr.functools stdlib module
+# Test functools.reduce
 from sifr.functools import reduce
 
 def add(a: int, b: int) -> int:
@@ -10,13 +10,17 @@ def mul(a: int, b: int) -> int:
 def main():
     data: list[int] = [1, 2, 3, 4, 5]
 
-    # reduce with add
     total: int = reduce(add, data, 0)
     print(total)
 
-    # reduce with multiply
     product: int = reduce(mul, data, 1)
     print(product)
 
+    # empty list with initial value
+    empty: list[int] = []
+    result: int = reduce(add, empty, 42)
+    print(result)
+
 # expect-stdout: 15
 # expect-stdout: 120
+# expect-stdout: 42

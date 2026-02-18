@@ -6,7 +6,7 @@
 
 ## milestone_stdlib_pure_expansion: Pure Sifr Function Additions
 
-status: pending
+status: completed
 
 **Goal:** Add high-ROI stdlib functions that can be implemented purely in Sifr (no new intrinsics needed). Also clean up non-CPython functions and document API naming divergences.
 

@@ -668,6 +668,9 @@ edition = "2021"
                 if !deps.contains(&"rand = \"0.8\"".to_string()) {
                     deps.push("rand = \"0.8\"".to_string());
                 }
+                if !deps.contains(&"rand_distr = \"0.4\"".to_string()) {
+                    deps.push("rand_distr = \"0.4\"".to_string());
+                }
             }
             "sifr.uuid" | "_sifr.uuid" => {
                 if !deps.contains(&"rand = \"0.8\"".to_string()) {
@@ -5917,6 +5920,38 @@ impl RustEmitter {
                 self.emit_expr(&args[0]);
                 self.write(").is_finite()");
             }
+            "acosh" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").acosh()");
+            }
+            "asinh" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").asinh()");
+            }
+            "atanh" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").atanh()");
+            }
+            "isqrt" => {
+                self.write("{ let __n = ");
+                self.emit_expr(&args[0]);
+                self.write(" as f64; __n.sqrt() as i64 }");
+            }
+            "dist" => {
+                self.write("{ let __p = &");
+                self.emit_expr(&args[0]);
+                self.write("; let __q = &");
+                self.emit_expr(&args[1]);
+                self.write("; let mut __sum = 0.0f64; let __len = __p.len().min(__q.len()); for __i in 0..__len { let __d = __p[__i] - __q[__i]; __sum += __d * __d; } __sum.sqrt() }");
+            }
+            "fsum" => {
+                self.write("{ let __data = &");
+                self.emit_expr(&args[0]);
+                self.write("; let mut __sum = 0.0f64; for __v in __data.iter() { __sum += __v; } __sum }");
+            }
             // sifr.test
             "assert_eq" => {
                 self.write("assert_eq!(");
@@ -6166,6 +6201,34 @@ impl RustEmitter {
                 self.write("..=");
                 self.emit_expr(&args[1]);
                 self.write(") }");
+            }
+            "random_shuffle" => {
+                self.write("{ use rand::seq::SliceRandom; let mut __v = ");
+                self.emit_expr(&args[0]);
+                self.write(".clone(); __v.shuffle(&mut rand::thread_rng()); __v }");
+            }
+            "random_sample" => {
+                self.write("{ use rand::seq::SliceRandom; let __items = &");
+                self.emit_expr(&args[0]);
+                self.write("; let __k = ");
+                self.emit_expr(&args[1]);
+                self.write(" as usize; if __k > __items.len() { Err(ValueError { message: format!(\"sample larger than population: {} > {}\", __k, __items.len()) }) } else { Ok(__items.choose_multiple(&mut rand::thread_rng(), __k).cloned().collect::<Vec<_>>()) } }");
+            }
+            "random_randrange" => {
+                self.write("{ let __start = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __stop = ");
+                self.emit_expr(&args[1]);
+                self.write("; let __step = ");
+                self.emit_expr(&args[2]);
+                self.write("; if __step == 0 { Err(ValueError { message: \"randrange: step must not be zero\".to_string() }) } else if __start >= __stop && __step > 0 { Err(ValueError { message: \"randrange: empty range\".to_string() }) } else { use rand::Rng; let __n = ((__stop - __start + __step - 1) / __step).abs(); Ok(__start + rand::thread_rng().gen_range(0..__n) * __step) } }");
+            }
+            "random_gauss" => {
+                self.write("{ use rand_distr::{Normal, Distribution}; let __mu = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __sigma = ");
+                self.emit_expr(&args[1]);
+                self.write("; Normal::new(__mu, __sigma).map(|d| d.sample(&mut rand::thread_rng())).unwrap_or(__mu) }");
             }
             // sifr.re
             "re_match" => {

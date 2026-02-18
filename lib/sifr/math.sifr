@@ -1,5 +1,5 @@
 # sifr.math — Math functions and constants
-from _sifr.math import sqrt, floor, ceil, abs_val, log, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, degrees, radians, isnan, isinf, trunc, copysign, fmod, hypot, tau, inf, nan, exp, expm1, log1p, fabs, isfinite
+from _sifr.math import sqrt, floor, ceil, abs_val, log, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, degrees, radians, isnan, isinf, trunc, copysign, fmod, hypot, tau, inf, nan, exp, expm1, log1p, fabs, isfinite, acosh, asinh, atanh, isqrt, dist, fsum
 
 def factorial(n: int) -> int:
     if n < 0:

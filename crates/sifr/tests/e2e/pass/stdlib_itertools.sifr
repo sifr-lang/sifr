@@ -1,5 +1,5 @@
 # Test sifr.itertools module
-from sifr.itertools import chain, repeat_val, take, flatten
+from sifr.itertools import chain, repeat, take, flatten
 
 def main():
     # chain two lists
@@ -8,8 +8,8 @@ def main():
     result: list[int] = chain(a, b)
     print(result)
 
-    # repeat_val
-    repeated: list[int] = repeat_val(7, 3)
+    # repeat
+    repeated: list[int] = repeat(7, 3)
     print(repeated)
 
     # take first N elements

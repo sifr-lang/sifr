@@ -4,12 +4,19 @@
 # expect-stdout: median_low = 2
 # expect-stdout: median_high = 3
 
-from sifr.statistics import fmean, harmonic_mean, median_low, median_high
+from sifr.statistics import fmean, harmonic_mean, median_low, median_high, StatisticsError
 
 def main():
-    data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
-    print("fmean = " + str(fmean(data)))
-    print("harmonic_mean = " + str(harmonic_mean(data)))
-    even: list[float] = [1.0, 2.0, 3.0, 4.0]
-    print("median_low = " + str(median_low(even)))
-    print("median_high = " + str(median_high(even)))
+    try:
+        data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
+        fm: float = fmean(data)
+        print("fmean = " + str(fm))
+        hm: float = harmonic_mean(data)
+        print("harmonic_mean = " + str(hm))
+        even: list[float] = [1.0, 2.0, 3.0, 4.0]
+        ml: float = median_low(even)
+        print("median_low = " + str(ml))
+        mh: float = median_high(even)
+        print("median_high = " + str(mh))
+    except StatisticsError as e:
+        print("error: " + e.message)

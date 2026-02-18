@@ -104,6 +104,23 @@ Sifr intentionally diverges from CPython in several areas to achieve compile-tim
 
 **Migration note:** code that relies heavily on exception propagation, import-time side effects, arbitrary-precision integers, or runtime reflection will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
 
+### API Naming Divergences
+
+Several stdlib functions intentionally diverge from CPython names due to Rust keyword conflicts or Sifr type-system constraints. This table is the authoritative reference — do not "fix" these names or introduce inconsistent workarounds.
+
+| sifr name | CPython name | reason |
+|---|---|---|
+| `sifr.shutil.move_file` | `shutil.move` | `move` is a Rust keyword |
+| `sifr.math.abs_val` | `math.fabs` (float abs) | `abs` is a Sifr built-in; `abs_val` is the intrinsic name used internally |
+| `sifr.math.pow_val` | `math.pow` | `pow` shadows the built-in; `pow_val` is the intrinsic; `sifr.math.pow` is the CPython-compatible wrapper |
+| `sifr.math.min_val` / `sifr.math.max_val` | `min` / `max` | `min`/`max` are Sifr built-ins; `min_val`/`max_val` are the float-specific intrinsics |
+| `sifr.math.round_val` | `round` | `round` is a Sifr built-in; `round_val` is the float intrinsic |
+| `sifr.itertools.repeat` | `itertools.repeat` | CPython-compatible name; `repeat_val` was the old non-CPython name (removed) |
+| `sifr.itertools.chain_str` | `itertools.chain` (str variant) | Type-specialised variant; `chain` handles `list[int]`, `chain_str` handles `list[str]` due to monomorphisation |
+| `sifr.itertools.count_from` | `itertools.count` | `count` conflicts with `list.count` method name in some contexts; `count_from` is the finite-list approximation |
+| `sifr.os.remove_file` | `os.remove` | `remove` is used as a method name on collections; `remove_file` avoids ambiguity |
+| `sifr.random.shuffle` | `random.shuffle` | CPython-compatible name; returns a new shuffled list (Sifr is immutable-by-default) instead of mutating in place |
+
 ## Compiler Pipeline
 
 ```mermaid

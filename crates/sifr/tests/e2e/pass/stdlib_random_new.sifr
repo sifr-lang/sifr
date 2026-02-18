@@ -1,0 +1,35 @@
+# Test new random functions: shuffle, sample, randrange, gauss
+from sifr.random import shuffle, sample, randrange, gauss
+from sifr.test import assert_eq, assert_true
+
+def main():
+    # shuffle returns a new list with same length
+    items: list[int] = [1, 2, 3, 4, 5]
+    shuffled: list[int] = shuffle(items)
+    assert_eq(len(shuffled), 5)
+    # original unchanged
+    assert_eq(len(items), 5)
+
+    # sample
+    try:
+        s: list[int] = sample(items, 3)
+        assert_eq(len(s), 3)
+    except ValueError as e:
+        print("unexpected: " + e.message)
+
+    # randrange
+    try:
+        r: int = randrange(0, 10, 1)
+        assert_true(r >= 0)
+        assert_true(r < 10)
+    except ValueError as e:
+        print("unexpected: " + e.message)
+
+    # gauss returns a float
+    g: float = gauss(0.0, 1.0)
+    # just check it's a number (no assertion on value since it's random)
+    _ = g
+
+    print("stdlib_random_new: all tests passed")
+
+# expect-stdout: stdlib_random_new: all tests passed

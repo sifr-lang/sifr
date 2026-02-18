@@ -1,5 +1,5 @@
-# Test itertools chain_own -- own parameter (transfer ownership)
-from sifr.itertools import chain, chain_own
+# Test itertools chain -- borrow semantics
+from sifr.itertools import chain
 
 def main():
     # chain (borrow both, returns new list)
@@ -11,13 +11,6 @@ def main():
     print(len(a))
     print(len(b))
 
-    # chain_own (transfers ownership of both lists)
-    x: list[int] = [10, 20]
-    y: list[int] = [30, 40]
-    combined: list[int] = chain_own(x, y)
-    print(combined)
-
 # expect-stdout: [1, 2, 3, 4, 5, 6]
 # expect-stdout: 3
 # expect-stdout: 3
-# expect-stdout: [10, 20, 30, 40]

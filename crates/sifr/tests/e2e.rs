@@ -84,6 +84,9 @@ edition = "2021"
                 if !deps.contains(&"rand = \"0.8\"") {
                     deps.push("rand = \"0.8\"");
                 }
+                if !deps.contains(&"rand_distr = \"0.4\"") {
+                    deps.push("rand_distr = \"0.4\"");
+                }
             }
             "sifr.uuid" | "_sifr.uuid" => {
                 if !deps.contains(&"rand = \"0.8\"") {

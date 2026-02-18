@@ -3,95 +3,132 @@ from sifr.test import assert_eq, assert_almost_eq, assert_true
 
 from sifr.statistics import (
     mean, median, variance, pvariance, stdev, pstdev,
-    fmean, harmonic_mean, geometric_mean, median_low, median_high, mode
+    fmean, harmonic_mean, geometric_mean, median_low, median_high, mode,
+    StatisticsError
 )
 
 def main():
-    # --- mean ---
-    data1: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
-    assert_almost_eq(mean(data1), 3.0, 0.0001)
+    try:
+        # --- mean ---
+        data1: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
+        m1: float = mean(data1)
+        assert_almost_eq(m1, 3.0, 0.0001)
 
-    data2: list[float] = [0.0, 1.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0, 5.0, 6.0, 7.0, 7.0, 7.0, 7.0, 8.0, 9.0]
-    assert_almost_eq(mean(data2), 4.8125, 0.0001)
+        data2: list[float] = [0.0, 1.0, 2.0, 3.0, 3.0, 3.0, 4.0, 5.0, 5.0, 6.0, 7.0, 7.0, 7.0, 7.0, 8.0, 9.0]
+        m2: float = mean(data2)
+        assert_almost_eq(m2, 4.8125, 0.0001)
 
-    data3: list[float] = [17.25, 19.75, 20.0, 21.5, 21.75, 23.25, 25.125, 27.5]
-    assert_almost_eq(mean(data3), 22.015625, 0.0001)
+        data3: list[float] = [17.25, 19.75, 20.0, 21.5, 21.75, 23.25, 25.125, 27.5]
+        m3: float = mean(data3)
+        assert_almost_eq(m3, 22.015625, 0.0001)
 
-    single: list[float] = [42.0]
-    assert_almost_eq(mean(single), 42.0, 0.0001)
+        single: list[float] = [42.0]
+        ms: float = mean(single)
+        assert_almost_eq(ms, 42.0, 0.0001)
 
-    # --- fmean ---
-    assert_almost_eq(fmean(data1), 3.0, 0.0001)
+        # --- fmean ---
+        fm1: float = fmean(data1)
+        assert_almost_eq(fm1, 3.0, 0.0001)
 
-    # --- median ---
-    even: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-    assert_almost_eq(median(even), 3.5, 0.0001)
+        # --- median ---
+        even: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+        med_even: float = median(even)
+        assert_almost_eq(med_even, 3.5, 0.0001)
 
-    odd: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 9.0]
-    assert_almost_eq(median(odd), 4.0, 0.0001)
+        odd: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 9.0]
+        med_odd: float = median(odd)
+        assert_almost_eq(med_odd, 4.0, 0.0001)
 
-    single_med: list[float] = [7.0]
-    assert_almost_eq(median(single_med), 7.0, 0.0001)
+        single_med: list[float] = [7.0]
+        med_s: float = median(single_med)
+        assert_almost_eq(med_s, 7.0, 0.0001)
 
-    # --- median_low / median_high ---
-    assert_almost_eq(median_low(even), 3.0, 0.0001)
-    assert_almost_eq(median_high(even), 4.0, 0.0001)
-    assert_almost_eq(median_low(odd), 4.0, 0.0001)
-    assert_almost_eq(median_high(odd), 4.0, 0.0001)
+        # --- median_low / median_high ---
+        ml_even: float = median_low(even)
+        assert_almost_eq(ml_even, 3.0, 0.0001)
+        mh_even: float = median_high(even)
+        assert_almost_eq(mh_even, 4.0, 0.0001)
+        ml_odd: float = median_low(odd)
+        assert_almost_eq(ml_odd, 4.0, 0.0001)
+        mh_odd: float = median_high(odd)
+        assert_almost_eq(mh_odd, 4.0, 0.0001)
 
-    # --- variance / stdev ---
-    assert_almost_eq(variance(data1), 2.5, 0.0001)
-    assert_almost_eq(stdev(data1), 1.5811, 0.001)
+        # --- variance / stdev ---
+        v1: float = variance(data1)
+        assert_almost_eq(v1, 2.5, 0.0001)
+        s1: float = stdev(data1)
+        assert_almost_eq(s1, 1.5811, 0.001)
 
-    # --- pvariance / pstdev ---
-    assert_almost_eq(pvariance(data1), 2.0, 0.0001)
-    assert_almost_eq(pstdev(data1), 1.4142, 0.001)
+        # --- pvariance / pstdev ---
+        pv1: float = pvariance(data1)
+        assert_almost_eq(pv1, 2.0, 0.0001)
+        ps1: float = pstdev(data1)
+        assert_almost_eq(ps1, 1.4142, 0.001)
 
-    # Variance of constant data
-    constant: list[float] = [5.0, 5.0, 5.0, 5.0]
-    assert_almost_eq(variance(constant), 0.0, 0.0001)
-    assert_almost_eq(pvariance(constant), 0.0, 0.0001)
+        # Variance of constant data
+        constant: list[float] = [5.0, 5.0, 5.0, 5.0]
+        vc: float = variance(constant)
+        assert_almost_eq(vc, 0.0, 0.0001)
+        pvc: float = pvariance(constant)
+        assert_almost_eq(pvc, 0.0, 0.0001)
 
-    # --- mode ---
-    mode_data: list[int] = [1, 1, 2, 3, 3, 3, 4]
-    assert_eq(mode(mode_data), 3)
+        # --- mode ---
+        mode_data: list[int] = [1, 1, 2, 3, 3, 3, 4]
+        mo1: int = mode(mode_data)
+        assert_eq(mo1, 3)
 
-    mode_data2: list[int] = [1, 2, 2, 3, 3, 3]
-    assert_eq(mode(mode_data2), 3)
+        mode_data2: list[int] = [1, 2, 2, 3, 3, 3]
+        mo2: int = mode(mode_data2)
+        assert_eq(mo2, 3)
 
-    # --- geometric_mean ---
-    geo1: list[float] = [4.0, 9.0]
-    assert_almost_eq(geometric_mean(geo1), 6.0, 0.0001)
+        # --- geometric_mean ---
+        geo1: list[float] = [4.0, 9.0]
+        gm1: float = geometric_mean(geo1)
+        assert_almost_eq(gm1, 6.0, 0.0001)
 
-    geo2: list[float] = [54.0, 24.0, 36.0]
-    assert_almost_eq(geometric_mean(geo2), 36.0, 0.01)
+        geo2: list[float] = [54.0, 24.0, 36.0]
+        gm2: float = geometric_mean(geo2)
+        assert_almost_eq(gm2, 36.0, 0.01)
 
-    geo3: list[float] = [17.625]
-    assert_almost_eq(geometric_mean(geo3), 17.625, 0.0001)
+        geo3: list[float] = [17.625]
+        gm3: float = geometric_mean(geo3)
+        assert_almost_eq(gm3, 17.625, 0.0001)
 
-    # --- harmonic_mean ---
-    hm1: list[float] = [2.0, 4.0, 4.0, 8.0, 16.0, 16.0]
-    assert_almost_eq(harmonic_mean(hm1), 4.8, 0.01)
+        # --- harmonic_mean ---
+        hm1: list[float] = [2.0, 4.0, 4.0, 8.0, 16.0, 16.0]
+        hm_r1: float = harmonic_mean(hm1)
+        assert_almost_eq(hm_r1, 4.8, 0.01)
 
-    hm2: list[float] = [0.25, 0.5, 1.0, 1.0]
-    assert_almost_eq(harmonic_mean(hm2), 0.5, 0.01)
+        hm2: list[float] = [0.25, 0.5, 1.0, 1.0]
+        hm_r2: float = harmonic_mean(hm2)
+        assert_almost_eq(hm_r2, 0.5, 0.01)
 
-    hm3: list[float] = [1.0]
-    assert_almost_eq(harmonic_mean(hm3), 1.0, 0.0001)
+        hm3: list[float] = [1.0]
+        hm_r3: float = harmonic_mean(hm3)
+        assert_almost_eq(hm_r3, 1.0, 0.0001)
 
-    # --- Two-element data ---
-    two: list[float] = [1.0, 3.0]
-    assert_almost_eq(mean(two), 2.0, 0.0001)
-    assert_almost_eq(median(two), 2.0, 0.0001)
-    assert_almost_eq(variance(two), 2.0, 0.0001)
-    assert_almost_eq(stdev(two), 1.4142, 0.001)
+        # --- Two-element data ---
+        two: list[float] = [1.0, 3.0]
+        m_two: float = mean(two)
+        assert_almost_eq(m_two, 2.0, 0.0001)
+        med_two: float = median(two)
+        assert_almost_eq(med_two, 2.0, 0.0001)
+        v_two: float = variance(two)
+        assert_almost_eq(v_two, 2.0, 0.0001)
+        s_two: float = stdev(two)
+        assert_almost_eq(s_two, 1.4142, 0.001)
 
-    # --- Large uniform data ---
-    uniform: list[float] = [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
-    assert_almost_eq(mean(uniform), 10.0, 0.0001)
-    assert_almost_eq(median(uniform), 10.0, 0.0001)
-    assert_almost_eq(stdev(uniform), 0.0, 0.0001)
+        # --- Large uniform data ---
+        uniform: list[float] = [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+        m_uni: float = mean(uniform)
+        assert_almost_eq(m_uni, 10.0, 0.0001)
+        med_uni: float = median(uniform)
+        assert_almost_eq(med_uni, 10.0, 0.0001)
+        s_uni: float = stdev(uniform)
+        assert_almost_eq(s_uni, 0.0, 0.0001)
 
-    print("cpython_statistics: all 42 assertions passed")
+        print("cpython_statistics: all 42 assertions passed")
+    except StatisticsError as e:
+        print("unexpected error: " + e.message)
 
 # expect-stdout: cpython_statistics: all 42 assertions passed
