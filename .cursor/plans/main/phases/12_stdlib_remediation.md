@@ -26,7 +26,9 @@ The `open()` built-in was specified in Phase 11's `milestone_stdlib_class_deepen
   - `readlines() -> Result[list[str], IOError]` — read all lines
   - `close() -> None` — explicit close (also called by `__exit__`)
 - Context manager support: `FileHandle` implements `__enter__` / `__exit__` so `with open(...) as f:` works
-- Modes: `"r"` (read text), `"w"` (write text, truncate), `"a"` (append text). Binary modes (`"rb"`, `"wb"`) deferred to a future milestone.
+- Modes: `"r"` (read text), `"w"` (write text, truncate), `"a"` (append text), `"rb"` (read binary), `"wb"` (write binary), `"ab"` (append binary)
+- Binary modes return `FileHandle` backed by `BufReader<File>` / `BufWriter<File>` with `read_bytes() -> Result[bytes, IOError]` and `write_bytes(data: bytes) -> Result[None, IOError]` methods
+- Binary file support is needed by Phase 19 (`milestone_data_processing` for Parquet I/O), Phase 15 (`milestone_crypto_auth` for AES encryption), and existing stdlib modules (`gzip`, `zipfile`)
 - Rust intrinsics: add `_sifr.fs.open_file`, `_sifr.fs.file_read`, `_sifr.fs.file_write`, `_sifr.fs.file_readline`, `_sifr.fs.file_readlines`, `_sifr.fs.file_close` to `stdlib.rs`
 - The `FileHandle` wraps a Rust `BufReader<File>` or `BufWriter<File>` depending on mode
 - All file operations return `Result[T, IOError]` — no panics
@@ -96,7 +98,7 @@ The Phase 11 plan specified removing non-CPython functions. The following remain
 
 ### Definition of Done (milestone_stdlib_remediation)
 
-- `open()` built-in works with `"r"`, `"w"`, `"a"` modes
+- `open()` built-in works with `"r"`, `"w"`, `"a"`, `"rb"`, `"wb"`, `"ab"` modes
 - `with open(...) as f:` works (context manager)
 - `FileHandle.read()`, `.write()`, `.readline()`, `.readlines()`, `.close()` all work
 - `csv.reader` / `csv.writer` accept `FileHandle`
@@ -112,5 +114,6 @@ The Phase 11 plan specified removing non-CPython functions. The following remain
 - `random.choice` re-exported
 - `itertools.take` and `itertools.flatten` documented as Sifr extensions in `architecture.md`
 - All existing E2E tests still pass (no regressions)
-- New E2E pass tests: `open_read`, `open_write`, `open_context_manager`, `open_readline`, `csv_reader_file`, `datetime_time_class`, `datetime_now_object`, `subprocess_completed_process`, `path_glob`, `re_flags_ignorecase`
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
+- New E2E pass tests: `open_read`, `open_write`, `open_context_manager`, `open_readline`, `open_binary_read`, `open_binary_write`, `csv_reader_file`, `datetime_time_class`, `datetime_now_object`, `subprocess_completed_process`, `path_glob`, `re_flags_ignorecase`
 - Milestone demo in `./demos/milestone_stdlib_remediation_demo.sifr`

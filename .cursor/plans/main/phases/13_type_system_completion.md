@@ -1,8 +1,8 @@
 # Type System Completion
 
-**Why now:** The stdlib is complete and remediated (Phase 12), the ownership model is proven (Phase 10), and safety is enforced (Phases 8-9). But the type system has critical gaps that block every subsequent phase: user-facing generics are incomplete (generic class field/method substitution doesn't work), the stdlib is monomorphic (functions duplicated per type), there is no pattern matching, no enum type, no auto-generated constructors, and generic container classes like `Counter` and `deque` are hardcoded to specific types. Every one of these gaps would infect the async runtime, typed serde, web extractors, and package ecosystem if left unfixed. Fixing them now means all subsequent phases build on a complete, expressive type system from day one.
+**Why now:** The stdlib is complete and remediated (Phase 12), the ownership model is proven (Phase 10), and safety is enforced (Phases 8-9). But the type system has critical gaps that block every subsequent phase: user-facing generics are incomplete (generic class field/method substitution doesn't work), the stdlib is monomorphic (functions duplicated per type), there is no pattern matching, no enum type, no auto-generated constructors, integer overflow contradicts the "if it compiles, it works" guarantee, and generic container classes like `Counter` and `deque` are hardcoded to specific types. Every one of these gaps would infect the async runtime, typed serde, web extractors, and package ecosystem if left unfixed. Fixing them now means all subsequent phases build on a complete, expressive type system from day one.
 
-**Why this ordering within the phase:** Each milestone builds on the previous one. Auto-init must come first because it eliminates boilerplate that would otherwise be duplicated in every subsequent milestone's new classes. User-facing generics come second because pattern matching, enums, and the stdlib rewrite all depend on them. Pattern matching comes third because enum types use it for exhaustive handling. Enums come fourth because they depend on both generics and pattern matching. The stdlib generic rewrite comes last because it exercises everything built in milestones 1-4 and serves as the integration test for the entire phase.
+**Why this ordering within the phase:** Each milestone builds on the previous one. Auto-init must come first because it eliminates boilerplate that would otherwise be duplicated in every subsequent milestone's new classes. User-facing generics come second because pattern matching, enums, and the stdlib rewrite all depend on them. Pattern matching comes third because enum types use it for exhaustive handling. Enums come fourth because they depend on both generics and pattern matching. Integer safety comes fifth to resolve the overflow contradiction before the stdlib rewrite. The stdlib generic rewrite comes last because it exercises everything built in milestones 1-5 and serves as the integration test for the entire phase.
 
 ---
 
@@ -73,6 +73,7 @@ These are only generated if the class does not already define them explicitly.
 - Auto-generated `__eq__` and `__str__` work for eligible classes
 - Explicit `__init__`, `__eq__`, `__str__` always take precedence over auto-generated versions
 - All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - Stdlib classes migrated where applicable (boilerplate `__init__` removed)
 - New E2E pass tests: `auto_init_basic`, `auto_init_defaults`, `auto_init_eq`, `auto_init_str`, `auto_init_explicit_override`, `auto_init_inheritance_warning`
 - New E2E fail tests: `auto_init_required_after_default` (field ordering error), `auto_init_inheritance_missing_super` (diagnostic)
@@ -154,6 +155,7 @@ As part of completing the type system, ensure `None` works fully as a standalone
 - Generic type aliases work
 - `None` works as a standalone value and type in all positions
 - All existing E2E tests still pass
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `generic_class_basic`, `generic_class_field_access`, `generic_class_method`, `generic_class_auto_init`, `generic_class_inference`, `generic_bounds_comparable`, `generic_bounds_multiple`, `generic_type_alias`, `none_standalone_value`, `none_standalone_type`, `none_as_dict_key`
 - New E2E fail tests: `generic_bounds_not_satisfied`, `generic_class_missing_type_arg`, `generic_wrong_type_arg`
 - Milestone demo in `./demos/milestone_generics_v2_demo.sifr`
@@ -219,12 +221,15 @@ Each `case` arm narrows the matched variable's type within the body:
 
 ### Compiler Changes
 
-#### Parser (sifr_python_parser)
+#### Parser (sifr_python_parser) — ALREADY DONE
 
-- Add `match` and `case` as keywords (they are soft keywords in Python 3.10, but Sifr can make them hard keywords since there is no backward compatibility concern with `match` — note: `match` is already a Rust keyword, so the `re.Pattern.match` method is already renamed to `is_match`)
-- Parse `match` statement into a new AST node: `StmtMatch { subject: Expr, cases: Vec<MatchCase> }`
-- Parse each `case` into: `MatchCase { pattern: Pattern, guard: Option<Expr>, body: Vec<Stmt> }`
-- Parse pattern syntax into a `Pattern` enum: `Literal`, `Capture`, `Wildcard`, `Class`, `Union`, `None`, `Or`, `Tuple`
+The parser already supports `match`/`case` syntax. The `pattern.rs` module exists in `sifr_python_parser`, and AST nodes for all pattern types (`MatchCase`, `PatternMatchValue`, `PatternMatchClass`, `PatternMatchOr`, etc.) are already defined in `sifr_python_ast`. No parser changes are needed for this milestone. The work is in HIR lowering, type checking, and codegen.
+
+For reference, the existing parser infrastructure includes:
+- `match` and `case` are parsed as part of the Python 3.10 syntax support inherited from ruff
+- `StmtMatch { subject: Expr, cases: Vec<MatchCase> }` AST node exists
+- `MatchCase { pattern: Pattern, guard: Option<Expr>, body: Vec<Stmt> }` exists
+- Pattern types (`Literal`, `Capture`, `Wildcard`, `Class`, `Or`, etc.) are defined
 
 #### Type checker (sifr_type_system)
 
@@ -273,6 +278,7 @@ Each `case` arm narrows the matched variable's type within the body:
 - OR patterns, guards, tuple patterns, and nested patterns work
 - Codegen produces correct Rust `match` expressions
 - All existing E2E tests still pass
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `match_literal`, `match_union`, `match_optional`, `match_class_destructure`, `match_or_pattern`, `match_guard`, `match_tuple`, `match_nested`, `match_wildcard`, `match_exhaustive_literal_union`
 - New E2E fail tests: `match_non_exhaustive_union`, `match_non_exhaustive_optional`, `match_non_exhaustive_literal`, `match_invalid_field_name`, `match_type_mismatch_guard`
 - Milestone demo in `./demos/milestone_pattern_matching_demo.sifr`
@@ -414,9 +420,74 @@ Sifr intentionally does NOT support enums with associated data (algebraic data t
 - Enums can be used as dict keys and set members
 - `.value` property works for valued enums
 - All existing E2E tests still pass
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `enum_simple`, `enum_valued`, `enum_methods`, `enum_match_exhaustive`, `enum_as_dict_key`, `enum_in_set`, `enum_value_property`
 - New E2E fail tests: `enum_match_non_exhaustive`, `enum_invalid_variant`, `enum_duplicate_value`
 - Milestone demo in `./demos/milestone_enums_demo.sifr`
+
+---
+
+## milestone_integer_safety: Integer Overflow and BigInt
+
+status: pending
+
+**Goal:** Resolve the integer overflow contradiction with Sifr's "if it compiles, it works" guarantee. Currently, `int` maps to Rust `i64` — overflow panics in debug mode and wraps silently in release mode. Both behaviors violate the safety promise. This milestone introduces a `bigint` type for arbitrary-precision arithmetic (matching Python's `int` behavior) and adds compiler diagnostics for potential overflow in `int` operations.
+
+**Depends on:** milestone_enums (the full type system feature set should be in place before changing arithmetic semantics)
+
+### Language Design
+
+#### `bigint` type — arbitrary-precision integers
+
+```python
+x: bigint = 10 ** 100
+y: bigint = factorial(1000)
+```
+
+- `bigint` maps to Rust's `num_bigint::BigInt` crate
+- Supports all arithmetic operators: `+`, `-`, `*`, `/`, `//`, `%`, `**`
+- Supports comparison operators: `==`, `!=`, `<`, `>`, `<=`, `>=`
+- `bigint` is `Eq`, `Hash`, `Clone`, `Debug`, `Comparable` — usable as dict keys, in sets, and in sorted collections
+- `bigint` literals: any integer literal can be assigned to `bigint`; the compiler emits `BigInt::from(...)` for small values and `BigInt::parse_bytes(...)` for large literals
+- Conversion: `int(b)` converts `bigint` to `int`, returns `Result[int, OverflowError]` if the value doesn't fit in `i64`; `bigint(n)` converts `int` to `bigint` (always succeeds)
+- `bigint` is NOT `Copy` — it is heap-allocated and follows move semantics
+
+#### `int` stays as `i64` with compiler diagnostics
+
+- `int` remains `i64` for performance — most programs don't need arbitrary precision
+- The compiler emits a warning when `int` arithmetic could overflow at runtime (e.g., `**` with non-constant exponent, multiplication of user inputs)
+- `int` overflow behavior is unchanged: panic in debug, wrap in release (matching Rust defaults)
+- The Python divergences table in `architecture.md` is updated to document `bigint` as the opt-in arbitrary-precision alternative
+
+#### Type system integration
+
+- `bigint` is a new `Type::BigInt` variant in the type enum
+- `int` and `bigint` are NOT implicitly convertible — explicit conversion required
+- Mixed arithmetic (`int + bigint`) is a compile error — the user must convert explicitly
+- `bigint` works with generics, pattern matching, and all type system features
+
+### Compiler Changes
+
+- Parser: no syntax changes needed — `bigint` is a type name, not a keyword
+- Type system: add `Type::BigInt` variant; implement subtyping rules (bigint is not a subtype of int or vice versa)
+- Codegen: `bigint` emits `num_bigint::BigInt`; add `num-bigint` as a Cargo dependency when `bigint` is used
+- Overflow warnings: static analysis pass that flags `int` expressions with potential overflow (exponentiation, multiplication in loops, user-input arithmetic)
+
+### Definition of Done (milestone_integer_safety)
+
+- `bigint` type works end-to-end with all arithmetic and comparison operators
+- `bigint` literals of arbitrary size compile correctly
+- `int(bigint_val)` returns `Result[int, OverflowError]`
+- `bigint(int_val)` always succeeds
+- Mixed `int`/`bigint` arithmetic is a compile error with clear diagnostic
+- `bigint` works as dict keys, set members, and in sorted collections
+- Compiler emits warnings for potential `int` overflow in risky expressions
+- Python divergences table updated to document `bigint` as opt-in arbitrary-precision
+- All existing E2E tests still pass
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
+- New E2E pass tests: `bigint_basic`, `bigint_large_value`, `bigint_arithmetic`, `bigint_comparison`, `bigint_to_int`, `int_to_bigint`, `bigint_as_dict_key`, `bigint_factorial`
+- New E2E fail tests: `bigint_int_mixed_arithmetic`, `bigint_overflow_conversion`
+- Milestone demo in `./demos/milestone_integer_safety_demo.sifr`
 
 ---
 
@@ -426,7 +497,7 @@ status: pending
 
 **Goal:** Rewrite the monomorphic stdlib to use generics. This is the integration test for the entire phase — every compiler feature from milestones 1-4 is exercised. After this milestone, the stdlib is type-safe, generic, and free of duplicated type-specific functions.
 
-**Depends on:** milestone_enums (all type system features must be complete before rewriting the stdlib)
+**Depends on:** milestone_integer_safety (all type system features including bigint must be complete before rewriting the stdlib)
 
 ### Scope
 
@@ -541,6 +612,7 @@ All existing E2E tests that use the monomorphic stdlib functions must be updated
 - `random.shuffle`/`random.sample` are generic
 - `test.assert_eq` is generic
 - All existing E2E tests still pass (with migration where needed)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`
 - New E2E fail tests: `generic_counter_unhashable` (float as Counter key), `generic_heapq_uncomparable` (type without Comparable)
 - Milestone demo in `./demos/milestone_stdlib_generic_rewrite_demo.sifr`
@@ -553,4 +625,5 @@ All existing E2E tests that use the monomorphic stdlib functions must be updated
 - **milestone_generics_v2 second:** User-facing generics are the foundation for everything else in this phase. Pattern matching needs to work on generic types. Enums benefit from pattern matching which benefits from generics. The stdlib rewrite needs generic functions and classes.
 - **milestone_pattern_matching third:** Pattern matching depends on generics (matching on `Option[T]`, `Result[T, E]`). Enums depend on pattern matching for exhaustive variant handling.
 - **milestone_enums fourth:** Enums depend on pattern matching for exhaustive `match` on variants. They are the capstone language feature of this phase.
-- **milestone_stdlib_generic_rewrite last:** The stdlib rewrite exercises every feature from milestones 1-4. It is the integration test for the entire phase and must come after all language features are stable.
+- **milestone_integer_safety fifth:** Resolves the integer overflow contradiction with the safety guarantee. Introduces `bigint` for arbitrary-precision arithmetic and compiler diagnostics for `int` overflow. Must come after enums so the full type system is in place.
+- **milestone_stdlib_generic_rewrite last:** The stdlib rewrite exercises every feature from milestones 1-5 including `bigint` support where appropriate. It is the integration test for the entire phase and must come after all language features are stable.

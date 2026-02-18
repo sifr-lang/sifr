@@ -36,6 +36,7 @@ status: pending
 - `sifr.task.sleep` works for async delays
 - `sifr.task.timeout` wraps an async call with a deadline
 - All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, task_sleep, task_timeout
 - Milestone demo in `./demos/milestone_async_core_demo.sifr`
 
@@ -63,6 +64,8 @@ status: pending
 - `dumps(obj)` serializes any class to JSON string
 - `loads(s, T)` deserializes JSON string to typed class, returns `Result[T, JSONDecodeError]`
 - Nested classes, lists, dicts, optionals, unions serialize correctly
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: typed_json_roundtrip, nested_class_serde, union_serde, optional_serde
 - E2E fail tests: json_parse_wrong_type, missing_required_field
 
@@ -88,6 +91,8 @@ status: pending
 - Each networking module compiles and works with async I/O
 - All fallible operations return `Result` or `Option`
 - `sifr.http` supports typed JSON response parsing via `loads`
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: subprocess_async, socket_tcp, http_get, http_typed_response, url_parse
 - Integration with the async runtime (tokio) is seamless
 
@@ -99,7 +104,7 @@ status: pending
 
 **Goal:** Add cross-task synchronization primitives and Send/Sync checking at spawn boundaries. These are needed for production async code but are not required for basic async functionality.
 
-**Depends on:** milestone_networking_stdlib (networking modules exercise async patterns that synchronization primitives protect)
+**Depends on:** milestone_async_core (sync primitives are fundamental concurrency tools independent of networking; they depend only on the async runtime)
 
 ### Work Items
 
@@ -116,6 +121,8 @@ status: pending
 - `sifr.sync.Semaphore` works for concurrency limiting
 - Send/Sync checking at spawn boundaries produces clear diagnostics
 - Async closures are checked for `Send + 'static`
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: lock_basic, channel_basic, semaphore_basic, send_sync_check
 - E2E fail tests: non_send_spawn (clear error for non-Send type in spawn)
 
@@ -140,6 +147,8 @@ status: pending
 - `async with` works for async context managers
 - Async generators (`yield` in `async def`) produce async iterators
 - Async comprehensions compile correctly
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: async_with_basic, async_generator_basic, async_comprehension
 - Milestone demo in `./demos/milestone_async_advanced_demo.sifr`
 
@@ -150,5 +159,5 @@ status: pending
 - **milestone_async_core first:** The async runtime must exist before anything else. This is the minimum viable async — `async def`/`await`, Tokio, basic task spawning.
 - **milestone_typed_serde_core second:** Typed serialization is web-independent and doesn't need networking. Placing it before networking means the HTTP client can return typed responses from day one.
 - **milestone_networking_stdlib third:** Networking modules (HTTP, sockets, subprocess async) depend on the async runtime and benefit from typed serde for response parsing.
-- **milestone_async_sync fourth:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking are needed for production async code but not for basic async functionality.
+- **milestone_async_sync fourth:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking depend only on the async runtime, not on networking. They are fundamental concurrency tools needed for production async code.
 - **milestone_async_advanced last:** Advanced features (async with, async generators, async comprehensions) build on everything above and are not needed for the web stack.

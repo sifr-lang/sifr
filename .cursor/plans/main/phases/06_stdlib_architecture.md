@@ -464,7 +464,7 @@ Full FFI (`extern crate`, `unsafe` blocks, type marshaling) solves a different p
 - **Simpler:** No `unsafe` keyword, no extern blocks, no type marshaling
 - **Safer:** Intrinsics are compiler-controlled, always correct
 - **Faster to ship:** Reuses the existing `emit_stdlib_call` mechanism
-- **Forward-compatible:** When FFI lands later (milestone_ffi in the Polish phase), intrinsics can be reimplemented as FFI calls internally without changing the stdlib `.sifr` files
+- **Forward-compatible:** When FFI lands later (milestone_ffi in the Interoperability phase), intrinsics can be reimplemented as FFI calls internally without changing the stdlib `.sifr` files
 
 ---
 

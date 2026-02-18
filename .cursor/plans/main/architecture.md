@@ -19,7 +19,7 @@ Sifr's core guarantee: **if it compiles, it works.** The language is designed so
   - Division (`a / b` returns `Result[T, DivisionError]` when the divisor is not provably non-zero)
   - Type conversions (`int(s)` where `s: str` returns `Result[int, ParseError]`)
   - File I/O, network, and all stdlib operations that can fail
-  - Integer overflow (panics in debug, wraps in release -- matches Rust; opt-in checked mode deferred)
+  - Integer overflow (`int` panics in debug, wraps in release -- matches Rust; use `bigint` for arbitrary-precision arithmetic matching Python's behavior)
 - `**assert` is the only panic.** The `assert` statement is a programmer invariant check -- it generates `panic!()` and is intentionally unrecoverable. It exists to catch programmer bugs (violated assumptions), not to handle runtime errors. It is the one escape hatch from the no-panic guarantee.
 - **Panic = unrecoverable system failure.** Beyond `assert`, panics only occur from truly unrecoverable situations: stack overflow, double panic, or hardware failure. These are never part of normal control flow.
 - **Exceptions are not errors.** Sifr does not use Python's exception model. There is no stack unwinding, no exception propagation. The `try`/`except` syntax is reinterpreted as pattern matching on `Result` values with **compiler-enforced exhaustiveness checking** on error types. `raise` is syntax sugar for returning `Err(...)`. `return value` in a `Result`-returning function auto-wraps in `Ok(...)`.
@@ -56,7 +56,7 @@ When adapting CPython behavior to Sifr, apply these rules:
 1. **Where CPython raises an exception, Sifr returns `Result[T, E]`.** Example: `int("abc")` raises `ValueError` in CPython; in Sifr it returns `Result[int, ParseError]`.
 2. **Where CPython raises `IndexError`, Sifr returns `Option[T]`.** Example: `list[99]` raises `IndexError` in CPython; in Sifr it returns `None`.
 3. **Where CPython raises `KeyError`, Sifr returns `Option[V]`.** Example: `dict["missing"]` raises `KeyError` in CPython; in Sifr it returns `None`.
-4. **Where CPython silently overflows or wraps, Sifr uses Rust's default behavior.** Example: large integer arithmetic in CPython uses arbitrary precision; Sifr uses `i64` arithmetic that panics on overflow in debug mode and wraps in release mode (matching Rust). An opt-in checked mode returning `Result[int, OverflowError]` is a future enhancement.
+4. **Where CPython uses arbitrary-precision integers, Sifr provides two options.** `int` maps to `i64` for performance (overflow panics in debug, wraps in release — matching Rust defaults). `bigint` maps to arbitrary-precision integers matching Python's `int` behavior (no overflow possible). The compiler emits warnings when `int` arithmetic could overflow at runtime. Conversion between `int` and `bigint` is explicit: `bigint(n)` always succeeds; `int(b)` returns `Result[int, OverflowError]`.
 5. **Where CPython allows mutation on immutable types at runtime, Sifr rejects at compile time.** Example: `tuple[0] = 1` raises `TypeError` at runtime in CPython; in Sifr it is a compile-time error.
 6. **Where CPython behavior is undefined or platform-dependent, Sifr defines explicit behavior.** Document any deviations from CPython in the milestone's notes.
 
@@ -81,7 +81,7 @@ Sifr intentionally diverges from CPython in several areas to achieve compile-tim
 | Exceptions for error handling (`try`/`except`/`raise`) | `Result[T, E]` and `Option[T]` with mandatory handling; `try`/`except` reinterpreted as pattern matching on `Result` with compiler-enforced exhaustiveness checking on error types; no `?` operator in user code; `raise` maps to `Err(...)`, `return` auto-wraps in `Ok(...)` | Compile-time error handling eliminates unhandled exceptions at runtime; exhaustiveness checking ensures all error types are covered | milestone_error_handling, milestone_error_exhaustiveness |
 | `IndexError` on out-of-bounds access                   | `x[i]` returns `Option[T]` (no panic)                                                                                | Safe indexing -- no runtime crashes from bad indices                                      | milestone_safe_indexing                        |
 | `KeyError` on missing dict key                         | `d[key]` returns `Option[V]` (no panic)                                                                              | Safe access -- caller must handle missing keys                                            | milestone_safe_indexing                        |
-| Arbitrary-precision integers                           | `i64` arithmetic; overflow panics in debug, wraps in release (matches Rust)                                          | Predictable performance; matches Rust's default behavior                                  | milestone_error_handling                       |
+| Arbitrary-precision integers                           | `int` is `i64` (overflow panics in debug, wraps in release); `bigint` type provides arbitrary-precision arithmetic matching Python's `int` | `int` stays `i64` for performance; `bigint` is opt-in for arbitrary precision; compiler warns on potential `int` overflow | milestone_error_handling, milestone_integer_safety |
 | Import-time side effects (`__init__.py` runs code)     | `__init__.sifr` defines exported API only; no side effects on import                                                 | Deterministic, safe module loading                                                        | milestone_imports                              |
 | Mutable default arguments (`def f(x=[])`)              | Default values are evaluated fresh each call (no shared mutable state)                                               | Eliminates a common Python footgun                                                        | milestone_ergonomics                           |
 | Augmented assignment on immutables                     | Augmented assignment (`+=`) on immutable types (tuple, frozenset) is a compile-time error                            | Compile-time enforcement of immutability                                                  | milestone_ergonomics                           |
@@ -242,7 +242,7 @@ Sifr replaces Python's exception model with Rust's `Result`/`Option` model (mile
 | `try`/`except` block             | Pattern match on `Result`         | `except` arms match error types; compiler checks coverage   | `match result { Ok(v) => ..., Err(e) => match e { ... } }` |
 | Indexing                         | `Option[T]` return                | Type narrowing (`if val is not None`)                       | `.get(i).cloned()` / `.chars().nth(i)`                     |
 | Division                         | `Result[T, DivisionError]`        | `try`/`except`                                              | Checked division with zero-check                           |
-| Integer overflow                 | Panic in debug, wrap in release   | N/A (matches Rust default behavior)                         | Default Rust arithmetic (opt-in checked mode deferred)     |
+| Integer overflow (`int`)         | Panic in debug, wrap in release   | Use `bigint` for arbitrary precision; compiler warns on risky `int` expressions | Default Rust `i64` arithmetic; `bigint` uses `num_bigint::BigInt` |
 | Type conversion                  | `Result[T, ParseError]`           | `try`/`except`                                              | `.parse::<T>()`                                            |
 | Unused `Result`                  | **Compile-time error**            | Must handle via `try`/`except` or discard with `_ = ...`    | `#[must_use]` attribute on `Result`                        |
 | Rust FFI (milestone_ffi)         | Rust panics caught at boundary    | `catch_unwind` at Rust FFI entry points                     | Panic -> `Result::Err` conversion                          |
@@ -446,7 +446,7 @@ except DbError as e:
 
 ### 4. Package Resolver and Reproducibility (milestone_imports/milestone_package_mgmt)
 
-This contract is split across two milestones: milestone_imports (multi-file compilation and imports) and milestone_package_mgmt (package management with dependency resolution). milestone_imports lands in the Language Foundations phase; milestone_package_mgmt lands in the Polish phase just before milestone_ecosystem.
+This contract is split across two milestones: milestone_imports (multi-file compilation and imports) and milestone_package_mgmt (package management with dependency resolution). milestone_imports lands in the Language Foundations phase; milestone_package_mgmt lands in its own Package Management phase (Phase 17).
 
 **Contract (milestone_imports -- imports and modules):**
 
@@ -678,6 +678,9 @@ enum Type {
 
     // Enum (milestone_enums)
     Enum(EnumId),
+
+    // Arbitrary-precision integer (milestone_integer_safety)
+    BigInt,
 
     // Range (milestone_control_flow)
     Range,

@@ -1,6 +1,6 @@
 # Web Stack
 
-This phase makes Sifr a practical language for building production web applications. It adds a web framework, database access, typed web extractors, authentication, production features, external services, and data processing.
+This phase makes Sifr a practical language for building production web applications. It adds a web framework, database access, typed web extractors, authentication, production features, and external services.
 
 ---
 
@@ -27,6 +27,8 @@ Thin wrapper around `axum`:
 - Decorator-based routing (`@app.get("/")`) works
 - Graceful shutdown and health checks work
 - Static file serving works
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: web_hello, web_routing, web_middleware, graceful_shutdown, health_check
 - Milestone demo in `./demos/milestone_web_framework_demo.sifr`
 
@@ -52,6 +54,8 @@ status: pending
 - Connection pooling works
 - Typed query results work (leverages generics from Phase 13)
 - Transactions and migrations work
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: sqlite_basic, sqlite_transactions, db_query, db_pool, db_migrations
 - Milestone demo in `./demos/milestone_database_demo.sifr`
 
@@ -76,6 +80,8 @@ status: pending
 - `Json[T]`, `Path[T]`, `Query[T]`, `Form[T]` extractors work in web handlers
 - `UploadFile` and `Multipart` handle file uploads
 - Validation errors return 422 with structured error body
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: typed_request_body, typed_path_param, typed_query_param, form_parsing, file_upload
 - E2E fail tests: json_parse_wrong_type, missing_required_field, upload_exceeds_limit
 
@@ -99,6 +105,8 @@ status: pending
 - JWT `encode()` / `decode()` with typed payloads
 - AES-256-GCM `encrypt()` / `decrypt()`
 - HMAC `hmac_sign()` / `hmac_verify()`
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: password_hash_verify, jwt_roundtrip, aes_encrypt_decrypt, hmac_sign_verify
 - E2E fail tests: wrong_password_rejected, expired_jwt_rejected, tampered_ciphertext_rejected
 
@@ -122,6 +130,8 @@ status: pending
 - `app.use_tracing()` logs every request with method, path, status, duration, request ID
 - Rate limiting works (global and per-route)
 - CORS configuration works
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: json_logging, request_tracing, rate_limit, cors
 - E2E fail tests: rate_limit_exceeded_429, cors_blocked_origin
 
@@ -147,29 +157,9 @@ status: pending
 - Storage: put/get/delete objects, presigned URLs, S3-compatible endpoints
 - Email: send text/HTML email, attachments, multiple recipients
 - All operations return `Result[T, E]`
+- All existing E2E tests still pass (no regressions)
+- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E tests for each service
-
----
-
-## milestone_data_processing: Data Processing
-
-status: pending
-
-**Goal:** Enable data science and data engineering workflows.
-
-**Depends on:** milestone_typed_serde_core (typed serialization for CSV/Parquet type mapping), milestone_async_core (async runtime for potential lazy evaluation)
-
-### Work Items
-
-- `sifr.data` (wraps `polars`) — DataFrame library with lazy evaluation, expressions, CSV/Parquet I/O
-
-### Definition of Done (milestone_data_processing)
-
-- `sifr.data.DataFrame` wraps polars with Pythonic API
-- Lazy evaluation chain (filter, group_by, agg, sort) compiles correctly
-- CSV/Parquet read/write works end-to-end
-- E2E pass tests: dataframe_basic, csv_roundtrip
-- Milestone demo in `./demos/milestone_data_processing_demo.sifr`
 
 ---
 
@@ -181,4 +171,3 @@ status: pending
 - **milestone_crypto_auth fourth:** Authentication depends on typed serialization for JWT payloads.
 - **milestone_web_production fifth:** Production features layer on top of the web framework and auth.
 - **milestone_web_services sixth:** External services (Redis, S3, email) build on the full web stack.
-- **milestone_data_processing independent:** Data processing depends only on typed serde and the async runtime — NOT on the web stack. It can proceed in parallel with web milestones or after them.
