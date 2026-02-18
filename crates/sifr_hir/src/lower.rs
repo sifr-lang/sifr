@@ -66,6 +66,9 @@ struct LowerCtx {
     generic_functions: HashMap<String, Vec<String>>,
     /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
     allow_intrinsic_imports: bool,
+    /// Set of parameter names that are immutably borrowed (&T) in the current function.
+    /// Used for escape analysis: returning or storing a borrowed param is a compile error.
+    borrowed_params: std::collections::HashSet<String>,
 }
 
 impl LowerCtx {
@@ -88,6 +91,7 @@ impl LowerCtx {
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
             allow_intrinsic_imports: false,
+            borrowed_params: std::collections::HashSet::new(),
         }
     }
 
@@ -1893,8 +1897,24 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
         });
     }
 
+    // Populate borrowed_params for escape analysis in lower_return / lower_let
+    // A param is "borrowed" (escape-unsafe) if its convention is Borrow and its type is Move.
+    // Exclude TypeVar parameters: generics are monomorphized by Rust and ownership is handled
+    // by the Rust compiler, not by Sifr's escape analysis.
+    ctx.borrowed_params.clear();
+    for param in &params {
+        if param.convention == ParamConvention::Borrow
+            && param.ty.ownership() == OwnershipKind::Move
+            && !matches!(param.ty, Type::TypeVar(_))
+        {
+            ctx.borrowed_params.insert(param.name.clone());
+        }
+    }
+
     // Lower body
     let body = lower_stmts(&func.body, &ft, ctx);
+
+    ctx.borrowed_params.clear();
 
     ctx.scope.pop();
 
@@ -2802,6 +2822,19 @@ fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut LowerCtx) 
     let value = if let Some(val) = &ret.value {
         let expr = lower_expr(val, ctx)?;
         let expr_ty = expr.ty().clone();
+
+        // Escape analysis: returning a borrowed parameter is a compile error.
+        // The programmer must use `own` to transfer ownership, or call `.clone()` explicitly.
+        if let HirExpr::Name { name, ty } = &expr {
+            if ctx.borrowed_params.contains(name.as_str())
+                && ty.ownership() == OwnershipKind::Move
+            {
+                ctx.error(format!(
+                    "cannot return borrowed parameter `{}`: it is borrowed by default -- use `own {}` to take ownership, or return `{}.clone()`",
+                    name, name, name
+                ));
+            }
+        }
 
         // If the function returns Result[T, E] and the value is T (not Result), wrap in Ok()
         if let Type::Result(ref ok_ty, _) = *func_type.return_type {
@@ -4107,13 +4140,13 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
 
     // Check if this is a Callable-typed variable being called
     let callable_info = ctx.scope.lookup(&func_name).and_then(|info| {
-        if let Type::Callable(ref param_types, _, ref ret_type) = info.ty {
-            Some((param_types.clone(), *ret_type.clone()))
+        if let Type::Callable(ref param_types, ref conventions, ref ret_type) = info.ty {
+            Some((param_types.clone(), conventions.clone(), *ret_type.clone()))
         } else {
             None
         }
     });
-    if let Some((param_types, ret_type)) = callable_info {
+    if let Some((param_types, conventions, ret_type)) = callable_info {
         // Lower arguments
         let mut args = Vec::new();
         for arg in &call.arguments.args {
@@ -4127,7 +4160,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             ));
             return None;
         }
-        // Type check arguments
+        // Type check arguments and apply convention-aware move tracking
         for (i, (arg, param_ty)) in args.iter().zip(param_types.iter()).enumerate() {
             if !arg.ty().is_assignable_to(param_ty) {
                 ctx.error(format!(
@@ -4135,6 +4168,17 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                     i + 1, func_name, param_ty.display_name(), arg.ty().display_name()
                 ));
             }
+            // Apply move tracking based on convention
+            let convention = conventions.get(i).copied().unwrap_or(ParamConvention::Borrow);
+            if convention == ParamConvention::Own {
+                // Own convention: transfer ownership, mark variable as moved
+                if let HirExpr::Name { name, ty } = arg {
+                    if ty.ownership() == OwnershipKind::Move {
+                        ctx.scope.mark_moved(name);
+                    }
+                }
+            }
+            // Borrow/MutBorrow: no move, variable remains usable
         }
         return Some(HirExpr::Call {
             func: func_name,

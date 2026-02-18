@@ -56,6 +56,22 @@ def sum_multiple_times(items: list[int], times: int) -> int:
         total = total + get_length(items)
     return total
 
+# --- Section 6: Callable-typed parameters borrow Move args ---
+# When passing a list/str to a Callable, the caller retains ownership.
+# The Callable signature uses &T internally, matching borrow-by-default.
+
+from typing import Callable
+
+def apply_and_return(f: Callable[[list[int]], int], items: list[int]) -> int:
+    # f borrows items, so items is still usable after f(items)
+    return f(items)
+
+def compute_sum(nums: list[int]) -> int:
+    total: int = 0
+    for n in nums:
+        total = total + n
+    return total
+
 def main():
     # Section 1: Borrow by default
     my_list: list[int] = [10, 20, 30]
@@ -96,3 +112,9 @@ def main():
     loop_total: int = sum_multiple_times(items, 3)
     print(loop_total)  # 9 (3 * 3)
     print(items)  # [10, 20, 30] -- still usable
+
+    # Section 6: Callable convention -- Move args remain usable after call
+    nums: list[int] = [5, 10, 15]
+    sum_result: int = apply_and_return(compute_sum, nums)
+    print(sum_result)  # 30
+    print(nums)        # [5, 10, 15] -- still usable! Callable borrows by default

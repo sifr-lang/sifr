@@ -287,8 +287,20 @@ impl Type {
             Self::Protocol { name, .. } => format!("Box<dyn {}>", name),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
-            Self::Callable(params, _, ret) => {
-                let param_types: Vec<String> = params.iter().map(Self::rust_type).collect();
+            Self::Callable(params, conventions, ret) => {
+                let param_types: Vec<String> = params.iter().zip(conventions.iter()).map(|(t, conv)| {
+                    let rust_ty = t.rust_type();
+                    // Apply borrow prefix based on convention (same logic as function params)
+                    match conv {
+                        ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
+                            format!("&{}", rust_ty)
+                        }
+                        ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
+                            format!("&mut {}", rust_ty)
+                        }
+                        _ => rust_ty, // Copy types or Own: pass by value
+                    }
+                }).collect();
                 let ret_type = ret.rust_type();
                 if ret_type == "()" {
                     format!("impl Fn({})", param_types.join(", "))
@@ -305,8 +317,19 @@ impl Type {
     /// is not allowed in struct field positions in Rust.
     pub fn rust_type_for_struct_field(&self) -> String {
         match self {
-            Self::Callable(params, _, ret) => {
-                let param_types: Vec<String> = params.iter().map(Self::rust_type).collect();
+            Self::Callable(params, conventions, ret) => {
+                let param_types: Vec<String> = params.iter().zip(conventions.iter()).map(|(t, conv)| {
+                    let rust_ty = t.rust_type();
+                    match conv {
+                        ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
+                            format!("&{}", rust_ty)
+                        }
+                        ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
+                            format!("&mut {}", rust_ty)
+                        }
+                        _ => rust_ty,
+                    }
+                }).collect();
                 let ret_type = ret.rust_type();
                 if ret_type == "()" {
                     format!("Box<dyn Fn({})>", param_types.join(", "))
