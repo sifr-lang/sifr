@@ -2453,10 +2453,20 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         return None;
     };
 
-    // Track move: if RHS is a variable name with Move ownership, mark it as moved
+    // Track move: if RHS is a variable name with Move ownership, mark it as moved.
+    // Also check escape analysis: storing a borrowed parameter into a local variable
+    // would allow it to outlive the borrow, which is not allowed.
     if let HirExpr::Name { name: ref src_name, ref ty } = value {
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-            ctx.scope.mark_moved(src_name);
+            // Escape analysis: cannot store a borrowed parameter into a new binding
+            if ctx.borrowed_params.contains(src_name.as_str()) {
+                ctx.error(format!(
+                    "cannot store borrowed parameter `{}`: it is borrowed by default -- use `own {}` to take ownership, or store `{}.clone()`",
+                    src_name, src_name, src_name
+                ));
+            } else {
+                ctx.scope.mark_moved(src_name);
+            }
         }
     }
 

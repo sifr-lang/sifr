@@ -39,7 +39,7 @@ As defined in [05_borrow_by_default.md](05_borrow_by_default.md) (original detai
 
 ## milestone_borrow_hardening: Exclusivity, Escape Analysis, and Diagnostics
 
-status: pending
+status: completed
 
 **Goal:** Harden the borrow-by-default model with exclusivity enforcement, escape analysis, consuming-self method receivers, for-loop element semantics, clear error messages, and comprehensive tests.
 
