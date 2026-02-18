@@ -1,32 +1,89 @@
 # sifr.collections — Extended collection types
-from _sifr.collections import new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection, counter_from_list, counter_get, counter_most_common, counter_total, counter_values, counter_keys, counter_items, counter_increment, defaultdict_new, defaultdict_get, defaultdict_set
+from _sifr.collections import new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection, defaultdict_new, defaultdict_get, defaultdict_set
 
 class Counter:
-    data: str
+    # A multiset (bag) mapping elements to their counts.
+    # Backed by a native dict[str, int] field.
+    # Methods that modify counts use self.counts[key] = val (in-place dict mutation).
+    counts: dict[str, int]
 
-    def __init__(self, data: str):
-        self.data = data
+    def __init__(self, counts: dict[str, int]):
+        self.counts = counts
 
     def get(self, key: str) -> int:
-        return counter_get(self.data, key)
-
-    def most_common(self, n: int) -> str:
-        return counter_most_common(self.data, n)
-
-    def total(self) -> int:
-        return counter_total(self.data)
-
-    def values(self) -> list[int]:
-        return counter_values(self.data)
-
-    def keys(self) -> list[str]:
-        return counter_keys(self.data)
-
-    def items(self) -> str:
-        return counter_items(self.data)
+        val: int | None = self.counts[key]
+        if val is not None:
+            return val
+        return 0
 
     def increment(self, key: str) -> None:
-        self.data = counter_increment(self.data, key)
+        val: int | None = self.counts[key]
+        if val is not None:
+            self.counts[key] = val + 1
+        else:
+            self.counts[key] = 1
+
+    def total(self) -> int:
+        total: int = 0
+        for count in self.counts.values():
+            total = total + count
+        return total
+
+    def most_common(self, n: int) -> list[str]:
+        # Return top-n keys sorted by count descending.
+        # Uses a simple selection sort on the keys.
+        all_keys: list[str] = self.counts.keys()
+        # Collect and sort by count descending (bubble sort for simplicity)
+        result: list[str] = []
+        for k in all_keys:
+            result.append(k)
+        # Sort by count descending (bubble sort)
+        sz: int = len(result)
+        i: int = 0
+        while i < sz:
+            j: int = i + 1
+            while j < sz:
+                ki: str | None = result[i]
+                kj: str | None = result[j]
+                if ki is not None:
+                    if kj is not None:
+                        ci: int | None = self.counts[ki]
+                        cj: int | None = self.counts[kj]
+                        ci_val: int = 0
+                        cj_val: int = 0
+                        if ci is not None:
+                            ci_val = ci
+                        if cj is not None:
+                            cj_val = cj
+                        if cj_val > ci_val:
+                            result[i] = kj
+                            result[j] = ki
+                j = j + 1
+            i = i + 1
+        # Take top n
+        top: list[str] = []
+        count: int = 0
+        while count < n:
+            if count >= len(result):
+                return top
+            val: str | None = result[count]
+            if val is not None:
+                top.append(val)
+            count = count + 1
+        return top
+
+    def keys(self) -> list[str]:
+        return self.counts.keys()
+
+    def values(self) -> list[int]:
+        return self.counts.values()
 
 def from_list(items: list[str]) -> Counter:
-    return Counter(counter_from_list(items))
+    counts: dict[str, int] = {}
+    for item in items:
+        val: int | None = counts[item]
+        if val is not None:
+            counts[item] = val + 1
+        else:
+            counts[item] = 1
+    return Counter(counts)

@@ -74,7 +74,7 @@ status: completed
 
 ## milestone_borrow_stdlib: Stdlib Ownership Patterns
 
-status: pending
+status: completed
 
 **Goal:** Exercise `mut` and `own` in the stdlib to prove the model works in real code.
 

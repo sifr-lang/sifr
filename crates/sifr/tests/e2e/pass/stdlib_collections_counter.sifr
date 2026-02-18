@@ -1,4 +1,4 @@
-# Test sifr.collections Counter class — basic construction and read methods
+# Test sifr.collections Counter class — native dict[str, int] implementation
 from sifr.collections import Counter, from_list
 
 def main():
@@ -14,12 +14,27 @@ def main():
     # Total count
     print(c.total())
 
-    # Most common (top 2)
-    print(c.most_common(2))
+    # Most common (top 2) -- returns list of keys sorted by count descending
+    top2: list[str] = c.most_common(2)
+    print(top2)
+
+    # Keys and values
+    keys: list[str] = c.keys()
+    print(len(keys))
+    vals: list[int] = c.values()
+    print(len(vals))
+
+    # Increment
+    c.increment("cherry")
+    c.increment("cherry")
+    print(c.get("cherry"))
 
 # expect-stdout: 3
 # expect-stdout: 2
 # expect-stdout: 1
 # expect-stdout: 0
 # expect-stdout: 6
-# expect-stdout: [["apple",3],["banana",2]]
+# expect-stdout: ["apple", "banana"]
+# expect-stdout: 3
+# expect-stdout: 3
+# expect-stdout: 3

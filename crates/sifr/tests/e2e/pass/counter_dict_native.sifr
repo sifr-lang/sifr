@@ -1,0 +1,33 @@
+# Test Counter class -- native dict[str, int] implementation
+# This replaces the old JSON-string workaround with real dict operations.
+from sifr.collections import Counter, from_list
+
+def main():
+    # Build from list
+    words: list[str] = ["hello", "world", "hello", "sifr", "hello", "world"]
+    c: Counter = from_list(words)
+
+    # Get counts
+    print(c.get("hello"))
+    print(c.get("world"))
+    print(c.get("sifr"))
+    print(c.get("missing"))
+
+    # Total
+    print(c.total())
+
+    # In-place increment (uses self.counts[key] = val + 1 via AttributeSubscriptAssign)
+    c.increment("sifr")
+    print(c.get("sifr"))
+
+    # Most common top-1 (clear winner: hello with 3)
+    top: list[str] = c.most_common(1)
+    print(top)
+
+# expect-stdout: 3
+# expect-stdout: 2
+# expect-stdout: 1
+# expect-stdout: 0
+# expect-stdout: 6
+# expect-stdout: 2
+# expect-stdout: ["hello"]

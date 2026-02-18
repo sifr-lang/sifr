@@ -1,4 +1,16 @@
 # sifr.bisect — Array bisection algorithm (pure Sifr, generic)
+#
+# Binary search functions:
+#   bisect_left(a, x) -> int   -- index for inserting x before any existing entries
+#   bisect_right(a, x) -> int  -- index for inserting x after any existing entries
+#
+# In-place sorted-insert (borrow-by-default with `mut`):
+#   insort_left(mut a, x)    -- insert x into sorted list a in-place (left variant)
+#   insort_right(mut a, x)   -- insert x into sorted list a in-place (right variant)
+#
+# Functional sorted-insert (backward compatibility):
+#   insort_left_copy(a, x) -> list   -- returns new sorted list
+#   insort_right_copy(a, x) -> list  -- returns new sorted list
 T = TypeVar("T")
 
 def bisect_left(a: list[T], x: T) -> int:
@@ -31,7 +43,21 @@ def bisect_right(a: list[T], x: T) -> int:
             lo = mid + 1
     return lo
 
-def insort_left(a: list[T], x: T) -> list[T]:
+# ── In-place API (mut parameters) ────────────────────────────────────────────
+
+def insort_left(mut a: list[T], x: T) -> None:
+    # Insert x into sorted list a in-place (left/stable position). O(n) time.
+    pos: int = bisect_left(a, x)
+    a.insert(pos, x)
+
+def insort_right(mut a: list[T], x: T) -> None:
+    # Insert x into sorted list a in-place (right position). O(n) time.
+    pos: int = bisect_right(a, x)
+    a.insert(pos, x)
+
+# ── Functional API (backward compatibility) ───────────────────────────────────
+
+def insort_left_copy(a: list[T], x: T) -> list[T]:
     pos: int = bisect_left(a, x)
     result: list[T] = []
     i: int = 0
@@ -46,7 +72,7 @@ def insort_left(a: list[T], x: T) -> list[T]:
         result.append(x)
     return result
 
-def insort_right(a: list[T], x: T) -> list[T]:
+def insort_right_copy(a: list[T], x: T) -> list[T]:
     pos: int = bisect_right(a, x)
     result: list[T] = []
     i: int = 0

@@ -1,43 +1,39 @@
 # CPython test_heapq.py — ported assertions for sifr.heapq
-# Note: Sifr's heapq uses functional style (returns new lists)
+# Updated to use the in-place mut-parameter API (borrow-by-default milestone)
 from sifr.test import assert_eq
 from sifr.heapq import heapify, heappush, heappop, heappop_rest, nsmallest, nlargest, heappushpop, heapreplace
 
 def main():
-    # --- heappush / heappop ---
+    # --- heappush / heappop (in-place) ---
     h1: list[int] = []
-    h1 = heappush(h1, 5)
+    heappush(h1, 5)
     assert_eq(len(h1), 1)
 
-    h1 = heappush(h1, 3)
-    h1 = heappush(h1, 7)
-    h1 = heappush(h1, 1)
+    heappush(h1, 3)
+    heappush(h1, 7)
+    heappush(h1, 1)
     assert_eq(len(h1), 4)
 
     v1: int | None = heappop(h1)
     if v1 is not None:
         assert_eq(v1, 1)
-    h1 = heappop_rest(h1)
 
     v2: int | None = heappop(h1)
     if v2 is not None:
         assert_eq(v2, 3)
-    h1 = heappop_rest(h1)
 
     v3: int | None = heappop(h1)
     if v3 is not None:
         assert_eq(v3, 5)
-    h1 = heappop_rest(h1)
 
     v4: int | None = heappop(h1)
     if v4 is not None:
         assert_eq(v4, 7)
-    h1 = heappop_rest(h1)
     assert_eq(len(h1), 0)
 
-    # --- heapify ---
+    # --- heapify (in-place) ---
     h2: list[int] = [3, 1, 4, 1, 5, 9, 2, 6]
-    h2 = heapify(h2)
+    heapify(h2)
 
     # Pop all to verify sorted order
     sorted_vals: list[int] = []
@@ -45,16 +41,15 @@ def main():
         val: int | None = heappop(h2)
         if val is not None:
             sorted_vals.append(val)
-        h2 = heappop_rest(h2)
     assert_eq(len(sorted_vals), 8)
     print(sorted_vals)
 
     # Empty heapify
     h3: list[int] = []
-    h3 = heapify(h3)
+    heapify(h3)
     assert_eq(len(h3), 0)
 
-    # --- nsmallest / nlargest ---
+    # --- nsmallest / nlargest (borrow data, return new list) ---
     data: list[int] = [4, 1, 5, 2, 3]
     sm: list[int] = nsmallest(3, data)
     assert_eq(len(sm), 3)
@@ -72,7 +67,7 @@ def main():
     assert_eq(len(lg1), 1)
     print(lg1)
 
-    # --- heappushpop ---
+    # --- heappushpop (uses functional API internally) ---
     h5: list[int] = [3, 5, 7]
     r1: int | None = heappushpop(h5, 1)
     if r1 is not None:
@@ -83,17 +78,17 @@ def main():
     if r2 is not None:
         assert_eq(r2, 3)
 
-    # --- heapreplace ---
+    # --- heapreplace (uses functional API internally) ---
     h7: list[int] = [1, 5, 7]
     r3: int | None = heapreplace(h7, 10)
     if r3 is not None:
         assert_eq(r3, 1)
 
-    print("cpython_heapq: all 18 assertions passed")
+    print("cpython_heapq: all assertions passed")
 
 # expect-stdout: [1, 1, 2, 3, 4, 5, 6, 9]
 # expect-stdout: [1, 2, 3]
 # expect-stdout: [5, 4, 3]
 # expect-stdout: [1]
 # expect-stdout: [5]
-# expect-stdout: cpython_heapq: all 18 assertions passed
+# expect-stdout: cpython_heapq: all assertions passed
