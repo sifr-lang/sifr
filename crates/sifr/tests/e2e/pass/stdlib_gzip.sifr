@@ -1,0 +1,15 @@
+# expect-stdout: compressed len > 0 = true
+# expect-stdout: decompressed = Hello, World!
+
+from sifr.gzip import compress, decompress
+
+def main():
+    data: str = "Hello, World!"
+    compressed: list[int] = compress(data)
+    print("compressed len > 0 = " + str(len(compressed) > 0))
+
+    try:
+        decompressed: str = decompress(compressed)
+        print("decompressed = " + decompressed)
+    except IOError as e:
+        print("error: " + e.message)

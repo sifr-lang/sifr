@@ -47,7 +47,7 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 
 ## milestone_new_modules: Critical Missing Modules
 
-status: pending
+status: completed
 
 **Goal:** Add critical missing modules that are needed by subsequent milestones and ecosystem phases. Placed second because several of these modules (`subprocess`, `sys`, `gzip`, `zipfile`) unblock downstream work.
 

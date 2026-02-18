@@ -1,0 +1,34 @@
+# expect-stdout: created = true
+# expect-stdout: content = hello from zip
+# expect-stdout: namelist len = 1
+
+from sifr.zipfile import ZipFile
+from sifr.os import remove_file
+
+def main():
+    path: str = "/tmp/sifr_test_zipfile.zip"
+    zf: ZipFile = ZipFile("/tmp/sifr_test_zipfile.zip")
+
+    try:
+        _: None = zf.create()
+        print("created = true")
+    except IOError as e:
+        print("create error: " + e.message)
+
+    try:
+        _w: None = zf.write("hello.txt", "hello from zip")
+        content: str = zf.read("hello.txt")
+        print("content = " + content)
+    except IOError as e:
+        print("write/read error: " + e.message)
+
+    try:
+        names: list[str] = zf.namelist()
+        print("namelist len = " + str(len(names)))
+    except IOError as e:
+        print("namelist error: " + e.message)
+
+    try:
+        _r: None = remove_file("/tmp/sifr_test_zipfile.zip")
+    except IOError as e:
+        pass

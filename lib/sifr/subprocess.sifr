@@ -1,0 +1,9 @@
+# sifr.subprocess — Subprocess management
+# Provides sync process execution. Async Popen added in Phase 12.
+from _sifr.sys import subprocess_run, subprocess_run_with_input
+
+def run(cmd: str) -> Result[str, IOError]:
+    return subprocess_run(cmd)
+
+def run_with_input(cmd: str, stdin_data: str) -> Result[str, IOError]:
+    return subprocess_run_with_input(cmd, stdin_data)

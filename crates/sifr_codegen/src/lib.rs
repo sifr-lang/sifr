@@ -704,7 +704,16 @@ edition = "2021"
                     deps.push("chrono = \"0.4\"".to_string());
                 }
             }
-            // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes use only std library
+            "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
+                if !deps.contains(&"flate2 = \"1\"".to_string()) {
+                    deps.push("flate2 = \"1\"".to_string());
+                }
+                if !deps.contains(&"zip = \"0.6\"".to_string()) {
+                    deps.push("zip = \"0.6\"".to_string());
+                }
+            }
+            // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes, sifr.sys,
+            // sifr.subprocess, sifr.html, sifr.calendar, sifr.operator use only std library
             _ => {}
         }
     }
@@ -6359,6 +6368,105 @@ impl RustEmitter {
                 self.write("{ let __ts = ");
                 self.emit_expr(&args[0]);
                 self.write(" as i64; chrono::DateTime::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).ok_or_else(|| ValueError { message: \"invalid timestamp\".to_string() }) }");
+            }
+            // sifr.sys extras
+            "sys_exit" => {
+                self.write("{ std::process::exit(");
+                self.emit_expr(&args[0]);
+                self.write(" as i32) }");
+            }
+            "sys_version" => {
+                self.write("\"sifr 0.1.0\".to_string()");
+            }
+            "sys_platform" => {
+                self.write("std::env::consts::OS.to_string()");
+            }
+            "sys_maxsize" => {
+                self.write("i64::MAX");
+            }
+            "subprocess_run" => {
+                self.write("(|| -> Result<String, IOError> { let output = std::process::Command::new(\"sh\").args([\"-c\", ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("]).output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
+            }
+            "subprocess_run_with_input" => {
+                self.write("(|| -> Result<String, IOError> { use std::io::Write; let mut child = std::process::Command::new(\"sh\").args([\"-c\", ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().map_err(__io_err)?; if let Some(mut stdin) = child.stdin.take() { stdin.write_all(");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(".as_bytes()).map_err(__io_err)?; } let output = child.wait_with_output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
+            }
+            // sifr.html
+            "html_escape" => {
+                self.write("{ let __s = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; __s.replace('&', \"&amp;\").replace('<', \"&lt;\").replace('>', \"&gt;\").replace('\"', \"&quot;\").replace('\\'', \"&#x27;\") }");
+            }
+            "html_unescape" => {
+                self.write("{ let __s = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; __s.replace(\"&amp;\", \"&\").replace(\"&lt;\", \"<\").replace(\"&gt;\", \">\").replace(\"&quot;\", \"\\\"\").replace(\"&#x27;\", \"'\").replace(\"&#39;\", \"'\") }");
+            }
+            // sifr.calendar
+            "calendar_isleap" => {
+                self.write("{ let __y = ");
+                self.emit_expr(&args[0]);
+                self.write("; (__y % 4 == 0 && __y % 100 != 0) || (__y % 400 == 0) }");
+            }
+            "calendar_weekday" => {
+                // Tomohiko Sakamoto's algorithm for day of week (0=Monday)
+                self.write("{ let __y0 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __m0 = ");
+                self.emit_expr(&args[1]);
+                self.write("; let __d0 = ");
+                self.emit_expr(&args[2]);
+                self.write("; let __t = [0i64, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]; let __y = if __m0 < 3 { __y0 - 1 } else { __y0 }; ((__y + __y/4 - __y/100 + __y/400 + __t[(__m0-1) as usize] + __d0) % 7 + 6) % 7 }");
+            }
+            "calendar_monthrange" => {
+                self.write("{ let __y = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __m = ");
+                self.emit_expr(&args[1]);
+                self.write("; let __days = match __m { 1|3|5|7|8|10|12 => 31i64, 4|6|9|11 => 30, 2 => if (__y%4==0 && __y%100!=0)||(__y%400==0) { 29 } else { 28 }, _ => 30 }; let __t = [0i64,3,2,5,0,3,5,1,4,6,2,4]; let __y2 = if __m < 3 { __y-1 } else { __y }; let __wd = ((__y2+__y2/4-__y2/100+__y2/400+__t[(__m-1) as usize]+1)%7+6)%7; vec![__wd, __days] }");
+            }
+            // sifr.gzip
+            "gzip_compress" => {
+                self.write("{ use std::io::Write; let __data = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(".as_bytes(); let mut __enc = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default()); __enc.write_all(__data).unwrap_or(()); __enc.finish().unwrap_or_default().iter().map(|b| *b as i64).collect::<Vec<i64>>() }");
+            }
+            "gzip_decompress" => {
+                self.write("(|| -> Result<String, IOError> { use std::io::Read; let __bytes: Vec<u8> = ");
+                self.emit_expr(&args[0]);
+                self.write(".iter().map(|b| *b as u8).collect(); let mut __dec = flate2::read::GzDecoder::new(__bytes.as_slice()); let mut __out = String::new(); __dec.read_to_string(&mut __out).map_err(__io_err)?; Ok(__out) })()");
+            }
+            // sifr.zipfile
+            "zip_create" => {
+                self.write("(|| -> Result<(), IOError> { let __f = std::fs::File::create(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").map_err(__io_err)?; drop(zip::ZipWriter::new(__f)); Ok(()) })()");
+            }
+            "zip_add_file" => {
+                self.write("(|| -> Result<(), IOError> { let __path = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __name = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; let __content = ");
+                self.emit_expr_as_str_ref(&args[2]);
+                self.write("; let __f = std::fs::OpenOptions::new().read(true).write(true).open(__path).map_err(__io_err)?; let mut __zip = zip::ZipWriter::new_append(__f).map_err(|e| IOError::new(e.to_string()))?; let __opts = zip::write::FileOptions::default(); __zip.start_file(__name, __opts).map_err(|e| IOError::new(e.to_string()))?; use std::io::Write; __zip.write_all(__content.as_bytes()).map_err(__io_err)?; __zip.finish().map_err(|e| IOError::new(e.to_string()))?; Ok(()) })()");
+            }
+            "zip_read_file" => {
+                self.write("(|| -> Result<String, IOError> { let __f = std::fs::File::open(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").map_err(__io_err)?; let mut __zip = zip::ZipArchive::new(__f).map_err(|e| IOError::new(e.to_string()))?; let mut __file = __zip.by_name(");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").map_err(|e| IOError::new(e.to_string()))?; let mut __content = String::new(); use std::io::Read; __file.read_to_string(&mut __content).map_err(__io_err)?; Ok(__content) })()");
+            }
+            "zip_namelist" => {
+                self.write("(|| -> Result<Vec<String>, IOError> { let __f = std::fs::File::open(");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(").map_err(__io_err)?; let mut __zip = zip::ZipArchive::new(__f).map_err(|e| IOError::new(e.to_string()))?; Ok((0..__zip.len()).map(|i| __zip.by_index(i).map(|f| f.name().to_string()).unwrap_or_default()).collect()) })()");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call

@@ -1,0 +1,66 @@
+# sifr.configparser — INI-style configuration file parser
+# Parses simple key=value pairs, optionally grouped by [section] headers.
+
+class ConfigParser:
+    _data: dict[str, str]
+
+    def __init__(self) -> None:
+        self._data = {}
+
+    def read_string(self, text: str) -> None:
+        # Parse INI-format text. Keys are stored as "section.key" or just "key".
+        current_section: str = ""
+        lines: list[str] = text.split("\n")
+        for line in lines:
+            stripped: str = line.strip()
+            if stripped == "" or stripped.startswith("#") or stripped.startswith(";"):
+                continue
+            if stripped.startswith("[") and stripped.endswith("]"):
+                current_section = stripped[1:len(stripped) - 1].strip()
+            elif "=" in stripped:
+                # Split on "=" and use first two parts
+                parts: list[str] = stripped.split("=")
+                if len(parts) >= 2:
+                    key_raw: str | None = parts[0]
+                    val_raw: str | None = parts[1]
+                    if key_raw is not None and val_raw is not None:
+                        key: str = key_raw.strip()
+                        value: str = val_raw.strip()
+                        if current_section == "":
+                            self._data[key] = value
+                        else:
+                            self._data[current_section + "." + key] = value
+
+    def get(self, section: str, key: str) -> str:
+        full_key: str = section + "." + key
+        result: str = ""
+        if full_key in self._data:
+            raw: str | None = self._data[full_key]
+            if raw is not None:
+                result = raw
+        return result
+
+    def get_default(self, key: str) -> str:
+        result: str = ""
+        if key in self._data:
+            raw: str | None = self._data[key]
+            if raw is not None:
+                result = raw
+        return result
+
+    def has_option(self, section: str, key: str) -> bool:
+        full_key: str = section + "." + key
+        return full_key in self._data
+
+    def sections(self) -> list[str]:
+        result: list[str] = []
+        for k in self._data:
+            if "." in k:
+                parts: list[str] = k.split(".")
+                if len(parts) >= 1:
+                    sec_raw: str | None = parts[0]
+                    if sec_raw is not None:
+                        section: str = sec_raw
+                        if section not in result:
+                            result.append(section)
+        return result

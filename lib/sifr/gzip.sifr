@@ -1,0 +1,10 @@
+# sifr.gzip — GZip compression/decompression
+from _sifr.compress import gzip_compress, gzip_decompress
+
+def compress(data: str) -> list[int]:
+    # Compress a string and return the gzip-compressed bytes as list[int].
+    return gzip_compress(data)
+
+def decompress(data: list[int]) -> Result[str, IOError]:
+    # Decompress gzip-compressed bytes (list[int]) back to a string.
+    return gzip_decompress(data)
