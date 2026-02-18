@@ -1,0 +1,20 @@
+# sifr.zipfile — ZIP archive support
+from _sifr.compress import zip_create, zip_add_file, zip_read_file, zip_namelist
+
+class ZipFile:
+    path: str
+
+    def __init__(self, path: str) -> None:
+        self.path = path
+
+    def create(self) -> Result[None, IOError]:
+        return zip_create(self.path)
+
+    def write(self, name: str, content: str) -> Result[None, IOError]:
+        return zip_add_file(self.path, name, content)
+
+    def read(self, name: str) -> Result[str, IOError]:
+        return zip_read_file(self.path, name)
+
+    def namelist(self) -> Result[list[str], IOError]:
+        return zip_namelist(self.path)

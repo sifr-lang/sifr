@@ -119,6 +119,14 @@ edition = "2021"
                     deps.push("chrono = \"0.4\"");
                 }
             }
+            "sifr.gzip" | "sifr.zipfile" | "_sifr.compress" => {
+                if !deps.contains(&"flate2 = \"1\"") {
+                    deps.push("flate2 = \"1\"");
+                }
+                if !deps.contains(&"zip = \"0.6\"") {
+                    deps.push("zip = \"0.6\"");
+                }
+            }
             _ => {}
         }
     }

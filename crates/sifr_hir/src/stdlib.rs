@@ -48,6 +48,9 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.platform" => Some(intrinsic_platform()),
         "_sifr.toml" => Some(intrinsic_toml()),
         "_sifr.datetime" => Some(intrinsic_datetime()),
+        "_sifr.html" => Some(intrinsic_html()),
+        "_sifr.calendar" => Some(intrinsic_calendar()),
+        "_sifr.compress" => Some(intrinsic_compress()),
         _ => None,
     }
 }
@@ -464,6 +467,27 @@ fn intrinsic_sys() -> IntrinsicModule {
     // get_args() -> list[str]
     functions.insert("get_args".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))));
 
+    // sys_exit(code: int) -> None (terminates the process)
+    functions.insert("sys_exit".to_string(), FunctionType::all_borrow(vec![("code".to_string(), Type::Int)], Type::None));
+
+    // sys_version() -> str (Sifr version string)
+    functions.insert("sys_version".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+
+    // sys_platform() -> str (platform identifier: "linux", "macos", "windows")
+    functions.insert("sys_platform".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+
+    // sys_maxsize() -> int (maximum int size)
+    functions.insert("sys_maxsize".to_string(), FunctionType::all_borrow(vec![], Type::Int));
+
+    // subprocess_run(cmd: str) -> Result[str, IOError]
+    functions.insert("subprocess_run".to_string(), FunctionType::all_borrow(vec![("cmd".to_string(), Type::Str)], result_ty(Type::Str, "IOError")));
+
+    // subprocess_run_with_input(cmd: str, stdin: str) -> Result[str, IOError]
+    functions.insert("subprocess_run_with_input".to_string(), FunctionType::all_borrow(vec![
+        ("cmd".to_string(), Type::Str),
+        ("stdin_data".to_string(), Type::Str),
+    ], result_ty(Type::Str, "IOError")));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -720,5 +744,59 @@ fn intrinsic_datetime() -> IntrinsicModule {
     functions.insert("datetime_from_timestamp".to_string(), FunctionType::all_borrow(vec![
         ("ts".to_string(), Type::Float),
     ], result_ty(Type::Str, "ValueError")));
+    IntrinsicModule { functions, constants: HashMap::new() }
+}
+
+/// _sifr.html — HTML escaping intrinsics
+fn intrinsic_html() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+    // html_escape(s: str) -> str
+    functions.insert("html_escape".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+    // html_unescape(s: str) -> str
+    functions.insert("html_unescape".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+    IntrinsicModule { functions, constants: HashMap::new() }
+}
+
+/// _sifr.calendar — Calendar/date calculation intrinsics
+fn intrinsic_calendar() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+    // calendar_isleap(year: int) -> bool
+    functions.insert("calendar_isleap".to_string(), FunctionType::all_borrow(vec![("year".to_string(), Type::Int)], Type::Bool));
+    // calendar_weekday(year: int, month: int, day: int) -> int (0=Monday..6=Sunday)
+    functions.insert("calendar_weekday".to_string(), FunctionType::all_borrow(vec![
+        ("year".to_string(), Type::Int),
+        ("month".to_string(), Type::Int),
+        ("day".to_string(), Type::Int),
+    ], Type::Int));
+    // calendar_monthrange(year: int, month: int) -> list[int] ([weekday_of_first, days_in_month])
+    functions.insert("calendar_monthrange".to_string(), FunctionType::all_borrow(vec![
+        ("year".to_string(), Type::Int),
+        ("month".to_string(), Type::Int),
+    ], Type::List(Box::new(Type::Int))));
+    IntrinsicModule { functions, constants: HashMap::new() }
+}
+
+/// _sifr.compress — Compression intrinsics (gzip + zip)
+fn intrinsic_compress() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+    // gzip_compress(data: str) -> list[int] (compressed bytes)
+    functions.insert("gzip_compress".to_string(), FunctionType::all_borrow(vec![("data".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
+    // gzip_decompress(data: list[int]) -> Result[str, IOError]
+    functions.insert("gzip_decompress".to_string(), FunctionType::all_borrow(vec![("data".to_string(), Type::List(Box::new(Type::Int)))], result_ty(Type::Str, "IOError")));
+    // zip_create(path: str) -> Result[None, IOError]
+    functions.insert("zip_create".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], result_ty(Type::None, "IOError")));
+    // zip_add_file(zip_path: str, name: str, content: str) -> Result[None, IOError]
+    functions.insert("zip_add_file".to_string(), FunctionType::all_borrow(vec![
+        ("zip_path".to_string(), Type::Str),
+        ("name".to_string(), Type::Str),
+        ("content".to_string(), Type::Str),
+    ], result_ty(Type::None, "IOError")));
+    // zip_read_file(zip_path: str, name: str) -> Result[str, IOError]
+    functions.insert("zip_read_file".to_string(), FunctionType::all_borrow(vec![
+        ("zip_path".to_string(), Type::Str),
+        ("name".to_string(), Type::Str),
+    ], result_ty(Type::Str, "IOError")));
+    // zip_namelist(zip_path: str) -> Result[list[str], IOError]
+    functions.insert("zip_namelist".to_string(), FunctionType::all_borrow(vec![("zip_path".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
     IntrinsicModule { functions, constants: HashMap::new() }
 }
