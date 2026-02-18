@@ -15,9 +15,11 @@
 | 9 | Stdlib Safety Remediation | 6 (io_safety → zero_panic_gate → error_subclasses) | in progress | All ~45+ `.unwrap()` panic paths fixed, zero-panic gate enforced, safety scores 7/10+ per module, error subclass hierarchy (FileNotFoundError etc.) for compile-time checked fine-grained error handling |
 | 10 | Borrow-by-Default | 3 (borrow_default, borrow_hardening, borrow_stdlib) | pending | Borrow-by-default params, exclusivity, escape analysis, consuming-self, for-loop semantics, stdlib ownership patterns |
 | 11 | Stdlib Deepening | 4 (pure_expansion → class_deepening) | completed | ~38% → deep CPython parity, 8 new modules, `datetime`/`deque`/`Pattern` classes, API naming divergences documented |
-| 12 | Async and Ecosystem Foundation | 3 (async, networking_stdlib, typed_serde_core) | pending | Async runtime, networking stdlib, web-independent typed serialization |
-| 13 | Web Stack | 6 (web_db → data_processing) | pending | Web framework, database, typed extractors, auth, production features, Redis, S3, email, data processing |
-| 14 | Polish and Tooling | 5 (metaprogramming → ecosystem) | pending | FFI, package management, LSP, formatter, REPL |
+| 12 | Stdlib Remediation | 1 (stdlib_remediation) | pending | `open()` built-in, `datetime.time`/`timezone`, `CompletedProcess`, `Path.glob`, `re` flags, minor gaps |
+| 13 | Type System Completion | 5 (auto_init → stdlib_generic_rewrite) | pending | Auto-init, user-facing generics, pattern matching, enums, generic stdlib |
+| 14 | Async and Ecosystem Foundation | 3 (async, networking_stdlib, typed_serde_core) | pending | Async runtime, networking stdlib, web-independent typed serialization |
+| 15 | Web Stack | 6 (web_db → data_processing) | pending | Web framework, database, typed extractors, auth, production features, Redis, S3, email, data processing |
+| 16 | Polish and Tooling | 5 (metaprogramming → ecosystem) | pending | FFI, package management, LSP, formatter, REPL |
 
 ## Ordering Rationale
 
@@ -57,14 +59,28 @@
    ownership model from day one. Writing 50+ new functions with move-by-default and then
    retrofitting `mut`/`own` is wasteful.
 
-10. **Stdlib Deepening → Async and Ecosystem Foundation**: The async runtime and web framework will
-    use stdlib functions heavily. Having a deep, safe, correctly-owned stdlib means fewer surprises
+10. **Stdlib Deepening → Stdlib Remediation**: Phase 11 gap analysis revealed unfinished items
+    (`open()` built-in, `datetime.time`/`timezone`, `subprocess.CompletedProcess`, `Path.glob`,
+    `re` flags). These must be closed before the type system completion phase rewrites the stdlib
+    with generics — the generic rewrite should operate on a complete stdlib, not patch gaps
+    simultaneously.
+
+11. **Stdlib Remediation → Type System Completion**: The type system has critical gaps: incomplete
+    user-facing generics (field/method substitution), monomorphic stdlib, no pattern matching,
+    no enum type, no auto-generated constructors. Fixing these before async means the async
+    runtime, typed serde, and web extractors all benefit from generics, pattern matching, and
+    clean class definitions from day one. The stdlib generic rewrite at the end of this phase
+    eliminates all type-specific function duplicates.
+
+12. **Type System Completion → Async and Ecosystem Foundation**: The async runtime and web framework
+    will use generic stdlib functions, pattern matching for error handling, and enum types for
+    state machines. Having a complete type system and generic stdlib means fewer surprises
     when building async features on top. Typed serde core (web-independent) lands here.
 
-11. **Async and Ecosystem Foundation → Web Stack**: The web framework requires async I/O. Web-specific
+13. **Async and Ecosystem Foundation → Web Stack**: The web framework requires async I/O. Web-specific
     extractors (`Json[T]`, `Path[T]`, etc.) depend on both the web framework and typed serde core.
 
-12. **Web Stack → Polish and Tooling**: The web stack is the primary use case. Tooling and ecosystem
+14. **Web Stack → Polish and Tooling**: The web stack is the primary use case. Tooling and ecosystem
     features are polish that benefits from a stable, feature-complete language.
 
 Per-milestone ordering rationale is documented within each phase file in `phases/`.
@@ -159,6 +175,16 @@ flowchart TD
         milestone_stdlib_intrinsic_expansion["milestone_stdlib_intrinsic_expansion: Intrinsic Expansion\nmath/os/hashlib/platform/\ntime/base64/shutil additions"]
         milestone_stdlib_class_deepening["milestone_stdlib_class_deepening: Class Deepening\nopen(), deque, datetime class,\nPath, Pattern, csv, logging"]
     end
+    subgraph phaseStdlibRemediation [Stdlib Remediation]
+        milestone_stdlib_remediation["milestone_stdlib_remediation: Gap Closure\nopen() built-in, datetime.time,\nCompletedProcess, Path.glob, re flags"]
+    end
+    subgraph phaseTypeSystem [Type System Completion]
+        milestone_auto_init["milestone_auto_init: Auto Constructors\nAuto __init__/__eq__/__str__,\nfield defaults, inheritance"]
+        milestone_generics_v2["milestone_generics_v2: Generics v2\nGeneric class substitution,\nbounds, inference, None standalone"]
+        milestone_pattern_matching["milestone_pattern_matching: Pattern Matching\nmatch/case, exhaustiveness,\nclass/union/literal patterns"]
+        milestone_enums["milestone_enums: Enum Types\nSimple enums, valued enums,\nmethods, exhaustive match"]
+        milestone_stdlib_generic_rewrite["milestone_stdlib_generic_rewrite: Generic Stdlib\nitertools/functools/collections/\nheapq generic rewrite"]
+    end
     subgraph phaseAsync [Async and Ecosystem]
         milestone_async["milestone_async: Async Runtime\nasync/await, tokio,\ntasks, streams"]
         milestone_networking_stdlib["milestone_networking_stdlib: Networking Stdlib\nsocket, http, subprocess async,\nurl parsing"]
@@ -202,7 +228,10 @@ flowchart TD
     milestone_zero_panic_gate --> milestone_error_subclasses --> milestone_borrow_default --> milestone_borrow_hardening --> milestone_borrow_stdlib
     milestone_borrow_stdlib --> milestone_stdlib_pure_expansion --> milestone_new_modules
     milestone_new_modules --> milestone_stdlib_intrinsic_expansion --> milestone_stdlib_class_deepening
-    milestone_stdlib_class_deepening --> milestone_async --> milestone_networking_stdlib --> milestone_typed_serde_core
+    milestone_stdlib_class_deepening --> milestone_stdlib_remediation
+    milestone_stdlib_remediation --> milestone_auto_init --> milestone_generics_v2 --> milestone_pattern_matching
+    milestone_pattern_matching --> milestone_enums --> milestone_stdlib_generic_rewrite
+    milestone_stdlib_generic_rewrite --> milestone_async --> milestone_networking_stdlib --> milestone_typed_serde_core
     milestone_typed_serde_core --> milestone_web_db --> milestone_typed_web_extractors --> milestone_crypto_auth
     milestone_crypto_auth --> milestone_web_production --> milestone_web_services --> milestone_data_processing
     milestone_data_processing --> milestone_metaprogramming --> milestone_ffi --> milestone_package_mgmt --> milestone_dev_tooling --> milestone_ecosystem
@@ -224,7 +253,11 @@ After the Stdlib Safety Remediation phase, all ~45+ `.unwrap()` panic paths in i
 
 After the Borrow-by-Default phase, Sifr uses borrow-by-default for function parameters with explicit `mut`/`own` opt-in. Escape analysis prevents silent `.clone()` insertion. Consuming-self method receivers work correctly. For-loop element semantics are resolved and documented. The 7 known codegen regressions are fixed. Stdlib functions (`heapq`, `bisect`) use `mut` parameters, proving the model works in real code.
 
-After the Stdlib Deepening phase, the stdlib reaches deep CPython parity with 8 new modules (`subprocess`, `sys`, `html`, `gzip`, `zipfile`, `configparser`, `calendar`, `operator`), the `open()` built-in with file object protocol, full `datetime`/`deque`/`Pattern` classes, and API naming divergences documented in `architecture.md`.
+After the Stdlib Deepening phase, the stdlib reaches deep CPython parity with 8 new modules (`subprocess`, `sys`, `html`, `gzip`, `zipfile`, `configparser`, `calendar`, `operator`), full `datetime`/`deque`/`Pattern` classes, and API naming divergences documented in `architecture.md`.
+
+After the Stdlib Remediation phase, all gaps from the Phase 11 gap analysis are closed: the `open()` built-in with file object protocol and context manager support, `datetime.time` and `datetime.timezone` classes, `subprocess.run` returning a structured `CompletedProcess` object, `Path.glob`/`Path.rglob`, `re` flags support, and minor surface area gaps (`os.sep`/`os.linesep`/`os.name`, `time` wrapper functions, `random.choice` re-export). The stdlib is now complete and ready for the generic rewrite.
+
+After the Type System Completion phase, Sifr's type system is fully expressive. Classes auto-generate `__init__`, `__eq__`, and `__str__` from field declarations (eliminating the most common boilerplate). User-facing generics are complete — generic classes with field/method substitution, type parameter inference, protocol bounds, and generic type aliases all work. `match`/`case` provides exhaustiveness-checked pattern matching on union types, literal unions, optional types, and class unions. Simple enum types provide namespaced constants with exhaustive matching. The entire stdlib is rewritten with generics: `itertools`, `functools`, `collections.Counter[T]`, `collections.deque[T]`, `heapq`, `bisect`, `random`, and `test` all use generic type parameters. Type-specific duplicates (`chain_str`, `accumulate_float`) are deleted. `Counter` has operator overloads and works for any hashable type. `deque` is backed by `VecDeque` intrinsics with O(1) front operations. `None` works as a standalone value and type.
 
 After the Async and Ecosystem Foundation phase, Sifr has an async runtime (Tokio-backed), networking stdlib modules, and web-independent typed serialization (`dumps`/`loads` with auto-derived serde).
 

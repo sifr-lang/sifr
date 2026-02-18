@@ -14,16 +14,16 @@ status: pending
 
 ### Work Items
 
-- `@dataclass`: auto-generate `__init__`, `__eq__`, `__repr__`
+- `@dataclass` decorator: explicit opt-in that adds `__hash__`, `__lt__`/`__le__`/`__gt__`/`__ge__` (ordering), `frozen=True` support, and `field()` configuration on top of the auto-init from Phase 13's milestone_auto_init. Auto-init provides the baseline (`__init__`, `__eq__`, `__str__`); `@dataclass` adds the advanced features.
 - Custom decorators: user-defined compile-time AST transforms
 - Positional-only parameters (`def f(x, /, y)`)
 
 ### Definition of Done (milestone_metaprogramming)
 
-- `@dataclass` generates `__init__`, `__eq__`, `__repr__`, `clone` methods
+- `@dataclass` adds ordering, hashing, frozen support, and field configuration
 - Custom decorators can transform class definitions
 - Positional-only parameters work
-- E2E pass tests: dataclass_basic, custom_decorator, positional_only_params
+- E2E pass tests: dataclass_ordering, dataclass_frozen, custom_decorator, positional_only_params
 - Milestone demo in `./demos/milestone_metaprogramming_demo.sifr`
 
 ---

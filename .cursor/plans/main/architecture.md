@@ -100,6 +100,10 @@ Sifr intentionally diverges from CPython in several areas to achieve compile-tim
 | `min([])`/`max([])` raise `ValueError` on empty | `min(list)`/`max(list)` return `T \| None`; `None` on empty list | Safe by default; absence is a value, not an error | milestone_collection_safety |
 | `set.pop()` raises `KeyError` on empty set | `set.pop()` returns `T \| None`; `None` on empty set | Consistent with safe collection semantics | milestone_collection_safety |
 | Error subclass fields | Only `message` via `str(e)` | `message: str` + typed fields (`line`, `column`, `detail`) | Structured error data without string parsing | milestone_error_subclasses |
+| `@dataclass` for auto-generated methods | `@dataclass` decorator | Auto-generated `__init__`, `__eq__`, `__str__` from field declarations (no decorator needed); `@dataclass` adds advanced features (ordering, frozen, field config) | Eliminates the most common boilerplate; every class with typed fields gets a constructor automatically | milestone_auto_init, milestone_metaprogramming |
+| `match`/`case` with soft keywords | `match`/`case` are soft keywords (context-dependent) | `match`/`case` are hard keywords (always reserved) | No backward compatibility concern; avoids parser ambiguity; `match` is already reserved as a Rust keyword | milestone_pattern_matching |
+| `enum.Enum` class-based syntax | `class Color(Enum): RED = auto()` | `enum Color: RED, GREEN, BLUE` (dedicated syntax, no class inheritance) | Cleaner syntax; direct mapping to Rust enums; no metaclass machinery | milestone_enums |
+| No enum associated data | `enum` variants can hold data via class-based pattern | Union types + classes for data-carrying variants; enums are simple constants only | One obvious way: classes + unions for data, enums for constants. Avoids duplicating algebraic data types. | milestone_enums |
 
 
 **Migration note:** code that relies heavily on exception propagation, import-time side effects, arbitrary-precision integers, or runtime reflection will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
@@ -121,7 +125,9 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.os.remove_file` | `os.remove` | `remove` is used as a method name on collections; `remove_file` avoids ambiguity |
 | `sifr.random.shuffle` | `random.shuffle` | CPython-compatible name; returns a new shuffled list (Sifr is immutable-by-default) instead of mutating in place |
 | `sifr.operator.mod_val` | `operator.mod` | `mod` is a Rust keyword |
-| `sifr.re.Pattern.is_match` | `re.Pattern.match` | `match` is a Rust keyword |
+| `sifr.re.Pattern.is_match` | `re.Pattern.match` | `match` is a Rust keyword (also a Sifr keyword from milestone_pattern_matching) |
+| `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from a list. Kept for ergonomics. |
+| `sifr.itertools.flatten` | `itertools.chain.from_iterable` | Sifr extension; flattens a list of lists. Simpler API than CPython's `chain.from_iterable`. |
 
 ## Compiler Pipeline
 
@@ -555,6 +561,8 @@ Sifr auto-derives common Rust traits for all user-defined types. This is a langu
   - `Ord` / `PartialOrd` -- comparison ordering requires explicit definition via `__lt__`, `__le__`, etc.
   - `Copy` -- only primitives (`int`, `float`, `bool`) are `Copy`. User-defined types are move-by-default.
 - **Codegen:** the compiler emits `#[derive(Debug, Clone, PartialEq)]` (and conditionally `Eq`, `Hash`) on all generated structs and enums.
+- **Enum types (milestone_enums):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
+- **Auto-init (milestone_auto_init):** when a class has no explicit `__init__`, the compiler auto-generates `__init__`, `__eq__` (if all fields are `PartialEq`), and `__str__` (via `Debug`-style formatting). Explicit definitions always take precedence.
 - **Dict key constraint:** types used as `dict` keys must be `Hash + Eq`. The compiler enforces this at the call site and emits a clear error if the type is not hashable.
 
 ### 11. Diagnostic Mapping
@@ -609,6 +617,9 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 - milestone_generators: define initial `with` block syntax (scoped block desugaring); eager generator codegen (`Vec<T>`)
 - milestone_compiler_hardening (Phase 7: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
 - milestone_lazy_iterators (Phase 7: Stdlib Parity): replace eager generator codegen with lazy state machine implementing `Iterator<Item = T>`; `for` loops consume iterators lazily; `list(iter)` eagerly collects
+- milestone_generics_v2 (Phase 13: Type System Completion): complete generic class field/method substitution; protocol bounds on type parameters (`T: Comparable & Display`)
+- milestone_pattern_matching (Phase 13: Type System Completion): `match`/`case` syntax with exhaustiveness checking on union types, literal unions, optional types, class unions, and enum types
+- milestone_enums (Phase 13: Type System Completion): simple enum types with exhaustive pattern matching; enum values implement `Eq`, `Hash`, `Clone`, `Debug`
 
 ### Ecosystem Strategy
 
@@ -664,6 +675,9 @@ enum Type {
 
     // Result / Option (milestone_error_handling)
     Result(Box<Type>, Box<Type>),
+
+    // Enum (milestone_enums)
+    Enum(EnumId),
 
     // Range (milestone_control_flow)
     Range,

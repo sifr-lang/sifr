@@ -1,6 +1,6 @@
 # Async and Ecosystem Foundation
 
-**Why now:** Safety is solid, ownership model is proven, stdlib is deep. The async runtime can be built on a stable foundation.
+**Why now:** Safety is solid, ownership model is proven, stdlib is deep and fully generic (Phase 13). The type system is complete — generics, pattern matching, enums, and auto-init are all in place. The async runtime can be built on a stable, expressive foundation where generic types, exhaustive error handling, and clean class definitions are available from day one.
 
 ---
 
@@ -10,7 +10,7 @@ status: pending
 
 **Goal:** Add async/await language support. This is a language feature milestone — it adds the async primitives that the web framework builds on.
 
-**Depends on:** milestone_stdlib_class_deepening (stdlib must be deep before async features are built on top)
+**Depends on:** milestone_stdlib_generic_rewrite (Phase 13 must be complete — the type system and generic stdlib provide the foundation for async features)
 
 ### Language Features
 
@@ -66,7 +66,7 @@ status: pending
 
 status: pending
 
-**Goal:** Web-independent typed serialization. This does NOT include web extractors — those depend on the web framework and are delivered in Phase 13.
+**Goal:** Web-independent typed serialization. This does NOT include web extractors — those depend on the web framework and are delivered in Phase 15.
 
 **Depends on:** milestone_networking_stdlib (networking modules should exist; typed serde benefits from the full async foundation)
 

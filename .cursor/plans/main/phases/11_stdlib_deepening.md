@@ -55,7 +55,7 @@ status: completed
 
 ### Modules
 
-- `sifr.subprocess` (wraps `std::process`) — sync `run(cmd) -> Result[CompletedProcess, Error]` (async Popen added in Phase 12's `milestone_networking_stdlib`)
+- `sifr.subprocess` (wraps `std::process`) — sync `run(cmd) -> Result[CompletedProcess, Error]` (async Popen added in Phase 14's `milestone_networking_stdlib`)
 - `sifr.sys` — `argv`, `exit(code)`, `platform`, `version`, `maxsize`
 - `sifr.html` — `escape(s)`, `unescape(s)`
 - `sifr.configparser` — `ConfigParser` class

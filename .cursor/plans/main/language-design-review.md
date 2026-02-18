@@ -22,7 +22,7 @@
 - **What Sifr matches from Python**: Comprehensions, generators, decorators, safe indexing, `with`/`try`, and the borrow-by-default ergonomics.
 - **What is still missing compared to Rust**: Algebraic enums with data, `match`/`case`, user-defined generics and trait bounds that can be reused in stdlib code.
 - **TypeScript inspiration**: Literal and union types work as intended; contextual typing is espoused but not yet showcased. Adding conditional/mapped types remains a future possibility.
-- **Go/Python-style REPL**: The roadmap mentions a REPL in Phase 14. Providing it earlier, even as a prototype, would help users experience the language interactively.
+- **Go/Python-style REPL**: The roadmap mentions a REPL in Phase 16. Providing it earlier, even as a prototype, would help users experience the language interactively.
 
 ### 4. Strategic Recommendations
 1. **Ship user-facing generics before expanding the stdlib further.** Every new stdlib helper should use generic parameters to avoid duplication.
