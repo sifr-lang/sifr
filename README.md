@@ -112,3 +112,9 @@ cargo test
 ## Architecture
 
 For a deep dive into the compiler pipeline, type system, ownership model, and design decisions, see the [Architecture Document](.cursor/plans/main/architecture.md).
+
+### Interactive Compiler Pipeline
+
+Want to see how a Sifr program travels from source text to a native binary? The interactive pipeline visualizer walks through every compiler step — Lexer → Parser → Binder → Type Checker → HIR → Codegen → rustc — with a live `factorial` example at each stage.
+
+**[▶ Open the Compiler Pipeline Visualizer](https://htmlpreview.github.io/?https://github.com/yaseralnajjar/sifr/blob/main/compiler_pipeline.html)**

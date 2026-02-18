@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sifr Compiler Pipeline</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --purple: #bc8cff;
+    --pink: #f778ba;
+    --cyan: #39d2c0;
+    --red: #f85149;
+    --yellow: #e3b341;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 48px 24px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  header p { color: var(--muted); font-size: 1rem; }
+
+  /* ── Main layout ── */
+  main {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 0;
+    height: calc(100vh - 130px);
+  }
+
+  /* ── Pipeline sidebar ── */
+  #pipeline {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .step-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text);
+  }
+  .step-btn:hover { border-color: var(--accent); background: var(--surface2); }
+  .step-btn.active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(88,166,255,0.1) 0%, rgba(188,140,255,0.1) 100%);
+    box-shadow: 0 0 16px rgba(88,166,255,0.15);
+  }
+  .step-btn.done { border-color: var(--green); }
+  .step-btn.done .step-icon { background: rgba(63,185,80,0.15); color: var(--green); }
+
+  .step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .step-btn.active .step-icon {
+    background: rgba(88,166,255,0.2);
+    color: var(--accent);
+  }
+
+  .step-info { flex: 1; }
+  .step-name { font-size: 0.85rem; font-weight: 600; }
+  .step-short { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+  .step-arrow {
+    width: 2px;
+    height: 14px;
+    background: linear-gradient(to bottom, var(--border), var(--accent));
+    margin: 0 auto;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+  }
+  .step-wrapper.active-flow .step-arrow { opacity: 1; }
+
+  /* ── Controls ── */
+  #controls {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+  .ctrl-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ctrl-btn.primary { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 600; }
+  .ctrl-btn.primary:hover { background: #79c0ff; }
+
+  /* ── Detail panel ── */
+  #detail {
+    overflow-y: auto;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    animation: slideIn 0.35s ease;
+  }
+  .detail-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+  }
+  .detail-title h2 { font-size: 1.5rem; font-weight: 700; }
+  .detail-title p { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+
+  .detail-desc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text);
+    animation: slideIn 0.4s ease;
+  }
+  .detail-desc strong { color: var(--accent); }
+  .detail-desc code {
+    background: var(--surface2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.82em;
+    color: var(--cyan);
+  }
+
+  /* ── Example pane ── */
+  .example-pane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    animation: slideIn 0.45s ease;
+  }
+  .pane-header {
+    background: var(--surface2);
+    padding: 10px 16px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pane-dot { width: 8px; height: 8px; border-radius: 50%; }
+  pre {
+    padding: 20px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* syntax tokens */
+  .kw  { color: #ff7b72; }
+  .fn  { color: #d2a8ff; }
+  .ty  { color: #79c0ff; }
+  .str { color: #a5d6ff; }
+  .num { color: #79c0ff; }
+  .cmt { color: #8b949e; font-style: italic; }
+  .op  { color: #ff7b72; }
+  .ident { color: #e6edf3; }
+  .lbl { color: var(--orange); }
+  .ok  { color: var(--green); }
+  .err { color: var(--red); }
+  .field { color: var(--cyan); }
+  .macro { color: var(--yellow); }
+  .attr  { color: var(--muted); }
+  .hi { background: rgba(88,166,255,0.15); border-radius: 3px; padding: 0 2px; }
+
+  /* ── Tokens display ── */
+  .tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 20px;
+  }
+  .token {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.78rem;
+    border: 1px solid;
+    animation: popIn 0.3s ease both;
+  }
+  .token-keyword  { background: rgba(255,123,114,0.1); border-color: rgba(255,123,114,0.4); color: #ff7b72; }
+  .token-ident    { background: rgba(230,237,243,0.07); border-color: rgba(230,237,243,0.2); color: #e6edf3; }
+  .token-type     { background: rgba(121,192,255,0.1); border-color: rgba(121,192,255,0.4); color: #79c0ff; }
+  .token-num      { background: rgba(57,210,192,0.1); border-color: rgba(57,210,192,0.4); color: var(--cyan); }
+  .token-str      { background: rgba(165,214,255,0.1); border-color: rgba(165,214,255,0.4); color: #a5d6ff; }
+  .token-op       { background: rgba(255,123,114,0.07); border-color: rgba(255,123,114,0.3); color: #ffa198; }
+  .token-punct    { background: rgba(139,148,158,0.1); border-color: rgba(139,148,158,0.3); color: var(--muted); }
+  .token-newline  { background: rgba(139,148,158,0.05); border-color: rgba(139,148,158,0.2); color: var(--muted); font-style: italic; }
+
+  /* ── Progress bar ── */
+  #progress-bar {
+    height: 3px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  #progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--accent), var(--purple));
+    transition: width 0.4s ease;
+  }
+
+  /* ── Animations ── */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(88,166,255,0.3); }
+    50%       { box-shadow: 0 0 0 6px rgba(88,166,255,0); }
+  }
+  .step-btn.active { animation: pulse 2s infinite; }
+
+  /* ── Auto-play indicator ── */
+  #autoplay-indicator {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 0 16px 8px;
+  }
+  #autoplay-indicator.visible { display: flex; }
+  .dot-anim { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* ── Scrollbar styling ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; height: auto; }
+    #pipeline { border-right: none; border-bottom: 1px solid var(--border); height: auto; max-height: 420px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sifr Compiler Pipeline</h1>
+  <p>Follow a <code style="color:var(--cyan);background:var(--surface2);padding:2px 8px;border-radius:5px;font-size:0.9em">factorial</code> function through each compiler step — from source text to native binary</p>
+</header>
+
+<div id="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+
+<main>
+  <!-- ── Left: step list ── -->
+  <div style="display:flex;flex-direction:column">
+    <div id="pipeline"></div>
+    <div id="autoplay-indicator"><div class="dot-anim"></div> Auto-playing…</div>
+    <div id="controls">
+      <button class="ctrl-btn" onclick="prev()">← Prev</button>
+      <button class="ctrl-btn primary" id="play-btn" onclick="togglePlay()">▶ Play</button>
+      <button class="ctrl-btn" onclick="next()">Next →</button>
+    </div>
+  </div>
+
+  <!-- ── Right: detail ── -->
+  <div id="detail">
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:12px">
+      <div style="font-size:3rem">⚙️</div>
+      <p>Select a step or press <strong style="color:var(--accent)">Play</strong> to start</p>
+    </div>
+  </div>
+</main>
+
+<script>
+const STEPS = [
+  {
+    id: 'source',
+    icon: '📄',
+    name: 'Source (.sifr)',
+    short: 'Raw source text',
+    color: '#58a6ff',
+    bgColor: 'rgba(88,166,255,0.12)',
+    desc: `The compiler starts with a plain <strong>.sifr source file</strong> — Python-like syntax with enforced static types.
+    The driver (<code>sifr_driver</code>) reads it into memory using <code>ruff_source_file</code> for line indexing and span tracking.
+    Every character position is recorded so error messages can point back to exact lines and columns later.`,
+    paneTitle: 'factorial.sifr',
+    paneDot: '#58a6ff',
+    content: () => `<span class="kw">def</span> <span class="fn">factorial</span>(<span class="ident">n</span>: <span class="ty">int</span>) -> <span class="ty">int</span>:
+    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;=</span> <span class="num">1</span>:
+        <span class="kw">return</span> <span class="num">1</span>
+    <span class="kw">return</span> <span class="ident">n</span> <span class="op">*</span> <span class="fn">factorial</span>(<span class="ident">n</span> <span class="op">-</span> <span class="num">1</span>)
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="ident">result</span>: <span class="ty">int</span> <span class="op">=</span> <span class="fn">factorial</span>(<span class="num">5</span>)
+    <span class="fn">print</span>(<span class="ident">result</span>)`,
+    extraTitle: null,
+  },
+  {
+    id: 'lexer',
+    icon: '🔡',
+    name: 'Lexer',
+    short: 'Source → Token stream',
+    color: '#d29922',
+    bgColor: 'rgba(210,153,34,0.12)',
+    desc: `The <strong>Lexer</strong> (inside <code>sifr_python_parser</code>, a vendored fork of ruff's lexer) scans the source text character-by-character and emits a flat stream of <strong>tokens</strong>.
+    <code>ruff_python_trivia</code> handles whitespace and comments. <code>ruff_python_literal</code> parses string escapes and number formats.
+    Each token carries its <strong>text span</strong> (byte offsets into the source) so diagnostics can point back to source positions.`,
+    paneTitle: 'Token stream',
+    paneDot: '#d29922',
+    isTokens: true,
+    content: () => '',
+    extraTitle: null,
+  },
+  {
+    id: 'parser',
+    icon: '🌳',
+    name: 'Parser',
+    short: 'Tokens → Sifr AST',
+    color: '#3fb950',
+    bgColor: 'rgba(63,185,80,0.12)',
+    desc: `The <strong>Parser</strong> (<code>sifr_python_parser</code>) consumes the token stream and builds the <strong>Sifr AST</strong> — a tree of typed Rust structs representing the syntactic structure of the program.
+    Invalid syntax is caught here. The AST is purely syntactic at this point: names are not resolved and types are not checked yet.
+    The vendored fork allows the tree to diverge from Python's grammar as Sifr evolves.`,
+    paneTitle: 'Sifr AST (pseudo-dump)',
+    paneDot: '#3fb950',
+    content: () => `<span class="cmt">// sifr_python_ast nodes</span>
+<span class="ty">Module</span> {
+  body: [
+    <span class="ty">FunctionDef</span> {
+      name: <span class="str">"factorial"</span>,
+      params: [<span class="ty">Param</span> { name: <span class="str">"n"</span>, annotation: <span class="ty">Name</span>(<span class="str">"int"</span>) }],
+      returns: <span class="ty">Name</span>(<span class="str">"int"</span>),
+      body: [
+        <span class="ty">If</span> {
+          test: <span class="ty">Compare</span>(<span class="ty">Name</span>(<span class="str">"n"</span>), <span class="op">LtE</span>, <span class="ty">Constant</span>(<span class="num">1</span>)),
+          body: [<span class="ty">Return</span>(<span class="ty">Constant</span>(<span class="num">1</span>))]
+        },
+        <span class="ty">Return</span>(
+          <span class="ty">BinOp</span>(
+            <span class="ty">Name</span>(<span class="str">"n"</span>),
+            <span class="op">Mult</span>,
+            <span class="ty">Call</span>(<span class="str">"factorial"</span>, [<span class="ty">BinOp</span>(<span class="ty">Name</span>(<span class="str">"n"</span>), <span class="op">Sub</span>, <span class="ty">Constant</span>(<span class="num">1</span>))])
+          )
+        )
+      ]
+    },
+    <span class="ty">FunctionDef</span> { name: <span class="str">"main"</span>, <span class="cmt">/* ... */</span> }
+  ]
+}`,
+    extraTitle: null,
+  },
+  {
+    id: 'binder',
+    icon: '🔗',
+    name: 'Binder / Name Resolution',
+    short: 'Resolves names → DefIds',
+    color: '#bc8cff',
+    bgColor: 'rgba(188,140,255,0.12)',
+    desc: `The <strong>Binder</strong> walks the AST and resolves every identifier to a <strong>definition</strong> (<code>DefId</code>).
+    It builds a symbol table, handles scoping (local → enclosing → module → builtins), detects <strong>import cycles</strong>, and constructs the <strong>control flow graph</strong> (CFG) the type checker uses for narrowing.
+    Inspired by TypeScript's binder — the CFG is the foundation for all dataflow-based type analysis.`,
+    paneTitle: 'After binding',
+    paneDot: '#bc8cff',
+    content: () => `<span class="cmt">// Each Name node now carries a DefId</span>
+<span class="ty">FunctionDef</span> {
+  name: <span class="str">"factorial"</span>,  <span class="cmt">// DefId(1)</span>
+  params: [<span class="ty">Param</span> {
+    name: <span class="str">"n"</span>,         <span class="cmt">// DefId(2)</span>
+    annotation: <span class="ty">Int</span>        <span class="cmt">// builtin resolved</span>
+  }],
+  body: [
+    <span class="ty">If</span> {
+      test: <span class="ty">Compare</span>(
+        <span class="hi"><span class="ty">Name</span>(<span class="str">"n"</span>, <span class="lbl">def=2</span>)</span>,  <span class="cmt">// resolved to param</span>
+        …
+      )
+    },
+    <span class="ty">Return</span>(
+      <span class="ty">Call</span>(
+        <span class="hi"><span class="ty">Name</span>(<span class="str">"factorial"</span>, <span class="lbl">def=1</span>)</span>,  <span class="cmt">// self-reference</span>
+        …
+      )
+    )
+  ]
+}
+
+<span class="cmt">// Symbol table</span>
+<span class="lbl">scope[module]</span>: {
+  <span class="str">"factorial"</span> → <span class="ty">DefId</span>(<span class="num">1</span>),
+  <span class="str">"main"</span>      → <span class="ty">DefId</span>(<span class="num">3</span>)
+}
+<span class="lbl">scope[factorial]</span>: {
+  <span class="str">"n"</span>         → <span class="ty">DefId</span>(<span class="num">2</span>)
+}`,
+    extraTitle: null,
+  },
+  {
+    id: 'checker',
+    icon: '✅',
+    name: 'Type Checker',
+    short: 'Infers & checks all types',
+    color: '#39d2c0',
+    bgColor: 'rgba(57,210,192,0.12)',
+    desc: `The <strong>Type Checker</strong> (<code>sifr_type_system</code>) is the core safety enforcer. It:
+    <br>• <strong>Infers types</strong> for every expression (initializer, return paths, call sites)
+    <br>• <strong>Verifies assignments</strong> — <code>n: int = "hello"</code> is a compile-time error
+    <br>• <strong>Narrows types</strong> through control flow (<code>if n &lt;= 1</code> narrows the branch)
+    <br>• <strong>Enforces must-use</strong> on <code>Result</code>/<code>Option</code> — ignoring them is an error
+    <br>• <strong>Checks borrow rules</strong> — use-after-move, <code>mut</code>/<code>own</code> parameter compliance`,
+    paneTitle: 'Type-checked (inline types)',
+    paneDot: '#39d2c0',
+    content: () => `<span class="cmt">// reveal_type annotations added by checker</span>
+<span class="kw">def</span> <span class="fn">factorial</span>(<span class="ident">n</span>: <span class="ty">int</span>) -> <span class="ty">int</span>:
+    <span class="cmt">// n : int  (from param annotation)</span>
+    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;=</span> <span class="num">1</span>:
+        <span class="cmt">// branch: n narrowed to int (≤1)</span>
+        <span class="kw">return</span> <span class="num">1</span>   <span class="cmt">// : int ✓</span>
+    <span class="cmt">// n : int (≥2 after narrowing)</span>
+    <span class="kw">return</span> <span class="ident">n</span> <span class="op">*</span> <span class="fn">factorial</span>(<span class="ident">n</span> <span class="op">-</span> <span class="num">1</span>)
+    <span class="cmt">//     int *      int      → int ✓</span>
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="ident">result</span>: <span class="ty">int</span> <span class="op">=</span> <span class="fn">factorial</span>(<span class="num">5</span>)
+    <span class="cmt">//        int ← int ✓</span>
+    <span class="fn">print</span>(<span class="ident">result</span>)
+    <span class="cmt">//     int → () ✓</span>
+
+<span class="ok">// ✓ No type errors. All types resolved.</span>`,
+    extraTitle: null,
+  },
+  {
+    id: 'hir',
+    icon: '🧩',
+    name: 'Sifr HIR',
+    short: 'Typed + desugared IR',
+    color: '#f778ba',
+    bgColor: 'rgba(247,120,186,0.12)',
+    desc: `The <strong>HIR</strong> (<code>sifr_hir</code>) is a <em>typed</em> version of the AST where every node carries its resolved type and all syntactic sugar is desugared.
+    The compiler inserts <strong>auto-unwrap <code>?</code> nodes</strong> inside <code>try</code> blocks, wraps bare <code>return</code> values in <code>Ok(…)</code> for <code>Result</code>-returning functions, makes all borrows explicit, and resolves method dispatch.
+    The HIR is the codegen's sole input — it never looks at the raw AST.`,
+    paneTitle: 'HIR (pseudo-dump)',
+    paneDot: '#f778ba',
+    content: () => `<span class="cmt">// HIR: every node has a resolved Type</span>
+<span class="ty">HirFunction</span> {
+  def_id: <span class="ty">DefId</span>(<span class="num">1</span>),
+  name: <span class="str">"factorial"</span>,
+  params: [<span class="ty">HirParam</span> { def_id: <span class="ty">DefId</span>(<span class="num">2</span>), ty: <span class="ty">Int</span> }],
+  return_ty: <span class="ty">Int</span>,
+  body: <span class="ty">HirBlock</span> {
+    stmts: [
+      <span class="ty">HirIf</span> {
+        cond: <span class="hi"><span class="ty">HirExpr</span> { ty: <span class="ty">Bool</span>, kind: Compare(…) }</span>,
+        then: [<span class="ty">HirReturn</span> { ty: <span class="ty">Int</span>, value: <span class="ty">HirLit</span>(<span class="num">1</span>) }]
+      },
+      <span class="ty">HirReturn</span> {
+        ty: <span class="ty">Int</span>,
+        value: <span class="ty">HirBinOp</span> {
+          ty: <span class="ty">Int</span>,
+          op: <span class="ty">Mul</span>,
+          lhs: <span class="hi"><span class="ty">HirVar</span> { ty: <span class="ty">Int</span>, def_id: <span class="ty">DefId</span>(<span class="num">2</span>) }</span>,
+          rhs: <span class="ty">HirCall</span> {
+            ty: <span class="ty">Int</span>,
+            callee: <span class="ty">DefId</span>(<span class="num">1</span>),  <span class="cmt">// resolved</span>
+            args: [<span class="ty">HirBinOp</span>(n <span class="op">-</span> <span class="num">1</span>, ty: <span class="ty">Int</span>)]
+          }
+        }
+      }
+    ]
+  }
+}`,
+    extraTitle: null,
+  },
+  {
+    id: 'codegen',
+    icon: '⚙️',
+    name: 'Rust Codegen',
+    short: 'HIR → .rs source',
+    color: '#e3b341',
+    bgColor: 'rgba(227,179,65,0.12)',
+    desc: `The <strong>Codegen</strong> (<code>sifr_codegen</code>) translates each HIR node into valid Rust source code.
+    Key translations: unions → Rust enums, <code>T|None</code> → <code>Option&lt;T&gt;</code>, borrow-by-default params → <code>&T</code>, classes → structs with <code>#[derive(…)]</code>.
+    A <strong>span map</strong> is recorded (Rust line → .sifr line) for error attribution.
+    <code>#[allow(warnings)]</code> suppresses machine-generated code warnings.`,
+    paneTitle: 'Generated Rust (.rs)',
+    paneDot: '#e3b341',
+    content: () => `<span class="attr">#[allow(warnings)]</span>
+
+<span class="kw">fn</span> <span class="fn">factorial</span>(<span class="ident">n</span>: <span class="ty">i64</span>) -> <span class="ty">i64</span> {
+    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;=</span> <span class="num">1</span> {
+        <span class="kw">return</span> <span class="num">1</span>;
+    }
+    <span class="ident">n</span> <span class="op">*</span> <span class="fn">factorial</span>(<span class="ident">n</span> <span class="op">-</span> <span class="num">1</span>)
+}
+
+<span class="kw">fn</span> <span class="fn">main</span>() {
+    <span class="kw">let</span> <span class="ident">result</span>: <span class="ty">i64</span> <span class="op">=</span> <span class="fn">factorial</span>(<span class="num">5</span>);
+    <span class="macro">println!</span>(<span class="str">"{}"</span>, <span class="ident">result</span>);
+}
+
+<span class="cmt">// Span map (Rust → Sifr)</span>
+<span class="cmt">// rs:3:4  → sifr:1:5  (factorial param)</span>
+<span class="cmt">// rs:4:4  → sifr:2:4  (if n &lt;= 1)</span>
+<span class="cmt">// rs:10:4 → sifr:8:4  (result assignment)</span>`,
+    extraTitle: null,
+  },
+  {
+    id: 'rustc',
+    icon: '🦀',
+    name: 'rustc',
+    short: 'Compiles .rs → native',
+    color: '#f85149',
+    bgColor: 'rgba(248,81,73,0.12)',
+    desc: `The standard <strong>Rust compiler</strong> (<code>rustc</code>) takes the generated <code>.rs</code> files and compiles them to optimized machine code.
+    If <code>rustc</code> emits errors, the <code>sifr_driver</code> translates them back to <code>.sifr</code> source locations using the span map.
+    Warnings from generated code are suppressed (<code>#[allow(warnings)]</code>). Over time, Sifr's type checker should catch everything before this step so <code>rustc</code> errors become rare.`,
+    paneTitle: 'rustc invocation',
+    paneDot: '#f85149',
+    content: () => `<span class="cmt">$ rustc factorial.rs -O -o factorial</span>
+
+<span class="cmt">// Internally: sifr_driver calls rustc</span>
+<span class="kw">let</span> status <span class="op">=</span> <span class="ty">Command</span>::new(<span class="str">"rustc"</span>)
+    .arg(<span class="str">"--edition=2021"</span>)
+    .arg(<span class="str">"-O"</span>)
+    .arg(<span class="str">"--out-dir"</span>)
+    .arg(<span class="ident">out_dir</span>)
+    .arg(<span class="ident">generated_rs_path</span>)
+    .status()?;
+
+<span class="kw">if</span> !status.success() {
+    <span class="cmt">// translate rustc errors → .sifr locations</span>
+    <span class="fn">translate_diagnostics</span>(&amp;<span class="ident">span_map</span>, &amp;<span class="ident">stderr</span>);
+}
+
+<span class="cmt">// Generated Rust compiles cleanly ✓</span>
+<span class="ok">// Compiling factorial v0.1.0</span>
+<span class="ok">// Finished release [optimized] in 0.38s</span>`,
+    extraTitle: null,
+  },
+  {
+    id: 'binary',
+    icon: '🚀',
+    name: 'Native Binary',
+    short: 'Final executable',
+    color: '#3fb950',
+    bgColor: 'rgba(63,185,80,0.12)',
+    desc: `The result is a <strong>native binary</strong> — no runtime, no garbage collector, no virtual machine.
+    It runs at full Rust speed. Sifr's core guarantee: <em>if it compiled, it won't crash at runtime under normal conditions.</em>
+    The only possible panic is an explicit <code>assert</code> statement (programmer invariant check). All other failure paths return <code>Result</code>/<code>Option</code> and were handled at compile time.`,
+    paneTitle: 'Execution output',
+    paneDot: '#3fb950',
+    content: () => `<span class="cmt">$ ./factorial</span>
+<span class="ok">120</span>
+
+<span class="cmt">// Sifr guarantee: no panics at runtime</span>
+<span class="cmt">// factorial(5) = 5 × 4 × 3 × 2 × 1 = 120</span>
+
+<span class="cmt">// Binary stats:</span>
+<span class="cmt">//   Size   : 312 KB (stripped)</span>
+<span class="cmt">//   Runtime: &lt;1 ms</span>
+<span class="cmt">//   GC     : none</span>
+<span class="cmt">//   VM     : none</span>`,
+    extraTitle: null,
+  },
+];
+
+const TOKENS = [
+  { kind: 'keyword', text: 'def' },
+  { kind: 'ident',   text: 'factorial' },
+  { kind: 'punct',   text: '(' },
+  { kind: 'ident',   text: 'n' },
+  { kind: 'punct',   text: ':' },
+  { kind: 'type',    text: 'int' },
+  { kind: 'punct',   text: ')' },
+  { kind: 'op',      text: '->' },
+  { kind: 'type',    text: 'int' },
+  { kind: 'punct',   text: ':' },
+  { kind: 'newline', text: 'NEWLINE' },
+  { kind: 'keyword', text: 'if' },
+  { kind: 'ident',   text: 'n' },
+  { kind: 'op',      text: '<=' },
+  { kind: 'num',     text: '1' },
+  { kind: 'punct',   text: ':' },
+  { kind: 'newline', text: 'NEWLINE' },
+  { kind: 'keyword', text: 'return' },
+  { kind: 'num',     text: '1' },
+  { kind: 'newline', text: 'NEWLINE' },
+  { kind: 'keyword', text: 'return' },
+  { kind: 'ident',   text: 'n' },
+  { kind: 'op',      text: '*' },
+  { kind: 'ident',   text: 'factorial' },
+  { kind: 'punct',   text: '(' },
+  { kind: 'ident',   text: 'n' },
+  { kind: 'op',      text: '-' },
+  { kind: 'num',     text: '1' },
+  { kind: 'punct',   text: ')' },
+  { kind: 'newline', text: 'NEWLINE' },
+  { kind: 'keyword', text: 'def' },
+  { kind: 'ident',   text: 'main' },
+  { kind: 'punct',   text: '(' },
+  { kind: 'punct',   text: ')' },
+  { kind: 'punct',   text: ':' },
+  { kind: 'newline', text: 'NEWLINE' },
+  { kind: 'ident',   text: 'result' },
+  { kind: 'punct',   text: ':' },
+  { kind: 'type',    text: 'int' },
+  { kind: 'op',      text: '=' },
+  { kind: 'ident',   text: 'factorial' },
+  { kind: 'punct',   text: '(' },
+  { kind: 'num',     text: '5' },
+  { kind: 'punct',   text: ')' },
+  { kind: 'newline', text: 'NEWLINE' },
+  { kind: 'ident',   text: 'print' },
+  { kind: 'punct',   text: '(' },
+  { kind: 'ident',   text: 'result' },
+  { kind: 'punct',   text: ')' },
+  { kind: 'keyword', text: 'EOF' },
+];
+
+let current = -1;
+let playTimer = null;
+let isPlaying = false;
+
+// ── Build pipeline sidebar ──
+const pipelineEl = document.getElementById('pipeline');
+STEPS.forEach((step, i) => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'step-wrapper';
+  wrapper.id = `wrapper-${i}`;
+
+  const btn = document.createElement('button');
+  btn.className = 'step-btn';
+  btn.id = `step-btn-${i}`;
+  btn.onclick = () => { stopPlay(); show(i); };
+  btn.innerHTML = `
+    <div class="step-icon" style="color:${step.color}">${step.icon}</div>
+    <div class="step-info">
+      <div class="step-name">${step.name}</div>
+      <div class="step-short">${step.short}</div>
+    </div>
+  `;
+  wrapper.appendChild(btn);
+
+  if (i < STEPS.length - 1) {
+    const arrow = document.createElement('div');
+    arrow.className = 'step-arrow';
+    arrow.id = `arrow-${i}`;
+    wrapper.appendChild(arrow);
+  }
+
+  pipelineEl.appendChild(wrapper);
+});
+
+function show(index) {
+  if (index < 0 || index >= STEPS.length) return;
+  const step = STEPS[index];
+
+  // Update sidebar
+  document.querySelectorAll('.step-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === index);
+    if (i < index) btn.classList.add('done'); else btn.classList.remove('done');
+  });
+
+  // Progress bar
+  document.getElementById('progress-fill').style.width =
+    ((index + 1) / STEPS.length * 100) + '%';
+
+  // Build detail
+  const detail = document.getElementById('detail');
+
+  let contentHtml;
+  if (step.isTokens) {
+    contentHtml = `<div class="tokens">${
+      TOKENS.map((t, i) =>
+        `<span class="token token-${t.kind}" style="animation-delay:${i * 35}ms">${t.text}</span>`
+      ).join('')
+    }</div>`;
+  } else {
+    contentHtml = `<pre>${step.content()}</pre>`;
+  }
+
+  detail.innerHTML = `
+    <div class="detail-header">
+      <div class="detail-badge" style="background:${step.bgColor};color:${step.color}">${step.icon}</div>
+      <div class="detail-title">
+        <h2 style="color:${step.color}">${step.name}</h2>
+        <p>${step.short}</p>
+      </div>
+    </div>
+
+    <div class="detail-desc">${step.desc}</div>
+
+    <div class="example-pane">
+      <div class="pane-header">
+        <div class="pane-dot" style="background:${step.paneDot}"></div>
+        ${step.paneTitle}
+      </div>
+      ${contentHtml}
+    </div>
+  `;
+
+  current = index;
+}
+
+function next() {
+  const n = (current + 1) % STEPS.length;
+  show(n);
+}
+
+function prev() {
+  const n = (current - 1 + STEPS.length) % STEPS.length;
+  show(n);
+}
+
+function togglePlay() {
+  if (isPlaying) stopPlay(); else startPlay();
+}
+
+function startPlay() {
+  isPlaying = true;
+  document.getElementById('play-btn').textContent = '⏸ Pause';
+  document.getElementById('autoplay-indicator').classList.add('visible');
+  if (current === STEPS.length - 1) show(0);
+  else next();
+  playTimer = setInterval(() => {
+    if (current === STEPS.length - 1) { stopPlay(); return; }
+    next();
+  }, 2200);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  clearInterval(playTimer);
+  document.getElementById('play-btn').textContent = '▶ Play';
+  document.getElementById('autoplay-indicator').classList.remove('visible');
+}
+
+// keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { stopPlay(); next(); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { stopPlay(); prev(); }
+  if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+});
+
+// Start on first step
+show(0);
+</script>
+</body>
+</html>
