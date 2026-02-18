@@ -118,3 +118,11 @@ For a deep dive into the compiler pipeline, type system, ownership model, and de
 Want to see how a Sifr program travels from source text to a native binary? The interactive pipeline visualizer walks through every compiler step — Lexer → Parser → Binder → Type Checker → HIR → Codegen → rustc — with a live `factorial` example at each stage.
 
 **[▶ Open the Compiler Pipeline Visualizer](https://htmlpreview.github.io/?https://github.com/yaseralnajjar/sifr/blob/main/compiler_pipeline.html)**
+
+## License
+
+[MIT](LICENSE.md)
+
+## Sponsors
+
+* [CDON](https://www.cdon.se/)/[Fyndiq](https://www.fyndiq.se/): One of the leading marketplaces in the Nordics (Sweden, Norway, Denmark, Finland).
