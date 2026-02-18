@@ -763,6 +763,10 @@ struct RustEmitter {
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
     borrowed_params: HashSet<String>,
+    /// Set of parameter names that are mutably borrowed (&mut T) in the current function.
+    /// Used to avoid double-borrowing: when a &mut param is passed to another &mut param,
+    /// we must NOT emit `&mut name` (it's already &mut T); just pass `name` directly.
+    mut_borrowed_params: HashSet<String>,
     /// Map of module_name -> set of names that are intrinsic re-exports (from _sifr.*)
     /// Used to distinguish intrinsic function calls from pure Sifr function calls
     stdlib_intrinsic_names: HashMap<String, HashSet<String>>,
@@ -810,6 +814,7 @@ impl RustEmitter {
             module_constants: HashMap::new(),
             generic_classes: HashSet::new(),
             borrowed_params: HashSet::new(),
+            mut_borrowed_params: HashSet::new(),
             stdlib_intrinsic_names: HashMap::new(),
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
@@ -1910,9 +1915,28 @@ impl RustEmitter {
                     self.write(" {\n");
                     self.indent += 1;
 
+                    // Track borrowed/mut-borrowed params for correct key-ref and borrow-prefix logic
+                    self.borrowed_params.clear();
+                    self.mut_borrowed_params.clear();
+                    for param in &method.params {
+                        if param.convention == ParamConvention::Borrow
+                            && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                        {
+                            self.borrowed_params.insert(param.name.clone());
+                        }
+                        if param.convention == ParamConvention::MutBorrow
+                            && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                        {
+                            self.mut_borrowed_params.insert(param.name.clone());
+                        }
+                    }
+
                     for stmt in &method.body {
                         self.emit_stmt(stmt);
                     }
+
+                    self.borrowed_params.clear();
+                    self.mut_borrowed_params.clear();
 
                     self.indent -= 1;
                     self.write_indent();
@@ -1940,6 +1964,7 @@ impl RustEmitter {
 
         // Track borrowed parameters for dereference in comparisons
         self.borrowed_params.clear();
+        self.mut_borrowed_params.clear();
         // Track Callable-typed params/locals so we can emit correct borrow prefixes when calling them
         self.callable_var_conventions.clear();
         for param in &func.params {
@@ -1947,6 +1972,11 @@ impl RustEmitter {
                 && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
             {
                 self.borrowed_params.insert(param.name.clone());
+            }
+            if param.convention == ParamConvention::MutBorrow
+                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            {
+                self.mut_borrowed_params.insert(param.name.clone());
             }
             // Register Callable-typed params for convention-aware call emission
             if let Type::Callable(ref param_types, ref conventions, _) = param.ty {
@@ -3225,6 +3255,55 @@ impl RustEmitter {
                 self.emit_expr(value);
                 self.write(";\n");
             }
+            HirStmt::AttributeSubscriptAssign { object, field, index, value, field_ty } => {
+                self.write_indent();
+                let field_access = format!("{}.{}", object, field);
+                match field_ty {
+                    Type::List(_) => {
+                        // self.field[i] = val -> bounds-checked assignment
+                        self.write("{ let __idx = ");
+                        self.emit_expr(index);
+                        self.write(" as usize; if let Some(__elem) = ");
+                        self.write(&field_access);
+                        self.write(".get_mut(__idx) { *__elem = ");
+                        self.emit_expr(value);
+                        self.write("; } }\n");
+                    }
+                    Type::Dict(ref key_ty, _) => {
+                        // self.field[key] = val -> self.field.insert(key_owned, val)
+                        // For string keys: if key is a borrowed param (&String), we clone it for owned insert.
+                        self.write(&field_access);
+                        self.write(".insert(");
+                        if matches!(key_ty.as_ref(), Type::Str) {
+                            // String key: emit key with .clone() if it's a borrowed param
+                            if let HirExpr::Name { name, .. } = index {
+                                if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()) {
+                                    self.emit_expr(index);
+                                    self.write(".clone()");
+                                } else {
+                                    self.emit_expr(index);
+                                }
+                            } else {
+                                self.emit_expr(index);
+                            }
+                        } else {
+                            self.emit_expr(index);
+                        }
+                        self.write(", ");
+                        self.emit_expr(value);
+                        self.write(");\n");
+                    }
+                    _ => {
+                        // Fallback: direct subscript
+                        self.write(&field_access);
+                        self.write("[");
+                        self.emit_expr(index);
+                        self.write("] = ");
+                        self.emit_expr(value);
+                        self.write(";\n");
+                    }
+                }
+            }
             HirStmt::Delete { object, index } => {
                 let obj_ty = object.ty();
                 self.write_indent();
@@ -3856,7 +3935,18 @@ impl RustEmitter {
                 if args.len() >= 2 {
                     self.emit_expr(&args[0]);
                     self.write(" as usize, ");
+                    // If the value arg is a borrowed/mut-borrowed param with Move ownership,
+                    // we need to clone it since Vec::insert requires an owned value.
+                    let needs_clone = if let HirExpr::Name { name, ty } = &args[1] {
+                        (self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()))
+                            && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                    } else {
+                        false
+                    };
                     self.emit_expr(&args[1]);
+                    if needs_clone {
+                        self.write(".clone()");
+                    }
                 }
                 self.write(")");
             }
@@ -4203,9 +4293,22 @@ impl RustEmitter {
         // This handles the case where a Callable call passes a borrowed param:
         //   fn apply(f: Callable[[list[int]], int], items: &Vec<i64>) { f(items) }
         // Here items is already &Vec<i64>, so we pass it as-is (no extra &).
+        //
+        // Similarly, if the argument is already a mutably borrowed parameter (&mut T),
+        // don't add another &mut. E.g.:
+        //   fn heapify(data: &mut Vec<i64>) { _sift_down(data, 0, n); }
+        // Here data is already &mut Vec<i64>; passing &mut data would be &&mut Vec<i64> error.
         if let Some(name) = arg_name {
             if self.borrowed_params.contains(name) && convention == ParamConvention::Borrow {
                 return; // already &T, no additional borrow needed
+            }
+            if self.mut_borrowed_params.contains(name) {
+                if convention == ParamConvention::MutBorrow {
+                    return; // already &mut T, no additional &mut needed
+                }
+                if convention == ParamConvention::Borrow {
+                    return; // &mut T -> &T is implicit reborrow in Rust; no extra & needed
+                }
             }
         }
         match convention {
@@ -4948,8 +5051,9 @@ impl RustEmitter {
                 let obj_ty = object.ty();
                 match obj_ty {
                     Type::Dict(_, _) => {
-                        // Safe dict indexing: d[key] -> d.get(&key).cloned()
-                        // Returns Option<V> which maps to our V | None union
+                        // Safe dict indexing: d[key] -> d.get(key_ref).cloned()
+                        // For self.field dict, we don't need to clone the field -- just borrow it.
+                        self.suppress_field_clone = true;
                         self.emit_expr(object);
                         self.write(".get(");
                         self.emit_key_ref_expr(index);
@@ -6259,6 +6363,26 @@ impl RustEmitter {
     fn emit_key_ref_expr(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
             self.write(&format!("{:?}", val));
+        } else if let HirExpr::Name { name, ty } = expr {
+            // If the name is already a borrowed parameter (&String or &mut String),
+            // emitting `&name` would produce `&&String` which fails Borrow<str> bounds.
+            // For borrowed string params, emit `name.as_str()` or just `name` (deref coerces).
+            if (self.borrowed_params.contains(name.as_str())
+                || self.mut_borrowed_params.contains(name.as_str()))
+                && matches!(ty, Type::Str)
+            {
+                // already &String -- deref-coerces to &str via as_str()
+                self.write(name);
+                self.write(".as_str()");
+            } else if self.borrowed_params.contains(name.as_str())
+                || self.mut_borrowed_params.contains(name.as_str())
+            {
+                // already a reference -- pass directly (no extra &)
+                self.emit_expr(expr);
+            } else {
+                self.write("&");
+                self.emit_expr(expr);
+            }
         } else {
             self.write("&");
             self.emit_expr(expr);
@@ -6547,7 +6671,9 @@ fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExp
 fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
     stmts.iter().any(|s| {
         match s {
-            HirStmt::FieldAssign { .. } | HirStmt::AttributeAugAssign { .. } => true,
+            HirStmt::FieldAssign { .. }
+            | HirStmt::AttributeAugAssign { .. }
+            | HirStmt::AttributeSubscriptAssign { .. } => true,
             HirStmt::If { then_body, elif_clauses, else_body, .. } => {
                 body_contains_field_assign_codegen(then_body)
                     || elif_clauses.iter().any(|(_, body)| body_contains_field_assign_codegen(body))

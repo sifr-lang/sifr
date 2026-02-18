@@ -2609,6 +2609,48 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
                 object_ty: obj_ty,
             });
         }
+        // Handle attribute subscript assignment: self.field[key] = val
+        if let Expr::Attribute(attr) = sub.value.as_ref() {
+            let obj_name = match attr.value.as_ref() {
+                Expr::Name(n) => n.id.to_string(),
+                _ => {
+                    ctx.error("subscript assignment target must be a simple name".to_string());
+                    return None;
+                }
+            };
+            let field_name = attr.attr.to_string();
+            // Look up field type from the object's class definition
+            let field_ty = ctx.scope.lookup(&obj_name)
+                .and_then(|info| {
+                    let obj_ty = info.effective_type();
+                    // The object may be typed as Type::Class directly (e.g. `self`)
+                    // or as Type::Unknown for unresolved types.
+                    if let Type::Class { fields, .. } = obj_ty {
+                        fields.iter().find(|(n, _)| n == &field_name).map(|(_, t)| t.clone())
+                    } else if let Type::Class { name: class_name, .. } = obj_ty {
+                        // Class by name reference
+                        ctx.class_types.get(class_name).and_then(|class_ty| {
+                            if let Type::Class { fields, .. } = class_ty {
+                                fields.iter().find(|(n, _)| n == &field_name).map(|(_, t)| t.clone())
+                            } else {
+                                None
+                            }
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or(Type::Unknown);
+            let index = lower_expr(&sub.slice, ctx)?;
+            let value = lower_expr(&assign.value, ctx)?;
+            return Some(HirStmt::AttributeSubscriptAssign {
+                object: obj_name,
+                field: field_name,
+                index,
+                value,
+                field_ty,
+            });
+        }
         let obj_name = match sub.value.as_ref() {
             Expr::Name(n) => n.id.to_string(),
             _ => {

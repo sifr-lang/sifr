@@ -1,6 +1,104 @@
 # sifr.heapq — Heap queue algorithm (pure Sifr)
-# Implements a min-heap. Functions return new lists (functional style)
-# to work with Sifr's borrow-by-default parameter convention.
+# Implements a min-heap.
+#
+# In-place API (borrow-by-default with `mut`):
+#   heapify(mut data)   -- convert list to a min-heap in-place
+#   heappush(mut heap, item) -- push item onto heap in-place
+#   heappop(mut heap) -> item | None -- pop smallest item, heapify in-place
+#
+# Functional API (for backward compatibility):
+#   heapify_copy(data) -> list   -- returns a new heap (copy)
+#   heappush_copy(heap, item) -> list
+#   heappop_val(heap) -> item | None   -- returns only the popped value
+
+# ── Internal helpers ──────────────────────────────────────────────────────────
+
+def _sift_down(mut data: list[int], pos: int, n: int) -> None:
+    done: bool = False
+    while not done:
+        smallest: int = pos
+        left: int = 2 * pos + 1
+        right: int = 2 * pos + 2
+        if left < n:
+            s_val: int | None = data[smallest]
+            l_val: int | None = data[left]
+            if s_val is not None:
+                if l_val is not None:
+                    if l_val < s_val:
+                        smallest = left
+        if right < n:
+            s_val2: int | None = data[smallest]
+            r_val: int | None = data[right]
+            if s_val2 is not None:
+                if r_val is not None:
+                    if r_val < s_val2:
+                        smallest = right
+        if smallest == pos:
+            done = True
+        else:
+            tmp_pos: int | None = data[pos]
+            tmp_sm: int | None = data[smallest]
+            if tmp_pos is not None:
+                if tmp_sm is not None:
+                    data[pos] = tmp_sm
+                    data[smallest] = tmp_pos
+            pos = smallest
+
+def _sift_up(mut heap: list[int], pos: int) -> None:
+    done: bool = False
+    while not done:
+        if pos <= 0:
+            done = True
+        else:
+            parent: int = (pos - 1) // 2
+            p_val: int | None = heap[parent]
+            c_val: int | None = heap[pos]
+            if p_val is not None:
+                if c_val is not None:
+                    if c_val < p_val:
+                        heap[parent] = c_val
+                        heap[pos] = p_val
+                        pos = parent
+                    else:
+                        done = True
+                else:
+                    done = True
+            else:
+                done = True
+
+# ── In-place API (mut parameters) ────────────────────────────────────────────
+
+def heapify(mut data: list[int]) -> None:
+    """Convert list to a min-heap in-place. O(n) time."""
+    n: int = len(data)
+    i: int = n // 2 - 1
+    while i >= 0:
+        _sift_down(data, i, n)
+        i = i - 1
+
+def heappush(mut heap: list[int], item: int) -> None:
+    """Push item onto the heap in-place. O(log n) time."""
+    heap.append(item)
+    pos: int = len(heap) - 1
+    _sift_up(heap, pos)
+
+def heappop(mut heap: list[int]) -> int | None:
+    """Pop and return the smallest item. Heap is modified in-place. O(log n) time.
+    Returns None if the heap is empty."""
+    n: int = len(heap)
+    if n == 0:
+        return None
+    top: int | None = heap[0]
+    last: int | None = heap[n - 1]
+    heap.pop()
+    n2: int = len(heap)
+    if n2 > 0:
+        if last is not None:
+            heap[0] = last
+        _sift_down(heap, 0, n2)
+    return top
+
+# ── Functional API (backward compatibility) ───────────────────────────────────
 
 def _swap(data: list[int], i: int, j: int) -> list[int]:
     result: list[int] = []
@@ -27,118 +125,36 @@ def _swap(data: list[int], i: int, j: int) -> list[int]:
         k = k + 1
     return result
 
-def heapify(data: list[int]) -> list[int]:
+def heapify_copy(data: list[int]) -> list[int]:
     result: list[int] = []
     for val in data:
         result.append(val)
-    n: int = len(result)
-    i: int = n // 2 - 1
-    while i >= 0:
-        # sift down at position i
-        pos: int = i
-        done: bool = False
-        while not done:
-            smallest: int = pos
-            left: int = 2 * pos + 1
-            right: int = 2 * pos + 2
-            if left < n:
-                s_val: int | None = result[smallest]
-                l_val: int | None = result[left]
-                if s_val is not None:
-                    if l_val is not None:
-                        if l_val < s_val:
-                            smallest = left
-            if right < n:
-                s_val2: int | None = result[smallest]
-                r_val: int | None = result[right]
-                if s_val2 is not None:
-                    if r_val is not None:
-                        if r_val < s_val2:
-                            smallest = right
-            if smallest == pos:
-                done = True
-            else:
-                result = _swap(result, pos, smallest)
-                pos = smallest
-        i = i - 1
+    heapify(result)
     return result
 
-def heappush(heap: list[int], item: int) -> list[int]:
+def heappush_copy(heap: list[int], item: int) -> list[int]:
     result: list[int] = []
     for val in heap:
         result.append(val)
-    result.append(item)
-    # sift up
-    pos: int = len(result) - 1
-    while pos > 0:
-        parent: int = (pos - 1) // 2
-        p_val: int | None = result[parent]
-        c_val: int | None = result[pos]
-        if p_val is not None:
-            if c_val is not None:
-                if c_val < p_val:
-                    result = _swap(result, parent, pos)
-                    pos = parent
-                else:
-                    return result
-            else:
-                return result
-        else:
-            return result
+    heappush(result, item)
     return result
 
-def heappop(heap: list[int]) -> int | None:
+def heappop_val(heap: list[int]) -> int | None:
+    """Return the smallest item without modifying the original heap.
+    Creates a temporary copy."""
     if len(heap) == 0:
         return None
-    top: int | None = heap[0]
-    if top is not None:
-        return top
-    return None
+    tmp: list[int] = []
+    for val in heap:
+        tmp.append(val)
+    return heappop(tmp)
 
 def heappop_rest(heap: list[int]) -> list[int]:
-    n: int = len(heap)
-    if n <= 1:
-        result: list[int] = []
-        return result
-    # Put last element at root, remove last
-    last: int | None = heap[n - 1]
-    result2: list[int] = []
-    if last is not None:
-        result2.append(last)
-    i: int = 1
-    while i < n - 1:
-        val: int | None = heap[i]
-        if val is not None:
-            result2.append(val)
-        i = i + 1
-    # sift down at position 0
-    pos: int = 0
-    done: bool = False
-    sz: int = len(result2)
-    while not done:
-        smallest: int = pos
-        left: int = 2 * pos + 1
-        right: int = 2 * pos + 2
-        if left < sz:
-            s_val: int | None = result2[smallest]
-            l_val: int | None = result2[left]
-            if s_val is not None:
-                if l_val is not None:
-                    if l_val < s_val:
-                        smallest = left
-        if right < sz:
-            s_val2: int | None = result2[smallest]
-            r_val: int | None = result2[right]
-            if s_val2 is not None:
-                if r_val is not None:
-                    if r_val < s_val2:
-                        smallest = right
-        if smallest == pos:
-            done = True
-        else:
-            result2 = _swap(result2, pos, smallest)
-            pos = smallest
-    return result2
+    result: list[int] = []
+    for val in heap:
+        result.append(val)
+    heappop(result)
+    return result
 
 def heapreplace(heap: list[int], item: int) -> int | None:
     if len(heap) == 0:
@@ -148,7 +164,7 @@ def heapreplace(heap: list[int], item: int) -> int | None:
     if top is not None:
         result = top
     rest: list[int] = heappop_rest(heap)
-    rest = heappush(rest, item)
+    rest = heappush_copy(rest, item)
     return result
 
 def heappushpop(heap: list[int], item: int) -> int | None:
@@ -158,12 +174,12 @@ def heappushpop(heap: list[int], item: int) -> int | None:
     if top is not None:
         if item <= top:
             return item
-    pushed: list[int] = heappush(heap, item)
-    val: int | None = heappop(pushed)
+    pushed: list[int] = heappush_copy(heap, item)
+    val: int | None = heappop_val(pushed)
     return val
 
 def nsmallest(n: int, data: list[int]) -> list[int]:
-    heap: list[int] = heapify(data)
+    heap: list[int] = heapify_copy(data)
     result: list[int] = []
     count: int = 0
     while count < n:
@@ -172,7 +188,6 @@ def nsmallest(n: int, data: list[int]) -> list[int]:
         val: int | None = heappop(heap)
         if val is not None:
             result.append(val)
-        heap = heappop_rest(heap)
         count = count + 1
     return result
 

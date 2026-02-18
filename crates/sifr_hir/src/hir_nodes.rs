@@ -203,6 +203,14 @@ pub enum HirStmt {
         op: String,
         value: HirExpr,
     },
+    /// Subscript assignment on an attribute: self.field[key] = val
+    AttributeSubscriptAssign {
+        object: String,
+        field: String,
+        index: HirExpr,
+        value: HirExpr,
+        field_ty: Type,
+    },
     /// Delete statement: del d[key] or del a[i]
     Delete {
         object: HirExpr,

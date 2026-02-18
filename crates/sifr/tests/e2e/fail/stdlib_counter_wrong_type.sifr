@@ -5,4 +5,4 @@ def main():
     c: Counter = Counter(42)
     print(c.total())
 
-# expect-error: argument 1 ('data') of function 'Counter': expected 'str', got 'int'
+# expect-error: argument 1 ('counts') of function 'Counter': expected 'dict[str, int]', got 'int'

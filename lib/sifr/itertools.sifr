@@ -8,13 +8,22 @@
 # expressions or for-loop-based generators.
 
 def chain(a: list[int], b: list[int]) -> list[int]:
-    # Eager: uses for-loop iteration (generator codegen requires while+yield)
+    # Borrow both lists and return a new combined list.
+    # Callers retain ownership of a and b after the call.
     result: list[int] = []
     for val in a:
         result.append(val)
     for val2 in b:
         result.append(val2)
     return result
+
+def chain_own(own a: list[int], own b: list[int]) -> list[int]:
+    # Consume both lists and return the combined result.
+    # Ownership of a and b is transferred -- they cannot be used after this call.
+    # More efficient than chain() because it extends a directly (no extra allocation).
+    for val in b:
+        a.append(val)
+    return a
 
 def chain_str(a: list[str], b: list[str]) -> list[str]:
     # Eager: uses for-loop iteration
@@ -24,6 +33,12 @@ def chain_str(a: list[str], b: list[str]) -> list[str]:
     for val2 in b:
         result.append(val2)
     return result
+
+def chain_str_own(own a: list[str], own b: list[str]) -> list[str]:
+    # Consume both string lists and return the combined result.
+    for val in b:
+        a.append(val)
+    return a
 
 def repeat_val(value: int, times: int) -> list[int]:
     # Lazy generator: simple while+yield pattern

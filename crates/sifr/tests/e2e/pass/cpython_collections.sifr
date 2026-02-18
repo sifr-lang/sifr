@@ -1,11 +1,10 @@
 # CPython test_collections.py — ported assertions for sifr.collections
-# Note: Set operations return new lists (functional style)
+# Updated to use native dict[str, int] Counter class (borrow-by-default milestone)
 from sifr.test import assert_eq, assert_true, assert_false
 from sifr.collections import (
+    Counter, from_list,
     new_set, set_from_list, set_add, set_contains, set_remove,
-    set_len, set_union, set_intersection,
-    counter_from_list, counter_get, counter_most_common, counter_total,
-    counter_values, counter_keys, counter_increment
+    set_len, set_union, set_intersection
 )
 
 def main():
@@ -48,33 +47,32 @@ def main():
     inter: list[int] = set_intersection(a_set, b_set)
     assert_eq(set_len(inter), 2)
 
-    # --- Counter operations (counter handle is str) ---
+    # --- Counter operations (native dict[str, int] class) ---
     words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
-    c: str = counter_from_list(words)
+    c: Counter = from_list(words)
 
-    assert_eq(counter_get(c, "apple"), 3)
-    assert_eq(counter_get(c, "banana"), 2)
-    assert_eq(counter_get(c, "cherry"), 1)
-    assert_eq(counter_get(c, "missing"), 0)
-    assert_eq(counter_total(c), 6)
+    assert_eq(c.get("apple"), 3)
+    assert_eq(c.get("banana"), 2)
+    assert_eq(c.get("cherry"), 1)
+    assert_eq(c.get("missing"), 0)
+    assert_eq(c.total(), 6)
 
-    # counter_most_common
-    mc: str = counter_most_common(c, 2)
+    # most_common returns list of keys sorted by count descending
+    mc: list[str] = c.most_common(2)
     print(mc)
 
-    # counter_keys
-    keys: list[str] = counter_keys(c)
+    # keys and values
+    keys: list[str] = c.keys()
     assert_eq(len(keys), 3)
 
-    # counter_values
-    vals: list[int] = counter_values(c)
+    vals: list[int] = c.values()
     assert_eq(len(vals), 3)
 
-    # counter_increment
-    c = counter_increment(c, "banana")
-    assert_eq(counter_get(c, "banana"), 3)
+    # increment
+    c.increment("banana")
+    assert_eq(c.get("banana"), 3)
 
     print("cpython_collections: all 26 assertions passed")
 
-# expect-stdout: [["apple",3],["banana",2]]
+# expect-stdout: ["apple", "banana"]
 # expect-stdout: cpython_collections: all 26 assertions passed
