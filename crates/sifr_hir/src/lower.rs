@@ -45,6 +45,8 @@ struct LowerCtx {
     loop_depth: usize,
     /// reveal_type() diagnostics (informational, not errors)
     reveal_types: Vec<String>,
+    /// Compiler warnings (non-fatal diagnostics printed to stderr)
+    warnings: Vec<String>,
     /// Whether we're currently inside a class method (tracks `self` type)
     current_class: Option<String>,
     /// The parent class name of the current class (for super() resolution)
@@ -81,6 +83,7 @@ impl LowerCtx {
             errors: Vec::new(),
             loop_depth: 0,
             reveal_types: Vec::new(),
+            warnings: Vec::new(),
             current_class: None,
             current_parent_class: None,
             in_try_block: false,
@@ -93,6 +96,10 @@ impl LowerCtx {
             allow_intrinsic_imports: false,
             borrowed_params: std::collections::HashSet::new(),
         }
+    }
+
+    fn warn(&mut self, message: String) {
+        self.warnings.push(message);
     }
 
     fn error(&mut self, message: String) {
@@ -200,6 +207,8 @@ pub struct LoweringResult {
     pub module: HirModule,
     /// reveal_type() diagnostics (informational, printed to stderr)
     pub reveal_types: Vec<String>,
+    /// Compiler warnings (non-fatal, printed to stderr)
+    pub warnings: Vec<String>,
 }
 
 /// External module definitions that can be imported.
@@ -639,6 +648,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
         Ok(LoweringResult {
             module: HirModule { functions, classes, imports, constants },
             reveal_types: ctx.reveal_types,
+            warnings: ctx.warnings,
         })
     } else {
         Err(ctx.errors)
@@ -4128,12 +4138,17 @@ fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     };
 
     match type_check_binary_op(left.ty(), op_str, right.ty()) {
-        Ok(result_ty) => Some(HirExpr::BinOp {
-            left: Box::new(left),
-            op: op_str.to_string(),
-            right: Box::new(right),
-            ty: result_ty,
-        }),
+        Ok(result_ty) => {
+            if result_ty == Type::Int {
+                check_int_overflow_risk(op_str, &left, &right, ctx);
+            }
+            Some(HirExpr::BinOp {
+                left: Box::new(left),
+                op: op_str.to_string(),
+                right: Box::new(right),
+                ty: result_ty,
+            })
+        }
         Err(e) => {
             // Check for operator overloading on class types
             if let Type::Class { methods, .. } = left.ty() {
@@ -4152,6 +4167,50 @@ fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
             ctx.error(e.message);
             None
         }
+    }
+}
+
+fn check_int_overflow_risk(op: &str, left: &HirExpr, right: &HirExpr, ctx: &mut LowerCtx) {
+    let is_left_const = matches!(left, HirExpr::IntLiteral(_));
+    let is_right_const = matches!(right, HirExpr::IntLiteral(_));
+
+    match op {
+        "**" => {
+            if let HirExpr::IntLiteral(exp) = right {
+                if *exp > 40 {
+                    ctx.warn(format!(
+                        "warning: int exponentiation with large exponent ({}) may overflow i64; consider using bigint",
+                        exp
+                    ));
+                }
+            } else {
+                ctx.warn(
+                    "warning: int exponentiation (**) with non-constant exponent may overflow i64 at runtime; consider using bigint".to_string()
+                );
+            }
+        }
+        "*" => {
+            if !is_left_const && !is_right_const {
+                ctx.warn(
+                    "warning: int multiplication with non-constant operands may overflow i64 at runtime; consider using bigint for large values".to_string()
+                );
+            }
+        }
+        "<<" => {
+            if !is_right_const {
+                ctx.warn(
+                    "warning: int left shift (<<) with non-constant shift amount may overflow i64 at runtime; consider using bigint".to_string()
+                );
+            } else if let HirExpr::IntLiteral(shift) = right {
+                if *shift >= 63 {
+                    ctx.warn(format!(
+                        "warning: int left shift by {} exceeds i64 range; consider using bigint",
+                        shift
+                    ));
+                }
+            }
+        }
+        _ => {}
     }
 }
 
