@@ -6,6 +6,9 @@
 # - pathlib.Path.glob / rglob
 # - re flags (IGNORECASE, MULTILINE, DOTALL)
 # - os constants, random.choice, time wrappers
+# - logging.basicConfig sets global log level
+# - logging.FileHandler uses open() internally
+# - csv.reader_from_path / csv.writer_to_path for file-based CSV
 
 from sifr.io import read_text, write_text
 from sifr.datetime import time, timezone, now
@@ -14,6 +17,8 @@ from sifr.pathlib import Path
 from sifr.re import compile_flags, search_flags, IGNORECASE, MULTILINE
 from sifr.os import getcwd
 from sifr.random import choice
+from sifr.logging import basicConfig, getLogger, FileHandler, WARNING, DEBUG, Logger
+from sifr.csv import reader_from_path, writer_to_path, reader
 
 def main():
     # --- open() built-in: text write + read ---
@@ -99,3 +104,31 @@ def main():
     items: list[int] = [1, 2, 3, 4, 5]
     picked: int = choice(items)
     print("random choice ok = " + str(picked >= 1 and picked <= 5))
+
+    # --- logging.basicConfig sets global log level ---
+    root: Logger = basicConfig(WARNING)
+    root.info("should not print")
+    root.warning("root warning visible")
+    logger2: Logger = getLogger("myapp")
+    logger2.info("should not print either")
+    logger2.warning("myapp warning visible")
+    print("basicConfig global level ok")
+
+    # --- logging.FileHandler uses open() internally ---
+    handler: FileHandler = FileHandler("/tmp/sifr_demo_fh_log.txt")
+    handler.emit("INFO", "demo", "file handler test")
+    try:
+        log_content: str = read_text("/tmp/sifr_demo_fh_log.txt")
+        print("file handler wrote ok = " + str(len(log_content) > 0))
+    except IOError as e:
+        print("file handler error: " + e.message)
+
+    # --- csv file-based operations ---
+    csv_path: str = "/tmp/sifr_demo_csv.csv"
+    try:
+        _4: None = write_text(csv_path, "name,age\nalice,30\nbob,25")
+        r: reader = reader_from_path(csv_path)
+        rows: list[list[str]] = r.rows()
+        print("csv reader_from_path rows = " + str(len(rows)))
+    except IOError as e:
+        print("csv error: " + e.message)

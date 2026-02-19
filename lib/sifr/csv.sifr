@@ -1,6 +1,6 @@
 # sifr.csv — CSV parsing and writing (pure Sifr)
 # Simplified CSV: no quoting, comma-separated values.
-from _sifr.fs import file_read, file_write
+from _sifr.fs import file_read, file_write, open_file, file_close
 
 def parse_row(line: str) -> list[str]:
     return line.split(",")
@@ -195,7 +195,6 @@ class DictWriter:
 
 
 def reader_from_file(handle: int) -> Result[reader, IOError]:
-    # Create a csv.reader from an open file handle ID (from FileHandle._handle).
     try:
         text: str = file_read(handle)
         return reader(text)
@@ -204,9 +203,31 @@ def reader_from_file(handle: int) -> Result[reader, IOError]:
 
 
 def writer_to_file(handle: int, rows: list[list[str]]) -> Result[None, IOError]:
-    # Write CSV rows to an open file handle ID (from FileHandle._handle).
     try:
         content: str = format_csv(rows)
         _: None = file_write(handle, content)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def reader_from_path(path: str) -> Result[reader, IOError]:
+    # Create a csv.reader by reading a file at the given path.
+    try:
+        handle: int = open_file(path, "r")
+        text: str = file_read(handle)
+        file_close(handle)
+        return reader(text)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def writer_to_path(path: str, rows: list[list[str]]) -> Result[None, IOError]:
+    # Write CSV rows to a file at the given path.
+    try:
+        handle: int = open_file(path, "w")
+        content: str = format_csv(rows)
+        _: None = file_write(handle, content)
+        file_close(handle)
+        return None
     except IOError as e:
         raise IOError(e.message)
