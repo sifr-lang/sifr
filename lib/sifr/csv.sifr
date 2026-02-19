@@ -1,5 +1,6 @@
 # sifr.csv — CSV parsing and writing (pure Sifr)
 # Simplified CSV: no quoting, comma-separated values.
+from _sifr.fs import file_read, file_write
 
 def parse_row(line: str) -> list[str]:
     return line.split(",")
@@ -191,3 +192,21 @@ class DictWriter:
 
     def getvalue(self) -> str:
         return format_csv(self._rows)
+
+
+def reader_from_file(handle: int) -> Result[reader, IOError]:
+    # Create a csv.reader from an open FileHandle (by handle ID).
+    try:
+        text: str = file_read(handle)
+        return reader(text)
+    except IOError as e:
+        raise IOError(e.message)
+
+
+def writer_to_file(handle: int, rows: list[list[str]]) -> Result[None, IOError]:
+    # Write CSV rows to an open FileHandle (by handle ID).
+    try:
+        content: str = format_csv(rows)
+        _: None = file_write(handle, content)
+    except IOError as e:
+        raise IOError(e.message)

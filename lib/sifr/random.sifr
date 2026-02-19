@@ -23,3 +23,6 @@ def randrange(start: int, stop: int, step: int) -> Result[int, ValueError]:
 
 def gauss(mu: float, sigma: float) -> float:
     return random_gauss(mu, sigma)
+
+def choice(items: list[int]) -> int:
+    return random_choice(items)

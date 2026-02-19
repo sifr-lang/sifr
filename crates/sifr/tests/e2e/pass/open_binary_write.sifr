@@ -1,0 +1,20 @@
+# expect-stdout: bytes verified
+# expect-stdout: binary write ok
+
+from sifr.io import read_text
+
+def main():
+    path: str = "/tmp/sifr_open_binary_write_test.txt"
+    try:
+        f = open(path, "wb")
+        data: list[int] = [104, 101, 108, 108, 111]
+        _: None = f.write_bytes(data)
+        f.close()
+        content: str = read_text(path)
+        if content == "hello":
+            print("bytes verified")
+        else:
+            print("mismatch: " + content)
+        print("binary write ok")
+    except IOError as e:
+        print("error: " + e.message)

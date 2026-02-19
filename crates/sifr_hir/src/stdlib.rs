@@ -527,6 +527,10 @@ fn intrinsic_sys() -> IntrinsicModule {
         ("stdin_data".to_string(), Type::Str),
     ], result_ty(Type::Str, "IOError")));
 
+    // subprocess_run_structured(cmd: str) -> Result[list[str], IOError]
+    // Returns [stdout, stderr, returncode_str] as a list[str].
+    functions.insert("subprocess_run_structured".to_string(), FunctionType::all_borrow(vec![("cmd".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -632,6 +636,57 @@ fn intrinsic_fs() -> IntrinsicModule {
 
     // disk_usage(path: str) -> list[int] ([total, used, free] in bytes)
     functions.insert("disk_usage".to_string(), FunctionType::all_borrow(vec![("path".to_string(), Type::Str)], Type::List(Box::new(Type::Int))));
+
+    // open_file(path: str, mode: str) -> Result[int, IOError]
+    // Returns an opaque file handle ID (i64) for use with file_* intrinsics.
+    functions.insert("open_file".to_string(), FunctionType::all_borrow(vec![
+            ("path".to_string(), Type::Str),
+            ("mode".to_string(), Type::Str),
+        ], result_ty(Type::Int, "IOError")));
+
+    // file_read(handle: int) -> Result[str, IOError]
+    functions.insert("file_read".to_string(), FunctionType::all_borrow(vec![("handle".to_string(), Type::Int)], result_ty(Type::Str, "IOError")));
+
+    // file_write(handle: int, data: str) -> Result[None, IOError]
+    functions.insert("file_write".to_string(), FunctionType::all_borrow(vec![
+            ("handle".to_string(), Type::Int),
+            ("data".to_string(), Type::Str),
+        ], result_ty(Type::None, "IOError")));
+
+    // file_readline(handle: int) -> Result[str | None, IOError]
+    functions.insert("file_readline".to_string(), FunctionType::all_borrow(vec![("handle".to_string(), Type::Int)], result_ty(Type::Union(vec![Type::Str, Type::None]), "IOError")));
+
+    // file_readlines(handle: int) -> Result[list[str], IOError]
+    functions.insert("file_readlines".to_string(), FunctionType::all_borrow(vec![("handle".to_string(), Type::Int)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
+
+    // file_close(handle: int) -> None
+    functions.insert("file_close".to_string(), FunctionType::all_borrow(vec![("handle".to_string(), Type::Int)], Type::None));
+
+    // file_read_bytes(handle: int) -> Result[list[int], IOError]
+    functions.insert("file_read_bytes".to_string(), FunctionType::all_borrow(vec![("handle".to_string(), Type::Int)], result_ty(Type::List(Box::new(Type::Int)), "IOError")));
+
+    // file_write_bytes(handle: int, data: list[int]) -> Result[None, IOError]
+    functions.insert("file_write_bytes".to_string(), FunctionType::all_borrow(vec![
+            ("handle".to_string(), Type::Int),
+            ("data".to_string(), Type::List(Box::new(Type::Int))),
+        ], result_ty(Type::None, "IOError")));
+
+    // glob_pattern(dir: str, pattern: str) -> Result[list[str], IOError]
+    functions.insert("glob_pattern".to_string(), FunctionType::all_borrow(vec![
+            ("dir".to_string(), Type::Str),
+            ("pattern".to_string(), Type::Str),
+        ], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
+
+    // rglob_pattern(dir: str, pattern: str) -> Result[list[str], IOError]
+    functions.insert("rglob_pattern".to_string(), FunctionType::all_borrow(vec![
+            ("dir".to_string(), Type::Str),
+            ("pattern".to_string(), Type::Str),
+        ], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
+
+    // os.sep, os.linesep, os.name as zero-arg functions in _sifr.fs
+    functions.insert("os_sep".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    functions.insert("os_linesep".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    functions.insert("os_name".to_string(), FunctionType::all_borrow(vec![], Type::Str));
 
     IntrinsicModule {
         functions,
@@ -780,6 +835,42 @@ fn intrinsic_regex() -> IntrinsicModule {
             ("text".to_string(), Type::Str),
         ], result_ty(Type::Int, "RegexError")));
 
+    // re_match_flags(pattern: str, text: str, flags: int) -> Result[bool, RegexError]
+    functions.insert("re_match_flags".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+            ("flags".to_string(), Type::Int),
+        ], result_ty(Type::Bool, "RegexError")));
+
+    // re_find_flags(pattern: str, text: str, flags: int) -> Result[str | None, RegexError]
+    functions.insert("re_find_flags".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+            ("flags".to_string(), Type::Int),
+        ], result_ty(Type::Union(vec![Type::Str, Type::None]), "RegexError")));
+
+    // re_replace_flags(pattern: str, replacement: str, text: str, flags: int) -> Result[str, RegexError]
+    functions.insert("re_replace_flags".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("replacement".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+            ("flags".to_string(), Type::Int),
+        ], result_ty(Type::Str, "RegexError")));
+
+    // re_findall_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]
+    functions.insert("re_findall_flags".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+            ("flags".to_string(), Type::Int),
+        ], result_ty(Type::List(Box::new(Type::Str)), "RegexError")));
+
+    // re_split_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]
+    functions.insert("re_split_flags".to_string(), FunctionType::all_borrow(vec![
+            ("pattern".to_string(), Type::Str),
+            ("text".to_string(), Type::Str),
+            ("flags".to_string(), Type::Int),
+        ], result_ty(Type::List(Box::new(Type::Str)), "RegexError")));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),
@@ -825,6 +916,8 @@ fn intrinsic_datetime() -> IntrinsicModule {
     let mut functions = HashMap::new();
     // datetime_now() -> str (ISO 8601 formatted current datetime)
     functions.insert("datetime_now".to_string(), FunctionType::all_borrow(vec![], Type::Str));
+    // datetime_now_struct() -> list[int] ([year, month, day, hour, minute, second])
+    functions.insert("datetime_now_struct".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Int))));
     // datetime_format(dt: str, fmt: str) -> str
     functions.insert("datetime_format".to_string(), FunctionType::all_borrow(vec![
         ("dt".to_string(), Type::Str),
@@ -834,6 +927,15 @@ fn intrinsic_datetime() -> IntrinsicModule {
     functions.insert("datetime_from_timestamp".to_string(), FunctionType::all_borrow(vec![
         ("ts".to_string(), Type::Float),
     ], result_ty(Type::Str, "ValueError")));
+    // time_strptime(s: str, fmt: str) -> list[int] ([year, month, day, hour, minute, second, weekday, yearday])
+    functions.insert("time_strptime".to_string(), FunctionType::all_borrow(vec![
+        ("s".to_string(), Type::Str),
+        ("fmt".to_string(), Type::Str),
+    ], result_ty(Type::List(Box::new(Type::Int)), "ValueError")));
+    // time_gmtime() -> list[int] ([year, month, day, hour, minute, second, weekday, yearday])
+    functions.insert("time_gmtime".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Int))));
+    // time_localtime() -> list[int] ([year, month, day, hour, minute, second, weekday, yearday])
+    functions.insert("time_localtime".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Int))));
     IntrinsicModule { functions, constants: HashMap::new() }
 }
 

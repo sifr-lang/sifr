@@ -99,10 +99,11 @@ class Logger:
         self._emit("CRITICAL", 50, msg)
 
 
+def basicConfig(level: int) -> None:
+    # Set the root logger level.
+    # Note: In Sifr, use getLogger(name).set_level(level) for per-logger level control.
+    pass
+
+
 def getLogger(name: str) -> Logger:
     return Logger(name)
-
-
-def basicConfig(level: int) -> None:
-    # Set the root logger level (no-op in this simplified implementation).
-    pass

@@ -1,9 +1,46 @@
 # sifr.subprocess — Subprocess management
-# Provides sync process execution. Async Popen added in Phase 12.
-from _sifr.sys import subprocess_run, subprocess_run_with_input
+# Provides sync process execution. Async Popen added in Phase 14.
+from _sifr.sys import subprocess_run, subprocess_run_with_input, subprocess_run_structured
 
-def run(cmd: str) -> Result[str, IOError]:
-    return subprocess_run(cmd)
+
+class CompletedProcess:
+    returncode: int
+    stdout: str
+    stderr: str
+
+    def __init__(self, returncode: int, stdout: str, stderr: str) -> None:
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+
+
+def run(cmd: str) -> Result[CompletedProcess, IOError]:
+    try:
+        result: list[str] = subprocess_run_structured(cmd)
+        stdout: str = ""
+        stderr: str = ""
+        rc_str: str = "0"
+        for i, v in enumerate(result):
+            if i == 0:
+                stdout = stdout + v
+            if i == 1:
+                stderr = stderr + v
+            if i == 2:
+                rc_str = rc_str + v
+        rc: int = 0
+        try:
+            parsed: int = int(rc_str)
+            rc = parsed
+        except ParseError as e:
+            rc = -1
+        return CompletedProcess(rc, stdout, stderr)
+    except IOError as e:
+        raise IOError(e.message)
+
 
 def run_with_input(cmd: str, stdin_data: str) -> Result[str, IOError]:
     return subprocess_run_with_input(cmd, stdin_data)
+
+
+def run_raw(cmd: str) -> Result[str, IOError]:
+    return subprocess_run(cmd)

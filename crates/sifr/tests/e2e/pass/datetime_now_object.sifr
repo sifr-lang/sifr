@@ -1,0 +1,11 @@
+# expect-stdout: year > 2020 = true
+# expect-stdout: month valid = true
+# expect-stdout: now returns datetime = true
+
+from sifr.datetime import now, datetime
+
+def main():
+    dt: datetime = now()
+    print("year > 2020 = " + str(dt.year > 2020))
+    print("month valid = " + str(dt.month >= 1 and dt.month <= 12))
+    print("now returns datetime = true")

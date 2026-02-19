@@ -1,0 +1,17 @@
+# expect-stdout: case insensitive match = true
+# expect-stdout: case sensitive no match = false
+# expect-stdout: compiled with flags ok
+
+from sifr.re import compile_flags, search_flags, IGNORECASE
+
+def main():
+    try:
+        result: str | None = search_flags("hello", "HELLO WORLD", IGNORECASE)
+        print("case insensitive match = " + str(result is not None))
+        result2: str | None = search_flags("hello", "HELLO WORLD", 0)
+        print("case sensitive no match = " + str(result2 is not None))
+        pat = compile_flags("hello", IGNORECASE)
+        result3: str | None = pat.search("HELLO WORLD")
+        print("compiled with flags ok")
+    except RegexError as e:
+        print("error: " + e.message)

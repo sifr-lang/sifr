@@ -1,0 +1,20 @@
+# expect-stdout: glob found files = true
+# expect-stdout: rglob found files = true
+
+from sifr.pathlib import Path
+from sifr.os import mkdir
+from sifr.io import write_text
+
+def main():
+    try:
+        dir_path: str = "/tmp/sifr_glob_test"
+        _: None = mkdir(dir_path)
+        _2: None = write_text(dir_path + "/test1.txt", "a")
+        _3: None = write_text(dir_path + "/test2.txt", "b")
+        p: Path = Path(dir_path)
+        files: list[str] = p.glob("*.txt")
+        print("glob found files = " + str(len(files) > 0))
+        all_files: list[str] = p.rglob("*.txt")
+        print("rglob found files = " + str(len(all_files) > 0))
+    except IOError as e:
+        print("error: " + e.message)
