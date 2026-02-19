@@ -79,6 +79,30 @@ def classify_point(p: Point) -> str:
         case Point(x=px, y=py):
             return "general"
 
+# 7. Tuple patterns
+def classify_pair(p: tuple[int, int]) -> str:
+    match p:
+        case (0, 0):
+            return "origin"
+        case (x, 0):
+            return "x-axis"
+        case (0, y):
+            return "y-axis"
+        case (x, y):
+            return "general"
+
+# 8. Nested patterns (class + guard)
+def classify_quadrant(p: Point) -> str:
+    match p:
+        case Point(x=0, y=0):
+            return "origin"
+        case Point(x=px, y=py) if px > 0 and py > 0:
+            return "Q1"
+        case Point(x=px, y=py) if px < 0 and py > 0:
+            return "Q2"
+        case _:
+            return "other"
+
 def main():
     # 1. Literal patterns
     print("=== Literal Patterns ===")
@@ -121,3 +145,21 @@ def main():
     print(classify_point(p2))
     print(classify_point(p3))
     print(classify_point(p4))
+
+    # 7. Tuple patterns
+    print("=== Tuple Patterns ===")
+    t1: tuple[int, int] = (0, 0)
+    t2: tuple[int, int] = (3, 0)
+    t3: tuple[int, int] = (0, 4)
+    t4: tuple[int, int] = (3, 4)
+    print(classify_pair(t1))
+    print(classify_pair(t2))
+    print(classify_pair(t3))
+    print(classify_pair(t4))
+
+    # 8. Nested patterns (class + guard)
+    print("=== Nested Patterns ===")
+    print(classify_quadrant(Point(0, 0)))
+    print(classify_quadrant(Point(3, 4)))
+    print(classify_quadrant(Point(-2, 5)))
+    print(classify_quadrant(Point(-1, -1)))

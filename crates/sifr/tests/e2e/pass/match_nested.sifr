@@ -1,0 +1,25 @@
+class Point:
+    x: int
+    y: int
+
+def classify(p: Point) -> str:
+    match p:
+        case Point(x=0, y=0):
+            return "origin"
+        case Point(x=px, y=py) if px > 0 and py > 0:
+            return "first quadrant"
+        case Point(x=px, y=py) if px < 0 and py > 0:
+            return "second quadrant"
+        case _:
+            return "other"
+
+def main():
+    print(classify(Point(0, 0)))
+    print(classify(Point(3, 4)))
+    print(classify(Point(-2, 5)))
+    print(classify(Point(-1, -1)))
+
+# expect-stdout: origin
+# expect-stdout: first quadrant
+# expect-stdout: second quadrant
+# expect-stdout: other

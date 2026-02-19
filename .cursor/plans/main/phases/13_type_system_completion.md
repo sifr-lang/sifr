@@ -164,7 +164,7 @@ As part of completing the type system, ensure `None` works fully as a standalone
 
 ## milestone_pattern_matching: Match/Case Syntax
 
-status: pending
+status: done
 
 **Goal:** Add Python 3.10-style structural pattern matching (`match`/`case`) to Sifr. This completes the safety story: union types, literal types, and type narrowing already exist, but users must use `isinstance` chains and `if`/`elif` to handle them. `match`/`case` provides a declarative, exhaustiveness-checked syntax that maps directly to Rust's `match` expression.
 
