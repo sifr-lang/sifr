@@ -1,10 +1,12 @@
 # Demo: milestone_stdlib_generic_rewrite
 # Showcases generic stdlib functions working with multiple types,
-# predicate-based itertools, IntCounter, and generic heapq.
+# predicate-based itertools, generic Counter[T] with operator overloads,
+# generic deque[T], generic heapq with Comparable bounds, and bigint support.
 
 from sifr.itertools import chain, take, flatten, cycle, islice, compress, pairwise, repeat, zip_longest, accumulate, dropwhile, takewhile, filterfalse
 from sifr.heapq import heapify, heappop, heappush, nsmallest, nlargest, heapify_copy
-from sifr.collections import IntCounter, int_counter_from_list
+from sifr.collections import Counter, from_list, deque
+from sifr.functools import reduce
 from sifr.random import shuffle
 
 def is_small(x: int) -> bool:
@@ -12,6 +14,9 @@ def is_small(x: int) -> bool:
 
 def is_even(x: int) -> bool:
     return x % 2 == 0
+
+def concat(a: str, b: str) -> str:
+    return a + b
 
 def main():
     # --- 1. Generic chain: works with any type ---
@@ -34,7 +39,7 @@ def main():
     flat_int: list[int] = flatten(nested_int)
     print(flat_int)
 
-    # --- 4. Generic accumulate (now works with int and float) ---
+    # --- 4. Generic accumulate (Addable bound: works with int, float, str) ---
     print("=== Generic accumulate ===")
     sums: list[int] = accumulate([1, 2, 3, 4, 5])
     print(sums)
@@ -57,7 +62,7 @@ def main():
     odds: list[int] = filterfalse(is_even, [1, 2, 3, 4, 5, 6])
     print(odds)
 
-    # --- 8. Generic heapq (nsmallest, nlargest) ---
+    # --- 8. Generic heapq (Comparable bound) ---
     print("=== Generic heapq ===")
     items: list[int] = [9, 3, 7, 1, 5]
     small: list[int] = nsmallest(3, items)
@@ -65,28 +70,52 @@ def main():
     big: list[int] = nlargest(2, items)
     print(big)
 
-    # --- 9. IntCounter (counter for int keys) ---
-    print("=== IntCounter ===")
-    nums: list[int] = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4]
-    c: IntCounter = int_counter_from_list(nums)
-    print(c.get(3))
-    print(c.get(4))
+    # --- 9. Generic Counter[T] with operator overloads ---
+    print("=== Generic Counter[T] ===")
+    words: list[str] = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+    c: Counter[str] = from_list(words)
+    print(c.get("apple"))
     print(c.total())
+    top: list[str] = c.most_common(2)
+    print(top)
 
-    # --- 10. Generic compress ---
+    nums: list[int] = [1, 2, 2, 3, 3, 3]
+    ci: Counter[int] = from_list(nums)
+    print(ci.get(3))
+
+    c2: Counter[str] = from_list(["banana", "date"])
+    combined: Counter[str] = c + c2
+    print(combined.get("banana"))
+
+    # --- 10. Generic deque[T] ---
+    print("=== Generic deque[T] ===")
+    d: deque[str] = deque(0)
+    d.append("first")
+    d.append("second")
+    d.appendleft("zero")
+    items_d: list[str] = d.to_list()
+    print(items_d)
+    print(d.len())
+
+    # --- 11. Generic functools.reduce ---
+    print("=== Generic reduce ===")
+    sentence: str = reduce(concat, ["hello", " ", "world"], "")
+    print(sentence)
+
+    # --- 12. Generic compress ---
     print("=== Generic compress ===")
     data_c: list[str] = ["a", "b", "c", "d", "e"]
     sel: list[bool] = [True, False, True, False, True]
     compressed: list[str] = compress(data_c, sel)
     print(compressed)
 
-    # --- 11. Generic zip_longest ---
+    # --- 13. Generic zip_longest ---
     print("=== Generic zip_longest ===")
     zl_str: list[list[str]] = zip_longest(["a", "b", "c"], ["x", "y"], "-")
     for pair in zl_str:
         print(pair)
 
-    # --- 12. Generic shuffle ---
+    # --- 14. Generic shuffle ---
     print("=== Generic shuffle ===")
     shuffled_str: list[str] = shuffle(["a", "b", "c", "d", "e"])
     print(len(shuffled_str))

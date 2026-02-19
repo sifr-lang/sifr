@@ -1,0 +1,31 @@
+# Test generic type aliases (type Pair[T] = tuple[T, T])
+from sifr.test import assert_eq
+
+type Pair[T] = tuple[T, T]
+type Triple[T] = tuple[T, T, T]
+
+def swap(p: Pair[int]) -> Pair[int]:
+    a: int = p[0]
+    b: int = p[1]
+    return (b, a)
+
+def main():
+    p: Pair[int] = (1, 2)
+    assert_eq(p[0], 1)
+    assert_eq(p[1], 2)
+
+    swapped: Pair[int] = swap(p)
+    assert_eq(swapped[0], 2)
+    assert_eq(swapped[1], 1)
+
+    sp: Pair[str] = ("hello", "world")
+    assert_eq(sp[0], "hello")
+    assert_eq(sp[1], "world")
+
+    t: Triple[int] = (10, 20, 30)
+    assert_eq(t[0], 10)
+    assert_eq(t[2], 30)
+
+    print("generic_type_alias: all tests passed")
+
+# expect-stdout: generic_type_alias: all tests passed

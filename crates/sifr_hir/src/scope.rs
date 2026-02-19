@@ -41,6 +41,8 @@ pub struct Scope {
     frames: Vec<HashMap<String, VarInfo>>,
     /// Type alias registry.
     type_aliases: HashMap<String, Type>,
+    /// Generic type alias registry: name -> (type_params, body_type).
+    generic_type_aliases: HashMap<String, (Vec<String>, Type)>,
 }
 
 impl Scope {
@@ -48,6 +50,7 @@ impl Scope {
         Self {
             frames: vec![HashMap::new()],
             type_aliases: HashMap::new(),
+            generic_type_aliases: HashMap::new(),
         }
     }
 
@@ -245,6 +248,16 @@ impl Scope {
     /// Look up a type alias.
     pub fn lookup_type_alias(&self, name: &str) -> Option<&Type> {
         self.type_aliases.get(name)
+    }
+
+    /// Register a generic type alias (e.g., `type Pair[T] = tuple[T, T]`).
+    pub fn define_generic_type_alias(&mut self, name: String, type_params: Vec<String>, ty: Type) {
+        self.generic_type_aliases.insert(name, (type_params, ty));
+    }
+
+    /// Look up a generic type alias.
+    pub fn lookup_generic_type_alias(&self, name: &str) -> Option<&(Vec<String>, Type)> {
+        self.generic_type_aliases.get(name)
     }
 }
 

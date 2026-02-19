@@ -83,7 +83,7 @@ def islice(data: list[T], stop: int) -> list[T]:
         i = i + 1
     return result
 
-def accumulate(data: list[T]) -> list[T]:
+def accumulate[T: Addable](data: list[T]) -> list[T]:
     # Running sum of data (matches CPython itertools.accumulate default operator=add).
     result: list[T] = []
     if len(data) == 0:

@@ -1,0 +1,13 @@
+# Test: passing wrong type to a bounded generic function
+from sifr.bisect import bisect_left
+
+class Point:
+    x: int
+    y: int
+
+def main():
+    points: list[Point] = [Point(1, 2), Point(3, 4)]
+    idx: int = bisect_left(points, Point(2, 3))
+    print(idx)
+
+# expect-error: does not implement protocol

@@ -1,0 +1,17 @@
+# Test deque[float] — generic deque with float values
+from sifr.collections import deque
+from sifr.test import assert_eq
+
+def main():
+    d: deque[float] = deque(4)
+    d.append(1.1)
+    d.append(2.2)
+    d.append(3.3)
+    assert_eq(d.len(), 3)
+    val: float | None = d.popleft()
+    if val is not None:
+        assert_eq(val, 1.1)
+    assert_eq(d.len(), 2)
+    print("generic_deque_float: passed")
+
+# expect-stdout: generic_deque_float: passed

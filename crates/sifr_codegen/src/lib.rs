@@ -146,6 +146,8 @@ pub struct StdlibCode {
     /// Map of module_name -> set of function names that are generators (contain yield).
     /// Used to emit .collect() when assigning generator results to list[T] in user code.
     pub generator_functions: HashMap<String, HashSet<String>>,
+    /// Set of class names that have generic type parameters across all stdlib modules.
+    pub generic_classes: HashSet<String>,
 }
 
 impl Default for StdlibCode {
@@ -157,6 +159,7 @@ impl Default for StdlibCode {
             func_signatures: HashMap::new(),
             transitive_deps: HashMap::new(),
             generator_functions: HashMap::new(),
+            generic_classes: HashSet::new(),
         }
     }
 }
@@ -330,7 +333,8 @@ fn parse_rust_blocks(rust_code: &str) -> Vec<(String, String)> {
                 while let Some(next_line) = lines.next() {
                     block_code.push_str(next_line);
                     block_code.push('\n');
-                    depth += count_braces(next_line);
+                    let delta = count_braces(next_line);
+                    depth += delta;
                     if depth <= 0 {
                         break;
                     }
@@ -373,20 +377,34 @@ fn extract_top_level_item_name(line: &str) -> Option<String> {
         return Some(name.to_string());
     }
     // impl Name or impl Display for Name
-    if let Some(rest) = trimmed.strip_prefix("impl ") {
+    if let Some(rest) = trimmed.strip_prefix("impl") {
+        // Skip generic params: impl<T: Bound> ... → skip past the closing '>'
+        let rest = if rest.starts_with('<') {
+            let mut depth = 0i32;
+            let mut end = 0;
+            for (i, ch) in rest.char_indices() {
+                if ch == '<' { depth += 1; }
+                if ch == '>' { depth -= 1; }
+                if depth == 0 { end = i + 1; break; }
+            }
+            rest[end..].trim_start()
+        } else {
+            rest.trim_start()
+        };
         // "impl Display for Name {" or "impl std::ops::Add<&Name> for &Name {"
         if let Some(for_idx) = rest.find(" for ") {
             let after_for = &rest[for_idx + 5..];
-            // Strip leading & (reference types in trait impls)
             let after_for = after_for.trim_start_matches('&');
             let name = after_for.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
             if !name.is_empty() {
                 return Some(name.to_string());
             }
         }
-        // "impl Name {"
+        // "impl Name {" or "Name<T> {"
         let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
-        return Some(name.to_string());
+        if !name.is_empty() {
+            return Some(name.to_string());
+        }
     }
     None
 }
@@ -410,6 +428,8 @@ pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
 pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.stdlib_intrinsic_names = stdlib_code.intrinsic_names.clone();
+    // Register stdlib generic classes so user code skips explicit type annotations
+    emitter.generic_classes.extend(stdlib_code.generic_classes.iter().cloned());
 
     // Pre-register stdlib constants and function signatures so user code can reference them correctly
     for import in &module.imports {
@@ -976,6 +996,8 @@ struct RustEmitter {
     module_constants: HashMap<String, (Type, String)>,
     /// Set of class names that have generic type parameters
     generic_classes: HashSet<String>,
+    /// Map of generic class name -> list of type parameter names (e.g., "Counter" -> ["T"])
+    generic_class_params: HashMap<String, Vec<String>>,
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
     borrowed_params: HashSet<String>,
@@ -1036,6 +1058,7 @@ impl RustEmitter {
             nested_fn_captures: HashMap::new(),
             module_constants: HashMap::new(),
             generic_classes: HashSet::new(),
+            generic_class_params: HashMap::new(),
             borrowed_params: HashSet::new(),
             mut_borrowed_params: HashSet::new(),
             stdlib_intrinsic_names: HashMap::new(),
@@ -1048,6 +1071,62 @@ impl RustEmitter {
             try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
         }
+    }
+
+    /// Check if a generic class needs Hash + Eq bounds on its type parameters.
+    /// This is true when a type parameter is used as a HashMap key (dict field with TypeVar key).
+    fn class_needs_hash_eq(class: &HirClass) -> bool {
+        fn type_has_typevar_dict_key(ty: &Type) -> bool {
+            match ty {
+                Type::Dict(key, _) => matches!(key.as_ref(), Type::TypeVar(_)),
+                Type::List(inner) => type_has_typevar_dict_key(inner),
+                Type::Union(members) => members.iter().any(type_has_typevar_dict_key),
+                _ => false,
+            }
+        }
+        class.fields.iter().any(|(_, ty)| type_has_typevar_dict_key(ty))
+    }
+
+    /// Check if a generic function needs Hash + Eq bounds (uses TypeVar as dict key
+    /// or returns a generic class that needs Hash + Eq).
+    fn func_needs_hash_eq(func: &HirFunction) -> bool {
+        fn type_has_typevar_dict_key(ty: &Type) -> bool {
+            match ty {
+                Type::Dict(key, _) => matches!(key.as_ref(), Type::TypeVar(_)),
+                Type::List(inner) => type_has_typevar_dict_key(inner),
+                Type::Union(members) => members.iter().any(type_has_typevar_dict_key),
+                Type::Class { fields, .. } => fields.iter().any(|(_, t)| type_has_typevar_dict_key(t)),
+                _ => false,
+            }
+        }
+        // Check params
+        if func.params.iter().any(|p| type_has_typevar_dict_key(&p.ty)) {
+            return true;
+        }
+        // Check return type
+        if type_has_typevar_dict_key(&func.return_type) {
+            return true;
+        }
+        false
+    }
+
+    fn generic_bounds_for_class(class: &HirClass) -> String {
+        if Self::class_needs_hash_eq(class) {
+            "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq".to_string()
+        } else {
+            "Clone + std::fmt::Display + PartialOrd".to_string()
+        }
+    }
+
+    /// Convert a Type to its Rust representation, appending generic type params
+    /// for classes that are known to be generic (e.g., Counter → Counter<T>).
+    fn rust_type_with_generics(&self, ty: &Type) -> String {
+        if let Type::Class { name, .. } = ty {
+            if let Some(params) = self.generic_class_params.get(name) {
+                return format!("{}<{}>", name, params.join(", "));
+            }
+        }
+        ty.rust_type()
     }
 
     /// Detect self-referential class fields that need Box<T> wrapping.
@@ -1063,6 +1142,7 @@ impl RustEmitter {
             }
             if !class.type_params.is_empty() {
                 self.generic_classes.insert(class.name.clone());
+                self.generic_class_params.insert(class.name.clone(), class.type_params.clone());
             }
         }
     }
@@ -1372,11 +1452,12 @@ impl RustEmitter {
             self.write("struct ");
         }
         self.write(&class.name);
+        let class_bounds = Self::generic_bounds_for_class(class);
         if !class.type_params.is_empty() {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
                 if i > 0 { self.write(", "); }
-                self.write(&format!("{}: Clone + std::fmt::Display + PartialOrd", tp));
+                self.write(&format!("{}: {}", tp, class_bounds));
             }
             self.write(">");
         }
@@ -1428,7 +1509,7 @@ impl RustEmitter {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
                 if i > 0 { self.write(", "); }
-                self.write(&format!("{}: Clone + std::fmt::Display + PartialOrd", tp));
+                self.write(&format!("{}: {}", tp, class_bounds));
             }
             self.write(">");
         }
@@ -1842,21 +1923,42 @@ impl RustEmitter {
     /// Emit `impl std::ops::Trait for ClassName` for binary operators.
     /// Uses reference-based impl to avoid consuming the operands.
     fn emit_binop_trait_impl(&mut self, class: &HirClass, func: &HirFunction, trait_name: &str, method_name: &str, _op: &str) {
+        let is_generic = !class.type_params.is_empty();
+        let bounds = Self::generic_bounds_for_class(class);
+        let generic_suffix = if is_generic {
+            let params: Vec<String> = class.type_params.iter().map(|p| p.clone()).collect();
+            format!("<{}>", params.join(", "))
+        } else {
+            String::new()
+        };
+        let class_with_generics = format!("{}{}", class.name, generic_suffix);
+
         let rhs_ty = if let Some(param) = func.params.first() {
-            // If the param type is the same class, use &ClassName
             if param.ty.rust_type() == class.name {
-                format!("&{}", class.name)
+                format!("&{}", class_with_generics)
             } else {
                 param.ty.rust_type()
             }
         } else {
-            format!("&{}", class.name)
+            format!("&{}", class_with_generics)
         };
-        let output_ty = func.return_type.rust_type();
+        let output_ty = if func.return_type.rust_type() == class.name {
+            class_with_generics.clone()
+        } else {
+            func.return_type.rust_type()
+        };
 
         self.output.push('\n');
         self.write_indent();
-        self.write(&format!("impl std::ops::{}<{}> for &{} {{\n", trait_name, rhs_ty, class.name));
+        if is_generic {
+            let bounded_params: Vec<String> = class.type_params.iter()
+                .map(|p| format!("{}: {}", p, bounds))
+                .collect();
+            self.write(&format!("impl<{}> std::ops::{}<{}> for &{} {{\n",
+                bounded_params.join(", "), trait_name, rhs_ty, class_with_generics));
+        } else {
+            self.write(&format!("impl std::ops::{}<{}> for &{} {{\n", trait_name, rhs_ty, class.name));
+        }
         self.indent += 1;
         self.write_indent();
         self.write(&format!("type Output = {};\n\n", output_ty));
@@ -1872,10 +1974,12 @@ impl RustEmitter {
         self.write(") -> Self::Output {\n");
         self.indent += 1;
 
-        // Emit the body
+        let saved_mutated = std::mem::take(&mut self.mutated_vars);
+        self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
         for stmt in &func.body {
             self.emit_stmt(stmt);
         }
+        self.mutated_vars = saved_mutated;
 
         self.indent -= 1;
         self.write_indent();
@@ -2265,8 +2369,7 @@ impl RustEmitter {
                         self.write(", ");
                         self.write(&param.name);
                         self.write(": ");
-                        // Emit parameter type based on convention
-                        let rust_ty = param.ty.rust_type();
+                        let rust_ty = self.rust_type_with_generics(&param.ty);
                         match param.convention {
                             ParamConvention::Borrow => {
                                 if param.ty.ownership() == sifr_type_system::OwnershipKind::Copy {
@@ -2474,13 +2577,19 @@ impl RustEmitter {
         self.write(&func.name);
         // Emit generic type parameters if this is a generic function
         if !func.type_params.is_empty() {
+            let needs_hash_eq = Self::func_needs_hash_eq(func);
             self.write("<");
             for (i, tp) in func.type_params.iter().enumerate() {
                 if i > 0 {
                     self.write(", ");
                 }
                 let extra = Self::extra_bounds_for_type_param(tp, &func.body);
-                self.write(&format!("{}: Clone + std::fmt::Display + PartialOrd{}", tp, extra));
+                let base = if needs_hash_eq {
+                    "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq"
+                } else {
+                    "Clone + std::fmt::Display + PartialOrd"
+                };
+                self.write(&format!("{}: {}{}", tp, base, extra));
             }
             self.write(">");
         }
@@ -2535,7 +2644,25 @@ impl RustEmitter {
                     };
                     self.write(&format!("impl Iterator<Item = {}>", yield_ty));
                 } else {
-                    self.write(&func.return_type.rust_type());
+                    // If return type is a generic class and this function has type params,
+                    // include the type params in the return type
+                    let ret_type = if let Type::Class { name: ref ret_name, .. } = func.return_type {
+                        if self.generic_classes.contains(ret_name) && !func.type_params.is_empty() {
+                            let type_params_in_ret: Vec<&String> = func.type_params.iter()
+                                .filter(|tp| type_contains_typevar(&func.return_type, tp))
+                                .collect();
+                            if !type_params_in_ret.is_empty() {
+                                format!("{}<{}>", ret_name, type_params_in_ret.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", "))
+                            } else {
+                                func.return_type.rust_type()
+                            }
+                        } else {
+                            func.return_type.rust_type()
+                        }
+                    } else {
+                        func.return_type.rust_type()
+                    };
+                    self.write(&ret_type);
                 }
             }
         }
@@ -3808,11 +3935,11 @@ impl RustEmitter {
                     }
                     Type::Dict(ref key_ty, _) => {
                         // self.field[key] = val -> self.field.insert(key_owned, val)
-                        // For string keys: if key is a borrowed param (&String), we clone it for owned insert.
+                        // For move-type keys: if key is a borrowed param (&T), clone for owned insert.
                         self.write(&field_access);
                         self.write(".insert(");
-                        if matches!(key_ty.as_ref(), Type::Str) {
-                            // String key: emit key with .clone() if it's a borrowed param
+                        let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_));
+                        if key_needs_clone {
                             if let HirExpr::Name { name, .. } = index {
                                 if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()) {
                                     self.emit_expr(index);
@@ -5934,6 +6061,14 @@ impl RustEmitter {
                         self.write(", ");
                     }
                     self.emit_expr(elem);
+                    if let HirExpr::Name { name, ty } = elem {
+                        if matches!(ty, Type::TypeVar(_))
+                            && (self.borrowed_params.contains(name.as_str())
+                                || self.mut_borrowed_params.contains(name.as_str()))
+                        {
+                            self.write(".clone()");
+                        }
+                    }
                 }
                 self.write("]");
             }
@@ -8097,7 +8232,7 @@ impl RustEmitter {
 
 fn is_hashable_type_codegen(ty: &Type) -> bool {
     match ty {
-        Type::Int | Type::Bool | Type::Str | Type::None => true,
+        Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt => true,
         Type::Float => false,
         _ => false,
     }
@@ -8200,6 +8335,27 @@ fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
             }
             // Recurse into the object
             expr_contains_self_field_mutation(object)
+        }
+        _ => false,
+    }
+}
+
+/// Check if a type contains a specific type variable name.
+fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
+    match ty {
+        Type::TypeVar(name) => name == tv_name,
+        Type::List(inner) => type_contains_typevar(inner, tv_name),
+        Type::Set(inner) => type_contains_typevar(inner, tv_name),
+        Type::Dict(key, val) => type_contains_typevar(key, tv_name) || type_contains_typevar(val, tv_name),
+        Type::Tuple(elems) => elems.iter().any(|e| type_contains_typevar(e, tv_name)),
+        Type::Union(members) => members.iter().any(|m| type_contains_typevar(m, tv_name)),
+        Type::Result(ok, err) => type_contains_typevar(ok, tv_name) || type_contains_typevar(err, tv_name),
+        Type::Class { fields, methods, .. } => {
+            fields.iter().any(|(_, t)| type_contains_typevar(t, tv_name))
+                || methods.iter().any(|(_, ft)| {
+                    ft.params.iter().any(|(_, t, _)| type_contains_typevar(t, tv_name))
+                        || type_contains_typevar(&ft.return_type, tv_name)
+                })
         }
         _ => false,
     }
@@ -8889,6 +9045,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -8922,6 +9080,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -8961,6 +9121,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -8995,6 +9157,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -9038,6 +9202,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -9067,6 +9233,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -9099,6 +9267,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -9148,6 +9318,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -9186,6 +9358,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -9231,6 +9405,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
@@ -9259,6 +9435,8 @@ mod tests {
             classes: vec![],
             imports: vec![],
             constants: vec![],
+            generic_functions: std::collections::HashMap::new(),
+            type_param_bounds: std::collections::HashMap::new(),
         };
 
         let rust_code = generate_rust(&module);
