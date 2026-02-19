@@ -405,6 +405,11 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                     continue;
                 }
 
+                // Skip enum imports (Enum is a built-in base class in Sifr)
+                if module_name == "enum" {
+                    continue;
+                }
+
                 // Block user imports of _sifr.* (internal intrinsics)
                 // Stdlib .sifr files are allowed to import from _sifr.*
                 if module_name.starts_with("_sifr.") {
@@ -842,13 +847,80 @@ fn get_parent_class(class_def: &StmtClassDef) -> Option<String> {
         if let Expr::Name(n) = base {
             let name = n.id.as_str();
             // Skip special base classes
-            if matches!(name, "Error" | "Protocol" | "int" | "float" | "str" | "bool") {
+            if matches!(name, "Error" | "Protocol" | "int" | "float" | "str" | "bool" | "Enum") {
                 return None;
             }
             return Some(name.to_string());
         }
     }
     None
+}
+
+/// Check if a class is an enum (inherits from Enum)
+fn is_enum_class(class_def: &StmtClassDef) -> bool {
+    for base in class_def.bases() {
+        if let Expr::Name(n) = base {
+            if n.id.as_str() == "Enum" {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Collect enum variants from a class body
+/// Returns (name, optional_int_value) for each variant
+fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Option<i64>)> {
+    let mut variants = Vec::new();
+    let mut auto_value = 1i64;
+    for stmt in &class_def.body {
+        match stmt {
+            Stmt::Assign(assign) => {
+                if assign.targets.len() == 1 {
+                    if let Expr::Name(name) = &assign.targets[0] {
+                        let variant_name = name.id.to_string();
+                        // Check if it has an integer value
+                        let value = if let Expr::NumberLiteral(num) = assign.value.as_ref() {
+                            if let sifr_python_ast::Number::Int(i) = &num.value {
+                                i.as_i64()
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        };
+                        let v = value.unwrap_or(auto_value);
+                        auto_value = v + 1;
+                        variants.push((variant_name, value));
+                    }
+                }
+            }
+            Stmt::AnnAssign(ann) => {
+                // `RED: int = 1` style
+                if let Expr::Name(name) = ann.target.as_ref() {
+                    let variant_name = name.id.to_string();
+                    let value = if let Some(val_expr) = &ann.value {
+                        if let Expr::NumberLiteral(num) = val_expr.as_ref() {
+                            if let sifr_python_ast::Number::Int(i) = &num.value {
+                                i.as_i64()
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    };
+                    let v = value.unwrap_or(auto_value);
+                    auto_value = v + 1;
+                    variants.push((variant_name, value));
+                }
+            }
+            _ => {}
+        }
+    }
+    variants
 }
 
 /// Check if a function definition has a specific decorator.
@@ -895,6 +967,50 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
             newtype_ty,
         );
         ctx.functions.insert(class_name.clone(), ft);
+        return;
+    }
+
+    // For enum declarations, register as an Enum type
+    if is_enum_class(class_def) {
+        let variants = collect_enum_variants(class_def);
+        let enum_ty = Type::Enum {
+            name: class_name.clone(),
+            variants: variants.iter().map(|(n, v)| (n.clone(), *v)).collect(),
+        };
+        ctx.class_types.insert(class_name.clone(), enum_ty.clone());
+        // Register each variant as a constant of the enum type
+        for (variant_name, _) in &variants {
+            ctx.functions.insert(
+                format!("{}.{}", class_name, variant_name),
+                FunctionType::new(vec![], enum_ty.clone()),
+            );
+        }
+        // Collect method signatures from enum body and register them
+        for stmt in &class_def.body {
+            if let Stmt::FunctionDef(func) = stmt {
+                let method_name = func.name.to_string();
+                if method_name == "__init__" { continue; }
+                let mut params = Vec::new();
+                for param in func.parameters.args.iter().skip(1) {
+                    let param_name = param.parameter.name.to_string();
+                    let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                        resolve_annotation_expr(ann, ctx)
+                    } else {
+                        Type::Any
+                    };
+                    params.push((param_name, param_ty));
+                }
+                let return_ty = if let Some(ref ret_ann) = func.returns {
+                    resolve_annotation_expr(ret_ann, ctx)
+                } else {
+                    Type::None
+                };
+                let ft = FunctionType::new(params, return_ty);
+                // Register method as ClassName.method_name for lookup
+                ctx.functions.insert(format!("{}.{}", class_name, method_name), ft.clone());
+                methods.push((method_name, ft));
+            }
+        }
         return;
     }
 
@@ -1123,6 +1239,82 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             implements_protocols: Vec::new(),
             parent_class: None,
             type_params: Vec::new(),
+            is_enum: false,
+            enum_variants: Vec::new(),
+        });
+    }
+
+    // For enum declarations, emit a HirClass with is_enum=true
+    if is_enum_class(class_def) {
+        let variants = collect_enum_variants(class_def);
+        // Lower any methods defined in the enum body
+        let mut hir_methods = Vec::new();
+        ctx.current_class = Some(class_name.clone());
+        for stmt in &class_def.body {
+            if let Stmt::FunctionDef(func) = stmt {
+                let method_name = func.name.to_string();
+                ctx.scope.push();
+                ctx.scope.define("self".to_string(), class_ty.clone());
+
+                // Define method parameters (skip `self`)
+                let mut params = Vec::new();
+                for param in func.parameters.args.iter().skip(1) {
+                    let param_name = param.parameter.name.to_string();
+                    let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                        resolve_annotation_expr(ann, ctx)
+                    } else {
+                        Type::Any
+                    };
+                    ctx.scope.define(param_name.clone(), param_ty.clone());
+                    params.push(HirParam {
+                        name: param_name,
+                        ty: param_ty,
+                        default: None,
+                        keyword_only: false,
+                        convention: ParamConvention::default(),
+                    });
+                }
+
+                let return_ty = if let Some(ref ret_ann) = func.returns {
+                    resolve_annotation_expr(ret_ann, ctx)
+                } else {
+                    Type::None
+                };
+
+                let method_ft = FunctionType::new(
+                    params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
+                    return_ty.clone(),
+                );
+
+                let body = lower_stmts(&func.body, &method_ft, ctx);
+                ctx.scope.pop();
+
+                hir_methods.push(HirFunction {
+                    name: method_name,
+                    params,
+                    return_type: return_ty,
+                    body,
+                    method_kind: MethodKind::Regular,
+                    decorators: vec![],
+                    type_params: Vec::new(),
+                });
+            }
+        }
+        ctx.current_class = None;
+        return Some(HirClass {
+            name: class_name,
+            fields: vec![],
+            methods: hir_methods,
+            is_hashable: true,
+            is_error_type: false,
+            is_protocol: false,
+            operator_impls: Vec::new(),
+            newtype_inner: None,
+            implements_protocols: Vec::new(),
+            parent_class: None,
+            type_params: Vec::new(),
+            is_enum: true,
+            enum_variants: variants,
         });
     }
 
@@ -1172,6 +1364,8 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             parent_class: None,
             implements_protocols: Vec::new(),
             type_params: Vec::new(),
+            is_enum: false,
+            enum_variants: Vec::new(),
         });
     }
 
@@ -1352,6 +1546,8 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         implements_protocols,
         parent_class: parent_class_name,
         type_params: class_type_params,
+        is_enum: false,
+        enum_variants: Vec::new(),
     })
 }
 
@@ -5142,9 +5338,26 @@ fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option<HirExpr> {
 }
 
 fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    let field_name = attr.attr.to_string();
+
+    // Check for enum variant access: Color.RED
+    if let Expr::Name(name) = attr.value.as_ref() {
+        let class_name = name.id.to_string();
+        if let Some(ty) = ctx.class_types.get(&class_name).cloned() {
+            if let Type::Enum { ref variants, .. } = ty {
+                if variants.iter().any(|(v, _)| v == &field_name) {
+                    return Some(HirExpr::EnumVariant {
+                        enum_name: class_name,
+                        variant: field_name,
+                        ty,
+                    });
+                }
+            }
+        }
+    }
+
     let object = lower_expr(&attr.value, ctx)?;
     let object_ty = object.ty().clone();
-    let field_name = attr.attr.to_string();
 
     // Check if the object is a class instance with this field
     if let Type::Class { name: _, fields, .. } = &object_ty {
@@ -5161,6 +5374,30 @@ fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> 
             field_name
         ));
         return None;
+    }
+
+    // Check if the object is an enum instance - access .name or .value
+    if let Type::Enum { name: enum_name, .. } = &object_ty {
+        match field_name.as_str() {
+            "name" => {
+                return Some(HirExpr::FieldAccess {
+                    object: Box::new(object),
+                    field: "name".to_string(),
+                    ty: Type::Str,
+                });
+            }
+            "value" => {
+                return Some(HirExpr::FieldAccess {
+                    object: Box::new(object),
+                    field: "value".to_string(),
+                    ty: Type::Int,
+                });
+            }
+            _ => {
+                ctx.error(format!("enum '{}' has no attribute '{}'", enum_name, field_name));
+                return None;
+            }
+        }
     }
 
     // Not a class field access -- report unsupported
@@ -5662,6 +5899,33 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             } else {
                 // Delegate to the inner type's methods
                 resolve_method_type(inner, method, args, ctx)
+            }
+        }
+        Type::Enum { name, .. } => {
+            match method {
+                "name" => {
+                    if !args.is_empty() {
+                        ctx.error(format!("{}.name() takes no arguments", name));
+                        return None;
+                    }
+                    Some(Type::Str)
+                }
+                "value" => {
+                    if !args.is_empty() {
+                        ctx.error(format!("{}.value() takes no arguments", name));
+                        return None;
+                    }
+                    Some(Type::Int)
+                }
+                _ => {
+                    // Check user-defined methods registered in functions
+                    let method_key = format!("{}.{}", name, method);
+                    if let Some(ft) = ctx.functions.get(&method_key).cloned() {
+                        return Some(*ft.return_type.clone());
+                    }
+                    ctx.error(format!("enum '{}' has no method '{}'", name, method));
+                    None
+                }
             }
         }
         _ => {

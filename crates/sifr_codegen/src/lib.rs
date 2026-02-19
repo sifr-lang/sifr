@@ -1288,6 +1288,12 @@ impl RustEmitter {
             return;
         }
 
+        // --- Enum: emit Rust enum with repr(i64) ---
+        if class.is_enum {
+            self.emit_enum_class(class);
+            return;
+        }
+
         // --- Newtype: emit tuple struct ---
         if let Some(ref inner) = class.newtype_inner {
             self.emit_newtype(class, inner);
@@ -1623,6 +1629,77 @@ impl RustEmitter {
     }
 
     /// Emit a newtype tuple struct.
+    fn emit_enum_class(&mut self, class: &HirClass) {
+        // #[repr(i64)]
+        // #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        // enum Color { RED = 1, GREEN = 2, BLUE = 3 }
+        self.write_indent();
+        self.write("#[repr(i64)]\n");
+        self.write_indent();
+        self.write("#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\n");
+        self.write_indent();
+        if self.pub_mode {
+            self.write("pub enum ");
+        } else {
+            self.write("enum ");
+        }
+        self.write(&class.name);
+        self.write(" {\n");
+        self.indent += 1;
+        let mut auto_value = 1i64;
+        for (variant_name, value) in &class.enum_variants {
+            self.write_indent();
+            self.write(variant_name);
+            let v = value.unwrap_or(auto_value);
+            self.write(&format!(" = {}", v));
+            self.write(",\n");
+            auto_value = v + 1;
+        }
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n\n");
+
+        // impl Display for Color { fn fmt(...) { write!(f, "{:?}", self) } }
+        self.write_indent();
+        self.write("impl std::fmt::Display for ");
+        self.write(&class.name);
+        self.write(" {\n");
+        self.indent += 1;
+        self.write_indent();
+        self.write("fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+        self.indent += 1;
+        self.write_indent();
+        self.write("write!(f, \"{:?}\", self)\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n");
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n\n");
+
+        // impl Color { fn name(&self) -> String { format!("{:?}", self) } fn value(&self) -> i64 { *self as i64 } }
+        self.write_indent();
+        self.write("impl ");
+        self.write(&class.name);
+        self.write(" {\n");
+        self.indent += 1;
+        self.write_indent();
+        self.write("fn name(&self) -> String { format!(\"{:?}\", self) }\n");
+        self.write_indent();
+        self.write("fn value(&self) -> i64 { *self as i64 }\n");
+        // Emit user-defined methods
+        let class_name = class.name.clone();
+        let methods = class.methods.clone();
+        for method in &methods {
+            self.current_class_name = Some(class_name.clone());
+            self.emit_class_method(method, class);
+        }
+        self.current_class_name = None;
+        self.indent -= 1;
+        self.write_indent();
+        self.write("}\n\n");
+    }
+
     fn emit_newtype(&mut self, class: &HirClass, inner: &Type) {
         // Derive attributes
         self.write_indent();
@@ -3982,6 +4059,9 @@ impl RustEmitter {
                             }
                             HirPattern::None => parts.push("None".to_string()),
                             HirPattern::Wildcard => parts.push("_".to_string()),
+                            HirPattern::Value { path } => {
+                                parts.push(path.join("::"));
+                            }
                             _ => parts.push("_".to_string()),
                         }
                     }
@@ -5744,6 +5824,15 @@ impl RustEmitter {
                 self.write(name);
             }
             HirExpr::FieldAccess { object, field, ty } => {
+                // Handle enum .name and .value as method calls
+                if matches!(object.ty(), Type::Enum { .. }) {
+                    self.emit_expr(object);
+                    self.write(".");
+                    self.write(field);
+                    self.write("()");
+                    return;
+                }
+
                 // Determine if we need .clone() (non-Copy field accessed on &self)
                 let is_self_access = matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
                 let needs_clone = is_self_access && needs_clone_for_type(ty) && !self.suppress_field_clone;
@@ -6144,6 +6233,12 @@ impl RustEmitter {
                     self.write(")");
                 }
                 // No .collect() - lazy iterator
+            }
+            HirExpr::EnumVariant { enum_name, variant, .. } => {
+                // Color.RED -> Color::RED
+                self.write(enum_name);
+                self.write("::");
+                self.write(variant);
             }
         }
     }

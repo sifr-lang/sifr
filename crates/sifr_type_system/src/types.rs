@@ -88,6 +88,15 @@ pub enum Type {
     /// Callable type: `Callable[[int, str], bool]` -> `fn(i64, String) -> bool`
     /// Fields: (parameter_types, parameter_conventions, return_type).
     Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>),
+
+    // --- milestone_enums: Enum Types ---
+
+    /// Enum type: `class Color(Enum): RED = 1; GREEN = 2; BLUE = 3`
+    /// Maps to a Rust `#[repr(i64)] enum Color { RED = 1, GREEN = 2, BLUE = 3 }`
+    Enum {
+        name: String,
+        variants: Vec<(String, Option<i64>)>,
+    },
 }
 
 /// Represents a function's type signature.
@@ -178,6 +187,7 @@ impl Type {
             Self::Newtype { inner, .. } => inner.ownership(),
             Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
             Self::Callable(..) => OwnershipKind::Copy, // function pointers are Copy
+            Self::Enum { .. } => OwnershipKind::Copy, // enums are Copy (repr(i64))
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -234,6 +244,7 @@ impl Type {
                 let parts: Vec<String> = params.iter().map(Self::display_name).collect();
                 format!("Callable[[{}], {}]", parts.join(", "), ret.display_name())
             }
+            Self::Enum { name, .. } => name.clone(),
         }
     }
 
@@ -287,6 +298,7 @@ impl Type {
             Self::Protocol { name, .. } => format!("Box<dyn {}>", name),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
+            Self::Enum { name, .. } => name.clone(), // Enum type maps to its Rust enum name
             Self::Callable(params, conventions, ret) => {
                 let param_types: Vec<String> = params.iter().zip(conventions.iter()).map(|(t, conv)| {
                     let rust_ty = t.rust_type();
@@ -391,6 +403,7 @@ impl Type {
             Type::Newtype { name, .. } => name.clone(),
             Type::TypeVar(name) => name.clone(),
             Type::Callable(..) => "Fn".to_string(),
+            Type::Enum { name, .. } => name.clone(),
         }
     }
 
@@ -604,6 +617,8 @@ impl Type {
                     && ft.params.iter().zip(params.iter()).all(|((_, pt, _), ct)| pt.is_assignable_to(ct))
                     && ft.return_type.is_assignable_to(ret)
             }
+            // Enum: nominal typing - same name means same enum
+            (Self::Enum { name: a, .. }, Self::Enum { name: b, .. }) => a == b,
             _ => false,
         }
     }

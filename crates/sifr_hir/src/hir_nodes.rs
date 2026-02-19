@@ -47,6 +47,12 @@ pub struct HirClass {
     pub parent_class: Option<String>,
     /// Generic type parameters (e.g., T, K, V from PEP 695 or TypeVar)
     pub type_params: Vec<String>,
+    /// Whether this class is an enum type (class Color(Enum):)
+    pub is_enum: bool,
+    /// Enum variants: (name, optional_value)
+    /// e.g., RED = 1 -> ("RED", Some(1))
+    /// e.g., RED -> ("RED", None)
+    pub enum_variants: Vec<(String, Option<i64>)>,
 }
 
 /// Method kind: regular, classmethod, or staticmethod
@@ -485,6 +491,12 @@ pub enum HirExpr {
         filter: Option<Box<HirExpr>>,
         ty: Type,
     },
+    /// Enum variant access: Color.RED -> Color::RED
+    EnumVariant {
+        enum_name: String,
+        variant: String,
+        ty: Type,
+    },
 }
 
 impl HirExpr {
@@ -524,7 +536,8 @@ impl HirExpr {
             | Self::ListComp { ty, .. }
             | Self::DictComp { ty, .. }
             | Self::SetComp { ty, .. }
-            | Self::GeneratorExpr { ty, .. } => ty,
+            | Self::GeneratorExpr { ty, .. }
+            | Self::EnumVariant { ty, .. } => ty,
         }
     }
 }

@@ -1,0 +1,23 @@
+from enum import Enum
+
+class Status(Enum):
+    PENDING = 1
+    ACTIVE = 2
+    DONE = 3
+
+def main():
+    counts: dict[Status, int] = {}
+    counts[Status.PENDING] = 5
+    counts[Status.ACTIVE] = 3
+    counts[Status.DONE] = 10
+    
+    v: int | None = counts[Status.ACTIVE]
+    if v is not None:
+        print(v)
+    
+    v2: int | None = counts[Status.DONE]
+    if v2 is not None:
+        print(v2)
+
+# expect-stdout: 3
+# expect-stdout: 10
