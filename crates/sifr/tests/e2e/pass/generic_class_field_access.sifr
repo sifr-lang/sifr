@@ -1,0 +1,14 @@
+# expect-stdout: 42
+# expect-stdout: hello
+
+class Box[T]:
+    value: T
+
+    def get(self) -> T:
+        return self.value
+
+def main():
+    b1: Box[int] = Box(42)
+    print(b1.value)
+    b2: Box[str] = Box("hello")
+    print(b2.value)

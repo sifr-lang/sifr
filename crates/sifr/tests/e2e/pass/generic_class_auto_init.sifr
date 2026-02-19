@@ -1,0 +1,11 @@
+# expect-stdout: 1
+# expect-stdout: 2
+
+class Pair[T]:
+    first: T
+    second: T
+
+def main():
+    p: Pair[int] = Pair(1, 2)
+    print(p.first)
+    print(p.second)
