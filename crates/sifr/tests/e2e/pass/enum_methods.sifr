@@ -1,0 +1,25 @@
+from enum import Enum
+
+class Direction(Enum):
+    NORTH = 1
+    SOUTH = 2
+    EAST = 3
+    WEST = 4
+
+    def is_vertical(self) -> bool:
+        match self:
+            case Direction.NORTH | Direction.SOUTH:
+                return True
+            case _:
+                return False
+
+def main():
+    print(Direction.NORTH.is_vertical())
+    print(Direction.EAST.is_vertical())
+    print(Direction.SOUTH.is_vertical())
+    print(Direction.WEST.is_vertical())
+
+# expect-stdout: true
+# expect-stdout: false
+# expect-stdout: true
+# expect-stdout: false

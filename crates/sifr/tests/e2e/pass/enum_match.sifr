@@ -1,0 +1,29 @@
+from enum import Enum
+
+class Direction(Enum):
+    NORTH = 1
+    SOUTH = 2
+    EAST = 3
+    WEST = 4
+
+def describe(d: Direction) -> str:
+    match d:
+        case Direction.NORTH:
+            return "north"
+        case Direction.SOUTH:
+            return "south"
+        case Direction.EAST:
+            return "east"
+        case Direction.WEST:
+            return "west"
+        case _:
+            return "unknown"
+
+def main():
+    print(describe(Direction.NORTH))
+    print(describe(Direction.EAST))
+    print(describe(Direction.WEST))
+
+# expect-stdout: north
+# expect-stdout: east
+# expect-stdout: west
