@@ -24,6 +24,17 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
         }
     }
 
+    // TypeVar arithmetic: T op T -> T (generic code assumes the concrete type supports the operation)
+    if matches!(left, Type::TypeVar(_)) && matches!(right, Type::TypeVar(_)) {
+        return Ok(left.clone());
+    }
+    if matches!(left, Type::TypeVar(_)) {
+        return Ok(left.clone());
+    }
+    if matches!(right, Type::TypeVar(_)) {
+        return Ok(right.clone());
+    }
+
     match op {
         "+" => {
             // BigInt arithmetic

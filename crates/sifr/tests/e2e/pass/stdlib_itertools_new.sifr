@@ -2,6 +2,9 @@
 from sifr.itertools import accumulate, compress, dropwhile, takewhile, filterfalse, zip_longest, count_from, cycle
 from sifr.test import assert_eq
 
+def is_small(x: int) -> bool:
+    return x < 3
+
 def main():
     # accumulate
     data: list[int] = [1, 2, 3, 4, 5]
@@ -16,16 +19,16 @@ def main():
     comp: list[int] = compress(data, selectors)
     assert_eq(len(comp), 3)
 
-    # dropwhile (drop while < 3)
-    dw: list[int] = dropwhile(3, data)
+    # dropwhile (drop while element < 3)
+    dw: list[int] = dropwhile(is_small, data)
     assert_eq(len(dw), 3)
 
-    # takewhile (take while < 3)
-    tw: list[int] = takewhile(3, data)
+    # takewhile (take while element < 3)
+    tw: list[int] = takewhile(is_small, data)
     assert_eq(len(tw), 2)
 
-    # filterfalse (keep where >= 3)
-    ff: list[int] = filterfalse(3, data)
+    # filterfalse (keep where is_small is False, i.e., >= 3)
+    ff: list[int] = filterfalse(is_small, data)
     assert_eq(len(ff), 3)
 
     # zip_longest

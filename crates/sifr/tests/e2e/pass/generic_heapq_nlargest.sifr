@@ -1,0 +1,30 @@
+# Test generic nlargest and heapreplace
+from sifr.heapq import nlargest, nsmallest, heapreplace, heappushpop, heapify_copy
+from sifr.test import assert_eq
+
+def main():
+    data: list[int] = [5, 1, 9, 3, 7]
+    big: list[int] = nlargest(3, data)
+    assert_eq(len(big), 3)
+    first: int | None = big[0]
+    if first is not None:
+        assert_eq(first, 9)
+    second: int | None = big[1]
+    if second is not None:
+        assert_eq(second, 7)
+    third: int | None = big[2]
+    if third is not None:
+        assert_eq(third, 5)
+
+    small: list[int] = nsmallest(2, data)
+    assert_eq(len(small), 2)
+    s1: int | None = small[0]
+    if s1 is not None:
+        assert_eq(s1, 1)
+    s2: int | None = small[1]
+    if s2 is not None:
+        assert_eq(s2, 3)
+
+    print("generic_heapq_nlargest: passed")
+
+# expect-stdout: generic_heapq_nlargest: passed

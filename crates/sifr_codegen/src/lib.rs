@@ -2319,6 +2319,80 @@ impl RustEmitter {
         self.mutated_vars.clear();
     }
 
+    fn extra_bounds_for_type_param(tp: &str, body: &[HirStmt]) -> String {
+        let mut needs_add = false;
+        let mut needs_sub = false;
+        Self::scan_body_for_typevar_ops(tp, body, &mut needs_add, &mut needs_sub);
+        let mut extra = String::new();
+        if needs_add {
+            extra.push_str(&format!(" + std::ops::Add<Output = {}>", tp));
+        }
+        if needs_sub {
+            extra.push_str(&format!(" + std::ops::Sub<Output = {}>", tp));
+        }
+        extra
+    }
+
+    fn scan_body_for_typevar_ops(tp: &str, stmts: &[HirStmt], needs_add: &mut bool, needs_sub: &mut bool) {
+        for stmt in stmts {
+            Self::scan_stmt_for_typevar_ops(tp, stmt, needs_add, needs_sub);
+        }
+    }
+
+    fn scan_stmt_for_typevar_ops(tp: &str, stmt: &HirStmt, needs_add: &mut bool, needs_sub: &mut bool) {
+        match stmt {
+            HirStmt::Let { value, .. } => {
+                Self::scan_expr_for_typevar_ops(tp, value, needs_add, needs_sub);
+            }
+            HirStmt::Assign { value, .. } => {
+                Self::scan_expr_for_typevar_ops(tp, value, needs_add, needs_sub);
+            }
+            HirStmt::Expr { expr } => {
+                Self::scan_expr_for_typevar_ops(tp, expr, needs_add, needs_sub);
+            }
+            HirStmt::Return { value: Some(expr) } => {
+                Self::scan_expr_for_typevar_ops(tp, expr, needs_add, needs_sub);
+            }
+            HirStmt::If { condition, then_body, elif_clauses, else_body, .. } => {
+                Self::scan_expr_for_typevar_ops(tp, condition, needs_add, needs_sub);
+                Self::scan_body_for_typevar_ops(tp, then_body, needs_add, needs_sub);
+                for (cond, body) in elif_clauses {
+                    Self::scan_expr_for_typevar_ops(tp, cond, needs_add, needs_sub);
+                    Self::scan_body_for_typevar_ops(tp, body, needs_add, needs_sub);
+                }
+                if let Some(eb) = else_body {
+                    Self::scan_body_for_typevar_ops(tp, eb, needs_add, needs_sub);
+                }
+            }
+            HirStmt::While { condition, body, .. } => {
+                Self::scan_expr_for_typevar_ops(tp, condition, needs_add, needs_sub);
+                Self::scan_body_for_typevar_ops(tp, body, needs_add, needs_sub);
+            }
+            HirStmt::For { iter, body, .. } => {
+                Self::scan_expr_for_typevar_ops(tp, iter, needs_add, needs_sub);
+                Self::scan_body_for_typevar_ops(tp, body, needs_add, needs_sub);
+            }
+            _ => {}
+        }
+    }
+
+    fn scan_expr_for_typevar_ops(tp: &str, expr: &HirExpr, needs_add: &mut bool, needs_sub: &mut bool) {
+        if let HirExpr::BinOp { left, op, right, ty } = expr {
+            let left_is_tp = matches!(left.ty(), Type::TypeVar(ref n) if n == tp);
+            let right_is_tp = matches!(right.ty(), Type::TypeVar(ref n) if n == tp);
+            let result_is_tp = matches!(ty, Type::TypeVar(ref n) if n == tp);
+            if left_is_tp || right_is_tp || result_is_tp {
+                match op.as_str() {
+                    "+" => *needs_add = true,
+                    "-" => *needs_sub = true,
+                    _ => {}
+                }
+            }
+            Self::scan_expr_for_typevar_ops(tp, left, needs_add, needs_sub);
+            Self::scan_expr_for_typevar_ops(tp, right, needs_add, needs_sub);
+        }
+    }
+
     fn emit_function(&mut self, func: &HirFunction) {
         // In test mode, skip the main function
         if self.test_mode && func.name == "main" {
@@ -2387,7 +2461,8 @@ impl RustEmitter {
                 if i > 0 {
                     self.write(", ");
                 }
-                self.write(&format!("{}: Clone + std::fmt::Display + PartialOrd", tp));
+                let extra = Self::extra_bounds_for_type_param(tp, &func.body);
+                self.write(&format!("{}: Clone + std::fmt::Display + PartialOrd{}", tp, extra));
             }
             self.write(">");
         }
@@ -5012,6 +5087,10 @@ impl RustEmitter {
     }
 
     fn emit_borrow_prefix_for_name(&mut self, convention: ParamConvention, arg_ty: &Type, param_ty: Option<&Type>, arg_name: Option<&str>) {
+        // Own convention: pass by value (move), no prefix needed
+        if convention == ParamConvention::Own {
+            return;
+        }
         // If the parameter type is a TypeVar, always emit the borrow prefix
         // because the generated Rust signature uses &T for borrowed TypeVar params
         let is_generic_param = param_ty.map_or(false, |t| matches!(t, Type::TypeVar(_)));

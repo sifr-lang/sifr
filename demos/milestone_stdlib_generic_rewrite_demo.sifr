@@ -1,27 +1,30 @@
 # Demo: milestone_stdlib_generic_rewrite
-# Showcases generic stdlib functions working with multiple types.
+# Showcases generic stdlib functions working with multiple types,
+# predicate-based itertools, IntCounter, and generic heapq.
 
-from sifr.itertools import chain, take, flatten, cycle, islice, compress, pairwise, repeat, zip_longest
-from sifr.heapq import heapify, heappop, heappush, nsmallest, heapify_copy
+from sifr.itertools import chain, take, flatten, cycle, islice, compress, pairwise, repeat, zip_longest, accumulate, dropwhile, takewhile, filterfalse
+from sifr.heapq import heapify, heappop, heappush, nsmallest, nlargest, heapify_copy
+from sifr.collections import IntCounter, int_counter_from_list
 from sifr.random import shuffle
+
+def is_small(x: int) -> bool:
+    return x < 5
+
+def is_even(x: int) -> bool:
+    return x % 2 == 0
 
 def main():
     # --- 1. Generic chain: works with any type ---
     print("=== Generic chain ===")
     ints: list[int] = chain([1, 2], [3, 4])
     print(ints)
-    
     strs: list[str] = chain(["a", "b"], ["c", "d"])
     print(strs)
-    
-    floats: list[float] = chain([1.1, 2.2], [3.3, 4.4])
-    print(floats)
 
     # --- 2. Generic take ---
     print("=== Generic take ===")
     first3_int: list[int] = take(3, [10, 20, 30, 40, 50])
     print(first3_int)
-    
     first2_str: list[str] = take(2, ["hello", "world", "foo"])
     print(first2_str)
 
@@ -30,68 +33,60 @@ def main():
     nested_int: list[list[int]] = [[1, 2], [3, 4], [5]]
     flat_int: list[int] = flatten(nested_int)
     print(flat_int)
-    
-    nested_str: list[list[str]] = [["a", "b"], ["c"]]
-    flat_str: list[str] = flatten(nested_str)
-    print(flat_str)
 
-    # --- 4. Generic cycle ---
-    print("=== Generic cycle ===")
-    cycled_int: list[int] = cycle([1, 2, 3], 7)
-    print(cycled_int)
-    
-    cycled_str: list[str] = cycle(["x", "y"], 5)
-    print(cycled_str)
+    # --- 4. Generic accumulate (now works with int and float) ---
+    print("=== Generic accumulate ===")
+    sums: list[int] = accumulate([1, 2, 3, 4, 5])
+    print(sums)
+    float_sums: list[float] = accumulate([1.0, 2.5, 3.5])
+    print(float_sums)
 
-    # --- 5. Generic repeat ---
-    print("=== Generic repeat ===")
-    rep_int: list[int] = repeat(42, 3)
-    print(rep_int)
-    
-    rep_str: list[str] = repeat("hi", 4)
-    print(rep_str)
+    # --- 5. Predicate-based dropwhile ---
+    print("=== Predicate-based dropwhile ===")
+    data: list[int] = [1, 3, 7, 2, 8]
+    dropped: list[int] = dropwhile(is_small, data)
+    print(dropped)
 
-    # --- 6. Generic heapq ---
-    print("=== Generic heapq (int) ===")
-    heap_int: list[int] = [5, 3, 8, 1, 4]
-    heapify(heap_int)
-    v1: int | None = heappop(heap_int)
-    if v1 is not None:
-        print(v1)
-    v2: int | None = heappop(heap_int)
-    if v2 is not None:
-        print(v2)
-    
-    print("=== Generic heapq (float) ===")
-    data_float: list[float] = [3.3, 1.1, 4.4, 1.5, 2.2]
-    smallest_floats: list[float] = nsmallest(3, data_float)
-    print(smallest_floats)
-    
-    print("=== Generic heapq (str) ===")
-    data_str: list[str] = ["banana", "apple", "cherry", "date"]
-    smallest_strs: list[str] = nsmallest(2, data_str)
-    print(smallest_strs)
+    # --- 6. Predicate-based takewhile ---
+    print("=== Predicate-based takewhile ===")
+    taken: list[int] = takewhile(is_small, data)
+    print(taken)
 
-    # --- 7. Generic compress ---
+    # --- 7. Predicate-based filterfalse ---
+    print("=== Predicate-based filterfalse ===")
+    odds: list[int] = filterfalse(is_even, [1, 2, 3, 4, 5, 6])
+    print(odds)
+
+    # --- 8. Generic heapq (nsmallest, nlargest) ---
+    print("=== Generic heapq ===")
+    items: list[int] = [9, 3, 7, 1, 5]
+    small: list[int] = nsmallest(3, items)
+    print(small)
+    big: list[int] = nlargest(2, items)
+    print(big)
+
+    # --- 9. IntCounter (counter for int keys) ---
+    print("=== IntCounter ===")
+    nums: list[int] = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4]
+    c: IntCounter = int_counter_from_list(nums)
+    print(c.get(3))
+    print(c.get(4))
+    print(c.total())
+
+    # --- 10. Generic compress ---
     print("=== Generic compress ===")
     data_c: list[str] = ["a", "b", "c", "d", "e"]
     sel: list[bool] = [True, False, True, False, True]
     compressed: list[str] = compress(data_c, sel)
     print(compressed)
 
-    # --- 8. Generic pairwise ---
-    print("=== Generic pairwise ===")
-    pairs: list[list[int]] = pairwise([1, 2, 3, 4])
-    for pair in pairs:
-        print(pair)
-
-    # --- 9. Generic zip_longest ---
+    # --- 11. Generic zip_longest ---
     print("=== Generic zip_longest ===")
     zl_str: list[list[str]] = zip_longest(["a", "b", "c"], ["x", "y"], "-")
     for pair in zl_str:
         print(pair)
 
-    # --- 10. Generic shuffle ---
+    # --- 12. Generic shuffle ---
     print("=== Generic shuffle ===")
     shuffled_str: list[str] = shuffle(["a", "b", "c", "d", "e"])
     print(len(shuffled_str))

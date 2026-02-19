@@ -1,0 +1,20 @@
+# Test deque with int values (basic operations)
+from sifr.collections import deque
+from sifr.test import assert_eq
+
+def main():
+    d: deque = deque(5)
+    d.append(10)
+    d.append(20)
+    d.append(30)
+    assert_eq(d.len(), 3)
+    val: int = d.popleft()
+    assert_eq(val, 10)
+    assert_eq(d.len(), 2)
+    d.appendleft(5)
+    assert_eq(d.len(), 3)
+    items: list[int] = d.to_list()
+    assert_eq(len(items), 3)
+    print("generic_deque_operations: passed")
+
+# expect-stdout: generic_deque_operations: passed

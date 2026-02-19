@@ -1,0 +1,11 @@
+# Test generic accumulate with float (running sum)
+from sifr.itertools import accumulate
+from sifr.test import assert_eq
+
+def main():
+    data: list[float] = [1.0, 2.5, 3.5]
+    acc: list[float] = accumulate(data)
+    assert_eq(len(acc), 3)
+    print("generic_accumulate_float: passed")
+
+# expect-stdout: generic_accumulate_float: passed
