@@ -429,7 +429,7 @@ Sifr intentionally does NOT support enums with associated data (algebraic data t
 
 ## milestone_integer_safety: Integer Overflow and BigInt
 
-status: pending
+status: done
 
 **Goal:** Resolve the integer overflow contradiction with Sifr's "if it compiles, it works" guarantee. Currently, `int` maps to Rust `i64` — overflow panics in debug mode and wraps silently in release mode. Both behaviors violate the safety promise. This milestone introduces a `bigint` type for arbitrary-precision arithmetic (matching Python's `int` behavior) and adds compiler diagnostics for potential overflow in `int` operations.
 

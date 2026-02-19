@@ -235,6 +235,16 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
 pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
     match op {
         "==" | "!=" => {
+            // Block mixed int/bigint equality comparisons
+            if (left == &Type::Int && right == &Type::BigInt) || (left == &Type::BigInt && right == &Type::Int) {
+                return Err(TypeError {
+                    message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
+                    kind: crate::TypeErrorKind::TypeMismatch {
+                        expected: left.clone(),
+                        actual: right.clone(),
+                    },
+                });
+            }
             // Equality comparison works on same types
             if left == right || left == &Type::Any || right == &Type::Any {
                 return Ok(Type::Bool);
@@ -276,6 +286,16 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
             })
         }
         "<" | ">" | "<=" | ">=" => {
+            // Block mixed int/bigint comparisons
+            if (left == &Type::Int && right == &Type::BigInt) || (left == &Type::BigInt && right == &Type::Int) {
+                return Err(TypeError {
+                    message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
+                    kind: crate::TypeErrorKind::TypeMismatch {
+                        expected: left.clone(),
+                        actual: right.clone(),
+                    },
+                });
+            }
             // Ordering comparison works on numeric types and strings
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Bool);
@@ -494,6 +514,17 @@ mod tests {
         assert_eq!(type_check_unary_op("not", &Type::Bool).unwrap(), Type::Bool);
         assert!(type_check_unary_op("-", &Type::Str).is_err());
         assert!(type_check_unary_op("not", &Type::Int).is_err());
+    }
+
+    #[test]
+    fn test_mixed_int_bigint_comparison_blocked() {
+        assert!(type_check_comparison(&Type::Int, "==", &Type::BigInt).is_err());
+        assert!(type_check_comparison(&Type::BigInt, "==", &Type::Int).is_err());
+        assert!(type_check_comparison(&Type::Int, "<", &Type::BigInt).is_err());
+        assert!(type_check_comparison(&Type::BigInt, ">", &Type::Int).is_err());
+        // Same-type comparisons should still work
+        assert!(type_check_comparison(&Type::BigInt, "==", &Type::BigInt).is_ok());
+        assert!(type_check_comparison(&Type::BigInt, "<", &Type::BigInt).is_ok());
     }
 
     #[test]
