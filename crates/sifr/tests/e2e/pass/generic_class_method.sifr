@@ -1,0 +1,20 @@
+# Test generic class method returning the same generic class
+class Pair[T]:
+    first: T
+    second: T
+
+    def __init__(self, first: T, second: T):
+        self.first = first
+        self.second = second
+
+    def swap(self) -> Pair[T]:
+        return Pair(self.second, self.first)
+
+def main():
+    p: Pair[int] = Pair(1, 2)
+    p2: Pair[int] = p.swap()
+    print(p2.first)
+    print(p2.second)
+
+# expect-stdout: 2
+# expect-stdout: 1

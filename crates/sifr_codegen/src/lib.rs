@@ -2167,7 +2167,17 @@ impl RustEmitter {
 
                     if method.return_type != Type::None {
                         self.write(" -> ");
-                        self.write(&method.return_type.rust_type());
+                        // If return type is the same generic class, include type params
+                        let ret_rust_type = if let Type::Class { name: ret_name, .. } = &method.return_type {
+                            if !class.type_params.is_empty() && ret_name == &class.name {
+                                format!("{}<{}>", ret_name, class.type_params.join(", "))
+                            } else {
+                                method.return_type.rust_type()
+                            }
+                        } else {
+                            method.return_type.rust_type()
+                        };
+                        self.write(&ret_rust_type);
                     }
 
                     self.write(" {\n");
@@ -2556,7 +2566,10 @@ impl RustEmitter {
                     self.write(&ty.rust_type());
                 }
                 self.write(" = ");
-                if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
+                if matches!(ty, Type::None) && matches!(value, HirExpr::NoneLiteral) {
+                    // `x: None = None` -> `let x: () = ()`
+                    self.write("()");
+                } else if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
                     // `x: str | None = None` -> `let x: Option<String> = None`
                     self.write("None");
                 } else if is_option_type(ty) && !is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
@@ -4828,11 +4841,20 @@ impl RustEmitter {
                     let op = &ops[0];
                     // Handle `is None` / `is not None` for Option types
                     if (op == "is" || op == "is not") && matches!(comparators[0], HirExpr::NoneLiteral) {
-                        self.emit_expr(left);
-                        if op == "is" {
-                            self.write(".is_none()");
+                        // If left is already Type::None (not T|None), it's always None
+                        if matches!(left.ty(), Type::None) {
+                            if op == "is" {
+                                self.write("true");
+                            } else {
+                                self.write("false");
+                            }
                         } else {
-                            self.write(".is_some()");
+                            self.emit_expr(left);
+                            if op == "is" {
+                                self.write(".is_none()");
+                            } else {
+                                self.write(".is_some()");
+                            }
                         }
                     } else if op == "is" {
                         self.emit_expr(left);
@@ -7457,6 +7479,9 @@ fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
             HirStmt::FieldAssign { .. }
             | HirStmt::AttributeAugAssign { .. }
             | HirStmt::AttributeSubscriptAssign { .. } => true,
+            HirStmt::Expr { expr } => expr_contains_self_field_mutation(expr),
+            HirStmt::Return { value: Some(expr) } => expr_contains_self_field_mutation(expr),
+            HirStmt::Let { value, .. } => expr_contains_self_field_mutation(value),
             HirStmt::If { then_body, elif_clauses, else_body, .. } => {
                 body_contains_field_assign_codegen(then_body)
                     || elif_clauses.iter().any(|(_, body)| body_contains_field_assign_codegen(body))
@@ -7468,6 +7493,23 @@ fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
             _ => false,
         }
     })
+}
+
+/// Check if an expression contains a mutating method call on a self field (e.g., self.items.append(...)).
+fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
+    match expr {
+        HirExpr::MethodCall { object, method, .. } => {
+            // Check if calling a mutating method on self.field
+            let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
+                if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
+            if is_self_field && MUTATING_METHODS.contains(&method.as_str()) {
+                return true;
+            }
+            // Recurse into the object
+            expr_contains_self_field_mutation(object)
+        }
+        _ => false,
+    }
 }
 
 /// Check if a type references a specific class name (directly or via union/option).
@@ -7706,6 +7748,7 @@ fn needs_clone_for_type(ty: &Type) -> bool {
         Type::Tuple(_) => true, // tuples of non-Copy are non-Copy
         Type::Class { .. } => true,
         Type::Newtype { .. } => true,
+        Type::TypeVar(_) => true, // Generic type params have T: Clone bound, so .clone() is safe
         _ => false,
     }
 }
