@@ -1,0 +1,10 @@
+# Test auto-generated __str__ for class with typed fields
+class Point:
+    x: int
+    y: int
+
+def main():
+    p: Point = Point(1, 2)
+    print(str(p))
+
+# expect-stdout: Point(x=1, y=2)

@@ -1,0 +1,19 @@
+# Test that explicit __init__ takes precedence over auto-generated one
+class Rectangle:
+    width: int
+    height: int
+
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+
+    def area(self) -> int:
+        return self.width * self.height
+
+def main():
+    r: Rectangle = Rectangle(3, 4)
+    print(r.area())
+    print(r.width)
+
+# expect-stdout: 12
+# expect-stdout: 3

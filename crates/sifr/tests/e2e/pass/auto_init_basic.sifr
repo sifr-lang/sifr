@@ -1,0 +1,12 @@
+# Test auto-generated __init__ for class with typed fields
+class Point:
+    x: int
+    y: int
+
+def main():
+    p: Point = Point(3, 4)
+    print(p.x)
+    print(p.y)
+
+# expect-stdout: 3
+# expect-stdout: 4

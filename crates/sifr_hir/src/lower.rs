@@ -962,13 +962,22 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         parent_class: None,
     });
 
+    let mut field_defaults: Vec<(usize, HirExpr)> = Vec::new();
+
     for stmt in &class_def.body {
         match stmt {
-            // Field annotations: `x: float`
+            // Field annotations: `x: float` or `x: float = 0.0`
             Stmt::AnnAssign(ann) => {
                 if let Expr::Name(name) = ann.target.as_ref() {
                     let ty = resolve_annotation_expr(&ann.annotation, ctx);
+                    let field_idx = fields.len();
                     fields.push((name.id.to_string(), ty));
+                    // Collect default value if present (for auto-init default params)
+                    if let Some(ref default_expr) = ann.value {
+                        if let Some(hir_default) = lower_expr_simple(default_expr) {
+                            field_defaults.push((field_idx, hir_default));
+                        }
+                    }
                 }
             }
             // Method definitions
@@ -1057,6 +1066,10 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         let params: Vec<(String, Type)> = fields.clone();
         let ft = FunctionType::new(params, class_ty.clone());
         ctx.functions.insert(class_name.clone(), ft);
+        // Store field defaults for the auto-generated constructor
+        if !field_defaults.is_empty() {
+            ctx.function_defaults.insert(class_name.clone(), field_defaults);
+        }
     }
 
     if is_error {

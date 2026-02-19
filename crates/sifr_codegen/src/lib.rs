@@ -21,6 +21,19 @@ const IO_ERROR_SUBCLASSES: &[&str] = &[
 
 /// Check if a built-in error class name is referenced in the generated Rust code.
 /// Uses word-boundary-aware matching to avoid false positives like "EmailError" matching "Error".
+/// Check if a type can be auto-formatted with `{}` (implements Display).
+/// Used to determine if auto-generated Display impl is safe for a class field.
+fn is_auto_display_type(ty: &Type) -> bool {
+    match ty {
+        Type::Int | Type::Float | Type::Bool | Type::Str | Type::None => true,
+        Type::LiteralInt(_) | Type::LiteralBool(_) | Type::LiteralStr(_) => true,
+        Type::Class { .. } => true, // Classes get auto-Display too
+        Type::Newtype { .. } => true,
+        // Union types map to Option<T> or Rust enum — neither implements Display
+        _ => false,
+    }
+}
+
 fn is_builtin_error_referenced(code: &str, error_name: &str) -> bool {
     let mut start = 0;
     while let Some(pos) = code[start..].find(error_name) {
@@ -202,7 +215,9 @@ fn filter_rust_code_to_needed(rust_code: &str, imported_names: &HashSet<String>)
                 }
             }
         }
-        deps.insert(name.clone(), called);
+        // Accumulate dependencies: multiple blocks with the same name (e.g., impl X and impl Display for X)
+        // should contribute their dependencies together
+        deps.entry(name.clone()).or_default().extend(called);
     }
 
     // Step 3: Compute transitive closure of needed functions
@@ -1187,9 +1202,14 @@ impl RustEmitter {
 
         // Pre-scan: collect classes that have Display impls
         for class in &module.classes {
+            let has_auto_display = !class.fields.is_empty()
+                && !class.is_protocol
+                && !class.operator_impls.iter().any(|(n, _)| n == "__str__" || n == "__repr__")
+                && class.fields.iter().all(|(_, t)| is_auto_display_type(t));
             if class.is_error_type
                 || class.newtype_inner.is_some()
                 || class.operator_impls.iter().any(|(n, _)| n == "__str__" || n == "__repr__")
+                || has_auto_display
             {
                 self.display_classes.insert(class.name.clone());
             }
@@ -1518,6 +1538,48 @@ impl RustEmitter {
                 self.write_indent();
                 self.write("}\n");
             }
+        } else if !has_custom_str && !class.is_error_type && !class.fields.is_empty()
+            && class.fields.iter().all(|(_, t)| is_auto_display_type(t))
+        {
+            // Auto-generate Display impl: ClassName(field1=value1, field2=value2)
+            self.output.push('\n');
+            self.write_indent();
+            self.write("impl std::fmt::Display for ");
+            self.write(&class.name);
+            if !class.type_params.is_empty() {
+                self.write("<");
+                for (i, tp) in class.type_params.iter().enumerate() {
+                    if i > 0 { self.write(", "); }
+                    self.write(tp);
+                }
+                self.write(">");
+            }
+            self.write(" {\n");
+            self.indent += 1;
+            self.write_indent();
+            self.write("fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+            self.indent += 1;
+            self.write_indent();
+            self.write("write!(f, \"");
+            self.write(&class.name);
+            self.write("(");
+            for (i, (field_name, _)) in class.fields.iter().enumerate() {
+                if i > 0 { self.write(", "); }
+                self.write(field_name);
+                self.write("={}");
+            }
+            self.write(")\"");
+            for (field_name, _) in &class.fields {
+                self.write(", self.");
+                self.write(field_name);
+            }
+            self.write(")\n");
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n");
+            self.indent -= 1;
+            self.write_indent();
+            self.write("}\n");
         }
 
         // Emit protocol trait impls
