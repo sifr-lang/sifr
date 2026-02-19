@@ -1,0 +1,14 @@
+def main():
+    a: bigint = bigint(100)
+    b: bigint = bigint(200)
+    print(a + b)
+    print(b - a)
+    print(a * b)
+    print(b // a)
+    print(b % bigint(3))
+
+# expect-stdout: 300
+# expect-stdout: 100
+# expect-stdout: 20000
+# expect-stdout: 2
+# expect-stdout: 2

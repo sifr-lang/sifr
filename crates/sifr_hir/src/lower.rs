@@ -1679,7 +1679,7 @@ fn register_builtins(ctx: &mut LowerCtx) {
             class_ty,
         ));
     }
-    let other_mid_level_errors = ["ParseError", "ValueError", "DivisionError", "KeyError"];
+    let other_mid_level_errors = ["ParseError", "ValueError", "DivisionError", "KeyError", "OverflowError"];
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {

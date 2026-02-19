@@ -1,0 +1,9 @@
+def main():
+    big: bigint = bigint(10) ** 20
+    try:
+        n: int = int(big)
+        print("should not reach here")
+    except OverflowError as e:
+        print("caught overflow")
+
+# expect-stdout: caught overflow

@@ -1,0 +1,9 @@
+def main():
+    d: dict[bigint, str] = {bigint(1): "one", bigint(2): "two", bigint(3): "three"}
+    print(len(d))
+    print(d[bigint(1)])
+    print(d[bigint(3)])
+
+# expect-stdout: 3
+# expect-stdout: one
+# expect-stdout: three

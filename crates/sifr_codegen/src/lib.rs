@@ -7943,8 +7943,9 @@ fn module_uses_bigint(module: &HirModule) -> bool {
     fn type_has_bigint(ty: &Type) -> bool {
         match ty {
             Type::BigInt => true,
-            Type::List(t) => type_has_bigint(t),
-            Type::Union(ts) => ts.iter().any(type_has_bigint),
+            Type::List(t) | Type::Set(t) => type_has_bigint(t),
+            Type::Dict(k, v) => type_has_bigint(k) || type_has_bigint(v),
+            Type::Tuple(ts) | Type::Union(ts) => ts.iter().any(type_has_bigint),
             Type::Result(ok, err) => type_has_bigint(ok) || type_has_bigint(err),
             _ => false,
         }
