@@ -5815,7 +5815,7 @@ impl RustEmitter {
                                 // Callable param with TypeVar params: wrap concrete function in
                                 // adapter closure so Copy-type args get dereferenced to match the
                                 // generic `impl Fn(&T) -> R` signature.
-                                if let Type::Callable(callable_params, callable_convs, callable_ret) = param_ty {
+                                if let Type::Callable(callable_params, callable_convs, _callable_ret) = param_ty {
                                     let has_typevar_param = callable_params.iter().any(|p| matches!(p, Type::TypeVar(_)));
                                     if has_typevar_param {
                                         if let HirExpr::Name { name: arg_func_name, .. } = arg {
