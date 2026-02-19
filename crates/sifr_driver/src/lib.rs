@@ -697,11 +697,15 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
         }]
     })?;
 
-    // Write Cargo.toml with stdlib dependencies
+    // Write Cargo.toml with stdlib dependencies (detect bigint usage)
+    let mut effective_stdlib_modules = used_stdlib_modules.clone();
+    if rust_source.contains("num_bigint::BigInt") || rust_source.contains("use num_bigint") {
+        effective_stdlib_modules.insert("_bigint".to_string());
+    }
     let (cargo_toml, _) = generate_project_with_deps(
         &sifr_hir::HirModule { functions: vec![], classes: vec![], imports: vec![], constants: vec![] },
         "sifr_output",
-        &used_stdlib_modules,
+        &effective_stdlib_modules,
     );
     std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
         vec![CompileError {

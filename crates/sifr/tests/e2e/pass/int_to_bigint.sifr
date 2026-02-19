@@ -1,0 +1,8 @@
+def main():
+    n: int = 42
+    b: bigint = bigint(n)
+    print(b)
+    print(b + bigint(8))
+
+# expect-stdout: 42
+# expect-stdout: 50

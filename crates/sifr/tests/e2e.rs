@@ -128,6 +128,12 @@ edition = "2021"
                     deps.push("zip = \"0.6\"");
                 }
             }
+            "_bigint" => {
+                if !deps.contains(&"num-bigint = \"0.4\"") {
+                    deps.push("num-bigint = \"0.4\"");
+                    deps.push("num-traits = \"0.2\"");
+                }
+            }
             _ => {}
         }
     }
@@ -149,8 +155,12 @@ fn build_and_run_with_deps(rust_source: &str, test_name: &str, stdlib_modules: &
     let src_dir = tmp_dir.join("src");
     fs::create_dir_all(&src_dir).map_err(|e| format!("failed to create dir: {}", e))?;
 
-    // Write Cargo.toml with stdlib dependencies
-    let cargo_toml = generate_cargo_toml(stdlib_modules);
+    // Write Cargo.toml with stdlib dependencies (also detect bigint usage)
+    let mut effective_modules = stdlib_modules.clone();
+    if rust_source.contains("num_bigint::BigInt") || rust_source.contains("use num_bigint") {
+        effective_modules.insert("_bigint".to_string());
+    }
+    let cargo_toml = generate_cargo_toml(&effective_modules);
     fs::write(tmp_dir.join("Cargo.toml"), cargo_toml)
         .map_err(|e| format!("failed to write Cargo.toml: {}", e))?;
 

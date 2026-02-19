@@ -1,0 +1,11 @@
+def factorial(n: int) -> bigint:
+    if n <= 1:
+        return bigint(1)
+    return bigint(n) * factorial(n - 1)
+
+def main():
+    print(factorial(10))
+    print(factorial(20))
+
+# expect-stdout: 3628800
+# expect-stdout: 2432902008176640000

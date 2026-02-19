@@ -12,6 +12,8 @@ const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "KeyError", "JSONDecodeError", "TOMLDecodeError", "RegexError",
     "FileNotFoundError", "PermissionError", "FileExistsError",
     "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
+    "OverflowError", "IndexError", "AttributeError", "TypeError",
+    "ZeroDivisionError", "RuntimeError", "NotImplementedError",
 ];
 
 const IO_ERROR_SUBCLASSES: &[&str] = &[
@@ -104,7 +106,10 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if emitter.needs_hashset {
         result.push_str("use std::collections::HashSet;\n");
     }
-    if emitter.needs_hashmap || emitter.needs_hashset {
+    if emitter.needs_bigint {
+        result.push_str("use num_bigint::BigInt;\n");
+    }
+    if emitter.needs_hashmap || emitter.needs_hashset || emitter.needs_bigint {
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -584,6 +589,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Emit HashMap/HashSet imports once at the top if needed by user code or any stdlib module.
     let needs_hashmap = emitter.needs_hashmap || stdlib_needs_hashmap;
     let needs_hashset = emitter.needs_hashset || stdlib_needs_hashset;
+    let needs_bigint = emitter.needs_bigint;
     let mut result = String::new();
     if needs_hashmap {
         result.push_str("use std::collections::HashMap;\n");
@@ -591,7 +597,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if needs_hashset {
         result.push_str("use std::collections::HashSet;\n");
     }
-    if needs_hashmap || needs_hashset {
+    if needs_bigint {
+        result.push_str("use num_bigint::BigInt;\n");
+    }
+    if needs_hashmap || needs_hashset || needs_bigint {
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -779,6 +788,9 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         if emitter.needs_hashset {
             result.push_str("use std::collections::HashSet;\n");
         }
+        if emitter.needs_bigint {
+            result.push_str("use num_bigint::BigInt;\n");
+        }
         if !result.is_empty() {
             result.push('\n');
         }
@@ -874,6 +886,12 @@ edition = "2021"
                     deps.push("zip = \"0.6\"".to_string());
                 }
             }
+            "_bigint" => {
+                if !deps.contains(&"num-bigint = \"0.4\"".to_string()) {
+                    deps.push("num-bigint = \"0.4\"".to_string());
+                    deps.push("num-traits = \"0.2\"".to_string());
+                }
+            }
             // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes, sifr.sys,
             // sifr.subprocess, sifr.html, sifr.calendar, sifr.operator use only std library
             _ => {}
@@ -898,6 +916,7 @@ struct RustEmitter {
     needs_hashmap: bool,
     needs_hashset: bool,
     needs_file_handles: bool,
+    needs_bigint: bool,
     /// Track union enum types that need to be defined (name -> member types)
     union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated enum definitions to prepend
@@ -979,6 +998,7 @@ impl RustEmitter {
             needs_hashmap: false,
             needs_hashset: false,
             needs_file_handles: false,
+            needs_bigint: false,
             union_enums: HashMap::new(),
             enum_defs: String::new(),
             current_return_type: None,
@@ -1171,6 +1191,11 @@ impl RustEmitter {
     }
 
     fn emit_module(&mut self, module: &HirModule) {
+        // Pre-scan: detect bigint usage
+        if module_uses_bigint(module) {
+            self.needs_bigint = true;
+        }
+
         // Pre-scan: collect stdlib/intrinsic imports and register function names
         for import in &module.imports {
             if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
@@ -2646,6 +2671,11 @@ impl RustEmitter {
                 if matches!(ty, Type::None) && matches!(value, HirExpr::NoneLiteral) {
                     // `x: None = None` -> `let x: () = ()`
                     self.write("()");
+                } else if matches!(ty, Type::BigInt) && matches!(value, HirExpr::IntLiteral(_)) {
+                    // `x: bigint = 42` -> `BigInt::from(42_i64)`
+                    if let HirExpr::IntLiteral(v) = value {
+                        self.write(&format!("BigInt::from({}_i64)", v));
+                    }
                 } else if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
                     // `x: str | None = None` -> `let x: Option<String> = None`
                     self.write("None");
@@ -4998,6 +5028,20 @@ impl RustEmitter {
                 }
             }
             HirExpr::BinOp { left, op, right, ty } => {
+                // BigInt arithmetic: always clone operands to avoid move issues
+                if left.ty() == &Type::BigInt && right.ty() == &Type::BigInt && op != "**" {
+                    if op == "//" {
+                        // BigInt floor division uses /
+                        self.emit_expr_with_bigint_clone(left);
+                        self.write(" / ");
+                        self.emit_expr_with_bigint_clone(right);
+                    } else {
+                        self.emit_expr_with_bigint_clone(left);
+                        self.write(&format!(" {} ", op));
+                        self.emit_expr_with_bigint_clone(right);
+                    }
+                    return;
+                }
                 // Special handling for string concatenation
                 if op == "+" && *ty == Type::Str {
                     // Flatten chained string concatenation into a single format! call
@@ -5046,7 +5090,13 @@ impl RustEmitter {
                     if matches!(right.as_ref(), HirExpr::BinOp { .. }) { self.write(")"); }
                 } else if op == "**" {
                     // Power: int ** int -> i64::pow, otherwise float
-                    if left.ty() == &Type::Int && right.ty() == &Type::Int {
+                    if left.ty() == &Type::BigInt {
+                        // bigint ** bigint or bigint ** int -> num_bigint pow
+                        self.emit_expr(left);
+                        self.write(".pow(u32::try_from(");
+                        self.emit_expr(right);
+                        self.write(").unwrap_or(0))");
+                    } else if left.ty() == &Type::Int && right.ty() == &Type::Int {
                         self.emit_expr(left);
                         self.write(".pow(");
                         self.emit_expr(right);
@@ -5364,10 +5414,23 @@ impl RustEmitter {
                                 self.emit_expr(&args[0]);
                                 self.write(" { 1_i64 } else { 0_i64 }");
                             }
+                            Type::BigInt => {
+                                // int(bigint) -> Result<i64, OverflowError>
+                                self.write("i64::try_from(&");
+                                self.emit_expr(&args[0]);
+                                self.write(").map_err(|_| OverflowError { message: \"bigint value out of range for int\".to_string() })");
+                            }
                             _ => {
                                 self.emit_expr(&args[0]);
                             }
                         }
+                    }
+                } else if func == "bigint" {
+                    if !args.is_empty() {
+                        // bigint(n) -> BigInt::from(n)
+                        self.write("BigInt::from(");
+                        self.emit_expr(&args[0]);
+                        self.write(")");
                     }
                 } else if func == "float" {
                     if !args.is_empty() {
@@ -7790,12 +7853,79 @@ fn detect_is_none_union_var(expr: &HirExpr) -> Option<(String, String, Vec<(Stri
 }
 
 /// Check if a type is hashable (for codegen derive decisions).
+/// Emit a BigInt expression, cloning if it's a variable name (to avoid move).
+impl RustEmitter {
+    fn emit_expr_with_bigint_clone(&mut self, expr: &HirExpr) {
+        match expr {
+            HirExpr::Name { .. } => {
+                self.emit_expr(expr);
+                self.write(".clone()");
+            }
+            HirExpr::FieldAccess { .. } => {
+                self.emit_expr(expr);
+                self.write(".clone()");
+            }
+            _ => {
+                self.emit_expr(expr);
+            }
+        }
+    }
+}
+
 fn is_hashable_type_codegen(ty: &Type) -> bool {
     match ty {
         Type::Int | Type::Bool | Type::Str | Type::None => true,
         Type::Float => false,
         _ => false,
     }
+}
+
+/// Check if a module uses the `bigint` type anywhere.
+fn module_uses_bigint(module: &HirModule) -> bool {
+    fn type_has_bigint(ty: &Type) -> bool {
+        match ty {
+            Type::BigInt => true,
+            Type::List(t) => type_has_bigint(t),
+            Type::Union(ts) => ts.iter().any(type_has_bigint),
+            Type::Result(ok, err) => type_has_bigint(ok) || type_has_bigint(err),
+            _ => false,
+        }
+    }
+    fn expr_has_bigint(expr: &HirExpr) -> bool {
+        type_has_bigint(expr.ty())
+    }
+    fn stmts_have_bigint(stmts: &[HirStmt]) -> bool {
+        stmts.iter().any(|s| stmt_has_bigint(s))
+    }
+    fn stmt_has_bigint(stmt: &HirStmt) -> bool {
+        match stmt {
+            HirStmt::Let { ty, value, .. } => type_has_bigint(ty) || expr_has_bigint(value),
+            HirStmt::Return { value } => value.as_ref().map(|e| expr_has_bigint(e)).unwrap_or(false),
+            HirStmt::Expr { expr } => expr_has_bigint(expr),
+            HirStmt::If { condition, then_body, else_body, elif_clauses, .. } => {
+                expr_has_bigint(condition) || stmts_have_bigint(then_body)
+                    || else_body.as_ref().map(|b| stmts_have_bigint(b)).unwrap_or(false)
+                    || elif_clauses.iter().any(|(_, b)| stmts_have_bigint(b))
+            }
+            HirStmt::While { body, .. } => stmts_have_bigint(body),
+            HirStmt::For { body, .. } => stmts_have_bigint(body),
+            _ => false,
+        }
+    }
+    for func in &module.functions {
+        if type_has_bigint(&func.return_type) { return true; }
+        if func.params.iter().any(|p| type_has_bigint(&p.ty)) { return true; }
+        if stmts_have_bigint(&func.body) { return true; }
+    }
+    for class in &module.classes {
+        if class.fields.iter().any(|(_, t)| type_has_bigint(t)) { return true; }
+        for method in &class.methods {
+            if type_has_bigint(&method.return_type) { return true; }
+            if method.params.iter().any(|p| type_has_bigint(&p.ty)) { return true; }
+            if stmts_have_bigint(&method.body) { return true; }
+        }
+    }
+    false
 }
 
 /// Collect all parts of a chained string concatenation (`a + b + c`).
@@ -8088,6 +8218,7 @@ fn needs_clone_for_type(ty: &Type) -> bool {
         Type::Class { .. } => true,
         Type::Newtype { .. } => true,
         Type::TypeVar(_) => true, // Generic type params have T: Clone bound, so .clone() is safe
+        Type::BigInt => true, // num_bigint::BigInt is not Copy
         _ => false,
     }
 }

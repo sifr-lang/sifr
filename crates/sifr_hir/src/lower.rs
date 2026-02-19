@@ -2855,7 +2855,9 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         }
         // Type check: value must be assignable to declared type
         let final_ty = expr.ty().clone();
-        if !final_ty.is_assignable_to(&declared_type) {
+        // int literals are assignable to bigint (coercion: 42 -> BigInt::from(42))
+        let is_int_to_bigint = final_ty == Type::Int && declared_type == Type::BigInt;
+        if !is_int_to_bigint && !final_ty.is_assignable_to(&declared_type) {
             ctx.error(format!(
                 "type mismatch: expected '{}', got '{}'",
                 declared_type.display_name(),
@@ -4282,6 +4284,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         // int(float) -> int (infallible truncation)
         // int(int) -> int (identity)
         // int(bool) -> int (True=1, False=0)
+        // int(bigint) -> Result[int, OverflowError] (may overflow i64)
         let result_ty = if arg_ty == Type::Str {
             let parse_error_ty = ctx.class_types.get("ParseError").cloned().unwrap_or(Type::Class {
                 name: "ParseError".to_string(),
@@ -4290,6 +4293,14 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 parent_class: None,
             });
             Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
+        } else if arg_ty == Type::BigInt {
+            let overflow_error_ty = ctx.class_types.get("OverflowError").cloned().unwrap_or(Type::Class {
+                name: "OverflowError".to_string(),
+                fields: vec![("message".to_string(), Type::Str)],
+                methods: vec![],
+                parent_class: None,
+            });
+            Type::Result(Box::new(Type::Int), Box::new(overflow_error_ty))
         } else {
             Type::Int
         };
@@ -4297,6 +4308,25 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             func: "int".to_string(),
             args: vec![arg],
             ty: result_ty,
+        });
+    }
+
+    // bigint(n) — convert int to bigint (always succeeds)
+    if func_name == "bigint" {
+        if call.arguments.args.len() != 1 {
+            ctx.error(format!("bigint() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            return None;
+        }
+        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let arg_ty = arg.ty().clone();
+        if arg_ty != Type::Int && arg_ty != Type::BigInt {
+            ctx.error(format!("bigint() requires an int argument, got '{}'", arg_ty.display_name()));
+            return None;
+        }
+        return Some(HirExpr::Call {
+            func: "bigint".to_string(),
+            args: vec![arg],
+            ty: Type::BigInt,
         });
     }
 
@@ -5924,6 +5954,21 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                         return Some(*ft.return_type.clone());
                     }
                     ctx.error(format!("enum '{}' has no method '{}'", name, method));
+                    None
+                }
+            }
+        }
+        Type::BigInt => {
+            match method {
+                "clone" => {
+                    if !args.is_empty() {
+                        ctx.error("bigint.clone() takes no arguments".to_string());
+                        return None;
+                    }
+                    Some(Type::BigInt)
+                }
+                _ => {
+                    ctx.error(format!("type 'bigint' has no method '{}'", method));
                     None
                 }
             }
