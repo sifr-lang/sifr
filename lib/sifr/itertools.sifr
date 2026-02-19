@@ -137,9 +137,8 @@ def filterfalse(threshold: int, data: list[int]) -> list[int]:
             result.append(val)
     return result
 
-def zip_longest(a: list[int], b: list[int], fill: int) -> list[list[int]]:
-    # Zip two lists, filling shorter one with fill value.
-    result: list[list[int]] = []
+def zip_longest(a: list[T], b: list[T], fill: T) -> list[list[T]]:
+    result: list[list[T]] = []
     len_a: int = len(a)
     len_b: int = len(b)
     max_len: int = len_a
@@ -147,9 +146,9 @@ def zip_longest(a: list[int], b: list[int], fill: int) -> list[list[int]]:
         max_len = len_b
     i: int = 0
     while i < max_len:
-        pair: list[int] = []
+        pair: list[T] = []
         if i < len_a:
-            va: int | None = a[i]
+            va: T | None = a[i]
             if va is not None:
                 pair.append(va)
             else:
@@ -157,7 +156,7 @@ def zip_longest(a: list[int], b: list[int], fill: int) -> list[list[int]]:
         else:
             pair.append(fill)
         if i < len_b:
-            vb: int | None = b[i]
+            vb: T | None = b[i]
             if vb is not None:
                 pair.append(vb)
             else:

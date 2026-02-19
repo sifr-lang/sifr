@@ -1,8 +1,9 @@
 # Demo: milestone_stdlib_generic_rewrite
 # Showcases generic stdlib functions working with multiple types.
 
-from sifr.itertools import chain, take, flatten, cycle, islice, compress, pairwise, repeat
+from sifr.itertools import chain, take, flatten, cycle, islice, compress, pairwise, repeat, zip_longest
 from sifr.heapq import heapify, heappop, heappush, nsmallest, heapify_copy
+from sifr.random import shuffle
 
 def main():
     # --- 1. Generic chain: works with any type ---
@@ -83,3 +84,14 @@ def main():
     pairs: list[list[int]] = pairwise([1, 2, 3, 4])
     for pair in pairs:
         print(pair)
+
+    # --- 9. Generic zip_longest ---
+    print("=== Generic zip_longest ===")
+    zl_str: list[list[str]] = zip_longest(["a", "b", "c"], ["x", "y"], "-")
+    for pair in zl_str:
+        print(pair)
+
+    # --- 10. Generic shuffle ---
+    print("=== Generic shuffle ===")
+    shuffled_str: list[str] = shuffle(["a", "b", "c", "d", "e"])
+    print(len(shuffled_str))
