@@ -1,0 +1,36 @@
+def describe_method(method: str) -> str:
+    match method:
+        case "GET":
+            return "read"
+        case "POST":
+            return "create"
+        case "PUT":
+            return "update"
+        case _:
+            return "other"
+
+def describe_code(code: int) -> str:
+    match code:
+        case 200:
+            return "ok"
+        case 404:
+            return "not found"
+        case 500:
+            return "error"
+        case _:
+            return "unknown"
+
+def main():
+    print(describe_method("GET"))
+    print(describe_method("POST"))
+    print(describe_method("DELETE"))
+    print(describe_code(200))
+    print(describe_code(404))
+    print(describe_code(999))
+
+# expect-stdout: read
+# expect-stdout: create
+# expect-stdout: other
+# expect-stdout: ok
+# expect-stdout: not found
+# expect-stdout: unknown

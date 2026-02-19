@@ -1,0 +1,25 @@
+def classify_pair(p: tuple[int, int]) -> str:
+    match p:
+        case (0, 0):
+            return "origin"
+        case (x, 0):
+            return "x-axis"
+        case (0, y):
+            return "y-axis"
+        case (x, y):
+            return "general"
+
+def main():
+    t1: tuple[int, int] = (0, 0)
+    t2: tuple[int, int] = (3, 0)
+    t3: tuple[int, int] = (0, 4)
+    t4: tuple[int, int] = (3, 4)
+    print(classify_pair(t1))
+    print(classify_pair(t2))
+    print(classify_pair(t3))
+    print(classify_pair(t4))
+
+# expect-stdout: origin
+# expect-stdout: x-axis
+# expect-stdout: y-axis
+# expect-stdout: general

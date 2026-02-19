@@ -3993,6 +3993,46 @@ impl RustEmitter {
         }
     }
 
+    fn substitute_class_captures_in_guard(&self, guard_code: &str, pattern: &HirPattern, is_non_option_union: bool) -> String {
+        if let HirPattern::Class { fields, .. } = pattern {
+            let prefix = if is_non_option_union { "__inner" } else { "__matched" };
+            let mut result = guard_code.to_string();
+            for (fname, fpat) in fields {
+                if let HirPattern::Capture { name, .. } = fpat {
+                    let replacement = format!("{}.{}", prefix, fname);
+                    result = Self::replace_identifier(&result, name, &replacement);
+                }
+            }
+            result
+        } else {
+            guard_code.to_string()
+        }
+    }
+
+    fn replace_identifier(code: &str, ident: &str, replacement: &str) -> String {
+        let mut result = String::new();
+        let chars: Vec<char> = code.chars().collect();
+        let ident_chars: Vec<char> = ident.chars().collect();
+        let mut i = 0;
+        while i < chars.len() {
+            if i + ident_chars.len() <= chars.len()
+                && &chars[i..i + ident_chars.len()] == ident_chars.as_slice()
+            {
+                let before_ok = i == 0 || !chars[i - 1].is_alphanumeric() && chars[i - 1] != '_';
+                let after_ok = i + ident_chars.len() >= chars.len()
+                    || !chars[i + ident_chars.len()].is_alphanumeric() && chars[i + ident_chars.len()] != '_';
+                if before_ok && after_ok {
+                    result.push_str(replacement);
+                    i += ident_chars.len();
+                    continue;
+                }
+            }
+            result.push(chars[i]);
+            i += 1;
+        }
+        result
+    }
+
     fn emit_match(&mut self, subject: &HirExpr, subject_ty: &Type, arms: &[HirMatchArm]) {
         // Determine how to emit the match based on subject type
         let is_option = is_option_type(subject_ty);
@@ -4133,6 +4173,22 @@ impl RustEmitter {
                 let rust_path = path.join("::");
                 self.write(&rust_path);
             }
+            HirPattern::Tuple { elements } => {
+                self.write("(");
+                for (i, elem) in elements.iter().enumerate() {
+                    if i > 0 { self.write(", "); }
+                    match elem {
+                        HirPattern::Capture { name, .. } => self.write(name),
+                        HirPattern::Wildcard => self.write("_"),
+                        HirPattern::Literal { value } => {
+                            let lit_code = self.expr_to_string(value);
+                            self.write(&lit_code);
+                        }
+                        _ => self.write("_"),
+                    }
+                }
+                self.write(")");
+            }
         }
 
         // Build field guards for class patterns with literal field values
@@ -4186,12 +4242,14 @@ impl RustEmitter {
         } else if !class_field_guards.is_empty() {
             let mut all_guards = class_field_guards;
             if let Some(guard_expr) = guard {
-                let guard_code = self.expr_to_string(guard_expr);
+                let mut guard_code = self.expr_to_string(guard_expr);
+                guard_code = self.substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
                 all_guards.push(guard_code);
             }
             self.write(&format!(" if {}", all_guards.join(" && ")));
         } else if let Some(guard_expr) = guard {
-            let guard_code = self.expr_to_string(guard_expr);
+            let mut guard_code = self.expr_to_string(guard_expr);
+            guard_code = self.substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
             self.write(&format!(" if {}", guard_code));
         }
 

@@ -276,6 +276,8 @@ pub enum HirPattern {
     },
     /// `case Color.RED:` — attribute value pattern (enum-like)
     Value { path: Vec<String> },
+    /// `case (x, y):` — tuple destructuring pattern
+    Tuple { elements: Vec<HirPattern> },
 }
 
 /// An except handler in a try/except block.

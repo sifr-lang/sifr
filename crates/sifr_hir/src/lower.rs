@@ -2713,7 +2713,15 @@ fn lower_match(
         bind_pattern_vars(&pattern, ctx);
 
         let guard = if let Some(ref g) = case.guard {
-            Some(lower_expr(g, ctx)?)
+            let guard_expr = lower_expr(g, ctx)?;
+            let guard_ty = guard_expr.ty();
+            if *guard_ty != Type::Bool && *guard_ty != Type::Any {
+                ctx.error(format!(
+                    "match guard must be a bool expression, got '{}'",
+                    guard_ty.display_name()
+                ));
+            }
+            Some(guard_expr)
         } else {
             None
         };
@@ -2725,17 +2733,126 @@ fn lower_match(
         arms.push(HirMatchArm { pattern, guard, body });
     }
 
-    // Basic exhaustiveness check: if subject is a union type, warn if no wildcard
-    if !arms.iter().any(|arm| matches!(arm.pattern, HirPattern::Wildcard)) {
+    // Exhaustiveness check: verify all variants of the subject type are covered
+    let has_wildcard = arms.iter().any(|arm| matches!(arm.pattern, HirPattern::Wildcard));
+    let has_capture_without_guard = arms.iter().any(|arm| {
+        matches!(arm.pattern, HirPattern::Capture { .. }) && arm.guard.is_none()
+    });
+
+    if !has_wildcard && !has_capture_without_guard {
         if let Type::Union(members) = &subject_ty {
-            let has_none = members.iter().any(|m| matches!(m, Type::None));
+            // Collect covered types from arms
+            let mut covered_none = false;
+            let mut covered_classes: std::collections::HashSet<String> = std::collections::HashSet::new();
+            let mut covered_types: std::collections::HashSet<String> = std::collections::HashSet::new();
 
-            // Check if None is covered when the union includes None
-            let covered_none = arms.iter().any(|arm| matches!(arm.pattern, HirPattern::None));
+            for arm in &arms {
+                match &arm.pattern {
+                    HirPattern::None => { covered_none = true; }
+                    HirPattern::Class { class_name, .. } => { covered_classes.insert(class_name.clone()); }
+                    HirPattern::Capture { ty, .. } if arm.guard.is_none() => {
+                        covered_types.insert(ty.display_name());
+                    }
+                    HirPattern::Or { patterns } => {
+                        for p in patterns {
+                            match p {
+                                HirPattern::None => { covered_none = true; }
+                                HirPattern::Class { class_name, .. } => { covered_classes.insert(class_name.clone()); }
+                                _ => {}
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
 
-            if has_none && !covered_none {
+            // Check each union member is covered
+            let mut uncovered: Vec<String> = Vec::new();
+            for member in members {
+                match member {
+                    Type::None => {
+                        if !covered_none { uncovered.push("None".to_string()); }
+                    }
+                    Type::Class { name, .. } => {
+                        if !covered_classes.contains(name) && !covered_types.contains(name) {
+                            uncovered.push(name.clone());
+                        }
+                    }
+                    Type::Int => {
+                        if !covered_types.contains("int") && !covered_classes.contains("int") {
+                            uncovered.push("int".to_string());
+                        }
+                    }
+                    Type::Str => {
+                        if !covered_types.contains("str") && !covered_classes.contains("str") {
+                            uncovered.push("str".to_string());
+                        }
+                    }
+                    Type::Float => {
+                        if !covered_types.contains("float") && !covered_classes.contains("float") {
+                            uncovered.push("float".to_string());
+                        }
+                    }
+                    Type::Bool => {
+                        if !covered_types.contains("bool") && !covered_classes.contains("bool") {
+                            uncovered.push("bool".to_string());
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            if !uncovered.is_empty() {
                 ctx.error(format!(
-                    "non-exhaustive match: union type '{}' has a None variant that is not covered — add `case None:` or `case _:`",
+                    "non-exhaustive match: type '{}' has uncovered variants: {} — add matching case(s) or `case _:`",
+                    subject_ty.display_name(),
+                    uncovered.join(", ")
+                ));
+            }
+        }
+
+        // Check enum exhaustiveness
+        if let Type::Enum { ref name, ref variants } = subject_ty {
+            let mut covered_variants: std::collections::HashSet<String> = std::collections::HashSet::new();
+            for arm in &arms {
+                if let HirPattern::Value { path } = &arm.pattern {
+                    if path.len() == 2 {
+                        covered_variants.insert(path[1].clone());
+                    }
+                }
+                if let HirPattern::Or { patterns } = &arm.pattern {
+                    for p in patterns {
+                        if let HirPattern::Value { path } = p {
+                            if path.len() == 2 {
+                                covered_variants.insert(path[1].clone());
+                            }
+                        }
+                    }
+                }
+            }
+            let uncovered: Vec<&String> = variants.iter()
+                .map(|(v, _)| v)
+                .filter(|v| !covered_variants.contains(*v))
+                .collect();
+            if !uncovered.is_empty() {
+                ctx.error(format!(
+                    "non-exhaustive match: enum '{}' has uncovered variants: {} — add matching case(s) or `case _:`",
+                    name,
+                    uncovered.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")
+                ));
+            }
+        }
+
+        // For non-union, non-enum types with only literal/guarded patterns, require a wildcard
+        if !matches!(subject_ty, Type::Union(_)) && !matches!(subject_ty, Type::Enum { .. }) {
+            let all_literal_or_guarded = arms.iter().all(|arm| {
+                matches!(arm.pattern, HirPattern::Literal { .. })
+                    || matches!(arm.pattern, HirPattern::Or { .. })
+                    || arm.guard.is_some()
+            });
+            if all_literal_or_guarded {
+                ctx.error(format!(
+                    "non-exhaustive match: type '{}' cannot be fully covered by literal patterns — add `case _:` to handle remaining values",
                     subject_ty.display_name()
                 ));
             }
@@ -2829,12 +2946,20 @@ fn lower_pattern(
             let mut fields = Vec::new();
             for kw in &class_pat.arguments.keywords {
                 let field_name = kw.attr.to_string();
-                // Get field type from class definition
                 let field_ty = if let Some(Type::Class { fields: class_fields, .. }) = &class_ty {
-                    class_fields.iter()
+                    let found = class_fields.iter()
                         .find(|(n, _)| n == &field_name)
-                        .map(|(_, t)| t.clone())
-                        .unwrap_or(Type::Any)
+                        .map(|(_, t)| t.clone());
+                    if found.is_none() {
+                        ctx.error(format!(
+                            "class '{}' has no field '{}' — available fields: {}",
+                            class_name,
+                            field_name,
+                            class_fields.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>().join(", ")
+                        ));
+                        return None;
+                    }
+                    found.unwrap()
                 } else {
                     Type::Any
                 };
@@ -2845,14 +2970,24 @@ fn lower_pattern(
             Some(HirPattern::Class { class_name, fields })
         }
         Pattern::MatchSequence(seq_pat) => {
-            // Simplified: treat as a series of captures
-            // For now, just create a wildcard (full tuple destructuring is complex)
             if seq_pat.patterns.is_empty() {
-                return Some(HirPattern::Wildcard);
+                return Some(HirPattern::Tuple { elements: vec![] });
             }
-            // Create a capture for each element — simplified implementation
-            ctx.error("sequence patterns (tuple destructuring) in match are not yet supported — use `case _:` or capture patterns".to_string());
-            None
+            let elem_types: Vec<Type> = if let Type::Tuple(ref elems) = *subject_ty {
+                elems.clone()
+            } else {
+                vec![Type::Any; seq_pat.patterns.len()]
+            };
+            let mut elements = Vec::new();
+            for (i, pat) in seq_pat.patterns.iter().enumerate() {
+                let elem_ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
+                if let Some(lowered) = lower_pattern(pat, &elem_ty, ctx) {
+                    elements.push(lowered);
+                } else {
+                    return None;
+                }
+            }
+            Some(HirPattern::Tuple { elements })
         }
         Pattern::MatchMapping(_) => {
             ctx.error("mapping patterns in match are not yet supported".to_string());
@@ -2894,6 +3029,11 @@ fn bind_pattern_vars(pattern: &HirPattern, ctx: &mut LowerCtx) {
             // Bind from first pattern (all OR alternatives should bind same names)
             if let Some(first) = patterns.first() {
                 bind_pattern_vars(first, ctx);
+            }
+        }
+        HirPattern::Tuple { elements } => {
+            for elem in elements {
+                bind_pattern_vars(elem, ctx);
             }
         }
         _ => {}
