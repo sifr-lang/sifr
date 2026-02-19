@@ -1,0 +1,8 @@
+# Test None as a standalone value and type
+def main():
+    x: None = None
+    print(x is None)
+    print(x is not None)
+
+# expect-stdout: true
+# expect-stdout: false

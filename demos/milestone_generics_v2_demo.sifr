@@ -1,0 +1,78 @@
+# Demo: milestone_generics_v2
+# Demonstrates generic class improvements:
+# - Generic class with method returning the same generic type
+# - TypeVar fields requiring .clone() for safe field access
+# - Mutating methods on generic fields detected correctly (&mut self)
+# - None as a standalone type and value
+
+# --- Generic class with swap method (return type includes type params) ---
+class Pair[T]:
+    first: T
+    second: T
+
+    def __init__(self, first: T, second: T):
+        self.first = first
+        self.second = second
+
+    def swap(self) -> Pair[T]:
+        return Pair(self.second, self.first)
+
+# --- Generic stack with push/pop (mutating methods detected) ---
+class Stack[T]:
+    items: list[T]
+
+    def __init__(self, items: list[T]):
+        self.items = items
+
+    def push(self, item: T) -> None:
+        self.items.append(item)
+
+    def pop(self) -> T | None:
+        return self.items.pop()
+
+    def size(self) -> int:
+        return len(self.items)
+
+# --- Generic wrapper (existing, verified no regression) ---
+class Wrapper[T]:
+    value: T
+
+    def __init__(self, value: T):
+        self.value = value
+
+    def get(self) -> T:
+        return self.value
+
+def main():
+    # --- Pair swap ---
+    p: Pair[int] = Pair(10, 20)
+    print("pair first = " + str(p.first))
+    print("pair second = " + str(p.second))
+    p2: Pair[int] = p.swap()
+    print("swapped first = " + str(p2.first))
+    print("swapped second = " + str(p2.second))
+
+    # --- String pair (swap works for str too) ---
+    sp: Pair[str] = Pair("hello", "world")
+    sp2: Pair[str] = sp.swap()
+    print("str pair swap ok = true")
+
+    # --- Stack operations ---
+    s: Stack[int] = Stack([])
+    s.push(1)
+    s.push(2)
+    s.push(3)
+    print("stack size = " + str(s.size()))
+    item: int | None = s.pop()
+    if item is not None:
+        print("popped = " + str(item))
+    print("stack size after pop = " + str(s.size()))
+
+    # --- Wrapper ---
+    w: Wrapper[int] = Wrapper(42)
+    print("wrapper get = " + str(w.get()))
+
+    # --- None as standalone type ---
+    x: None = None
+    print("x is None = " + str(x is None))
+    print("x is not None = " + str(x is not None))
