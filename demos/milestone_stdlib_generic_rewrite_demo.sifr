@@ -1,0 +1,85 @@
+# Demo: milestone_stdlib_generic_rewrite
+# Showcases generic stdlib functions working with multiple types.
+
+from sifr.itertools import chain, take, flatten, cycle, islice, compress, pairwise, repeat
+from sifr.heapq import heapify, heappop, heappush, nsmallest, heapify_copy
+
+def main():
+    # --- 1. Generic chain: works with any type ---
+    print("=== Generic chain ===")
+    ints: list[int] = chain([1, 2], [3, 4])
+    print(ints)
+    
+    strs: list[str] = chain(["a", "b"], ["c", "d"])
+    print(strs)
+    
+    floats: list[float] = chain([1.1, 2.2], [3.3, 4.4])
+    print(floats)
+
+    # --- 2. Generic take ---
+    print("=== Generic take ===")
+    first3_int: list[int] = take(3, [10, 20, 30, 40, 50])
+    print(first3_int)
+    
+    first2_str: list[str] = take(2, ["hello", "world", "foo"])
+    print(first2_str)
+
+    # --- 3. Generic flatten ---
+    print("=== Generic flatten ===")
+    nested_int: list[list[int]] = [[1, 2], [3, 4], [5]]
+    flat_int: list[int] = flatten(nested_int)
+    print(flat_int)
+    
+    nested_str: list[list[str]] = [["a", "b"], ["c"]]
+    flat_str: list[str] = flatten(nested_str)
+    print(flat_str)
+
+    # --- 4. Generic cycle ---
+    print("=== Generic cycle ===")
+    cycled_int: list[int] = cycle([1, 2, 3], 7)
+    print(cycled_int)
+    
+    cycled_str: list[str] = cycle(["x", "y"], 5)
+    print(cycled_str)
+
+    # --- 5. Generic repeat ---
+    print("=== Generic repeat ===")
+    rep_int: list[int] = repeat(42, 3)
+    print(rep_int)
+    
+    rep_str: list[str] = repeat("hi", 4)
+    print(rep_str)
+
+    # --- 6. Generic heapq ---
+    print("=== Generic heapq (int) ===")
+    heap_int: list[int] = [5, 3, 8, 1, 4]
+    heapify(heap_int)
+    v1: int | None = heappop(heap_int)
+    if v1 is not None:
+        print(v1)
+    v2: int | None = heappop(heap_int)
+    if v2 is not None:
+        print(v2)
+    
+    print("=== Generic heapq (float) ===")
+    data_float: list[float] = [3.3, 1.1, 4.4, 1.5, 2.2]
+    smallest_floats: list[float] = nsmallest(3, data_float)
+    print(smallest_floats)
+    
+    print("=== Generic heapq (str) ===")
+    data_str: list[str] = ["banana", "apple", "cherry", "date"]
+    smallest_strs: list[str] = nsmallest(2, data_str)
+    print(smallest_strs)
+
+    # --- 7. Generic compress ---
+    print("=== Generic compress ===")
+    data_c: list[str] = ["a", "b", "c", "d", "e"]
+    sel: list[bool] = [True, False, True, False, True]
+    compressed: list[str] = compress(data_c, sel)
+    print(compressed)
+
+    # --- 8. Generic pairwise ---
+    print("=== Generic pairwise ===")
+    pairs: list[list[int]] = pairwise([1, 2, 3, 4])
+    for pair in pairs:
+        print(pair)

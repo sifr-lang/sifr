@@ -1,54 +1,49 @@
-# sifr.itertools — Iterator building blocks (pure Sifr)
+# sifr.itertools — Iterator building blocks (pure Sifr, generic)
 # CPython-compatible functions only.
+T = TypeVar("T")
 
-def chain(a: list[int], b: list[int]) -> list[int]:
-    result: list[int] = []
+def chain(a: list[T], b: list[T]) -> list[T]:
+    result: list[T] = []
     for val in a:
         result.append(val)
     for val2 in b:
         result.append(val2)
     return result
 
-def chain_str(a: list[str], b: list[str]) -> list[str]:
-    result: list[str] = []
-    for val in a:
-        result.append(val)
-    for val2 in b:
-        result.append(val2)
-    return result
-
-def repeat(value: int, times: int) -> list[int]:
+def repeat(value: T, times: int) -> list[T]:
+    result: list[T] = []
     i: int = 0
     while i < times:
-        yield value
+        result.append(value)
         i = i + 1
+    return result
 
-def take(n: int, data: list[int]) -> list[int]:
-    result: list[int] = []
+def take(n: int, data: list[T]) -> list[T]:
+    result: list[T] = []
     i: int = 0
     while i < n:
         if i >= len(data):
             return result
-        val: int | None = data[i]
+        val: T | None = data[i]
         if val is not None:
             result.append(val)
         i = i + 1
     return result
 
-def flatten(lists: list[list[int]]) -> list[int]:
-    result: list[int] = []
+def flatten(lists: list[list[T]]) -> list[T]:
+    result: list[T] = []
     for inner in lists:
         for val in inner:
             result.append(val)
     return result
 
-def pairwise(data: list[int]) -> list[list[int]]:
-    result: list[list[int]] = []
+def pairwise(data: list[T]) -> list[list[T]]:
+    result: list[list[T]] = []
     i: int = 0
     while i < len(data) - 1:
-        pair: list[int] = []
-        a: int | None = data[i]
-        b: int | None = data[i + 1]
+        pair: list[T] = []
+        a: T | None = data[i]
+        b: T | None = data[i + 1]
         if a is not None:
             pair.append(a)
         if b is not None:
@@ -57,17 +52,17 @@ def pairwise(data: list[int]) -> list[list[int]]:
         i = i + 1
     return result
 
-def batched(data: list[int], n: int) -> Result[list[list[int]], ValueError]:
+def batched(data: list[T], n: int) -> Result[list[list[T]], ValueError]:
     if n <= 0:
         raise ValueError("batched: n must be > 0")
-    result: list[list[int]] = []
+    result: list[list[T]] = []
     i: int = 0
     while i < len(data):
-        batch: list[int] = []
+        batch: list[T] = []
         j: int = 0
         while j < n:
             if i + j < len(data):
-                val: int | None = data[i + j]
+                val: T | None = data[i + j]
                 if val is not None:
                     batch.append(val)
             j = j + 1
@@ -75,13 +70,13 @@ def batched(data: list[int], n: int) -> Result[list[list[int]], ValueError]:
         i = i + n
     return result
 
-def islice(data: list[int], stop: int) -> list[int]:
-    result: list[int] = []
+def islice(data: list[T], stop: int) -> list[T]:
+    result: list[T] = []
     i: int = 0
     while i < stop:
         if i >= len(data):
             return result
-        val: int | None = data[i]
+        val: T | None = data[i]
         if val is not None:
             result.append(val)
         i = i + 1
@@ -96,23 +91,15 @@ def accumulate(data: list[int]) -> list[int]:
         result.append(total)
     return result
 
-def accumulate_float(data: list[float]) -> list[float]:
-    result: list[float] = []
-    total: float = 0.0
-    for val in data:
-        total = total + val
-        result.append(total)
-    return result
-
-def compress(data: list[int], selectors: list[bool]) -> list[int]:
+def compress(data: list[T], selectors: list[bool]) -> list[T]:
     # Return elements of data where corresponding selector is True.
-    result: list[int] = []
+    result: list[T] = []
     i: int = 0
     while i < len(data):
         if i >= len(selectors):
             return result
         sel: bool | None = selectors[i]
-        val: int | None = data[i]
+        val: T | None = data[i]
         if sel is not None:
             if val is not None:
                 if sel:
@@ -122,7 +109,6 @@ def compress(data: list[int], selectors: list[bool]) -> list[int]:
 
 def dropwhile(threshold: int, data: list[int]) -> list[int]:
     # Drop elements while they are less than threshold, then return the rest.
-    # Approximates CPython's dropwhile(pred, iterable) with a simple predicate.
     result: list[int] = []
     dropping: bool = True
     for val in data:
@@ -136,7 +122,6 @@ def dropwhile(threshold: int, data: list[int]) -> list[int]:
 
 def takewhile(threshold: int, data: list[int]) -> list[int]:
     # Take elements while they are less than threshold.
-    # Approximates CPython's takewhile(pred, iterable) with a simple predicate.
     result: list[int] = []
     for val in data:
         if val >= threshold:
@@ -145,8 +130,7 @@ def takewhile(threshold: int, data: list[int]) -> list[int]:
     return result
 
 def filterfalse(threshold: int, data: list[int]) -> list[int]:
-    # Return elements where val >= threshold (i.e., where predicate val < threshold is False).
-    # Approximates CPython's filterfalse(pred, iterable) with a simple predicate.
+    # Return elements where val >= threshold.
     result: list[int] = []
     for val in data:
         if val >= threshold:
@@ -186,7 +170,6 @@ def zip_longest(a: list[int], b: list[int], fill: int) -> list[list[int]]:
 
 def count_from(start: int, step: int, n: int) -> list[int]:
     # Generate n values starting from start with given step.
-    # Approximates CPython's itertools.count(start, step) as a finite list.
     result: list[int] = []
     i: int = 0
     val: int = start
@@ -196,16 +179,15 @@ def count_from(start: int, step: int, n: int) -> list[int]:
         i = i + 1
     return result
 
-def cycle(data: list[int], n: int) -> list[int]:
+def cycle(data: list[T], n: int) -> list[T]:
     # Cycle through data n times total (n elements returned).
-    # Approximates CPython's itertools.cycle(iterable) as a finite list.
-    result: list[int] = []
+    result: list[T] = []
     if len(data) == 0:
         return result
     i: int = 0
     while i < n:
         idx: int = i % len(data)
-        val: int | None = data[idx]
+        val: T | None = data[idx]
         if val is not None:
             result.append(val)
         i = i + 1

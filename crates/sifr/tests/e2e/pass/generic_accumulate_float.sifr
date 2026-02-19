@@ -1,0 +1,13 @@
+from sifr.itertools import accumulate
+
+def main():
+    data: list[int] = [1, 2, 3, 4, 5]
+    result: list[int] = accumulate(data)
+    for v in result:
+        print(v)
+
+# expect-stdout: 1
+# expect-stdout: 3
+# expect-stdout: 6
+# expect-stdout: 10
+# expect-stdout: 15

@@ -1,0 +1,13 @@
+from sifr.itertools import chain
+
+def main():
+    a: list[float] = [1.1, 2.2]
+    b: list[float] = [3.3, 4.4]
+    result: list[float] = chain(a, b)
+    for v in result:
+        print(v)
+
+# expect-stdout: 1.1
+# expect-stdout: 2.2
+# expect-stdout: 3.3
+# expect-stdout: 4.4
