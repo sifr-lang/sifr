@@ -25,6 +25,7 @@ status: pending
 - HIR: new `HirAwait` node. Async functions produce `Future` types.
 - Type checker: `await` on a non-`Future` type is a compile error. `Result` auto-unwrap inside `try` blocks works across `.await` boundaries.
 - Codegen: `async def` emits `async fn`. `await` emits `.await`. Main function with async calls gets `#[tokio::main]`.
+- Send-bound diagnostics: `sifr.task.spawn` requires the spawned closure to be `Send + 'static`. The compiler must translate `rustc`'s Send-bound errors into Sifr-level diagnostics (e.g., "type X cannot be sent between tasks because field Y is not Send") rather than leaking raw Rust error messages. Full Send/Sync checking infrastructure is deferred to `milestone_async_sync`, but the spawn boundary must produce clear Sifr diagnostics from day one.
 
 ### Definition of Done (milestone_async_core)
 
@@ -38,6 +39,7 @@ status: pending
 - All existing E2E tests still pass (no regressions)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: async_basic, await_chain, task_spawn, async_error_propagation, task_sleep, task_timeout
+- E2E fail tests: spawn_non_send (clear Sifr diagnostic when spawning a non-Send type)
 - Milestone demo in `./demos/milestone_async_core_demo.sifr`
 
 ---

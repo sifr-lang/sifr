@@ -464,6 +464,7 @@ y: bigint = factorial(1000)
 - `bigint` is a new `Type::BigInt` variant in the type enum
 - `int` and `bigint` are NOT implicitly convertible — explicit conversion required
 - Mixed arithmetic (`int + bigint`) is a compile error — the user must convert explicitly
+- Mixed comparison (`int > bigint`, `bigint == int`) is also a compile error — explicit conversion required, consistent with the arithmetic rule
 - `bigint` works with generics, pattern matching, and all type system features
 
 ### Compiler Changes
@@ -613,8 +614,9 @@ All existing E2E tests that use the monomorphic stdlib functions must be updated
 - `test.assert_eq` is generic
 - All existing E2E tests still pass (with migration where needed)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
-- New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`
+- New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`, `generic_counter_bigint`, `generic_heapq_bigint`, `generic_accumulate_bigint`
 - New E2E fail tests: `generic_counter_unhashable` (float as Counter key), `generic_heapq_uncomparable` (type without Comparable)
+- API naming divergences table in `architecture.md` updated: remove `chain_str`, `accumulate_float`, and any other deleted type-specific entries; update `itertools.count_from` if its rationale changes
 - Milestone demo in `./demos/milestone_stdlib_generic_rewrite_demo.sifr`
 
 ---

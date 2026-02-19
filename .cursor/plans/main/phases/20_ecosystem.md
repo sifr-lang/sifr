@@ -52,6 +52,7 @@ status: pending
 - `sifr repl` provides interactive expression evaluation with type display
 - All existing E2E tests still pass (no regressions)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
+- Fuzz testing for parser and type checker (cargo-fuzz or afl) — as required by architecture contract (CI Quality Gates, milestone_ecosystem)
 - Milestone demo: a complete web application built entirely in Sifr, published as a package
 
 ---

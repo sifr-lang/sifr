@@ -104,6 +104,7 @@ Sifr intentionally diverges from CPython in several areas to achieve compile-tim
 | `match`/`case` with soft keywords | `match`/`case` are soft keywords (context-dependent) | `match`/`case` are hard keywords (always reserved) | No backward compatibility concern; avoids parser ambiguity; `match` is already reserved as a Rust keyword | milestone_pattern_matching |
 | `enum.Enum` class-based syntax | `class Color(Enum): RED = auto()` | `enum Color: RED, GREEN, BLUE` (dedicated syntax, no class inheritance) | Cleaner syntax; direct mapping to Rust enums; no metaclass machinery | milestone_enums |
 | No enum associated data | `enum` variants can hold data via class-based pattern | Union types + classes for data-carrying variants; enums are simple constants only | One obvious way: classes + unions for data, enums for constants. Avoids duplicating algebraic data types. | milestone_enums |
+| Dict insertion order guaranteed (Python 3.7+) | Dict order is unspecified (`HashMap`); use `collections.OrderedDict` if order matters | `dict` maps to Rust `HashMap` which does not guarantee insertion order | Performance: `HashMap` is faster than ordered alternatives; `IndexMap` may be considered in a future milestone | -- |
 
 
 **Migration note:** code that relies heavily on exception propagation, import-time side effects, arbitrary-precision integers, or runtime reflection will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
@@ -379,6 +380,7 @@ All errors have `message: str` populated from Rust's `Display` (for built-ins) o
 | `JSONDecodeError` | `Error` | `message: str`, `line: int`, `column: int` | `serde_json::Error` |
 | `TOMLDecodeError` | `Error` | `message: str`, `line: int`, `column: int` | `toml::de::Error` |
 | `RegexError` | `Error` | `message: str`, `detail: str` | `regex::Error` |
+| `OverflowError` | `Error` | `message: str` | `bigint`-to-`int` conversion via `int(b)` |
 
 **Exhaustiveness with Subclasses:**
 
