@@ -231,6 +231,45 @@ pub enum HirStmt {
     NestedFunction {
         func: HirFunction,
     },
+    /// Match/case statement (Python 3.10 structural pattern matching)
+    Match {
+        subject: HirExpr,
+        subject_ty: Type,
+        arms: Vec<HirMatchArm>,
+    },
+}
+
+/// A single arm in a match statement.
+#[derive(Debug, Clone)]
+pub struct HirMatchArm {
+    /// The pattern to match against
+    pub pattern: HirPattern,
+    /// Optional guard condition
+    pub guard: Option<HirExpr>,
+    /// Body to execute when pattern matches
+    pub body: Vec<HirStmt>,
+}
+
+/// Pattern types for match/case statements.
+#[derive(Debug, Clone)]
+pub enum HirPattern {
+    /// `case _:` — matches anything, no binding
+    Wildcard,
+    /// `case x:` — captures the value into variable `x`
+    Capture { name: String, ty: Type },
+    /// `case 42:` / `case "hello":` / `case True:` — literal value match
+    Literal { value: HirExpr },
+    /// `case None:` — matches None in T | None
+    None,
+    /// `case "GET" | "POST":` — OR pattern
+    Or { patterns: Vec<HirPattern> },
+    /// `case Circle(radius=r):` — class pattern with field bindings
+    Class {
+        class_name: String,
+        fields: Vec<(String, HirPattern)>,
+    },
+    /// `case Color.RED:` — attribute value pattern (enum-like)
+    Value { path: Vec<String> },
 }
 
 /// An except handler in a try/except block.

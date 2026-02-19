@@ -3880,7 +3880,251 @@ impl RustEmitter {
                 self.current_return_type = saved_return_type;
                 self.mutated_vars = saved_mutated;
             }
+            HirStmt::Match { subject, subject_ty, arms } => {
+                self.emit_match(subject, subject_ty, arms);
+            }
         }
+    }
+
+    fn emit_match(&mut self, subject: &HirExpr, subject_ty: &Type, arms: &[HirMatchArm]) {
+        // Determine how to emit the match based on subject type
+        let is_option = is_option_type(subject_ty);
+        let is_non_option_union = matches!(subject_ty, Type::Union(_)) && !is_option;
+
+        self.write_indent();
+
+        if is_option || is_non_option_union {
+            // For union types, emit as a Rust match on the enum/Option
+            let subject_code = self.expr_to_string(subject);
+            self.write(&format!("match {} {{\n", subject_code));
+        } else {
+            // For simple types (literals, etc.), emit as a Rust match
+            let subject_code = self.expr_to_string(subject);
+            self.write(&format!("match {} {{\n", subject_code));
+        }
+
+        self.indent += 1;
+
+        let mut has_wildcard = false;
+        for arm in arms {
+            if matches!(arm.pattern, HirPattern::Wildcard) {
+                has_wildcard = true;
+            }
+            self.emit_match_arm(&arm.pattern, subject_ty, &arm.guard, &arm.body, is_option, is_non_option_union);
+        }
+
+        // If no wildcard and not a union type, add a wildcard arm to make it exhaustive
+        if !has_wildcard && !is_option && !is_non_option_union {
+            // Already handled by the arms themselves
+        }
+
+        self.indent -= 1;
+        self.writeln("}");
+    }
+
+    fn emit_match_arm(
+        &mut self,
+        pattern: &HirPattern,
+        subject_ty: &Type,
+        guard: &Option<HirExpr>,
+        body: &[HirStmt],
+        is_option: bool,
+        is_non_option_union: bool,
+    ) {
+        self.write_indent();
+
+        // Build the pattern part (without =>)
+        let has_str_guard = matches!(pattern, HirPattern::Literal { value: HirExpr::StringLiteral(_) })
+            || matches!(pattern, HirPattern::Or { patterns } if patterns.iter().any(|p| matches!(p, HirPattern::Literal { value: HirExpr::StringLiteral(_) })));
+
+        match pattern {
+            HirPattern::Wildcard => {
+                self.write("_");
+            }
+            HirPattern::None => {
+                if is_option {
+                    self.write("None");
+                } else {
+                    self.write("_");
+                }
+            }
+            HirPattern::Capture { name, ty } => {
+                if is_option {
+                    let _ = ty;
+                    self.write(&format!("Some({})", name));
+                } else {
+                    self.write(name);
+                }
+            }
+            HirPattern::Literal { value } => {
+                let lit_code = self.expr_to_string(value);
+                match value {
+                    HirExpr::StringLiteral(_) => {
+                        // String matching needs a guard since Rust can't match String directly
+                        self.write("__s");
+                    }
+                    _ => {
+                        self.write(&lit_code);
+                    }
+                }
+            }
+            HirPattern::Or { patterns } => {
+                let has_str = patterns.iter().any(|p| matches!(p, HirPattern::Literal { value: HirExpr::StringLiteral(_) }));
+                if has_str {
+                    self.write("__s");
+                } else {
+                    let mut parts = Vec::new();
+                    for p in patterns {
+                        match p {
+                            HirPattern::Literal { value } => {
+                                let lit_code = self.expr_to_string(value);
+                                parts.push(lit_code);
+                            }
+                            HirPattern::None => parts.push("None".to_string()),
+                            HirPattern::Wildcard => parts.push("_".to_string()),
+                            _ => parts.push("_".to_string()),
+                        }
+                    }
+                    self.write(&parts.join(" | "));
+                }
+            }
+            HirPattern::Class { class_name, fields } => {
+                if is_non_option_union {
+                    let enum_name = subject_ty.union_enum_name();
+                    let variant_name = if let Type::Union(members) = subject_ty {
+                        let target_ty = match class_name.as_str() {
+                            "int" => Some(Type::Int),
+                            "str" => Some(Type::Str),
+                            "float" => Some(Type::Float),
+                            "bool" => Some(Type::Bool),
+                            other => members.iter().find(|m| {
+                                matches!(m, Type::Class { name, .. } if name == other)
+                            }).cloned(),
+                        };
+                        if let Some(ty) = target_ty {
+                            ty.union_variant_name()
+                        } else {
+                            class_name.clone()
+                        }
+                    } else {
+                        class_name.clone()
+                    };
+                    if fields.is_empty() {
+                        self.write(&format!("{}::{}(_)", enum_name, variant_name));
+                    } else {
+                        self.write(&format!("{}::{}(__inner)", enum_name, variant_name));
+                    }
+                } else {
+                    // For direct struct patterns, use __matched with field guards
+                    self.write("__matched");
+                }
+            }
+            HirPattern::Value { path } => {
+                let rust_path = path.join("::");
+                self.write(&rust_path);
+            }
+        }
+
+        // Build field guards for class patterns with literal field values
+        let class_field_guards: Vec<String> = if let HirPattern::Class { fields, .. } = pattern {
+            if !is_non_option_union {
+                fields.iter().filter_map(|(fname, fpat)| {
+                    match fpat {
+                        HirPattern::Literal { value } => {
+                            let lit_code = self.expr_to_string(value);
+                            Some(format!("__matched.{} == {}", fname, lit_code))
+                        }
+                        HirPattern::None => {
+                            Some(format!("__matched.{}.is_none()", fname))
+                        }
+                        _ => None,
+                    }
+                }).collect()
+            } else {
+                Vec::new()
+            }
+        } else {
+            Vec::new()
+        };
+
+        // Add guard
+        if has_str_guard {
+            // Build string guard condition
+            let str_guard = match pattern {
+                HirPattern::Literal { value: HirExpr::StringLiteral(s) } => {
+                    format!("__s == {:?}", s)
+                }
+                HirPattern::Or { patterns } => {
+                    let conditions: Vec<String> = patterns.iter().map(|p| {
+                        match p {
+                            HirPattern::Literal { value: HirExpr::StringLiteral(s) } => {
+                                format!("__s == {:?}", s)
+                            }
+                            _ => "__s == _".to_string(),
+                        }
+                    }).collect();
+                    conditions.join(" || ")
+                }
+                _ => String::new(),
+            };
+            if let Some(guard_expr) = guard {
+                let guard_code = self.expr_to_string(guard_expr);
+                self.write(&format!(" if ({}) && ({})", str_guard, guard_code));
+            } else {
+                self.write(&format!(" if {}", str_guard));
+            }
+        } else if !class_field_guards.is_empty() {
+            let mut all_guards = class_field_guards;
+            if let Some(guard_expr) = guard {
+                let guard_code = self.expr_to_string(guard_expr);
+                all_guards.push(guard_code);
+            }
+            self.write(&format!(" if {}", all_guards.join(" && ")));
+        } else if let Some(guard_expr) = guard {
+            let guard_code = self.expr_to_string(guard_expr);
+            self.write(&format!(" if {}", guard_code));
+        }
+
+        self.write(" => {\n");
+        self.indent += 1;
+
+        // For class patterns with fields on union types, destructure
+        if let HirPattern::Class { class_name, fields } = pattern {
+            if is_non_option_union && !fields.is_empty() {
+                for (fname, fpat) in fields {
+                    if let HirPattern::Capture { name, .. } = fpat {
+                        self.write_indent();
+                        self.write(&format!("let {} = __inner.{};\n", name, fname));
+                    }
+                }
+            } else if !is_non_option_union {
+                for (fname, fpat) in fields {
+                    if let HirPattern::Capture { name, .. } = fpat {
+                        self.write_indent();
+                        self.write(&format!("let {} = __matched.{};\n", name, fname));
+                    }
+                }
+            }
+            let _ = class_name;
+        }
+
+        for s in body {
+            self.emit_stmt(s);
+        }
+
+        self.indent -= 1;
+        self.writeln("}");
+    }
+
+    fn expr_to_string(&mut self, expr: &HirExpr) -> String {
+        let saved_output = std::mem::take(&mut self.output);
+        let saved_indent = self.indent;
+        self.indent = 0;
+        self.emit_expr(expr);
+        let result = std::mem::take(&mut self.output);
+        self.output = saved_output;
+        self.indent = saved_indent;
+        result.trim().to_string()
     }
 
     /// Emit any walrus (named expression) assignments that need to be hoisted before a condition.

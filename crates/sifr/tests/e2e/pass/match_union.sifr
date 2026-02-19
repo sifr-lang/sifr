@@ -1,0 +1,21 @@
+def describe_union(x: int | str) -> str:
+    match x:
+        case int():
+            return "integer"
+        case str():
+            return "string"
+
+def make_int() -> int | str:
+    return 42
+
+def make_str() -> int | str:
+    return "hello"
+
+def main():
+    a: int | str = make_int()
+    b: int | str = make_str()
+    print(describe_union(a))
+    print(describe_union(b))
+
+# expect-stdout: integer
+# expect-stdout: string

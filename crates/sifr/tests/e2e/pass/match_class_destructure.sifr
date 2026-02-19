@@ -1,0 +1,29 @@
+class Point:
+    x: int
+    y: int
+
+def describe_point(p: Point) -> str:
+    match p:
+        case Point(x=0, y=0):
+            return "origin"
+        case Point(x=px, y=0):
+            return "on x-axis"
+        case Point(x=0, y=py):
+            return "on y-axis"
+        case Point(x=px, y=py):
+            return "general"
+
+def main():
+    p1: Point = Point(0, 0)
+    p2: Point = Point(3, 0)
+    p3: Point = Point(0, 4)
+    p4: Point = Point(3, 4)
+    print(describe_point(p1))
+    print(describe_point(p2))
+    print(describe_point(p3))
+    print(describe_point(p4))
+
+# expect-stdout: origin
+# expect-stdout: on x-axis
+# expect-stdout: on y-axis
+# expect-stdout: general

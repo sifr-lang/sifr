@@ -2415,10 +2415,216 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 },
             })
         }
+        Stmt::Match(match_stmt) => lower_match(match_stmt, func_type, ctx),
         _ => {
             ctx.error("unsupported statement type".to_string());
             None
         }
+    }
+}
+
+fn lower_match(
+    match_stmt: &StmtMatch,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
+    let subject = lower_expr(&match_stmt.subject, ctx)?;
+    let subject_ty = subject.ty().clone();
+
+    let mut arms = Vec::new();
+    for case in &match_stmt.cases {
+        ctx.scope.push();
+
+        let pattern = lower_pattern(&case.pattern, &subject_ty, ctx)?;
+
+        // Bind captured variables into scope
+        bind_pattern_vars(&pattern, ctx);
+
+        let guard = if let Some(ref g) = case.guard {
+            Some(lower_expr(g, ctx)?)
+        } else {
+            None
+        };
+
+        let body = lower_stmts(&case.body, func_type, ctx);
+
+        ctx.scope.pop();
+
+        arms.push(HirMatchArm { pattern, guard, body });
+    }
+
+    // Basic exhaustiveness check: if subject is a union type, warn if no wildcard
+    if !arms.iter().any(|arm| matches!(arm.pattern, HirPattern::Wildcard)) {
+        if let Type::Union(members) = &subject_ty {
+            let has_none = members.iter().any(|m| matches!(m, Type::None));
+
+            // Check if None is covered when the union includes None
+            let covered_none = arms.iter().any(|arm| matches!(arm.pattern, HirPattern::None));
+
+            if has_none && !covered_none {
+                ctx.error(format!(
+                    "non-exhaustive match: union type '{}' has a None variant that is not covered — add `case None:` or `case _:`",
+                    subject_ty.display_name()
+                ));
+            }
+        }
+    }
+
+    Some(HirStmt::Match { subject, subject_ty, arms })
+}
+
+fn lower_pattern(
+    pattern: &Pattern,
+    subject_ty: &Type,
+    ctx: &mut LowerCtx,
+) -> Option<HirPattern> {
+    match pattern {
+        Pattern::MatchAs(pat_as) => {
+            if pat_as.pattern.is_none() && pat_as.name.is_none() {
+                // `case _:` — wildcard
+                return Some(HirPattern::Wildcard);
+            }
+            if let Some(name) = &pat_as.name {
+                let var_name = name.to_string();
+                if let Some(inner_pat) = &pat_as.pattern {
+                    // `case SomePattern as x:` — match inner pattern, bind to x
+                    let inner = lower_pattern(inner_pat, subject_ty, ctx)?;
+                    // For now, treat as capture with narrowed type
+                    let narrowed_ty = pattern_narrowed_type(&inner, subject_ty, ctx);
+                    let _ = inner; // inner pattern info embedded in capture
+                    return Some(HirPattern::Capture { name: var_name, ty: narrowed_ty });
+                } else {
+                    // `case x:` — capture pattern
+                    return Some(HirPattern::Capture { name: var_name, ty: subject_ty.clone() });
+                }
+            }
+            if let Some(inner_pat) = &pat_as.pattern {
+                return lower_pattern(inner_pat, subject_ty, ctx);
+            }
+            Some(HirPattern::Wildcard)
+        }
+        Pattern::MatchSingleton(singleton) => {
+            match &singleton.value {
+                Singleton::None => Some(HirPattern::None),
+                Singleton::True => Some(HirPattern::Literal {
+                    value: HirExpr::BoolLiteral(true),
+                }),
+                Singleton::False => Some(HirPattern::Literal {
+                    value: HirExpr::BoolLiteral(false),
+                }),
+            }
+        }
+        Pattern::MatchValue(val_pat) => {
+            // Could be a literal or an attribute access like Color.RED
+            match val_pat.value.as_ref() {
+                Expr::Attribute(attr) => {
+                    let obj_name = match attr.value.as_ref() {
+                        Expr::Name(n) => n.id.to_string(),
+                        _ => {
+                            ctx.error("complex attribute pattern not supported".to_string());
+                            return None;
+                        }
+                    };
+                    let attr_name = attr.attr.to_string();
+                    Some(HirPattern::Value { path: vec![obj_name, attr_name] })
+                }
+                _ => {
+                    // Try to lower as a literal expression
+                    let expr = lower_expr(val_pat.value.as_ref(), ctx)?;
+                    Some(HirPattern::Literal { value: expr })
+                }
+            }
+        }
+        Pattern::MatchOr(or_pat) => {
+            let mut patterns = Vec::new();
+            for p in &or_pat.patterns {
+                patterns.push(lower_pattern(p, subject_ty, ctx)?);
+            }
+            Some(HirPattern::Or { patterns })
+        }
+        Pattern::MatchClass(class_pat) => {
+            let class_name = match class_pat.cls.as_ref() {
+                Expr::Name(n) => n.id.to_string(),
+                _ => {
+                    ctx.error("class pattern class name must be a simple name".to_string());
+                    return None;
+                }
+            };
+
+            // Resolve the class type to get field types
+            let class_ty = ctx.class_types.get(&class_name).cloned();
+
+            let mut fields = Vec::new();
+            for kw in &class_pat.arguments.keywords {
+                let field_name = kw.attr.to_string();
+                // Get field type from class definition
+                let field_ty = if let Some(Type::Class { fields: class_fields, .. }) = &class_ty {
+                    class_fields.iter()
+                        .find(|(n, _)| n == &field_name)
+                        .map(|(_, t)| t.clone())
+                        .unwrap_or(Type::Any)
+                } else {
+                    Type::Any
+                };
+                let field_pattern = lower_pattern(&kw.pattern, &field_ty, ctx)?;
+                fields.push((field_name, field_pattern));
+            }
+
+            Some(HirPattern::Class { class_name, fields })
+        }
+        Pattern::MatchSequence(seq_pat) => {
+            // Simplified: treat as a series of captures
+            // For now, just create a wildcard (full tuple destructuring is complex)
+            if seq_pat.patterns.is_empty() {
+                return Some(HirPattern::Wildcard);
+            }
+            // Create a capture for each element — simplified implementation
+            ctx.error("sequence patterns (tuple destructuring) in match are not yet supported — use `case _:` or capture patterns".to_string());
+            None
+        }
+        Pattern::MatchMapping(_) => {
+            ctx.error("mapping patterns in match are not yet supported".to_string());
+            None
+        }
+        Pattern::MatchStar(_) => {
+            ctx.error("star patterns in match are not yet supported".to_string());
+            None
+        }
+    }
+}
+
+fn pattern_narrowed_type(pattern: &HirPattern, subject_ty: &Type, ctx: &LowerCtx) -> Type {
+    match pattern {
+        HirPattern::None => Type::None,
+        HirPattern::Class { class_name, .. } => {
+            // Look up the class type
+            if let Some(class_ty) = ctx.class_types.get(class_name) {
+                class_ty.clone()
+            } else {
+                subject_ty.clone()
+            }
+        }
+        _ => subject_ty.clone(),
+    }
+}
+
+fn bind_pattern_vars(pattern: &HirPattern, ctx: &mut LowerCtx) {
+    match pattern {
+        HirPattern::Capture { name, ty } => {
+            ctx.scope.define(name.clone(), ty.clone());
+        }
+        HirPattern::Class { fields, .. } => {
+            for (_, field_pat) in fields {
+                bind_pattern_vars(field_pat, ctx);
+            }
+        }
+        HirPattern::Or { patterns } => {
+            // Bind from first pattern (all OR alternatives should bind same names)
+            if let Some(first) = patterns.first() {
+                bind_pattern_vars(first, ctx);
+            }
+        }
+        _ => {}
     }
 }
 
