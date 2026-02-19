@@ -1,9 +1,10 @@
 # sifr.collections — Extended collection types
 from _sifr.collections import new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection, defaultdict_new, defaultdict_get, defaultdict_set
+T = TypeVar("T")
 
 class Counter:
     # A multiset (bag) mapping elements to their counts.
-    # Backed by a native dict[str, int] field.
+    # Operates on str keys (use IntCounter for int keys).
     counts: dict[str, int]
 
     def get(self, key: str) -> int:
@@ -70,7 +71,6 @@ class Counter:
         return self.counts.values()
 
     def update(self, other: Counter) -> None:
-        # Add counts from other into self.
         for key in other.counts.keys():
             other_val: int | None = other.counts[key]
             if other_val is not None:
@@ -81,7 +81,6 @@ class Counter:
                     self.counts[key] = other_val
 
     def subtract(self, other: Counter) -> None:
-        # Subtract counts of other from self (counts can go negative).
         for key in other.counts.keys():
             other_val: int | None = other.counts[key]
             if other_val is not None:
@@ -92,8 +91,6 @@ class Counter:
                     self.counts[key] = 0 - other_val
 
     def elements(self) -> list[str]:
-        # Return list of elements repeated by their count (positive counts only).
-        # Uses repeated append with index-based key lookup to avoid move issues.
         result: list[str] = []
         all_keys: list[str] = self.counts.keys()
         ki: int = 0
@@ -112,9 +109,37 @@ class Counter:
         return result
 
 
+class IntCounter:
+    # Counter specialized for int keys.
+    counts: dict[int, int]
+
+    def get(self, key: int) -> int:
+        val: int | None = self.counts[key]
+        if val is not None:
+            return val
+        return 0
+
+    def increment(self, key: int) -> None:
+        val: int | None = self.counts[key]
+        if val is not None:
+            self.counts[key] = val + 1
+        else:
+            self.counts[key] = 1
+
+    def total(self) -> int:
+        total: int = 0
+        for count in self.counts.values():
+            total = total + count
+        return total
+
+    def keys(self) -> list[int]:
+        return self.counts.keys()
+
+    def values(self) -> list[int]:
+        return self.counts.values()
+
+
 def counter_add(a: Counter, b: Counter) -> Counter:
-    # Return new Counter with sums of counts (only positive results).
-    # CPython: Counter.__add__(other)
     new_counts: dict[str, int] = {}
     for key in a.counts.keys():
         a_val: int | None = a.counts[key]
@@ -137,8 +162,6 @@ def counter_add(a: Counter, b: Counter) -> Counter:
 
 
 def counter_sub(a: Counter, b: Counter) -> Counter:
-    # Return new Counter with differences (only positive results kept).
-    # CPython: Counter.__sub__(other)
     new_counts: dict[str, int] = {}
     for key in a.counts.keys():
         a_val: int | None = a.counts[key]
@@ -164,9 +187,20 @@ def from_list(items: list[str]) -> Counter:
     return Counter(counts)
 
 
+def int_counter_from_list(items: list[int]) -> IntCounter:
+    counts: dict[int, int] = {}
+    for item in items:
+        val: int | None = counts[item]
+        if val is not None:
+            counts[item] = val + 1
+        else:
+            counts[item] = 1
+    return IntCounter(counts)
+
+
 class deque:
-    # A double-ended queue backed by a list[int].
-    # Supports O(1) append/appendleft and pop/popleft.
+    # A double-ended queue backed by a list.
+    # Currently operates on int values.
     _data: list[int]
     _maxlen: int
 
@@ -177,7 +211,6 @@ class deque:
     def append(self, val: int) -> None:
         self._data.append(val)
         if self._maxlen > 0 and len(self._data) > self._maxlen:
-            # Remove from front
             new_data: list[int] = []
             for i, v in enumerate(self._data):
                 if i > 0:
@@ -189,7 +222,6 @@ class deque:
         for v in self._data:
             new_data.append(v)
         if self._maxlen > 0 and len(new_data) > self._maxlen:
-            # Trim from right
             trimmed: list[int] = []
             for i, v in enumerate(new_data):
                 if i < self._maxlen:

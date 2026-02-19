@@ -1,5 +1,6 @@
 # sifr.itertools — Iterator building blocks (pure Sifr, generic)
 # CPython-compatible functions plus Sifr extensions (take, flatten).
+from typing import Callable
 T = TypeVar("T")
 
 def chain(a: list[T], b: list[T]) -> list[T]:
@@ -82,13 +83,23 @@ def islice(data: list[T], stop: int) -> list[T]:
         i = i + 1
     return result
 
-def accumulate(data: list[int]) -> list[int]:
+def accumulate(data: list[T]) -> list[T]:
     # Running sum of data (matches CPython itertools.accumulate default operator=add).
-    result: list[int] = []
-    total: int = 0
-    for val in data:
-        total = total + val
-        result.append(total)
+    result: list[T] = []
+    if len(data) == 0:
+        return result
+    first: T | None = data[0]
+    if first is not None:
+        result.append(first)
+    i: int = 1
+    while i < len(data):
+        prev: T | None = result[len(result) - 1]
+        cur: T | None = data[i]
+        if prev is not None:
+            if cur is not None:
+                next_val: T = prev + cur
+                result.append(next_val)
+        i = i + 1
     return result
 
 def compress(data: list[T], selectors: list[bool]) -> list[T]:
@@ -107,33 +118,36 @@ def compress(data: list[T], selectors: list[bool]) -> list[T]:
         i = i + 1
     return result
 
-def dropwhile(threshold: int, data: list[int]) -> list[int]:
-    # Drop elements while they are less than threshold, then return the rest.
+def dropwhile(pred: Callable[[int], bool], data: list[int]) -> list[int]:
+    # Drop elements while pred(element) is True, then return the rest.
+    # Matches CPython itertools.dropwhile(predicate, iterable).
     result: list[int] = []
     dropping: bool = True
     for val in data:
         if dropping:
-            if val >= threshold:
+            if not pred(val):
                 dropping = False
                 result.append(val)
         else:
             result.append(val)
     return result
 
-def takewhile(threshold: int, data: list[int]) -> list[int]:
-    # Take elements while they are less than threshold.
+def takewhile(pred: Callable[[int], bool], data: list[int]) -> list[int]:
+    # Take elements while pred(element) is True.
+    # Matches CPython itertools.takewhile(predicate, iterable).
     result: list[int] = []
     for val in data:
-        if val >= threshold:
+        if not pred(val):
             return result
         result.append(val)
     return result
 
-def filterfalse(threshold: int, data: list[int]) -> list[int]:
-    # Return elements where val >= threshold.
+def filterfalse(pred: Callable[[int], bool], data: list[int]) -> list[int]:
+    # Return elements where pred(element) is False.
+    # Matches CPython itertools.filterfalse(predicate, iterable).
     result: list[int] = []
     for val in data:
-        if val >= threshold:
+        if not pred(val):
             result.append(val)
     return result
 

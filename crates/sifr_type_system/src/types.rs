@@ -311,7 +311,6 @@ impl Type {
             Self::Callable(params, conventions, ret) => {
                 let param_types: Vec<String> = params.iter().zip(conventions.iter()).map(|(t, conv)| {
                     let rust_ty = t.rust_type();
-                    // Apply borrow prefix based on convention (same logic as function params)
                     match conv {
                         ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
                             format!("&{}", rust_ty)
@@ -319,7 +318,7 @@ impl Type {
                         ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
                             format!("&mut {}", rust_ty)
                         }
-                        _ => rust_ty, // Copy types or Own: pass by value
+                        _ => rust_ty,
                     }
                 }).collect();
                 let ret_type = ret.rust_type();
