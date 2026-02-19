@@ -118,10 +118,10 @@ def compress(data: list[T], selectors: list[bool]) -> list[T]:
         i = i + 1
     return result
 
-def dropwhile(pred: Callable[[int], bool], data: list[int]) -> list[int]:
+def dropwhile(pred: Callable[[T], bool], data: list[T]) -> list[T]:
     # Drop elements while pred(element) is True, then return the rest.
     # Matches CPython itertools.dropwhile(predicate, iterable).
-    result: list[int] = []
+    result: list[T] = []
     dropping: bool = True
     for val in data:
         if dropping:
@@ -132,20 +132,20 @@ def dropwhile(pred: Callable[[int], bool], data: list[int]) -> list[int]:
             result.append(val)
     return result
 
-def takewhile(pred: Callable[[int], bool], data: list[int]) -> list[int]:
+def takewhile(pred: Callable[[T], bool], data: list[T]) -> list[T]:
     # Take elements while pred(element) is True.
     # Matches CPython itertools.takewhile(predicate, iterable).
-    result: list[int] = []
+    result: list[T] = []
     for val in data:
         if not pred(val):
             return result
         result.append(val)
     return result
 
-def filterfalse(pred: Callable[[int], bool], data: list[int]) -> list[int]:
+def filterfalse(pred: Callable[[T], bool], data: list[T]) -> list[T]:
     # Return elements where pred(element) is False.
     # Matches CPython itertools.filterfalse(predicate, iterable).
-    result: list[int] = []
+    result: list[T] = []
     for val in data:
         if not pred(val):
             result.append(val)
