@@ -419,6 +419,87 @@ fn count_braces(line: &str) -> i32 {
     depth
 }
 
+/// Strip top-level items from Rust source whose names are already in `emitted_items`.
+/// Items that survive are added to `emitted_items` so subsequent calls can deduplicate further.
+///
+/// Uses composite keys to distinguish struct/fn definitions from impl blocks:
+/// - `struct X` / `fn X` → key = "X"
+/// - `impl X {` → key = "impl X"
+/// - `impl Trait for X {` → key = "impl Trait for X"
+///
+/// The `skip_types` set contains type names (e.g., "IOError") for which ALL items
+/// (struct, impl, trait impls) should be unconditionally stripped.
+fn dedup_rust_items(rust_code: &str, emitted_items: &mut HashSet<String>, skip_types: &HashSet<String>) -> String {
+    let mut result = String::new();
+    let mut lines = rust_code.lines().peekable();
+    let mut pending_attrs: Vec<String> = Vec::new();
+
+    while let Some(line) = lines.next() {
+        if line.trim().starts_with("#[") {
+            pending_attrs.push(line.to_string());
+            continue;
+        }
+
+        let item_name = extract_top_level_item_name(line);
+
+        if let Some(ref name) = item_name {
+            let mut item_lines = Vec::new();
+            for attr in &pending_attrs {
+                item_lines.push(attr.clone());
+            }
+            item_lines.push(line.to_string());
+            let mut depth: i32 = count_braces(line);
+            if depth > 0 {
+                while let Some(next_line) = lines.next() {
+                    item_lines.push(next_line.to_string());
+                    depth += count_braces(next_line);
+                    if depth <= 0 {
+                        break;
+                    }
+                }
+            }
+            pending_attrs.clear();
+
+            // If the type name is in skip_types, unconditionally strip everything related to it
+            if skip_types.contains(name) {
+                continue;
+            }
+
+            // Build a dedup key that distinguishes struct/fn from impl blocks
+            let trimmed = line.trim();
+            let dedup_key = if trimmed.starts_with("impl") {
+                // Use a normalized impl signature as the key
+                // Strip generic params for matching: "impl<T> X<T> {" → "impl X {"
+                let normalized = trimmed.split('{').next().unwrap_or(trimmed).trim().to_string();
+                normalized
+            } else {
+                name.clone()
+            };
+
+            if !emitted_items.contains(&dedup_key) {
+                emitted_items.insert(dedup_key);
+                for il in &item_lines {
+                    result.push_str(il);
+                    result.push('\n');
+                }
+                result.push('\n');
+            }
+        } else if line.trim().is_empty() {
+            pending_attrs.clear();
+        } else {
+            for attr in &pending_attrs {
+                result.push_str(attr);
+                result.push('\n');
+            }
+            pending_attrs.clear();
+            result.push_str(line);
+            result.push('\n');
+        }
+    }
+
+    result
+}
+
 /// Generate Rust source code from a HIR module, returning metadata about stdlib usage.
 pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
     generate_rust_with_stdlib(module, &StdlibCode::default())
@@ -456,14 +537,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             // Load class method signatures for classes returned by imported functions.
             // This handles cases like `compile_flags` returning `Pattern` - we need
             // `Pattern::search` etc. to be available for correct borrow prefix emission.
-            // Exclude FileHandle (handled inline) and other codegen-managed classes.
-            let inline_classes: std::collections::HashSet<&str> = ["FileHandle"].iter().cloned().collect();
             for (key, sig) in sig_map.iter() {
                 if key.contains("::") && !emitter.func_signatures.contains_key(key) {
-                    let class_name = key.split("::").next().unwrap_or("");
-                    if !inline_classes.contains(class_name) {
-                        emitter.func_signatures.insert(key.clone(), sig.clone());
-                    }
+                    emitter.func_signatures.insert(key.clone(), sig.clone());
                 }
             }
         }
@@ -492,6 +568,17 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Build stdlib preamble first so we can check for error type references
     let mut stdlib_preamble = String::new();
     let mut emitted_modules: HashSet<String> = HashSet::new();
+    let mut emitted_items: HashSet<String> = HashSet::new();
+    // Types whose definitions are always provided by the infrastructure code (error types,
+    // IO helpers). All items (struct, impl, fn) for these types are stripped from stdlib output.
+    let mut infra_skip_types: HashSet<String> = HashSet::new();
+    for &error_name in BUILTIN_ERROR_CLASSES {
+        infra_skip_types.insert(error_name.to_string());
+    }
+    for &error_name in IO_ERROR_SUBCLASSES {
+        infra_skip_types.insert(error_name.to_string());
+    }
+    infra_skip_types.insert("__io_err".to_string());
     let mut all_needed: Vec<String> = Vec::new();
     let mut stdlib_needs_hashmap = false;
     let mut stdlib_needs_hashset = false;
@@ -601,9 +688,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         lines_out.join("\n")
                     };
                     if !stripped.trim().is_empty() {
-                        stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
-                        stdlib_preamble.push_str(&stripped);
-                        stdlib_preamble.push('\n');
+                        let deduped = dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
+                        if !deduped.trim().is_empty() {
+                            stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
+                            stdlib_preamble.push_str(&deduped);
+                            stdlib_preamble.push('\n');
+                        }
                     }
                 }
                 emitted_modules.insert(module_name.clone());
@@ -745,12 +835,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             result.push_str("impl FileHandle {\n");
             result.push_str("    fn new(_handle: i64, _mode: String) -> Self { Self { _handle, _mode } }\n");
             result.push_str("    fn read(&self) -> Result<String, IOError> { (|| -> Result<String, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::Read; let mut __s = String::new(); __r.read_to_string(&mut __s).map_err(__io_err)?; Ok(__s) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
-            result.push_str("    fn write(&self, data: String) -> Result<(), IOError> { (|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextWrite(ref mut __w)) => { use std::io::Write; __w.write_all(__data.as_bytes()).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for writing\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
+            result.push_str("    fn write(&self, data: &String) -> Result<(), IOError> { (|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextWrite(ref mut __w)) => { use std::io::Write; __w.write_all(__data.as_bytes()).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for writing\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
             result.push_str("    fn readline(&self) -> Result<Option<String>, IOError> { (|| -> Result<Option<String>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::BufRead; let mut __line = String::new(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { Ok(None) } else { if __line.ends_with('\\n') { __line.pop(); if __line.ends_with('\\r') { __line.pop(); } } Ok(Some(__line)) } }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
             result.push_str("    fn readlines(&self) -> Result<Vec<String>, IOError> { (|| -> Result<Vec<String>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::BufRead; let mut __lines: Vec<String> = Vec::new(); let mut __line = String::new(); loop { __line.clear(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { break; } let mut __l = __line.clone(); if __l.ends_with('\\n') { __l.pop(); if __l.ends_with('\\r') { __l.pop(); } } __lines.push(__l); } Ok(__lines) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
             result.push_str("    fn close(&self) { let __hid = self._handle; __SIFR_FILE_HANDLES.lock().unwrap().remove(&__hid); }\n");
             result.push_str("    fn read_bytes(&self) -> Result<Vec<i64>, IOError> { (|| -> Result<Vec<i64>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryRead(ref mut __r)) => { use std::io::Read; let mut __buf = Vec::new(); __r.read_to_end(&mut __buf).map_err(__io_err)?; Ok(__buf.into_iter().map(|b| b as i64).collect()) }, _ => Err(IOError { message: \"file not open for binary reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
-            result.push_str("    fn write_bytes(&self, data: Vec<i64>) -> Result<(), IOError> { (|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryWrite(ref mut __w)) => { use std::io::Write; let __bytes: Vec<u8> = __data.iter().map(|&b| b as u8).collect(); __w.write_all(&__bytes).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for binary writing\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
+            result.push_str("    fn write_bytes(&self, data: &Vec<i64>) -> Result<(), IOError> { (|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryWrite(ref mut __w)) => { use std::io::Write; let __bytes: Vec<u8> = __data.iter().map(|&b| b as u8).collect(); __w.write_all(&__bytes).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for binary writing\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
             result.push_str("    fn __enter__(&self) -> &Self { self }\n");
             result.push_str("    fn __exit__(&self) { self.close(); }\n");
             result.push_str("}\n\n");
@@ -7616,7 +7706,7 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write("; let __mode = ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write("; let __handle_id: i64 = { use std::sync::atomic::{AtomicI64, Ordering}; static __NEXT_ID: AtomicI64 = AtomicI64::new(1); __NEXT_ID.fetch_add(1, Ordering::SeqCst) }; match __mode { \"r\" | \"rt\" => { let __f = std::fs::File::open(__path).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextRead(__reader)); Ok(__handle_id) }, \"w\" | \"wt\" => { let __f = std::fs::File::create(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"a\" | \"at\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"rb\" => { let __f = std::fs::File::open(__path).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryRead(__reader)); Ok(__handle_id) }, \"wb\" => { let __f = std::fs::File::create(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, \"ab\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, _ => Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() }) } })()");
+                self.write("; let __handle_id: i64 = { use std::sync::atomic::{AtomicI64, Ordering}; static __NEXT_ID: AtomicI64 = AtomicI64::new(1); __NEXT_ID.fetch_add(1, Ordering::SeqCst) }; let __mode_s: &str = &__mode; let __path_s: &str = &__path; match __mode_s { \"r\" | \"rt\" => { let __f = std::fs::File::open(__path_s).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextRead(__reader)); Ok(__handle_id) }, \"w\" | \"wt\" => { let __f = std::fs::File::create(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"a\" | \"at\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"rb\" => { let __f = std::fs::File::open(__path_s).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryRead(__reader)); Ok(__handle_id) }, \"wb\" => { let __f = std::fs::File::create(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, \"ab\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, _ => Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() }) } })()");
             }
             "file_read" => {
                 self.write("(|| -> Result<String, IOError> { use std::io::Read; let __hid = ");
