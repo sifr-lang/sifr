@@ -287,7 +287,7 @@ For reference, the existing parser infrastructure includes:
 
 ## milestone_enums: Simple Enum Types
 
-status: pending
+status: done
 
 **Goal:** Add a dedicated `enum` type to Sifr for simple value enumerations (no associated data). While literal union types (`"GET" | "POST"`) partially fill this role, they are stringly-typed and don't provide namespacing. A proper enum gives namespaced constants, type safety, exhaustive matching, and direct mapping to Rust enums. Data-carrying variants are NOT included — Sifr's existing union types + classes + pattern matching cover that use case (see design rationale below).
 
