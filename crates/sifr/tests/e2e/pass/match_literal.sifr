@@ -1,0 +1,21 @@
+def describe(x: int) -> str:
+    match x:
+        case 1:
+            return "one"
+        case 2:
+            return "two"
+        case 3:
+            return "three"
+        case _:
+            return "other"
+
+def main():
+    print(describe(1))
+    print(describe(2))
+    print(describe(3))
+    print(describe(99))
+
+# expect-stdout: one
+# expect-stdout: two
+# expect-stdout: three
+# expect-stdout: other

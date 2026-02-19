@@ -1,0 +1,10 @@
+def describe(x: int | None) -> str:
+    match x:
+        case int():
+            return "integer"
+        # Missing None case - should error about non-exhaustive match
+
+def main():
+    print(describe(None))
+
+# expect-error: non-exhaustive

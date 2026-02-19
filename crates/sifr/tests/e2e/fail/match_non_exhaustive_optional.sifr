@@ -1,0 +1,10 @@
+def describe(x: str | None) -> str:
+    match x:
+        case str():
+            return "has value"
+        # Missing None case
+
+def main():
+    print(describe(None))
+
+# expect-error: non-exhaustive

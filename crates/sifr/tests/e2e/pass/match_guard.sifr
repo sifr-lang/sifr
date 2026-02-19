@@ -1,0 +1,19 @@
+def classify(x: int) -> str:
+    match x:
+        case n if n < 0:
+            return "negative"
+        case n if n == 0:
+            return "zero"
+        case n if n > 0:
+            return "positive"
+        case _:
+            return "unknown"
+
+def main():
+    print(classify(-5))
+    print(classify(0))
+    print(classify(7))
+
+# expect-stdout: negative
+# expect-stdout: zero
+# expect-stdout: positive

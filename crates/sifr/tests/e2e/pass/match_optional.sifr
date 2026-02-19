@@ -1,0 +1,13 @@
+def describe_optional(x: int | None) -> str:
+    match x:
+        case None:
+            return "nothing"
+        case _:
+            return "something"
+
+def main():
+    print(describe_optional(None))
+    print(describe_optional(42))
+
+# expect-stdout: nothing
+# expect-stdout: something

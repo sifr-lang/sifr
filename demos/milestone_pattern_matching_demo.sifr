@@ -1,0 +1,123 @@
+from sifr.io import read_text
+
+# Demo: milestone_pattern_matching
+# Showcases Python 3.10-style match/case structural pattern matching
+
+# 1. Literal patterns
+def describe_number(x: int) -> str:
+    match x:
+        case 0:
+            return "zero"
+        case 1:
+            return "one"
+        case 2:
+            return "two"
+        case _:
+            return "many"
+
+# 2. OR patterns
+def classify_http(method: str) -> str:
+    match method:
+        case "GET" | "HEAD":
+            return "read"
+        case "POST" | "PUT" | "PATCH":
+            return "write"
+        case "DELETE":
+            return "delete"
+        case _:
+            return "other"
+
+# 3. Guard patterns
+def classify_score(score: int) -> str:
+    match score:
+        case n if n >= 90:
+            return "A"
+        case n if n >= 80:
+            return "B"
+        case n if n >= 70:
+            return "C"
+        case n if n >= 60:
+            return "D"
+        case _:
+            return "F"
+
+# 4. Optional type matching (T | None)
+def describe_optional(x: int | None) -> str:
+    match x:
+        case None:
+            return "nothing"
+        case _:
+            return "something"
+
+# 5. Union type matching
+def describe_union(x: int | str) -> str:
+    match x:
+        case int():
+            return "integer"
+        case str():
+            return "string"
+
+def make_int_union() -> int | str:
+    return 42
+
+def make_str_union() -> int | str:
+    return "hello"
+
+# 6. Class pattern destructuring
+class Point:
+    x: int
+    y: int
+
+def classify_point(p: Point) -> str:
+    match p:
+        case Point(x=0, y=0):
+            return "origin"
+        case Point(x=px, y=0):
+            return "on x-axis"
+        case Point(x=0, y=py):
+            return "on y-axis"
+        case Point(x=px, y=py):
+            return "general"
+
+def main():
+    # 1. Literal patterns
+    print("=== Literal Patterns ===")
+    print(describe_number(0))
+    print(describe_number(1))
+    print(describe_number(42))
+
+    # 2. OR patterns
+    print("=== OR Patterns ===")
+    print(classify_http("GET"))
+    print(classify_http("POST"))
+    print(classify_http("DELETE"))
+    print(classify_http("OPTIONS"))
+
+    # 3. Guard patterns
+    print("=== Guard Patterns ===")
+    print(classify_score(95))
+    print(classify_score(85))
+    print(classify_score(55))
+
+    # 4. Optional matching
+    print("=== Optional Matching ===")
+    print(describe_optional(None))
+    print(describe_optional(42))
+
+    # 5. Union matching
+    print("=== Union Matching ===")
+    a: int | str = make_int_union()
+    b: int | str = make_str_union()
+    print(describe_union(a))
+    print(describe_union(b))
+
+    # 6. Class destructuring
+    print("=== Class Destructuring ===")
+    p1: Point = Point(0, 0)
+    p2: Point = Point(3, 0)
+    p3: Point = Point(0, 4)
+    p4: Point = Point(3, 4)
+    print(classify_point(p1))
+    print(classify_point(p2))
+    print(classify_point(p3))
+    print(classify_point(p4))
