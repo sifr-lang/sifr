@@ -1,0 +1,14 @@
+# Test auto-generated __eq__ for class with typed fields
+class Point:
+    x: int
+    y: int
+
+def main():
+    p1: Point = Point(1, 2)
+    p2: Point = Point(1, 2)
+    p3: Point = Point(3, 4)
+    print(p1 == p2)
+    print(p1 == p3)
+
+# expect-stdout: true
+# expect-stdout: false

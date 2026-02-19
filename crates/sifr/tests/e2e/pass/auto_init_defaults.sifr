@@ -1,0 +1,17 @@
+# Test auto-generated __init__ with default field values
+class Config:
+    debug: bool = False
+    timeout: int = 30
+
+def main():
+    c1: Config = Config()
+    print(c1.debug)
+    print(c1.timeout)
+    c2: Config = Config(True, 60)
+    print(c2.debug)
+    print(c2.timeout)
+
+# expect-stdout: false
+# expect-stdout: 30
+# expect-stdout: true
+# expect-stdout: 60

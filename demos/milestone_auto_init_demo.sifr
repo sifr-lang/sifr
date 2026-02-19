@@ -1,0 +1,70 @@
+# Demo: milestone_auto_init
+# Demonstrates auto-generated constructors, __eq__, and __str__ for classes
+# with typed fields but no explicit __init__.
+
+# --- Basic auto-init: fields become constructor parameters ---
+class Point:
+    x: int
+    y: int
+
+# --- Default field values become default parameters ---
+class Config:
+    debug: bool = False
+    timeout: int = 30
+    name: str = "default"
+
+# --- Auto-init with str fields ---
+class Person:
+    first_name: str
+    last_name: str
+    age: int
+
+# --- Explicit __init__ still takes precedence ---
+class Rectangle:
+    width: int
+    height: int
+
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+
+    def area(self) -> int:
+        return self.width * self.height
+
+    def __str__(self) -> str:
+        return "Rectangle(" + str(self.width) + "x" + str(self.height) + ")"
+
+def main():
+    # --- Auto-generated constructor ---
+    p: Point = Point(3, 4)
+    print("point x = " + str(p.x))
+    print("point y = " + str(p.y))
+
+    # --- Auto-generated __str__ ---
+    print("point str = " + str(p))
+
+    # --- Auto-generated __eq__ ---
+    p2: Point = Point(3, 4)
+    p3: Point = Point(5, 6)
+    print("point eq = " + str(p == p2))
+    print("point neq = " + str(p == p3))
+
+    # --- Default field values ---
+    c1: Config = Config()
+    print("config debug default = " + str(c1.debug))
+    print("config timeout default = " + str(c1.timeout))
+    print("config name default = " + c1.name)
+
+    c2: Config = Config(True, 60, "production")
+    print("config debug custom = " + str(c2.debug))
+    print("config timeout custom = " + str(c2.timeout))
+    print("config name custom = " + c2.name)
+
+    # --- Auto-init with multiple fields ---
+    person: Person = Person("Alice", "Smith", 30)
+    print("person str = " + str(person))
+
+    # --- Explicit __init__ and __str__ take precedence ---
+    r: Rectangle = Rectangle(5, 3)
+    print("rect area = " + str(r.area()))
+    print("rect str = " + str(r))

@@ -1,4 +1,4 @@
-# expect-stdout: Person { name: "Alice", age: 30 }
+# expect-stdout: Person(name=Alice, age=30)
 
 class Person:
     name: str
