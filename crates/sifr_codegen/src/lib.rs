@@ -2767,6 +2767,16 @@ impl RustEmitter {
                     if needs_collect {
                         self.write(".collect()");
                     }
+                    // Clone borrowed TypeVar params assigned to owned TypeVar locals
+                    let needs_clone_for_typevar = matches!(ty, Type::TypeVar(_))
+                        && if let HirExpr::Name { name: ref vname, .. } = value {
+                            self.borrowed_params.contains(vname.as_str())
+                        } else {
+                            false
+                        };
+                    if needs_clone_for_typevar {
+                        self.write(".clone()");
+                    }
                 }
                 self.write(";\n");
             }
@@ -2775,6 +2785,14 @@ impl RustEmitter {
                 self.write(name);
                 self.write(" = ");
                 self.emit_expr(value);
+                // Clone borrowed TypeVar params reassigned to owned TypeVar locals
+                if matches!(value.ty(), Type::TypeVar(_)) {
+                    if let HirExpr::Name { name: ref vname, .. } = value {
+                        if self.borrowed_params.contains(vname.as_str()) {
+                            self.write(".clone()");
+                        }
+                    }
+                }
                 self.write(";\n");
             }
             HirStmt::AugAssign { name, op, value } => {
@@ -5793,6 +5811,47 @@ impl RustEmitter {
                                     self.emit_expr(arg);
                                     self.write(")");
                                     continue;
+                                }
+                                // Callable param with TypeVar params: wrap concrete function in
+                                // adapter closure so Copy-type args get dereferenced to match the
+                                // generic `impl Fn(&T) -> R` signature.
+                                if let Type::Callable(callable_params, callable_convs, callable_ret) = param_ty {
+                                    let has_typevar_param = callable_params.iter().any(|p| matches!(p, Type::TypeVar(_)));
+                                    if has_typevar_param {
+                                        if let HirExpr::Name { name: arg_func_name, .. } = arg {
+                                            if let Some((concrete_params, _)) = self.func_signatures.get(arg_func_name.as_str()).cloned() {
+                                                let needs_wrapper = callable_params.iter().zip(concrete_params.iter()).any(|(cp, (ct, _))| {
+                                                    matches!(cp, Type::TypeVar(_)) && ct.ownership() == sifr_type_system::OwnershipKind::Copy
+                                                });
+                                                if needs_wrapper {
+                                                    self.write("|");
+                                                    for (pi, (cp, cc)) in callable_params.iter().zip(callable_convs.iter()).enumerate() {
+                                                        if pi > 0 { self.write(", "); }
+                                                        let pname = format!("__a{}", pi);
+                                                        if matches!(cp, Type::TypeVar(_)) || (*cc == ParamConvention::Borrow && cp.ownership() == sifr_type_system::OwnershipKind::Move) {
+                                                            self.write(&format!("{}: &_", pname));
+                                                        } else {
+                                                            self.write(&format!("{}: _", pname));
+                                                        }
+                                                    }
+                                                    self.write("| ");
+                                                    self.write(arg_func_name);
+                                                    self.write("(");
+                                                    for (pi, (cp, (ct, _))) in callable_params.iter().zip(concrete_params.iter()).enumerate() {
+                                                        if pi > 0 { self.write(", "); }
+                                                        let pname = format!("__a{}", pi);
+                                                        if matches!(cp, Type::TypeVar(_)) && ct.ownership() == sifr_type_system::OwnershipKind::Copy {
+                                                            self.write(&format!("*{}", pname));
+                                                        } else {
+                                                            self.write(&pname);
+                                                        }
+                                                    }
+                                                    self.write(")");
+                                                    continue;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                                 // Convention-aware borrow prefix for regular arguments.
                                 // Pass the arg name (if it's a Name expr) so we can detect
