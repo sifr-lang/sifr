@@ -1,8 +1,16 @@
-# Test None as a standalone value and type
-def main():
-    x: None = None
-    print(x is None)
-    print(x is not None)
-
+# expect-stdout: none
 # expect-stdout: true
 # expect-stdout: false
+
+def maybe_value(x: int) -> int | None:
+    if x > 0:
+        return x
+    return None
+
+def main():
+    result: int | None = maybe_value(0)
+    if result is None:
+        print("none")
+    result2: int | None = maybe_value(5)
+    print(result2 is not None)
+    print(result2 is None)

@@ -1,0 +1,11 @@
+# expect-stdout: got none
+# expect-stdout: got 42
+
+def process(x: int | None) -> str:
+    if x is None:
+        return "got none"
+    return "got " + str(x)
+
+def main():
+    print(process(None))
+    print(process(42))

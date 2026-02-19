@@ -83,7 +83,7 @@ These are only generated if the class does not already define them explicitly.
 
 ## milestone_generics_v2: User-Facing Generics Completion
 
-status: pending
+status: done
 
 **Goal:** Complete the generics implementation so that users can define generic functions, generic classes, and use type parameters in all positions. The current implementation supports generic functions (PEP 695 syntax and `TypeVar` declarations) but generic classes have incomplete type parameter substitution — type parameters in fields and methods are not substituted at instantiation sites. This milestone completes the story.
 

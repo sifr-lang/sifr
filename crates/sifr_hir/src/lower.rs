@@ -2056,10 +2056,54 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                 }
                 _ => {
                     // Check if it's a generic class instantiation (e.g., Stack[int])
-                    if ctx.class_types.contains_key(&base_name) {
-                        // For now, just return the class type (ignore type parameters)
-                        // Full generic class support would substitute type parameters
-                        ctx.class_types.get(&base_name).cloned().unwrap_or(Type::Any)
+                    if let Some(class_ty) = ctx.class_types.get(&base_name).cloned() {
+                        // Resolve type arguments and substitute into the class type
+                        let type_args: Vec<Type> = match sub.slice.as_ref() {
+                            Expr::Tuple(tup) => tup.elts.iter().map(|e| resolve_annotation_expr(e, ctx)).collect(),
+                            single => vec![resolve_annotation_expr(single, ctx)],
+                        };
+                        // Build substitution map from class type params to concrete args
+                        if let Type::Class { ref fields, ref methods, .. } = class_ty {
+                            let class_type_params: Vec<String> = fields.iter()
+                                .flat_map(|(_, ty)| { let mut vars = Vec::new(); collect_type_vars(ty, &mut vars); vars })
+                                .chain(methods.iter().flat_map(|(_, ft)| {
+                                    let mut vars = Vec::new();
+                                    for (_, pt, _) in &ft.params { collect_type_vars(pt, &mut vars); }
+                                    collect_type_vars(&ft.return_type, &mut vars);
+                                    vars
+                                }))
+                                .collect::<std::collections::HashSet<_>>()
+                                .into_iter().collect::<Vec<_>>();
+                            if !class_type_params.is_empty() && !type_args.is_empty() {
+                                let mut bindings = HashMap::new();
+                                for (i, tp) in class_type_params.iter().enumerate() {
+                                    if let Some(arg) = type_args.get(i) {
+                                        bindings.insert(tp.clone(), arg.clone());
+                                    }
+                                }
+                                if !bindings.is_empty() {
+                                    let subst_fields: Vec<(String, Type)> = fields.iter()
+                                        .map(|(n, t)| (n.clone(), substitute_type_vars(t, &bindings)))
+                                        .collect();
+                                    let subst_methods: Vec<(String, FunctionType)> = methods.iter()
+                                        .map(|(n, ft)| {
+                                            let subst_params: Vec<(String, Type, ParamConvention)> = ft.params.iter()
+                                                .map(|(pn, pt, pc)| (pn.clone(), substitute_type_vars(pt, &bindings), *pc))
+                                                .collect();
+                                            let subst_ret = substitute_type_vars(&ft.return_type, &bindings);
+                                            (n.clone(), FunctionType { params: subst_params, return_type: Box::new(subst_ret) })
+                                        })
+                                        .collect();
+                                    return Type::Class {
+                                        name: base_name.clone(),
+                                        fields: subst_fields,
+                                        methods: subst_methods,
+                                        parent_class: None,
+                                    };
+                                }
+                            }
+                        }
+                        class_ty
                     } else {
                         ctx.error(format!("unknown generic type: '{}'", base_name));
                         Type::Any

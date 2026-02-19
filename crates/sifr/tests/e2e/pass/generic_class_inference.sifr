@@ -1,0 +1,11 @@
+# expect-stdout: 42
+# expect-stdout: hello
+
+class Wrapper[T]:
+    value: T
+
+def main():
+    w1 = Wrapper(42)
+    print(w1.value)
+    w2 = Wrapper("hello")
+    print(w2.value)
