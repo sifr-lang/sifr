@@ -4,9 +4,6 @@ from _sifr.compress import zip_create, zip_add_file, zip_read_file, zip_namelist
 class ZipFile:
     path: str
 
-    def __init__(self, path: str) -> None:
-        self.path = path
-
     def create(self) -> Result[None, IOError]:
         return zip_create(self.path)
 

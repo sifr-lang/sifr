@@ -43,14 +43,6 @@ class datetime:
     minute: int
     second: int
 
-    def __init__(self, year: int, month: int, day: int, hour: int, minute: int, second: int) -> None:
-        self.year = year
-        self.month = month
-        self.day = day
-        self.hour = hour
-        self.minute = minute
-        self.second = second
-
     def isoformat(self) -> str:
         # Returns ISO 8601 format: YYYY-MM-DDTHH:MM:SS
         y: str = str(self.year)
@@ -109,11 +101,6 @@ class date:
     month: int
     day: int
 
-    def __init__(self, year: int, month: int, day: int) -> None:
-        self.year = year
-        self.month = month
-        self.day = day
-
     def isoformat(self) -> str:
         y: str = str(self.year)
         mo: str = str(self.month)
@@ -135,11 +122,6 @@ class time:
     hour: int
     minute: int
     second: int
-
-    def __init__(self, hour: int, minute: int, second: int) -> None:
-        self.hour = hour
-        self.minute = minute
-        self.second = second
 
     def isoformat(self) -> str:
         h: str = str(self.hour)

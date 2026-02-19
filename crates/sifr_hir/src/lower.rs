@@ -1179,6 +1179,38 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         ft.return_type = Box::new(class_ty.clone());
     } else {
         // No __init__ defined -- create a default constructor from fields
+
+        // Validate field ordering: required fields must come before defaulted fields
+        let default_indices: std::collections::HashSet<usize> = field_defaults.iter().map(|(i, _)| *i).collect();
+        let mut seen_default = false;
+        for (i, (fname, _)) in fields.iter().enumerate() {
+            if default_indices.contains(&i) {
+                seen_default = true;
+            } else if seen_default {
+                ctx.error(format!(
+                    "class '{}': required field '{}' declared after field with default value",
+                    class_name, fname
+                ));
+            }
+        }
+
+        // Inheritance diagnostic: warn when child has own fields but no __init__ and extends a parent
+        if parent_class_name.is_some() {
+            let parent_field_count = if let Some(ref pname) = parent_class_name {
+                ctx.class_types.get(pname).map_or(0, |ty| {
+                    if let Type::Class { fields: pf, .. } = ty { pf.len() } else { 0 }
+                })
+            } else { 0 };
+            let has_own_fields = fields.len() > parent_field_count;
+            if has_own_fields {
+                ctx.error(format!(
+                    "class '{}' has fields but no __init__; parent fields will not be initialized. \
+                     Define an explicit __init__ with super().__init__(...)",
+                    class_name
+                ));
+            }
+        }
+
         let params: Vec<(String, Type)> = fields.clone();
         let ft = FunctionType::new(params, class_ty.clone());
         ctx.functions.insert(class_name.clone(), ft);

@@ -6,9 +6,6 @@ class Counter:
     # Backed by a native dict[str, int] field.
     counts: dict[str, int]
 
-    def __init__(self, counts: dict[str, int]):
-        self.counts = counts
-
     def get(self, key: str) -> int:
         val: int | None = self.counts[key]
         if val is not None:

@@ -1,0 +1,8 @@
+# expect-error: required field 'name' declared after field with default value
+
+class BadConfig:
+    debug: bool = False
+    name: str
+
+def main():
+    c: BadConfig = BadConfig(True, "test")
