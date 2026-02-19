@@ -494,7 +494,7 @@ y: bigint = factorial(1000)
 
 ## milestone_stdlib_generic_rewrite: Stdlib Generification
 
-status: pending
+status: done
 
 **Goal:** Rewrite the monomorphic stdlib to use generics. This is the integration test for the entire phase — every compiler feature from milestones 1-4 is exercised. After this milestone, the stdlib is type-safe, generic, and free of duplicated type-specific functions.
 

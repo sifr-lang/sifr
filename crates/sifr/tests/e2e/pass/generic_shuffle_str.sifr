@@ -1,0 +1,8 @@
+from sifr.random import shuffle
+
+def main():
+    items: list[str] = ["a", "b", "c", "d", "e"]
+    result: list[str] = shuffle(items)
+    print(len(result))
+
+# expect-stdout: 5

@@ -740,14 +740,14 @@ fn intrinsic_crypto() -> IntrinsicModule {
     // urlsafe_b64decode(s: str) -> Result[str, ParseError]
     functions.insert("urlsafe_b64decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "ParseError")));
 
-    // random_shuffle(items: list[int]) -> list[int]
-    functions.insert("random_shuffle".to_string(), FunctionType::all_borrow(vec![("items".to_string(), Type::List(Box::new(Type::Int)))], Type::List(Box::new(Type::Int))));
+    // random_shuffle(items: list[Any]) -> list[Any]
+    functions.insert("random_shuffle".to_string(), FunctionType::all_borrow(vec![("items".to_string(), Type::List(Box::new(Type::Any)))], Type::List(Box::new(Type::Any))));
 
-    // random_sample(items: list[int], k: int) -> Result[list[int], ValueError]
+    // random_sample(items: list[Any], k: int) -> Result[list[Any], ValueError]
     functions.insert("random_sample".to_string(), FunctionType::all_borrow(vec![
-            ("items".to_string(), Type::List(Box::new(Type::Int))),
+            ("items".to_string(), Type::List(Box::new(Type::Any))),
             ("k".to_string(), Type::Int),
-        ], result_ty(Type::List(Box::new(Type::Int)), "ValueError")));
+        ], result_ty(Type::List(Box::new(Type::Any)), "ValueError")));
 
     // random_randrange(start: int, stop: int, step: int) -> Result[int, ValueError]
     functions.insert("random_randrange".to_string(), FunctionType::all_borrow(vec![

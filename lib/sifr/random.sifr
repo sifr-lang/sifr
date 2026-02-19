@@ -1,5 +1,6 @@
-# sifr.random — Random number generation
+# sifr.random — Random number generation (generic)
 from _sifr.crypto import random_int, random_float, random_choice, random_uniform, random_shuffle, random_sample, random_randrange, random_gauss
+T = TypeVar("T")
 
 def randint(min: int, max: int) -> Result[int, ValueError]:
     if min > max:
@@ -12,10 +13,10 @@ def random() -> float:
 def uniform(min: float, max: float) -> float:
     return random_uniform(min, max)
 
-def shuffle(items: list[int]) -> list[int]:
+def shuffle(items: list[T]) -> list[T]:
     return random_shuffle(items)
 
-def sample(items: list[int], k: int) -> Result[list[int], ValueError]:
+def sample(items: list[T], k: int) -> Result[list[T], ValueError]:
     return random_sample(items, k)
 
 def randrange(start: int, stop: int, step: int) -> Result[int, ValueError]:
@@ -24,5 +25,5 @@ def randrange(start: int, stop: int, step: int) -> Result[int, ValueError]:
 def gauss(mu: float, sigma: float) -> float:
     return random_gauss(mu, sigma)
 
-def choice(items: list[int]) -> int:
+def choice(items: list[T]) -> T:
     return random_choice(items)

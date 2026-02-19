@@ -1,0 +1,12 @@
+from sifr.itertools import zip_longest
+
+def main():
+    a: list[str] = ["a", "b", "c"]
+    b: list[str] = ["x", "y"]
+    result: list[list[str]] = zip_longest(a, b, "-")
+    for pair in result:
+        print(pair)
+
+# expect-stdout: ["a", "x"]
+# expect-stdout: ["b", "y"]
+# expect-stdout: ["c", "-"]
