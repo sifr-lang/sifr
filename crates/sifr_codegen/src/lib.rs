@@ -143,34 +143,61 @@ impl Default for StdlibCode {
     }
 }
 
+/// Returns the default parameter convention for a type.
+/// Copy types (int, float, bool) are passed by value (Own).
+/// Move types (str, list, dict, class, etc.) are passed by reference (Borrow).
+fn default_param_convention(ty: &Type) -> ParamConvention {
+    if ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+        ParamConvention::Own
+    } else {
+        ParamConvention::Borrow
+    }
+}
+
 /// Filter compiled Rust source code to only include top-level items whose names
 /// are in the given set (or are transitively called by them).
 fn filter_rust_code_to_needed(rust_code: &str, imported_names: &HashSet<String>) -> String {
     // Step 1: Parse the Rust code into named blocks
     let blocks = parse_rust_blocks(rust_code);
 
-    // Step 2: Build a dependency graph (which functions call which)
+    // Step 2: Build a dependency graph (which functions call/use which)
     let mut deps: HashMap<String, HashSet<String>> = HashMap::new();
     let block_names: HashSet<String> = blocks.iter().map(|(name, _)| name.clone()).collect();
+    // Error types that are defined globally (not in stdlib preamble) - don't include them as deps
+    let global_types: HashSet<&str> = ["IOError", "ParseError", "ValueError", "TypeError",
+        "RegexError", "KeyError", "IndexError", "AttributeError", "OverflowError",
+        "ZeroDivisionError", "RuntimeError", "NotImplementedError", "Error",
+        "JSONDecodeError", "TOMLDecodeError",
+        "FileNotFoundError", "PermissionError", "FileExistsError",
+        "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
+    ].iter().cloned().collect();
     for (name, code) in &blocks {
         let mut called = HashSet::new();
         for other_name in &block_names {
-            if other_name != name {
-                // Check if this block's code contains a call to other_name
+            if other_name != name && !global_types.contains(other_name.as_str()) {
+                // Check if this block's code contains a call to or type reference of other_name
                 // Use word-boundary check to avoid substring false positives
-                // (e.g., "fnmatch_filter(" should not match "filter(")
-                let call_pattern = format!("{}(", other_name);
-                for (idx, _) in code.match_indices(&call_pattern) {
-                    // Check that the character before the match is not alphanumeric or underscore
-                    let is_word_boundary = if idx == 0 {
-                        true
-                    } else {
-                        let prev_char = code.as_bytes()[idx - 1] as char;
-                        !prev_char.is_alphanumeric() && prev_char != '_'
-                    };
-                    if is_word_boundary {
-                        called.insert(other_name.clone());
-                        break;
+                // Check for function calls: other_name(
+                // Check for type references: -> TypeName, TypeName {, TypeName::
+                let patterns = [
+                    format!("{}(", other_name),
+                    format!("-> {}", other_name),
+                    format!("{} {{", other_name),
+                    format!("{}::", other_name),
+                ];
+                for pattern in &patterns {
+                    for (idx, _) in code.match_indices(pattern.as_str()) {
+                        // Check that the character before the match is not alphanumeric or underscore
+                        let is_word_boundary = if idx == 0 {
+                            true
+                        } else {
+                            let prev_char = code.as_bytes()[idx - 1] as char;
+                            !prev_char.is_alphanumeric() && prev_char != '_'
+                        };
+                        if is_word_boundary {
+                            called.insert(other_name.clone());
+                            break;
+                        }
                     }
                 }
             }
@@ -386,6 +413,19 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     }
                 }
             }
+            // Load class method signatures for classes returned by imported functions.
+            // This handles cases like `compile_flags` returning `Pattern` - we need
+            // `Pattern::search` etc. to be available for correct borrow prefix emission.
+            // Exclude FileHandle (handled inline) and other codegen-managed classes.
+            let inline_classes: std::collections::HashSet<&str> = ["FileHandle"].iter().cloned().collect();
+            for (key, sig) in sig_map.iter() {
+                if key.contains("::") && !emitter.func_signatures.contains_key(key) {
+                    let class_name = key.split("::").next().unwrap_or("");
+                    if !inline_classes.contains(class_name) {
+                        emitter.func_signatures.insert(key.clone(), sig.clone());
+                    }
+                }
+            }
         }
         // Pre-register stdlib generator functions so .collect() is emitted at call sites
         if let Some(gen_set) = stdlib_code.generator_functions.get(&import.module) {
@@ -415,6 +455,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut all_needed: Vec<String> = Vec::new();
     let mut stdlib_needs_hashmap = false;
     let mut stdlib_needs_hashset = false;
+    let mut stdlib_needs_file_handles = false;
     for module_name in &emitter.used_stdlib_modules {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             for dep in deps {
@@ -463,14 +504,56 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     if filtered.contains("use std::collections::HashSet;") {
                         stdlib_needs_hashset = true;
                     }
-                    let stripped: String = filtered.lines()
-                        .filter(|l| {
-                            let t = l.trim();
-                            t != "use std::collections::HashMap;"
-                                && t != "use std::collections::HashSet;"
-                        })
-                        .collect::<Vec<_>>()
-                        .join("\n");
+                    // Track if any stdlib module needs file handle infrastructure
+                    if filtered.contains("__SIFR_FILE_HANDLES") {
+                        stdlib_needs_file_handles = true;
+                    }
+                    // Strip per-module imports and file handle infrastructure (emitted once at top)
+                    let stripped: String = {
+                        let mut in_file_handle_block = false;
+                        let mut skip_next_blank = false;
+                        let mut skip_file_handle_continuation = false;
+                        let mut lines_out: Vec<&str> = Vec::new();
+                        for line in filtered.lines() {
+                            let t = line.trim();
+                            // Skip use imports
+                            if t == "use std::collections::HashMap;"
+                                || t == "use std::collections::HashSet;"
+                                || t == "use std::sync::Mutex;"
+                            {
+                                continue;
+                            }
+                            // Skip file handle infrastructure block (SifrFileHandle enum)
+                            if t.starts_with("enum SifrFileHandle {") {
+                                in_file_handle_block = true;
+                                continue;
+                            }
+                            if in_file_handle_block {
+                                if t == "}" {
+                                    in_file_handle_block = false;
+                                    skip_next_blank = true;
+                                }
+                                continue;
+                            }
+                            // Skip __SIFR_FILE_HANDLES static declaration (multi-line)
+                            if t.starts_with("static __SIFR_FILE_HANDLES:") {
+                                skip_file_handle_continuation = true;
+                                skip_next_blank = true;
+                                continue;
+                            }
+                            if skip_file_handle_continuation {
+                                skip_file_handle_continuation = false;
+                                continue;
+                            }
+                            if skip_next_blank && t.is_empty() {
+                                skip_next_blank = false;
+                                continue;
+                            }
+                            skip_next_blank = false;
+                            lines_out.push(line);
+                        }
+                        lines_out.join("\n")
+                    };
                     if !stripped.trim().is_empty() {
                         stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
                         stdlib_preamble.push_str(&stripped);
@@ -508,9 +591,14 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         .filter(|c| c.is_error_type)
         .map(|c| c.name.clone())
         .collect();
+    // Determine if file handles will be emitted (they always use IOError)
+    let needs_file_handles_check = emitter.needs_file_handles
+        || stdlib_needs_file_handles
+        || emitter.output.contains("__SIFR_FILE_HANDLES");
     // Emit IOError with kind field and __io_err helper
     let io_error_referenced = is_builtin_error_referenced(&combined_code, "IOError")
-        || IO_ERROR_SUBCLASSES.iter().any(|s| is_builtin_error_referenced(&combined_code, s));
+        || IO_ERROR_SUBCLASSES.iter().any(|s| is_builtin_error_referenced(&combined_code, s))
+        || needs_file_handles_check; // FileHandle always uses IOError
     if io_error_referenced && !user_defined_error_classes.contains("IOError") {
         result.push_str("#[derive(Debug, Clone)]\n");
         result.push_str("struct IOError {\n");
@@ -576,6 +664,46 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             result.push_str("    }\n");
             result.push_str("}\n\n");
             result.push_str(&format!("impl std::error::Error for {} {{}}\n\n", error_name));
+        }
+    }
+
+    // Emit file handle global state if open() built-in or any file handle intrinsic is used
+    let needs_file_handles = emitter.needs_file_handles
+        || stdlib_needs_file_handles
+        || emitter.output.contains("__SIFR_FILE_HANDLES");
+    if needs_file_handles {
+        result.push_str("use std::sync::Mutex;\n\n");
+        result.push_str("enum SifrFileHandle {\n");
+        result.push_str("    TextRead(std::io::BufReader<std::fs::File>),\n");
+        result.push_str("    TextWrite(std::io::BufWriter<std::fs::File>),\n");
+        result.push_str("    BinaryRead(std::io::BufReader<std::fs::File>),\n");
+        result.push_str("    BinaryWrite(std::io::BufWriter<std::fs::File>),\n");
+        result.push_str("}\n\n");
+        result.push_str("static __SIFR_FILE_HANDLES: std::sync::LazyLock<Mutex<HashMap<i64, SifrFileHandle>>> =\n");
+        result.push_str("    std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));\n\n");
+        // Ensure HashMap is imported
+        if !result.contains("use std::collections::HashMap;") {
+            result = format!("use std::collections::HashMap;\n\n{}", result);
+        }
+        // Emit FileHandle struct if not already defined by stdlib preamble
+        if !stdlib_preamble.contains("struct FileHandle {") && !result.contains("struct FileHandle {") {
+            result.push_str("#[derive(Debug, Clone)]\n");
+            result.push_str("struct FileHandle {\n");
+            result.push_str("    _handle: i64,\n");
+            result.push_str("    _mode: String,\n");
+            result.push_str("}\n\n");
+            result.push_str("impl FileHandle {\n");
+            result.push_str("    fn new(_handle: i64, _mode: String) -> Self { Self { _handle, _mode } }\n");
+            result.push_str("    fn read(&self) -> Result<String, IOError> { (|| -> Result<String, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::Read; let mut __s = String::new(); __r.read_to_string(&mut __s).map_err(__io_err)?; Ok(__s) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
+            result.push_str("    fn write(&self, data: String) -> Result<(), IOError> { (|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextWrite(ref mut __w)) => { use std::io::Write; __w.write_all(__data.as_bytes()).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for writing\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
+            result.push_str("    fn readline(&self) -> Result<Option<String>, IOError> { (|| -> Result<Option<String>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::BufRead; let mut __line = String::new(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { Ok(None) } else { if __line.ends_with('\\n') { __line.pop(); if __line.ends_with('\\r') { __line.pop(); } } Ok(Some(__line)) } }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
+            result.push_str("    fn readlines(&self) -> Result<Vec<String>, IOError> { (|| -> Result<Vec<String>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::BufRead; let mut __lines: Vec<String> = Vec::new(); let mut __line = String::new(); loop { __line.clear(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { break; } let mut __l = __line.clone(); if __l.ends_with('\\n') { __l.pop(); if __l.ends_with('\\r') { __l.pop(); } } __lines.push(__l); } Ok(__lines) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
+            result.push_str("    fn close(&self) { let __hid = self._handle; __SIFR_FILE_HANDLES.lock().unwrap().remove(&__hid); }\n");
+            result.push_str("    fn read_bytes(&self) -> Result<Vec<i64>, IOError> { (|| -> Result<Vec<i64>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryRead(ref mut __r)) => { use std::io::Read; let mut __buf = Vec::new(); __r.read_to_end(&mut __buf).map_err(__io_err)?; Ok(__buf.into_iter().map(|b| b as i64).collect()) }, _ => Err(IOError { message: \"file not open for binary reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
+            result.push_str("    fn write_bytes(&self, data: Vec<i64>) -> Result<(), IOError> { (|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryWrite(ref mut __w)) => { use std::io::Write; let __bytes: Vec<u8> = __data.iter().map(|&b| b as u8).collect(); __w.write_all(&__bytes).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for binary writing\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
+            result.push_str("    fn __enter__(&self) -> &Self { self }\n");
+            result.push_str("    fn __exit__(&self) { self.close(); }\n");
+            result.push_str("}\n\n");
         }
     }
 
@@ -754,6 +882,7 @@ struct RustEmitter {
     indent: usize,
     needs_hashmap: bool,
     needs_hashset: bool,
+    needs_file_handles: bool,
     /// Track union enum types that need to be defined (name -> member types)
     union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated enum definitions to prepend
@@ -814,8 +943,13 @@ struct RustEmitter {
     suppress_field_clone: bool,
     /// Whether we're inside a generator closure (yield -> return Some(val))
     in_generator_closure: bool,
+    /// Whether we're inside a Display::fmt implementation (for __str__ methods)
+    /// Return statements in this context become write!(f, "{}", val) + return Ok(())
+    in_display_impl: bool,
     /// Counter for generating unique try-block error enum names
     try_enum_counter: usize,
+    /// Depth of try-block closures we're currently inside (for return statement handling)
+    try_closure_depth: usize,
     /// Map from variable name -> Callable parameter (type, convention) list.
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
@@ -829,6 +963,7 @@ impl RustEmitter {
             indent: 0,
             needs_hashmap: false,
             needs_hashset: false,
+            needs_file_handles: false,
             union_enums: HashMap::new(),
             enum_defs: String::new(),
             current_return_type: None,
@@ -855,7 +990,9 @@ impl RustEmitter {
             imported_stdlib_names: HashMap::new(),
             suppress_field_clone: false,
             in_generator_closure: false,
+            in_display_impl: false,
             try_enum_counter: 0,
+            try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
         }
     }
@@ -1339,16 +1476,40 @@ impl RustEmitter {
                 self.indent += 1;
                 // Emit the body of __str__ but wrap the return value in write!(f, "{}", ...)
                 // For simplicity, if the body is a single Return, emit write!(f, "{}", return_expr)
-                if let Some(HirStmt::Return { value: Some(ref ret_expr) }) = str_func.body.first() {
-                    self.write_indent();
-                    self.write("write!(f, \"{}\", ");
-                    self.emit_expr(ret_expr);
-                    self.write(")\n");
+                if str_func.body.len() == 1 {
+                    if let Some(HirStmt::Return { value: Some(ref ret_expr) }) = str_func.body.first() {
+                        self.write_indent();
+                        self.write("write!(f, \"{}\", ");
+                        self.emit_expr(ret_expr);
+                        self.write(")\n");
+                    } else {
+                        // Single non-return statement
+                        let saved = self.in_display_impl;
+                        self.in_display_impl = true;
+                        let saved_mutated = std::mem::take(&mut self.mutated_vars);
+                        self.mutated_vars = collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
+                        for stmt in &str_func.body {
+                            self.emit_stmt(stmt);
+                        }
+                        self.mutated_vars = saved_mutated;
+                        self.in_display_impl = saved;
+                        self.write_indent();
+                        self.write("Ok(())\n");
+                    }
                 } else {
-                    // Fallback: emit body statements
+                    // Multi-statement body: emit with in_display_impl flag
+                    let saved = self.in_display_impl;
+                    self.in_display_impl = true;
+                    // Pre-scan for mutated variables so let mut is emitted correctly
+                    let saved_mutated = std::mem::take(&mut self.mutated_vars);
+                    self.mutated_vars = collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
                     for stmt in &str_func.body {
                         self.emit_stmt(stmt);
                     }
+                    self.mutated_vars = saved_mutated;
+                    self.in_display_impl = saved;
+                    self.write_indent();
+                    self.write("Ok(())\n");
                 }
                 self.indent -= 1;
                 self.write_indent();
@@ -2434,6 +2595,22 @@ impl RustEmitter {
                 }
             }
             HirStmt::Return { value } => {
+                // Inside Display::fmt (for __str__ methods), return statements become
+                // write!(f, "{}", val); return Ok(())
+                if self.in_display_impl {
+                    if let Some(val) = value {
+                        self.write_indent();
+                        self.write("write!(f, \"{}\", ");
+                        self.emit_expr(val);
+                        self.write(")?;\n");
+                        self.write_indent();
+                        self.write("return Ok(());\n");
+                    } else {
+                        self.write_indent();
+                        self.write("return Ok(());\n");
+                    }
+                    return;
+                }
                 let ret_is_option = self.current_return_type.as_ref().map_or(false, |t| is_option_type(t));
                 let ret_is_non_option_union = self.current_return_type.as_ref().map_or(false, |t| {
                     matches!(t, Type::Union(_)) && !is_option_type(t)
@@ -2993,20 +3170,35 @@ impl RustEmitter {
                     }
 
                     // Emit try body as a closure
+                    // Check if the try body contains a return statement with a value.
+                    let body_has_return_multi = try_body_has_value_return(body);
+                    let (closure_ok_type_multi, ok_arm_multi) = if body_has_return_multi {
+                        let inner_ty = self.current_return_type.as_ref()
+                            .and_then(|t| if let Type::Result(ok, _) = t { Some(ok.rust_type()) } else { None })
+                            .unwrap_or_else(|| "_".to_string());
+                        (inner_ty, "Ok(__try_ret) => { return Ok(__try_ret); }".to_string())
+                    } else {
+                        ("()".to_string(), "Ok(()) => {}".to_string())
+                    };
+
                     self.write_indent();
-                    self.write(&format!("match (|| -> Result<(), {}> {{\n", enum_name));
+                    self.write(&format!("match (|| -> Result<{}, {}> {{\n", closure_ok_type_multi, enum_name));
                     self.indent += 1;
                     for stmt in body {
                         self.emit_stmt(stmt);
                     }
                     self.write_indent();
-                    self.write("Ok(())\n");
+                    if body_has_return_multi {
+                        self.write("unreachable!()\n");
+                    } else {
+                        self.write("Ok(())\n");
+                    }
                     self.indent -= 1;
                     self.write_indent();
                     self.write("})() {\n");
                     self.indent += 1;
                     self.write_indent();
-                    self.write("Ok(()) => {}\n");
+                    self.write(&format!("{}\n", ok_arm_multi));
 
                     // Emit match arms
                     for handler in handlers {
@@ -3083,20 +3275,37 @@ impl RustEmitter {
                             .unwrap_or_else(|| "String".to_string())
                     };
 
+                    // Check if the try body contains a return statement with a value.
+                    // If so, the closure must return Result<T, E> instead of Result<(), E>.
+                    let body_has_return = try_body_has_value_return(body);
+                    let (closure_ok_type, ok_arm) = if body_has_return {
+                        // Use the function's return type's inner type for the closure
+                        let inner_ty = self.current_return_type.as_ref()
+                            .and_then(|t| if let Type::Result(ok, _) = t { Some(ok.rust_type()) } else { None })
+                            .unwrap_or_else(|| "_".to_string());
+                        (inner_ty.clone(), "Ok(__try_ret) => { return Ok(__try_ret); }".to_string())
+                    } else {
+                        ("()".to_string(), "Ok(()) => {}".to_string())
+                    };
+
                     self.write_indent();
-                    self.write(&format!("match (|| -> Result<(), {}> {{\n", error_rust_type));
+                    self.write(&format!("match (|| -> Result<{}, {}> {{\n", closure_ok_type, error_rust_type));
                     self.indent += 1;
                     for stmt in body {
                         self.emit_stmt(stmt);
                     }
                     self.write_indent();
-                    self.write("Ok(())\n");
+                    if body_has_return {
+                        self.write("unreachable!()\n");
+                    } else {
+                        self.write("Ok(())\n");
+                    }
                     self.indent -= 1;
                     self.write_indent();
                     self.write("})() {\n");
                     self.indent += 1;
                     self.write_indent();
-                    self.write("Ok(()) => {}\n");
+                    self.write(&format!("{}\n", ok_arm));
 
                     if has_io_subclass_handler && error_rust_type == "IOError" {
                         // IOError with subclass dispatch: use guard-based matching
@@ -3404,18 +3613,6 @@ impl RustEmitter {
                         self.write(" = ");
                         self.emit_expr(value);
                         self.write(";\n");
-                        // Call __enter__() and bind result to var
-                        self.write_indent();
-                        if stmts_reference_var(body, var) || items.iter().any(|(v, _, _)| v != var && v.contains(var)) {
-                            self.write("let ");
-                            self.write(var);
-                        } else {
-                            self.write("let _");
-                            self.write(var);
-                        }
-                        self.write(" = ");
-                        self.write(&ctx_name);
-                        self.write(".__enter__();\n");
                         // Emit Drop guard struct that calls __exit__() on scope exit
                         self.write_indent();
                         self.write(&format!("struct {} {{ ctx: {} }}\n", guard_type, class_name));
@@ -3429,7 +3626,19 @@ impl RustEmitter {
                         self.write("}\n");
                         // Create guard instance, moving ctx into it
                         self.write_indent();
-                        self.write(&format!("let {} = {} {{ ctx: {} }};\n", guard_var, guard_type, ctx_name));
+                        self.write(&format!("let mut {} = {} {{ ctx: {} }};\n", guard_var, guard_type, ctx_name));
+                        // Call __enter__() on guard's ctx and bind result to var
+                        self.write_indent();
+                        if stmts_reference_var(body, var) || items.iter().any(|(v, _, _)| v != var && v.contains(var)) {
+                            self.write("let ");
+                            self.write(var);
+                        } else {
+                            self.write("let _");
+                            self.write(var);
+                        }
+                        self.write(" = ");
+                        self.write(&guard_var);
+                        self.write(".ctx.__enter__();\n");
                     } else {
                         // Fallback: no context manager protocol, just bind directly
                         self.write_indent();
@@ -4918,7 +5127,7 @@ impl RustEmitter {
                         self.emit_lambda_untyped(&args[0]);
                         self.write(")(x)).collect::<Vec<_>>()");
                     }
-                } else if self.intrinsic_functions.contains(func.as_str()) {
+                } else if self.intrinsic_functions.contains(func.as_str()) || func == "builtin_open" {
                     // Intrinsic function call — emit the correct Rust code
                     self.emit_intrinsic_call(func, args);
                 } else {
@@ -6310,6 +6519,64 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[1]);
                 self.write(").map_or(-1_i64, |m| m.end() as i64)).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
             }
+            // re flags variants
+            // Signatures:
+            //   re_match_flags(pattern, text, flags)
+            //   re_find_flags(pattern, text, flags)
+            //   re_replace_flags(pattern, replacement, text, flags)
+            //   re_findall_flags(pattern, text, flags)
+            //   re_split_flags(pattern, text, flags)
+            "re_match_flags" | "re_find_flags" | "re_findall_flags" | "re_split_flags" => {
+                let flags_idx = 2usize;
+                let text_idx = 1usize;
+                self.write("(|| -> Result<");
+                match func {
+                    "re_match_flags" => self.write("bool"),
+                    "re_find_flags" => self.write("Option<String>"),
+                    _ => self.write("Vec<String>"),
+                }
+                self.write(", RegexError> { let __flags_val = ");
+                self.emit_expr(&args[flags_idx]);
+                self.write("; let mut __flag_str = String::new(); if __flags_val & 2 != 0 { __flag_str.push_str(\"(?i)\"); } if __flags_val & 8 != 0 { __flag_str.push_str(\"(?m)\"); } if __flags_val & 16 != 0 { __flag_str.push_str(\"(?s)\"); } if __flags_val & 64 != 0 { __flag_str.push_str(\"(?x)\"); } let __pat = __flag_str + ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __re = regex::Regex::new(&__pat).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })?; ");
+                match func {
+                    "re_match_flags" => {
+                        self.write("Ok(__re.is_match(");
+                        self.emit_expr_as_str_ref(&args[text_idx]);
+                        self.write("))");
+                    }
+                    "re_find_flags" => {
+                        self.write("Ok(__re.find(");
+                        self.emit_expr_as_str_ref(&args[text_idx]);
+                        self.write(").map(|m| m.as_str().to_string()))");
+                    }
+                    "re_findall_flags" => {
+                        self.write("Ok(__re.find_iter(");
+                        self.emit_expr_as_str_ref(&args[text_idx]);
+                        self.write(").map(|m| m.as_str().to_string()).collect())");
+                    }
+                    "re_split_flags" => {
+                        self.write("Ok(__re.split(");
+                        self.emit_expr_as_str_ref(&args[text_idx]);
+                        self.write(").map(|s| s.to_string()).collect())");
+                    }
+                    _ => {}
+                }
+                self.write(" })()");
+            }
+            "re_replace_flags" => {
+                // re_replace_flags(pattern, replacement, text, flags)
+                self.write("(|| -> Result<String, RegexError> { let __flags_val = ");
+                self.emit_expr(&args[3]);
+                self.write("; let mut __flag_str = String::new(); if __flags_val & 2 != 0 { __flag_str.push_str(\"(?i)\"); } if __flags_val & 8 != 0 { __flag_str.push_str(\"(?m)\"); } if __flags_val & 16 != 0 { __flag_str.push_str(\"(?s)\"); } if __flags_val & 64 != 0 { __flag_str.push_str(\"(?x)\"); } let __pat = __flag_str + ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __re = regex::Regex::new(&__pat).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })?; Ok(__re.replace_all(");
+                self.emit_expr_as_str_ref(&args[2]);
+                self.write(", ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write(").to_string()) })()");
+            }
             // sifr.hash
             "sha256" => {
                 self.write("{ use sha2::Digest; format!(\"{:x}\", sha2::Sha256::digest(");
@@ -6375,6 +6642,22 @@ impl RustEmitter {
             // sifr.datetime
             "datetime_now" => {
                 self.write("chrono::Local::now().format(\"%Y-%m-%dT%H:%M:%S\").to_string()");
+            }
+            "datetime_now_struct" => {
+                self.write("{ use chrono::{Datelike, Timelike}; let __dt = chrono::Local::now(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64] }");
+            }
+            "time_strptime" => {
+                self.write("(|| -> Result<Vec<i64>, ValueError> { let __s = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __fmt = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; chrono::NaiveDateTime::parse_from_str(__s, __fmt).map(|dt| { use chrono::Datelike; use chrono::Timelike; vec![dt.year() as i64, dt.month() as i64, dt.day() as i64, dt.hour() as i64, dt.minute() as i64, dt.second() as i64, dt.weekday().num_days_from_monday() as i64, dt.ordinal() as i64] }).map_err(|e| ValueError { message: e.to_string() }) })()");
+            }
+            "time_gmtime" => {
+                self.write("{ use chrono::{Datelike, Timelike, Utc}; let __dt = Utc::now().naive_utc(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64, __dt.weekday().num_days_from_monday() as i64, __dt.ordinal() as i64] }");
+            }
+            "time_localtime" => {
+                self.write("{ use chrono::{Datelike, Timelike, Local}; let __dt = Local::now().naive_local(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64, __dt.weekday().num_days_from_monday() as i64, __dt.ordinal() as i64] }");
             }
             "datetime_format" => {
                 self.write("{ let __dt_str = ");
@@ -6481,6 +6764,92 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write("; let __stat = std::fs::metadata(__path); match __stat { Ok(_) => { let __out = std::process::Command::new(\"df\").args([\"-k\", __path]).output(); match __out { Ok(__o) => { let __s = String::from_utf8_lossy(&__o.stdout); let __lines: Vec<&str> = __s.lines().collect(); if __lines.len() >= 2 { let __parts: Vec<&str> = __lines[1].split_whitespace().collect(); if __parts.len() >= 4 { let __total = __parts[1].parse::<i64>().unwrap_or(0) * 1024; let __used = __parts[2].parse::<i64>().unwrap_or(0) * 1024; let __free = __parts[3].parse::<i64>().unwrap_or(0) * 1024; vec![__total, __used, __free] } else { vec![0i64, 0, 0] } } else { vec![0i64, 0, 0] } }, Err(_) => vec![0i64, 0, 0] } }, Err(_) => vec![0i64, 0, 0] } }");
             }
+            // open() built-in — wraps open_file and constructs FileHandle (raises IOError on failure)
+            "builtin_open" => {
+                self.needs_file_handles = true;
+                self.used_stdlib_modules.insert("io".to_string());
+                self.write("{ use std::io::{BufReader, BufWriter}; let __path = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __mode = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; let __handle_id: i64 = { use std::sync::atomic::{AtomicI64, Ordering}; static __NEXT_FH_ID: AtomicI64 = AtomicI64::new(1); __NEXT_FH_ID.fetch_add(1, Ordering::SeqCst) }; match __mode { \"r\" | \"rt\" => { let __f = std::fs::File::open(__path).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextRead(__reader)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"w\" | \"wt\" => { let __f = std::fs::File::create(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"a\" | \"at\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"rb\" => { let __f = std::fs::File::open(__path).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryRead(__reader)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"wb\" => { let __f = std::fs::File::create(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"ab\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, _ => return Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() }) } }");
+            }
+            // open() built-in file handle intrinsics
+            "open_file" => {
+                self.needs_file_handles = true;
+                self.write("(|| -> Result<i64, IOError> { use std::io::{BufReader, BufWriter}; let __path = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __mode = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; let __handle_id: i64 = { use std::sync::atomic::{AtomicI64, Ordering}; static __NEXT_ID: AtomicI64 = AtomicI64::new(1); __NEXT_ID.fetch_add(1, Ordering::SeqCst) }; match __mode { \"r\" | \"rt\" => { let __f = std::fs::File::open(__path).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextRead(__reader)); Ok(__handle_id) }, \"w\" | \"wt\" => { let __f = std::fs::File::create(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"a\" | \"at\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"rb\" => { let __f = std::fs::File::open(__path).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryRead(__reader)); Ok(__handle_id) }, \"wb\" => { let __f = std::fs::File::create(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, \"ab\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, _ => Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() }) } })()");
+            }
+            "file_read" => {
+                self.write("(|| -> Result<String, IOError> { use std::io::Read; let __hid = ");
+                self.emit_expr(&args[0]);
+                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { let mut __s = String::new(); __r.read_to_string(&mut __s).map_err(__io_err)?; Ok(__s) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })()");
+            }
+            "file_write" => {
+                self.write("(|| -> Result<(), IOError> { use std::io::Write; let __hid = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __data = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextWrite(ref mut __w)) => { __w.write_all(__data.as_bytes()).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for writing\".to_string(), kind: \"Other\".to_string() }) } })()");
+            }
+            "file_readline" => {
+                self.write("(|| -> Result<Option<String>, IOError> { use std::io::BufRead; let __hid = ");
+                self.emit_expr(&args[0]);
+                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { let mut __line = String::new(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { Ok(None) } else { if __line.ends_with('\\n') { __line.pop(); if __line.ends_with('\\r') { __line.pop(); } } Ok(Some(__line)) } }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })()");
+            }
+            "file_readlines" => {
+                self.write("(|| -> Result<Vec<String>, IOError> { use std::io::BufRead; let __hid = ");
+                self.emit_expr(&args[0]);
+                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { let mut __lines: Vec<String> = Vec::new(); let mut __line = String::new(); loop { __line.clear(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { break; } let mut __l = __line.clone(); if __l.ends_with('\\n') { __l.pop(); if __l.ends_with('\\r') { __l.pop(); } } __lines.push(__l); } Ok(__lines) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })()");
+            }
+            "file_close" => {
+                self.write("{ let __hid = ");
+                self.emit_expr(&args[0]);
+                self.write("; __SIFR_FILE_HANDLES.lock().unwrap().remove(&__hid); }");
+            }
+            "file_read_bytes" => {
+                self.write("(|| -> Result<Vec<i64>, IOError> { use std::io::Read; let __hid = ");
+                self.emit_expr(&args[0]);
+                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryRead(ref mut __r)) => { let mut __buf = Vec::new(); __r.read_to_end(&mut __buf).map_err(__io_err)?; Ok(__buf.iter().map(|&b| b as i64).collect()) }, _ => Err(IOError { message: \"file not open for binary reading\".to_string(), kind: \"Other\".to_string() }) } })()");
+            }
+            "file_write_bytes" => {
+                self.write("(|| -> Result<(), IOError> { use std::io::Write; let __hid = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __data: Vec<u8> = ");
+                self.emit_expr(&args[1]);
+                self.write(".iter().map(|&b| b as u8).collect(); let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryWrite(ref mut __w)) => { __w.write_all(&__data).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for binary writing\".to_string(), kind: \"Other\".to_string() }) } })()");
+            }
+            // Path.glob / Path.rglob
+            "glob_pattern" => {
+                self.write("(|| -> Result<Vec<String>, IOError> { let __dir = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __pat = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; let __full_pat = if __dir.is_empty() { __pat.to_string() } else { format!(\"{}/{}\", __dir, __pat) }; let __entries = std::fs::read_dir(__dir).map_err(__io_err)?; let mut __results: Vec<String> = Vec::new(); fn __matches_glob(name: &str, pattern: &str) -> bool { let __parts: Vec<&str> = pattern.split('*').collect(); if __parts.len() == 1 { return name == pattern; } if !name.starts_with(__parts[0]) { return false; } let mut __pos = __parts[0].len(); for __i in 1..__parts.len() { if __parts[__i].is_empty() { __pos = name.len(); continue; } match name[__pos..].find(__parts[__i]) { Some(__idx) => __pos += __idx + __parts[__i].len(), None => return false, } } true } for __entry in __entries { let __e = __entry.map_err(__io_err)?; let __name = __e.file_name().to_string_lossy().to_string(); if __matches_glob(&__name, __pat) { __results.push(__e.path().to_string_lossy().to_string()); } } __results.sort(); Ok(__results) })()");
+            }
+            "rglob_pattern" => {
+                self.write("(|| -> Result<Vec<String>, IOError> { let __dir = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __pat = ");
+                self.emit_expr_as_str_ref(&args[1]);
+                self.write("; fn __rglob_walk(dir: &str, pattern: &str, results: &mut Vec<String>) -> Result<(), IOError> { fn __io_err_inner(e: std::io::Error) -> IOError { IOError { message: e.to_string(), kind: \"Other\".to_string() } } fn __matches_glob(name: &str, pat: &str) -> bool { let parts: Vec<&str> = pat.split('*').collect(); if parts.len() == 1 { return name == pat; } if !name.starts_with(parts[0]) { return false; } let mut pos = parts[0].len(); for i in 1..parts.len() { if parts[i].is_empty() { pos = name.len(); continue; } match name[pos..].find(parts[i]) { Some(idx) => pos += idx + parts[i].len(), None => return false, } } true } let entries = std::fs::read_dir(dir).map_err(__io_err_inner)?; for entry in entries { let e = entry.map_err(__io_err_inner)?; let path = e.path(); let name = e.file_name().to_string_lossy().to_string(); if path.is_dir() { __rglob_walk(&path.to_string_lossy(), pattern, results)?; } if __matches_glob(&name, pattern) { results.push(path.to_string_lossy().to_string()); } } Ok(()) } let mut __results: Vec<String> = Vec::new(); __rglob_walk(__dir, __pat, &mut __results).map_err(|e| e)?; __results.sort(); Ok(__results) })()");
+            }
+            // os constants
+            "os_sep" => {
+                self.write("std::path::MAIN_SEPARATOR.to_string()");
+            }
+            "os_linesep" => {
+                #[cfg(target_os = "windows")]
+                self.write("\"\\r\\n\".to_string()");
+                #[cfg(not(target_os = "windows"))]
+                self.write("\"\\n\".to_string()");
+            }
+            "os_name" => {
+                self.write("{ if cfg!(target_os = \"windows\") { \"nt\".to_string() } else { \"posix\".to_string() } }");
+            }
             // sifr.hashlib new intrinsics
             "sha224" => {
                 self.write("{ use sha2::Digest; let mut __h = sha2::Sha224::new(); __h.update(");
@@ -6567,6 +6936,11 @@ impl RustEmitter {
                 self.write("]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().map_err(__io_err)?; if let Some(mut stdin) = child.stdin.take() { stdin.write_all(");
                 self.emit_expr_as_str_ref(&args[1]);
                 self.write(".as_bytes()).map_err(__io_err)?; } let output = child.wait_with_output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
+            }
+            "subprocess_run_structured" => {
+                self.write("(|| -> Result<Vec<String>, IOError> { let output = std::process::Command::new(\"sh\").args([\"-c\", ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("]).output().map_err(__io_err)?; let stdout = String::from_utf8_lossy(&output.stdout).to_string(); let stderr = String::from_utf8_lossy(&output.stderr).to_string(); let returncode = output.status.code().unwrap_or(-1).to_string(); Ok(vec![stdout, stderr, returncode]) })()");
             }
             // sifr.html
             "html_escape" => {
@@ -7089,6 +7463,9 @@ fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
             HirStmt::Yield { value } => {
                 if expr_references_var(value, var_name) { return true; }
             }
+            HirStmt::Let { value, .. } => {
+                if expr_references_var(value, var_name) { return true; }
+            }
             HirStmt::Assign { value, .. } => {
                 if expr_references_var(value, var_name) { return true; }
             }
@@ -7126,6 +7503,18 @@ fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
                     if expr_references_var(value, var_name) { return true; }
                 }
                 if stmts_reference_var(body, var_name) { return true; }
+            }
+            HirStmt::TryExcept { body, handlers, .. } => {
+                if stmts_reference_var(body, var_name) { return true; }
+                for handler in handlers {
+                    if stmts_reference_var(&handler.body, var_name) { return true; }
+                }
+            }
+            HirStmt::Raise { value } => {
+                if expr_references_var(value, var_name) { return true; }
+            }
+            HirStmt::AugAssign { value, .. } => {
+                if expr_references_var(value, var_name) { return true; }
             }
             _ => {}
         }
@@ -7167,11 +7556,50 @@ fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
                 expr_references_var(iter, var_name) || filter.as_ref().map_or(false, |f| expr_references_var(f, var_name))
             })
         }
+        HirExpr::QuestionMark { expr, .. } => expr_references_var(expr, var_name),
+        HirExpr::OkWrap { value, .. } => expr_references_var(value, var_name),
+        HirExpr::ErrWrap { value, .. } => expr_references_var(value, var_name),
+        HirExpr::DictLiteral { keys, values, .. } => keys.iter().chain(values.iter()).any(|e| expr_references_var(e, var_name)),
         _ => false,
     }
 }
 
 /// Check if a function body contains any yield statements (making it a generator).
+/// Check if a try body contains a return statement with a non-unit value.
+/// Used to determine if the try closure needs to return T instead of ().
+fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
+    for stmt in stmts {
+        match stmt {
+            HirStmt::Return { value: Some(val) } => {
+                // A return with a non-None value
+                if !matches!(val, HirExpr::NoneLiteral) {
+                    return true;
+                }
+            }
+            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+                if try_body_has_value_return(then_body) { return true; }
+                for (_, body) in elif_clauses {
+                    if try_body_has_value_return(body) { return true; }
+                }
+                if let Some(eb) = else_body {
+                    if try_body_has_value_return(eb) { return true; }
+                }
+            }
+            HirStmt::While { body, .. } => {
+                if try_body_has_value_return(body) { return true; }
+            }
+            HirStmt::For { body, .. } => {
+                if try_body_has_value_return(body) { return true; }
+            }
+            HirStmt::With { body, .. } => {
+                if try_body_has_value_return(body) { return true; }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
 pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
     for stmt in stmts {
         match stmt {

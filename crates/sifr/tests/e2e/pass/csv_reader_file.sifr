@@ -1,0 +1,23 @@
+# expect-stdout: rows count = 2
+# expect-stdout: first row first cell = a
+
+from sifr.csv import reader
+from sifr.io import write_text, read_text
+
+def main():
+    path: str = "/tmp/sifr_csv_file_test.csv"
+    try:
+        _: None = write_text(path, "a,b,c\n1,2,3")
+        content: str = read_text(path)
+        r: reader = reader(content)
+        rows: list[list[str]] = r.rows()
+        print("rows count = " + str(len(rows)))
+        if len(rows) > 0:
+            row0: list[str] | None = rows[0]
+            if row0 is not None:
+                if len(row0) > 0:
+                    cell: str | None = row0[0]
+                    if cell is not None:
+                        print("first row first cell = " + cell)
+    except IOError as e:
+        print("error: " + e.message)

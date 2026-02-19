@@ -1,0 +1,101 @@
+# Demo: milestone_stdlib_remediation
+# Demonstrates Phase 12 gap closures:
+# - open() built-in with FileHandle (text + binary modes, context manager)
+# - datetime.time, datetime.timezone, datetime.now() returning object
+# - subprocess.CompletedProcess structured result
+# - pathlib.Path.glob / rglob
+# - re flags (IGNORECASE, MULTILINE, DOTALL)
+# - os constants, random.choice, time wrappers
+
+from sifr.io import read_text, write_text
+from sifr.datetime import time, timezone, now
+from sifr.subprocess import run, CompletedProcess
+from sifr.pathlib import Path
+from sifr.re import compile_flags, search_flags, IGNORECASE, MULTILINE
+from sifr.os import getcwd
+from sifr.random import choice
+
+def main():
+    # --- open() built-in: text write + read ---
+    path: str = "/tmp/sifr_demo_remediation.txt"
+    try:
+        f = open(path, "w")
+        _: None = f.write("hello from open()\n")
+        _2: None = f.write("second line\n")
+        f.close()
+        content: str = read_text(path)
+        print("open write ok = " + str(len(content) > 0))
+    except IOError as e:
+        print("open write error: " + e.message)
+
+    # --- open() with context manager ---
+    path2: str = "/tmp/sifr_demo_ctx.txt"
+    try:
+        with open(path2, "w") as fw:
+            _3: None = fw.write("context manager works")
+        result: str = read_text(path2)
+        print("context manager ok = " + str(result == "context manager works"))
+    except IOError as e:
+        print("context manager error: " + e.message)
+
+    # --- open() read mode ---
+    try:
+        fr = open(path, "r")
+        content2: str = fr.read()
+        fr.close()
+        print("open read ok = " + str(len(content2) > 0))
+    except IOError as e:
+        print("open read error: " + e.message)
+
+    # --- datetime.time ---
+    t: time = time(10, 30, 45)
+    print("time isoformat = " + t.isoformat())
+    t2: time = time(10, 30, 45)
+    print("time eq = " + str(t == t2))
+
+    # --- datetime.timezone ---
+    tz: timezone = timezone(0)
+    print("timezone utc = " + str(tz))
+
+    # --- datetime.now() returns object ---
+    dt = now()
+    iso: str = dt.isoformat()
+    print("now isoformat ok = " + str(len(iso) > 0))
+
+    # --- subprocess.CompletedProcess ---
+    try:
+        result2: CompletedProcess = run("echo hello_subprocess")
+        print("subprocess returncode = " + str(result2.returncode))
+        print("subprocess stdout ok = " + str(len(result2.stdout) > 0))
+    except IOError as e:
+        print("subprocess error: " + e.message)
+
+    # --- pathlib.Path.glob ---
+    tmp: Path = Path("/tmp")
+    try:
+        matches: list[str] = tmp.glob("sifr_demo_*")
+        print("glob found = " + str(len(matches) > 0))
+    except IOError as e:
+        print("glob error: " + e.message)
+
+    # --- re flags ---
+    try:
+        found: str | None = search_flags("hello", "HELLO WORLD", IGNORECASE)
+        print("re ignorecase = " + str(found is not None))
+        pat = compile_flags("^line", MULTILINE)
+        found2: str | None = pat.search("line1\nline2")
+        print("re multiline = " + str(found2 is not None))
+    except RegexError as e:
+        print("re error: " + e.message)
+
+    # --- os constants (sep, linesep, name available in sifr.os) ---
+    try:
+        cwd: str = getcwd()
+        print("os getcwd ok = " + str(len(cwd) > 0))
+    except IOError as e:
+        print("os getcwd error: " + e.message)
+
+    # --- random.choice ---
+    items: list[int] = [1, 2, 3, 4, 5]
+    picked: int = choice(items)
+    print("random choice ok = " + str(picked >= 1 and picked <= 5))

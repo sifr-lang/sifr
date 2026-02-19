@@ -1,0 +1,15 @@
+# expect-stdout: content = hello from context
+# expect-stdout: context manager ok
+
+from sifr.io import read_text
+
+def main():
+    path: str = "/tmp/sifr_open_ctx_test.txt"
+    try:
+        with open(path, "w") as f:
+            _: None = f.write("hello from context")
+        content: str = read_text(path)
+        print("content = " + content)
+        print("context manager ok")
+    except IOError as e:
+        print("error: " + e.message)

@@ -1,14 +1,5 @@
 # sifr.datetime — Date and time classes
-from _sifr.datetime import datetime_now, datetime_format, datetime_from_timestamp
-
-def now() -> str:
-    return datetime_now()
-
-def format_datetime(dt: str, fmt: str) -> str:
-    return datetime_format(dt, fmt)
-
-def from_timestamp(ts: float) -> Result[str, ValueError]:
-    return datetime_from_timestamp(ts)
+from _sifr.datetime import datetime_now, datetime_now_struct, datetime_format, datetime_from_timestamp
 
 class timedelta:
     _days: int
@@ -138,3 +129,111 @@ class date:
 
     def __str__(self) -> str:
         return self.isoformat()
+
+
+class time:
+    hour: int
+    minute: int
+    second: int
+
+    def __init__(self, hour: int, minute: int, second: int) -> None:
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+
+    def isoformat(self) -> str:
+        h: str = str(self.hour)
+        if len(h) < 2:
+            h = "0" + h
+        mi: str = str(self.minute)
+        if len(mi) < 2:
+            mi = "0" + mi
+        s: str = str(self.second)
+        if len(s) < 2:
+            s = "0" + s
+        return h + ":" + mi + ":" + s
+
+    def __eq__(self, other: time) -> bool:
+        return self.hour == other.hour and self.minute == other.minute and self.second == other.second
+
+    def __str__(self) -> str:
+        return self.isoformat()
+
+
+class timezone:
+    _offset: int
+
+    def __init__(self, offset: int) -> None:
+        self._offset = offset
+
+    def offset(self) -> int:
+        return self._offset
+
+    def __str__(self) -> str:
+        if self._offset == 0:
+            return "UTC"
+        sign: str = "+"
+        if self._offset < 0:
+            sign = "-"
+        abs_offset: int = self._offset
+        if abs_offset < 0:
+            abs_offset = -abs_offset
+        h: int = abs_offset // 3600
+        m: int = (abs_offset % 3600) // 60
+        hs: str = str(h)
+        if len(hs) < 2:
+            hs = "0" + hs
+        ms: str = str(m)
+        if len(ms) < 2:
+            ms = "0" + ms
+        return "UTC" + sign + hs + ":" + ms
+
+
+utc: timezone = timezone(0)
+
+
+def now() -> datetime:
+    parts: list[int] = datetime_now_struct()
+    yr: int = 0
+    mo: int = 1
+    dy: int = 1
+    hr: int = 0
+    mn: int = 0
+    sc: int = 0
+    for i, v in enumerate(parts):
+        if i == 0:
+            yr = v
+        if i == 1:
+            mo = v
+        if i == 2:
+            dy = v
+        if i == 3:
+            hr = v
+        if i == 4:
+            mn = v
+        if i == 5:
+            sc = v
+    return datetime(yr, mo, dy, hr, mn, sc)
+
+
+def today() -> date:
+    parts: list[int] = datetime_now_struct()
+    yr: int = 0
+    mo: int = 1
+    dy: int = 1
+    for i, v in enumerate(parts):
+        if i == 0:
+            yr = v
+        if i == 1:
+            mo = v
+        if i == 2:
+            dy = v
+    return date(yr, mo, dy)
+
+
+def format_datetime(dt: str, fmt: str) -> str:
+    return datetime_format(dt, fmt)
+
+
+def from_timestamp(ts: float) -> Result[str, ValueError]:
+    return datetime_from_timestamp(ts)

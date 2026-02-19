@@ -1,5 +1,8 @@
 # sifr.time — Time operations
-from _sifr.time import time_now, sleep, time_format, perf_counter, monotonic, strptime, gmtime, localtime
+from _sifr.time import time_now, sleep, time_format, perf_counter, monotonic
+from _sifr.time import strptime as _strptime_intrinsic
+from _sifr.time import gmtime as _gmtime_intrinsic
+from _sifr.time import localtime as _localtime_intrinsic
 
 # CPython-compatible aliases
 def time() -> float:
@@ -7,3 +10,15 @@ def time() -> float:
 
 def strftime(epoch: float, fmt: str) -> str:
     return time_format(epoch, fmt)
+
+def strptime(s: str, fmt: str) -> Result[str, ValueError]:
+    # Parse a time string according to a format, returning ISO datetime string.
+    return _strptime_intrinsic(s, fmt)
+
+def gmtime(epoch: float) -> str:
+    # Return UTC time as ISO string for the given epoch.
+    return _gmtime_intrinsic(epoch)
+
+def localtime(epoch: float) -> str:
+    # Return local time as ISO string for the given epoch.
+    return _localtime_intrinsic(epoch)

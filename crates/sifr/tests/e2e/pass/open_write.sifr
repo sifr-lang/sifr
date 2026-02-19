@@ -1,0 +1,19 @@
+# expect-stdout: write ok
+# expect-stdout: verify ok
+
+from sifr.io import read_text
+
+def main():
+    path: str = "/tmp/sifr_open_write_test.txt"
+    try:
+        f = open(path, "w")
+        _: None = f.write("test content")
+        f.close()
+        content: str = read_text(path)
+        if content == "test content":
+            print("write ok")
+        else:
+            print("write mismatch: " + content)
+        print("verify ok")
+    except IOError as e:
+        print("error: " + e.message)

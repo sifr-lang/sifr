@@ -1,5 +1,11 @@
 # sifr.re — Regular expressions
-from _sifr.regex import re_match, re_find, re_replace, re_findall, re_split, re_find_start, re_find_end
+from _sifr.regex import re_match, re_find, re_replace, re_findall, re_split, re_find_start, re_find_end, re_match_flags, re_find_flags, re_replace_flags, re_findall_flags, re_split_flags
+
+# Flag constants (CPython-compatible values)
+IGNORECASE: int = 2
+MULTILINE: int = 8
+DOTALL: int = 16
+VERBOSE: int = 64
 
 class Match:
     _matched: str
@@ -32,6 +38,9 @@ class Match:
 def search(pattern: str, text: str) -> Result[str | None, RegexError]:
     return re_find(pattern, text)
 
+def search_flags(pattern: str, text: str, flags: int) -> Result[str | None, RegexError]:
+    return re_find_flags(pattern, text, flags)
+
 def search_match(pattern: str, text: str) -> Result[Match | None, RegexError]:
     try:
         found: str | None = re_find(pattern, text)
@@ -46,34 +55,55 @@ def search_match(pattern: str, text: str) -> Result[Match | None, RegexError]:
 def sub(pattern: str, replacement: str, text: str) -> Result[str, RegexError]:
     return re_replace(pattern, replacement, text)
 
+def sub_flags(pattern: str, replacement: str, text: str, flags: int) -> Result[str, RegexError]:
+    return re_replace_flags(pattern, replacement, text, flags)
+
 def findall(pattern: str, text: str) -> Result[list[str], RegexError]:
     return re_findall(pattern, text)
 
+def findall_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
+    return re_findall_flags(pattern, text, flags)
+
 def split(pattern: str, text: str) -> Result[list[str], RegexError]:
     return re_split(pattern, text)
+
+def split_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
+    return re_split_flags(pattern, text, flags)
 
 
 class Pattern:
     # A compiled regular expression pattern.
     _pattern: str
+    _flags: int
 
-    def __init__(self, pattern: str) -> None:
+    def __init__(self, pattern: str, flags: int) -> None:
         self._pattern = pattern
+        self._flags = flags
 
     def search(self, text: str) -> Result[str | None, RegexError]:
+        if self._flags != 0:
+            return re_find_flags(self._pattern, text, self._flags)
         return re_find(self._pattern, text)
 
     def is_match(self, text: str) -> Result[bool, RegexError]:
         # CPython: Pattern.match — renamed is_match due to Rust keyword conflict
+        if self._flags != 0:
+            return re_match_flags(self._pattern, text, self._flags)
         return re_match(self._pattern, text)
 
     def sub(self, replacement: str, text: str) -> Result[str, RegexError]:
+        if self._flags != 0:
+            return re_replace_flags(self._pattern, replacement, text, self._flags)
         return re_replace(self._pattern, replacement, text)
 
     def findall(self, text: str) -> Result[list[str], RegexError]:
+        if self._flags != 0:
+            return re_findall_flags(self._pattern, text, self._flags)
         return re_findall(self._pattern, text)
 
     def split(self, text: str) -> Result[list[str], RegexError]:
+        if self._flags != 0:
+            return re_split_flags(self._pattern, text, self._flags)
         return re_split(self._pattern, text)
 
     def pattern(self) -> str:
@@ -81,10 +111,17 @@ class Pattern:
 
 
 def compile(pattern: str) -> Pattern:
-    return Pattern(pattern)
+    return Pattern(pattern, 0)
+
+def compile_flags(pattern: str, flags: int) -> Pattern:
+    return Pattern(pattern, flags)
 
 
 def fullmatch(pattern: str, text: str) -> Result[bool, RegexError]:
     # Match the entire string against the pattern.
     anchored: str = "^" + pattern + "$"
     return re_match(anchored, text)
+
+def fullmatch_flags(pattern: str, text: str, flags: int) -> Result[bool, RegexError]:
+    anchored: str = "^" + pattern + "$"
+    return re_match_flags(anchored, text, flags)
