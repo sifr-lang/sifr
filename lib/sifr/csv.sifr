@@ -195,7 +195,7 @@ class DictWriter:
 
 
 def reader_from_file(handle: int) -> Result[reader, IOError]:
-    # Create a csv.reader from an open FileHandle (by handle ID).
+    # Create a csv.reader from an open file handle ID (from FileHandle._handle).
     try:
         text: str = file_read(handle)
         return reader(text)
@@ -204,7 +204,7 @@ def reader_from_file(handle: int) -> Result[reader, IOError]:
 
 
 def writer_to_file(handle: int, rows: list[list[str]]) -> Result[None, IOError]:
-    # Write CSV rows to an open FileHandle (by handle ID).
+    # Write CSV rows to an open file handle ID (from FileHandle._handle).
     try:
         content: str = format_csv(rows)
         _: None = file_write(handle, content)

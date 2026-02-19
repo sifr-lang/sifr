@@ -1,5 +1,5 @@
 # sifr.itertools — Iterator building blocks (pure Sifr, generic)
-# CPython-compatible functions only.
+# CPython-compatible functions plus Sifr extensions (take, flatten).
 T = TypeVar("T")
 
 def chain(a: list[T], b: list[T]) -> list[T]:

@@ -6,7 +6,7 @@
 
 ## milestone_stdlib_remediation: Phase 11 Gap Closure
 
-status: pending
+status: done
 
 **Goal:** Close all gaps identified in the Phase 11 gap analysis. This is a single focused milestone that completes the stdlib surface area before the type system completion phase rewrites it with generics.
 
