@@ -1,0 +1,21 @@
+from sifr.heapq import heapify, heappop, heappush, nsmallest
+
+def main():
+    data: list[float] = [3.3, 1.1, 4.4, 1.5, 2.2]
+    heapify(data)
+    
+    # Pop smallest
+    v: float | None = heappop(data)
+    if v is not None:
+        print(v)
+    
+    # nsmallest
+    data2: list[float] = [5.5, 1.1, 3.3, 2.2, 4.4]
+    smallest: list[float] = nsmallest(3, data2)
+    for x in smallest:
+        print(x)
+
+# expect-stdout: 1.1
+# expect-stdout: 1.1
+# expect-stdout: 2.2
+# expect-stdout: 3.3
