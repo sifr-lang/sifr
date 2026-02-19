@@ -1,0 +1,24 @@
+from enum import Enum
+
+class HttpStatus(Enum):
+    OK = 200
+    NOT_FOUND = 404
+    INTERNAL_ERROR = 500
+
+def main():
+    s: HttpStatus = HttpStatus.OK
+    print(s.value())
+    print(s.name())
+    s2: HttpStatus = HttpStatus.NOT_FOUND
+    print(s2.value())
+    print(s2.name())
+    s3: HttpStatus = HttpStatus.INTERNAL_ERROR
+    print(s3.value())
+    print(s3.name())
+
+# expect-stdout: 200
+# expect-stdout: OK
+# expect-stdout: 404
+# expect-stdout: NOT_FOUND
+# expect-stdout: 500
+# expect-stdout: INTERNAL_ERROR
