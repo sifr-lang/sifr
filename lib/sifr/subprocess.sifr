@@ -8,11 +8,6 @@ class CompletedProcess:
     stdout: str
     stderr: str
 
-    def __init__(self, returncode: int, stdout: str, stderr: str) -> None:
-        self.returncode = returncode
-        self.stdout = stdout
-        self.stderr = stderr
-
 
 def run(cmd: str) -> Result[CompletedProcess, IOError]:
     try:

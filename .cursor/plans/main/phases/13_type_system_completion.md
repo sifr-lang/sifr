@@ -8,7 +8,7 @@
 
 ## milestone_auto_init: Auto-Generated Constructors
 
-status: pending
+status: done
 
 **Goal:** Eliminate the most common boilerplate in Sifr code. When a class declares typed fields but does not define an explicit `__init__`, the compiler auto-generates a constructor that accepts one positional argument per field (in declaration order) and assigns each to `self`. This is the single highest-impact ergonomic improvement — every class in the demos, stdlib, and user code currently repeats this pattern manually.
 
