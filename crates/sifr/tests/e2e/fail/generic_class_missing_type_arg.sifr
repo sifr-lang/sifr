@@ -1,0 +1,6 @@
+# Test: using unknown generic type in annotation
+def main():
+    x: UnknownType[int] = 42
+    print(x)
+
+# expect-error: unknown generic type

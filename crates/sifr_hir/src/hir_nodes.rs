@@ -10,6 +10,10 @@ pub struct HirModule {
     pub imports: Vec<HirImport>,
     /// Module-level constants (name, type, value)
     pub constants: Vec<(String, Type, HirExpr)>,
+    /// Generic function info: function_name -> type_var_names
+    pub generic_functions: std::collections::HashMap<String, Vec<String>>,
+    /// Type parameter bounds: owner_name (function or class) -> (type_var_name -> protocol_names)
+    pub type_param_bounds: std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
 }
 
 /// An import statement.

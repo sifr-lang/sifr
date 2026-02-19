@@ -66,11 +66,15 @@ struct LowerCtx {
     type_vars: std::collections::HashSet<String>,
     /// Map of generic function names to their type variable names
     generic_functions: HashMap<String, Vec<String>>,
+    /// Map of owner (function or class name) -> (type_var_name -> protocol bounds)
+    type_param_bounds: HashMap<String, HashMap<String, Vec<String>>>,
     /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
     allow_intrinsic_imports: bool,
     /// Set of parameter names that are immutably borrowed (&T) in the current function.
     /// Used for escape analysis: returning or storing a borrowed param is a compile error.
     borrowed_params: std::collections::HashSet<String>,
+    /// Map of class names to their declared type parameters (from PEP 695 class C[T])
+    class_declared_type_params: HashMap<String, Vec<String>>,
 }
 
 impl LowerCtx {
@@ -93,8 +97,10 @@ impl LowerCtx {
             vararg_functions: std::collections::HashSet::new(),
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
             allow_intrinsic_imports: false,
             borrowed_params: std::collections::HashSet::new(),
+            class_declared_type_params: HashMap::new(),
         }
     }
 
@@ -202,6 +208,30 @@ fn infer_type_var_bindings(param_ty: &Type, arg_ty: &Type, bindings: &mut HashMa
     }
 }
 
+/// Check if a concrete type satisfies a protocol bound.
+fn type_satisfies_bound(ty: &Type, bound: &str) -> bool {
+    // TypeVars are not concrete — bounds are checked when they're instantiated
+    if matches!(ty, Type::TypeVar(_)) {
+        return true;
+    }
+    match bound {
+        "Comparable" => matches!(
+            ty,
+            Type::Int | Type::Float | Type::Str | Type::Bool | Type::BigInt
+        ),
+        "Addable" => matches!(
+            ty,
+            Type::Int | Type::Float | Type::Str | Type::BigInt
+        ),
+        "Hashable" => matches!(
+            ty,
+            Type::Int | Type::Str | Type::Bool | Type::BigInt | Type::None
+                | Type::Enum { .. } | Type::LiteralStr(_) | Type::LiteralInt(_) | Type::LiteralBool(_)
+        ),
+        _ => true,
+    }
+}
+
 /// Result of lowering, including the HIR module and any diagnostics.
 pub struct LoweringResult {
     pub module: HirModule,
@@ -222,6 +252,10 @@ pub struct ExternalDefs {
     pub constants: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
     /// Set of class names that are error types (class Foo(Error)) across all modules
     pub error_types: std::collections::HashSet<String>,
+    /// Map of module_name -> (owner_name -> (type_var_name -> bounds))
+    pub type_param_bounds: std::collections::HashMap<String, std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>>,
+    /// Map of module_name -> (function_name -> type_var_names)
+    pub generic_functions: std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
 }
 
 /// Lower a parsed module AST into a typed HIR module.
@@ -314,8 +348,25 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                         continue;
                     }
                 };
+                let mut alias_type_params = Vec::new();
+                if let Some(ref tps) = type_alias.type_params {
+                    for tp in tps.iter() {
+                        if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
+                            let tp_name = tv.name.to_string();
+                            ctx.type_vars.insert(tp_name.clone());
+                            alias_type_params.push(tp_name);
+                        }
+                    }
+                }
                 let ty = resolve_annotation_expr(&type_alias.value, &mut ctx);
-                ctx.scope.define_type_alias(name, ty);
+                if alias_type_params.is_empty() {
+                    ctx.scope.define_type_alias(name, ty);
+                } else {
+                    ctx.scope.define_generic_type_alias(name, alias_type_params.clone(), ty);
+                }
+                for tp_name in &alias_type_params {
+                    ctx.type_vars.remove(tp_name.as_str());
+                }
             }
             _ => {}
         }
@@ -329,7 +380,19 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                     if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
                         let name = tv.name.to_string();
                         ctx.type_vars.insert(name.clone());
-                        pep695_type_vars.push(name);
+                        pep695_type_vars.push(name.clone());
+                        if let Some(ref bound) = tv.bound {
+                            let bound_name = match bound.as_ref() {
+                                Expr::Name(n) => n.id.to_string(),
+                                _ => continue,
+                            };
+                            ctx.type_param_bounds
+                                .entry(func.name.to_string())
+                                .or_insert_with(HashMap::new)
+                                .entry(name)
+                                .or_insert_with(Vec::new)
+                                .push(bound_name);
+                        }
                     }
                 }
             }
@@ -469,6 +532,17 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                 if let Some(ft) = module_fns.get(name) {
                                     ctx.functions.insert(local.clone(), ft.clone());
                                     found = true;
+                                    // Import generic function info and bounds
+                                    if let Some(module_gf) = externals.generic_functions.get(&stdlib_module_key) {
+                                        if let Some(type_vars) = module_gf.get(name) {
+                                            ctx.generic_functions.insert(local.clone(), type_vars.clone());
+                                        }
+                                    }
+                                    if let Some(module_bounds) = externals.type_param_bounds.get(&stdlib_module_key) {
+                                        if let Some(owner_bounds) = module_bounds.get(name) {
+                                            ctx.type_param_bounds.insert(local.clone(), owner_bounds.clone());
+                                        }
+                                    }
                                 }
                             }
                             // Check classes
@@ -492,6 +566,12 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                                 FunctionType::new(params, class_ty.clone())
                                             };
                                             ctx.functions.insert(local.clone(), ft);
+                                        }
+                                        // Import class type parameter bounds
+                                        if let Some(module_bounds) = externals.type_param_bounds.get(&stdlib_module_key) {
+                                            if let Some(owner_bounds) = module_bounds.get(name) {
+                                                ctx.type_param_bounds.insert(local.clone(), owner_bounds.clone());
+                                            }
                                         }
                                         found = true;
                                     }
@@ -646,7 +726,14 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
 
     if ctx.errors.is_empty() {
         Ok(LoweringResult {
-            module: HirModule { functions, classes, imports, constants },
+            module: HirModule {
+                functions,
+                classes,
+                imports,
+                constants,
+                generic_functions: ctx.generic_functions.clone(),
+                type_param_bounds: ctx.type_param_bounds.clone(),
+            },
             reveal_types: ctx.reveal_types,
             warnings: ctx.warnings,
         })
@@ -956,10 +1043,26 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
 
     // PEP 695: register inline type params (class C[T]) as type variables
     if let Some(ref type_params) = class_def.type_params {
+        let mut declared_params = Vec::new();
         for tp in type_params.iter() {
             if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
-                ctx.type_vars.insert(tv.name.to_string());
+                let tp_name = tv.name.to_string();
+                ctx.type_vars.insert(tp_name.clone());
+                declared_params.push(tp_name.clone());
+                if let Some(ref bound) = tv.bound {
+                    if let Expr::Name(n) = bound.as_ref() {
+                        ctx.type_param_bounds
+                            .entry(class_name.clone())
+                            .or_insert_with(HashMap::new)
+                            .entry(tp_name)
+                            .or_insert_with(Vec::new)
+                            .push(n.id.to_string());
+                    }
+                }
             }
+        }
+        if !declared_params.is_empty() {
+            ctx.class_declared_type_params.insert(class_name.clone(), declared_params);
         }
     }
 
@@ -983,6 +1086,23 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     // For enum declarations, register as an Enum type
     if is_enum_class(class_def) {
         let variants = collect_enum_variants(class_def);
+        // Check for duplicate variant values
+        {
+            let mut seen_values: std::collections::HashMap<i64, String> = std::collections::HashMap::new();
+            for (vname, vval) in &variants {
+                let val = vval.unwrap_or(0);
+                if let Some(existing) = seen_values.get(&val) {
+                    if vval.is_some() {
+                        ctx.error(format!(
+                            "enum '{}' has duplicate value {}: variants '{}' and '{}'",
+                            class_name, val, existing, vname
+                        ));
+                    }
+                } else if vval.is_some() {
+                    seen_values.insert(val, vname.clone());
+                }
+            }
+        }
         let enum_ty = Type::Enum {
             name: class_name.clone(),
             variants: variants.iter().map(|(n, v)| (n.clone(), *v)).collect(),
@@ -1596,7 +1716,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
 /// Check if a type is hashable (can derive Hash + Eq).
 fn is_hashable_type(ty: &Type) -> bool {
     match ty {
-        Type::Int | Type::Bool | Type::Str | Type::None => true,
+        Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt => true,
         Type::Float => false, // f64 doesn't implement Hash
         Type::LiteralInt(_) | Type::LiteralBool(_) | Type::LiteralStr(_) => true,
         Type::Tuple(elems) => elems.iter().all(is_hashable_type),
@@ -2065,6 +2185,20 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     }
                 }
                 _ => {
+                    // Check if it's a generic type alias (e.g., Pair[int])
+                    if let Some((alias_params, alias_body)) = ctx.scope.lookup_generic_type_alias(&base_name).cloned() {
+                        let type_args: Vec<Type> = match sub.slice.as_ref() {
+                            Expr::Tuple(tup) => tup.elts.iter().map(|e| resolve_annotation_expr(e, ctx)).collect(),
+                            single => vec![resolve_annotation_expr(single, ctx)],
+                        };
+                        let mut bindings = HashMap::new();
+                        for (i, tp) in alias_params.iter().enumerate() {
+                            if let Some(arg) = type_args.get(i) {
+                                bindings.insert(tp.clone(), arg.clone());
+                            }
+                        }
+                        return substitute_type_vars(&alias_body, &bindings);
+                    }
                     // Check if it's a generic class instantiation (e.g., Stack[int])
                     if let Some(class_ty) = ctx.class_types.get(&base_name).cloned() {
                         // Resolve type arguments and substitute into the class type
@@ -2074,16 +2208,23 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         };
                         // Build substitution map from class type params to concrete args
                         if let Type::Class { ref fields, ref methods, .. } = class_ty {
-                            let class_type_params: Vec<String> = fields.iter()
-                                .flat_map(|(_, ty)| { let mut vars = Vec::new(); collect_type_vars(ty, &mut vars); vars })
-                                .chain(methods.iter().flat_map(|(_, ft)| {
-                                    let mut vars = Vec::new();
-                                    for (_, pt, _) in &ft.params { collect_type_vars(pt, &mut vars); }
-                                    collect_type_vars(&ft.return_type, &mut vars);
-                                    vars
-                                }))
-                                .collect::<std::collections::HashSet<_>>()
-                                .into_iter().collect::<Vec<_>>();
+                            // Use declared type parameters (from class C[T]) when available,
+                            // falling back to scanning fields/methods for backward compatibility.
+                            let class_type_params: Vec<String> = ctx.class_declared_type_params
+                                .get(&base_name)
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    fields.iter()
+                                        .flat_map(|(_, ty)| { let mut vars = Vec::new(); collect_type_vars(ty, &mut vars); vars })
+                                        .chain(methods.iter().flat_map(|(_, ft)| {
+                                            let mut vars = Vec::new();
+                                            for (_, pt, _) in &ft.params { collect_type_vars(pt, &mut vars); }
+                                            collect_type_vars(&ft.return_type, &mut vars);
+                                            vars
+                                        }))
+                                        .collect::<std::collections::HashSet<_>>()
+                                        .into_iter().collect::<Vec<_>>()
+                                });
                             if !class_type_params.is_empty() && !type_args.is_empty() {
                                 let mut bindings = HashMap::new();
                                 for (i, tp) in class_type_params.iter().enumerate() {
@@ -2755,6 +2896,25 @@ fn lower_match(
             let mut covered_none = false;
             let mut covered_classes: std::collections::HashSet<String> = std::collections::HashSet::new();
             let mut covered_types: std::collections::HashSet<String> = std::collections::HashSet::new();
+            let mut covered_literal_strs: std::collections::HashSet<String> = std::collections::HashSet::new();
+            let mut covered_literal_ints: std::collections::HashSet<i64> = std::collections::HashSet::new();
+            let mut covered_literal_bools: std::collections::HashSet<bool> = std::collections::HashSet::new();
+
+            fn collect_literal_coverage(
+                pattern: &HirPattern,
+                covered_literal_strs: &mut std::collections::HashSet<String>,
+                covered_literal_ints: &mut std::collections::HashSet<i64>,
+                covered_literal_bools: &mut std::collections::HashSet<bool>,
+            ) {
+                if let HirPattern::Literal { value } = pattern {
+                    match value {
+                        HirExpr::StringLiteral(s) => { covered_literal_strs.insert(s.clone()); }
+                        HirExpr::IntLiteral(n) => { covered_literal_ints.insert(*n); }
+                        HirExpr::BoolLiteral(b) => { covered_literal_bools.insert(*b); }
+                        _ => {}
+                    }
+                }
+            }
 
             for arm in &arms {
                 match &arm.pattern {
@@ -2763,11 +2923,17 @@ fn lower_match(
                     HirPattern::Capture { ty, .. } if arm.guard.is_none() => {
                         covered_types.insert(ty.display_name());
                     }
+                    HirPattern::Literal { .. } => {
+                        collect_literal_coverage(&arm.pattern, &mut covered_literal_strs, &mut covered_literal_ints, &mut covered_literal_bools);
+                    }
                     HirPattern::Or { patterns } => {
                         for p in patterns {
                             match p {
                                 HirPattern::None => { covered_none = true; }
                                 HirPattern::Class { class_name, .. } => { covered_classes.insert(class_name.clone()); }
+                                HirPattern::Literal { .. } => {
+                                    collect_literal_coverage(p, &mut covered_literal_strs, &mut covered_literal_ints, &mut covered_literal_bools);
+                                }
                                 _ => {}
                             }
                         }
@@ -2806,6 +2972,21 @@ fn lower_match(
                     Type::Bool => {
                         if !covered_types.contains("bool") && !covered_classes.contains("bool") {
                             uncovered.push("bool".to_string());
+                        }
+                    }
+                    Type::LiteralStr(s) => {
+                        if !covered_literal_strs.contains(s) {
+                            uncovered.push(format!("\"{}\"", s));
+                        }
+                    }
+                    Type::LiteralInt(n) => {
+                        if !covered_literal_ints.contains(n) {
+                            uncovered.push(n.to_string());
+                        }
+                    }
+                    Type::LiteralBool(b) => {
+                        if !covered_literal_bools.contains(b) {
+                            uncovered.push(b.to_string());
                         }
                     }
                     _ => {}
@@ -5252,6 +5433,27 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let mut bindings = HashMap::new();
         for (arg, (_, param_ty, _)) in args.iter().zip(ft.params.iter()) {
             infer_type_var_bindings(param_ty, arg.ty(), &mut bindings);
+        }
+        // Check protocol bounds on type parameters (scoped to this function)
+        let func_bounds = ctx.type_param_bounds.get(&func_name);
+        let bound_errors: Vec<String> = bindings.iter().flat_map(|(tv_name, concrete_ty)| {
+            func_bounds.into_iter().flat_map(move |owner_bounds| {
+                owner_bounds.get(tv_name).into_iter().flat_map(move |bounds| {
+                    bounds.iter().filter_map(move |bound| {
+                        if !type_satisfies_bound(concrete_ty, bound) {
+                            Some(format!(
+                                "type '{}' does not implement protocol '{}' required by type parameter '{}'",
+                                concrete_ty.display_name(), bound, tv_name
+                            ))
+                        } else {
+                            None
+                        }
+                    })
+                })
+            })
+        }).collect();
+        for err in bound_errors {
+            ctx.error(err);
         }
         if bindings.is_empty() {
             *ft.return_type

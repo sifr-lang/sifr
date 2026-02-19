@@ -1,0 +1,13 @@
+# Test: accessing a non-existent enum variant
+from enum import Enum
+
+class Color(Enum):
+    RED = 1
+    GREEN = 2
+    BLUE = 3
+
+def main():
+    c: Color = Color.YELLOW
+    print(c)
+
+# expect-error: undefined variable

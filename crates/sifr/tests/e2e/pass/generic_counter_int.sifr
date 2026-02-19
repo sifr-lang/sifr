@@ -1,10 +1,10 @@
-# Test IntCounter for int keys
-from sifr.collections import IntCounter, int_counter_from_list
+# Test Counter[int] — generic counter with int keys
+from sifr.collections import Counter, from_list
 from sifr.test import assert_eq
 
 def main():
     items: list[int] = [1, 2, 2, 3, 3, 3]
-    c: IntCounter = int_counter_from_list(items)
+    c: Counter[int] = from_list(items)
     assert_eq(c.get(1), 1)
     assert_eq(c.get(2), 2)
     assert_eq(c.get(3), 3)

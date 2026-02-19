@@ -121,7 +121,6 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.math.min_val` / `sifr.math.max_val` | `min` / `max` | `min`/`max` are Sifr built-ins; `min_val`/`max_val` are the float-specific intrinsics |
 | `sifr.math.round_val` | `round` | `round` is a Sifr built-in; `round_val` is the float intrinsic |
 | `sifr.itertools.repeat` | `itertools.repeat` | CPython-compatible name; `repeat_val` was the old non-CPython name (removed) |
-| `sifr.itertools.chain_str` | `itertools.chain` (str variant) | Type-specialised variant; `chain` handles `list[int]`, `chain_str` handles `list[str]` due to monomorphisation |
 | `sifr.itertools.count_from` | `itertools.count` | `count` conflicts with `list.count` method name in some contexts; `count_from` is the finite-list approximation |
 | `sifr.os.remove_file` | `os.remove` | `remove` is used as a method name on collections; `remove_file` avoids ambiguity |
 | `sifr.random.shuffle` | `random.shuffle` | CPython-compatible name; returns a new shuffled list (Sifr is immutable-by-default) instead of mutating in place |

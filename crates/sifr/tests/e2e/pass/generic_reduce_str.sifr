@@ -1,0 +1,14 @@
+# Test generic reduce with str accumulator
+from sifr.functools import reduce
+from sifr.test import assert_eq
+
+def concat(acc: str, item: str) -> str:
+    return acc + item
+
+def main():
+    parts: list[str] = ["hello", " ", "world"]
+    result: str = reduce(concat, parts, "")
+    assert_eq(result, "hello world")
+    print("generic_reduce_str: passed")
+
+# expect-stdout: generic_reduce_str: passed

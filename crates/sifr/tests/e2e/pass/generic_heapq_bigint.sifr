@@ -1,0 +1,16 @@
+# Test heapq with bigint values
+from sifr.heapq import heapify, heappop, nsmallest
+
+def main():
+    data: list[bigint] = [bigint(30), bigint(10), bigint(40), bigint(20)]
+    heapify(data)
+    v: bigint | None = heappop(data)
+    if v is not None:
+        print(v)
+    smallest: list[bigint] = nsmallest(2, data)
+    for x in smallest:
+        print(x)
+
+# expect-stdout: 10
+# expect-stdout: 20
+# expect-stdout: 30

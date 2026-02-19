@@ -14,7 +14,7 @@ T = TypeVar("T")
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
-def _sift_down(mut data: list[T], pos: int, n: int) -> None:
+def _sift_down[T: Comparable](mut data: list[T], pos: int, n: int) -> None:
     done: bool = False
     while not done:
         smallest: int = pos
@@ -45,7 +45,7 @@ def _sift_down(mut data: list[T], pos: int, n: int) -> None:
                     data[smallest] = tmp_pos
             pos = smallest
 
-def _sift_up(mut heap: list[T], pos: int) -> None:
+def _sift_up[T: Comparable](mut heap: list[T], pos: int) -> None:
     done: bool = False
     while not done:
         if pos <= 0:
@@ -69,7 +69,7 @@ def _sift_up(mut heap: list[T], pos: int) -> None:
 
 # ── In-place API (mut parameters) ────────────────────────────────────────────
 
-def heapify(mut data: list[T]) -> None:
+def heapify[T: Comparable](mut data: list[T]) -> None:
     """Convert list to a min-heap in-place. O(n) time."""
     n: int = len(data)
     i: int = n // 2 - 1
@@ -77,13 +77,13 @@ def heapify(mut data: list[T]) -> None:
         _sift_down(data, i, n)
         i = i - 1
 
-def heappush(mut heap: list[T], item: T) -> None:
+def heappush[T: Comparable](mut heap: list[T], item: T) -> None:
     """Push item onto the heap in-place. O(log n) time."""
     heap.append(item)
     pos: int = len(heap) - 1
     _sift_up(heap, pos)
 
-def heappop(mut heap: list[T]) -> T | None:
+def heappop[T: Comparable](mut heap: list[T]) -> T | None:
     """Pop and return the smallest item. Heap is modified in-place. O(log n) time.
     Returns None if the heap is empty."""
     n: int = len(heap)
@@ -101,7 +101,7 @@ def heappop(mut heap: list[T]) -> T | None:
 
 # ── Functional API (backward compatibility) ───────────────────────────────────
 
-def _swap(data: list[T], i: int, j: int) -> list[T]:
+def _swap[T: Comparable](data: list[T], i: int, j: int) -> list[T]:
     result: list[T] = []
     k: int = 0
     while k < len(data):
@@ -120,21 +120,21 @@ def _swap(data: list[T], i: int, j: int) -> list[T]:
         k = k + 1
     return result
 
-def heapify_copy(data: list[T]) -> list[T]:
+def heapify_copy[T: Comparable](data: list[T]) -> list[T]:
     result: list[T] = []
     for val in data:
         result.append(val)
     heapify(result)
     return result
 
-def heappush_copy(heap: list[T], item: T) -> list[T]:
+def heappush_copy[T: Comparable](heap: list[T], item: T) -> list[T]:
     result: list[T] = []
     for val in heap:
         result.append(val)
     heappush(result, item)
     return result
 
-def heappop_val(heap: list[T]) -> T | None:
+def heappop_val[T: Comparable](heap: list[T]) -> T | None:
     """Return the smallest item without modifying the original heap.
     Creates a temporary copy."""
     if len(heap) == 0:
@@ -144,14 +144,14 @@ def heappop_val(heap: list[T]) -> T | None:
         tmp.append(val)
     return heappop(tmp)
 
-def heappop_rest(heap: list[T]) -> list[T]:
+def heappop_rest[T: Comparable](heap: list[T]) -> list[T]:
     result: list[T] = []
     for val in heap:
         result.append(val)
     heappop(result)
     return result
 
-def heapreplace(heap: list[T], item: T) -> T | None:
+def heapreplace[T: Comparable](heap: list[T], item: T) -> T | None:
     if len(heap) == 0:
         return None
     top: T | None = heap[0]
@@ -159,13 +159,13 @@ def heapreplace(heap: list[T], item: T) -> T | None:
     rest = heappush_copy(rest, item)
     return top
 
-def heappushpop(heap: list[T], item: T) -> T | None:
+def heappushpop[T: Comparable](heap: list[T], item: T) -> T | None:
     # Push item then pop smallest. Equivalent to heappush + heappop but more efficient.
     pushed: list[T] = heappush_copy(heap, item)
     val: T | None = heappop(pushed)
     return val
 
-def nsmallest(n: int, data: list[T]) -> list[T]:
+def nsmallest[T: Comparable](n: int, data: list[T]) -> list[T]:
     heap: list[T] = heapify_copy(data)
     result: list[T] = []
     count: int = 0
@@ -178,7 +178,7 @@ def nsmallest(n: int, data: list[T]) -> list[T]:
         count = count + 1
     return result
 
-def nlargest(n: int, data: list[T]) -> list[T]:
+def nlargest[T: Comparable](n: int, data: list[T]) -> list[T]:
     # Uses a selection approach: find n largest by repeated scanning.
     if n <= 0:
         return []

@@ -228,6 +228,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                 func_signatures: stdlib_code.func_signatures.clone(),
                 transitive_deps: stdlib_code.transitive_deps.clone(),
                 generator_functions: stdlib_code.generator_functions.clone(),
+                generic_classes: stdlib_code.generic_classes.clone(),
             };
             let codegen_result = sifr_codegen::generate_rust_with_stdlib(&result.module, &codegen_stdlib);
             stdlib_code.module_rust_code.insert(module_name.to_string(), codegen_result.rust_source);
@@ -273,6 +274,13 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
             if !gen_fns.is_empty() {
                 stdlib_code.generator_functions.insert(module_name.to_string(), gen_fns);
             }
+
+            // Track generic classes for correct type annotation skipping in user code
+            for class in &result.module.classes {
+                if !class.type_params.is_empty() {
+                    stdlib_code.generic_classes.insert(class.name.clone());
+                }
+            }
         }
 
         stdlib_code.intrinsic_names.insert(module_name.to_string(), intrinsic_names_for_module);
@@ -284,6 +292,12 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
         stdlib_defs.classes.insert(module_name.to_string(), class_exports);
         if !const_exports.is_empty() {
             stdlib_defs.constants.insert(module_name.to_string(), const_exports);
+        }
+        if !result.module.generic_functions.is_empty() {
+            stdlib_defs.generic_functions.insert(module_name.to_string(), result.module.generic_functions.clone());
+        }
+        if !result.module.type_param_bounds.is_empty() {
+            stdlib_defs.type_param_bounds.insert(module_name.to_string(), result.module.type_param_bounds.clone());
         }
     }
 
@@ -605,7 +619,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
 
     // Write Cargo.toml
     let (cargo_toml, _) = generate_project(
-        &HirModule { functions: vec![], classes: vec![], imports: vec![], constants: vec![] },
+        &HirModule { functions: vec![], classes: vec![], imports: vec![], constants: vec![], generic_functions: HashMap::new(), type_param_bounds: HashMap::new() },
         "sifr_output",
     );
     std::fs::write(project_path.join("Cargo.toml"), cargo_toml).map_err(|e| {
@@ -708,7 +722,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
         effective_stdlib_modules.insert("_bigint".to_string());
     }
     let (cargo_toml, _) = generate_project_with_deps(
-        &sifr_hir::HirModule { functions: vec![], classes: vec![], imports: vec![], constants: vec![] },
+        &sifr_hir::HirModule { functions: vec![], classes: vec![], imports: vec![], constants: vec![], generic_functions: HashMap::new(), type_param_bounds: HashMap::new() },
         "sifr_output",
         &effective_stdlib_modules,
     );

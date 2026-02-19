@@ -1,0 +1,9 @@
+# Test: float as Counter key should fail (float is not Hashable)
+from sifr.collections import Counter, from_list
+
+def main():
+    items: list[float] = [1.0, 2.0, 3.0]
+    c: Counter[float] = from_list(items)
+    print(c.total())
+
+# expect-error: does not implement protocol 'Hashable'
