@@ -406,6 +406,11 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
         eprintln!("{}", diag);
     }
 
+    // Print compiler warnings to stderr
+    for warning in &lowering_result.warnings {
+        eprintln!("{}", warning);
+    }
+
     // Phase 3: Generate Rust code with stdlib code
     let codegen_result = generate_rust_with_stdlib(&lowering_result.module, &stdlib_compiled.code);
 

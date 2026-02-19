@@ -1,5 +1,6 @@
 # Demo: milestone_integer_safety
-# Showcases bigint type for arbitrary-precision arithmetic.
+# Showcases bigint type for arbitrary-precision arithmetic,
+# and compiler overflow warnings for risky int operations.
 
 def factorial(n: int) -> bigint:
     if n <= 1:
@@ -63,3 +64,21 @@ def main():
     print("=== Fibonacci ===")
     print(fibonacci(50))
     print(fibonacci(100))
+
+    # --- 8. Overflow warnings ---
+    # The compiler emits warnings (to stderr) for risky int operations:
+    #   - int ** <non-constant> warns about potential overflow
+    #   - int ** <large constant> warns about potential overflow
+    #   - int * int with non-constant operands warns about potential overflow
+    # These are non-fatal warnings — the program still compiles and runs.
+    print("=== Overflow Warnings (check stderr) ===")
+    base: int = 2
+    exp: int = 10
+    risky_pow: int = base ** exp
+    print(risky_pow)
+    a2: int = 1000000
+    b2: int = 1000000
+    risky_mul: int = a2 * b2
+    print(risky_mul)
+    safe_mul: int = 5 * 10
+    print(safe_mul)
