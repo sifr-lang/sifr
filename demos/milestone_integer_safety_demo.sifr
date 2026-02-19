@@ -1,0 +1,65 @@
+# Demo: milestone_integer_safety
+# Showcases bigint type for arbitrary-precision arithmetic.
+
+def factorial(n: int) -> bigint:
+    if n <= 1:
+        return bigint(1)
+    return bigint(n) * factorial(n - 1)
+
+def fibonacci(n: int) -> bigint:
+    if n <= 1:
+        return bigint(n)
+    a: bigint = bigint(0)
+    b: bigint = bigint(1)
+    i: int = 2
+    while i <= n:
+        c: bigint = a + b
+        a = b.clone()
+        b = c.clone()
+        i = i + 1
+    return b
+
+def main():
+    # --- 1. Basic bigint creation ---
+    print("=== Basic BigInt ===")
+    x: bigint = bigint(42)
+    y: bigint = bigint(100)
+    print(x)
+    print(y)
+
+    # --- 2. Arithmetic ---
+    print("=== Arithmetic ===")
+    print(x + y)
+    print(y - x)
+    print(x * y)
+    print(bigint(10) ** 20)
+
+    # --- 3. Large values beyond i64 ---
+    print("=== Large Values ===")
+    huge: bigint = bigint(2) ** 100
+    print(huge)
+
+    # --- 4. Comparison ---
+    print("=== Comparison ===")
+    a: bigint = bigint(100)
+    b: bigint = bigint(200)
+    print(a < b)
+    print(a == bigint(100))
+    print(b > a)
+
+    # --- 5. int -> bigint conversion ---
+    print("=== int to bigint ===")
+    n: int = 999
+    big_n: bigint = bigint(n)
+    print(big_n)
+
+    # --- 6. Factorial (large numbers) ---
+    print("=== Factorial ===")
+    print(factorial(10))
+    print(factorial(20))
+    print(factorial(30))
+
+    # --- 7. Fibonacci (large numbers) ---
+    print("=== Fibonacci ===")
+    print(fibonacci(50))
+    print(fibonacci(100))

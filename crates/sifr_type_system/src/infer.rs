@@ -34,6 +34,7 @@ pub fn resolve_type_annotation(name: &str) -> Option<Type> {
         "Any" => Some(Type::Any),
         "Unknown" => Some(Type::Unknown),
         "Never" => Some(Type::Never),
+        "bigint" => Some(Type::BigInt),
         _ => None,
     }
 }

@@ -8,8 +8,28 @@ use crate::TypeError;
 ///
 /// Returns the result type or an error.
 pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
+    // Mixed int/bigint arithmetic is a compile error (except bigint ** int which is allowed)
+    let is_bigint_pow_int = left == &Type::BigInt && right == &Type::Int && op == "**";
+    if !is_bigint_pow_int {
+        if (left == &Type::Int && right == &Type::BigInt) || (left == &Type::BigInt && right == &Type::Int) {
+            return Err(TypeError {
+                message: format!(
+                    "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly"
+                ),
+                kind: crate::TypeErrorKind::InvalidOperator {
+                    op: op.to_string(),
+                    ty: left.clone(),
+                },
+            });
+        }
+    }
+
     match op {
         "+" => {
+            // BigInt arithmetic
+            if left == &Type::BigInt && right == &Type::BigInt {
+                return Ok(Type::BigInt);
+            }
             // Numeric addition
             if left == &Type::Int && right == &Type::Int {
                 return Ok(Type::Int);
@@ -44,6 +64,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "-" | "*" => {
+            // BigInt arithmetic
+            if left == &Type::BigInt && right == &Type::BigInt {
+                return Ok(Type::BigInt);
+            }
             if left == &Type::Int && right == &Type::Int {
                 return Ok(Type::Int);
             }
@@ -82,6 +106,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "/" => {
+            // BigInt division returns BigInt (floor division semantics for bigint)
+            if left == &Type::BigInt && right == &Type::BigInt {
+                return Ok(Type::BigInt);
+            }
             // Division always returns float in Sifr (like Python 3)
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
@@ -102,6 +130,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "//" | "%" => {
+            // BigInt floor division and modulo
+            if left == &Type::BigInt && right == &Type::BigInt {
+                return Ok(Type::BigInt);
+            }
             // Floor division and modulo
             if left == &Type::Int && right == &Type::Int {
                 return Ok(Type::Int);
@@ -125,6 +157,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             })
         }
         "**" => {
+            // BigInt power: bigint ** bigint -> bigint, bigint ** int -> bigint
+            if left == &Type::BigInt && (right == &Type::BigInt || right == &Type::Int) {
+                return Ok(Type::BigInt);
+            }
             // Power: int ** int -> int, otherwise float
             if left == &Type::Int && right == &Type::Int {
                 return Ok(Type::Int);

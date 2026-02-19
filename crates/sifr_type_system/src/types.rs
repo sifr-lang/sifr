@@ -97,6 +97,12 @@ pub enum Type {
         name: String,
         variants: Vec<(String, Option<i64>)>,
     },
+
+    // --- milestone_integer_safety: BigInt ---
+
+    /// Arbitrary-precision integer (`bigint` in Sifr, `num_bigint::BigInt` in Rust)
+    /// Unlike `int` (i64), `bigint` never overflows — it grows as needed.
+    BigInt,
 }
 
 /// Represents a function's type signature.
@@ -188,6 +194,7 @@ impl Type {
             Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
             Self::Callable(..) => OwnershipKind::Copy, // function pointers are Copy
             Self::Enum { .. } => OwnershipKind::Copy, // enums are Copy (repr(i64))
+            Self::BigInt => OwnershipKind::Move, // heap-allocated, not Copy
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -245,6 +252,7 @@ impl Type {
                 format!("Callable[[{}], {}]", parts.join(", "), ret.display_name())
             }
             Self::Enum { name, .. } => name.clone(),
+            Self::BigInt => "bigint".to_string(),
         }
     }
 
@@ -299,6 +307,7 @@ impl Type {
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
             Self::Enum { name, .. } => name.clone(), // Enum type maps to its Rust enum name
+            Self::BigInt => "BigInt".to_string(),
             Self::Callable(params, conventions, ret) => {
                 let param_types: Vec<String> = params.iter().zip(conventions.iter()).map(|(t, conv)| {
                     let rust_ty = t.rust_type();
@@ -404,12 +413,13 @@ impl Type {
             Type::TypeVar(name) => name.clone(),
             Type::Callable(..) => "Fn".to_string(),
             Type::Enum { name, .. } => name.clone(),
+            Type::BigInt => "BigInt".to_string(),
         }
     }
 
     /// Check if this type is a numeric type (int or float).
     pub fn is_numeric(&self) -> bool {
-        matches!(self, Self::Int | Self::Float | Self::LiteralInt(_))
+        matches!(self, Self::Int | Self::Float | Self::LiteralInt(_) | Self::BigInt)
     }
 
     /// Check if this type is a union type.
@@ -619,6 +629,8 @@ impl Type {
             }
             // Enum: nominal typing - same name means same enum
             (Self::Enum { name: a, .. }, Self::Enum { name: b, .. }) => a == b,
+            // BigInt: only assignable to BigInt
+            (Self::BigInt, Self::BigInt) => true,
             _ => false,
         }
     }
