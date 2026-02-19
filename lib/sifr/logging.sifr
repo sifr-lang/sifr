@@ -47,7 +47,7 @@ class FileHandler:
         self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
 
     def set_formatter(self, fmt: Formatter) -> None:
-        self._formatter = fmt
+        self._formatter = Formatter(fmt._fmt + "")
 
     def emit(self, level: str, name: str, msg: str) -> None:
         line: str = self._formatter.format(level, name, msg) + "\n"
@@ -62,9 +62,9 @@ class Logger:
     _level: int
     _log_path: str
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, level: int = 20) -> None:
         self._name = name
-        self._level = 20
+        self._level = level
         self._log_path = ""
 
     def set_level(self, level: int) -> None:
@@ -99,10 +99,8 @@ class Logger:
         self._emit("CRITICAL", 50, msg)
 
 
-def basicConfig(level: int) -> None:
-    # Set the root logger level.
-    # Note: In Sifr, use getLogger(name).set_level(level) for per-logger level control.
-    pass
+def basicConfig(level: int) -> Logger:
+    return Logger("root", level)
 
 
 def getLogger(name: str) -> Logger:
