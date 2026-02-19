@@ -1,6 +1,7 @@
 # sifr.logging — Simple logging with level filtering
 from _sifr.time import time_now
-from _sifr.fs import append_text
+from _sifr.logging import set_global_level, get_global_level
+from _sifr.fs import open_file, file_write, file_close
 
 # Log level constants (CPython-compatible)
 DEBUG: int = 10
@@ -52,7 +53,12 @@ class FileHandler:
     def emit(self, level: str, name: str, msg: str) -> None:
         line: str = self._formatter.format(level, name, msg) + "\n"
         try:
-            _: None = append_text(self._path, line)
+            handle: int = open_file(self._path, "a")
+            try:
+                _: None = file_write(handle, line)
+            except IOError as e2:
+                pass
+            file_close(handle)
         except IOError as e:
             pass
 
@@ -79,7 +85,12 @@ class Logger:
             print(line)
             if self._log_path != "":
                 try:
-                    _: None = append_text(self._log_path, line + "\n")
+                    handle: int = open_file(self._log_path, "a")
+                    try:
+                        _: None = file_write(handle, line + "\n")
+                    except IOError as e2:
+                        pass
+                    file_close(handle)
                 except IOError as e:
                     pass
 
@@ -100,8 +111,10 @@ class Logger:
 
 
 def basicConfig(level: int) -> Logger:
+    set_global_level(level)
     return Logger("root", level)
 
 
 def getLogger(name: str) -> Logger:
-    return Logger(name)
+    level: int = get_global_level()
+    return Logger(name, level)

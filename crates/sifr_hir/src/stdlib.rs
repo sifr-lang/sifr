@@ -51,6 +51,7 @@ pub fn get_intrinsic_module(module_name: &str) -> Option<IntrinsicModule> {
         "_sifr.html" => Some(intrinsic_html()),
         "_sifr.calendar" => Some(intrinsic_calendar()),
         "_sifr.compress" => Some(intrinsic_compress()),
+        "_sifr.logging" => Some(intrinsic_logging()),
         _ => None,
     }
 }
@@ -990,5 +991,18 @@ fn intrinsic_compress() -> IntrinsicModule {
     ], result_ty(Type::Str, "IOError")));
     // zip_namelist(zip_path: str) -> Result[list[str], IOError]
     functions.insert("zip_namelist".to_string(), FunctionType::all_borrow(vec![("zip_path".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Str)), "IOError")));
+    IntrinsicModule { functions, constants: HashMap::new() }
+}
+
+/// _sifr.logging — Logging intrinsics for global state management
+fn intrinsic_logging() -> IntrinsicModule {
+    let mut functions = HashMap::new();
+
+    // set_global_level(level: int) -> None
+    functions.insert("set_global_level".to_string(), FunctionType::all_borrow(vec![("level".to_string(), Type::Int)], Type::None));
+
+    // get_global_level() -> int
+    functions.insert("get_global_level".to_string(), FunctionType::all_borrow(vec![], Type::Int));
+
     IntrinsicModule { functions, constants: HashMap::new() }
 }

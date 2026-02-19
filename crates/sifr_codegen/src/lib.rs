@@ -561,6 +561,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                                 skip_next_blank = true;
                                 continue;
                             }
+                            // Skip __SIFR_GLOBAL_LOG_LEVEL static declaration (multi-line)
+                            if t.starts_with("static __SIFR_GLOBAL_LOG_LEVEL:") {
+                                skip_file_handle_continuation = true;
+                                skip_next_blank = true;
+                                continue;
+                            }
                             if skip_file_handle_continuation {
                                 skip_file_handle_continuation = false;
                                 continue;
@@ -729,6 +735,18 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             result.push_str("    fn __exit__(&self) { self.close(); }\n");
             result.push_str("}\n\n");
         }
+    }
+
+    // Emit global log level state if logging module is used
+    if emitter.used_stdlib_modules.contains("sifr.logging")
+        || emitter.used_stdlib_modules.contains("_sifr.logging")
+        || emitter.output.contains("__SIFR_GLOBAL_LOG_LEVEL")
+    {
+        if !result.contains("use std::sync::Mutex;") {
+            result.push_str("use std::sync::Mutex;\n\n");
+        }
+        result.push_str("static __SIFR_GLOBAL_LOG_LEVEL: std::sync::LazyLock<Mutex<i64>> =\n");
+        result.push_str("    std::sync::LazyLock::new(|| Mutex::new(20));\n\n");
     }
 
     if !stdlib_preamble.is_empty() {
@@ -7695,6 +7713,15 @@ impl RustEmitter {
                 self.write("(|| -> Result<Vec<String>, IOError> { let __f = std::fs::File::open(");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write(").map_err(__io_err)?; let mut __zip = zip::ZipArchive::new(__f).map_err(|e| IOError::new(e.to_string()))?; Ok((0..__zip.len()).map(|i| __zip.by_index(i).map(|f| f.name().to_string()).unwrap_or_default()).collect()) })()");
+            }
+            // sifr.logging
+            "set_global_level" => {
+                self.write("{ *__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap() = ");
+                self.emit_expr(&args[0]);
+                self.write("; }");
+            }
+            "get_global_level" => {
+                self.write("*__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap()");
             }
             _ => {
                 // Unknown stdlib function — emit as regular call
