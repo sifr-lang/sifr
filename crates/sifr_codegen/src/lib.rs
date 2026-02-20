@@ -7336,12 +7336,12 @@ impl RustEmitter {
                 self.emit_expr(&args[0]);
                 self.write("; let __q = &");
                 self.emit_expr(&args[1]);
-                self.write("; let mut __sum = 0.0f64; let __len = __p.len().min(__q.len()); for __i in 0..__len { let __d = __p[__i] - __q[__i]; __sum += __d * __d; } __sum.sqrt() }");
+                self.write("; if __p.len() != __q.len() { f64::NAN } else if __p.is_empty() { 0.0 } else { let mut __scale = 0.0f64; let mut __ssq = 1.0f64; for __i in 0..__p.len() { let __d = (__p[__i] - __q[__i]).abs(); if __d != 0.0 { if __scale < __d { let __r = __scale / __d; __ssq = 1.0 + __ssq * __r * __r; __scale = __d; } else { let __r = __d / __scale; __ssq += __r * __r; } } } if __scale == 0.0 { 0.0 } else { __scale * __ssq.sqrt() } } }");
             }
             "fsum" => {
                 self.write("{ let __data = &");
                 self.emit_expr(&args[0]);
-                self.write("; let mut __sum = 0.0f64; for __v in __data.iter() { __sum += __v; } __sum }");
+                self.write("; let mut __sum = 0.0f64; let mut __comp = 0.0f64; let mut __pos_inf = false; let mut __neg_inf = false; let mut __has_nan = false; for __x in __data.iter() { let __v = *__x; if __v.is_nan() { __has_nan = true; continue; } if __v.is_infinite() { if __v.is_sign_positive() { __pos_inf = true; } else { __neg_inf = true; } continue; } let __t = __sum + __v; if __sum.abs() >= __v.abs() { __comp += (__sum - __t) + __v; } else { __comp += (__v - __t) + __sum; } __sum = __t; } if __has_nan || (__pos_inf && __neg_inf) { f64::NAN } else if __pos_inf { f64::INFINITY } else if __neg_inf { f64::NEG_INFINITY } else { __sum + __comp } }");
             }
             "sumprod" => {
                 self.write("{ let __p = &");
@@ -7877,7 +7877,7 @@ impl RustEmitter {
             "frexp" => {
                 self.write("{ let __x: f64 = ");
                 self.emit_expr(&args[0]);
-                self.write("; if __x == 0.0 { vec![0.0f64, 0.0] } else { let __bits = __x.to_bits(); let __exp = ((__bits >> 52) & 0x7ff) as i64 - 1022; let __mant = f64::from_bits((__bits & 0x800fffffffffffff) | 0x3fe0000000000000); vec![__mant, __exp as f64] } }");
+                self.write("; if __x == 0.0 { vec![__x, 0.0] } else if !__x.is_finite() { vec![__x, 0.0] } else { let __bits = __x.to_bits(); let __sign = __bits & 0x8000000000000000; let __exp = ((__bits >> 52) & 0x7ff) as i32; let __frac = __bits & 0x000fffffffffffff; if __exp == 0 { let __scaled = __x * (2.0f64).powi(54); let __sbits = __scaled.to_bits(); let __sexp = ((__sbits >> 52) & 0x7ff) as i32; let __sfrac = __sbits & 0x000fffffffffffff; let __mant = f64::from_bits(__sign | (0x3feu64 << 52) | __sfrac); let __e = __sexp - 1022 - 54; vec![__mant, __e as f64] } else { let __mant = f64::from_bits(__sign | (0x3feu64 << 52) | __frac); let __e = __exp - 1022; vec![__mant, __e as f64] } } }");
             }
             "ldexp" => {
                 self.write("{ let __m: f64 = ");
@@ -7889,19 +7889,19 @@ impl RustEmitter {
             "modf" => {
                 self.write("{ let __x: f64 = ");
                 self.emit_expr(&args[0]);
-                self.write("; let __frac = __x.fract(); let __int = __x.trunc(); vec![__frac, __int] }");
+                self.write("; if __x.is_nan() { vec![f64::NAN, f64::NAN] } else if __x.is_infinite() { vec![0.0f64.copysign(__x), __x] } else { let __int = __x.trunc(); let mut __frac = __x - __int; if __frac == 0.0 { __frac = 0.0f64.copysign(__x); } vec![__frac, __int] } }");
             }
             "nextafter" => {
                 self.write("{ let __x: f64 = ");
                 self.emit_expr(&args[0]);
                 self.write("; let __y: f64 = ");
                 self.emit_expr(&args[1]);
-                self.write("; if __x == __y { __y } else if __x < __y { f64::from_bits(__x.to_bits() + 1) } else { f64::from_bits(__x.to_bits() - 1) } }");
+                self.write("; if __x.is_nan() || __y.is_nan() { f64::NAN } else if __x == __y { __y } else if __x == 0.0 { let __sign = if __y.is_sign_negative() { 1u64 << 63 } else { 0u64 }; f64::from_bits(__sign | 1u64) } else { let mut __bits = __x.to_bits(); if (__x < __y) == (__x > 0.0) { __bits += 1; } else { __bits -= 1; } f64::from_bits(__bits) } }");
             }
             "ulp" => {
                 self.write("{ let __x: f64 = ");
                 self.emit_expr(&args[0]);
-                self.write("; let __bits = __x.abs().to_bits(); f64::from_bits(if __bits == 0 { 1 } else { __bits & 0xfff0000000000000 }) - f64::from_bits(((__bits & 0xfff0000000000000) - 0x0010000000000000).max(0)) }");
+                self.write("; if __x.is_nan() { f64::NAN } else if __x.is_infinite() { f64::INFINITY } else { let __a = __x.abs(); if __a == 0.0 { f64::from_bits(1u64) } else if __a == f64::MAX { __a - f64::from_bits(__a.to_bits() - 1) } else { f64::from_bits(__a.to_bits() + 1) - __a } } }");
             }
             // sifr.pathlib new intrinsics
             "touch" => {

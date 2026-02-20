@@ -104,6 +104,36 @@ def prod(data: list[int]) -> int:
         result = result * val
     return result
 
+# Tuple-style adapters for pair-returning math intrinsics.
+# Sifr currently models these as list pairs.
+def frexp_mantissa(x: float) -> float:
+    parts: list[float] = frexp(x)
+    m: float | None = parts[0]
+    if m is None:
+        return nan
+    return m
+
+def frexp_exponent(x: float) -> int:
+    parts: list[float] = frexp(x)
+    exp_val: float | None = parts[1]
+    if exp_val is None:
+        return 0
+    return trunc(exp_val)
+
+def modf_fractional(x: float) -> float:
+    parts: list[float] = modf(x)
+    f: float | None = parts[0]
+    if f is None:
+        return nan
+    return f
+
+def modf_integral(x: float) -> float:
+    parts: list[float] = modf(x)
+    i: float | None = parts[1]
+    if i is None:
+        return nan
+    return i
+
 # CPython-compatible aliases
 # Note: fabs is already imported from _sifr.math, so it's already available
 def pow(x: float, y: float) -> float:

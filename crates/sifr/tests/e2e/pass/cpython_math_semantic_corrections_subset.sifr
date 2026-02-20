@@ -1,0 +1,57 @@
+# Adapted CPython math semantic-correction subset for sifr.math
+from sifr.test import assert_eq, assert_true, assert_false, assert_almost_eq
+from sifr.math import (
+    dist, fsum, nextafter, ulp,
+    frexp_mantissa, frexp_exponent,
+    modf_fractional, modf_integral,
+    signbit, isinf, isnan, inf, nan
+)
+
+def main():
+    # dist: equal dimensions work; mismatched dimensions are safe-NaN.
+    p: list[float] = [0.0, 0.0]
+    q: list[float] = [3.0, 4.0]
+    assert_almost_eq(dist(p, q), 5.0, 0.0000001)
+    mismatch: float = dist([1.0, 2.0], [1.0])
+    assert_true(isnan(mismatch))
+
+    # fsum: compensated accumulation for cancellation-heavy inputs.
+    assert_almost_eq(fsum([1e100, 1.0, -1e100]), 1.0, 0.0000001)
+    tenths: list[float] = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    assert_almost_eq(fsum(tenths), 1.0, 0.0000001)
+    assert_true(isnan(fsum([inf, 1.0, 0.0 - inf])))
+    assert_true(isinf(fsum([inf, 2.0])))
+
+    # nextafter: directional stepping and special values.
+    assert_true(nextafter(1.0, inf) > 1.0)
+    assert_true(nextafter(1.0, 0.0 - inf) < 1.0)
+    assert_true(nextafter(0.0, inf) > 0.0)
+    assert_true(signbit(nextafter(0.0, -1.0)))
+    assert_false(isinf(nextafter(inf, 0.0)))
+    assert_false(isinf(nextafter(0.0 - inf, 0.0)))
+    assert_true(isnan(nextafter(nan, 1.0)))
+    assert_true(isnan(nextafter(1.0, nan)))
+
+    # ulp: CPython-like edge behavior.
+    u1: float = ulp(1.0)
+    u2: float = ulp(2.0)
+    assert_true(u1 > 0.0)
+    assert_true(u2 > u1)
+    assert_almost_eq(ulp(-1.0), u1, 0.0)
+    assert_true(isinf(ulp(inf)))
+    assert_true(isnan(ulp(nan)))
+
+    # frexp/modf tuple-shape adaptation helpers.
+    assert_almost_eq(frexp_mantissa(8.0), 0.5, 0.0000001)
+    assert_eq(frexp_exponent(8.0), 4)
+    assert_almost_eq(frexp_mantissa(-1.0), -0.5, 0.0000001)
+    assert_eq(frexp_exponent(-1.0), 1)
+
+    assert_almost_eq(modf_fractional(3.7), 0.7, 0.0000001)
+    assert_almost_eq(modf_integral(3.7), 3.0, 0.0000001)
+    assert_true(modf_fractional(0.0 - inf) == 0.0)
+    assert_true(isinf(modf_integral(0.0 - inf)))
+
+    print("cpython_math_semantic_corrections_subset: pass")
+
+# expect-stdout: cpython_math_semantic_corrections_subset: pass
