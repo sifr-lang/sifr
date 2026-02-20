@@ -362,7 +362,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M2: bytes demo created and validated
 - [x] M3: base64 API expansion (b64/standard/urlsafe/b32/b32hex/b16)
 - [x] M3: base64 strict decode options implemented
-- [ ] M3: base64 tests ported and passing
+- [x] M3: base64 tests ported and passing
 - [x] M3: base64 demo created and validated
 - [ ] M4: math missing function surface completed
 - [ ] M4: math signature and semantic fixes completed
@@ -440,11 +440,11 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] altchars support
   - [x] validate/ignorechars behavior
   - [x] wrapcol behavior
-- [ ] PR3-C CPython parity tests
-  - [ ] RFC vectors
-  - [ ] invalid input behavior
-  - [ ] round-trip stress/property-like cases
-- [ ] PR3-C progress note: added `cpython_base64_subset.sifr` and `cpython_base64_strictness_subset.sifr`; full RFC vector/property matrix still pending
+- [x] PR3-C CPython parity tests
+  - [x] RFC vectors (`cpython_base64_rfc4648_vectors.sifr`)
+  - [x] invalid input behavior (`cpython_base64_subset.sifr`, `cpython_base64_strictness_subset.sifr`)
+  - [x] round-trip stress/property-like cases (deterministic payload matrix in `cpython_base64_rfc4648_vectors.sifr`)
+- [x] PR3-C progress note: added full RFC4648 vector assertions + deterministic roundtrip matrix; also aligned `b16encode` output to uppercase for CPython parity.
 - [x] Milestone demo
   - [x] `demos/m3_base64_demo.sifr` passes
 
