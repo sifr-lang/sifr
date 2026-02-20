@@ -1,0 +1,28 @@
+# Milestone 4 demo: sifr.math missing API surface baseline
+from sifr.math import cbrt, exp2, fma, log_base, isclose, sumprod, isnormal, issubnormal, remainder, trunc
+
+def main():
+    print(trunc(cbrt(27.0)))
+    print(trunc(exp2(3.0)))
+    print(trunc(fma(2.0, 3.0, 4.0)))
+    print(trunc(log_base(32.0, 2.0)))
+    print(isclose(1e-9, 0.0, 0.9, 1e-8))
+
+    p: list[float] = [1.0, 2.0, 3.0]
+    q: list[float] = [4.0, 5.0, 6.0]
+    print(trunc(sumprod(p, q)))
+
+    tiny_subnormal: float = 2.2250738585072014e-308 / 2.0
+    print(isnormal(1.0))
+    print(issubnormal(tiny_subnormal))
+    print(remainder(5.5, 2.0) < 0.0)
+
+# expect-stdout: 3
+# expect-stdout: 8
+# expect-stdout: 10
+# expect-stdout: 5
+# expect-stdout: true
+# expect-stdout: 32
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true

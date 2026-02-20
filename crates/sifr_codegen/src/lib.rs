@@ -7097,6 +7097,16 @@ impl RustEmitter {
                 self.emit_expr(&args[0]);
                 self.write(").ln()");
             }
+            "cbrt" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").cbrt()");
+            }
+            "exp2" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").exp2()");
+            }
             "sin" => {
                 self.write("(");
                 self.emit_expr(&args[0]);
@@ -7217,6 +7227,11 @@ impl RustEmitter {
                 self.emit_expr(&args[1]);
                 self.write(")");
             }
+            "signbit" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").is_sign_negative()");
+            }
             "fmod" => {
                 self.write("(");
                 self.emit_expr(&args[0]);
@@ -7224,12 +7239,42 @@ impl RustEmitter {
                 self.emit_expr(&args[1]);
                 self.write(")");
             }
+            "remainder" => {
+                self.write("{ let __x: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __y: f64 = ");
+                self.emit_expr(&args[1]);
+                self.write("; if __x.is_nan() || __y.is_nan() { f64::NAN } else if __y == 0.0 || __x.is_infinite() { f64::NAN } else if __y.is_infinite() { __x } else { let __q = __x / __y; let __n0 = __q.trunc(); let __frac = __q - __n0; let __abs_frac = __frac.abs(); let __n = if __abs_frac < 0.5 { __n0 } else if __abs_frac > 0.5 { __n0 + __q.signum() } else if (__n0 as i64) % 2 == 0 { __n0 } else { __n0 + __q.signum() }; let __r = __x - __n * __y; if __r == 0.0 { 0.0f64.copysign(__x) } else { __r } } }");
+            }
             "hypot" => {
                 self.write("(");
                 self.emit_expr(&args[0]);
                 self.write(").hypot(");
                 self.emit_expr(&args[1]);
                 self.write(")");
+            }
+            "fma" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").mul_add(");
+                self.emit_expr(&args[1]);
+                self.write(", ");
+                self.emit_expr(&args[2]);
+                self.write(")");
+            }
+            "fmax" => {
+                self.write("{ let __a: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __b: f64 = ");
+                self.emit_expr(&args[1]);
+                self.write("; __a.max(__b) }");
+            }
+            "fmin" => {
+                self.write("{ let __a: f64 = ");
+                self.emit_expr(&args[0]);
+                self.write("; let __b: f64 = ");
+                self.emit_expr(&args[1]);
+                self.write("; __a.min(__b) }");
             }
             "exp" => {
                 self.write("(");
@@ -7255,6 +7300,16 @@ impl RustEmitter {
                 self.write("(");
                 self.emit_expr(&args[0]);
                 self.write(").is_finite()");
+            }
+            "isnormal" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").is_normal()");
+            }
+            "issubnormal" => {
+                self.write("(");
+                self.emit_expr(&args[0]);
+                self.write(").is_subnormal()");
             }
             "acosh" => {
                 self.write("(");
@@ -7287,6 +7342,13 @@ impl RustEmitter {
                 self.write("{ let __data = &");
                 self.emit_expr(&args[0]);
                 self.write("; let mut __sum = 0.0f64; for __v in __data.iter() { __sum += __v; } __sum }");
+            }
+            "sumprod" => {
+                self.write("{ let __p = &");
+                self.emit_expr(&args[0]);
+                self.write("; let __q = &");
+                self.emit_expr(&args[1]);
+                self.write("; let __len = __p.len().min(__q.len()); let mut __sum = 0.0f64; for __i in 0..__len { __sum += __p[__i] * __q[__i]; } __sum }");
             }
             // sifr.test
             "assert_eq" => {

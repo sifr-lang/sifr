@@ -26,7 +26,7 @@ def main():
     assert_eq(gcd(12, 8), 4)
     assert_eq(lcm(4, 6), 12)
     assert_eq(comb(5, 2), 10)
-    assert_true(isclose(1.0, 1.0000001, 0.001))
+    assert_true(isclose(1.0, 1.0000001, 0.001, 0.0))
     print("math: OK")
 
     # ===== statistics =====

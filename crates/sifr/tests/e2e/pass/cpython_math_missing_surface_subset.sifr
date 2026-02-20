@@ -1,0 +1,61 @@
+# Adapted CPython test_math subset for newly added sifr.math surface
+from sifr.test import assert_eq, assert_true, assert_false, assert_almost_eq
+from sifr.math import (
+    cbrt, exp2, fma, fmax, fmin, isnormal, issubnormal,
+    remainder, signbit, sumprod, log, log_base, isclose, isnan, e, nan
+)
+
+def main():
+    # cbrt
+    assert_almost_eq(cbrt(27.0), 3.0, 0.0000001)
+    assert_almost_eq(cbrt(-27.0), -3.0, 0.0000001)
+    assert_almost_eq(cbrt(1.2), 1.062658569182611, 0.0000001)
+
+    # exp2
+    assert_almost_eq(exp2(-1.0), 0.5, 0.0000001)
+    assert_almost_eq(exp2(2.3), 4.924577653379665, 0.0000001)
+
+    # fma
+    assert_almost_eq(fma(2.0, 3.0, 4.0), 10.0, 0.0000001)
+
+    # fmax/fmin (including NaN handling)
+    assert_eq(fmax(1.0, 2.0), 2.0)
+    assert_eq(fmin(1.0, 2.0), 1.0)
+    assert_false(isnan(fmax(nan, 1.0)))
+    assert_false(isnan(fmin(nan, 1.0)))
+
+    # signbit
+    assert_false(signbit(0.0))
+    assert_true(signbit(-0.0))
+    assert_true(signbit(-1.0))
+
+    # isnormal / issubnormal
+    tiny_subnormal: float = 2.2250738585072014e-308 / 2.0
+    assert_true(isnormal(1.25))
+    assert_false(isnormal(0.0))
+    assert_true(issubnormal(tiny_subnormal))
+    assert_false(issubnormal(1.0))
+
+    # remainder (IEEE-like)
+    assert_almost_eq(remainder(5.0, 2.0), 1.0, 0.0000001)
+    assert_almost_eq(remainder(5.5, 2.0), -0.5, 0.0000001)
+    assert_almost_eq(remainder(-5.5, 2.0), 0.5, 0.0000001)
+
+    # log + log_base adaptation
+    assert_almost_eq(log(e), 1.0, 0.0000001)
+    assert_almost_eq(log_base(32.0, 2.0), 5.0, 0.0000001)
+    assert_almost_eq(log_base(1000.0, 10.0), 3.0, 0.0000001)
+
+    # isclose with abs_tol support
+    assert_false(isclose(1e-9, 0.0, 0.9, 0.0))
+    assert_true(isclose(1e-9, 0.0, 0.9, 1e-8))
+    assert_true(isclose(1.0, 1.0000001, 0.001, 0.0))
+
+    # sumprod
+    p: list[float] = [1.0, 2.0, 3.0]
+    q: list[float] = [4.0, 5.0, 6.0]
+    assert_almost_eq(sumprod(p, q), 32.0, 0.0000001)
+
+    print("cpython_math_missing_surface_subset: pass")
+
+# expect-stdout: cpython_math_missing_surface_subset: pass

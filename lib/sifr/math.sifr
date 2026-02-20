@@ -1,5 +1,5 @@
 # sifr.math — Math functions and constants
-from _sifr.math import sqrt, floor, ceil, abs_val, log, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, degrees, radians, isnan, isinf, trunc, copysign, fmod, hypot, tau, inf, nan, exp, expm1, log1p, fabs, isfinite, acosh, asinh, atanh, isqrt, dist, fsum, erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp
+from _sifr.math import sqrt, floor, ceil, abs_val, log, cbrt, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, exp2, degrees, radians, isnan, isinf, trunc, copysign, signbit, fmod, remainder, hypot, fma, fmax, fmin, tau, inf, nan, exp, expm1, log1p, fabs, isfinite, isnormal, issubnormal, acosh, asinh, atanh, isqrt, dist, fsum, sumprod, erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp
 
 def factorial(n: int) -> int:
     if n < 0:
@@ -70,19 +70,33 @@ def perm(n: int, k: int) -> int:
         i = i + 1
     return result
 
-def isclose(a: float, b: float, rel_tol: float) -> bool:
+def log_base(x: float, base: float) -> float:
+    return log(x) / log(base)
+
+def isclose(a: float, b: float, rel_tol: float, abs_tol: float) -> bool:
+    if rel_tol < 0.0:
+        return False
+    if abs_tol < 0.0:
+        return False
+    if a == b:
+        return True
+    if isnan(a) or isnan(b):
+        return False
+    if isinf(a) or isinf(b):
+        return False
     diff: float = a - b
     if diff < 0.0:
         diff = 0.0 - diff
-    max_ab: float = a
-    if max_ab < 0.0:
-        max_ab = 0.0 - max_ab
+    a_abs: float = a
+    if a_abs < 0.0:
+        a_abs = 0.0 - a_abs
     b_abs: float = b
     if b_abs < 0.0:
         b_abs = 0.0 - b_abs
-    if b_abs > max_ab:
-        max_ab = b_abs
-    return diff <= rel_tol * max_ab
+    rel_bound: float = rel_tol * max_val(a_abs, b_abs)
+    if abs_tol > rel_bound:
+        rel_bound = abs_tol
+    return diff <= rel_bound
 
 def prod(data: list[int]) -> int:
     result: int = 1

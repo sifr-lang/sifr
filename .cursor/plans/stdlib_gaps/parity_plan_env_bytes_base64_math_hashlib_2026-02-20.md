@@ -364,10 +364,10 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M3: base64 strict decode options implemented
 - [x] M3: base64 tests ported and passing
 - [x] M3: base64 demo created and validated
-- [ ] M4: math missing function surface completed
+- [x] M4: math missing function surface completed
 - [ ] M4: math signature and semantic fixes completed
 - [ ] M4: expanded `test_math` parity port passing
-- [ ] M4: math demo created and validated
+- [x] M4: math demo created and validated
 - [ ] M5: hashlib object model implemented
 - [ ] M5: hashlib API/algorithm parity subset completed
 - [ ] M5: hashlib tests ported and passing
@@ -450,10 +450,10 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 
 ### Milestone 4 (`sifr.math`)
 
-- [ ] PR4-A Missing API surface
-  - [ ] `cbrt`, `exp2`, `fma`, `fmax`, `fmin`, `isnormal`, `issubnormal`, `remainder`, `signbit`, `sumprod`
-  - [ ] `log(x, base)` support
-  - [ ] `isclose(..., abs_tol)` support
+- [x] PR4-A Missing API surface
+  - [x] `cbrt`, `exp2`, `fma`, `fmax`, `fmin`, `isnormal`, `issubnormal`, `remainder`, `signbit`, `sumprod`
+  - [x] `log` base support via `log_base(x, base)` adapter (`log(x)` kept for compatibility until language-level optional args/overloads are available)
+  - [x] `isclose(..., abs_tol)` support (explicit 4-arg form in current Sifr surface)
 - [ ] PR4-B Semantic corrections
   - [ ] `dist` dimension mismatch behavior
   - [ ] robust `fsum` strategy
@@ -462,8 +462,8 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [ ] PR4-C Test-port completion
   - [ ] Broad `test_math.py` subset migrated
   - [ ] divergence tests for intentional Sifr differences
-- [ ] Milestone demo
-  - [ ] `demos/m4_math_demo.sifr` passes
+- [x] Milestone demo
+  - [x] `demos/m4_math_demo.sifr` passes
 
 ### Milestone 5 (`sifr.hashlib`)
 
