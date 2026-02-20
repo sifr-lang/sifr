@@ -1,10 +1,16 @@
-# Tests: assert_gt and assert_lt
-from sifr.test import assert_gt, assert_lt
+# Tests: assert_gt/assert_ge and assert_lt/assert_le
+from sifr.test import assert_gt, assert_ge, assert_lt, assert_le
 
 def main():
     assert_gt(10, 5)
     assert_gt(1, 0)
     assert_gt(100, 99)
+    assert_ge(10, 10)
+    assert_ge(11, 10)
     assert_lt(5, 10)
     assert_lt(0, 1)
     assert_lt(-1, 0)
+    assert_le(10, 10)
+    assert_le(9, 10)
+    assert_gt("b", "a")
+    assert_lt("a", "b")
