@@ -39,6 +39,8 @@
 
 mod rust_ir;
 pub use rust_ir::*;
+mod render;
+pub use render::*;
 
 use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};

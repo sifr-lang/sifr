@@ -20,7 +20,7 @@ Loop per milestone: **Work -> Validate -> Demo -> PR -> Review -> Merge -> Mark 
 
 ## milestone_rust_ir_types
 
-status: in_progress
+status: done
 
 - [x] Add `crates/sifr_codegen/src/rust_ir.rs` with core IR node families:
   - [x] `RustFile`, `RustItem`, `RustStmt`, `RustExpr`
@@ -31,23 +31,23 @@ status: in_progress
   - [x] `mod rust_ir;`
   - [x] `pub use rust_ir::*;`
 - [x] Add representative IR construction tests in `rust_ir.rs`
-- [ ] Demo: `demos/milestone_rust_ir_types_demo.rs`
-- [ ] Open PR for milestone 1
-- [ ] Review and merge PR for milestone 1
-- [ ] Mark `milestone_rust_ir_types` status done in phase docs
+- [x] Demo: `demos/milestone_rust_ir_types_demo.rs`
+- [x] Open PR for milestone 1
+- [x] Review and merge PR for milestone 1
+- [x] Mark `milestone_rust_ir_types` status done in phase docs
 
 ---
 
 ## milestone_rust_ir_renderer
 
-status: pending
+status: in_progress
 
-- [ ] Add `crates/sifr_codegen/src/render.rs` with `Renderer`
-- [ ] Implement full render coverage for all IR variants
-- [ ] Add `render_items`, `render_stmts`, `render_expr` convenience functions
-- [ ] Wire exports in `lib.rs` (`mod render; pub use render::*;`)
-- [ ] Add renderer snapshot/unit tests (including `RawCode` passthrough)
-- [ ] Demo: `demos/milestone_rust_ir_renderer_demo.rs`
+- [x] Add `crates/sifr_codegen/src/render.rs` with `Renderer`
+- [x] Implement full render coverage for all IR variants
+- [x] Add `render_items`, `render_stmts`, `render_expr` convenience functions
+- [x] Wire exports in `lib.rs` (`mod render; pub use render::*;`)
+- [x] Add renderer snapshot/unit tests (including `RawCode` passthrough)
+- [x] Demo: `demos/milestone_rust_ir_renderer_demo.rs`
 - [ ] Open PR(s), review, merge
 - [ ] Mark done in phase docs
 

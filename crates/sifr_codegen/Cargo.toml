@@ -12,6 +12,7 @@ sifr_type_system = { workspace = true }
 
 [dev-dependencies]
 sifr_python_parser = { workspace = true }
+insta = { workspace = true }
 
 [lints]
 workspace = true
