@@ -106,6 +106,7 @@ status: in_progress
 - [x] PR12 slice: migrate `sifr.collections` set intrinsics into registry lowerers
 - [x] PR13 slice: migrate `sifr.collections` counter/defaultdict intrinsics into registry lowerers
 - [x] PR14 slice: migrate core `sifr.bytes` intrinsics into registry lowerers
+- [x] PR15 slice: migrate `sifr.time` intrinsics (`time_now`, `sleep`, `time_format`, `perf_counter`, `monotonic`, `strptime`, `gmtime`, `localtime`) into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
