@@ -8282,7 +8282,6 @@ impl RustEmitter {
 
         if let Some(required_crate) = lowered.required_crate {
             self.intrinsic_registry_crates.insert(required_crate.to_string());
-            self.used_stdlib_modules.insert(required_crate.to_string());
         }
 
         self.write(&crate::render_expr(&lowered.expr));
