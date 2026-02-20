@@ -74,6 +74,7 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "getpid" => (os::lower_getpid(rendered_args), None),
         "cpu_count" => (os::lower_cpu_count(rendered_args), None),
         "stat_size" => (os::lower_stat_size(rendered_args), None),
+        "which" => (os::lower_which(rendered_args), None),
         "touch" => (pathlib::lower_touch(rendered_args), None),
         "resolve_path" => (pathlib::lower_resolve_path(rendered_args), None),
         "iterdir" => (pathlib::lower_iterdir(rendered_args), None),
@@ -179,6 +180,9 @@ mod tests {
 
         let cpus = lower_intrinsic("cpu_count", &[]).expect("cpu_count should lower");
         assert!(render_expr(&cpus.expr).contains("available_parallelism"));
+
+        let which = lower_intrinsic("which", &["tool".to_string()]).expect("which should lower");
+        assert!(render_expr(&which.expr).contains("std::env::var(\"PATH\")"));
     }
 
     #[test]
