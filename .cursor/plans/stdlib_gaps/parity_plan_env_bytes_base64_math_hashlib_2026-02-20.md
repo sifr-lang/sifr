@@ -365,7 +365,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M3: base64 tests ported and passing
 - [x] M3: base64 demo created and validated
 - [x] M4: math missing function surface completed
-- [ ] M4: math signature and semantic fixes completed
+- [x] M4: math signature and semantic fixes completed
 - [ ] M4: expanded `test_math` parity port passing
 - [x] M4: math demo created and validated
 - [ ] M5: hashlib object model implemented
@@ -454,11 +454,11 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] `cbrt`, `exp2`, `fma`, `fmax`, `fmin`, `isnormal`, `issubnormal`, `remainder`, `signbit`, `sumprod`
   - [x] `log` base support via `log_base(x, base)` adapter (`log(x)` kept for compatibility until language-level optional args/overloads are available)
   - [x] `isclose(..., abs_tol)` support (explicit 4-arg form in current Sifr surface)
-- [ ] PR4-B Semantic corrections
-  - [ ] `dist` dimension mismatch behavior
-  - [ ] robust `fsum` strategy
-  - [ ] accurate `nextafter` and `ulp` edge behavior
-  - [ ] tuple-return semantics (`frexp`, `modf`) adaptation
+- [x] PR4-B Semantic corrections
+  - [x] `dist` dimension mismatch behavior (safe `NaN` on length mismatch)
+  - [x] robust `fsum` strategy (Neumaier-style compensated summation + NaN/Inf handling)
+  - [x] accurate `nextafter` and `ulp` edge behavior
+  - [x] tuple-return semantics (`frexp`, `modf`) adaptation via pair helper accessors (`frexp_mantissa`/`frexp_exponent`, `modf_fractional`/`modf_integral`)
 - [ ] PR4-C Test-port completion
   - [ ] Broad `test_math.py` subset migrated
   - [ ] divergence tests for intentional Sifr differences

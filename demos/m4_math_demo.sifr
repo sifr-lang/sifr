@@ -1,5 +1,5 @@
-# Milestone 4 demo: sifr.math missing API surface baseline
-from sifr.math import cbrt, exp2, fma, log_base, isclose, sumprod, isnormal, issubnormal, remainder, trunc
+# Milestone 4 demo: sifr.math API + semantic parity baseline
+from sifr.math import cbrt, exp2, fma, log_base, isclose, sumprod, isnormal, issubnormal, remainder, trunc, dist, fsum, nextafter, ulp, frexp_exponent, modf_fractional, isnan, inf
 
 def main():
     print(trunc(cbrt(27.0)))
@@ -16,6 +16,12 @@ def main():
     print(isnormal(1.0))
     print(issubnormal(tiny_subnormal))
     print(remainder(5.5, 2.0) < 0.0)
+    print(isnan(dist([1.0, 2.0], [1.0])))
+    print(trunc(fsum([1e100, 1.0, -1e100])))
+    print(nextafter(1.0, inf) > 1.0)
+    print(ulp(1.0) > 0.0)
+    print(frexp_exponent(8.0))
+    print(modf_fractional(3.7) > 0.69)
 
 # expect-stdout: 3
 # expect-stdout: 8
@@ -25,4 +31,10 @@ def main():
 # expect-stdout: 32
 # expect-stdout: true
 # expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: 1
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: 4
 # expect-stdout: true
