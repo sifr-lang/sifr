@@ -60,3 +60,13 @@ pub(super) fn lower_stat_size(args: &[String]) -> Option<RustExpr> {
         borrow_expr(&args[0])
     )))
 }
+
+pub(super) fn lower_which(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __name = {}; std::env::var(\"PATH\").ok().and_then(|__path| __path.split(':').map(|d| std::path::Path::new(d).join(__name)).find(|p| p.is_file()).map(|p| p.to_string_lossy().to_string())) }}",
+        borrow_expr(&args[0])
+    )))
+}
