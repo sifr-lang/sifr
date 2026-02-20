@@ -1,0 +1,45 @@
+# Adapted CPython bytes subset for sifr.bytes
+from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
+
+def main():
+    data: list[int] = encode_utf8("mississippi")
+    print(count_byte(data, 115))
+
+    first_p: int | None = find_byte(data, 112)
+    if first_p is not None:
+        print(first_p)
+
+    not_found: int | None = find_byte(data, 120)
+    if not_found is None:
+        print("not found")
+
+    print(starts_with(data, encode_utf8("miss")))
+    print(ends_with(data, encode_utf8("ippi")))
+
+    try:
+        hx: str = bytes_to_hex(encode_utf8("Hi"))
+        print(hx)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    try:
+        parsed: list[int] = bytes_from_hex("48 69")
+        txt: str = decode_utf8(parsed)
+        print(txt)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    try:
+        bad: list[int] = bytes_from_hex("abc")
+        print(len(bad))
+    except ParseError as e:
+        print("odd digits safe")
+
+# expect-stdout: 4
+# expect-stdout: 8
+# expect-stdout: not found
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: 4869
+# expect-stdout: Hi
+# expect-stdout: odd digits safe

@@ -357,9 +357,9 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M1: env CPython tests ported and passing
 - [x] M1: env demo created and validated
 - [x] M2: bytes safety fixes (no wraparound, robust hex)
-- [ ] M2: bytes parity subset methods implemented
-- [ ] M2: bytes tests ported and passing
-- [ ] M2: bytes demo created and validated
+- [x] M2: bytes parity subset methods implemented
+- [x] M2: bytes tests ported and passing
+- [x] M2: bytes demo created and validated
 - [ ] M3: base64 API expansion (b64/standard/urlsafe/b32/b32hex/b16)
 - [ ] M3: base64 strict decode options implemented
 - [ ] M3: base64 tests ported and passing
@@ -420,14 +420,14 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] Reject out-of-range integers for byte conversion
   - [x] Remove panic paths in hex parsing
   - [x] Align hex decode errors with CPython-like positions/messages where feasible
-- [ ] PR2-B API expansion subset
-  - [ ] Add high-value byte utilities used by base64/hashlib parity work
-  - [ ] Keep behavior predictable with Result/Option safety model
-- [ ] PR2-C CPython test subset port
-  - [ ] fromhex/hex encoding-decoding core tests
-  - [ ] decode error-path tests
-- [ ] Milestone demo
-  - [ ] `demos/m2_bytes_demo.sifr` passes
+- [x] PR2-B API expansion subset
+  - [x] Add high-value byte utilities used by base64/hashlib parity work
+  - [x] Keep behavior predictable with Result/Option safety model
+- [x] PR2-C CPython test subset port
+  - [x] fromhex/hex encoding-decoding core tests
+  - [x] decode error-path tests
+- [x] Milestone demo
+  - [x] `demos/m2_bytes_demo.sifr` passes
 
 ### Milestone 3 (`sifr.base64`)
 
