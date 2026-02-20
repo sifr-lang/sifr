@@ -1,5 +1,5 @@
 # Milestone 3 demo: sifr.base64 parity baseline
-from sifr.base64 import b64encode, b64decode, b64encode_opts, b64decode_opts, standard_b64encode, standard_b64decode, b16encode, b16decode
+from sifr.base64 import b64encode, b64decode, b64encode_opts, b64decode_opts, standard_b64encode, standard_b64decode, b32hexencode, b32hexdecode, b16encode, b16decode
 
 def main():
     print(b64encode("sifr"))
@@ -23,6 +23,14 @@ def main():
         print(dec3)
     except ParseError as e:
         print("hex error: " + e.message)
+
+    b32h: str = b32hexencode("hello")
+    print(b32h)
+    try:
+        b32d: str = b32hexdecode(b32h)
+        print(b32d)
+    except ParseError as e:
+        print("b32hex error: " + e.message)
 
     try:
         _bad: str = b64decode("###")
@@ -48,6 +56,8 @@ def main():
 # expect-stdout: demo
 # expect-stdout: 4869
 # expect-stdout: Hi
+# expect-stdout: D1IMOR3F
+# expect-stdout: hello
 # expect-stdout: invalid-safe
 # expect-stdout: d3d3LnB5
 # expect-stdout: dGhvbi5v
