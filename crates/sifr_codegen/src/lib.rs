@@ -37,6 +37,21 @@
 #![allow(clippy::if_not_else)]
 #![allow(clippy::unnecessary_unwrap)]
 
+mod rust_ir;
+pub use rust_ir::*;
+mod render;
+pub use render::*;
+mod preamble;
+pub use preamble::*;
+mod context;
+pub use context::*;
+mod lower_expr;
+pub use lower_expr::*;
+mod lower_stmt;
+pub use lower_stmt::*;
+mod lower_item;
+pub use lower_item::*;
+
 use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};
 use std::collections::{HashMap, HashSet};
@@ -744,26 +759,59 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         }
     }
 
-    // Now assemble result: imports, enums, error classes, stdlib preamble, main output
-    // Emit HashMap/HashSet imports once at the top if needed by user code or any stdlib module.
-    let needs_hashmap = emitter.needs_hashmap || stdlib_needs_hashmap;
+    // Now assemble result: imports, enums, IR-backed preamble items, stdlib preamble, main output.
+    let needs_file_handles = emitter.needs_file_handles
+        || stdlib_needs_file_handles
+        || emitter.output.contains("__SIFR_FILE_HANDLES");
+    let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
+        || emitter.used_stdlib_modules.contains("_sifr.logging")
+        || emitter.output.contains("__SIFR_GLOBAL_LOG_LEVEL");
+
+    // File handle infrastructure always relies on HashMap + Mutex.
+    let needs_hashmap = emitter.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
     let needs_hashset = emitter.needs_hashset || stdlib_needs_hashset;
     let needs_vecdeque = emitter.needs_vecdeque || stdlib_needs_vecdeque;
     let needs_bigint = emitter.needs_bigint;
-    let mut result = String::new();
+
+    let mut import_items: Vec<RustItem> = Vec::new();
     if needs_hashmap {
-        result.push_str("use std::collections::HashMap;\n");
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "HashMap".to_string(),
+        ]));
     }
     if needs_hashset {
-        result.push_str("use std::collections::HashSet;\n");
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "HashSet".to_string(),
+        ]));
     }
     if needs_vecdeque {
-        result.push_str("use std::collections::VecDeque;\n");
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "VecDeque".to_string(),
+        ]));
     }
     if needs_bigint {
-        result.push_str("use num_bigint::BigInt;\n");
+        import_items.push(RustItem::Use(vec![
+            "num_bigint".to_string(),
+            "BigInt".to_string(),
+        ]));
     }
-    if needs_hashmap || needs_hashset || needs_vecdeque || needs_bigint {
+    if needs_file_handles || needs_logging {
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "sync".to_string(),
+            "Mutex".to_string(),
+        ]));
+    }
+
+    let mut result = String::new();
+    if !import_items.is_empty() {
+        result.push_str(&render_items(&import_items));
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -771,139 +819,77 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         result.push('\n');
     }
 
-    // Emit built-in error class struct definitions for any that are referenced
-    // Check BOTH the main output AND the stdlib preamble for references
+    // Emit built-in error class struct definitions for any that are referenced.
+    // For now this remains a compatibility shim that scans generated code.
     let combined_code = format!("{}{}", stdlib_preamble, emitter.output);
-    let user_defined_error_classes: HashSet<String> = module.classes.iter()
+    let user_defined_error_classes: HashSet<String> = module
+        .classes
+        .iter()
         .filter(|c| c.is_error_type)
         .map(|c| c.name.clone())
         .collect();
-    // Determine if file handles will be emitted (they always use IOError)
-    let needs_file_handles_check = emitter.needs_file_handles
-        || stdlib_needs_file_handles
-        || emitter.output.contains("__SIFR_FILE_HANDLES");
-    // Emit IOError with kind field and __io_err helper
     let io_error_referenced = is_builtin_error_referenced(&combined_code, "IOError")
-        || IO_ERROR_SUBCLASSES.iter().any(|s| is_builtin_error_referenced(&combined_code, s))
-        || needs_file_handles_check; // FileHandle always uses IOError
+        || IO_ERROR_SUBCLASSES
+            .iter()
+            .any(|s| is_builtin_error_referenced(&combined_code, s))
+        || needs_file_handles;
+
+    let mut preamble_items: Vec<RustItem> = Vec::new();
     if io_error_referenced && !user_defined_error_classes.contains("IOError") {
-        result.push_str("#[derive(Debug, Clone)]\n");
-        result.push_str("struct IOError {\n");
-        result.push_str("    message: String,\n");
-        result.push_str("    kind: String,\n");
-        result.push_str("}\n\n");
-        result.push_str("impl IOError {\n");
-        result.push_str("    fn new(message: String) -> Self { Self { message, kind: \"Other\".to_string() } }\n");
-        result.push_str("}\n\n");
-        result.push_str("impl std::fmt::Display for IOError {\n");
-        result.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
-        result.push_str("        write!(f, \"{}\", self.message)\n");
-        result.push_str("    }\n");
-        result.push_str("}\n\n");
-        result.push_str("impl std::error::Error for IOError {}\n\n");
-        result.push_str("fn __io_err(e: std::io::Error) -> IOError {\n");
-        result.push_str("    let msg = e.to_string();\n");
-        result.push_str("    let kind = match e.kind() {\n");
-        result.push_str("        std::io::ErrorKind::NotFound => \"FileNotFound\",\n");
-        result.push_str("        std::io::ErrorKind::PermissionDenied => \"PermissionDenied\",\n");
-        result.push_str("        std::io::ErrorKind::AlreadyExists => \"FileExists\",\n");
-        result.push_str("        _ => \"Other\",\n");
-        result.push_str("    };\n");
-        result.push_str("    IOError { message: msg, kind: kind.to_string() }\n");
-        result.push_str("}\n\n");
+        preamble_items.extend(build_io_error_items());
     }
 
-    // Other error types as structs
     for &error_name in BUILTIN_ERROR_CLASSES {
-        // Skip IOError and its subclasses (handled above)
+        // Skip IOError and its subclasses (handled separately)
         if error_name == "IOError" || IO_ERROR_SUBCLASSES.contains(&error_name) {
             continue;
         }
         let is_referenced = is_builtin_error_referenced(&combined_code, error_name);
         if is_referenced && !user_defined_error_classes.contains(error_name) {
-            result.push_str("#[derive(Debug, Clone)]\n");
-            result.push_str(&format!("struct {} {{\n", error_name));
-            result.push_str("    message: String,\n");
-            if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
-                result.push_str("    line: i64,\n");
-                result.push_str("    column: i64,\n");
+            let (extra_fields, defaults) = if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
+                (
+                    vec![
+                        ("line".to_string(), sifr_type_to_rust_type(&Type::Int)),
+                        ("column".to_string(), sifr_type_to_rust_type(&Type::Int)),
+                    ],
+                    vec![
+                        ("line".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
+                        ("column".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
+                    ],
+                )
             } else if error_name == "RegexError" {
-                result.push_str("    detail: String,\n");
-            }
-            result.push_str("}\n\n");
-            // Add new() constructor that accepts only message, defaulting extra fields
-            if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
-                result.push_str(&format!("impl {} {{\n", error_name));
-                result.push_str("    fn new(message: String) -> Self { Self { message, line: 0, column: 0 } }\n");
-                result.push_str("}\n\n");
-            } else if error_name == "RegexError" {
-                result.push_str(&format!("impl {} {{\n", error_name));
-                result.push_str("    fn new(message: String) -> Self { Self { message, detail: String::new() } }\n");
-                result.push_str("}\n\n");
+                (
+                    vec![("detail".to_string(), sifr_type_to_rust_type(&Type::Str))],
+                    vec![(
+                        "detail".to_string(),
+                        RustExpr::RawCode("String::new()".to_string()),
+                    )],
+                )
             } else {
-                result.push_str(&format!("impl {} {{\n", error_name));
-                result.push_str("    fn new(message: String) -> Self { Self { message } }\n");
-                result.push_str("}\n\n");
-            }
-            result.push_str(&format!("impl std::fmt::Display for {} {{\n", error_name));
-            result.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
-            result.push_str("        write!(f, \"{}\", self.message)\n");
-            result.push_str("    }\n");
-            result.push_str("}\n\n");
-            result.push_str(&format!("impl std::error::Error for {} {{}}\n\n", error_name));
+                (vec![], vec![])
+            };
+            preamble_items.extend(build_error_type_items(error_name, &extra_fields, &defaults));
         }
     }
 
-    // Emit file handle global state if open() built-in or any file handle intrinsic is used
-    let needs_file_handles = emitter.needs_file_handles
-        || stdlib_needs_file_handles
-        || emitter.output.contains("__SIFR_FILE_HANDLES");
+    // Emit file handle global state if open() built-in or any file handle intrinsic is used.
     if needs_file_handles {
-        result.push_str("use std::sync::Mutex;\n\n");
-        result.push_str("enum SifrFileHandle {\n");
-        result.push_str("    TextRead(std::io::BufReader<std::fs::File>),\n");
-        result.push_str("    TextWrite(std::io::BufWriter<std::fs::File>),\n");
-        result.push_str("    BinaryRead(std::io::BufReader<std::fs::File>),\n");
-        result.push_str("    BinaryWrite(std::io::BufWriter<std::fs::File>),\n");
-        result.push_str("}\n\n");
-        result.push_str("static __SIFR_FILE_HANDLES: std::sync::LazyLock<Mutex<HashMap<i64, SifrFileHandle>>> =\n");
-        result.push_str("    std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));\n\n");
-        // Ensure HashMap is imported
-        if !result.contains("use std::collections::HashMap;") {
-            result = format!("use std::collections::HashMap;\n\n{}", result);
-        }
-        // Emit FileHandle struct if not already defined by stdlib preamble
-        if !stdlib_preamble.contains("struct FileHandle {") && !result.contains("struct FileHandle {") {
-            result.push_str("#[derive(Debug, Clone)]\n");
-            result.push_str("struct FileHandle {\n");
-            result.push_str("    _handle: i64,\n");
-            result.push_str("    _mode: String,\n");
-            result.push_str("}\n\n");
-            result.push_str("impl FileHandle {\n");
-            result.push_str("    fn new(_handle: i64, _mode: String) -> Self { Self { _handle, _mode } }\n");
-            result.push_str("    fn read(&self) -> Result<String, IOError> { (|| -> Result<String, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::Read; let mut __s = String::new(); __r.read_to_string(&mut __s).map_err(__io_err)?; Ok(__s) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
-            result.push_str("    fn write(&self, data: &String) -> Result<(), IOError> { (|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextWrite(ref mut __w)) => { use std::io::Write; __w.write_all(__data.as_bytes()).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for writing\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
-            result.push_str("    fn readline(&self) -> Result<Option<String>, IOError> { (|| -> Result<Option<String>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::BufRead; let mut __line = String::new(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { Ok(None) } else { if __line.ends_with('\\n') { __line.pop(); if __line.ends_with('\\r') { __line.pop(); } } Ok(Some(__line)) } }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
-            result.push_str("    fn readlines(&self) -> Result<Vec<String>, IOError> { (|| -> Result<Vec<String>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::BufRead; let mut __lines: Vec<String> = Vec::new(); let mut __line = String::new(); loop { __line.clear(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { break; } let mut __l = __line.clone(); if __l.ends_with('\\n') { __l.pop(); if __l.ends_with('\\r') { __l.pop(); } } __lines.push(__l); } Ok(__lines) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
-            result.push_str("    fn close(&self) { let __hid = self._handle; __SIFR_FILE_HANDLES.lock().unwrap().remove(&__hid); }\n");
-            result.push_str("    fn read_bytes(&self) -> Result<Vec<i64>, IOError> { (|| -> Result<Vec<i64>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryRead(ref mut __r)) => { use std::io::Read; let mut __buf = Vec::new(); __r.read_to_end(&mut __buf).map_err(__io_err)?; Ok(__buf.into_iter().map(|b| b as i64).collect()) }, _ => Err(IOError { message: \"file not open for binary reading\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
-            result.push_str("    fn write_bytes(&self, data: &Vec<i64>) -> Result<(), IOError> { (|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryWrite(ref mut __w)) => { use std::io::Write; let __bytes: Vec<u8> = __data.iter().map(|&b| b as u8).collect(); __w.write_all(&__bytes).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for binary writing\".to_string(), kind: \"Other\".to_string() }) } })() }\n");
-            result.push_str("    fn __enter__(&self) -> &Self { self }\n");
-            result.push_str("    fn __exit__(&self) { self.close(); }\n");
-            result.push_str("}\n\n");
+        preamble_items.extend(build_file_handle_infra_items());
+        if !stdlib_preamble.contains("struct FileHandle {")
+            && !emitter.output.contains("struct FileHandle {")
+        {
+            preamble_items.extend(build_file_handle_struct_items());
         }
     }
 
-    // Emit global log level state if logging module is used
-    if emitter.used_stdlib_modules.contains("sifr.logging")
-        || emitter.used_stdlib_modules.contains("_sifr.logging")
-        || emitter.output.contains("__SIFR_GLOBAL_LOG_LEVEL")
-    {
-        if !result.contains("use std::sync::Mutex;") {
-            result.push_str("use std::sync::Mutex;\n\n");
-        }
-        result.push_str("static __SIFR_GLOBAL_LOG_LEVEL: std::sync::LazyLock<Mutex<i64>> =\n");
-        result.push_str("    std::sync::LazyLock::new(|| Mutex::new(20));\n\n");
+    // Emit global log level state if logging module is used.
+    if needs_logging {
+        preamble_items.extend(build_logging_items());
+    }
+
+    if !preamble_items.is_empty() {
+        result.push_str(&render_items(&preamble_items));
+        result.push('\n');
     }
 
     if !stdlib_preamble.is_empty() {
@@ -3044,7 +3030,41 @@ impl RustEmitter {
         }
     }
 
+    fn emit_lowered_stmts(&mut self, lowered_stmts: &[RustStmt]) {
+        for lowered_stmt in lowered_stmts {
+            match lowered_stmt {
+                RustStmt::Expr(lowered_expr) => {
+                    self.write_indent();
+                    self.write(&crate::render_expr(lowered_expr));
+                    self.write(";\n");
+                }
+                RustStmt::RawCode(code) => {
+                    self.write_indent();
+                    self.write(code);
+                    self.write("\n");
+                }
+                RustStmt::Break => {
+                    self.writeln("break;");
+                }
+                RustStmt::Continue => {
+                    self.writeln("continue;");
+                }
+                _ => {
+                    self.write_indent();
+                    let rendered = crate::render_stmts(std::slice::from_ref(lowered_stmt));
+                    self.write(rendered.trim_end());
+                    self.write("\n");
+                }
+            }
+        }
+    }
+
     fn emit_stmt(&mut self, stmt: &HirStmt) {
+        if let Some(lowered_stmts) = try_lower_simple_stmt(stmt, self.in_loop_with_else) {
+            self.emit_lowered_stmts(&lowered_stmts);
+            return;
+        }
+
         match stmt {
             HirStmt::Let { name, ty, value, is_mutable: _ } => {
                 self.write_indent();
@@ -4707,6 +4727,12 @@ impl RustEmitter {
     }
 
     fn expr_to_string(&mut self, expr: &HirExpr) -> String {
+        // Fast path for expressions already supported by IR lowering.
+        // This gradually removes reliance on the output-buffer swapping hack.
+        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
+            return crate::render_expr(&lowered_expr);
+        }
+
         let saved_output = std::mem::take(&mut self.output);
         let saved_indent = self.indent;
         self.indent = 0;
@@ -5507,6 +5533,11 @@ impl RustEmitter {
     }
 
     fn emit_expr(&mut self, expr: &HirExpr) {
+        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
+            self.write(&crate::render_expr(&lowered_expr));
+            return;
+        }
+
         match expr {
             HirExpr::IntLiteral(val) => {
                 self.write(&val.to_string());
@@ -9800,5 +9831,20 @@ mod tests {
         let rust_code = generate_rust(&module);
         assert!(rust_code.contains("println!()"), "should emit println!() for empty print");
         assert!(!rust_code.contains(r#"println!("{}", "")"#), "should NOT emit println with empty string arg");
+    }
+
+    #[test]
+    fn test_expr_to_string_fast_path_for_lowered_leafs() {
+        let mut emitter = RustEmitter::new();
+        let int_code = emitter.expr_to_string(&HirExpr::IntLiteral(7));
+        assert_eq!(int_code, "7_i64");
+
+        let bool_op = HirExpr::BoolOp {
+            op: "and".to_string(),
+            values: vec![HirExpr::BoolLiteral(true), HirExpr::BoolLiteral(false)],
+            ty: Type::Bool,
+        };
+        let bool_code = emitter.expr_to_string(&bool_op);
+        assert_eq!(bool_code, "true && false");
     }
 }
