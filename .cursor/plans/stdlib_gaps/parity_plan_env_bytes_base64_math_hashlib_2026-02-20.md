@@ -366,7 +366,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M3: base64 demo created and validated
 - [x] M4: math missing function surface completed
 - [x] M4: math signature and semantic fixes completed
-- [ ] M4: expanded `test_math` parity port passing
+- [x] M4: expanded `test_math` parity port passing
 - [x] M4: math demo created and validated
 - [ ] M5: hashlib object model implemented
 - [ ] M5: hashlib API/algorithm parity subset completed
@@ -459,9 +459,9 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] robust `fsum` strategy (Neumaier-style compensated summation + NaN/Inf handling)
   - [x] accurate `nextafter` and `ulp` edge behavior
   - [x] tuple-return semantics (`frexp`, `modf`) adaptation via pair helper accessors (`frexp_mantissa`/`frexp_exponent`, `modf_fractional`/`modf_integral`)
-- [ ] PR4-C Test-port completion
-  - [ ] Broad `test_math.py` subset migrated
-  - [ ] divergence tests for intentional Sifr differences
+- [x] PR4-C Test-port completion
+  - [x] Broad `test_math.py` subset migrated (`cpython_math.sifr`, `cpython_math_extended.sifr`, `cpython_math_missing_surface_subset.sifr`, `cpython_math_semantic_corrections_subset.sifr`, `cpython_math_parity_expanded_matrix.sifr`)
+  - [x] divergence tests for intentional Sifr differences (safe-`NaN` paths for non-`Result` APIs such as `dist` mismatch and invalid `remainder` cases)
 - [x] Milestone demo
   - [x] `demos/m4_math_demo.sifr` passes
 

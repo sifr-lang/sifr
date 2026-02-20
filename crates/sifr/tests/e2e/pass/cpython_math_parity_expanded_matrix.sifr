@@ -1,0 +1,87 @@
+# Expanded CPython test_math-inspired parity matrix for sifr.math (PR4-C)
+from sifr.test import assert_eq, assert_true, assert_false, assert_almost_eq
+from sifr.math import (
+    dist, fsum, nextafter, ulp, remainder,
+    frexp_mantissa, frexp_exponent, modf_fractional, modf_integral,
+    isnormal, issubnormal, signbit, isinf, isnan, inf, nan
+)
+
+def main():
+    empty: list[float] = []
+
+    # dist
+    assert_almost_eq(dist(empty, empty), 0.0, 0.0000001)
+    assert_almost_eq(dist([1.0, 2.0, 3.0], [1.0, 2.0, 3.0]), 0.0, 0.0000001)
+    assert_almost_eq(dist([1.0, 2.0, 3.0], [4.0, 6.0, 3.0]), 5.0, 0.0000001)
+    assert_true(isnan(dist([1.0], [1.0, 2.0])))
+
+    # fsum
+    assert_almost_eq(fsum(empty), 0.0, 0.0000001)
+    assert_almost_eq(fsum([1.0, -1.0]), 0.0, 0.0000001)
+    assert_almost_eq(fsum([1e100, 1.0, -1e100]), 1.0, 0.0000001)
+    assert_almost_eq(fsum([10000000000000000.0, 1.0, -10000000000000000.0]), 1.0, 0.0000001)
+    assert_true(isnan(fsum([inf, 0.0 - inf])))
+    assert_true(isinf(fsum([inf, 1.0])))
+
+    # nextafter
+    assert_true(nextafter(1.0, inf) > 1.0)
+    assert_true(nextafter(1.0, 0.0 - inf) < 1.0)
+    assert_almost_eq(nextafter(4503599627370496.0, inf), 4503599627370497.0, 0.0000001)
+    assert_almost_eq(nextafter(4503599627370496.0, 0.0 - inf), 4503599627370495.5, 0.0000001)
+    assert_true(nextafter(0.0, inf) == ulp(0.0))
+    assert_true(signbit(nextafter(0.0, -1.0)))
+    assert_false(signbit(nextafter(-0.0, 1.0)))
+    assert_true(isnan(nextafter(nan, 1.0)))
+    assert_true(isnan(nextafter(1.0, nan)))
+
+    # ulp
+    assert_almost_eq(ulp(1.0), nextafter(1.0, inf) - 1.0, 0.0000001)
+    assert_almost_eq(ulp(4503599627370496.0), 1.0, 0.0000001)
+    assert_almost_eq(ulp(9007199254740992.0), 2.0, 0.0000001)
+    assert_almost_eq(ulp(-1.0), ulp(1.0), 0.0000001)
+    assert_true(isinf(ulp(inf)))
+    assert_true(isnan(ulp(nan)))
+
+    # remainder
+    assert_almost_eq(remainder(5.0, 2.0), 1.0, 0.0000001)
+    assert_almost_eq(remainder(7.0, 2.0), -1.0, 0.0000001)
+    assert_almost_eq(remainder(5.5, 2.0), -0.5, 0.0000001)
+    assert_almost_eq(remainder(-5.5, 2.0), 0.5, 0.0000001)
+    assert_almost_eq(remainder(3.0, inf), 3.0, 0.0000001)
+    assert_true(isnan(remainder(inf, 2.0)))
+    assert_true(isnan(remainder(2.0, 0.0)))
+    assert_true(isnan(remainder(nan, 2.0)))
+    assert_true(isnan(remainder(2.0, nan)))
+
+    # frexp/modf adapters
+    assert_almost_eq(frexp_mantissa(1.0), 0.5, 0.0000001)
+    assert_eq(frexp_exponent(1.0), 1)
+    assert_almost_eq(frexp_mantissa(2.0), 0.5, 0.0000001)
+    assert_eq(frexp_exponent(2.0), 2)
+    assert_almost_eq(frexp_mantissa(-1.0), -0.5, 0.0000001)
+    assert_eq(frexp_exponent(-1.0), 1)
+    assert_true(isinf(frexp_mantissa(inf)))
+    assert_true(isnan(frexp_mantissa(nan)))
+
+    assert_almost_eq(modf_fractional(1.5), 0.5, 0.0000001)
+    assert_almost_eq(modf_integral(1.5), 1.0, 0.0000001)
+    assert_almost_eq(modf_fractional(-1.5), -0.5, 0.0000001)
+    assert_almost_eq(modf_integral(-1.5), -1.0, 0.0000001)
+    assert_true(modf_fractional(inf) == 0.0)
+    assert_true(isinf(modf_integral(inf)))
+    assert_true(modf_fractional(0.0 - inf) == 0.0)
+    assert_true(isinf(modf_integral(0.0 - inf)))
+    assert_true(isnan(modf_fractional(nan)))
+    assert_true(isnan(modf_integral(nan)))
+
+    # normal/subnormal
+    tiny: float = ulp(0.0)
+    assert_true(issubnormal(tiny))
+    assert_false(isnormal(tiny))
+    assert_true(isnormal(1.25))
+    assert_false(issubnormal(1.25))
+    assert_false(isnormal(0.0))
+
+    print("cpython_math_parity_expanded_matrix: pass")
+
+# expect-stdout: cpython_math_parity_expanded_matrix: pass
