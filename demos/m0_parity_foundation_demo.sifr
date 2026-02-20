@@ -1,0 +1,24 @@
+# Milestone 0 demo: parity foundation safety + harness baseline
+from sifr.bytes import decode_utf8
+from sifr.base64 import b64encode
+from sifr.test import assert_vector_eq
+
+def main():
+    # Safety behavior: out-of-range byte values return ParseError (no panic).
+    try:
+        bad: str = decode_utf8([256])
+        print(False)
+    except ParseError as e:
+        print(True)
+
+    # Harness behavior: vector-driven parity assertions.
+    inputs: list[str] = ["", "f", "fo", "foo"]
+    expected: list[str] = ["", "Zg==", "Zm8=", "Zm9v"]
+    actual: list[str] = []
+    for s in inputs:
+        actual.append(b64encode(s))
+    assert_vector_eq(actual, expected)
+    print(True)
+
+# expect-stdout: true
+# expect-stdout: true
