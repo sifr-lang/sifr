@@ -99,6 +99,7 @@ status: in_progress
 - [x] PR5 slice: migrate `sifr.os` command/argv intrinsics into registry lowerers with OS parity tests
 - [x] PR6 slice: migrate core `sifr.io` file/path intrinsics into registry lowerers with IO parity tests
 - [x] PR7 slice: migrate additional `sifr.os` intrinsics (`chdir`, `getpid`, `cpu_count`, `stat_size`) into registry lowerers
+- [x] PR8 slice: migrate remaining core `sifr.io` intrinsics (`append_text`, `walk_dir`) into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules

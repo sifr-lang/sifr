@@ -77,6 +77,7 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "write_text" => (io::lower_write_text(rendered_args), None),
         "exists" => (io::lower_exists(rendered_args), None),
         "read_lines" => (io::lower_read_lines(rendered_args), None),
+        "append_text" => (io::lower_append_text(rendered_args), None),
         "getcwd" => (io::lower_getcwd(rendered_args), None),
         "listdir" => (io::lower_listdir(rendered_args), None),
         "mkdir" => (io::lower_mkdir(rendered_args), None),
@@ -86,6 +87,7 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "is_file" => (io::lower_is_file(rendered_args), None),
         "is_dir" => (io::lower_is_dir(rendered_args), None),
         "copy_file" => (io::lower_copy_file(rendered_args), None),
+        "walk_dir" => (io::lower_walk_dir(rendered_args), None),
         "rmdir_all" => (io::lower_rmdir_all(rendered_args), None),
         "gettempdir" => (io::lower_gettempdir(rendered_args), None),
         "makedirs" => (io::lower_makedirs(rendered_args), None),
@@ -192,5 +194,12 @@ mod tests {
             render_expr(&gettempdir.expr),
             "std::env::temp_dir().display().to_string()"
         );
+
+        let append = lower_intrinsic("append_text", &["p".to_string(), "c".to_string()])
+            .expect("append_text lowers");
+        assert!(render_expr(&append.expr).contains("OpenOptions::new().append(true)"));
+
+        let walk = lower_intrinsic("walk_dir", &["root".to_string()]).expect("walk_dir lowers");
+        assert!(render_expr(&walk.expr).contains("fn __walk"));
     }
 }
