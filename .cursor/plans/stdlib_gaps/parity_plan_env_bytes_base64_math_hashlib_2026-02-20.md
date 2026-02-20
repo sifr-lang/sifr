@@ -438,14 +438,14 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [ ] `encodebytes/decodebytes`
 - [ ] PR3-A progress note: baseline wrappers implemented for `standard_b64*`, `b16*`, `encodebytes/decodebytes`; remaining gap is `b32hex*`
 - [ ] PR3-B strictness and parameter parity
-  - [ ] altchars support
-  - [ ] validate/ignorechars behavior
-  - [ ] wrapcol behavior
+  - [x] altchars support
+  - [x] validate/ignorechars behavior
+  - [x] wrapcol behavior
 - [ ] PR3-C CPython parity tests
   - [ ] RFC vectors
   - [ ] invalid input behavior
   - [ ] round-trip stress/property-like cases
-- [ ] PR3-C progress note: added `cpython_base64_subset.sifr` baseline; full vector/strictness matrix still pending
+- [ ] PR3-C progress note: added `cpython_base64_subset.sifr` and `cpython_base64_strictness_subset.sifr`; full RFC vector/property matrix still pending
 - [x] Milestone demo
   - [x] `demos/m3_base64_demo.sifr` passes
 

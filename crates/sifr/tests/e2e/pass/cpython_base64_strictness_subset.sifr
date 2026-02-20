@@ -1,0 +1,74 @@
+# Adapted CPython strictness subset for sifr.base64 options
+from sifr.base64 import b64encode_opts, b64decode_opts
+
+def main():
+    # wrapcol behavior (8)
+    try:
+        wrapped: str = b64encode_opts("www.python.org", "", 8)
+        print(wrapped)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    # altchars translation for '+' and '/'.
+    try:
+        e1: str = b64encode_opts("~~~", "*$", 0)
+        print(e1)
+        d1: str = b64decode_opts(e1, "*$", False, "")
+        print(d1)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    try:
+        e2: str = b64encode_opts("???", "*$", 0)
+        print(e2)
+        d2: str = b64decode_opts(e2, "*$", False, "")
+        print(d2)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    # validate=False should discard invalid chars.
+    try:
+        loose: str = b64decode_opts("YWJj!", "", False, "")
+        print(loose)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    # validate=True should reject invalid chars.
+    try:
+        strict_fail: str = b64decode_opts("YWJj!", "", True, "")
+        print(strict_fail)
+    except ParseError as e:
+        print("strict-invalid-safe")
+
+    # ignorechars should permit strict decoding with known ignored chars.
+    try:
+        with_ignore: str = b64decode_opts("YW\nJj", "", True, "\n")
+        print(with_ignore)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    # invalid option values are safe errors.
+    try:
+        bad_alt: str = b64encode_opts("x", "+", 0)
+        print(bad_alt)
+    except ParseError as e:
+        print("invalid-altchars-safe")
+
+    try:
+        bad_wrap: str = b64encode_opts("x", "", -1)
+        print(bad_wrap)
+    except ParseError as e:
+        print("invalid-wrap-safe")
+
+# expect-stdout: d3d3LnB5
+# expect-stdout: dGhvbi5v
+# expect-stdout: cmc=
+# expect-stdout: fn5*
+# expect-stdout: ~~~
+# expect-stdout: Pz8$
+# expect-stdout: ???
+# expect-stdout: abc
+# expect-stdout: strict-invalid-safe
+# expect-stdout: abc
+# expect-stdout: invalid-altchars-safe
+# expect-stdout: invalid-wrap-safe

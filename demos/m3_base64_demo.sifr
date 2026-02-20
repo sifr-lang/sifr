@@ -1,5 +1,5 @@
 # Milestone 3 demo: sifr.base64 parity baseline
-from sifr.base64 import b64encode, b64decode, standard_b64encode, standard_b64decode, b16encode, b16decode
+from sifr.base64 import b64encode, b64decode, b64encode_opts, b64decode_opts, standard_b64encode, standard_b64decode, b16encode, b16decode
 
 def main():
     print(b64encode("sifr"))
@@ -30,6 +30,18 @@ def main():
     except ParseError as e:
         print("invalid-safe")
 
+    try:
+        wrapped: str = b64encode_opts("www.python.org", "", 8)
+        print(wrapped)
+    except ParseError as e:
+        print("opts error: " + e.message)
+
+    try:
+        strict: str = b64decode_opts("YWJj!", "", True, "")
+        print(strict)
+    except ParseError as e:
+        print("strict-safe")
+
 # expect-stdout: c2lmcg==
 # expect-stdout: sifr
 # expect-stdout: ZGVtbw==
@@ -37,3 +49,7 @@ def main():
 # expect-stdout: 4869
 # expect-stdout: Hi
 # expect-stdout: invalid-safe
+# expect-stdout: d3d3LnB5
+# expect-stdout: dGhvbi5v
+# expect-stdout: cmc=
+# expect-stdout: strict-safe

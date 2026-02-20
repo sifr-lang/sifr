@@ -737,6 +737,21 @@ fn intrinsic_crypto() -> IntrinsicModule {
     // base64_decode(s: str) -> Result[str, ParseError]
     functions.insert("base64_decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "ParseError")));
 
+    // base64_encode_opts(s: str, altchars: str, wrapcol: int) -> Result[str, ParseError]
+    functions.insert("base64_encode_opts".to_string(), FunctionType::all_borrow(vec![
+            ("s".to_string(), Type::Str),
+            ("altchars".to_string(), Type::Str),
+            ("wrapcol".to_string(), Type::Int),
+        ], result_ty(Type::Str, "ParseError")));
+
+    // base64_decode_opts(s: str, altchars: str, validate: bool, ignorechars: str) -> Result[str, ParseError]
+    functions.insert("base64_decode_opts".to_string(), FunctionType::all_borrow(vec![
+            ("s".to_string(), Type::Str),
+            ("altchars".to_string(), Type::Str),
+            ("validate".to_string(), Type::Bool),
+            ("ignorechars".to_string(), Type::Str),
+        ], result_ty(Type::Str, "ParseError")));
+
     // random_uniform(min: float, max: float) -> float
     functions.insert("random_uniform".to_string(), FunctionType::all_borrow(vec![
             ("min".to_string(), Type::Float),
