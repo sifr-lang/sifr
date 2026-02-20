@@ -4716,6 +4716,12 @@ impl RustEmitter {
     }
 
     fn expr_to_string(&mut self, expr: &HirExpr) -> String {
+        // Fast path for expressions already supported by IR lowering.
+        // This gradually removes reliance on the output-buffer swapping hack.
+        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
+            return crate::render_expr(&lowered_expr);
+        }
+
         let saved_output = std::mem::take(&mut self.output);
         let saved_indent = self.indent;
         self.indent = 0;
@@ -9814,5 +9820,20 @@ mod tests {
         let rust_code = generate_rust(&module);
         assert!(rust_code.contains("println!()"), "should emit println!() for empty print");
         assert!(!rust_code.contains(r#"println!("{}", "")"#), "should NOT emit println with empty string arg");
+    }
+
+    #[test]
+    fn test_expr_to_string_fast_path_for_lowered_leafs() {
+        let mut emitter = RustEmitter::new();
+        let int_code = emitter.expr_to_string(&HirExpr::IntLiteral(7));
+        assert_eq!(int_code, "7_i64");
+
+        let bool_op = HirExpr::BoolOp {
+            op: "and".to_string(),
+            values: vec![HirExpr::BoolLiteral(true), HirExpr::BoolLiteral(false)],
+            ty: Type::Bool,
+        };
+        let bool_code = emitter.expr_to_string(&bool_op);
+        assert_eq!(bool_code, "true && false");
     }
 }
