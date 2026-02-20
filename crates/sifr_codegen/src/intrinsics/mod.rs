@@ -9,6 +9,7 @@ mod pathlib;
 mod test;
 mod collections;
 mod bytes;
+mod time;
 
 use crate::RustExpr;
 
@@ -137,6 +138,17 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "decode_utf8" => (bytes::lower_decode_utf8(rendered_args), None),
         "bytes_to_hex" => (bytes::lower_bytes_to_hex(rendered_args), None),
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(rendered_args), None),
+        "time_now" => (time::lower_time_now(rendered_args), None),
+        "sleep" => (time::lower_sleep(rendered_args), None),
+        "time_format" => (time::lower_time_format(rendered_args), None),
+        "perf_counter" => (time::lower_perf_counter(rendered_args), None),
+        "monotonic" => (time::lower_monotonic(rendered_args), None),
+        "strptime" => (time::lower_strptime(rendered_args), None),
+        "gmtime" => (time::lower_gmtime(rendered_args), None),
+        "localtime" => (time::lower_localtime(rendered_args), None),
+        "_strptime_intrinsic" => (time::lower_strptime(rendered_args), None),
+        "_gmtime_intrinsic" => (time::lower_gmtime(rendered_args), None),
+        "_localtime_intrinsic" => (time::lower_localtime(rendered_args), None),
         _ => return None,
     };
 
@@ -332,5 +344,38 @@ mod tests {
         let from_hex =
             lower_intrinsic("bytes_from_hex", &["hex".to_string()]).expect("bytes_from_hex");
         assert!(render_expr(&from_hex.expr).contains("invalid hex character"));
+    }
+
+    #[test]
+    fn lowers_time_intrinsics_via_registry() {
+        let now = lower_intrinsic("time_now", &[]).expect("time_now");
+        assert!(render_expr(&now.expr).contains("SystemTime::now()"));
+
+        let sleep = lower_intrinsic("sleep", &["0.1".to_string()]).expect("sleep");
+        assert!(render_expr(&sleep.expr).contains("from_secs_f64"));
+
+        let fmt = lower_intrinsic("time_format", &["secs".to_string(), "mask".to_string()])
+            .expect("time_format");
+        assert!(render_expr(&fmt.expr).contains("DateTime::from_timestamp"));
+
+        let perf = lower_intrinsic("perf_counter", &[]).expect("perf_counter");
+        assert!(render_expr(&perf.expr).contains("OnceLock<std::time::Instant>"));
+
+        let mono = lower_intrinsic("monotonic", &[]).expect("monotonic");
+        assert!(render_expr(&mono.expr).contains("OnceLock<std::time::Instant>"));
+
+        let parse =
+            lower_intrinsic("strptime", &["s".to_string(), "f".to_string()]).expect("strptime");
+        assert!(render_expr(&parse.expr).contains("NaiveDateTime::parse_from_str"));
+
+        let gmt = lower_intrinsic("gmtime", &["ts".to_string()]).expect("gmtime");
+        assert!(render_expr(&gmt.expr).contains("DateTime::<Utc>::from_timestamp"));
+
+        let local = lower_intrinsic("localtime", &["ts".to_string()]).expect("localtime");
+        assert!(render_expr(&local.expr).contains("with_timezone(&Local)"));
+
+        let parse_alias = lower_intrinsic("_strptime_intrinsic", &["s".to_string(), "f".to_string()])
+            .expect("_strptime_intrinsic");
+        assert!(render_expr(&parse_alias.expr).contains("NaiveDateTime::parse_from_str"));
     }
 }
