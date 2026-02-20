@@ -57,7 +57,11 @@ def main():
         print(f"decode error: {err.message}")
 
     # Hex encoding
-    print(f"'hello' as hex: {bytes_to_hex(encode_utf8('hello'))}")
+    try:
+        hex_hello: str = bytes_to_hex(encode_utf8("hello"))
+        print(f"'hello' as hex: {hex_hello}")
+    except ParseError as err:
+        print(f"hex encode error: {err.message}")
 
     # Hex decoding
     try:
