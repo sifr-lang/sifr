@@ -115,6 +115,23 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "set_len" => (collections::lower_set_len(rendered_args), None),
         "set_union" => (collections::lower_set_union(rendered_args), None),
         "set_intersection" => (collections::lower_set_intersection(rendered_args), None),
+        "counter_from_list" => (collections::lower_counter_from_list(rendered_args), Some("serde_json")),
+        "counter_get" => (collections::lower_counter_get(rendered_args), Some("serde_json")),
+        "counter_most_common" => (
+            collections::lower_counter_most_common(rendered_args),
+            Some("serde_json"),
+        ),
+        "counter_total" => (collections::lower_counter_total(rendered_args), Some("serde_json")),
+        "counter_values" => (collections::lower_counter_values(rendered_args), Some("serde_json")),
+        "counter_keys" => (collections::lower_counter_keys(rendered_args), Some("serde_json")),
+        "counter_items" => (collections::lower_counter_items(rendered_args), Some("serde_json")),
+        "counter_increment" => (
+            collections::lower_counter_increment(rendered_args),
+            Some("serde_json"),
+        ),
+        "defaultdict_new" => (collections::lower_defaultdict_new(rendered_args), None),
+        "defaultdict_get" => (collections::lower_defaultdict_get(rendered_args), Some("serde_json")),
+        "defaultdict_set" => (collections::lower_defaultdict_set(rendered_args), Some("serde_json")),
         _ => return None,
     };
 
@@ -272,5 +289,27 @@ mod tests {
             lower_intrinsic("set_intersection", &["a".to_string(), "b".to_string()])
                 .expect("set_intersection lowers");
         assert!(render_expr(&inter.expr).contains("collect::<Vec<i64>>()"));
+    }
+
+    #[test]
+    fn lowers_collections_counter_intrinsics_via_registry() {
+        let from_list =
+            lower_intrinsic("counter_from_list", &["vals".to_string()]).expect("counter_from_list");
+        assert!(render_expr(&from_list.expr).contains("HashMap::<String, i64>"));
+
+        let get = lower_intrinsic("counter_get", &["data".to_string(), "k".to_string()])
+            .expect("counter_get");
+        assert!(render_expr(&get.expr).contains("serde_json::from_str"));
+
+        let incr = lower_intrinsic("counter_increment", &["data".to_string(), "k".to_string()])
+            .expect("counter_increment");
+        assert!(render_expr(&incr.expr).contains("or_insert(0) += 1"));
+
+        let dd_set = lower_intrinsic(
+            "defaultdict_set",
+            &["dd".to_string(), "key".to_string(), "v".to_string()],
+        )
+        .expect("defaultdict_set");
+        assert!(render_expr(&dd_set.expr).contains("serde_json::json!"));
     }
 }

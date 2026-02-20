@@ -104,6 +104,7 @@ status: in_progress
 - [x] PR10 slice: migrate `sifr.os.which` into registry lowerers
 - [x] PR11 slice: migrate core `sifr.test` assertion intrinsics into registry lowerers
 - [x] PR12 slice: migrate `sifr.collections` set intrinsics into registry lowerers
+- [x] PR13 slice: migrate `sifr.collections` counter/defaultdict intrinsics into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
