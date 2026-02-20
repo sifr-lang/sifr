@@ -3261,9 +3261,32 @@ impl RustEmitter {
                 }
             }
             HirStmt::Expr { expr } => {
-                self.write_indent();
-                self.emit_expr(expr);
-                self.write(";\n");
+                if let Some(lowered_stmts) = try_lower_expr_stmt(expr) {
+                    for lowered_stmt in &lowered_stmts {
+                        match lowered_stmt {
+                            RustStmt::Expr(lowered_expr) => {
+                                self.write_indent();
+                                self.write(&crate::render_expr(lowered_expr));
+                                self.write(";\n");
+                            }
+                            RustStmt::RawCode(code) => {
+                                self.write_indent();
+                                self.write(code);
+                                self.write("\n");
+                            }
+                            _ => {
+                                self.write_indent();
+                                let rendered = crate::render_stmts(std::slice::from_ref(lowered_stmt));
+                                self.write(rendered.trim_end());
+                                self.write("\n");
+                            }
+                        }
+                    }
+                } else {
+                    self.write_indent();
+                    self.emit_expr(expr);
+                    self.write(";\n");
+                }
             }
             HirStmt::If {
                 condition,
@@ -5493,6 +5516,11 @@ impl RustEmitter {
     }
 
     fn emit_expr(&mut self, expr: &HirExpr) {
+        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
+            self.write(&crate::render_expr(&lowered_expr));
+            return;
+        }
+
         match expr {
             HirExpr::IntLiteral(val) => {
                 self.write(&val.to_string());
