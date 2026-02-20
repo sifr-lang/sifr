@@ -1,6 +1,6 @@
 # Demo: milestone_codegen_intrinsic_migration (registry scaffold)
 # This demo exercises math intrinsics routed through the new registry path.
-from sifr.math import sqrt, floor, ceil, pow_val
+from sifr.math import sqrt, floor, ceil, pow_val, round_val, atan2, isfinite
 
 def main():
     base: float = 9.0
@@ -8,13 +8,22 @@ def main():
     rounded_down: int = floor(3.9)
     rounded_up: int = ceil(3.1)
     powered: float = pow_val(2.0, 3.0)
+    rounded: int = round_val(3.6)
+    angle: float = atan2(1.0, 1.0)
+    finite: bool = isfinite(powered)
 
     print(f"root = {root}")
     print(f"rounded_down = {rounded_down}")
     print(f"rounded_up = {rounded_up}")
     print(f"powered = {powered}")
+    print(f"rounded = {rounded}")
+    print(f"angle_positive = {angle > 0.0}")
+    print(f"finite = {finite}")
 
 # expect-stdout: root = 3
 # expect-stdout: rounded_down = 3
 # expect-stdout: rounded_up = 4
 # expect-stdout: powered = 8
+# expect-stdout: rounded = 4
+# expect-stdout: angle_positive = true
+# expect-stdout: finite = true

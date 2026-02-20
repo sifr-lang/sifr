@@ -23,6 +23,41 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "cos" => (math::lower_cos(rendered_args), None),
         "tan" => (math::lower_tan(rendered_args), None),
         "pow_val" => (math::lower_pow_val(rendered_args), None),
+        "min_val" => (math::lower_min_val(rendered_args), None),
+        "max_val" => (math::lower_max_val(rendered_args), None),
+        "round_val" => (math::lower_round_val(rendered_args), None),
+        "asin" => (math::lower_asin(rendered_args), None),
+        "acos" => (math::lower_acos(rendered_args), None),
+        "atan" => (math::lower_atan(rendered_args), None),
+        "atan2" => (math::lower_atan2(rendered_args), None),
+        "sinh" => (math::lower_sinh(rendered_args), None),
+        "cosh" => (math::lower_cosh(rendered_args), None),
+        "tanh" => (math::lower_tanh(rendered_args), None),
+        "log10" => (math::lower_log10(rendered_args), None),
+        "log2" => (math::lower_log2(rendered_args), None),
+        "degrees" => (math::lower_degrees(rendered_args), None),
+        "radians" => (math::lower_radians(rendered_args), None),
+        "isnan" => (math::lower_isnan(rendered_args), None),
+        "isinf" => (math::lower_isinf(rendered_args), None),
+        "trunc" => (math::lower_trunc(rendered_args), None),
+        "copysign" => (math::lower_copysign(rendered_args), None),
+        "signbit" => (math::lower_signbit(rendered_args), None),
+        "fmod" => (math::lower_fmod(rendered_args), None),
+        "hypot" => (math::lower_hypot(rendered_args), None),
+        "fma" => (math::lower_fma(rendered_args), None),
+        "fmax" => (math::lower_fmax(rendered_args), None),
+        "fmin" => (math::lower_fmin(rendered_args), None),
+        "exp" => (math::lower_exp(rendered_args), None),
+        "expm1" => (math::lower_expm1(rendered_args), None),
+        "log1p" => (math::lower_log1p(rendered_args), None),
+        "fabs" => (math::lower_fabs(rendered_args), None),
+        "isfinite" => (math::lower_isfinite(rendered_args), None),
+        "isnormal" => (math::lower_isnormal(rendered_args), None),
+        "issubnormal" => (math::lower_issubnormal(rendered_args), None),
+        "acosh" => (math::lower_acosh(rendered_args), None),
+        "asinh" => (math::lower_asinh(rendered_args), None),
+        "atanh" => (math::lower_atanh(rendered_args), None),
+        "isqrt" => (math::lower_isqrt(rendered_args), None),
         "json_loads" => (json::lower_json_loads(rendered_args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(rendered_args), Some("serde_json")),
         _ => return None,
@@ -47,6 +82,21 @@ mod tests {
         let lowered = lower_intrinsic("pow_val", &["a".to_string(), "b".to_string()])
             .expect("pow_val should lower");
         assert_eq!(render_expr(&lowered.expr), "(a).powf(b)");
+
+        let lowered = lower_intrinsic("atan2", &["y".to_string(), "x".to_string()])
+            .expect("atan2 should lower");
+        assert_eq!(render_expr(&lowered.expr), "(y).atan2(x)");
+
+        let lowered = lower_intrinsic("round_val", &["n".to_string()])
+            .expect("round_val should lower");
+        assert_eq!(render_expr(&lowered.expr), "(n).round() as i64");
+
+        let lowered = lower_intrinsic("isfinite", &["f".to_string()])
+            .expect("isfinite should lower");
+        assert_eq!(render_expr(&lowered.expr), "(f).is_finite()");
+
+        let lowered = lower_intrinsic("isqrt", &["v".to_string()]).expect("isqrt should lower");
+        assert_eq!(render_expr(&lowered.expr), "{ let __n = v as f64; __n.sqrt() as i64 }");
     }
 
     #[test]
