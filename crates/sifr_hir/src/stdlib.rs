@@ -810,6 +810,12 @@ fn intrinsic_crypto() -> IntrinsicModule {
     // b32decode(s: str) -> Result[str, ParseError]
     functions.insert("b32decode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "ParseError")));
 
+    // b32hexencode(s: str) -> str
+    functions.insert("b32hexencode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], Type::Str));
+
+    // b32hexdecode(s: str) -> Result[str, ParseError]
+    functions.insert("b32hexdecode".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::Str, "ParseError")));
+
     IntrinsicModule {
         functions,
         constants: HashMap::new(),

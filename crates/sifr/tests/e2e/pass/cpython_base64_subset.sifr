@@ -4,6 +4,7 @@ from sifr.base64 import (
     standard_b64encode, standard_b64decode,
     urlsafe_b64encode, urlsafe_b64decode,
     b32encode, b32decode,
+    b32hexencode, b32hexdecode,
     b16encode, b16decode,
     encodebytes, decodebytes
 )
@@ -39,6 +40,14 @@ def main():
     except ParseError as e:
         print("unexpected: " + e.message)
 
+    b32h: str = b32hexencode("hello")
+    print(len(b32h) > 0)
+    try:
+        b32hd: str = b32hexdecode(b32h)
+        print(b32hd)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
     try:
         h: str = b16encode("Hi")
         print(h)
@@ -64,6 +73,8 @@ def main():
 # expect-stdout: foo
 # expect-stdout: Zm9v
 # expect-stdout: foo
+# expect-stdout: true
+# expect-stdout: hello
 # expect-stdout: true
 # expect-stdout: hello
 # expect-stdout: true

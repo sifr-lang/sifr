@@ -8002,6 +8002,16 @@ impl RustEmitter {
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write("; let __s = __s.trim_end_matches('='); let mut __bits = 0u64; let mut __bit_count = 0u32; let mut __out: Vec<u8> = Vec::new(); for __c in __s.chars() { let __val = __b32_alpha.iter().position(|&b| b as char == __c.to_ascii_uppercase()).ok_or_else(|| ParseError { message: format!(\"invalid base32 char: {}\", __c) })? as u64; __bits = (__bits << 5) | __val; __bit_count += 5; if __bit_count >= 8 { __bit_count -= 8; __out.push(((__bits >> __bit_count) & 0xff) as u8); } } String::from_utf8(__out).map_err(|e| ParseError { message: e.to_string() }) })()");
             }
+            "b32hexencode" => {
+                self.write("{ let __b32_alpha = b\"0123456789ABCDEFGHIJKLMNOPQRSTUV\"; let __data = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write(".as_bytes(); let mut __out = String::new(); let mut __i = 0usize; while __i < __data.len() { let __b0 = __data[__i] as u64; let __b1 = if __i+1 < __data.len() { __data[__i+1] as u64 } else { 0 }; let __b2 = if __i+2 < __data.len() { __data[__i+2] as u64 } else { 0 }; let __b3 = if __i+3 < __data.len() { __data[__i+3] as u64 } else { 0 }; let __b4 = if __i+4 < __data.len() { __data[__i+4] as u64 } else { 0 }; let __buf = (__b0<<32)|(__b1<<24)|(__b2<<16)|(__b3<<8)|__b4; let __n = ((__data.len() - __i).min(5)) as u64; for __j in 0..8u64 { if __j < (__n*8+4)/5 { __out.push(__b32_alpha[((__buf >> (35 - __j*5)) & 0x1f) as usize] as char); } else { __out.push('='); } } __i += 5; } __out }");
+            }
+            "b32hexdecode" => {
+                self.write("(|| -> Result<String, ParseError> { let __b32_alpha = b\"0123456789ABCDEFGHIJKLMNOPQRSTUV\"; let __s = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; let __s = __s.trim_end_matches('='); let mut __bits = 0u64; let mut __bit_count = 0u32; let mut __out: Vec<u8> = Vec::new(); for __c in __s.chars() { let __val = __b32_alpha.iter().position(|&b| b as char == __c.to_ascii_uppercase()).ok_or_else(|| ParseError { message: format!(\"invalid base32hex char: {}\", __c) })? as u64; __bits = (__bits << 5) | __val; __bit_count += 5; if __bit_count >= 8 { __bit_count -= 8; __out.push(((__bits >> __bit_count) & 0xff) as u8); } } String::from_utf8(__out).map_err(|e| ParseError { message: e.to_string() }) })()");
+            }
             // sifr.platform new intrinsics
             "platform_release" => {
                 self.write("{ std::process::Command::new(\"uname\").arg(\"-r\").output().map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default() }");

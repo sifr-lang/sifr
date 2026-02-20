@@ -360,8 +360,8 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M2: bytes parity subset methods implemented
 - [x] M2: bytes tests ported and passing
 - [x] M2: bytes demo created and validated
-- [ ] M3: base64 API expansion (b64/standard/urlsafe/b32/b32hex/b16)
-- [ ] M3: base64 strict decode options implemented
+- [x] M3: base64 API expansion (b64/standard/urlsafe/b32/b32hex/b16)
+- [x] M3: base64 strict decode options implemented
 - [ ] M3: base64 tests ported and passing
 - [x] M3: base64 demo created and validated
 - [ ] M4: math missing function surface completed
@@ -431,13 +431,12 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 
 ### Milestone 3 (`sifr.base64`)
 
-- [ ] PR3-A API expansion
-  - [ ] `standard_b64encode/decode`
-  - [ ] `b32hexencode/decode`
-  - [ ] `b16encode/decode`
-  - [ ] `encodebytes/decodebytes`
-- [ ] PR3-A progress note: baseline wrappers implemented for `standard_b64*`, `b16*`, `encodebytes/decodebytes`; remaining gap is `b32hex*`
-- [ ] PR3-B strictness and parameter parity
+- [x] PR3-A API expansion
+  - [x] `standard_b64encode/decode`
+  - [x] `b32hexencode/decode`
+  - [x] `b16encode/decode`
+  - [x] `encodebytes/decodebytes`
+- [x] PR3-B strictness and parameter parity
   - [x] altchars support
   - [x] validate/ignorechars behavior
   - [x] wrapcol behavior
