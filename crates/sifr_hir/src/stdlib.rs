@@ -130,6 +130,12 @@ fn intrinsic_math() -> IntrinsicModule {
     // log(x: float) -> float
     functions.insert("log".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
 
+    // cbrt(x: float) -> float
+    functions.insert("cbrt".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
+    // exp2(x: float) -> float
+    functions.insert("exp2".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
+
     // sin(x: float) -> float
     functions.insert("sin".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
 
@@ -196,11 +202,26 @@ fn intrinsic_math() -> IntrinsicModule {
     // copysign(x: float, y: float) -> float
     functions.insert("copysign".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
 
+    // signbit(x: float) -> bool
+    functions.insert("signbit".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Bool));
+
     // fmod(x: float, y: float) -> float
     functions.insert("fmod".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
 
+    // remainder(x: float, y: float) -> float
+    functions.insert("remainder".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
+
     // hypot(x: float, y: float) -> float
     functions.insert("hypot".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
+
+    // fma(x: float, y: float, z: float) -> float
+    functions.insert("fma".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float), ("z".to_string(), Type::Float)], Type::Float));
+
+    // fmax(x: float, y: float) -> float
+    functions.insert("fmax".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
+
+    // fmin(x: float, y: float) -> float
+    functions.insert("fmin".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float), ("y".to_string(), Type::Float)], Type::Float));
 
     // exp(x: float) -> float
     functions.insert("exp".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
@@ -216,6 +237,12 @@ fn intrinsic_math() -> IntrinsicModule {
 
     // isfinite(x: float) -> bool
     functions.insert("isfinite".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Bool));
+
+    // isnormal(x: float) -> bool
+    functions.insert("isnormal".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Bool));
+
+    // issubnormal(x: float) -> bool
+    functions.insert("issubnormal".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Bool));
 
     // acosh(x: float) -> float
     functions.insert("acosh".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));
@@ -234,6 +261,9 @@ fn intrinsic_math() -> IntrinsicModule {
 
     // fsum(data: list[float]) -> float
     functions.insert("fsum".to_string(), FunctionType::all_borrow(vec![("data".to_string(), Type::List(Box::new(Type::Float)))], Type::Float));
+
+    // sumprod(p: list[float], q: list[float]) -> float
+    functions.insert("sumprod".to_string(), FunctionType::all_borrow(vec![("p".to_string(), Type::List(Box::new(Type::Float))), ("q".to_string(), Type::List(Box::new(Type::Float)))], Type::Float));
 
     // erf(x: float) -> float
     functions.insert("erf".to_string(), FunctionType::all_borrow(vec![("x".to_string(), Type::Float)], Type::Float));

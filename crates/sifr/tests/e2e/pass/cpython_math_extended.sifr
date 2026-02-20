@@ -89,10 +89,10 @@ def main():
     assert_almost_eq(fmod(7.0, 7.0), 0.0, 0.0001)
 
     # --- More isclose ---
-    assert_true(isclose(1.0, 1.0, 0.0))
-    assert_false(isclose(1.0, 1.1, 0.01))
-    assert_true(isclose(100.0, 100.001, 0.01))
-    assert_false(isclose(1.0, 2.0, 0.1))
+    assert_true(isclose(1.0, 1.0, 0.0, 0.0))
+    assert_false(isclose(1.0, 1.1, 0.01, 0.0))
+    assert_true(isclose(100.0, 100.001, 0.01, 0.0))
+    assert_false(isclose(1.0, 2.0, 0.1, 0.0))
 
     # --- Product with different inputs ---
     nums2: list[int] = [2, 3, 4]
