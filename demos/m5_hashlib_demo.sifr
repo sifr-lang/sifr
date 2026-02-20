@@ -1,5 +1,6 @@
 # Milestone 5 demo: sifr.hashlib object model baseline
-from sifr.hashlib import sha256, sha256_obj, md5_obj, copy_hash
+from sifr.hashlib import sha256, sha256_obj, md5_obj, copy_hash, new, algorithms_guaranteed, file_digest, HashlibError, HashObject
+from sifr.io import write_text
 
 def main():
     h = sha256_obj("si")
@@ -18,6 +19,26 @@ def main():
     print(m.hexdigest())
     print(m.digest_size == 16)
 
+    print(len(algorithms_guaranteed()) >= 8)
+    try:
+        h2: HashObject = new("sha256", "api")
+        print(h2.hexdigest() == sha256("api"))
+    except ValueError as e:
+        print(False)
+
+    _ = write_text("tmp_m5_hashlib_demo.txt", "digest-me")
+    try:
+        fd: str = file_digest("tmp_m5_hashlib_demo.txt", "sha256")
+        print(fd == sha256("digest-me"))
+    except HashlibError as e:
+        print(False)
+
+    try:
+        bad: str = file_digest("tmp_m5_hashlib_demo.txt", "sha3_256")
+        print(False)
+    except HashlibError as e:
+        print(True)
+
 # expect-stdout: true
 # expect-stdout: sha256
 # expect-stdout: 32
@@ -25,4 +46,8 @@ def main():
 # expect-stdout: true
 # expect-stdout: true
 # expect-stdout: fe01ce2a7fbac8fafaed7c982a04e229
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
 # expect-stdout: true

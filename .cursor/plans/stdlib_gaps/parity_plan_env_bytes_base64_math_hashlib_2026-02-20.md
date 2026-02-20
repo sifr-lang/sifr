@@ -369,9 +369,9 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M4: expanded `test_math` parity port passing
 - [x] M4: math demo created and validated
 - [x] M5: hashlib object model implemented
-- [ ] M5: hashlib API/algorithm parity subset completed
-- [ ] M5: hashlib tests ported and passing
-- [ ] M5: hashlib demo created and validated
+- [x] M5: hashlib API/algorithm parity subset completed
+- [x] M5: hashlib tests ported and passing
+- [x] M5: hashlib demo created and validated
 - [ ] Final: all milestone PRs reviewed/merged, board moved to Done
 
 ---
@@ -471,13 +471,13 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] object constructors + incremental `update`
   - [x] `digest`/`hexdigest`/`copy` (with `copy_hash()` adapter due current method return-type constraints)
   - [x] metadata fields parity (`name`, sizes)
-- [ ] PR5-B API/algorithm parity
-  - [ ] `new`, `algorithms_guaranteed`, `algorithms_available`, `file_digest`
-  - [ ] SHA3/SHAKE constructors parity subset
-- [ ] PR5-C CPython parity tests
-  - [ ] known vectors
-  - [ ] object behavior
-  - [ ] file digest and error-path tests
-- [ ] Milestone demo
-  - [ ] `demos/m5_hashlib_demo.sifr` passes
+- [x] PR5-B API/algorithm parity
+  - [x] `new`, `algorithms_guaranteed`, `algorithms_available`, `file_digest`
+  - [x] SHA3/SHAKE constructors parity subset (explicit unsupported constructor stubs returning `ValueError` for current runtime)
+- [x] PR5-C CPython parity tests
+  - [x] known vectors
+  - [x] object behavior
+  - [x] file digest and error-path tests
+- [x] Milestone demo
+  - [x] `demos/m5_hashlib_demo.sifr` passes
 

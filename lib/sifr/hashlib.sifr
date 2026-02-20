@@ -1,5 +1,9 @@
 # sifr.hashlib — Hashing functions and hash object model
 from _sifr.crypto import sha256, md5, sha1, sha512, sha224, sha384, blake2b, blake2s
+from _sifr.fs import read_text
+
+class HashlibError(Error):
+    message: str
 
 class HashObject:
     _algorithm: str
@@ -49,6 +53,19 @@ def _build_hash(algorithm: str, data: str) -> HashObject:
 def copy_hash(h: HashObject) -> HashObject:
     return _build_hash(h._algorithm, h._data)
 
+def _is_supported_algorithm(name: str) -> bool:
+    n: str = name.lower()
+    return (
+        n == "md5" or
+        n == "sha1" or
+        n == "sha224" or
+        n == "sha256" or
+        n == "sha384" or
+        n == "sha512" or
+        n == "blake2b" or
+        n == "blake2s"
+    )
+
 def _hash_hex(algorithm: str, data: str) -> str:
     if algorithm == "md5":
         return md5(data)
@@ -69,6 +86,41 @@ def _hash_hex(algorithm: str, data: str) -> str:
     return ""
 
 # CPython-like constructor helpers (adapted to Sifr str input model).
+def new(name: str, data: str = "") -> Result[HashObject, ValueError]:
+    if not _is_supported_algorithm(name):
+        raise ValueError("unsupported hash algorithm: " + name)
+    return _build_hash(name, data)
+
+def algorithms_guaranteed() -> list[str]:
+    return ["md5", "sha1", "sha224", "sha256", "sha384", "sha512", "blake2b", "blake2s"]
+
+def algorithms_available() -> list[str]:
+    # Current runtime exposes the same guaranteed set.
+    return algorithms_guaranteed()
+
+def file_digest(path: str, name: str) -> Result[str, HashlibError]:
+    try:
+        data: str = read_text(path)
+        h: HashObject = new(name, data)
+        return h.hexdigest()
+    except IOError as e:
+        raise HashlibError(e.message)
+    except ValueError as e:
+        raise HashlibError(e.message)
+
+# SHA3/SHAKE constructor placeholders for API parity planning.
+def sha3_256_obj(data: str = "") -> Result[HashObject, ValueError]:
+    raise ValueError("sha3_256 is not yet supported")
+
+def sha3_512_obj(data: str = "") -> Result[HashObject, ValueError]:
+    raise ValueError("sha3_512 is not yet supported")
+
+def shake_128_obj(data: str = "") -> Result[HashObject, ValueError]:
+    raise ValueError("shake_128 is not yet supported")
+
+def shake_256_obj(data: str = "") -> Result[HashObject, ValueError]:
+    raise ValueError("shake_256 is not yet supported")
+
 def md5_obj(data: str = "") -> HashObject:
     return _build_hash("md5", data)
 
