@@ -1,0 +1,49 @@
+# Demo: milestone_test_assertions_parity
+# Showcases:
+# 1) Core assertion helpers
+# 2) Almost-equality edge behavior
+# 3) Comparable assertions
+# 4) Result/Option adapted assertions
+
+from sifr.math import inf
+from sifr.test import (
+    assert_eq, assert_ne, assert_true, assert_false,
+    assert_almost_eq, assert_not_almost_eq,
+    assert_gt, assert_ge, assert_lt, assert_le,
+    assert_some, assert_none, assert_ok, assert_err
+)
+
+def parse_num(s: str) -> Result[int, ValueError]:
+    if s == "bad":
+        raise ValueError("parse failure")
+    return 10
+
+def main():
+    print("=== Core equality/truth assertions ===")
+    assert_eq("sifr", "sifr")
+    assert_ne("sifr", "rust")
+    assert_true(2 > 1)
+    assert_false(1 > 2)
+    print("core assertions ok")
+
+    print("=== Almost-equality semantics ===")
+    assert_almost_eq(0.1 + 0.2, 0.3, 0.0001)
+    assert_almost_eq(inf, inf, 0.0)
+    assert_not_almost_eq(1.1, 1.0, 0.05)
+    print("almost assertions ok")
+
+    print("=== Comparable assertions ===")
+    assert_gt(5, 4)
+    assert_ge(5, 5)
+    assert_lt("a", "b")
+    assert_le("b", "b")
+    print("comparison assertions ok")
+
+    print("=== Result/Option adapted assertions ===")
+    assert_ok(parse_num("ok"))
+    assert_err(parse_num("bad"))
+    maybe_name: str | None = "sifr"
+    maybe_missing: str | None = None
+    assert_some(maybe_name)
+    assert_none(maybe_missing)
+    print("result/option assertions ok")

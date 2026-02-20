@@ -1,0 +1,44 @@
+# Portable subset inspired by CPython Lib/test/test_unittest/test_assertions.py
+# expect-stdout: cpython unittest assertion subset ok
+from sifr.math import inf
+from sifr.test import (
+    assert_eq, assert_ne, assert_true, assert_false,
+    assert_almost_eq, assert_not_almost_eq,
+    assert_gt, assert_ge, assert_lt, assert_le,
+    assert_some, assert_none, assert_ok, assert_err
+)
+
+def parse_num(s: str) -> Result[int, ValueError]:
+    if s == "bad":
+        raise ValueError("parse failure")
+    return 7
+
+def main():
+    # assertEqual / assertNotEqual style
+    assert_eq(3, 3)
+    assert_ne(3, 2)
+
+    # assertTrue / assertFalse style
+    assert_true(1 < 2)
+    assert_false(2 < 1)
+
+    # assertAlmostEqual / assertNotAlmostEqual style
+    assert_almost_eq(1.00000001, 1.0, 0.000001)
+    assert_almost_eq(inf, inf, 0.0)
+    assert_not_almost_eq(1.1, 1.0, 0.05)
+
+    # assertGreater/Less (+ equal variants)
+    assert_gt(3, 2)
+    assert_ge(3, 3)
+    assert_lt("a", "b")
+    assert_le("b", "b")
+
+    # Sifr-adapted Result/Option assertions (assertRaises analogue)
+    assert_ok(parse_num("ok"))
+    assert_err(parse_num("bad"))
+    maybe_a: int | None = 42
+    maybe_b: int | None = None
+    assert_some(maybe_a)
+    assert_none(maybe_b)
+
+    print("cpython unittest assertion subset ok")
