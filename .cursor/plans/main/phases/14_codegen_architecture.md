@@ -272,13 +272,9 @@ pub enum RustType {
     RawCode(String),
 }
 
-pub struct RustParam {
-    pub name: String,
-    pub ty: RustType,
-    pub is_ref: bool,
-    pub is_mut_ref: bool,
-    pub is_self: bool,
-    pub self_mutability: Option<bool>,
+pub enum RustParam {
+    SelfParam { mutable: bool },
+    Named { name: String, ty: RustType },
 }
 
 pub struct RustMatchArm {
@@ -315,7 +311,7 @@ pub enum Visibility {
 
 4. **`FormatMacro` is separate from `MacroCall`.** Format macros (`format!`, `write!`, `println!`, `panic!`) have a format string + args pattern that deserves its own node for clarity and potential future optimization (e.g., folding adjacent string literals).
 
-5. **`RustParam` handles all parameter forms.** Regular params (`name: Type`), `&self`, `&mut self`, `self` are all represented by the same struct with boolean flags. This avoids a separate enum for receiver types.
+5. **`RustParam` is an enum, not a struct with boolean flags.** `SelfParam { mutable }` handles `&self`/`&mut self` receivers. `Named { name, ty }` handles regular parameters where reference-ness is expressed through `RustType::Ref` on the type itself (e.g., `&str` is `Named { name: "s", ty: RustType::Ref { mutable: false, inner: Box::new(RustType::String_) } }`). This avoids invalid states where boolean flags (`is_ref`, `is_mut_ref`) could contradict the type.
 
 ### Integration Point
 
@@ -560,7 +556,7 @@ This decomposition happens incrementally alongside the `lower_*` migration — e
 
 ### Design Principle: `lower_*` Methods Return `Result`
 
-All new `lower_*` methods return `Result<RustExpr, CodegenError>` / `Result<Vec<RustStmt>, CodegenError>` instead of panicking on unexpected input. Define a `CodegenError` type in `sifr_codegen` for structured error reporting. This is adopted incrementally — the initial `lower_*` implementations may use `.expect()` for cases that are genuinely unreachable, but new code defaults to `Result` propagation.
+All new `lower_*` methods return `Result<RustExpr, CodegenError>` / `Result<Vec<RustStmt>, CodegenError>` instead of panicking on unexpected input. Define a `CodegenError` type in `sifr_codegen` for structured error reporting. `CodegenError` must carry the source `Span` (line/column) from the `HirExpr` or `HirStmt` being lowered, so the driver can report the exact user source location when codegen fails on an unsupported construct. This is adopted incrementally — the initial `lower_*` implementations may use `.expect()` for cases that are genuinely unreachable, but new code defaults to `Result` propagation.
 
 ### Migration Strategy
 
@@ -768,11 +764,17 @@ The current function matches on (object type, method name) pairs for ~50 methods
 
 ### Intrinsic Registry (Mandatory)
 
-Instead of a single 1,300-line match statement, intrinsics **must** be registered in a `HashMap<&str, fn(&CodegenContext, &[HirExpr]) -> Result<RustExpr, CodegenError>>` at initialization time. This:
+Instead of a single 1,300-line match statement, intrinsics **must** be registered in a registry at initialization time. Each registration includes:
+- The intrinsic name (e.g., `"sha256"`)
+- The lowering function: `fn(&CodegenContext, &[HirExpr]) -> Result<RustExpr, CodegenError>`
+- The required Cargo crate dependency, if any (e.g., `Some("sha2")` for `sha256`, `None` for `sqrt`)
+
+This:
 - Makes adding new intrinsics a one-line registration instead of editing a giant match
 - Enables intrinsic discovery (list all registered intrinsics)
 - Reduces the size of any single function
 - Is essential for maintainability as future phases (async, typed serde, web framework, FFI) will add hundreds of new intrinsics
+- **Eliminates the driver's string-scanning hack** for Cargo dependency detection. Currently the driver uses fragile patterns like `if rust_source.contains("num_bigint::BigInt")` to decide which crates to add to `Cargo.toml`. With the registry, the codegen collects all required crate names into a `HashSet<String>` during lowering and returns them alongside the generated code. The driver uses this set directly — no string scanning needed. This is not a full package manager (deferred to Phase 18) but it removes the most fragile part of the current dependency detection.
 
 The registry is built once at codegen initialization. Each intrinsic function lives in a domain-specific module:
 
@@ -801,10 +803,11 @@ Similarly, method calls are organized by type in a `methods/` directory:
 
 ### Definition of Done (milestone_codegen_intrinsic_migration)
 
-- Intrinsic registry (`HashMap`-based) is implemented and dispatches all ~80 intrinsic functions
+- Intrinsic registry is implemented and dispatches all ~80 intrinsic functions, each declaring its required Cargo crate (if any)
 - Method registry dispatches all ~50 method calls organized by receiver type
 - Intrinsics are decomposed into domain-specific modules under `intrinsics/` directory
 - Methods are decomposed into type-specific modules under `methods/` directory
+- Codegen returns a `HashSet<String>` of required Cargo crates alongside the generated code; the driver's string-scanning dependency detection is deleted
 - No intrinsic or method lowering function contains a `self.write(...)` call longer than 100 characters (the current worst case is 1,500+ characters)
 - The `builtin_open` intrinsic is a readable, structured function body (not a single string literal)
 - All `RawCode` usages in intrinsics and methods are eliminated (fully converted)
@@ -886,7 +889,7 @@ This catches codegen bugs at Sifr compile time rather than at Rust compile time.
 
 The following are **not** addressed in this phase:
 
-- **`Cargo.toml` dependency resolution.** The generated Rust code's `Cargo.toml` (which lists crate dependencies like `serde`, `regex`, `sha2`, etc.) is currently built by string concatenation in the driver. Migrating this to a structured representation is a separate concern — it's not part of the Rust source code IR and would require a different data model. This is deferred to the package management phase (Phase 18).
+- **`Cargo.toml` structured representation.** The generated Rust code's `Cargo.toml` is currently built by string concatenation in the driver. Migrating this to a structured data model is deferred to the package management phase (Phase 18). However, the driver's fragile string-scanning hack for detecting which crates are needed **is** eliminated in this phase — the intrinsic registry declares crate dependencies as metadata, and the codegen returns a `HashSet<String>` of required crates alongside the generated code.
 
 - **HIR-level ownership analysis.** The root cause of many unnecessary `.clone()` calls is that the HIR does not track ownership/borrowing semantics. A proper ownership analysis pass in `sifr_hir` would allow the codegen to emit moves instead of clones in many cases. This is a future phase concern — this phase only removes clones that are trivially provable as unnecessary from type information alone.
 
