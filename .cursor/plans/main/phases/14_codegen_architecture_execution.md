@@ -96,6 +96,7 @@ status: in_progress
 - [x] PR2 slice: add registry dependency metadata plumbing and migrate `json_loads/json_dumps` to registry lowering
 - [x] PR3 slice: migrate expanded `sifr.math` intrinsic set into registry lowerers with parity checks
 - [x] PR4 slice: migrate `sifr.env` intrinsic handlers into registry lowerers with env parity tests
+- [x] PR5 slice: migrate `sifr.os` command/argv intrinsics into registry lowerers with OS parity tests
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules

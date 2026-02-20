@@ -3,6 +3,7 @@
 mod math;
 mod json;
 mod env;
+mod os;
 
 use crate::RustExpr;
 
@@ -65,6 +66,8 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "env_keys" => (env::lower_env_keys(rendered_args), None),
         "env_values" => (env::lower_env_values(rendered_args), None),
         "env_items" => (env::lower_env_items(rendered_args), None),
+        "run_command" => (os::lower_run_command(rendered_args), None),
+        "get_args" => (os::lower_get_args(rendered_args), None),
         "json_loads" => (json::lower_json_loads(rendered_args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(rendered_args), Some("serde_json")),
         _ => return None,
@@ -133,5 +136,15 @@ mod tests {
 
         let keys = lower_intrinsic("env_keys", &[]).expect("env_keys should lower");
         assert!(render_expr(&keys.expr).contains("std::env::vars_os()"));
+    }
+
+    #[test]
+    fn lowers_os_intrinsics_via_registry() {
+        let run = lower_intrinsic("run_command", &["cmd".to_string()])
+            .expect("run_command should lower");
+        assert!(render_expr(&run.expr).contains("std::process::Command::new(\"sh\")"));
+
+        let args = lower_intrinsic("get_args", &[]).expect("get_args should lower");
+        assert_eq!(render_expr(&args.expr), "std::env::args().collect::<Vec<String>>()");
     }
 }
