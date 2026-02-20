@@ -1,0 +1,42 @@
+# Milestone 2 demo: sifr.bytes safety + method subset
+from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
+
+def main():
+    data: list[int] = encode_utf8("sifr-bytes")
+    print(len(data))
+    print(count_byte(data, 115))
+
+    idx: int | None = find_byte(data, 45)
+    if idx is not None:
+        print(idx)
+
+    print(starts_with(data, encode_utf8("sifr")))
+    print(ends_with(data, encode_utf8("bytes")))
+
+    try:
+        hex_data: str = bytes_to_hex(data)
+        print(hex_data)
+    except ParseError as e:
+        print("hex encode error: " + e.message)
+
+    try:
+        parsed: list[int] = bytes_from_hex("73 69 66 72")
+        text: str = decode_utf8(parsed)
+        print(text)
+    except ParseError as e:
+        print("hex decode error: " + e.message)
+
+    try:
+        _bad: str = decode_utf8([300])
+        print("unexpected")
+    except ParseError as e:
+        print("range-safe")
+
+# expect-stdout: 10
+# expect-stdout: 2
+# expect-stdout: 4
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: 736966722d6279746573
+# expect-stdout: sifr
+# expect-stdout: range-safe

@@ -3,3 +3,51 @@
 # bytes_to_hex returns Result[str, ParseError]
 # bytes_from_hex returns Result[list[int], ParseError]
 from _sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
+
+def count_byte(data: list[int], value: int) -> int:
+    count: int = 0
+    for b in data:
+        if b == value:
+            count = count + 1
+    return count
+
+def find_byte(data: list[int], value: int) -> int | None:
+    idx: int = 0
+    for b in data:
+        if b == value:
+            return idx
+        idx = idx + 1
+    return None
+
+def starts_with(data: list[int], prefix: list[int]) -> bool:
+    if len(prefix) > len(data):
+        return False
+    i: int = 0
+    while i < len(prefix):
+        a: int | None = data[i]
+        b: int | None = prefix[i]
+        if a is None:
+            return False
+        if b is None:
+            return False
+        if a != b:
+            return False
+        i = i + 1
+    return True
+
+def ends_with(data: list[int], suffix: list[int]) -> bool:
+    if len(suffix) > len(data):
+        return False
+    offset: int = len(data) - len(suffix)
+    i: int = 0
+    while i < len(suffix):
+        a: int | None = data[offset + i]
+        b: int | None = suffix[i]
+        if a is None:
+            return False
+        if b is None:
+            return False
+        if a != b:
+            return False
+        i = i + 1
+    return True
