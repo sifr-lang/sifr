@@ -1,0 +1,54 @@
+# Adapted CPython hashlib API subset for sifr.hashlib PR5-B
+from sifr.hashlib import new, sha256, algorithms_guaranteed, algorithms_available, file_digest, HashlibError, HashObject
+from sifr.io import write_text
+from sifr.test import assert_eq, assert_true
+
+def contains(values: list[str], needle: str) -> bool:
+    for v in values:
+        if v == needle:
+            return True
+    return False
+
+def main():
+    guaranteed: list[str] = algorithms_guaranteed()
+    available: list[str] = algorithms_available()
+    assert_true(contains(guaranteed, "sha256"))
+    assert_true(contains(guaranteed, "md5"))
+    assert_eq(len(guaranteed), len(available))
+
+    try:
+        h: HashObject = new("sha256", "abc")
+        assert_eq(h.hexdigest(), sha256("abc"))
+    except ValueError as e:
+        print("unexpected new error: " + e.message)
+        assert False
+
+    try:
+        h_bad: HashObject = new("sha3_256", "")
+        print(h_bad.name)
+        assert False
+    except ValueError as e:
+        print("unsupported new: pass")
+
+    try:
+        _ = write_text("tmp_hashlib_api_subset.txt", "file-data")
+    except IOError as e:
+        print("unexpected write error: " + e.message)
+        assert False
+
+    try:
+        digest: str = file_digest("tmp_hashlib_api_subset.txt", "sha256")
+        assert_eq(digest, sha256("file-data"))
+    except HashlibError as e:
+        print("unexpected file_digest error: " + e.message)
+        assert False
+
+    try:
+        bad_digest: str = file_digest("tmp_hashlib_api_subset.txt", "sha3_256")
+        print(bad_digest)
+        assert False
+    except HashlibError as e:
+        print("file_digest unsupported: pass")
+
+# expect-stdout: unsupported new: pass
+# expect-stdout: file_digest unsupported: pass
