@@ -11,7 +11,7 @@ Guidelines:
 1. Keep vectors deterministic and order-stable.
 2. Encode CPython expected outputs literally in `expected`.
 3. Compute `actual` in a loop over `inputs`.
-4. Compare with `sifr.parity_harness.assert_vector_eq(...)`.
+4. Compare with `sifr.test.assert_vector_eq(...)`.
 5. For error-path fixtures, maintain parallel boolean vectors (`expected_ok`/`actual_ok`) and use `assert_bool_vector_eq(...)`.
 
 This format is intentionally minimal so it can be applied uniformly across stdlib parity ports without requiring higher-order function support.
