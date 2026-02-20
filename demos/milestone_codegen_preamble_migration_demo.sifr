@@ -1,0 +1,26 @@
+# Demo: milestone_codegen_preamble_migration
+# Exercises IR-emitted preamble pieces:
+# - IOError + file handle infrastructure via open/read/close
+# - logging global state via getLogger().set_level()/info()
+
+from sifr.io import write_text
+from sifr.logging import getLogger, Logger
+
+def main():
+    path: str = "/tmp/sifr_m14_preamble_demo.txt"
+    try:
+        _: None = write_text(path, "m14 preamble")
+        f = open(path, "r")
+        text: str = f.read()
+        f.close()
+        print("file = " + text)
+    except IOError as e:
+        print("ioerror = " + e.message)
+
+    log: Logger = getLogger("m14")
+    log.set_level(20)
+    log.info("preamble logging alive")
+    print("preamble demo complete")
+
+# expect-stdout: file = m14 preamble
+# expect-stdout: preamble demo complete
