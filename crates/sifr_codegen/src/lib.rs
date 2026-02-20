@@ -7483,18 +7483,19 @@ impl RustEmitter {
                 self.write(".iter().map(|b| *b as i64).collect::<Vec<i64>>()");
             }
             "decode_utf8" => {
-                self.write("String::from_utf8(");
+                self.write("(|| -> Result<String, ParseError> { let __vals = ");
                 self.emit_expr(&args[0]);
-                self.write(".iter().map(|b| *b as u8).collect::<Vec<u8>>()).map_err(|e| ParseError { message: e.to_string() })");
+                self.write("; let mut __bytes: Vec<u8> = Vec::with_capacity(__vals.len()); for (__idx, __b) in __vals.iter().enumerate() { if *__b < 0 || *__b > 255 { return Err(ParseError { message: format!(\"byte out of range at index {}: {}\", __idx, *__b) }); } __bytes.push(*__b as u8); } String::from_utf8(__bytes).map_err(|e| ParseError { message: e.to_string() }) })()");
             }
             "bytes_to_hex" => {
+                self.write("(|| -> Result<String, ParseError> { let __vals = ");
                 self.emit_expr(&args[0]);
-                self.write(".iter().map(|b| format!(\"{:02x}\", *b as u8)).collect::<Vec<String>>().join(\"\")");
+                self.write("; let mut __out = String::new(); for (__idx, __b) in __vals.iter().enumerate() { if *__b < 0 || *__b > 255 { return Err(ParseError { message: format!(\"byte out of range at index {}: {}\", __idx, *__b) }); } __out.push_str(&format!(\"{:02x}\", *__b as u8)); } Ok(__out) })()");
             }
             "bytes_from_hex" => {
                 self.write("(|| -> Result<Vec<i64>, ParseError> { let s = ");
                 self.emit_expr(&args[0]);
-                self.write("; let mut result = Vec::new(); let mut i = 0; while i < s.len() { if i + 2 > s.len() { return Err(ParseError { message: format!(\"invalid hex string at position {}\", i) }); } result.push(i64::from_str_radix(&s[i..i+2], 16).map_err(|e| ParseError { message: e.to_string() })?); i += 2; } Ok(result) })()");
+                self.write("; let mut cleaned = String::new(); for ch in s.chars() { if ch.is_ascii_whitespace() { continue; } if !ch.is_ascii_hexdigit() { return Err(ParseError { message: format!(\"invalid hex character: {}\", ch) }); } cleaned.push(ch); } if cleaned.len() % 2 != 0 { return Err(ParseError { message: \"fromhex() arg must contain an even number of hexadecimal digits\".to_string() }); } let mut result = Vec::new(); for pair in cleaned.as_bytes().chunks(2) { let pair_str = std::str::from_utf8(pair).map_err(|e| ParseError { message: e.to_string() })?; result.push(i64::from_str_radix(pair_str, 16).map_err(|e| ParseError { message: e.to_string() })?); } Ok(result) })()");
             }
             // sifr.time
             "time_now" => {

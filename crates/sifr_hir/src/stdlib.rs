@@ -436,8 +436,8 @@ fn intrinsic_bytes() -> IntrinsicModule {
     // decode_utf8(bytes: list[int]) -> Result[str, ParseError]
     functions.insert("decode_utf8".to_string(), FunctionType::all_borrow(vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))], result_ty(Type::Str, "ParseError")));
 
-    // bytes_to_hex(bytes: list[int]) -> str
-    functions.insert("bytes_to_hex".to_string(), FunctionType::all_borrow(vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))], Type::Str));
+    // bytes_to_hex(bytes: list[int]) -> Result[str, ParseError]
+    functions.insert("bytes_to_hex".to_string(), FunctionType::all_borrow(vec![("bytes".to_string(), Type::List(Box::new(Type::Int)))], result_ty(Type::Str, "ParseError")));
 
     // bytes_from_hex(s: str) -> Result[list[int], ParseError]
     functions.insert("bytes_from_hex".to_string(), FunctionType::all_borrow(vec![("s".to_string(), Type::Str)], result_ty(Type::List(Box::new(Type::Int)), "ParseError")));

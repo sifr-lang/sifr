@@ -356,7 +356,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M1: env API parity subset implemented
 - [x] M1: env CPython tests ported and passing
 - [x] M1: env demo created and validated
-- [ ] M2: bytes safety fixes (no wraparound, robust hex)
+- [x] M2: bytes safety fixes (no wraparound, robust hex)
 - [ ] M2: bytes parity subset methods implemented
 - [ ] M2: bytes tests ported and passing
 - [ ] M2: bytes demo created and validated
@@ -416,10 +416,10 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 
 ### Milestone 2 (`sifr.bytes`)
 
-- [ ] PR2-A Safety correctness fixes
-  - [ ] Reject out-of-range integers for byte conversion
-  - [ ] Remove panic paths in hex parsing
-  - [ ] Align hex decode errors with CPython-like positions/messages where feasible
+- [x] PR2-A Safety correctness fixes
+  - [x] Reject out-of-range integers for byte conversion
+  - [x] Remove panic paths in hex parsing
+  - [x] Align hex decode errors with CPython-like positions/messages where feasible
 - [ ] PR2-B API expansion subset
   - [ ] Add high-value byte utilities used by base64/hashlib parity work
   - [ ] Keep behavior predictable with Result/Option safety model
