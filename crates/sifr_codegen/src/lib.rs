@@ -37,6 +37,9 @@
 #![allow(clippy::if_not_else)]
 #![allow(clippy::unnecessary_unwrap)]
 
+mod rust_ir;
+pub use rust_ir::*;
+
 use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};
 use std::collections::{HashMap, HashSet};
