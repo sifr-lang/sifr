@@ -348,7 +348,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [ ] M0: bytes boundary design approved (type + adapters)
 - [ ] M0: parity harness helpers for CPython vector tests
 - [x] M1: env API parity subset implemented
-- [ ] M1: env CPython tests ported and passing
+- [x] M1: env CPython tests ported and passing
 - [x] M1: env demo created and validated
 - [ ] M2: bytes safety fixes (no wraparound, robust hex)
 - [ ] M2: bytes parity subset methods implemented
@@ -398,10 +398,10 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] `getenv(key, default)` helper
   - [x] keys/values/items helper APIs
   - [x] Keep backward compatibility with `env_get`/`env_set`
-- [ ] PR1-B CPython test ports (environment-focused subset)
-  - [ ] Port `putenv/unsetenv` invalid-name cases (adapted to Sifr safety semantics)
-  - [ ] Port getenv default behavior cases
-  - [ ] Port mapping-like listing behavior checks
+- [x] PR1-B CPython test ports (environment-focused subset)
+  - [x] Port `putenv/unsetenv` invalid-name cases (adapted to Sifr safety semantics)
+  - [x] Port getenv default behavior cases
+  - [x] Port mapping-like listing behavior checks
 - [ ] PR1-C Documentation/deviation notes
   - [ ] Record differences from full CPython mapping semantics
   - [ ] Record safety adaptation for invalid key/value handling
