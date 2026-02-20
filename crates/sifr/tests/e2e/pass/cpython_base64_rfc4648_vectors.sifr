@@ -1,0 +1,134 @@
+# CPython RFC4648 vector subset + deterministic roundtrip matrix for sifr.base64
+from sifr.base64 import (
+    b64encode, b64decode,
+    standard_b64encode, standard_b64decode,
+    urlsafe_b64encode, urlsafe_b64decode,
+    b32encode, b32decode,
+    b32hexencode, b32hexdecode,
+    b16encode, b16decode,
+    encodebytes, decodebytes
+)
+from sifr.test import assert_eq
+
+def assert_b16_vector(input_text: str, expected_hex: str):
+    try:
+        out: str = b16encode(input_text)
+        assert_eq(out, expected_hex)
+    except ParseError as e:
+        print("unexpected parse error: " + e.message)
+        assert False
+
+def check_roundtrip(payload: str):
+    e1: str = b64encode(payload)
+    try:
+        d1: str = b64decode(e1)
+        assert_eq(d1, payload)
+    except ParseError as e:
+        print("unexpected parse error: " + e.message)
+        assert False
+
+    e2: str = standard_b64encode(payload)
+    try:
+        d2: str = standard_b64decode(e2)
+        assert_eq(d2, payload)
+    except ParseError as e:
+        print("unexpected parse error: " + e.message)
+        assert False
+
+    e3: str = urlsafe_b64encode(payload)
+    try:
+        d3: str = urlsafe_b64decode(e3)
+        assert_eq(d3, payload)
+    except ParseError as e:
+        print("unexpected parse error: " + e.message)
+        assert False
+
+    e4: str = b32encode(payload)
+    try:
+        d4: str = b32decode(e4)
+        assert_eq(d4, payload)
+    except ParseError as e:
+        print("unexpected parse error: " + e.message)
+        assert False
+
+    e5: str = b32hexencode(payload)
+    try:
+        d5: str = b32hexdecode(e5)
+        assert_eq(d5, payload)
+    except ParseError as e:
+        print("unexpected parse error: " + e.message)
+        assert False
+
+    try:
+        e6: str = b16encode(payload)
+        d6: str = b16decode(e6)
+        assert_eq(d6, payload)
+    except ParseError as e:
+        print("unexpected parse error: " + e.message)
+        assert False
+
+    e7: str = encodebytes(payload)
+    try:
+        d7: str = decodebytes(e7)
+        assert_eq(d7, payload)
+    except ParseError as e:
+        print("unexpected parse error: " + e.message)
+        assert False
+
+def main():
+    # RFC4648 base64 vectors
+    assert_eq(b64encode(""), "")
+    assert_eq(b64encode("f"), "Zg==")
+    assert_eq(b64encode("fo"), "Zm8=")
+    assert_eq(b64encode("foo"), "Zm9v")
+    assert_eq(b64encode("foob"), "Zm9vYg==")
+    assert_eq(b64encode("fooba"), "Zm9vYmE=")
+    assert_eq(b64encode("foobar"), "Zm9vYmFy")
+
+    # RFC4648 base32 vectors
+    assert_eq(b32encode(""), "")
+    assert_eq(b32encode("f"), "MY======")
+    assert_eq(b32encode("fo"), "MZXQ====")
+    assert_eq(b32encode("foo"), "MZXW6===")
+    assert_eq(b32encode("foob"), "MZXW6YQ=")
+    assert_eq(b32encode("fooba"), "MZXW6YTB")
+    assert_eq(b32encode("foobar"), "MZXW6YTBOI======")
+
+    # RFC4648 base32hex vectors
+    assert_eq(b32hexencode(""), "")
+    assert_eq(b32hexencode("f"), "CO======")
+    assert_eq(b32hexencode("fo"), "CPNG====")
+    assert_eq(b32hexencode("foo"), "CPNMU===")
+    assert_eq(b32hexencode("foob"), "CPNMUOG=")
+    assert_eq(b32hexencode("fooba"), "CPNMUOJ1")
+    assert_eq(b32hexencode("foobar"), "CPNMUOJ1E8======")
+
+    # RFC4648 base16 vectors (uppercase output)
+    assert_b16_vector("", "")
+    assert_b16_vector("f", "66")
+    assert_b16_vector("fo", "666F")
+    assert_b16_vector("foo", "666F6F")
+    assert_b16_vector("foob", "666F6F62")
+    assert_b16_vector("fooba", "666F6F6261")
+    assert_b16_vector("foobar", "666F6F626172")
+
+    print("rfc4648 vectors: pass")
+
+    # Deterministic roundtrip matrix (battle-tested subset style)
+    payloads: list[str] = [
+        "",
+        "a",
+        "ab",
+        "abc",
+        "hello",
+        "foobar",
+        "www.python.org",
+        "!@#0^&*();:<>,. []{}",
+    ]
+    for payload in payloads:
+        check_roundtrip(payload)
+
+    print("roundtrip matrix: pass")
+
+# expect-stdout: rfc4648 vectors: pass
+# expect-stdout: roundtrip matrix: pass

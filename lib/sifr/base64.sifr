@@ -27,9 +27,12 @@ def encodebytes(s: str) -> str:
 def decodebytes(s: str) -> Result[str, ParseError]:
     return base64_decode(s)
 
-# NOTE: b16encode uses lowercase hex to match current sifr.bytes behavior.
 def b16encode(s: str) -> Result[str, ParseError]:
-    return bytes_to_hex(encode_utf8(s))
+    try:
+        raw: str = bytes_to_hex(encode_utf8(s))
+        return raw.upper()
+    except ParseError as e:
+        raise e
 
 def b16decode(s: str) -> Result[str, ParseError]:
     try:
