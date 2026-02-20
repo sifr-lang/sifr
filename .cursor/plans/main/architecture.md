@@ -142,7 +142,10 @@ flowchart LR
     Binder --> Checker["Type Checker"]
     Checker --> HIR["Sifr HIR"]
     HIR --> RustCodegen["Rust Codegen"]
-    RustCodegen --> RustSource[".rs files"]
+    RustCodegen --> RustIR["Rust IR"]
+    RustIR --> Passes["IR Passes\n(imports, DCE, clone opt)"]
+    Passes --> Renderer["Pretty-Printer"]
+    Renderer --> RustSource[".rs files"]
     RustSource --> Rustc["rustc"]
     Rustc --> Binary["Native Binary"]
 ```
@@ -159,7 +162,7 @@ sifr/
     sifr_python_parser/     (vendored fork of ruff_python_parser -- may diverge for sifr syntax)
     sifr_hir/               (High-level IR: typed AST after name resolution + type checking)
     sifr_type_system/       (type definitions, inference, checking, subtyping)
-    sifr_codegen/           (Rust source code generation from HIR)
+    sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
     sifr_driver/            (orchestrates the pipeline, error reporting)
     sifr/                   (CLI binary: sifr build, sifr check, sifr run)
 
@@ -449,7 +452,7 @@ except DbError as e:
 
 ### 4. Package Resolver and Reproducibility (milestone_imports/milestone_package_mgmt)
 
-This contract is split across two milestones: milestone_imports (multi-file compilation and imports) and milestone_package_mgmt (package management with dependency resolution). milestone_imports lands in the Language Foundations phase; milestone_package_mgmt lands in its own Package Management phase (Phase 17).
+This contract is split across two milestones: milestone_imports (multi-file compilation and imports) and milestone_package_mgmt (package management with dependency resolution). milestone_imports lands in the Language Foundations phase; milestone_package_mgmt lands in its own Package Management phase (Phase 18).
 
 **Contract (milestone_imports -- imports and modules):**
 

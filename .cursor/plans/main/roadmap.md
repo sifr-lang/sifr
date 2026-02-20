@@ -17,13 +17,14 @@
 | 11 | Stdlib Deepening | 4 (pure_expansion → class_deepening) | completed | ~38% → deep CPython parity, 8 new modules, `datetime`/`deque`/`Pattern` classes, API naming divergences documented |
 | 12 | Stdlib Remediation | 1 (stdlib_remediation) | pending | `open()` built-in (text + binary modes), `datetime.time`/`timezone`, `CompletedProcess`, `Path.glob`, `re` flags, minor gaps |
 | 13 | Type System Completion | 6 (auto_init → stdlib_generic_rewrite) | pending | Auto-init, user-facing generics, pattern matching, enums, bigint, generic stdlib |
-| 14 | Async and Ecosystem Foundation | 5 (async_core → async_advanced) | pending | Async runtime, typed serde, networking stdlib, sync primitives, async generators |
-| 15 | Web Stack | 6 (web_framework → web_services) | pending | Web framework, database, typed extractors, auth, production features, external services |
-| 16 | Interoperability | 1 (ffi) | pending | Rust FFI, C FFI, unsafe boundary |
-| 17 | Package Management | 1 (package_mgmt) | pending | sifr.toml, sifr.lock, PubGrub solver, dependency resolution |
-| 18 | Developer Tools | 1 (dev_tooling) | pending | LSP, formatter, linter, doc generator |
-| 19 | Data Science and ML | 2 (data_processing, ml_inference) | pending | Polars DataFrames, ML inference, LLM integration |
-| 20 | Ecosystem | 2 (metaprogramming, ecosystem) | pending | Compile-time decorators, package registry, incremental compilation, REPL |
+| 14 | Codegen Architecture | 6 (rust_ir_types → codegen_structural_passes) | pending | Structured Rust IR, pretty-printer, preamble/stmt/expr/intrinsic migration, dead-code elimination, clone optimization |
+| 15 | Async and Ecosystem Foundation | 5 (async_core → async_advanced) | pending | Async runtime, typed serde, networking stdlib, sync primitives, async generators |
+| 16 | Web Stack | 6 (web_framework → web_services) | pending | Web framework, database, typed extractors, auth, production features, external services |
+| 17 | Interoperability | 1 (ffi) | pending | Rust FFI, C FFI, unsafe boundary |
+| 18 | Package Management | 1 (package_mgmt) | pending | sifr.toml, sifr.lock, PubGrub solver, dependency resolution |
+| 19 | Developer Tools | 1 (dev_tooling) | pending | LSP, formatter, linter, doc generator |
+| 20 | Data Science and ML | 2 (data_processing, ml_inference) | pending | Polars DataFrames, ML inference, LLM integration |
+| 21 | Ecosystem | 2 (metaprogramming, ecosystem) | pending | Compile-time decorators, package registry, incremental compilation, REPL |
 
 ## Ordering Rationale
 
@@ -67,8 +68,8 @@
     (`open()` built-in, `datetime.time`/`timezone`, `subprocess.CompletedProcess`, `Path.glob`,
     `re` flags). These must be closed before the type system completion phase rewrites the stdlib
     with generics — the generic rewrite should operate on a complete stdlib, not patch gaps
-    simultaneously. Binary file modes (`"rb"`, `"wb"`) are included because Phase 19 (data
-    processing with Parquet I/O) and Phase 15 (crypto with AES encryption) need them.
+    simultaneously. Binary file modes (`"rb"`, `"wb"`) are included because Phase 20 (data
+    processing with Parquet I/O) and Phase 16 (crypto with AES encryption) need them.
 
 11. **Stdlib Remediation → Type System Completion**: The type system has critical gaps: incomplete
     user-facing generics (field/method substitution), monomorphic stdlib, no pattern matching,
@@ -78,40 +79,52 @@
     `bigint` type resolves the integer overflow contradiction. The stdlib generic rewrite at the
     end of this phase eliminates all type-specific function duplicates.
 
-12. **Type System Completion → Async and Ecosystem Foundation**: The async runtime and web framework
-    will use generic stdlib functions, pattern matching for error handling, and enum types for
-    state machines. Having a complete type system and generic stdlib means fewer surprises
-    when building async features on top. The async phase is split into 5 milestones: async core
-    (minimum viable async), typed serde (web-independent, placed before networking so the HTTP
-    client can return typed responses from day one), networking stdlib, sync primitives
-    (Lock/Channel/Semaphore + Send/Sync checking), and advanced async (async with, generators).
+12. **Type System Completion → Codegen Architecture**: The codegen is the single largest crate
+    (9,805 lines) and is entirely string-based — every Rust construct is emitted via
+    `self.write("...")` with no intermediate representation. This causes: no compile-time
+    validation of generated code, manual indentation tracking, heuristic clone insertion via
+    temporal-coupling boolean flags, a string-parsing dead-code eliminator, and 34 Clippy
+    suppressions. Every subsequent phase (async, web, FFI) will add hundreds of new intrinsics
+    and codegen patterns. Introducing a structured Rust IR now means all future codegen is
+    built on a sound foundation. The type system must be complete first so the IR covers all
+    type constructs (generics, enums, pattern matching, bigint).
 
-13. **Async and Ecosystem Foundation → Web Stack**: The web framework requires async I/O. Web-specific
+13. **Codegen Architecture → Async and Ecosystem Foundation**: The async runtime and web framework
+    will use generic stdlib functions, pattern matching for error handling, and enum types for
+    state machines. Having a complete type system, generic stdlib, and structured codegen means
+    fewer surprises when building async features on top. New async codegen patterns (async fn,
+    .await, tokio runtime) are built on structured IR from day one. The async phase is split
+    into 5 milestones: async core (minimum viable async), typed serde (web-independent, placed
+    before networking so the HTTP client can return typed responses from day one), networking
+    stdlib, sync primitives (Lock/Channel/Semaphore + Send/Sync checking), and advanced async
+    (async with, generators).
+
+14. **Async and Ecosystem Foundation → Web Stack**: The web framework requires async I/O. Web-specific
     extractors (`Json[T]`, `Path[T]`, etc.) depend on both the web framework and typed serde core.
     The web stack splits web framework and database into separate milestones — database access
     is independent and can be used by CLI tools without a web framework.
 
-14. **Web Stack → Interoperability**: FFI formalizes what the intrinsic system already does — wrapping
+15. **Web Stack → Interoperability**: FFI formalizes what the intrinsic system already does — wrapping
     Rust crates. Placing it after the web stack means the language is feature-complete and stable.
     FFI is its own phase because it's a fundamental capability (the "escape hatch" for the entire
     Rust ecosystem), not polish.
 
-15. **Interoperability → Package Management**: Package management needs to handle both Sifr packages
+16. **Interoperability → Package Management**: Package management needs to handle both Sifr packages
     and Rust crate dependencies (via FFI). Having FFI available means the package manager can
     properly resolve and build mixed Sifr/Rust dependency graphs.
 
-16. **Package Management → Developer Tools**: The LSP needs to understand project structure from
+17. **Package Management → Developer Tools**: The LSP needs to understand project structure from
     `sifr.toml`. The formatter and linter benefit from a stable language surface. Developer tools
     are a dedicated phase because they are substantial engineering efforts that deserve focused
     attention.
 
-17. **Developer Tools → Data Science and ML**: Data processing and ML inference are independent of
-    the web stack — they depend only on typed serde and the async runtime (both from Phase 14).
+18. **Developer Tools → Data Science and ML**: Data processing and ML inference are independent of
+    the web stack — they depend only on typed serde and the async runtime (both from Phase 15).
     Placing them after developer tools means the IDE support is available for data science
     workflows. This phase is separate from the web stack because data science is a distinct
     use case.
 
-18. **Data Science and ML → Ecosystem**: The ecosystem phase (registry, incremental compilation,
+19. **Data Science and ML → Ecosystem**: The ecosystem phase (registry, incremental compilation,
     REPL, metaprogramming) is the capstone that turns Sifr from a language into a platform.
     It comes last because it benefits from every preceding phase being complete and stable.
 
@@ -219,6 +232,14 @@ flowchart TD
         milestone_integer_safety["milestone_integer_safety: Integer Safety\nbigint type, overflow warnings,\narbitrary-precision arithmetic"]
         milestone_stdlib_generic_rewrite["milestone_stdlib_generic_rewrite: Generic Stdlib\nitertools/functools/collections/\nheapq generic rewrite"]
     end
+    subgraph phaseCodegenArch [Codegen Architecture]
+        milestone_rust_ir_types["milestone_rust_ir_types: Rust IR Types\nRustExpr, RustStmt, RustItem,\nRustType, RawCode escape hatch"]
+        milestone_rust_ir_renderer["milestone_rust_ir_renderer: IR Renderer\nPretty-printer, indentation,\nRawCode passthrough"]
+        milestone_codegen_preamble_migration["milestone_codegen_preamble_migration: Preamble Migration\nError types, FileHandle,\nlogging, imports via IR"]
+        milestone_codegen_stmt_expr_migration["milestone_codegen_stmt_expr_migration: Stmt/Expr Migration\nlower_stmt, lower_expr,\neliminate temporal flags"]
+        milestone_codegen_intrinsic_migration["milestone_codegen_intrinsic_migration: Intrinsic Migration\n~80 intrinsics, ~50 methods,\nstructured IR bodies"]
+        milestone_codegen_structural_passes["milestone_codegen_structural_passes: Structural Passes\nImport collection, dead-code\nelim, clone optimization"]
+    end
     subgraph phaseAsync [Async and Ecosystem]
         milestone_async_core["milestone_async_core: Async Core\nasync/await, tokio,\ntask spawn/sleep/timeout"]
         milestone_typed_serde_core["milestone_typed_serde_core: Typed Serde\nAuto serde, dumps/loads,\nweb-independent"]
@@ -277,7 +298,9 @@ flowchart TD
     milestone_stdlib_class_deepening --> milestone_stdlib_remediation
     milestone_stdlib_remediation --> milestone_auto_init --> milestone_generics_v2 --> milestone_pattern_matching
     milestone_pattern_matching --> milestone_enums --> milestone_integer_safety --> milestone_stdlib_generic_rewrite
-    milestone_stdlib_generic_rewrite --> milestone_async_core --> milestone_typed_serde_core
+    milestone_stdlib_generic_rewrite --> milestone_rust_ir_types --> milestone_rust_ir_renderer --> milestone_codegen_preamble_migration
+    milestone_codegen_preamble_migration --> milestone_codegen_stmt_expr_migration --> milestone_codegen_intrinsic_migration --> milestone_codegen_structural_passes
+    milestone_codegen_structural_passes --> milestone_async_core --> milestone_typed_serde_core
     milestone_typed_serde_core --> milestone_networking_stdlib
     milestone_async_core --> milestone_async_sync
     milestone_networking_stdlib --> milestone_async_advanced
@@ -316,6 +339,8 @@ After the Stdlib Deepening phase, the stdlib reaches deep CPython parity with 8 
 After the Stdlib Remediation phase, all gaps from the Phase 11 gap analysis are closed: the `open()` built-in with file object protocol, context manager support, and both text and binary modes (`"r"`, `"w"`, `"a"`, `"rb"`, `"wb"`, `"ab"`), `datetime.time` and `datetime.timezone` classes, `subprocess.run` returning a structured `CompletedProcess` object, `Path.glob`/`Path.rglob`, `re` flags support, and minor surface area gaps (`os.sep`/`os.linesep`/`os.name`, `time` wrapper functions, `random.choice` re-export). The stdlib is now complete and ready for the generic rewrite.
 
 After the Type System Completion phase, Sifr's type system is fully expressive. Classes auto-generate `__init__`, `__eq__`, and `__str__` from field declarations (eliminating the most common boilerplate). User-facing generics are complete — generic classes with field/method substitution, type parameter inference, protocol bounds, and generic type aliases all work. `match`/`case` provides exhaustiveness-checked pattern matching on union types, literal unions, optional types, and class unions. Simple enum types provide namespaced constants with exhaustive matching. The `bigint` type provides arbitrary-precision arithmetic matching Python's `int` behavior, resolving the integer overflow contradiction with the safety guarantee. The compiler emits warnings for potential `int` overflow. The entire stdlib is rewritten with generics: `itertools`, `functools`, `collections.Counter[T]`, `collections.deque[T]`, `heapq`, `bisect`, `random`, and `test` all use generic type parameters. Type-specific duplicates (`chain_str`, `accumulate_float`) are deleted. `Counter` has operator overloads and works for any hashable type. `deque` is backed by `VecDeque` intrinsics with O(1) front operations. `None` works as a standalone value and type.
+
+After the Codegen Architecture phase, the entire codegen pipeline uses a structured Rust IR instead of string templates. A purpose-built intermediate representation (`RustExpr`, `RustStmt`, `RustItem`, `RustType`) models the ~50 Rust constructs Sifr emits. A pretty-printer renders IR to formatted Rust source. The preamble (error types, `FileHandle` with its 10 methods, logging globals) is emitted via structured IR — the 500-650 character single-line string templates are gone. All statement and expression codegen builds IR nodes via `lower_stmt`/`lower_expr` functions. All ~80 intrinsic function match arms and ~50 method call match arms produce structured IR bodies. Temporal coupling flags (`suppress_field_clone`, `in_generator_closure`, `in_display_impl`) are eliminated or converted to explicit parameters. The string-parsing dead-code eliminator (`filter_rust_code_to_needed`) is replaced by a structural IR pass. Import collection is automatic (no more `needs_hashmap` boolean flags). A clone optimization pass removes unnecessary `.clone()` calls. At least 20 of the 34 Clippy suppressions are removed. All future codegen (async, web, FFI) is built on structured IR from day one.
 
 After the Async and Ecosystem Foundation phase, Sifr has a full async story. The core async runtime (Tokio-backed) supports `async def`/`await`, task spawning, sleep, and timeouts. Web-independent typed serialization (`dumps`/`loads` with auto-derived serde) enables typed JSON roundtrips. Networking stdlib modules (HTTP client, sockets, subprocess async, URL parsing) use typed serde for response parsing. Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking at spawn boundaries enable safe concurrent code. Advanced async features (async with, async generators, async comprehensions) complete the story.
 

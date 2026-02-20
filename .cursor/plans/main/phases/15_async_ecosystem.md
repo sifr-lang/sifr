@@ -1,6 +1,6 @@
 # Async and Ecosystem Foundation
 
-**Why now:** Safety is solid, ownership model is proven, stdlib is deep and fully generic (Phase 13). The type system is complete — generics, pattern matching, enums, and auto-init are all in place. The async runtime can be built on a stable, expressive foundation where generic types, exhaustive error handling, and clean class definitions are available from day one.
+**Why now:** Safety is solid, ownership model is proven, stdlib is deep and fully generic (Phase 13). The type system is complete — generics, pattern matching, enums, and auto-init are all in place. The codegen architecture is sound (Phase 14) — all new async codegen patterns will be built on structured IR, not string templates. The async runtime can be built on a stable, expressive foundation where generic types, exhaustive error handling, and clean class definitions are available from day one.
 
 ---
 
@@ -10,7 +10,7 @@ status: pending
 
 **Goal:** Add the minimum viable async language support: `async def`/`await` syntax, Tokio runtime auto-bundling, and basic task spawning. This is the foundational compiler feature that all other async milestones build on.
 
-**Depends on:** milestone_stdlib_generic_rewrite (Phase 13 must be complete — the type system and generic stdlib provide the foundation for async features)
+**Depends on:** milestone_codegen_structural_passes (Phase 14 must be complete — the codegen architecture provides structured IR for all new async codegen patterns)
 
 ### Language Features
 
