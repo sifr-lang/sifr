@@ -2,6 +2,7 @@
 
 mod math;
 mod json;
+mod env;
 
 use crate::RustExpr;
 
@@ -58,6 +59,12 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "asinh" => (math::lower_asinh(rendered_args), None),
         "atanh" => (math::lower_atanh(rendered_args), None),
         "isqrt" => (math::lower_isqrt(rendered_args), None),
+        "env_get" => (env::lower_env_get(rendered_args), None),
+        "env_set" => (env::lower_env_set(rendered_args), None),
+        "env_unset" => (env::lower_env_unset(rendered_args), None),
+        "env_keys" => (env::lower_env_keys(rendered_args), None),
+        "env_values" => (env::lower_env_values(rendered_args), None),
+        "env_items" => (env::lower_env_items(rendered_args), None),
         "json_loads" => (json::lower_json_loads(rendered_args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(rendered_args), Some("serde_json")),
         _ => return None,
@@ -113,5 +120,18 @@ mod tests {
             render_expr(&dumps.expr),
             "serde_json::to_string(&value).unwrap_or_default()"
         );
+    }
+
+    #[test]
+    fn lowers_env_intrinsics_via_registry() {
+        let get = lower_intrinsic("env_get", &["key".to_string()]).expect("env_get should lower");
+        assert!(render_expr(&get.expr).contains("std::env::var"));
+
+        let set = lower_intrinsic("env_set", &["k".to_string(), "v".to_string()])
+            .expect("env_set should lower");
+        assert!(render_expr(&set.expr).contains("std::env::set_var"));
+
+        let keys = lower_intrinsic("env_keys", &[]).expect("env_keys should lower");
+        assert!(render_expr(&keys.expr).contains("std::env::vars_os()"));
     }
 }
