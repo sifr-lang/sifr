@@ -161,8 +161,12 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                 if let Some(intrinsic_mod) = sifr_hir::stdlib::get_intrinsic_module(&import.module) {
                     for name in &import.names {
                         if let Some(ft) = intrinsic_mod.functions.get(name) {
-                            fn_exports.insert(name.clone(), ft.clone());
-                            intrinsic_names_for_module.insert(name.clone());
+                            // Pure Sifr functions declared in the module should shadow
+                            // imported intrinsic names (e.g. generic wrappers in sifr.test).
+                            if !fn_exports.contains_key(name) {
+                                fn_exports.insert(name.clone(), ft.clone());
+                                intrinsic_names_for_module.insert(name.clone());
+                            }
                         }
                         if let Some(const_ty) = intrinsic_mod.constants.get(name) {
                             const_exports.insert(name.clone(), const_ty.clone());
