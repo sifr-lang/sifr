@@ -1,0 +1,18 @@
+# Demo: milestone_codegen_stmt_expr_migration (phase-in scaffold)
+# This demo exercises statement + expression-heavy control flow while
+# milestone 4 migration is rolled out incrementally in multiple PRs.
+
+def main():
+    total: int = 0
+    for i in range(1, 6):
+        if i % 2 == 0:
+            total += i
+        else:
+            total += i * 2
+
+    verdict: str = "high" if total > 10 else "low"
+    print(f"total = {total}")
+    print(f"verdict = {verdict}")
+
+# expect-stdout: total = 24
+# expect-stdout: verdict = high
