@@ -55,7 +55,7 @@ status: done
 
 ## milestone_codegen_preamble_migration
 
-status: in_progress
+status: done
 
 - [x] Move preamble emission to IR items (`error types`, `FileHandle`, logging, imports)
 - [x] Add `sifr_type_to_rust_type(&Type) -> RustType`
@@ -63,24 +63,24 @@ status: in_progress
 - [ ] Add differential old-vs-new codegen harness for parity
 - [ ] Remove at least 5 clippy suppressions (including `format_push_string`)
 - [x] Demo: `demos/milestone_codegen_preamble_migration_demo.sifr`
-- [ ] Open PR(s), review, merge
-- [ ] Mark done in phase docs
+- [x] Open PR(s), review, merge
+- [x] Mark done in phase docs
 
 ---
 
 ## milestone_codegen_stmt_expr_migration
 
-status: pending
+status: in_progress
 
-- [ ] Introduce `context.rs` (`CodegenContext`, `ScopeContext`, `CodegenError`)
-- [ ] Add `lower_expr.rs`, `lower_stmt.rs`, `lower_item.rs`, `preamble.rs`
+- [x] Introduce `context.rs` (`CodegenContext`, `ScopeContext`, `CodegenError`)
+- [x] Add `lower_expr.rs`, `lower_stmt.rs`, `lower_item.rs`, `preamble.rs`
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [ ] Replace all `expr_to_string` call sites with structured lowering
 - [ ] Convert >= 80% of stmt/expr arms to structured IR (`RawCode` only for remainder)
 - [ ] Remove/replace at least 4 temporal coupling flags
 - [ ] Add differential corpus parity tests
-- [ ] Demo: `demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+- [x] Demo: `demos/milestone_codegen_stmt_expr_migration_demo.sifr`
 - [ ] Open PR(s), review, merge
 - [ ] Mark done in phase docs
 

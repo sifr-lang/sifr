@@ -43,6 +43,14 @@ mod render;
 pub use render::*;
 mod preamble;
 pub use preamble::*;
+mod context;
+pub use context::*;
+mod lower_expr;
+pub use lower_expr::*;
+mod lower_stmt;
+pub use lower_stmt::*;
+mod lower_item;
+pub use lower_item::*;
 
 use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};
