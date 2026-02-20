@@ -47,6 +47,17 @@ pub(super) fn lower_read_lines(args: &[String]) -> Option<RustExpr> {
     )))
 }
 
+pub(super) fn lower_append_text(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ use std::io::Write; (|| -> Result<(), IOError> {{ let mut _f = std::fs::OpenOptions::new().append(true).create(true).open({}).map_err(__io_err)?; write!(_f, \"{{}}\", {}).map_err(__io_err)?; Ok(()) }})() }}",
+        borrow_expr(&args[0]),
+        args[1]
+    )))
+}
+
 pub(super) fn lower_getcwd(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
@@ -63,6 +74,16 @@ pub(super) fn lower_listdir(args: &[String]) -> Option<RustExpr> {
     }
     Some(RustExpr::RawCode(format!(
         "std::fs::read_dir({}).map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect::<Vec<String>>()).map_err(__io_err)",
+        borrow_expr(&args[0])
+    )))
+}
+
+pub(super) fn lower_walk_dir(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ fn __walk(p: &std::path::Path) -> Result<Vec<String>, IOError> {{ let mut r = Vec::new(); let entries = std::fs::read_dir(p).map_err(__io_err)?; for e in entries {{ let e = e.map_err(__io_err)?; let path = e.path(); r.push(path.display().to_string()); if path.is_dir() {{ r.extend(__walk(&path)?); }} }} Ok(r) }} __walk(std::path::Path::new({})) }}",
         borrow_expr(&args[0])
     )))
 }
