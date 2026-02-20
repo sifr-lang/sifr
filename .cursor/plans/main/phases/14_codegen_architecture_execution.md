@@ -95,6 +95,7 @@ status: in_progress
 - [x] Demo: `demos/milestone_codegen_intrinsic_migration_demo.sifr` (initial registry path validation)
 - [x] PR2 slice: add registry dependency metadata plumbing and migrate `json_loads/json_dumps` to registry lowering
 - [x] PR3 slice: migrate expanded `sifr.math` intrinsic set into registry lowerers with parity checks
+- [x] PR4 slice: migrate `sifr.env` intrinsic handlers into registry lowerers with env parity tests
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
