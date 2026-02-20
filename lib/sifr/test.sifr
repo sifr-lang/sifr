@@ -1,18 +1,18 @@
 # sifr.test — Test assertion functions
 
-def assert_eq[T](actual: T, expected: T) -> None:
+def assert_eq[T](own actual: T, own expected: T) -> None:
     assert actual == expected
 
-def assert_ne[T](actual: T, expected: T) -> None:
+def assert_ne[T](own actual: T, own expected: T) -> None:
     assert actual != expected
 
-def assert_true(value: bool) -> None:
+def assert_true(own value: bool) -> None:
     assert value
 
-def assert_false(value: bool) -> None:
+def assert_false(own value: bool) -> None:
     assert not value
 
-def assert_almost_eq(actual: float, expected: float, tolerance: float) -> None:
+def assert_almost_eq(own actual: float, own expected: float, own tolerance: float) -> None:
     assert tolerance >= 0.0
     if actual == expected:
         return
@@ -24,7 +24,7 @@ def assert_almost_eq(actual: float, expected: float, tolerance: float) -> None:
         assert False
     assert diff <= tolerance
 
-def assert_not_almost_eq(actual: float, expected: float, tolerance: float) -> None:
+def assert_not_almost_eq(own actual: float, own expected: float, own tolerance: float) -> None:
     assert tolerance >= 0.0
     if actual == expected:
         assert False
@@ -36,31 +36,31 @@ def assert_not_almost_eq(actual: float, expected: float, tolerance: float) -> No
         return
     assert diff > tolerance
 
-def assert_gt[T: Comparable](a: T, b: T) -> None:
+def assert_gt[T: Comparable](own a: T, own b: T) -> None:
     assert a > b
 
-def assert_ge[T: Comparable](a: T, b: T) -> None:
+def assert_ge[T: Comparable](own a: T, own b: T) -> None:
     assert a >= b
 
-def assert_lt[T: Comparable](a: T, b: T) -> None:
+def assert_lt[T: Comparable](own a: T, own b: T) -> None:
     assert a < b
 
-def assert_le[T: Comparable](a: T, b: T) -> None:
+def assert_le[T: Comparable](own a: T, own b: T) -> None:
     assert a <= b
 
-def assert_some[T](value: T | None) -> None:
+def assert_some[T](own value: T | None) -> None:
     assert value is not None
 
-def assert_none[T](value: T | None) -> None:
+def assert_none[T](own value: T | None) -> None:
     assert value is None
 
-def assert_ok[T](value: Result[T, Error]) -> None:
+def assert_ok[T](own value: Result[T, Error]) -> None:
     try:
         out: T = value
     except Error as e:
         assert False
 
-def assert_err[T](value: Result[T, Error]) -> None:
+def assert_err[T](own value: Result[T, Error]) -> None:
     try:
         out: T = value
         assert False

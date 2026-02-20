@@ -6149,6 +6149,22 @@ impl RustEmitter {
                                     self.emit_expr(arg);
                                     continue;
                                 }
+                                // Result[T, Error] param with a concrete Result[T, SomeError] arg:
+                                // convert the error branch so Rust types line up (Result invariance).
+                                if convention == ParamConvention::Own {
+                                    if let (Type::Result(_, param_err), Type::Result(_, arg_err)) =
+                                        (param_ty, arg.ty())
+                                    {
+                                        if param_err.display_name() == "Error"
+                                            && arg_err.display_name() != "Error"
+                                        {
+                                            self.write("(");
+                                            self.emit_expr(arg);
+                                            self.write(").map_err(|e| Error::new(e.to_string()))");
+                                            continue;
+                                        }
+                                    }
+                                }
                                 // Non-Option union param -> wrap in enum variant
                                 if let Type::Union(members) = param_ty {
                                     if !is_option_type(param_ty) {

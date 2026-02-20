@@ -25,6 +25,14 @@ fn extract_expect_stdout(source: &str) -> Option<String> {
     }
 }
 
+/// Collect all `# expect-stderr: <value>` lines.
+fn extract_expect_stderr(source: &str) -> Vec<String> {
+    source
+        .lines()
+        .filter_map(|line| line.strip_prefix("# expect-stderr:").map(|rest| rest.trim().to_string()))
+        .collect()
+}
+
 /// Extract expected error substrings from `# expect-error: <value>` comments.
 fn extract_expect_errors(source: &str) -> Vec<String> {
     let mut errors = Vec::new();
@@ -150,7 +158,12 @@ edition = "2021"
 }
 
 /// Build the generated Rust source with stdlib dependencies into a binary and run it.
-fn build_and_run_with_deps(rust_source: &str, test_name: &str, stdlib_modules: &HashSet<String>) -> Result<String, String> {
+/// Returns (stdout, stderr, success_status).
+fn build_and_run_capture_with_deps(
+    rust_source: &str,
+    test_name: &str,
+    stdlib_modules: &HashSet<String>,
+) -> Result<(String, String, bool), String> {
     let tmp_dir = std::env::temp_dir().join("sifr_e2e_tests").join(test_name);
     let src_dir = tmp_dir.join("src");
     fs::create_dir_all(&src_dir).map_err(|e| format!("failed to create dir: {}", e))?;
@@ -195,13 +208,27 @@ fn build_and_run_with_deps(rust_source: &str, test_name: &str, stdlib_modules: &
         .output()
         .map_err(|e| format!("failed to run binary: {}", e))?;
 
-    if !run_output.status.success() {
-        let stderr = String::from_utf8_lossy(&run_output.stderr);
-        return Err(format!("binary exited with error:\n{}", stderr));
-    }
-
     let stdout = String::from_utf8_lossy(&run_output.stdout).to_string();
-    Ok(stdout)
+    let stderr = String::from_utf8_lossy(&run_output.stderr).to_string();
+    Ok((stdout, stderr, run_output.status.success()))
+}
+
+/// Build and run, requiring successful process exit.
+fn build_and_run_with_deps(
+    rust_source: &str,
+    test_name: &str,
+    stdlib_modules: &HashSet<String>,
+) -> Result<String, String> {
+    match build_and_run_capture_with_deps(rust_source, test_name, stdlib_modules) {
+        Ok((stdout, stderr, success)) => {
+            if success {
+                Ok(stdout)
+            } else {
+                Err(format!("binary exited with error:\n{}", stderr))
+            }
+        }
+        Err(e) => Err(e),
+    }
 }
 
 #[test]
@@ -332,4 +359,81 @@ fn test_e2e_fail() {
 
     assert!(test_count > 0, "No fail tests found");
     eprintln!("  {} fail tests completed", test_count);
+}
+
+#[test]
+fn test_e2e_runtime_fail() {
+    let runtime_fail_dir = Path::new("tests/e2e/runtime_fail");
+    if !runtime_fail_dir.exists() {
+        return;
+    }
+
+    let mut entries: Vec<_> = fs::read_dir(runtime_fail_dir)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map_or(false, |ext| ext == "sifr"))
+        .collect();
+    entries.sort_by_key(|e| e.path());
+
+    let mut test_count = 0;
+    let mut failures: Vec<String> = Vec::new();
+
+    for entry in &entries {
+        let path = entry.path();
+        let test_name = path.file_stem().unwrap().to_string_lossy().to_string();
+        let source = fs::read_to_string(&path).unwrap();
+        let expected_stderr = extract_expect_stderr(&source);
+
+        let (rust_source, used_stdlib_modules) = match compile_source_with_metadata(&source) {
+            Ok(result) => result,
+            Err(errors) => {
+                failures.push(format!(
+                    "FAIL [{}]: sifr compilation failed (runtime-fail tests must compile):\n  {}",
+                    test_name,
+                    errors.join("\n  ")
+                ));
+                continue;
+            }
+        };
+
+        match build_and_run_capture_with_deps(&rust_source, &test_name, &used_stdlib_modules) {
+            Ok((_stdout, stderr, success)) => {
+                if success {
+                    failures.push(format!(
+                        "FAIL [{}]: expected runtime failure but binary exited successfully",
+                        test_name
+                    ));
+                    continue;
+                }
+
+                for expected in &expected_stderr {
+                    if !stderr.contains(expected) {
+                        failures.push(format!(
+                            "FAIL [{}]: expected stderr containing {:?} but got:\n{}",
+                            test_name, expected, stderr
+                        ));
+                    }
+                }
+            }
+            Err(err) => {
+                failures.push(format!("FAIL [{}]: {}", test_name, err));
+                continue;
+            }
+        }
+
+        test_count += 1;
+    }
+
+    if !failures.is_empty() {
+        panic!(
+            "\n{} E2E runtime-fail test(s) failed:\n\n{}\n\n({} passed, {} failed)",
+            failures.len(),
+            failures.join("\n\n"),
+            test_count,
+            failures.len()
+        );
+    }
+
+    assert!(test_count > 0, "No runtime_fail tests found");
+    eprintln!("  {} runtime_fail tests completed", test_count);
 }
