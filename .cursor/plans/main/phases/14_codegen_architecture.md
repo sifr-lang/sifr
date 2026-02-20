@@ -283,6 +283,7 @@ pub struct RustParam {
 
 pub struct RustMatchArm {
     pub pattern: String,
+    pub bindings: Vec<String>,
     pub guard: Option<RustExpr>,
     pub body: Vec<RustStmt>,
 }
@@ -308,7 +309,7 @@ pub enum Visibility {
 
 1. **`RawCode(String)` on every node type.** This is the critical migration enabler. Any codegen path that hasn't been converted yet can emit `RawCode("the old string output")`. The renderer passes it through verbatim. This means every intermediate state compiles and works correctly — there is no big-bang rewrite.
 
-2. **Match arm patterns are `String`, not a structured pattern type.** Rust match patterns are complex (nested destructuring, `ref`, `@` bindings, range patterns). Modeling them fully would add 100+ lines of types for marginal benefit. Since Sifr generates a limited set of patterns, keeping them as strings is pragmatic. The renderer emits them verbatim.
+2. **Match arm patterns are `String`, not a structured pattern type.** Rust match patterns are complex (nested destructuring, `ref`, `@` bindings, range patterns). Modeling them fully would add 100+ lines of types for marginal benefit. Since Sifr generates a limited set of patterns, keeping them as strings is pragmatic. The renderer emits them verbatim. However, each `RustMatchArm` carries a `bindings: Vec<String>` field that lists the variable names introduced by the pattern. This enables the DCE pass to know which identifiers are defined (not just referenced) in match arms, without requiring a full pattern AST.
 
 3. **No `syn`/`quote` dependency.** These crates are designed for proc-macros and model all of Rust syntax (~50k lines). Sifr only emits ~50 distinct constructs. A purpose-built IR of ~300 lines is the right size.
 
@@ -336,7 +337,7 @@ The new module is added to `crates/sifr_codegen/src/lib.rs` as `mod rust_ir;` an
 
 status: pending
 
-**Goal:** Write a renderer that takes `RustFile` (or any IR node) and produces correctly formatted, indented Rust source code as a `String`. This is the single point where indentation logic lives — the codegen never thinks about whitespace again. The renderer must produce output that is byte-for-byte identical to what the current string-based codegen produces for any IR node that has been converted (so that snapshot tests don't break during migration).
+**Goal:** Write a renderer that takes `RustFile` (or any IR node) and produces correctly formatted, indented Rust source code as a `String`. This is the single point where indentation logic lives — the codegen never thinks about whitespace again. The renderer must produce output that is **semantically identical** to what the current string-based codegen produces — the generated Rust must compile and produce the same runtime behavior. Whitespace and formatting differences are acceptable (the IR renderer may produce cleaner formatting than the manual `push_str` chains). The verification contract is: **same compilation success, same runtime output** — not byte-for-byte textual identity.
 
 **Depends on:** milestone_rust_ir_types (the IR types must exist before the renderer can consume them)
 
@@ -488,7 +489,13 @@ Currently: Boolean flags (`needs_hashmap`, `needs_hashset`, `needs_vecdeque`, `n
 
 Target: A `Vec<RustItem::Use>` collected during emission, deduplicated, and prepended to the file. The boolean flags remain for now (they're set during HIR traversal) but the emission path uses IR.
 
-#### 5. `is_builtin_error_referenced` elimination
+#### 5. `Type::rust_type()` → `RustType` mapping
+
+Currently: `Type::rust_type()` in `sifr_type_system/src/types.rs` returns a `String` (e.g., `"Vec<i64>"`, `"HashMap<String, f64>"`). The codegen interpolates this string directly into templates.
+
+Target: Add a helper function `fn sifr_type_to_rust_type(ty: &Type) -> RustType` in `sifr_codegen` that maps Sifr types to structured `RustType` nodes. This function lives in the codegen crate (not the type system crate) because `RustType` is a codegen concept. The existing `Type::rust_type() -> String` method remains unchanged for backward compatibility — the new function is used by the IR-building `lower_*` methods, while the old method continues to serve any remaining string-based paths during migration.
+
+#### 6. `is_builtin_error_referenced` elimination
 
 Currently: The function at line 74 scans the generated Rust source code as a string to determine which error types are actually used, using word-boundary matching. This is a consequence of string-based codegen — you can't query the output structurally.
 
@@ -521,6 +528,7 @@ The generated Rust output must be functionally identical before and after migrat
 - Logging infrastructure emitted via IR
 - Import collection uses `RustItem::Use` instead of direct string concatenation
 - `is_builtin_error_referenced` string-scanning function eliminated or reduced to a thin compatibility shim
+- `sifr_type_to_rust_type` helper function maps all Sifr `Type` variants to `RustType` nodes
 - All existing E2E tests still pass (zero regressions)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes
 - At least 5 Clippy suppressions from the file header can be removed (specifically `format_push_string` which is the most directly caused by string templates)
@@ -536,13 +544,27 @@ status: pending
 
 **Depends on:** milestone_codegen_preamble_migration (the preamble migration proves the IR+renderer pipeline works end-to-end on real output)
 
+### `RustEmitter` State Decomposition
+
+The current `RustEmitter` is a god-object with 33 mutable fields mixing output accumulation, contextual flags, and type metadata. As part of this migration, decompose its state into focused contexts:
+
+- **`CodegenContext`**: Carries immutable compilation context (type information, stdlib symbols, compiler options). Passed by reference to all `lower_*` methods.
+- **`ScopeContext`**: Carries mutable scope-local state (current function return type, whether inside a generator/display impl/loop-with-else). Passed as a parameter, not stored as mutable struct fields. This replaces the temporal coupling flags.
+- **`RustEmitter`** retains only the output accumulation (`output: String`, `indent: usize`) and delegates to `lower_*` methods that accept contexts explicitly.
+
+This decomposition happens incrementally alongside the `lower_*` migration — each converted codegen path receives explicit context parameters instead of reading mutable struct fields.
+
+### Design Principle: `lower_*` Methods Return `Result`
+
+All new `lower_*` methods return `Result<RustExpr, CodegenError>` / `Result<Vec<RustStmt>, CodegenError>` instead of panicking on unexpected input. Define a `CodegenError` type in `sifr_codegen` for structured error reporting. This is adopted incrementally — the initial `lower_*` implementations may use `.expect()` for cases that are genuinely unreachable, but new code defaults to `Result` propagation.
+
 ### Migration Strategy
 
 The migration uses a **dual-path approach** during the transition:
 
-1. **New `lower_*` methods** return IR nodes: `fn lower_stmt(&self, stmt: &HirStmt) -> Vec<RustStmt>`, `fn lower_expr(&self, expr: &HirExpr) -> RustExpr`, etc.
+1. **New `lower_*` methods** return IR nodes: `fn lower_stmt(&self, stmt: &HirStmt) -> Result<Vec<RustStmt>, CodegenError>`, `fn lower_expr(&self, expr: &HirExpr) -> Result<RustExpr, CodegenError>`, etc.
 2. **Old `emit_*` methods** become thin wrappers that call the new `lower_*` methods and render the result into `self.output`.
-3. **Unconverted match arms** in the new `lower_*` methods return `RawCode(...)` by capturing the old string output via a temporary buffer.
+3. **Unconverted match arms** in the new `lower_*` methods return `Ok(RawCode(...))` by capturing the old string output via a temporary buffer.
 
 This means:
 - Every intermediate state compiles and works correctly
@@ -621,15 +643,33 @@ As each codegen path is converted to IR, the temporal coupling flags can be elim
 
 These flags are NOT removed in this milestone if doing so would risk regressions. They are removed only when the corresponding codegen path is fully converted and tested. Some flags may persist as parameters to `lower_*` methods rather than mutable struct fields — this is still an improvement (explicit parameter vs hidden mutable state).
 
+### Module Decomposition
+
+As part of this milestone, break up the monolithic `lib.rs` (9,805 lines) into focused modules:
+
+- `crates/sifr_codegen/src/rust_ir.rs` — IR type definitions (already created in milestone 1)
+- `crates/sifr_codegen/src/render.rs` — Renderer (already created in milestone 2)
+- `crates/sifr_codegen/src/lower_expr.rs` — `lower_expr` and all expression-lowering helpers
+- `crates/sifr_codegen/src/lower_stmt.rs` — `lower_stmt` and all statement-lowering helpers
+- `crates/sifr_codegen/src/lower_item.rs` — `lower_function`, `lower_class`, `lower_enum_class`, `lower_protocol_trait`, `lower_module`
+- `crates/sifr_codegen/src/context.rs` — `CodegenContext`, `ScopeContext`, `CodegenError` definitions
+- `crates/sifr_codegen/src/preamble.rs` — Preamble generation functions (moved from milestone 3 additions in `lib.rs`)
+- `crates/sifr_codegen/src/lib.rs` — Retains `RustEmitter`, `generate_rust_with_stdlib`, and module declarations; becomes a thin orchestration layer
+
+The decomposition happens as each `lower_*` function is written — new code goes directly into the new module files. The old `emit_*` methods in `lib.rs` become thin wrappers that delegate to the new modules.
+
 ### Definition of Done (milestone_codegen_stmt_expr_migration)
 
 - `lower_expr` handles all `HirExpr` variants (some may use `RawCode` for complex cases)
 - `lower_stmt` handles all `HirStmt` variants (some may use `RawCode` for complex cases)
 - `emit_function` and `emit_class` build IR items
 - `emit_module` builds a `RustFile` and renders it
+- All new `lower_*` methods return `Result<_, CodegenError>` (not panicking)
+- `CodegenContext` and `ScopeContext` structs are defined and used by all `lower_*` methods
 - At least 80% of match arms in `lower_expr` and `lower_stmt` produce structured IR (not `RawCode`)
 - The remaining `RawCode` usages are documented with `// TODO: convert to structured IR` comments
-- At least 3 temporal coupling flags (`suppress_field_clone`, `in_generator_closure`, `in_display_impl`) are eliminated or converted to explicit parameters
+- At least 3 temporal coupling flags (`suppress_field_clone`, `in_generator_closure`, `in_display_impl`) are eliminated or converted to explicit `ScopeContext` parameters
+- Module decomposition complete: `lower_expr.rs`, `lower_stmt.rs`, `lower_item.rs`, `context.rs`, `preamble.rs` exist as separate files; `lib.rs` is reduced to orchestration
 - All existing E2E tests still pass (zero regressions)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes
 - At least 10 additional Clippy suppressions from the file header can be removed
@@ -683,25 +723,51 @@ Complex intrinsics (e.g., `builtin_open`, `walk_dir`, `disk_usage`) produce `Rus
 
 The current function matches on (object type, method name) pairs for ~50 methods across `str`, `list`, `dict`, `set`, `tuple`, `deque`, `FileHandle`, etc. Each arm becomes a structured IR expression.
 
-### Registry Pattern (Optional Improvement)
+### Intrinsic Registry (Mandatory)
 
-Instead of a single 1,300-line match statement, intrinsics can be registered in a `HashMap<&str, fn(&RustEmitter, &[HirExpr]) -> RustExpr>` at initialization time. This:
+Instead of a single 1,300-line match statement, intrinsics **must** be registered in a `HashMap<&str, fn(&CodegenContext, &[HirExpr]) -> Result<RustExpr, CodegenError>>` at initialization time. This:
 - Makes adding new intrinsics a one-line registration instead of editing a giant match
 - Enables intrinsic discovery (list all registered intrinsics)
 - Reduces the size of any single function
+- Is essential for maintainability as future phases (async, typed serde, web framework, FFI) will add hundreds of new intrinsics
 
-This is an optional improvement — the match statement works fine functionally. The registry is better for maintainability but adds indirection.
+The registry is built once at codegen initialization. Each intrinsic function lives in a domain-specific module:
+
+- `crates/sifr_codegen/src/intrinsics/mod.rs` — Registry construction and dispatch
+- `crates/sifr_codegen/src/intrinsics/io.rs` — `sifr.io` intrinsics (~18 functions)
+- `crates/sifr_codegen/src/intrinsics/math.rs` — `sifr.math` intrinsics (~20 functions)
+- `crates/sifr_codegen/src/intrinsics/json.rs` — `sifr.json` intrinsics
+- `crates/sifr_codegen/src/intrinsics/env.rs` — `sifr.env` intrinsics
+- `crates/sifr_codegen/src/intrinsics/os.rs` — `sifr.os` intrinsics
+- `crates/sifr_codegen/src/intrinsics/time.rs` — `sifr.time` intrinsics
+- `crates/sifr_codegen/src/intrinsics/random.rs` — `sifr.random` intrinsics
+- `crates/sifr_codegen/src/intrinsics/re.rs` — `sifr.re` intrinsics
+- `crates/sifr_codegen/src/intrinsics/hashlib.rs` — `sifr.hashlib` intrinsics
+- `crates/sifr_codegen/src/intrinsics/base64.rs` — `sifr.base64` intrinsics
+- `crates/sifr_codegen/src/intrinsics/crypto.rs` — `sifr.crypto` intrinsics
+- `crates/sifr_codegen/src/intrinsics/file_handle.rs` — File handle intrinsics
+
+Similarly, method calls are organized by type in a `methods/` directory:
+
+- `crates/sifr_codegen/src/methods/mod.rs` — Method registry construction and dispatch
+- `crates/sifr_codegen/src/methods/str_methods.rs` — String method lowering
+- `crates/sifr_codegen/src/methods/list_methods.rs` — List method lowering
+- `crates/sifr_codegen/src/methods/dict_methods.rs` — Dict method lowering
+- `crates/sifr_codegen/src/methods/set_methods.rs` — Set method lowering
+- etc.
 
 ### Definition of Done (milestone_codegen_intrinsic_migration)
 
-- `lower_intrinsic_call` handles all ~80 intrinsic function match arms via structured IR
-- `lower_method_call` handles all ~50 method call match arms via structured IR
-- No intrinsic match arm contains a `self.write(...)` call longer than 100 characters (the current worst case is 1,500+ characters)
+- Intrinsic registry (`HashMap`-based) is implemented and dispatches all ~80 intrinsic functions
+- Method registry dispatches all ~50 method calls organized by receiver type
+- Intrinsics are decomposed into domain-specific modules under `intrinsics/` directory
+- Methods are decomposed into type-specific modules under `methods/` directory
+- No intrinsic or method lowering function contains a `self.write(...)` call longer than 100 characters (the current worst case is 1,500+ characters)
 - The `builtin_open` intrinsic is a readable, structured function body (not a single string literal)
-- All `RawCode` usages in intrinsics are eliminated (intrinsics are fully converted)
+- All `RawCode` usages in intrinsics and methods are eliminated (fully converted)
 - All existing E2E tests still pass (zero regressions)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes
-- The total line count of `sifr_codegen/src/lib.rs` is reduced by at least 500 lines (string templates replaced by more compact IR construction)
+- The total line count of `sifr_codegen/src/lib.rs` is reduced by at least 2,000 lines (intrinsics + methods moved to separate modules)
 
 ---
 
@@ -717,7 +783,9 @@ status: pending
 
 Currently: Boolean flags (`needs_hashmap`, `needs_hashset`, `needs_vecdeque`, `needs_bigint`) are set during HIR traversal and checked during preamble generation.
 
-New approach: Walk the `RustFile` IR and collect all `RustType` nodes. If any node contains `RustType::HashMap`, add `use std::collections::HashMap;`. If any contains `RustType::HashSet`, add `use std::collections::HashSet;`. Etc.
+New approach: Walk the entire `RustFile` IR tree and collect all `RustType` nodes. If any node contains `RustType::HashMap`, add `use std::collections::HashMap;`. If any contains `RustType::HashSet`, add `use std::collections::HashSet;`. Etc. The walk must visit all IR nodes recursively — items, statements, expressions, types, and nested bodies.
+
+**`RawCode` handling:** `RawCode` nodes are opaque strings and cannot be inspected structurally. If any `RawCode` nodes remain in the IR at this point, the import collection pass falls back to the existing boolean flags for those paths. The goal is to have zero `RawCode` by the time this pass runs (see structural passes DoD), but the fallback ensures correctness during any intermediate state.
 
 This eliminates the boolean flags and makes import collection automatic and correct — if a codegen path forgets to set a flag, the import is still collected.
 
@@ -727,16 +795,21 @@ Currently: `filter_rust_code_to_needed` (lines 218-349) parses generated Rust so
 
 New approach: Walk the `RustFile` IR. For each `RustItem`, extract its name. Build a dependency graph by walking the item's body and collecting all `RustExpr::Ident` and `RustExpr::Path` references. Compute the transitive closure from the set of imported names. Filter the `RustFile.items` to only include needed items.
 
+**`RawCode` gate:** This pass requires zero `RawCode` nodes in the IR to be fully correct. `RawCode` nodes are opaque — the pass cannot extract identifiers or references from them, which means the dependency graph would be incomplete. The prerequisite for enabling this pass is that all core codegen paths (milestones 3-5) have eliminated `RawCode`. If any `RawCode` remains in the stdlib preamble, the DCE pass must conservatively mark those items as always-needed (roots of the dependency graph).
+
+**Scope:** DCE operates on the full `RustFile` — both user code items and stdlib preamble items. The entry points (roots) are the user's `main` function and any `#[test]` functions.
+
 This is structurally correct (no false positives from substring matches), handles all edge cases (nested references, type references, trait impl references), and is ~50 lines of code instead of ~130 lines of string parsing.
 
-### Pass 3: Clone Optimization
+### Pass 3: Clone Optimization (Conservative)
 
-Currently: `.clone()` is inserted heuristically at 20+ locations based on contextual flags. Some clones are unnecessary (e.g., cloning a `Copy` type, cloning a value that is used only once).
+Currently: `.clone()` is inserted heuristically at 20+ locations based on contextual flags. Some clones are unnecessary (e.g., cloning a `Copy` type, cloning a literal).
 
-New approach: Walk the IR and identify `RustExpr::Clone(inner)` nodes where:
-- `inner` is a literal (no clone needed)
-- `inner` is a `Copy` type based on the Sifr type information (no clone needed)
-- `inner` is used exactly once in the enclosing scope (move instead of clone)
+New approach: Walk the IR and identify `RustExpr::Clone(inner)` nodes where the clone is **trivially provable** as unnecessary:
+- `inner` is a literal (no clone needed — literals are always fresh values)
+- `inner` is a `Copy` type based on the Sifr type information (no clone needed — `i64`, `f64`, `bool`, `char`)
+
+**Explicitly out of scope for this phase:** "Used exactly once" analysis. Determining whether a value is used exactly once requires full dataflow/ownership analysis across the enclosing scope, which is a complex problem that belongs in `sifr_hir` as a proper ownership analysis pass (a future phase concern). This phase only removes clones that are provably unnecessary from local type information alone.
 
 Remove unnecessary clones. This is a conservative pass — it only removes clones that are provably unnecessary, never adds them.
 
@@ -752,15 +825,33 @@ This catches codegen bugs at Sifr compile time rather than at Rust compile time.
 
 ### Definition of Done (milestone_codegen_structural_passes)
 
+- **`RawCode`-zero gate met:** Zero `RawCode` nodes in all core codegen paths (user code expressions, statements, items, intrinsics, methods). The only acceptable `RawCode` remaining is in the stdlib preamble if any edge cases resist conversion — these must be explicitly documented and counted (target: zero, hard maximum: 5)
 - Import collection pass eliminates `needs_hashmap`, `needs_hashset`, `needs_vecdeque`, `needs_bigint` boolean flags
 - Dead code elimination pass replaces `filter_rust_code_to_needed` (the old string-parsing function is deleted)
-- Clone optimization pass removes at least 10% of `.clone()` calls in generated code (measured across the E2E test suite)
+- Clone optimization pass removes clones on literals and `Copy` types (conservative scope — no ownership analysis)
 - IR validation pass catches at least 3 categories of structural issues
 - All existing E2E tests still pass (zero regressions)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes
 - The `parse_rust_blocks`, `extract_top_level_item_name`, and `count_braces` helper functions are deleted
 - At least 20 of the 34 Clippy suppressions in the file header can be removed
 - Binary size of generated programs does not increase (clone optimization should decrease it slightly)
+- Stdlib code goes through the same IR pipeline as user code — the stdlib preamble is built as `Vec<RustItem>` and rendered, not special-cased as raw strings
+
+---
+
+## Explicit Scope Exclusions
+
+The following are **not** addressed in this phase:
+
+- **`Cargo.toml` dependency resolution.** The generated Rust code's `Cargo.toml` (which lists crate dependencies like `serde`, `regex`, `sha2`, etc.) is currently built by string concatenation in the driver. Migrating this to a structured representation is a separate concern — it's not part of the Rust source code IR and would require a different data model. This is deferred to the package management phase (Phase 18).
+
+- **HIR-level ownership analysis.** The root cause of many unnecessary `.clone()` calls is that the HIR does not track ownership/borrowing semantics. A proper ownership analysis pass in `sifr_hir` would allow the codegen to emit moves instead of clones in many cases. This is a future phase concern — this phase only removes clones that are trivially provable as unnecessary from type information alone.
+
+- **Full pattern AST for match arms.** Match arm patterns remain as `String` with a `bindings` annotation. A full structured pattern type is not justified by the current set of patterns Sifr generates.
+
+## Stdlib Pipeline Clarification
+
+Stdlib code (compiled from `stdlib.sifr`) goes through the **same IR pipeline** as user code. The stdlib is compiled by `sifr_driver` using the same `RustEmitter` → IR → Renderer path. The only special handling is the **preamble** (error types, `FileHandle`, logging globals, imports) which is generated programmatically (not from `.sifr` source) — this preamble is also built as `Vec<RustItem>` and rendered through the IR pipeline, not emitted as raw strings.
 
 ---
 
@@ -769,6 +860,6 @@ This catches codegen bugs at Sifr compile time rather than at Rust compile time.
 - **milestone_rust_ir_types first:** Everything depends on the IR type definitions. No existing code changes — pure addition.
 - **milestone_rust_ir_renderer second:** The renderer is needed before any migration can begin. Also pure addition — no existing code changes.
 - **milestone_codegen_preamble_migration third:** The safest migration target (static code, no user-input dependency). Proves the pipeline end-to-end. Eliminates the worst string templates.
-- **milestone_codegen_stmt_expr_migration fourth:** The bulk of the migration. Requires the preamble to be proven. Converts the core codegen loop.
-- **milestone_codegen_intrinsic_migration fifth:** Intrinsics are the most self-contained. Requires `lower_expr` to be in place so intrinsic bodies can reference it.
-- **milestone_codegen_structural_passes last:** New capabilities that require the full IR. The payoff milestone — this is where the architectural investment delivers measurable improvements.
+- **milestone_codegen_stmt_expr_migration fourth:** The bulk of the migration. Requires the preamble to be proven. Converts the core codegen loop. Includes module decomposition of `lib.rs`.
+- **milestone_codegen_intrinsic_migration fifth:** Intrinsics are the most self-contained. Requires `lower_expr` to be in place so intrinsic bodies can reference it. Includes mandatory registry pattern and domain-specific module decomposition.
+- **milestone_codegen_structural_passes last:** New capabilities that require the full IR. The payoff milestone — this is where the architectural investment delivers measurable improvements. Requires `RawCode`-zero gate to be met.
