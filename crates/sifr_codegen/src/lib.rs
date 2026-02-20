@@ -7037,16 +7037,30 @@ impl RustEmitter {
             }
             // sifr.env
             "env_get" => {
-                self.write("std::env::var(");
+                self.write("{ let __k = ");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(").ok()");
+                self.write("; if __k.is_empty() || __k.contains('=') || __k.as_bytes().contains(&0) { None } else { std::env::var(__k).ok() } }");
             }
             "env_set" => {
-                self.write("std::env::set_var(");
+                self.write("{ let __k = ");
                 self.emit_expr_as_str_ref(&args[0]);
-                self.write(", ");
+                self.write("; let __v = ");
                 self.emit_expr_as_str_ref(&args[1]);
-                self.write(")");
+                self.write("; if !__k.is_empty() && !__k.contains('=') && !__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0) { std::env::set_var(__k, __v); } }");
+            }
+            "env_unset" => {
+                self.write("{ let __k = ");
+                self.emit_expr_as_str_ref(&args[0]);
+                self.write("; if !__k.is_empty() && !__k.contains('=') && !__k.as_bytes().contains(&0) { std::env::remove_var(__k); } }");
+            }
+            "env_keys" => {
+                self.write("std::env::vars_os().map(|(k, _)| k.to_string_lossy().to_string()).collect::<Vec<String>>()");
+            }
+            "env_values" => {
+                self.write("std::env::vars_os().map(|(_, v)| v.to_string_lossy().to_string()).collect::<Vec<String>>()");
+            }
+            "env_items" => {
+                self.write("std::env::vars_os().map(|(k, v)| format!(\"{}={}\", k.to_string_lossy(), v.to_string_lossy())).collect::<Vec<String>>()");
             }
             // sifr.os
             "run_command" => {
