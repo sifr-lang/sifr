@@ -1,0 +1,48 @@
+# Adapted CPython env subset for sifr.env safety model
+from sifr.env import env_get, env_set, env_unset, getenv, keys, values, items
+
+def main():
+    env_unset("SIFR_ENV_PORT")
+    env_set("SIFR_ENV_PORT", "v")
+
+    v1: str | None = env_get("SIFR_ENV_PORT")
+    if v1 is not None:
+        print(v1)
+    print(getenv("SIFR_ENV_PORT", "d"))
+
+    env_unset("SIFR_ENV_PORT")
+    print(getenv("SIFR_ENV_PORT", "d"))
+
+    # Safety adaptation: invalid names are ignored instead of panicking.
+    env_set("", "x")
+    bad_empty: str | None = env_get("")
+    if bad_empty is None:
+        print("empty-key-safe")
+
+    env_set("A=B", "x")
+    bad_eq: str | None = env_get("A=B")
+    if bad_eq is None:
+        print("equals-key-safe")
+
+    k: list[str] = keys()
+    v: list[str] = values()
+    it: list[str] = items()
+
+    print(len(k) == len(v))
+    print(len(k) == len(it))
+
+    has_equals_pair: bool = False
+    for pair in it:
+        for ch in pair:
+            if ch == "=":
+                has_equals_pair = True
+    print(has_equals_pair)
+
+# expect-stdout: v
+# expect-stdout: v
+# expect-stdout: d
+# expect-stdout: empty-key-safe
+# expect-stdout: equals-key-safe
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
