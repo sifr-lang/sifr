@@ -6237,6 +6237,25 @@ impl RustEmitter {
                                 } else {
                                     None
                                 };
+                                // For borrowed generic params (&T), wrapping non-trivial expressions
+                                // avoids Rust precedence pitfalls like `&(x) as i64`.
+                                if convention == ParamConvention::Borrow
+                                    && matches!(param_ty, Type::TypeVar(_))
+                                    && !matches!(
+                                        arg,
+                                        HirExpr::Name { .. }
+                                            | HirExpr::IntLiteral(_)
+                                            | HirExpr::FloatLiteral(_)
+                                            | HirExpr::StringLiteral(_)
+                                            | HirExpr::BoolLiteral(_)
+                                            | HirExpr::NoneLiteral
+                                    )
+                                {
+                                    self.write("&(");
+                                    self.emit_expr(arg);
+                                    self.write(")");
+                                    continue;
+                                }
                                 self.emit_borrow_prefix_for_name(convention, arg.ty(), Some(param_ty), arg_name_opt);
                                 self.emit_expr(arg);
                                 continue;
