@@ -11,6 +11,7 @@ mod collections;
 mod bytes;
 mod time;
 mod random;
+mod re;
 
 use crate::RustExpr;
 
@@ -158,6 +159,18 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "random_sample" => (random::lower_random_sample(rendered_args), None),
         "random_randrange" => (random::lower_random_randrange(rendered_args), None),
         "random_gauss" => (random::lower_random_gauss(rendered_args), None),
+        "re_match" => (re::lower_re_match(rendered_args), None),
+        "re_find" => (re::lower_re_find(rendered_args), None),
+        "re_replace" => (re::lower_re_replace(rendered_args), None),
+        "re_findall" => (re::lower_re_findall(rendered_args), None),
+        "re_split" => (re::lower_re_split(rendered_args), None),
+        "re_find_start" => (re::lower_re_find_start(rendered_args), None),
+        "re_find_end" => (re::lower_re_find_end(rendered_args), None),
+        "re_match_flags" => (re::lower_re_match_flags(rendered_args), None),
+        "re_find_flags" => (re::lower_re_find_flags(rendered_args), None),
+        "re_replace_flags" => (re::lower_re_replace_flags(rendered_args), None),
+        "re_findall_flags" => (re::lower_re_findall_flags(rendered_args), None),
+        "re_split_flags" => (re::lower_re_split_flags(rendered_args), None),
         _ => return None,
     };
 
@@ -422,5 +435,56 @@ mod tests {
         let gauss = lower_intrinsic("random_gauss", &["0.0".to_string(), "1.0".to_string()])
             .expect("random_gauss");
         assert!(render_expr(&gauss.expr).contains("rand_distr"));
+    }
+
+    #[test]
+    fn lowers_re_intrinsics_via_registry() {
+        let m = lower_intrinsic("re_match", &["pat".to_string(), "txt".to_string()]).expect("re_match");
+        assert!(render_expr(&m.expr).contains("is_match"));
+
+        let f = lower_intrinsic("re_find", &["pat".to_string(), "txt".to_string()]).expect("re_find");
+        assert!(render_expr(&f.expr).contains("re.find"));
+
+        let rep = lower_intrinsic(
+            "re_replace",
+            &["pat".to_string(), "repl".to_string(), "txt".to_string()],
+        )
+        .expect("re_replace");
+        assert!(render_expr(&rep.expr).contains("replace_all"));
+
+        let all =
+            lower_intrinsic("re_findall", &["pat".to_string(), "txt".to_string()]).expect("re_findall");
+        assert!(render_expr(&all.expr).contains("find_iter"));
+
+        let split =
+            lower_intrinsic("re_split", &["pat".to_string(), "txt".to_string()]).expect("re_split");
+        assert!(render_expr(&split.expr).contains("re.split"));
+
+        let s = lower_intrinsic("re_find_start", &["pat".to_string(), "txt".to_string()])
+            .expect("re_find_start");
+        assert!(render_expr(&s.expr).contains("m.start()"));
+
+        let e = lower_intrinsic("re_find_end", &["pat".to_string(), "txt".to_string()])
+            .expect("re_find_end");
+        assert!(render_expr(&e.expr).contains("m.end()"));
+
+        let mf = lower_intrinsic(
+            "re_match_flags",
+            &["pat".to_string(), "txt".to_string(), "flags".to_string()],
+        )
+        .expect("re_match_flags");
+        assert!(render_expr(&mf.expr).contains("__flags_val"));
+
+        let rf = lower_intrinsic(
+            "re_replace_flags",
+            &[
+                "pat".to_string(),
+                "repl".to_string(),
+                "txt".to_string(),
+                "flags".to_string(),
+            ],
+        )
+        .expect("re_replace_flags");
+        assert!(render_expr(&rf.expr).contains("replace_all"));
     }
 }
