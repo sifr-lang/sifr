@@ -1,0 +1,28 @@
+# Milestone 5 demo: sifr.hashlib object model baseline
+from sifr.hashlib import sha256, sha256_obj, md5_obj, copy_hash
+
+def main():
+    h = sha256_obj("si")
+    h.update("fr")
+    print(h.hexdigest() == sha256("sifr"))
+    print(h.name)
+    print(h.digest_size)
+    print(h.block_size)
+
+    c = copy_hash(h)
+    c.update("-copy")
+    print(h.hexdigest() == sha256("sifr"))
+    print(c.hexdigest() == sha256("sifr-copy"))
+
+    m = md5_obj("demo")
+    print(m.hexdigest())
+    print(m.digest_size == 16)
+
+# expect-stdout: true
+# expect-stdout: sha256
+# expect-stdout: 32
+# expect-stdout: 64
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: fe01ce2a7fbac8fafaed7c982a04e229
+# expect-stdout: true

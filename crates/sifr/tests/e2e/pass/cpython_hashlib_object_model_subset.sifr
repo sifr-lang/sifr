@@ -1,0 +1,33 @@
+# Adapted CPython hashlib object-model subset for sifr.hashlib
+from sifr.hashlib import sha256, md5, sha256_obj, md5_obj, copy_hash
+
+def main():
+    h = sha256_obj("")
+    h.update("a")
+    h.update("bc")
+    print(h.hexdigest() == sha256("abc"))
+    print(h.digest() == h.hexdigest())
+    print(h.name == "sha256")
+    print(h.digest_size == 32)
+    print(h.block_size == 64)
+
+    c = copy_hash(h)
+    c.update("x")
+    print(h.hexdigest() == sha256("abc"))
+    print(c.hexdigest() == sha256("abcx"))
+
+    m = md5_obj("hello")
+    print(m.hexdigest() == md5("hello"))
+    print(m.digest_size == 16)
+    print(m.block_size == 64)
+
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
+# expect-stdout: true
