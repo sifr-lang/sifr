@@ -3030,7 +3030,41 @@ impl RustEmitter {
         }
     }
 
+    fn emit_lowered_stmts(&mut self, lowered_stmts: &[RustStmt]) {
+        for lowered_stmt in lowered_stmts {
+            match lowered_stmt {
+                RustStmt::Expr(lowered_expr) => {
+                    self.write_indent();
+                    self.write(&crate::render_expr(lowered_expr));
+                    self.write(";\n");
+                }
+                RustStmt::RawCode(code) => {
+                    self.write_indent();
+                    self.write(code);
+                    self.write("\n");
+                }
+                RustStmt::Break => {
+                    self.writeln("break;");
+                }
+                RustStmt::Continue => {
+                    self.writeln("continue;");
+                }
+                _ => {
+                    self.write_indent();
+                    let rendered = crate::render_stmts(std::slice::from_ref(lowered_stmt));
+                    self.write(rendered.trim_end());
+                    self.write("\n");
+                }
+            }
+        }
+    }
+
     fn emit_stmt(&mut self, stmt: &HirStmt) {
+        if let Some(lowered_stmts) = try_lower_simple_stmt(stmt, self.in_loop_with_else) {
+            self.emit_lowered_stmts(&lowered_stmts);
+            return;
+        }
+
         match stmt {
             HirStmt::Let { name, ty, value, is_mutable: _ } => {
                 self.write_indent();
@@ -3261,32 +3295,9 @@ impl RustEmitter {
                 }
             }
             HirStmt::Expr { expr } => {
-                if let Some(lowered_stmts) = try_lower_expr_stmt(expr) {
-                    for lowered_stmt in &lowered_stmts {
-                        match lowered_stmt {
-                            RustStmt::Expr(lowered_expr) => {
-                                self.write_indent();
-                                self.write(&crate::render_expr(lowered_expr));
-                                self.write(";\n");
-                            }
-                            RustStmt::RawCode(code) => {
-                                self.write_indent();
-                                self.write(code);
-                                self.write("\n");
-                            }
-                            _ => {
-                                self.write_indent();
-                                let rendered = crate::render_stmts(std::slice::from_ref(lowered_stmt));
-                                self.write(rendered.trim_end());
-                                self.write("\n");
-                            }
-                        }
-                    }
-                } else {
-                    self.write_indent();
-                    self.emit_expr(expr);
-                    self.write(";\n");
-                }
+                self.write_indent();
+                self.emit_expr(expr);
+                self.write(";\n");
             }
             HirStmt::If {
                 condition,
