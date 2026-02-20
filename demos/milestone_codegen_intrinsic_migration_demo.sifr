@@ -1,0 +1,20 @@
+# Demo: milestone_codegen_intrinsic_migration (registry scaffold)
+# This demo exercises math intrinsics routed through the new registry path.
+from sifr.math import sqrt, floor, ceil, pow_val
+
+def main():
+    base: float = 9.0
+    root: float = sqrt(base)
+    rounded_down: int = floor(3.9)
+    rounded_up: int = ceil(3.1)
+    powered: float = pow_val(2.0, 3.0)
+
+    print(f"root = {root}")
+    print(f"rounded_down = {rounded_down}")
+    print(f"rounded_up = {rounded_up}")
+    print(f"powered = {powered}")
+
+# expect-stdout: root = 3
+# expect-stdout: rounded_down = 3
+# expect-stdout: rounded_up = 4
+# expect-stdout: powered = 8

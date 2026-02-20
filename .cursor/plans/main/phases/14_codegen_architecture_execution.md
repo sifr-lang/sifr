@@ -88,15 +88,18 @@ status: in_progress
 
 ## milestone_codegen_intrinsic_migration
 
-status: pending
+status: in_progress
 
+- [x] PR1 scaffold: add `intrinsics/mod.rs` registry and `intrinsics/math.rs` domain lowerers (initial subset)
+- [x] Route `emit_intrinsic_call` through registry-first dispatch with legacy match fallback
+- [x] Demo: `demos/milestone_codegen_intrinsic_migration_demo.sifr` (initial registry path validation)
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
 - [ ] Remove driver string-scanning dependency detection; return `HashSet<String>` dependencies
 - [ ] Convert all intrinsic/method lowering to structured IR (no `RawCode`)
 - [ ] Reduce `lib.rs` by >= 2000 lines via decomposition
-- [ ] Demo: `demos/milestone_codegen_intrinsic_migration_demo.sifr`
+- [ ] Demo: `demos/milestone_codegen_intrinsic_migration_demo.sifr` (final milestone gate)
 - [ ] Open PR(s), review, merge
 - [ ] Mark done in phase docs
 

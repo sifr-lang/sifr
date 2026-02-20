@@ -51,6 +51,7 @@ mod lower_stmt;
 pub use lower_stmt::*;
 mod lower_item;
 pub use lower_item::*;
+mod intrinsics;
 
 use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};
@@ -1108,6 +1109,8 @@ struct RustEmitter {
     pub used_stdlib_modules: HashSet<String>,
     /// Set of intrinsic function names (for codegen dispatch)
     intrinsic_functions: HashSet<String>,
+    /// Crates requested by intrinsic registry lowering.
+    intrinsic_registry_crates: HashSet<String>,
     /// Whether to emit in test mode (#[test] on test_* functions, no main)
     test_mode: bool,
     /// Set of (class_name, field_name) pairs that are self-referential and need Box<T>
@@ -1180,6 +1183,7 @@ impl RustEmitter {
             current_class_name: None,
             used_stdlib_modules: HashSet::new(),
             intrinsic_functions: HashSet::new(),
+            intrinsic_registry_crates: HashSet::new(),
             test_mode: false,
             recursive_fields: HashSet::new(),
             class_field_order: HashMap::new(),
@@ -6964,6 +6968,10 @@ impl RustEmitter {
 
     /// Emit an intrinsic function call with the correct Rust code.
     fn emit_intrinsic_call(&mut self, func: &str, args: &[HirExpr]) {
+        if self.try_emit_intrinsic_via_registry(func, args) {
+            return;
+        }
+
         match func {
             // sifr.io
             "read_text" => {
@@ -8264,6 +8272,21 @@ impl RustEmitter {
                 self.write(")");
             }
         }
+    }
+
+    fn try_emit_intrinsic_via_registry(&mut self, func: &str, args: &[HirExpr]) -> bool {
+        let rendered_args = args.iter().map(|arg| self.expr_to_string(arg)).collect::<Vec<_>>();
+        let Some(lowered) = intrinsics::lower_intrinsic(func, &rendered_args) else {
+            return false;
+        };
+
+        if let Some(required_crate) = lowered.required_crate {
+            self.intrinsic_registry_crates.insert(required_crate.to_string());
+            self.used_stdlib_modules.insert(required_crate.to_string());
+        }
+
+        self.write(&crate::render_expr(&lowered.expr));
+        true
     }
 
     fn emit_lambda_untyped(&mut self, expr: &HirExpr) {
