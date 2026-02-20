@@ -6,6 +6,7 @@ mod env;
 mod os;
 mod io;
 mod pathlib;
+mod test;
 
 use crate::RustExpr;
 
@@ -98,6 +99,13 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "makedirs" => (io::lower_makedirs(rendered_args), None),
         "json_loads" => (json::lower_json_loads(rendered_args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(rendered_args), Some("serde_json")),
+        "assert_eq" => (test::lower_assert_eq(rendered_args), None),
+        "assert_ne" => (test::lower_assert_ne(rendered_args), None),
+        "assert_true" => (test::lower_assert_true(rendered_args), None),
+        "assert_false" => (test::lower_assert_false(rendered_args), None),
+        "assert_almost_eq" => (test::lower_assert_almost_eq(rendered_args), None),
+        "assert_gt" => (test::lower_assert_gt(rendered_args), None),
+        "assert_lt" => (test::lower_assert_lt(rendered_args), None),
         _ => return None,
     };
 
@@ -222,5 +230,23 @@ mod tests {
 
         let iterdir = lower_intrinsic("iterdir", &["p".to_string()]).expect("iterdir lowers");
         assert!(render_expr(&iterdir.expr).contains("std::fs::read_dir"));
+    }
+
+    #[test]
+    fn lowers_test_intrinsics_via_registry() {
+        let eq = lower_intrinsic("assert_eq", &["a".to_string(), "b".to_string()])
+            .expect("assert_eq lowers");
+        assert_eq!(render_expr(&eq.expr), "assert_eq!(a, b)");
+
+        let almost = lower_intrinsic(
+            "assert_almost_eq",
+            &["x".to_string(), "y".to_string(), "tol".to_string()],
+        )
+        .expect("assert_almost_eq lowers");
+        assert!(render_expr(&almost.expr).contains("assert_almost_eq failed"));
+
+        let gt = lower_intrinsic("assert_gt", &["l".to_string(), "r".to_string()])
+            .expect("assert_gt lowers");
+        assert!(render_expr(&gt.expr).contains("assert_gt failed"));
     }
 }
