@@ -66,3 +66,18 @@ def assert_err[T](own value: Result[T, Error]) -> None:
         assert False
     except Error as e:
         pass
+
+# Reusable vector helpers for CPython parity tests.
+def assert_vector_eq(actual: list[str], expected: list[str]) -> None:
+    assert_eq(len(actual), len(expected))
+    i: int = 0
+    while i < len(actual):
+        assert actual[i] == expected[i]
+        i = i + 1
+
+def assert_bool_vector_eq(actual: list[bool], expected: list[bool]) -> None:
+    assert_eq(len(actual), len(expected))
+    i: int = 0
+    while i < len(actual):
+        assert actual[i] == expected[i]
+        i = i + 1

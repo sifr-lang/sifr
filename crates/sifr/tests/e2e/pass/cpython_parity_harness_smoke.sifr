@@ -1,0 +1,16 @@
+# CPython parity harness smoke: vector-driven base64 fixture checks
+from sifr.base64 import b64encode
+from sifr.test import assert_vector_eq
+
+def main():
+    inputs: list[str] = ["", "f", "fo", "foo", "foob", "fooba", "foobar"]
+    expected: list[str] = ["", "Zg==", "Zm8=", "Zm9v", "Zm9vYg==", "Zm9vYmE=", "Zm9vYmFy"]
+    actual: list[str] = []
+
+    for s in inputs:
+        actual.append(b64encode(s))
+
+    assert_vector_eq(actual, expected)
+    print("cpython_parity_harness_smoke: pass")
+
+# expect-stdout: cpython_parity_harness_smoke: pass

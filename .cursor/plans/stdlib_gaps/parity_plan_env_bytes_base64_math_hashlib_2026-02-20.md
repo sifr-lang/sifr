@@ -351,8 +351,8 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 ## Master TODO (Implementation Checklist)
 
 - [x] M0: env panic-proof validation path (`env_get`, `env_set`, new `unsetenv`)
-- [ ] M0: bytes boundary design approved (type + adapters)
-- [ ] M0: parity harness helpers for CPython vector tests
+- [x] M0: bytes boundary design approved (type + adapters)
+- [x] M0: parity harness helpers for CPython vector tests
 - [x] M1: env API parity subset implemented
 - [x] M1: env CPython tests ported and passing
 - [x] M1: env demo created and validated
@@ -372,7 +372,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M5: hashlib API/algorithm parity subset completed
 - [x] M5: hashlib tests ported and passing
 - [x] M5: hashlib demo created and validated
-- [ ] Final: all milestone PRs reviewed/merged, board moved to Done
+- [x] Final: all milestone PRs reviewed/merged, board moved to Done
 
 ---
 
@@ -386,16 +386,16 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] Add env unset/list helper intrinsics needed for parity work
   - [x] Add regression e2e tests for invalid key handling
   - [x] Validate with focused test run
-- [ ] PR0-B Bytes boundary design + adapters
-  - [ ] Document bytes boundary representation trade-offs
-  - [ ] Implement minimal conversion adapters used by base64/hashlib work
-  - [ ] Add tests for out-of-range byte rejection behavior
-- [ ] PR0-C CPython parity harness helpers
-  - [ ] Add reusable vector-driven parity test helper pattern
-  - [ ] Add baseline fixture format for CPython expected outputs
-  - [ ] Wire first parity harness tests
-- [ ] Milestone demo
-  - [ ] `demos/m0_parity_foundation_demo.sifr` runs and shows safety behavior
+- [x] PR0-B Bytes boundary design + adapters
+  - [x] Document bytes boundary representation trade-offs
+  - [x] Implement minimal conversion adapters used by base64/hashlib work
+  - [x] Add tests for out-of-range byte rejection behavior
+- [x] PR0-C CPython parity harness helpers
+  - [x] Add reusable vector-driven parity test helper pattern
+  - [x] Add baseline fixture format for CPython expected outputs
+  - [x] Wire first parity harness tests
+- [x] Milestone demo
+  - [x] `demos/m0_parity_foundation_demo.sifr` runs and shows safety behavior
 
 ### Milestone 1 (`sifr.env`)
 
