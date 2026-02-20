@@ -368,7 +368,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [x] M4: math signature and semantic fixes completed
 - [x] M4: expanded `test_math` parity port passing
 - [x] M4: math demo created and validated
-- [ ] M5: hashlib object model implemented
+- [x] M5: hashlib object model implemented
 - [ ] M5: hashlib API/algorithm parity subset completed
 - [ ] M5: hashlib tests ported and passing
 - [ ] M5: hashlib demo created and validated
@@ -467,10 +467,10 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 
 ### Milestone 5 (`sifr.hashlib`)
 
-- [ ] PR5-A Hash object model
-  - [ ] object constructors + incremental `update`
-  - [ ] `digest`/`hexdigest`/`copy`
-  - [ ] metadata fields parity (`name`, sizes)
+- [x] PR5-A Hash object model
+  - [x] object constructors + incremental `update`
+  - [x] `digest`/`hexdigest`/`copy` (with `copy_hash()` adapter due current method return-type constraints)
+  - [x] metadata fields parity (`name`, sizes)
 - [ ] PR5-B API/algorithm parity
   - [ ] `new`, `algorithms_guaranteed`, `algorithms_available`, `file_digest`
   - [ ] SHA3/SHAKE constructors parity subset

@@ -1,2 +1,94 @@
-# sifr.hashlib — Hashing functions (renamed from sifr.hash)
+# sifr.hashlib — Hashing functions and hash object model
 from _sifr.crypto import sha256, md5, sha1, sha512, sha224, sha384, blake2b, blake2s
+
+class HashObject:
+    _algorithm: str
+    _data: str
+    name: str
+    digest_size: int
+    block_size: int
+
+    def __init__(self, algorithm: str, data: str, name: str, digest_size: int, block_size: int) -> None:
+        self._algorithm = algorithm
+        self._data = data
+        self.name = name
+        self.digest_size = digest_size
+        self.block_size = block_size
+
+    def update(self, data: str) -> None:
+        self._data = self._data + data
+
+    def hexdigest(self) -> str:
+        return _hash_hex(self._algorithm, self._data)
+
+    # NOTE: Sifr currently uses hex-string digest representation.
+    def digest(self) -> str:
+        return self.hexdigest()
+
+def _build_hash(algorithm: str, data: str) -> HashObject:
+    alg: str = algorithm.lower()
+    if alg == "md5":
+        return HashObject(alg, data, "md5", 16, 64)
+    elif alg == "sha1":
+        return HashObject(alg, data, "sha1", 20, 64)
+    elif alg == "sha224":
+        return HashObject(alg, data, "sha224", 28, 64)
+    elif alg == "sha256":
+        return HashObject(alg, data, "sha256", 32, 64)
+    elif alg == "sha384":
+        return HashObject(alg, data, "sha384", 48, 128)
+    elif alg == "sha512":
+        return HashObject(alg, data, "sha512", 64, 128)
+    elif alg == "blake2b":
+        return HashObject(alg, data, "blake2b", 64, 128)
+    elif alg == "blake2s":
+        return HashObject(alg, data, "blake2s", 32, 64)
+    # Unsupported algorithms are represented as zero-sized placeholders.
+    return HashObject(alg, data, "unknown", 0, 0)
+
+def copy_hash(h: HashObject) -> HashObject:
+    return _build_hash(h._algorithm, h._data)
+
+def _hash_hex(algorithm: str, data: str) -> str:
+    if algorithm == "md5":
+        return md5(data)
+    elif algorithm == "sha1":
+        return sha1(data)
+    elif algorithm == "sha224":
+        return sha224(data)
+    elif algorithm == "sha256":
+        return sha256(data)
+    elif algorithm == "sha384":
+        return sha384(data)
+    elif algorithm == "sha512":
+        return sha512(data)
+    elif algorithm == "blake2b":
+        return blake2b(data)
+    elif algorithm == "blake2s":
+        return blake2s(data)
+    return ""
+
+# CPython-like constructor helpers (adapted to Sifr str input model).
+def md5_obj(data: str = "") -> HashObject:
+    return _build_hash("md5", data)
+
+def sha1_obj(data: str = "") -> HashObject:
+    return _build_hash("sha1", data)
+
+def sha224_obj(data: str = "") -> HashObject:
+    return _build_hash("sha224", data)
+
+def sha256_obj(data: str = "") -> HashObject:
+    return _build_hash("sha256", data)
+
+def sha384_obj(data: str = "") -> HashObject:
+    return _build_hash("sha384", data)
+
+def sha512_obj(data: str = "") -> HashObject:
+    return _build_hash("sha512", data)
+
+def blake2b_obj(data: str = "") -> HashObject:
+    return _build_hash("blake2b", data)
+
+def blake2s_obj(data: str = "") -> HashObject:
+    return _build_hash("blake2s", data)
