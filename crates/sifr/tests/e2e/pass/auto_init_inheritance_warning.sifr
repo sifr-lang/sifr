@@ -1,0 +1,19 @@
+# Test inheritance with auto-init parent and explicit child __init__
+class Animal:
+    name: str
+    age: int
+
+class Dog(Animal):
+    breed: str
+
+    def __init__(self, name: str, age: int, breed: str):
+        super().__init__(name, age)
+        self.breed = breed
+
+def main():
+    d: Dog = Dog("Rex", 5, "Labrador")
+    print(d.name)
+    print(d.breed)
+
+# expect-stdout: Rex
+# expect-stdout: Labrador

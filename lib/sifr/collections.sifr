@@ -154,7 +154,7 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
 
 
 class deque[T]:
-    # A double-ended queue backed by a list.
+    # A double-ended queue backed by VecDeque for O(1) front/back operations.
     _data: list[T]
     _maxlen: int
 
@@ -165,47 +165,22 @@ class deque[T]:
     def append(self, val: T) -> None:
         self._data.append(val)
         if self._maxlen > 0 and len(self._data) > self._maxlen:
-            new_data: list[T] = []
-            for i, v in enumerate(self._data):
-                if i > 0:
-                    new_data.append(v)
-            self._data = new_data
+            self._data.popleft()
 
     def appendleft(self, val: T) -> None:
-        new_data: list[T] = [val]
-        for v in self._data:
-            new_data.append(v)
-        if self._maxlen > 0 and len(new_data) > self._maxlen:
-            trimmed: list[T] = []
-            for i, v in enumerate(new_data):
-                if i < self._maxlen:
-                    trimmed.append(v)
-            self._data = trimmed
-        else:
-            self._data = new_data
+        self._data.appendleft(val)
+        if self._maxlen > 0 and len(self._data) > self._maxlen:
+            self._data.pop()
 
     def pop(self) -> T | None:
-        if len(self._data) > 0:
-            last_idx: int = len(self._data) - 1
-            result: T | None = self._data[last_idx]
-            new_data: list[T] = []
-            for i, v in enumerate(self._data):
-                if i < last_idx:
-                    new_data.append(v)
-            self._data = new_data
-            return result
-        return None
+        if len(self._data) == 0:
+            return None
+        return self._data.pop()
 
     def popleft(self) -> T | None:
-        if len(self._data) > 0:
-            result: T | None = self._data[0]
-            new_data: list[T] = []
-            for i, v in enumerate(self._data):
-                if i > 0:
-                    new_data.append(v)
-            self._data = new_data
-            return result
-        return None
+        if len(self._data) == 0:
+            return None
+        return self._data.popleft()
 
     def len(self) -> int:
         return len(self._data)
@@ -222,23 +197,13 @@ class deque[T]:
     def extend(self, items: list[T]) -> None:
         for v in items:
             self._data.append(v)
-        if self._maxlen > 0 and len(self._data) > self._maxlen:
-            new_data: list[T] = []
-            start: int = len(self._data) - self._maxlen
-            for i, v in enumerate(self._data):
-                if i >= start:
-                    new_data.append(v)
-            self._data = new_data
+        if self._maxlen > 0:
+            while len(self._data) > self._maxlen:
+                self._data.popleft()
 
     def extendleft(self, items: list[T]) -> None:
         for v in items:
-            new_data: list[T] = [v]
-            for existing in self._data:
-                new_data.append(existing)
-            self._data = new_data
-        if self._maxlen > 0 and len(self._data) > self._maxlen:
-            trimmed: list[T] = []
-            for i, v in enumerate(self._data):
-                if i < self._maxlen:
-                    trimmed.append(v)
-            self._data = trimmed
+            self._data.appendleft(v)
+        if self._maxlen > 0:
+            while len(self._data) > self._maxlen:
+                self._data.pop()

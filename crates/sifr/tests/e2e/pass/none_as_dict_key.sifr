@@ -1,0 +1,20 @@
+# Test dict operations with None-returning lookups and safe key access
+def main():
+    d: dict[str, int] = {}
+    d["x"] = 42
+    d["y"] = 10
+
+    v1: int | None = d["x"]
+    if v1 is not None:
+        print(v1)
+
+    v2: int | None = d["missing"]
+    if v2 is None:
+        print("none")
+
+    d["z"] = 99
+    print(len(d))
+
+# expect-stdout: 42
+# expect-stdout: none
+# expect-stdout: 3

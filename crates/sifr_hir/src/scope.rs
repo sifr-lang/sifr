@@ -32,7 +32,7 @@ pub type NarrowingSnapshot = Vec<(String, Option<Type>)>;
 
 /// A snapshot of the moved state for all variables in scope.
 /// Used to save/restore moved state at branch points and loop boundaries.
-pub type MovedSnapshot = Vec<(String, bool)>;
+pub(crate) type MovedSnapshot = Vec<(String, bool)>;
 
 /// A scope for name resolution.
 #[derive(Debug, Clone)]
@@ -41,7 +41,7 @@ pub struct Scope {
     frames: Vec<HashMap<String, VarInfo>>,
     /// Type alias registry.
     type_aliases: HashMap<String, Type>,
-    /// Generic type alias registry: name -> (type_params, body_type).
+    /// Generic type alias registry: name -> (`type_params`, `body_type`).
     generic_type_aliases: HashMap<String, (Vec<String>, Type)>,
 }
 

@@ -63,7 +63,7 @@ pub fn subtract_from_union(union: &Type, to_remove: &Type) -> Type {
 
 /// Determine if type `a` should be removed when subtracting `to_remove`.
 /// Unlike `types_overlap`, this does NOT remove a base type when subtracting a literal.
-/// e.g., subtracting LiteralStr("+") from str should NOT remove str,
+/// e.g., subtracting `LiteralStr`("+") from str should NOT remove str,
 /// because str is broader than any single literal.
 fn should_subtract(a: &Type, to_remove: &Type) -> bool {
     if a == to_remove {
@@ -164,10 +164,10 @@ fn deduplicate(types: &mut Vec<Type>) {
 }
 
 /// Sort types for consistent ordering.
-/// Order: None, Bool, Int, Float, Str, LiteralBool, LiteralInt, LiteralStr,
+/// Order: None, Bool, Int, Float, Str, `LiteralBool`, `LiteralInt`, `LiteralStr`,
 ///        List, Dict, Tuple, Range, Function, Unknown, Any, Never, Union, Intersection, Alias
-fn sort_members(types: &mut Vec<Type>) {
-    types.sort_by_key(|ty| type_sort_key(ty));
+fn sort_members(types: &mut [Type]) {
+    types.sort_by_key(type_sort_key);
 }
 
 fn type_sort_key(ty: &Type) -> (u8, String) {
@@ -205,12 +205,12 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
 
 /// Check if a member type contains a target type (for literal-to-base matching).
 fn member_contains(member: &Type, target: &Type) -> bool {
-    match (member, target) {
-        (Type::Int, Type::LiteralInt(_)) => true,
-        (Type::Str, Type::LiteralStr(_)) => true,
-        (Type::Bool, Type::LiteralBool(_)) => true,
-        _ => false,
-    }
+    matches!(
+        (member, target),
+        (Type::Int, Type::LiteralInt(_))
+            | (Type::Str, Type::LiteralStr(_))
+            | (Type::Bool, Type::LiteralBool(_))
+    )
 }
 
 /// Check if two types overlap (share possible values).

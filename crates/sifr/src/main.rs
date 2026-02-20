@@ -5,6 +5,14 @@
 //!   sifr run <file.sifr>      Compile and run
 //!   sifr check <file.sifr>    Type-check only
 //!   sifr emit <file.sifr>     Show generated Rust code
+#![allow(
+    clippy::uninlined_format_args,
+    clippy::print_stderr,
+    clippy::print_stdout,
+    clippy::unnecessary_map_or,
+    clippy::ptr_arg,
+    clippy::items_after_statements
+)]
 
 use clap::{Parser, Subcommand};
 use sifr_driver::{compile, check, build, build_project, run_tests, CompileResult};

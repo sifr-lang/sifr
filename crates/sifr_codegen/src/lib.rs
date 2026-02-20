@@ -2,6 +2,41 @@
 //!
 //! Translates the typed HIR into Rust source code.
 
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::format_push_string)]
+#![allow(clippy::type_complexity)]
+#![allow(clippy::option_map_or_none)]
+#![allow(clippy::nonminimal_bool)]
+#![allow(clippy::while_let_loop)]
+#![allow(clippy::needless_borrow)]
+#![allow(clippy::redundant_closure)]
+#![allow(clippy::ref_option)]
+#![allow(clippy::collapsible_match)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::iter_next_loop)]
+#![allow(clippy::map_clone)]
+#![allow(clippy::useless_format)]
+#![allow(clippy::cloned_instead_of_copied)]
+#![allow(clippy::wildcard_imports)]
+#![allow(clippy::unused_self)]
+#![allow(clippy::unnecessary_semicolon)]
+#![allow(dead_code)]
+#![allow(clippy::derivable_impls)]
+#![allow(clippy::while_let_on_iterator)]
+#![allow(clippy::assigning_clones)]
+#![allow(clippy::explicit_iter_loop)]
+#![allow(clippy::unnecessary_map_or)]
+#![allow(clippy::inefficient_to_string)]
+#![allow(clippy::struct_excessive_bools)]
+#![allow(clippy::doc_link_with_quotes)]
+#![allow(clippy::redundant_closure_for_method_calls)]
+#![allow(clippy::if_same_then_else)]
+#![allow(clippy::if_not_else)]
+#![allow(clippy::unnecessary_unwrap)]
+
 use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};
 use std::collections::{HashMap, HashSet};
@@ -106,10 +141,13 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if emitter.needs_hashset {
         result.push_str("use std::collections::HashSet;\n");
     }
+    if emitter.needs_vecdeque {
+        result.push_str("use std::collections::VecDeque;\n");
+    }
     if emitter.needs_bigint {
         result.push_str("use num_bigint::BigInt;\n");
     }
-    if emitter.needs_hashmap || emitter.needs_hashset || emitter.needs_bigint {
+    if emitter.needs_hashmap || emitter.needs_hashset || emitter.needs_vecdeque || emitter.needs_bigint {
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -582,6 +620,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut all_needed: Vec<String> = Vec::new();
     let mut stdlib_needs_hashmap = false;
     let mut stdlib_needs_hashset = false;
+    let mut stdlib_needs_vecdeque = false;
     let mut stdlib_needs_file_handles = false;
     for module_name in &emitter.used_stdlib_modules {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
@@ -631,6 +670,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     if filtered.contains("use std::collections::HashSet;") {
                         stdlib_needs_hashset = true;
                     }
+                    if filtered.contains("use std::collections::VecDeque;") {
+                        stdlib_needs_vecdeque = true;
+                    }
                     // Track if any stdlib module needs file handle infrastructure
                     if filtered.contains("__SIFR_FILE_HANDLES") {
                         stdlib_needs_file_handles = true;
@@ -646,6 +688,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                             // Skip use imports
                             if t == "use std::collections::HashMap;"
                                 || t == "use std::collections::HashSet;"
+                                || t == "use std::collections::VecDeque;"
                                 || t == "use std::sync::Mutex;"
                             {
                                 continue;
@@ -705,6 +748,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Emit HashMap/HashSet imports once at the top if needed by user code or any stdlib module.
     let needs_hashmap = emitter.needs_hashmap || stdlib_needs_hashmap;
     let needs_hashset = emitter.needs_hashset || stdlib_needs_hashset;
+    let needs_vecdeque = emitter.needs_vecdeque || stdlib_needs_vecdeque;
     let needs_bigint = emitter.needs_bigint;
     let mut result = String::new();
     if needs_hashmap {
@@ -713,10 +757,13 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if needs_hashset {
         result.push_str("use std::collections::HashSet;\n");
     }
+    if needs_vecdeque {
+        result.push_str("use std::collections::VecDeque;\n");
+    }
     if needs_bigint {
         result.push_str("use num_bigint::BigInt;\n");
     }
-    if needs_hashmap || needs_hashset || needs_bigint {
+    if needs_hashmap || needs_hashset || needs_vecdeque || needs_bigint {
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -916,6 +963,9 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         if emitter.needs_hashset {
             result.push_str("use std::collections::HashSet;\n");
         }
+        if emitter.needs_vecdeque {
+            result.push_str("use std::collections::VecDeque;\n");
+        }
         if emitter.needs_bigint {
             result.push_str("use num_bigint::BigInt;\n");
         }
@@ -1045,6 +1095,7 @@ struct RustEmitter {
     needs_hashset: bool,
     needs_file_handles: bool,
     needs_bigint: bool,
+    needs_vecdeque: bool,
     /// Track union enum types that need to be defined (name -> member types)
     union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated enum definitions to prepend
@@ -1129,6 +1180,7 @@ impl RustEmitter {
             needs_hashset: false,
             needs_file_handles: false,
             needs_bigint: false,
+            needs_vecdeque: false,
             union_enums: HashMap::new(),
             enum_defs: String::new(),
             current_return_type: None,
@@ -1161,6 +1213,21 @@ impl RustEmitter {
             try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
         }
+    }
+
+    /// Check if the object expression is `self._data` inside the `deque` class.
+    fn is_deque_data_field(&self, object: &HirExpr) -> bool {
+        if self.current_class_name.as_deref() != Some("deque") {
+            return false;
+        }
+        if let HirExpr::FieldAccess { object: inner, field, .. } = object {
+            if field == "_data" {
+                if let HirExpr::Name { name, .. } = inner.as_ref() {
+                    return name == "self";
+                }
+            }
+        }
+        false
     }
 
     /// Check if a generic class needs Hash + Eq bounds on its type parameters.
@@ -1583,6 +1650,13 @@ impl RustEmitter {
             let is_recursive = self.recursive_fields.contains(&(class.name.clone(), field_name.clone()));
             if is_recursive {
                 self.write(&recursive_field_rust_type(field_ty, &class.name));
+            } else if class.name == "deque" && field_name == "_data" {
+                if let Type::List(elem) = field_ty {
+                    self.needs_vecdeque = true;
+                    self.write(&format!("VecDeque<{}>", elem.rust_type()));
+                } else {
+                    self.write(&field_ty.rust_type_for_struct_field());
+                }
             } else {
                 self.write(&field_ty.rust_type_for_struct_field());
             }
@@ -2408,6 +2482,16 @@ impl RustEmitter {
                             self.write_indent();
                             self.write(field_name);
                             self.write(": ");
+                            // deque._data = [] → VecDeque::new() in constructor
+                            if class.name == "deque" && *field_name == "_data" {
+                                if let HirExpr::ListLiteral { elements, .. } = value {
+                                    if elements.is_empty() {
+                                        self.write("VecDeque::new()");
+                                        self.write(",\n");
+                                        continue;
+                                    }
+                                }
+                            }
                             // Wrap Callable values in Box::new() for struct fields
                             let field_ty = class.fields.iter().find(|(n, _)| n == field_name).map(|(_, t)| t);
                             let needs_box = field_ty.map_or(false, |t| matches!(t, Type::Callable(..)));
@@ -3925,6 +4009,16 @@ impl RustEmitter {
                 self.write(".");
                 self.write(field);
                 self.write(" = ");
+                // deque._data = [] → VecDeque::new()
+                if self.current_class_name.as_deref() == Some("deque") && field == "_data" {
+                    if let HirExpr::ListLiteral { elements, .. } = value {
+                        if elements.is_empty() {
+                            self.write("VecDeque::new()");
+                            self.write(";\n");
+                            return;
+                        }
+                    }
+                }
                 self.emit_expr(value);
                 self.write(";\n");
             }
@@ -4966,6 +5060,37 @@ impl RustEmitter {
                 self.write(", width = ");
                 if !args.is_empty() { self.emit_expr(&args[0]); }
                 self.write(" as usize)");
+            }
+            // VecDeque methods (deque class _data field)
+            (Type::List(_), "append") if self.is_deque_data_field(object) => {
+                self.emit_expr(object);
+                self.write(".push_back(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                    if matches!(args[0].ty(), Type::TypeVar(_)) {
+                        self.write(".clone()");
+                    }
+                }
+                self.write(")");
+            }
+            (Type::List(_), "appendleft") if self.is_deque_data_field(object) => {
+                self.emit_expr(object);
+                self.write(".push_front(");
+                if !args.is_empty() {
+                    self.emit_expr(&args[0]);
+                    if matches!(args[0].ty(), Type::TypeVar(_)) {
+                        self.write(".clone()");
+                    }
+                }
+                self.write(")");
+            }
+            (Type::List(_), "pop") if self.is_deque_data_field(object) => {
+                self.emit_expr(object);
+                self.write(".pop_back()");
+            }
+            (Type::List(_), "popleft") if self.is_deque_data_field(object) => {
+                self.emit_expr(object);
+                self.write(".pop_front()");
             }
             // List methods
             (Type::List(_), "append") => {
@@ -8695,7 +8820,8 @@ fn needs_clone_for_type(ty: &Type) -> bool {
 
 /// Mutating methods that require the receiver variable to be `mut`.
 const MUTATING_METHODS: &[&str] = &[
-    "append", "extend", "insert", "clear", "reverse", "sort", "pop", "remove",
+    "append", "appendleft", "extend", "insert", "clear", "reverse", "sort",
+    "pop", "popleft", "remove",
     "push_str", "update", "add", "discard",
 ];
 

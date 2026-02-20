@@ -129,6 +129,8 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from a list. Kept for ergonomics. |
 | `sifr.itertools.flatten` | `itertools.chain.from_iterable` | Sifr extension; flattens a list of lists. Simpler API than CPython's `chain.from_iterable`. |
 
+**Removed type-specific duplicates (Phase 13 — stdlib generic rewrite):** `chain_str`, `chain_float`, `accumulate_float`, `accumulate_str`, `counter_add`, `counter_sub`, and other monomorphic variants have been deleted. All stdlib functions are now generic — e.g., `chain[T]`, `accumulate[T: Addable]`, `Counter[T: Hashable]`, `deque[T]`, `heapq` functions with `[T: Comparable]` bounds, `reduce[T, U]`, `shuffle[T]`, `sample[T]`.
+
 ## Compiler Pipeline
 
 ```mermaid
