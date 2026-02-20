@@ -7,6 +7,7 @@ mod os;
 mod io;
 mod pathlib;
 mod test;
+mod collections;
 
 use crate::RustExpr;
 
@@ -106,6 +107,14 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "assert_almost_eq" => (test::lower_assert_almost_eq(rendered_args), None),
         "assert_gt" => (test::lower_assert_gt(rendered_args), None),
         "assert_lt" => (test::lower_assert_lt(rendered_args), None),
+        "new_set" => (collections::lower_new_set(rendered_args), None),
+        "set_from_list" => (collections::lower_set_from_list(rendered_args), None),
+        "set_add" => (collections::lower_set_add(rendered_args), None),
+        "set_contains" => (collections::lower_set_contains(rendered_args), None),
+        "set_remove" => (collections::lower_set_remove(rendered_args), None),
+        "set_len" => (collections::lower_set_len(rendered_args), None),
+        "set_union" => (collections::lower_set_union(rendered_args), None),
+        "set_intersection" => (collections::lower_set_intersection(rendered_args), None),
         _ => return None,
     };
 
@@ -248,5 +257,20 @@ mod tests {
         let gt = lower_intrinsic("assert_gt", &["l".to_string(), "r".to_string()])
             .expect("assert_gt lowers");
         assert!(render_expr(&gt.expr).contains("assert_gt failed"));
+    }
+
+    #[test]
+    fn lowers_collections_set_intrinsics_via_registry() {
+        let new_set = lower_intrinsic("new_set", &[]).expect("new_set lowers");
+        assert_eq!(render_expr(&new_set.expr), "Vec::<i64>::new()");
+
+        let add = lower_intrinsic("set_add", &["s".to_string(), "v".to_string()])
+            .expect("set_add lowers");
+        assert!(render_expr(&add.expr).contains("s.push(v)"));
+
+        let inter =
+            lower_intrinsic("set_intersection", &["a".to_string(), "b".to_string()])
+                .expect("set_intersection lowers");
+        assert!(render_expr(&inter.expr).contains("collect::<Vec<i64>>()"));
     }
 }
