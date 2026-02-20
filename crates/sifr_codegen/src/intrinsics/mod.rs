@@ -5,6 +5,7 @@ mod json;
 mod env;
 mod os;
 mod io;
+mod pathlib;
 
 use crate::RustExpr;
 
@@ -73,6 +74,9 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "getpid" => (os::lower_getpid(rendered_args), None),
         "cpu_count" => (os::lower_cpu_count(rendered_args), None),
         "stat_size" => (os::lower_stat_size(rendered_args), None),
+        "touch" => (pathlib::lower_touch(rendered_args), None),
+        "resolve_path" => (pathlib::lower_resolve_path(rendered_args), None),
+        "iterdir" => (pathlib::lower_iterdir(rendered_args), None),
         "read_text" => (io::lower_read_text(rendered_args), None),
         "write_text" => (io::lower_write_text(rendered_args), None),
         "exists" => (io::lower_exists(rendered_args), None),
@@ -201,5 +205,18 @@ mod tests {
 
         let walk = lower_intrinsic("walk_dir", &["root".to_string()]).expect("walk_dir lowers");
         assert!(render_expr(&walk.expr).contains("fn __walk"));
+    }
+
+    #[test]
+    fn lowers_pathlib_intrinsics_via_registry() {
+        let touch = lower_intrinsic("touch", &["p".to_string()]).expect("touch lowers");
+        assert!(render_expr(&touch.expr).contains("OpenOptions::new().create(true)"));
+
+        let resolve = lower_intrinsic("resolve_path", &["p".to_string()])
+            .expect("resolve_path lowers");
+        assert!(render_expr(&resolve.expr).contains("std::fs::canonicalize"));
+
+        let iterdir = lower_intrinsic("iterdir", &["p".to_string()]).expect("iterdir lowers");
+        assert!(render_expr(&iterdir.expr).contains("std::fs::read_dir"));
     }
 }
