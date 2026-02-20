@@ -8,6 +8,7 @@ mod io;
 mod pathlib;
 mod test;
 mod collections;
+mod bytes;
 
 use crate::RustExpr;
 
@@ -132,6 +133,10 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "defaultdict_new" => (collections::lower_defaultdict_new(rendered_args), None),
         "defaultdict_get" => (collections::lower_defaultdict_get(rendered_args), Some("serde_json")),
         "defaultdict_set" => (collections::lower_defaultdict_set(rendered_args), Some("serde_json")),
+        "encode_utf8" => (bytes::lower_encode_utf8(rendered_args), None),
+        "decode_utf8" => (bytes::lower_decode_utf8(rendered_args), None),
+        "bytes_to_hex" => (bytes::lower_bytes_to_hex(rendered_args), None),
+        "bytes_from_hex" => (bytes::lower_bytes_from_hex(rendered_args), None),
         _ => return None,
     };
 
@@ -311,5 +316,21 @@ mod tests {
         )
         .expect("defaultdict_set");
         assert!(render_expr(&dd_set.expr).contains("serde_json::json!"));
+    }
+
+    #[test]
+    fn lowers_bytes_intrinsics_via_registry() {
+        let enc = lower_intrinsic("encode_utf8", &["s".to_string()]).expect("encode_utf8");
+        assert!(render_expr(&enc.expr).contains("as_bytes()"));
+
+        let dec = lower_intrinsic("decode_utf8", &["vals".to_string()]).expect("decode_utf8");
+        assert!(render_expr(&dec.expr).contains("String::from_utf8"));
+
+        let to_hex = lower_intrinsic("bytes_to_hex", &["vals".to_string()]).expect("bytes_to_hex");
+        assert!(render_expr(&to_hex.expr).contains("byte out of range"));
+
+        let from_hex =
+            lower_intrinsic("bytes_from_hex", &["hex".to_string()]).expect("bytes_from_hex");
+        assert!(render_expr(&from_hex.expr).contains("invalid hex character"));
     }
 }
