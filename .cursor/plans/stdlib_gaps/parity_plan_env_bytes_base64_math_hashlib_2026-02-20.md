@@ -363,7 +363,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - [ ] M3: base64 API expansion (b64/standard/urlsafe/b32/b32hex/b16)
 - [ ] M3: base64 strict decode options implemented
 - [ ] M3: base64 tests ported and passing
-- [ ] M3: base64 demo created and validated
+- [x] M3: base64 demo created and validated
 - [ ] M4: math missing function surface completed
 - [ ] M4: math signature and semantic fixes completed
 - [ ] M4: expanded `test_math` parity port passing
@@ -436,6 +436,7 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [ ] `b32hexencode/decode`
   - [ ] `b16encode/decode`
   - [ ] `encodebytes/decodebytes`
+- [ ] PR3-A progress note: baseline wrappers implemented for `standard_b64*`, `b16*`, `encodebytes/decodebytes`; remaining gap is `b32hex*`
 - [ ] PR3-B strictness and parameter parity
   - [ ] altchars support
   - [ ] validate/ignorechars behavior
@@ -444,8 +445,9 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [ ] RFC vectors
   - [ ] invalid input behavior
   - [ ] round-trip stress/property-like cases
-- [ ] Milestone demo
-  - [ ] `demos/m3_base64_demo.sifr` passes
+- [ ] PR3-C progress note: added `cpython_base64_subset.sifr` baseline; full vector/strictness matrix still pending
+- [x] Milestone demo
+  - [x] `demos/m3_base64_demo.sifr` passes
 
 ### Milestone 4 (`sifr.math`)
 

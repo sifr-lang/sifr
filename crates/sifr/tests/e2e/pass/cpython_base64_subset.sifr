@@ -1,0 +1,75 @@
+# Adapted CPython base64 subset for sifr.base64
+from sifr.base64 import (
+    b64encode, b64decode,
+    standard_b64encode, standard_b64decode,
+    urlsafe_b64encode, urlsafe_b64decode,
+    b32encode, b32decode,
+    b16encode, b16decode,
+    encodebytes, decodebytes
+)
+
+def main():
+    print(b64encode("foo"))
+    try:
+        d1: str = b64decode("Zm9v")
+        print(d1)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    print(standard_b64encode("foo"))
+    try:
+        d2: str = standard_b64decode("Zm9v")
+        print(d2)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    u: str = urlsafe_b64encode("hello")
+    print(len(u) > 0)
+    try:
+        ud: str = urlsafe_b64decode(u)
+        print(ud)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    b32: str = b32encode("hello")
+    print(len(b32) > 0)
+    try:
+        b32d: str = b32decode(b32)
+        print(b32d)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    try:
+        h: str = b16encode("Hi")
+        print(h)
+        hd: str = b16decode(h)
+        print(hd)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    print(encodebytes("bar"))
+    try:
+        d3: str = decodebytes("YmFy")
+        print(d3)
+    except ParseError as e:
+        print("unexpected: " + e.message)
+
+    try:
+        bad: str = b64decode("not base64!!!")
+        print(bad)
+    except ParseError as e:
+        print("invalid-safe")
+
+# expect-stdout: Zm9v
+# expect-stdout: foo
+# expect-stdout: Zm9v
+# expect-stdout: foo
+# expect-stdout: true
+# expect-stdout: hello
+# expect-stdout: true
+# expect-stdout: hello
+# expect-stdout: 4869
+# expect-stdout: Hi
+# expect-stdout: YmFy
+# expect-stdout: bar
+# expect-stdout: invalid-safe

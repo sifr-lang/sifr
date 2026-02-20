@@ -1,0 +1,39 @@
+# Milestone 3 demo: sifr.base64 parity baseline
+from sifr.base64 import b64encode, b64decode, standard_b64encode, standard_b64decode, b16encode, b16decode
+
+def main():
+    print(b64encode("sifr"))
+    try:
+        dec1: str = b64decode("c2lmcg==")
+        print(dec1)
+    except ParseError as e:
+        print("decode error: " + e.message)
+
+    print(standard_b64encode("demo"))
+    try:
+        dec2: str = standard_b64decode("ZGVtbw==")
+        print(dec2)
+    except ParseError as e:
+        print("decode error: " + e.message)
+
+    try:
+        hx: str = b16encode("Hi")
+        print(hx)
+        dec3: str = b16decode(hx)
+        print(dec3)
+    except ParseError as e:
+        print("hex error: " + e.message)
+
+    try:
+        _bad: str = b64decode("###")
+        print("unexpected")
+    except ParseError as e:
+        print("invalid-safe")
+
+# expect-stdout: c2lmcg==
+# expect-stdout: sifr
+# expect-stdout: ZGVtbw==
+# expect-stdout: demo
+# expect-stdout: 4869
+# expect-stdout: Hi
+# expect-stdout: invalid-safe
