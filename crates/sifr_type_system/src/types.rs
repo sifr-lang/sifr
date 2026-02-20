@@ -86,7 +86,7 @@ pub enum Type {
     TypeVar(String),
 
     /// Callable type: `Callable[[int, str], bool]` -> `fn(i64, String) -> bool`
-    /// Fields: (parameter_types, parameter_conventions, return_type).
+    /// Fields: (`parameter_types`, `parameter_conventions`, `return_type`).
     Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>),
 
     // --- milestone_enums: Enum Types ---
@@ -115,7 +115,7 @@ pub struct FunctionType {
 }
 
 impl FunctionType {
-    /// Create a FunctionType where all parameters use the default convention
+    /// Create a `FunctionType` where all parameters use the default convention
     /// (Borrow for Move types, Own for Copy/TypeVar types).
     pub fn new(params: Vec<(String, Type)>, return_type: Type) -> Self {
         let params = params.into_iter().map(|(name, ty)| {
@@ -132,7 +132,7 @@ impl FunctionType {
         }
     }
 
-    /// Create a FunctionType where all parameters borrow (for built-in functions).
+    /// Create a `FunctionType` where all parameters borrow (for built-in functions).
     pub fn all_borrow(params: Vec<(String, Type)>, return_type: Type) -> Self {
         let params = params.into_iter().map(|(name, ty)| {
             (name, ty, ParamConvention::Borrow)
@@ -145,20 +145,15 @@ impl FunctionType {
 }
 
 /// How a function parameter receives its value.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum ParamConvention {
     /// Immutable borrow (default for Move types). Codegen: &T
+    #[default]
     Borrow,
     /// Mutable borrow (mut keyword). Codegen: &mut T
     MutBorrow,
     /// Ownership transfer (own keyword, or default for Copy types). Codegen: T
     Own,
-}
-
-impl Default for ParamConvention {
-    fn default() -> Self {
-        ParamConvention::Borrow
-    }
 }
 
 /// Describes how a type behaves with respect to ownership.
@@ -303,7 +298,7 @@ impl Type {
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
             Self::Class { name, .. } => name.clone(),
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
-            Self::Protocol { name, .. } => format!("Box<dyn {}>", name),
+            Self::Protocol { name, .. } => format!("Box<dyn {name}>"),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
             Self::Enum { name, .. } => name.clone(), // Enum type maps to its Rust enum name
@@ -313,10 +308,10 @@ impl Type {
                     let rust_ty = t.rust_type();
                     match conv {
                         ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
-                            format!("&{}", rust_ty)
+                            format!("&{rust_ty}")
                         }
                         ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
-                            format!("&mut {}", rust_ty)
+                            format!("&mut {rust_ty}")
                         }
                         _ => rust_ty,
                     }
@@ -342,10 +337,10 @@ impl Type {
                     let rust_ty = t.rust_type();
                     match conv {
                         ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
-                            format!("&{}", rust_ty)
+                            format!("&{rust_ty}")
                         }
                         ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
-                            format!("&mut {}", rust_ty)
+                            format!("&mut {rust_ty}")
                         }
                         _ => rust_ty,
                     }
@@ -369,7 +364,7 @@ impl Type {
             Self::Union(members) => {
                 let parts: Vec<String> = members
                     .iter()
-                    .map(|m| Self::type_to_enum_variant_prefix(m))
+                    .map(Self::type_to_enum_variant_prefix)
                     .collect();
                 parts.join("Or")
             }
@@ -382,7 +377,7 @@ impl Type {
         Self::type_to_enum_variant_prefix(self)
     }
 
-    /// Helper: map a type to a PascalCase name for enum variant/name generation.
+    /// Helper: map a type to a `PascalCase` name for enum variant/name generation.
     fn type_to_enum_variant_prefix(ty: &Type) -> String {
         match ty {
             Type::Int => "Int".to_string(),

@@ -10,9 +10,9 @@ pub struct HirModule {
     pub imports: Vec<HirImport>,
     /// Module-level constants (name, type, value)
     pub constants: Vec<(String, Type, HirExpr)>,
-    /// Generic function info: function_name -> type_var_names
+    /// Generic function info: `function_name` -> `type_var_names`
     pub generic_functions: std::collections::HashMap<String, Vec<String>>,
-    /// Type parameter bounds: owner_name (function or class) -> (type_var_name -> protocol_names)
+    /// Type parameter bounds: `owner_name` (function or class) -> (`type_var_name` -> `protocol_names`)
     pub type_param_bounds: std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
 }
 
@@ -29,6 +29,7 @@ pub struct HirImport {
 
 /// A class definition with resolved types.
 #[derive(Debug, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct HirClass {
     pub name: String,
     pub fields: Vec<(String, Type)>,
@@ -40,20 +41,20 @@ pub struct HirClass {
     /// Whether this class is a Protocol (maps to Rust trait)
     pub is_protocol: bool,
     /// Operator overloading methods: maps dunder name to method
-    /// e.g., "__add__" -> HirFunction, "__eq__" -> HirFunction
+    /// e.g., "__add__" -> `HirFunction`, "__eq__" -> `HirFunction`
     pub operator_impls: Vec<(String, HirFunction)>,
     /// For newtype declarations: the wrapped primitive type
-    /// e.g., `class Port(int)` -> Some(Type::Int)
+    /// e.g., `class Port(int)` -> `Some(Type::Int)`
     pub newtype_inner: Option<Type>,
     /// List of protocols this class implements (protocol names)
     pub implements_protocols: Vec<String>,
     /// Parent class name for single inheritance
     pub parent_class: Option<String>,
-    /// Generic type parameters (e.g., T, K, V from PEP 695 or TypeVar)
+    /// Generic type parameters (e.g., T, K, V from PEP 695 or `TypeVar`)
     pub type_params: Vec<String>,
     /// Whether this class is an enum type (class Color(Enum):)
     pub is_enum: bool,
-    /// Enum variants: (name, optional_value)
+    /// Enum variants: (name, `optional_value`)
     /// e.g., RED = 1 -> ("RED", Some(1))
     /// e.g., RED -> ("RED", None)
     pub enum_variants: Vec<(String, Option<i64>)>,
@@ -74,11 +75,11 @@ pub struct HirFunction {
     pub params: Vec<HirParam>,
     pub return_type: Type,
     pub body: Vec<HirStmt>,
-    /// Method kind: Regular, ClassMethod, or StaticMethod
+    /// Method kind: Regular, `ClassMethod`, or `StaticMethod`
     pub method_kind: MethodKind,
     /// User-defined decorators (excluding classmethod/staticmethod)
     pub decorators: Vec<String>,
-    /// Generic type parameters (e.g., ["T", "K", "V"] for generic functions)
+    /// Generic type parameters (e.g., `["T", "K", "V"]` for generic functions)
     pub type_params: Vec<String>,
 }
 
@@ -231,8 +232,8 @@ pub enum HirStmt {
         value: HirExpr,
     },
     /// With statement: with expr as var: body
-    /// Supports multiple context managers: with A() as a, B() as b: body
-    /// Each item is (var_name, context_expr, has_context_manager_protocol)
+    /// Supports multiple context managers: with `A()` as a, `B()` as b: body
+    /// Each item is (`var_name`, `context_expr`, `has_context_manager_protocol`)
     With {
         items: Vec<(String, HirExpr, bool)>,
         body: Vec<HirStmt>,
@@ -391,13 +392,13 @@ pub enum HirExpr {
         elements: Vec<HirExpr>,
         ty: Type,
     },
-    /// Indexing: x[0], d["key"]
+    /// Indexing: `x[0]`, `d["key"]`
     Index {
         object: Box<HirExpr>,
         index: Box<HirExpr>,
         ty: Type,
     },
-    /// Method call: x.append(1), s.upper()
+    /// Method call: `x.append(1)`, `s.upper()`
     MethodCall {
         object: Box<HirExpr>,
         method: String,
@@ -456,7 +457,7 @@ pub enum HirExpr {
         value: Box<HirExpr>,
         ty: Type,
     },
-    /// Super call: super().__init__(args) -> ParentType::new(args)
+    /// Super call: `super().__init__(args)` -> `ParentType::new(args)`
     SuperCall {
         parent_class: String,
         method: String,
@@ -497,7 +498,7 @@ pub enum HirExpr {
         filter: Option<Box<HirExpr>>,
         ty: Type,
     },
-    /// Enum variant access: Color.RED -> Color::RED
+    /// Enum variant access: `Color.RED` -> `Color::RED`
     EnumVariant {
         enum_name: String,
         variant: String,

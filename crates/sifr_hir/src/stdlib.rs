@@ -13,7 +13,7 @@ pub struct IntrinsicModule {
     pub constants: HashMap<String, Type>,
 }
 
-/// Helper: construct a built-in error class type (e.g., IOError, ParseError).
+/// Helper: construct a built-in error class type (e.g., `IOError`, `ParseError`).
 /// Built-in error classes have a single `message: str` field.
 fn error_class(name: &str) -> Type {
     Type::Class {

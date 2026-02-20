@@ -7,15 +7,14 @@ use crate::TypeError;
 /// Type-check a binary operation (e.g., `a + b`, `a - b`).
 ///
 /// Returns the result type or an error.
+#[allow(clippy::result_large_err)]
 pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
     // Mixed int/bigint arithmetic is a compile error (except bigint ** int which is allowed)
     let is_bigint_pow_int = left == &Type::BigInt && right == &Type::Int && op == "**";
     if !is_bigint_pow_int {
         if (left == &Type::Int && right == &Type::BigInt) || (left == &Type::BigInt && right == &Type::Int) {
             return Err(TypeError {
-                message: format!(
-                    "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly"
-                ),
+                message: "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly".to_string(),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
                     ty: left.clone(),
@@ -243,6 +242,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
 }
 
 /// Type-check a comparison operation (e.g., `a == b`, `a < b`).
+#[allow(clippy::result_large_err)]
 pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
     match op {
         "==" | "!=" => {
@@ -354,6 +354,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
 }
 
 /// Type-check a unary operation (e.g., `-x`, `not x`).
+#[allow(clippy::result_large_err)]
 pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> {
     match op {
         "-" | "+" => {
@@ -424,6 +425,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
 }
 
 /// Type-check a boolean operation (e.g., `a and b`, `a or b`).
+#[allow(clippy::result_large_err)]
 pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
     match op {
         "and" | "or" => {

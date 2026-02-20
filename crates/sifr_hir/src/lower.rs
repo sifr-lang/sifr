@@ -1,5 +1,6 @@
 //! AST to HIR lowering with type checking and name resolution.
 
+#[allow(clippy::wildcard_imports)]
 use sifr_python_ast::*;
 use sifr_type_system::{
     Type, FunctionType, OwnershipKind, ParamConvention,
@@ -7,6 +8,7 @@ use sifr_type_system::{
     make_union, NarrowingCondition, narrow_type,
 };
 use sifr_type_system::infer::resolve_type_annotation;
+#[allow(clippy::wildcard_imports)]
 use crate::hir_nodes::*;
 use crate::scope::Scope;
 use std::collections::HashMap;
@@ -33,9 +35,9 @@ impl std::fmt::Display for LoweringError {
 struct LowerCtx {
     /// Function signatures (name -> type)
     functions: HashMap<String, FunctionType>,
-    /// Default parameter values for functions (name -> vec of (param_index, default_expr))
+    /// Default parameter values for functions (name -> vec of (`param_index`, `default_expr`))
     function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
-    /// Class type definitions (name -> Type::Class)
+    /// Class type definitions (name -> `Type::Class`)
     class_types: HashMap<String, Type>,
     /// Current scope for name resolution
     scope: Scope,
@@ -43,13 +45,13 @@ struct LowerCtx {
     errors: Vec<LoweringError>,
     /// Loop nesting depth (for break/continue validation)
     loop_depth: usize,
-    /// reveal_type() diagnostics (informational, not errors)
+    /// `reveal_type()` diagnostics (informational, not errors)
     reveal_types: Vec<String>,
     /// Compiler warnings (non-fatal diagnostics printed to stderr)
     warnings: Vec<String>,
     /// Whether we're currently inside a class method (tracks `self` type)
     current_class: Option<String>,
-    /// The parent class name of the current class (for super() resolution)
+    /// The parent class name of the current class (for `super()` resolution)
     current_parent_class: Option<String>,
     /// Whether we're inside a try block (auto-unwrap Result values)
     in_try_block: bool,
@@ -62,11 +64,11 @@ struct LowerCtx {
     error_hierarchy: HashMap<String, Vec<String>>,
     /// Set of function names that have *args (vararg) parameters
     vararg_functions: std::collections::HashSet<String>,
-    /// Set of registered type variable names (e.g., T, K, V from TypeVar declarations)
+    /// Set of registered type variable names (e.g., T, K, V from `TypeVar` declarations)
     type_vars: std::collections::HashSet<String>,
     /// Map of generic function names to their type variable names
     generic_functions: HashMap<String, Vec<String>>,
-    /// Map of owner (function or class name) -> (type_var_name -> protocol bounds)
+    /// Map of owner (function or class name) -> (`type_var_name` -> protocol bounds)
     type_param_bounds: HashMap<String, HashMap<String, Vec<String>>>,
     /// Whether _sifr.* intrinsic imports are allowed (true for stdlib .sifr files)
     allow_intrinsic_imports: bool,
@@ -121,7 +123,7 @@ impl LowerCtx {
     }
 }
 
-/// Collect all TypeVar names used in a type.
+/// Collect all `TypeVar` names used in a type.
 fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
     match ty {
         Type::TypeVar(name) => {
@@ -235,7 +237,7 @@ fn type_satisfies_bound(ty: &Type, bound: &str) -> bool {
 /// Result of lowering, including the HIR module and any diagnostics.
 pub struct LoweringResult {
     pub module: HirModule,
-    /// reveal_type() diagnostics (informational, printed to stderr)
+    /// `reveal_type()` diagnostics (informational, printed to stderr)
     pub reveal_types: Vec<String>,
     /// Compiler warnings (non-fatal, printed to stderr)
     pub warnings: Vec<String>,
@@ -244,17 +246,17 @@ pub struct LoweringResult {
 /// External module definitions that can be imported.
 #[derive(Debug, Clone, Default)]
 pub struct ExternalDefs {
-    /// Map of module_name -> (function_name -> FunctionType)
+    /// Map of `module_name` -> (`function_name` -> `FunctionType`)
     pub functions: std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
-    /// Map of module_name -> (class_name -> Type)
+    /// Map of `module_name` -> (`class_name` -> Type)
     pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
-    /// Map of module_name -> (constant_name -> Type)
+    /// Map of `module_name` -> (`constant_name` -> Type)
     pub constants: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
     /// Set of class names that are error types (class Foo(Error)) across all modules
     pub error_types: std::collections::HashSet<String>,
-    /// Map of module_name -> (owner_name -> (type_var_name -> bounds))
+    /// Map of `module_name` -> (`owner_name` -> (`type_var_name` -> bounds))
     pub type_param_bounds: std::collections::HashMap<String, std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>>,
-    /// Map of module_name -> (function_name -> type_var_names)
+    /// Map of `module_name` -> (`function_name` -> `type_var_names`)
     pub generic_functions: std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
 }
 
@@ -486,7 +488,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                 // Stdlib .sifr files are allowed to import from _sifr.*
                 if module_name.starts_with("_sifr.") {
                     if !ctx.allow_intrinsic_imports {
-                        ctx.error(format!("cannot import from '{}' — _sifr.* modules are internal compiler intrinsics", module_name));
+                        ctx.error(format!("cannot import from '{module_name}' — _sifr.* modules are internal compiler intrinsics"));
                         continue;
                     }
                     // Resolve intrinsic imports for stdlib .sifr files
@@ -498,7 +500,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                             } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
                                 ctx.scope.define(local, const_ty.clone());
                             } else {
-                                ctx.error(format!("intrinsic module '{}' has no member '{}'", module_name, name));
+                                ctx.error(format!("intrinsic module '{module_name}' has no member '{name}'"));
                             }
                         }
                         imports.push(HirImport {
@@ -508,7 +510,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                         });
                         continue;
                     } else {
-                        ctx.error(format!("unknown intrinsic module '{}'", module_name));
+                        ctx.error(format!("unknown intrinsic module '{module_name}'"));
                         continue;
                     }
                 }
@@ -587,7 +589,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                 }
                             }
                             if !found {
-                                ctx.error(format!("module '{}' has no member '{}'", module_name, name));
+                                ctx.error(format!("module '{module_name}' has no member '{name}'"));
                             }
                         }
                         imports.push(HirImport {
@@ -598,7 +600,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                         continue;
                     } else {
                         // Module doesn't exist in stdlib — emit clear error at the import site
-                        ctx.error(format!("unknown stdlib module '{}'", module_name));
+                        ctx.error(format!("unknown stdlib module '{module_name}'"));
                         continue;
                     }
                 }
@@ -607,7 +609,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                 let has_local_module = externals.functions.contains_key(&module_name)
                     || externals.classes.contains_key(&module_name);
                 if !has_local_module {
-                    ctx.error(format!("unknown module '{}'", module_name));
+                    ctx.error(format!("unknown module '{module_name}'"));
                     continue;
                 }
 
@@ -616,7 +618,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                     let local = local_name_for(name);
                     // Check if it's a private name
                     if name.starts_with('_') {
-                        ctx.error(format!("cannot import private name '{}' from module '{}'", name, module_name));
+                        ctx.error(format!("cannot import private name '{name}' from module '{module_name}'"));
                         continue;
                     }
 
@@ -658,7 +660,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                         }
                     }
                     if !found {
-                        ctx.error(format!("module '{}' has no member '{}'", module_name, name));
+                        ctx.error(format!("module '{module_name}' has no member '{name}'"));
                     }
                 }
 
@@ -744,7 +746,7 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
 
 /// Early import resolution: register imported types/functions/constants in the context
 /// so they're available during function signature extraction and type annotation resolution.
-/// This is a subset of the full import processing — it doesn't produce HirImport nodes.
+/// This is a subset of the full import processing — it doesn't produce `HirImport` nodes.
 fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut LowerCtx) {
     for stmt in stmts {
         if let Stmt::ImportFrom(import_from) = stmt {
@@ -820,6 +822,7 @@ fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut Low
 }
 
 /// Check if a class definition extends an error class (Error or any registered error type).
+#[allow(dead_code)]
 fn is_error_class_with_ctx(class_def: &StmtClassDef, error_types: &std::collections::HashSet<String>) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
@@ -832,7 +835,7 @@ fn is_error_class_with_ctx(class_def: &StmtClassDef, error_types: &std::collecti
     false
 }
 
-/// Check if a class definition has `(Error)` as its base class (legacy, for contexts without error_types).
+/// Check if a class definition has `(Error)` as its base class (legacy, for contexts without `error_types`).
 fn is_error_class(class_def: &StmtClassDef) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
@@ -844,7 +847,7 @@ fn is_error_class(class_def: &StmtClassDef) -> bool {
     false
 }
 
-/// Check if a type is a valid error type (a class registered in error_types).
+/// Check if a type is a valid error type (a class registered in `error_types`).
 fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty {
         Type::Class { name, .. } => ctx.error_types.contains(name),
@@ -863,7 +866,7 @@ fn format_type_name(ty: &Type) -> String {
         Type::Class { name, .. } => name.clone(),
         Type::List(inner) => format!("list[{}]", format_type_name(inner)),
         Type::Dict(k, v) => format!("dict[{}, {}]", format_type_name(k), format_type_name(v)),
-        _ => format!("{:?}", ty),
+        _ => format!("{ty:?}"),
     }
 }
 
@@ -966,7 +969,7 @@ fn is_enum_class(class_def: &StmtClassDef) -> bool {
 }
 
 /// Collect enum variants from a class body
-/// Returns (name, optional_int_value) for each variant
+/// Returns (name, `optional_int_value`) for each variant
 fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Option<i64>)> {
     let mut variants = Vec::new();
     let mut auto_value = 1i64;
@@ -1111,7 +1114,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         // Register each variant as a constant of the enum type
         for (variant_name, _) in &variants {
             ctx.functions.insert(
-                format!("{}.{}", class_name, variant_name),
+                format!("{class_name}.{variant_name}"),
                 FunctionType::new(vec![], enum_ty.clone()),
             );
         }
@@ -1137,7 +1140,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 };
                 let ft = FunctionType::new(params, return_ty);
                 // Register method as ClassName.method_name for lookup
-                ctx.functions.insert(format!("{}.{}", class_name, method_name), ft.clone());
+                ctx.functions.insert(format!("{class_name}.{method_name}"), ft.clone());
                 methods.push((method_name, ft));
             }
         }
@@ -1195,7 +1198,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 }
             }
         } else {
-            ctx.error(format!("parent class '{}' not defined", parent_name));
+            ctx.error(format!("parent class '{parent_name}' not defined"));
         }
     }
 
@@ -1238,8 +1241,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                             resolve_annotation_expr(ann, ctx)
                         } else {
                             ctx.error(format!(
-                                "parameter '{}' in {}.__init__ is missing a type annotation",
-                                param_name, class_name
+                                "parameter '{param_name}' in {class_name}.__init__ is missing a type annotation"
                             ));
                             Type::Any
                         };
@@ -1275,8 +1277,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                             resolve_annotation_expr(ann, ctx)
                         } else {
                             ctx.error(format!(
-                                "parameter '{}' in {}.{} is missing a type annotation",
-                                param_name, class_name, method_name
+                                "parameter '{param_name}' in {class_name}.{method_name} is missing a type annotation"
                             ));
                             Type::Any
                         };
@@ -1292,7 +1293,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
             }
             Stmt::Pass(_) => {} // Allow pass in class body
             _ => {
-                ctx.error(format!("unsupported statement in class '{}' body", class_name));
+                ctx.error(format!("unsupported statement in class '{class_name}' body"));
             }
         }
     }
@@ -1318,8 +1319,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 seen_default = true;
             } else if seen_default {
                 ctx.error(format!(
-                    "class '{}': required field '{}' declared after field with default value",
-                    class_name, fname
+                    "class '{class_name}': required field '{fname}' declared after field with default value"
                 ));
             }
         }
@@ -1334,9 +1334,8 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
             let has_own_fields = fields.len() > parent_field_count;
             if has_own_fields {
                 ctx.error(format!(
-                    "class '{}' has fields but no __init__; parent fields will not be initialized. \
-                     Define an explicit __init__ with super().__init__(...)",
-                    class_name
+                    "class '{class_name}' has fields but no __init__; parent fields will not be initialized. \
+                     Define an explicit __init__ with super().__init__(...)"
                 ));
             }
         }
@@ -1357,7 +1356,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     ctx.class_types.insert(class_name, class_ty);
 }
 
-/// Second pass: lower class method bodies into HirClass.
+/// Second pass: lower class method bodies into `HirClass`.
 fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass> {
     let class_name = class_def.name.to_string();
     let class_ty = ctx.class_types.get(&class_name)?.clone();
@@ -1730,7 +1729,7 @@ fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
     stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
 }
 
-/// Lower a simple expression (literal values only) without requiring a full LowerCtx.
+/// Lower a simple expression (literal values only) without requiring a full `LowerCtx`.
 /// Used for collecting default parameter values in the first pass.
 fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
     match expr {
@@ -2256,7 +2255,7 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         }
                         class_ty
                     } else {
-                        ctx.error(format!("unknown generic type: '{}'", base_name));
+                        ctx.error(format!("unknown generic type: '{base_name}'"));
                         Type::Any
                     }
                 }
@@ -2507,8 +2506,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 if !is_valid_error_type(raised_ty, ctx) {
                     let ty_name = format_type_name(raised_ty);
                     ctx.error(format!(
-                        "raise requires an Error class instance — `{}` is not an Error class",
-                        ty_name
+                        "raise requires an Error class instance — `{ty_name}` is not an Error class"
                     ));
                     return None;
                 }
@@ -2630,8 +2628,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                         // Validate the except type is a known error class
                         if !ctx.error_types.contains(et) {
                             ctx.error(format!(
-                                "`{}` in except arm is not a known error class — use a class extending Error",
-                                et
+                                "`{et}` in except arm is not a known error class — use a class extending Error"
                             ));
                         }
                         covered_types.insert(et.clone());
@@ -2976,7 +2973,7 @@ fn lower_match(
                     }
                     Type::LiteralStr(s) => {
                         if !covered_literal_strs.contains(s) {
-                            uncovered.push(format!("\"{}\"", s));
+                            uncovered.push(format!("\"{s}\""));
                         }
                     }
                     Type::LiteralInt(n) => {
@@ -3273,7 +3270,7 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         }
         expr
     } else {
-        ctx.error(format!("variable '{}' must be initialized", name));
+        ctx.error(format!("variable '{name}' must be initialized"));
         return None;
     };
 
@@ -3285,8 +3282,7 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
             // Escape analysis: cannot store a borrowed parameter into a new binding
             if ctx.borrowed_params.contains(src_name.as_str()) {
                 ctx.error(format!(
-                    "cannot store borrowed parameter `{}`: it is borrowed by default -- use `own {}` to take ownership, or store `{}.clone()`",
-                    src_name, src_name, src_name
+                    "cannot store borrowed parameter `{src_name}`: it is borrowed by default -- use `own {src_name}` to take ownership, or store `{src_name}.clone()`"
                 ));
             } else {
                 ctx.scope.mark_moved(src_name);
@@ -3662,7 +3658,7 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
     // Check that the variable exists
     let var_info = ctx.scope.lookup(&name);
     if var_info.is_none() {
-        ctx.error(format!("undefined variable: '{}'", name));
+        ctx.error(format!("undefined variable: '{name}'"));
         return None;
     }
     let var_ty = var_info.unwrap().ty.clone();
@@ -3706,8 +3702,7 @@ fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut LowerCtx) 
                 && ty.ownership() == OwnershipKind::Move
             {
                 ctx.error(format!(
-                    "cannot return borrowed parameter `{}`: it is borrowed by default -- use `own {}` to take ownership, or return `{}.clone()`",
-                    name, name, name
+                    "cannot return borrowed parameter `{name}`: it is borrowed by default -- use `own {name}` to take ownership, or return `{name}.clone()`"
                 ));
             }
         }
@@ -4021,7 +4016,7 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
     }
 }
 
-/// Convert an AST expression to a LiteralValue (for equality narrowing).
+/// Convert an AST expression to a `LiteralValue` (for equality narrowing).
 fn expr_to_literal_value(expr: &Expr) -> Option<sifr_type_system::LiteralValue> {
     match expr {
         Expr::StringLiteral(s) => Some(sifr_type_system::LiteralValue::Str(s.value.to_str().to_string())),
@@ -4085,8 +4080,7 @@ fn lower_while(while_stmt: &StmtWhile, func_type: &FunctionType, ctx: &mut Lower
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);
     for var_name in &newly_moved {
         ctx.error(format!(
-            "value '{}' is moved inside loop body; it would be unavailable on subsequent iterations",
-            var_name
+            "value '{var_name}' is moved inside loop body; it would be unavailable on subsequent iterations"
         ));
     }
 
@@ -4171,8 +4165,7 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
     let newly_moved = ctx.scope.moved_since(&moved_before_loop);
     for var_name in &newly_moved {
         ctx.error(format!(
-            "value '{}' is moved inside loop body; it would be unavailable on subsequent iterations",
-            var_name
+            "value '{var_name}' is moved inside loop body; it would be unavailable on subsequent iterations"
         ));
     }
 
@@ -4251,8 +4244,7 @@ fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let ty = info.effective_type().clone();
         if is_moved {
             ctx.error(format!(
-                "use of moved value: '{}'",
-                var_name
+                "use of moved value: '{var_name}'"
             ));
         }
         return Some(HirExpr::Name {
@@ -4277,7 +4269,7 @@ fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
         _ => {}
     }
 
-    ctx.error(format!("undefined variable: '{}'", var_name));
+    ctx.error(format!("undefined variable: '{var_name}'"));
     None
 }
 
@@ -4360,8 +4352,7 @@ fn check_int_overflow_risk(op: &str, left: &HirExpr, right: &HirExpr, ctx: &mut 
             if let HirExpr::IntLiteral(exp) = right {
                 if *exp > 40 {
                     ctx.warn(format!(
-                        "warning: int exponentiation with large exponent ({}) may overflow i64; consider using bigint",
-                        exp
+                        "warning: int exponentiation with large exponent ({exp}) may overflow i64; consider using bigint"
                     ));
                 }
             } else {
@@ -4385,8 +4376,7 @@ fn check_int_overflow_risk(op: &str, left: &HirExpr, right: &HirExpr, ctx: &mut 
             } else if let HirExpr::IntLiteral(shift) = right {
                 if *shift >= 63 {
                     ctx.warn(format!(
-                        "warning: int left shift by {} exceeds i64 range; consider using bigint",
-                        shift
+                        "warning: int left shift by {shift} exceeds i64 range; consider using bigint"
                     ));
                 }
             }
@@ -5095,7 +5085,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Matches Python's open() behavior: raises on error, returns FileHandle directly.
     if func_name == "open" {
         let n_args = call.arguments.args.len();
-        let n_kwargs = call.arguments.keywords.len();
+        let _n_kwargs = call.arguments.keywords.len();
         let path_arg = if n_args >= 1 {
             lower_expr(&call.arguments.args[0], ctx)?
         } else {
@@ -5205,7 +5195,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     }
 
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
-        ctx.error(format!("undefined function: '{}'", func_name));
+        ctx.error(format!("undefined function: '{func_name}'"));
         None
     })?;
 
@@ -5314,8 +5304,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 // Check no duplicate keyword for this position
                 if keyword_args.iter().any(|(k, _)| k == param_name) {
                     ctx.error(format!(
-                        "function '{}': argument '{}' given both positionally and as keyword",
-                        func_name, param_name
+                        "function '{func_name}': argument '{param_name}' given both positionally and as keyword"
                     ));
                     return None;
                 }
@@ -5330,15 +5319,13 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                         resolved.push(default_expr.clone());
                     } else {
                         ctx.error(format!(
-                            "function '{}': missing argument '{}' with no default value",
-                            func_name, param_name
+                            "function '{func_name}': missing argument '{param_name}' with no default value"
                         ));
                         return None;
                     }
                 } else {
                     ctx.error(format!(
-                        "function '{}': missing argument '{}' with no default value",
-                        func_name, param_name
+                        "function '{func_name}': missing argument '{param_name}' with no default value"
                     ));
                     return None;
                 }
@@ -5349,8 +5336,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         for (kw_name, _) in &keyword_args {
             if !ft.params.iter().any(|(p, _, _)| p == kw_name) {
                 ctx.error(format!(
-                    "function '{}': unexpected keyword argument '{}'",
-                    func_name, kw_name
+                    "function '{func_name}': unexpected keyword argument '{kw_name}'"
                 ));
                 return None;
             }
@@ -5388,13 +5374,11 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                         ParamConvention::MutBorrow => {
                             if mut_borrowed.contains(name) {
                                 ctx.error(format!(
-                                    "cannot borrow '{}' as mutable more than once in the same call to '{}'",
-                                    name, func_name
+                                    "cannot borrow '{name}' as mutable more than once in the same call to '{func_name}'"
                                 ));
                             } else if immut_borrowed.contains(name) {
                                 ctx.error(format!(
-                                    "cannot borrow '{}' as mutable because it is already borrowed as immutable in the same call to '{}'",
-                                    name, func_name
+                                    "cannot borrow '{name}' as mutable because it is already borrowed as immutable in the same call to '{func_name}'"
                                 ));
                             }
                             mut_borrowed.push(name.clone());
@@ -5402,8 +5386,7 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                         ParamConvention::Borrow => {
                             if mut_borrowed.contains(name) {
                                 ctx.error(format!(
-                                    "cannot borrow '{}' as immutable because it is already borrowed as mutable in the same call to '{}'",
-                                    name, func_name
+                                    "cannot borrow '{name}' as immutable because it is already borrowed as mutable in the same call to '{func_name}'"
                                 ));
                             }
                             immut_borrowed.push(name.clone());
@@ -5901,14 +5884,14 @@ fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> 
                 });
             }
             _ => {
-                ctx.error(format!("enum '{}' has no attribute '{}'", enum_name, field_name));
+                ctx.error(format!("enum '{enum_name}' has no attribute '{field_name}'"));
                 return None;
             }
         }
     }
 
     // Not a class field access -- report unsupported
-    ctx.error(format!("attribute access '.{}' is not supported as an expression; use as a method call", field_name));
+    ctx.error(format!("attribute access '.{field_name}' is not supported as an expression; use as a method call"));
     None
 }
 
@@ -5956,14 +5939,14 @@ fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) 
                     if let Some((_, ft)) = methods.iter().find(|(n, _)| n == &method_name) {
                         let return_ty = *ft.return_type.clone();
                         return Some(HirExpr::Call {
-                            func: format!("{}::{}", class_name, method_name),
+                            func: format!("{class_name}::{method_name}"),
                             args,
                             ty: return_ty,
                         });
                     }
                 }
             }
-            ctx.error(format!("type '{}' has no class/static method '{}'", class_name, method_name));
+            ctx.error(format!("type '{class_name}' has no class/static method '{method_name}'"));
             return None;
         }
     }
@@ -6079,6 +6062,20 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 // pop() returns Option[T] = T | None
                 Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
             }
+            "popleft" => {
+                if !args.is_empty() {
+                    ctx.error("list.popleft() takes no arguments".to_string());
+                    return None;
+                }
+                Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
+            }
+            "appendleft" => {
+                if args.len() != 1 {
+                    ctx.error(format!("list.appendleft() takes exactly 1 argument, got {}", args.len()));
+                    return None;
+                }
+                Some(Type::None)
+            }
             "remove" => {
                 if args.len() != 1 {
                     ctx.error(format!("list.remove() takes exactly 1 argument, got {}", args.len()));
@@ -6095,7 +6092,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 Some(Type::Union(vec![Type::Int, Type::None]))
             }
             _ => {
-                ctx.error(format!("list has no method '{}'", method));
+                ctx.error(format!("list has no method '{method}'"));
                 None
             }
         },
@@ -6178,7 +6175,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 Some(Type::Union(vec![*val_ty.clone(), Type::None]))
             }
             _ => {
-                ctx.error(format!("dict has no method '{}'", method));
+                ctx.error(format!("dict has no method '{method}'"));
                 None
             }
         },
@@ -6248,7 +6245,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 Some(Type::Union(vec![*elem_ty.clone(), Type::None]))
             }
             _ => {
-                ctx.error(format!("set has no method '{}'", method));
+                ctx.error(format!("set has no method '{method}'"));
                 None
             }
         },
@@ -6264,7 +6261,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "isdigit" | "isalpha" | "isalnum" | "isspace" | "isupper" | "islower" => {
                 if !args.is_empty() {
-                    ctx.error(format!("str.{}() takes no arguments", method));
+                    ctx.error(format!("str.{method}() takes no arguments"));
                     return None;
                 }
                 Some(Type::Bool)
@@ -6313,7 +6310,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 Some(Type::Union(vec![Type::Int, Type::None]))
             }
             _ => {
-                ctx.error(format!("str has no method '{}'", method));
+                ctx.error(format!("str has no method '{method}'"));
                 None
             }
         },
@@ -6327,7 +6324,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 Some(Type::Int)
             }
             _ => {
-                ctx.error(format!("tuple has no method '{}'", method));
+                ctx.error(format!("tuple has no method '{method}'"));
                 None
             }
         },
@@ -6377,7 +6374,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     None
                 }
             } else {
-                ctx.error(format!("class '{}' has no method '{}'", name, method));
+                ctx.error(format!("class '{name}' has no method '{method}'"));
                 None
             }
         }
@@ -6391,7 +6388,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 }
                 Some(*ft.return_type.clone())
             } else {
-                ctx.error(format!("protocol '{}' has no method '{}'", name, method));
+                ctx.error(format!("protocol '{name}' has no method '{method}'"));
                 None
             }
         }
@@ -6399,7 +6396,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             // Newtype has a built-in `value()` method that returns the inner type
             if method == "value" {
                 if !args.is_empty() {
-                    ctx.error(format!("{}.value() takes no arguments", name));
+                    ctx.error(format!("{name}.value() takes no arguments"));
                     return None;
                 }
                 Some(*inner.clone())
@@ -6412,25 +6409,25 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             match method {
                 "name" => {
                     if !args.is_empty() {
-                        ctx.error(format!("{}.name() takes no arguments", name));
+                        ctx.error(format!("{name}.name() takes no arguments"));
                         return None;
                     }
                     Some(Type::Str)
                 }
                 "value" => {
                     if !args.is_empty() {
-                        ctx.error(format!("{}.value() takes no arguments", name));
+                        ctx.error(format!("{name}.value() takes no arguments"));
                         return None;
                     }
                     Some(Type::Int)
                 }
                 _ => {
                     // Check user-defined methods registered in functions
-                    let method_key = format!("{}.{}", name, method);
+                    let method_key = format!("{name}.{method}");
                     if let Some(ft) = ctx.functions.get(&method_key).cloned() {
                         return Some(*ft.return_type.clone());
                     }
-                    ctx.error(format!("enum '{}' has no method '{}'", name, method));
+                    ctx.error(format!("enum '{name}' has no method '{method}'"));
                     None
                 }
             }
@@ -6445,7 +6442,7 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     Some(Type::BigInt)
                 }
                 _ => {
-                    ctx.error(format!("type 'bigint' has no method '{}'", method));
+                    ctx.error(format!("type 'bigint' has no method '{method}'"));
                     None
                 }
             }

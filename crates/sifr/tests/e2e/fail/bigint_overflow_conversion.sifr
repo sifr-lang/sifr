@@ -1,0 +1,7 @@
+# Test that bigint-to-int conversion without error handling is a compile error
+def main():
+    big: bigint = bigint(10) ** 20
+    n: int = int(big)
+    print(n)
+
+# expect-error: type mismatch

@@ -1,7 +1,7 @@
 //! Control Flow Graph for type narrowing.
 //!
 //! Inspired by TypeScript's binder, this module builds a control flow graph
-//! during HIR lowering. Each statement/expression gets a FlowNode that
+//! during HIR lowering. Each statement/expression gets a `FlowNode` that
 //! tracks how variable types change through branches.
 
 use sifr_type_system::Type;
@@ -87,7 +87,7 @@ impl ControlFlowGraph {
         id
     }
 
-    /// Create a condition branch point. Returns (true_branch_start, false_branch_start).
+    /// Create a condition branch point. Returns (`true_branch_start`, `false_branch_start`).
     pub fn branch(&mut self) -> (FlowNodeId, FlowNodeId) {
         let antecedent = self.current;
         let true_start = self.add_node(FlowNode::Label {

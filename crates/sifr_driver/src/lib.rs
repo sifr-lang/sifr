@@ -6,6 +6,16 @@
 //! Stdlib `.sifr` files are embedded in the compiler binary via `include_str!`.
 //! They are compiled before user code (two-phase compilation).
 
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::inefficient_to_string)]
+#![allow(clippy::print_stderr)]
+#![allow(clippy::unnecessary_map_or)]
+#![allow(clippy::for_kv_map)]
+#![allow(clippy::format_push_string)]
+#![allow(clippy::useless_format)]
+#![allow(clippy::single_match)]
+
 use sifr_python_parser::parse_module;
 use sifr_hir::{lower_module, lower_module_with_externals, lower_module_stdlib_with_externals, ExternalDefs, HirModule};
 use sifr_codegen::{generate_rust_with_stdlib, generate_rust_test, generate_rust_multi, generate_project, generate_project_with_deps, StdlibCode};
