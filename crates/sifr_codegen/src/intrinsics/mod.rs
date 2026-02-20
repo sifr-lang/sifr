@@ -10,6 +10,7 @@ mod test;
 mod collections;
 mod bytes;
 mod time;
+mod random;
 
 use crate::RustExpr;
 
@@ -149,6 +150,14 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "_strptime_intrinsic" => (time::lower_strptime(rendered_args), None),
         "_gmtime_intrinsic" => (time::lower_gmtime(rendered_args), None),
         "_localtime_intrinsic" => (time::lower_localtime(rendered_args), None),
+        "random_int" => (random::lower_random_int(rendered_args), None),
+        "random_float" => (random::lower_random_float(rendered_args), None),
+        "random_choice" => (random::lower_random_choice(rendered_args), None),
+        "random_uniform" => (random::lower_random_uniform(rendered_args), None),
+        "random_shuffle" => (random::lower_random_shuffle(rendered_args), None),
+        "random_sample" => (random::lower_random_sample(rendered_args), None),
+        "random_randrange" => (random::lower_random_randrange(rendered_args), None),
+        "random_gauss" => (random::lower_random_gauss(rendered_args), None),
         _ => return None,
     };
 
@@ -377,5 +386,41 @@ mod tests {
         let parse_alias = lower_intrinsic("_strptime_intrinsic", &["s".to_string(), "f".to_string()])
             .expect("_strptime_intrinsic");
         assert!(render_expr(&parse_alias.expr).contains("NaiveDateTime::parse_from_str"));
+    }
+
+    #[test]
+    fn lowers_random_intrinsics_via_registry() {
+        let rint = lower_intrinsic("random_int", &["1".to_string(), "9".to_string()])
+            .expect("random_int");
+        assert!(render_expr(&rint.expr).contains("gen_range(1..=9)"));
+
+        let rfloat = lower_intrinsic("random_float", &[]).expect("random_float");
+        assert!(render_expr(&rfloat.expr).contains("gen::<f64>()"));
+
+        let choice = lower_intrinsic("random_choice", &["items".to_string()]).expect("random_choice");
+        assert!(render_expr(&choice.expr).contains("items.len()"));
+
+        let uniform = lower_intrinsic("random_uniform", &["0.0".to_string(), "1.0".to_string()])
+            .expect("random_uniform");
+        assert!(render_expr(&uniform.expr).contains("gen_range(0.0..=1.0)"));
+
+        let shuffle =
+            lower_intrinsic("random_shuffle", &["vals".to_string()]).expect("random_shuffle");
+        assert!(render_expr(&shuffle.expr).contains("SliceRandom"));
+
+        let sample = lower_intrinsic("random_sample", &["vals".to_string(), "3".to_string()])
+            .expect("random_sample");
+        assert!(render_expr(&sample.expr).contains("choose_multiple"));
+
+        let randrange = lower_intrinsic(
+            "random_randrange",
+            &["0".to_string(), "10".to_string(), "1".to_string()],
+        )
+        .expect("random_randrange");
+        assert!(render_expr(&randrange.expr).contains("randrange: step must not be zero"));
+
+        let gauss = lower_intrinsic("random_gauss", &["0.0".to_string(), "1.0".to_string()])
+            .expect("random_gauss");
+        assert!(render_expr(&gauss.expr).contains("rand_distr"));
     }
 }
