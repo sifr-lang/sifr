@@ -40,7 +40,7 @@ status: done
 
 ## milestone_rust_ir_renderer
 
-status: in_progress
+status: done
 
 - [x] Add `crates/sifr_codegen/src/render.rs` with `Renderer`
 - [x] Implement full render coverage for all IR variants
@@ -48,21 +48,21 @@ status: in_progress
 - [x] Wire exports in `lib.rs` (`mod render; pub use render::*;`)
 - [x] Add renderer snapshot/unit tests (including `RawCode` passthrough)
 - [x] Demo: `demos/milestone_rust_ir_renderer_demo.rs`
-- [ ] Open PR(s), review, merge
-- [ ] Mark done in phase docs
+- [x] Open PR(s), review, merge
+- [x] Mark done in phase docs
 
 ---
 
 ## milestone_codegen_preamble_migration
 
-status: pending
+status: in_progress
 
-- [ ] Move preamble emission to IR items (`error types`, `FileHandle`, logging, imports)
-- [ ] Add `sifr_type_to_rust_type(&Type) -> RustType`
-- [ ] Remove/reduce `is_builtin_error_referenced` string scanning
+- [x] Move preamble emission to IR items (`error types`, `FileHandle`, logging, imports)
+- [x] Add `sifr_type_to_rust_type(&Type) -> RustType`
+- [x] Remove/reduce `is_builtin_error_referenced` string scanning
 - [ ] Add differential old-vs-new codegen harness for parity
 - [ ] Remove at least 5 clippy suppressions (including `format_push_string`)
-- [ ] Demo: `demos/milestone_codegen_preamble_migration_demo.sifr`
+- [x] Demo: `demos/milestone_codegen_preamble_migration_demo.sifr`
 - [ ] Open PR(s), review, merge
 - [ ] Mark done in phase docs
 
