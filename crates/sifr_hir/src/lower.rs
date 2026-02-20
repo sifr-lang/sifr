@@ -5417,6 +5417,23 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         for (arg, (_, param_ty, _)) in args.iter().zip(ft.params.iter()) {
             infer_type_var_bindings(param_ty, arg.ty(), &mut bindings);
         }
+        // Re-check argument types after TypeVar substitution so repeated type
+        // parameters (e.g. assert_eq[T](a: T, b: T)) enforce consistent types.
+        if func_name != "print" {
+            for (i, (arg, (param_name, param_ty, _))) in args.iter().zip(ft.params.iter()).enumerate() {
+                let concrete_param_ty = substitute_type_vars(param_ty, &bindings);
+                if !arg.ty().is_assignable_to(&concrete_param_ty) {
+                    ctx.error(format!(
+                        "argument {} ('{}') of function '{}': expected '{}', got '{}'",
+                        i + 1,
+                        param_name,
+                        func_name,
+                        concrete_param_ty.display_name(),
+                        arg.ty().display_name()
+                    ));
+                }
+            }
+        }
         // Check protocol bounds on type parameters (scoped to this function)
         let func_bounds = ctx.type_param_bounds.get(&func_name);
         let bound_errors: Vec<String> = bindings.iter().flat_map(|(tv_name, concrete_ty)| {

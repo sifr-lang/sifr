@@ -1,2 +1,8 @@
 # sifr.test — Test assertion functions
-from _sifr.test import assert_eq, assert_ne, assert_true, assert_false, assert_almost_eq, assert_gt, assert_lt
+#
+# User-facing wrappers keep CPython-style names while enforcing stronger
+# Sifr type checking (for example, assert_eq requires both args to be same T).
+from _sifr.test import assert_ne, assert_true, assert_false, assert_almost_eq, assert_gt, assert_lt
+
+def assert_eq[T](actual: T, expected: T) -> None:
+    assert actual == expected
