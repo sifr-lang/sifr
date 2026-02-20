@@ -1,0 +1,67 @@
+//! Test/assertion intrinsic lowerers for registry migration.
+
+use crate::RustExpr;
+
+pub(super) fn lower_assert_eq(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "assert_eq!({}, {})",
+        args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_assert_ne(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "assert_ne!({}, {})",
+        args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_assert_true(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!("assert!({})", args[0])))
+}
+
+pub(super) fn lower_assert_false(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!("assert!(!({}))", args[0])))
+}
+
+pub(super) fn lower_assert_almost_eq(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 3 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "assert!(({} - ({})).abs() < {}, \"assert_almost_eq failed: {{}} != {{}} (tolerance {{}})\", {}, {}, {})",
+        args[0], args[1], args[2], args[0], args[1], args[2]
+    )))
+}
+
+pub(super) fn lower_assert_gt(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "assert!({} > {}, \"assert_gt failed: {{}} is not > {{}}\", {}, {})",
+        args[0], args[1], args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_assert_lt(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "assert!({} < {}, \"assert_lt failed: {{}} is not < {{}}\", {}, {})",
+        args[0], args[1], args[0], args[1]
+    )))
+}
