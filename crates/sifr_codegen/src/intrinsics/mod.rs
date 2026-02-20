@@ -4,6 +4,7 @@ mod math;
 mod json;
 mod env;
 mod os;
+mod io;
 
 use crate::RustExpr;
 
@@ -68,6 +69,22 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "env_items" => (env::lower_env_items(rendered_args), None),
         "run_command" => (os::lower_run_command(rendered_args), None),
         "get_args" => (os::lower_get_args(rendered_args), None),
+        "read_text" => (io::lower_read_text(rendered_args), None),
+        "write_text" => (io::lower_write_text(rendered_args), None),
+        "exists" => (io::lower_exists(rendered_args), None),
+        "read_lines" => (io::lower_read_lines(rendered_args), None),
+        "getcwd" => (io::lower_getcwd(rendered_args), None),
+        "listdir" => (io::lower_listdir(rendered_args), None),
+        "mkdir" => (io::lower_mkdir(rendered_args), None),
+        "rmdir" => (io::lower_rmdir(rendered_args), None),
+        "remove_file" => (io::lower_remove_file(rendered_args), None),
+        "rename" => (io::lower_rename(rendered_args), None),
+        "is_file" => (io::lower_is_file(rendered_args), None),
+        "is_dir" => (io::lower_is_dir(rendered_args), None),
+        "copy_file" => (io::lower_copy_file(rendered_args), None),
+        "rmdir_all" => (io::lower_rmdir_all(rendered_args), None),
+        "gettempdir" => (io::lower_gettempdir(rendered_args), None),
+        "makedirs" => (io::lower_makedirs(rendered_args), None),
         "json_loads" => (json::lower_json_loads(rendered_args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(rendered_args), Some("serde_json")),
         _ => return None,
@@ -146,5 +163,24 @@ mod tests {
 
         let args = lower_intrinsic("get_args", &[]).expect("get_args should lower");
         assert_eq!(render_expr(&args.expr), "std::env::args().collect::<Vec<String>>()");
+    }
+
+    #[test]
+    fn lowers_io_intrinsics_via_registry() {
+        let read = lower_intrinsic("read_text", &["path".to_string()]).expect("read_text lowers");
+        assert!(render_expr(&read.expr).contains("std::fs::read_to_string"));
+
+        let write = lower_intrinsic("write_text", &["p".to_string(), "c".to_string()])
+            .expect("write_text lowers");
+        assert!(render_expr(&write.expr).contains("std::fs::write"));
+
+        let exists = lower_intrinsic("exists", &["p".to_string()]).expect("exists lowers");
+        assert!(render_expr(&exists.expr).contains("Path::new"));
+
+        let gettempdir = lower_intrinsic("gettempdir", &[]).expect("gettempdir lowers");
+        assert_eq!(
+            render_expr(&gettempdir.expr),
+            "std::env::temp_dir().display().to_string()"
+        );
     }
 }
