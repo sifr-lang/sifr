@@ -64,6 +64,12 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
 - `sifr.env` is intentionally minimal and function-based, while CPython environment support is mapping-based.
 - Intrinsic contract currently lacks error-typed env operations for invalid key/value validation.
 
+### M1 Deviation Notes (Documented)
+
+- CPython exposes env via mapping semantics (`os.environ`); Sifr currently exposes function-first APIs in `sifr.env`.
+- Invalid names are safety-guarded (ignored/no panic) instead of raising runtime exceptions, aligned with Sifr no-panic goals.
+- `keys()`/`values()`/`items()` are snapshot helpers, not a mutable mapping object.
+
 ### Test Port Status
 
 - Sifr has 1 dedicated test (`stdlib_env.sifr`), mostly happy-path.
@@ -402,9 +408,9 @@ Scope order (required): `sifr.env` -> `sifr.bytes` -> `sifr.base64` -> `sifr.mat
   - [x] Port `putenv/unsetenv` invalid-name cases (adapted to Sifr safety semantics)
   - [x] Port getenv default behavior cases
   - [x] Port mapping-like listing behavior checks
-- [ ] PR1-C Documentation/deviation notes
-  - [ ] Record differences from full CPython mapping semantics
-  - [ ] Record safety adaptation for invalid key/value handling
+- [x] PR1-C Documentation/deviation notes
+  - [x] Record differences from full CPython mapping semantics
+  - [x] Record safety adaptation for invalid key/value handling
 - [x] Milestone demo
   - [x] `demos/m1_env_demo.sifr` passes
 
