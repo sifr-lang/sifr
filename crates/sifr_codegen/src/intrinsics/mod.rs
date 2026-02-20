@@ -69,6 +69,10 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "env_items" => (env::lower_env_items(rendered_args), None),
         "run_command" => (os::lower_run_command(rendered_args), None),
         "get_args" => (os::lower_get_args(rendered_args), None),
+        "chdir" => (os::lower_chdir(rendered_args), None),
+        "getpid" => (os::lower_getpid(rendered_args), None),
+        "cpu_count" => (os::lower_cpu_count(rendered_args), None),
+        "stat_size" => (os::lower_stat_size(rendered_args), None),
         "read_text" => (io::lower_read_text(rendered_args), None),
         "write_text" => (io::lower_write_text(rendered_args), None),
         "exists" => (io::lower_exists(rendered_args), None),
@@ -163,6 +167,12 @@ mod tests {
 
         let args = lower_intrinsic("get_args", &[]).expect("get_args should lower");
         assert_eq!(render_expr(&args.expr), "std::env::args().collect::<Vec<String>>()");
+
+        let pid = lower_intrinsic("getpid", &[]).expect("getpid should lower");
+        assert_eq!(render_expr(&pid.expr), "std::process::id() as i64");
+
+        let cpus = lower_intrinsic("cpu_count", &[]).expect("cpu_count should lower");
+        assert!(render_expr(&cpus.expr).contains("available_parallelism"));
     }
 
     #[test]
