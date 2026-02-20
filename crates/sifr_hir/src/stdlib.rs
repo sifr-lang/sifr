@@ -501,6 +501,20 @@ fn intrinsic_sys() -> IntrinsicModule {
             ("value".to_string(), Type::Str),
         ], Type::None));
 
+    // env_unset(key: str) -> None
+    functions.insert("env_unset".to_string(), FunctionType::all_borrow(vec![
+            ("key".to_string(), Type::Str),
+        ], Type::None));
+
+    // env_keys() -> list[str]
+    functions.insert("env_keys".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))));
+
+    // env_values() -> list[str]
+    functions.insert("env_values".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))));
+
+    // env_items() -> list[str]  (formatted as "key=value")
+    functions.insert("env_items".to_string(), FunctionType::all_borrow(vec![], Type::List(Box::new(Type::Str))));
+
     // run_command(cmd: str) -> Result[str, IOError]
     functions.insert("run_command".to_string(), FunctionType::all_borrow(vec![("cmd".to_string(), Type::Str)], result_ty(Type::Str, "IOError")));
 
