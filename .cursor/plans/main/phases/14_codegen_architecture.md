@@ -520,6 +520,10 @@ The generated Rust output must be functionally identical before and after migrat
 3. Both must compile and produce identical runtime behavior
 4. Whitespace differences are acceptable (the IR renderer may format differently than the manual `push_str` chains) as long as the code compiles and behaves identically
 
+### Differential Testing Harness
+
+Starting with this milestone and continuing through milestones 4-5, use a differential testing approach: for the full E2E test corpus, run both the old codegen path and the new IR path, compile both outputs, and compare runtime results. This catches semantic regressions that unit tests might miss. The harness is a test-time utility, not a production feature — it can be a `#[cfg(test)]` function that generates Rust via both paths and asserts identical output/behavior.
+
 ### Definition of Done (milestone_codegen_preamble_migration)
 
 - All error type definitions emitted via IR (`error_type_items` function)
@@ -584,53 +588,74 @@ Convert in order of decreasing isolation (most self-contained first):
 4. `HirExpr::BoolLiteral` → `RustExpr::Literal(RustLiteral::Bool(v))`
 5. `HirExpr::NoneLiteral` → `RustExpr::Literal(RustLiteral::None)`
 6. `HirExpr::Name` → `RustExpr::Ident(name)` or stdlib constant lookup
+7. `HirExpr::EnumVariant` → `RustExpr::Path(vec![enum_name, variant])` (e.g., `Color::RED`)
 
 #### Phase B: Compound expressions (recurse into sub-expressions)
 
-7. `HirExpr::BinOp` → `RustExpr::BinOp` (with special cases for string concat, list concat, floor div, power)
-8. `HirExpr::UnaryOp` → `RustExpr::UnaryOp`
-9. `HirExpr::Compare` → `RustExpr::BinOp` chains
-10. `HirExpr::BoolOp` → `RustExpr::BinOp` chains with `&&`/`||`
-11. `HirExpr::IfExpr` → `RustExpr::If`
-12. `HirExpr::Index` → `RustExpr::MethodCall` (`.get()`) or `RustExpr::Index`
-13. `HirExpr::FieldAccess` → `RustExpr::Field`
-14. `HirExpr::MethodCall` → `RustExpr::MethodCall` (delegates to `lower_method_call`)
-15. `HirExpr::Call` → `RustExpr::FnCall` (with intrinsic dispatch)
-16. `HirExpr::FString` → `RustExpr::FormatMacro`
-17. `HirExpr::ListLiteral` / `SetLiteral` / `DictLiteral` / `TupleLiteral` → `RustExpr::Vec` / macro calls / `RustExpr::Tuple`
-18. `HirExpr::Lambda` → `RustExpr::Closure`
-19. `HirExpr::ListComp` / `DictComp` / `SetComp` → iterator chain expressions
-20. `HirExpr::ConstructorCall` → `RustExpr::StructInit` or `RustExpr::FnCall`
-21. `HirExpr::QuestionMark` → `RustExpr::Try`
-22. `HirExpr::OkWrap` / `ErrWrap` → `RustExpr::FnCall` wrapping
-23. `HirExpr::Slice` → `lower_list_slice` / `lower_string_slice`
-24. `HirExpr::Match` → `RustExpr::Match`
+8. `HirExpr::BinOp` → `RustExpr::BinOp` (with special cases for string concat, list concat, floor div, power)
+9. `HirExpr::UnaryOp` → `RustExpr::UnaryOp`
+10. `HirExpr::Compare` → `RustExpr::BinOp` chains
+11. `HirExpr::BoolOp` → `RustExpr::BinOp` chains with `&&`/`||`
+12. `HirExpr::ContainsOp` → `RustExpr::MethodCall` (`.contains()`) on collection
+13. `HirExpr::IfExpr` → `RustExpr::If`
+14. `HirExpr::Index` → `RustExpr::MethodCall` (`.get()`) or `RustExpr::Index`
+15. `HirExpr::FieldAccess` → `RustExpr::Field`
+16. `HirExpr::MethodCall` → `RustExpr::MethodCall` (delegates to `lower_method_call`)
+17. `HirExpr::Call` → `RustExpr::FnCall` (with intrinsic dispatch)
+18. `HirExpr::FString` → `RustExpr::FormatMacro`
+19. `HirExpr::ListLiteral` / `SetLiteral` / `DictLiteral` / `TupleLiteral` → `RustExpr::Vec` / macro calls / `RustExpr::Tuple`
+20. `HirExpr::RangeLiteral` → `RustExpr::Range` (with step handling via `.step_by()`)
+21. `HirExpr::Lambda` → `RustExpr::Closure`
+22. `HirExpr::ListComp` / `DictComp` / `SetComp` → iterator chain expressions
+23. `HirExpr::GeneratorExpr` → lazy iterator chain (similar to comprehensions but without `.collect()`)
+24. `HirExpr::ConstructorCall` → `RustExpr::StructInit` or `RustExpr::FnCall`
+25. `HirExpr::SuperCall` → `RustExpr::FnCall` to `ParentType::new(args)`
+26. `HirExpr::WalrusExpr` → `RustExpr::Block` with let-binding and trailing expression
+27. `HirExpr::QuestionMark` → `RustExpr::Try`
+28. `HirExpr::OkWrap` / `ErrWrap` → `RustExpr::FnCall` wrapping
+29. `HirExpr::Slice` → `lower_list_slice` / `lower_string_slice`
+30. `HirExpr::Match` → `RustExpr::Match`
 
 #### Phase C: Statements
 
-25. `HirStmt::Let` → `RustStmt::Let`
-26. `HirStmt::Assign` → `RustStmt::Assign`
-27. `HirStmt::AugAssign` → `RustStmt::AugAssign` or method call
-28. `HirStmt::Return` → `RustStmt::Return` (with context-dependent wrapping for Display impls, generators, try blocks)
-29. `HirStmt::Expr` → `RustStmt::Expr`
-30. `HirStmt::If` → `RustStmt::If`
-31. `HirStmt::While` → `RustStmt::While`
-32. `HirStmt::For` → `RustStmt::For` (with iterator adaptation)
-33. `HirStmt::Break` / `Continue` → `RustStmt::Break` / `RustStmt::Continue`
-34. `HirStmt::Match` → `RustStmt::Match`
-35. `HirStmt::TryExcept` → `RustStmt::Match` on Result
-36. `HirStmt::Raise` → `RustStmt::Return` with `Err(...)`
-37. `HirStmt::Assert` → `RustStmt::If` + `RustStmt::RawCode("panic!(...)")`
-38. `HirStmt::FieldAssign` / `SubscriptAssign` → `RustStmt::Assign`
+31. `HirStmt::Let` → `RustStmt::Let`
+32. `HirStmt::Assign` → `RustStmt::Assign`
+33. `HirStmt::AugAssign` → `RustStmt::AugAssign` or method call
+34. `HirStmt::Return` → `RustStmt::Return` (with context-dependent wrapping for Display impls, generators, try blocks)
+35. `HirStmt::Expr` → `RustStmt::Expr`
+36. `HirStmt::Pass` → empty `Vec<RustStmt>` (no-op, produces no output)
+37. `HirStmt::If` → `RustStmt::If` (**semantic transformation**: `elif_clauses` become nested `else { if ... }` chains — see note below)
+38. `HirStmt::While` → `RustStmt::While` (**semantic transformation**: `else_body` requires flag variable — see note below)
+39. `HirStmt::For` → `RustStmt::For` (with type-driven iterator adaptation — see note below; **semantic transformation** for `else_body`)
+40. `HirStmt::Break` / `Continue` → `RustStmt::Break` / `RustStmt::Continue`
+41. `HirStmt::Match` → `RustStmt::Match`
+42. `HirStmt::TryExcept` → `RustStmt::Match` on Result
+43. `HirStmt::Raise` → `RustStmt::Return` with `Err(...)`
+44. `HirStmt::Assert` → `RustStmt::If` + `RustStmt::RawCode("panic!(...)")`
+45. `HirStmt::FieldAssign` → `RustStmt::Assign` targeting `RustExpr::Field`
+46. `HirStmt::SubscriptAssign` → `RustStmt::Expr` with method call (e.g., `.insert()`, index assign)
+47. `HirStmt::NestedSubscriptAssign` → `RustStmt::Expr` with chained index access + assignment
+48. `HirStmt::SubscriptAugAssign` → index access + augmented assignment
+49. `HirStmt::AttributeAugAssign` → field access + augmented assignment
+50. `HirStmt::AttributeSubscriptAssign` → field access + index assignment
+51. `HirStmt::TupleUnpack` → multiple `RustStmt::Let` bindings from destructured tuple
+52. `HirStmt::StarUnpack` → `RustStmt::Let` bindings with slice operations for `*rest`
+53. `HirStmt::Delete` → `RustStmt::Expr` with `.remove()` method call
+54. `HirStmt::Yield` → `RustStmt::Expr` with generator yield (context-dependent on generator type)
+55. `HirStmt::With` → `RustStmt::Block` with resource acquisition and drop semantics
+56. `HirStmt::NestedFunction` → `RustStmt::Expr` containing a closure `let` binding (or `RustItem::Fn` if non-capturing)
 
 #### Phase D: Top-level items
 
-39. `emit_function` → builds `RustItem::Fn`
-40. `emit_class` → builds `RustItem::Struct` + `RustItem::Impl`
-41. `emit_protocol_trait` → builds `RustItem::Trait`
-42. `emit_enum_class` → builds `RustItem::Enum` + `RustItem::Impl`
-43. `emit_operator_impls` → builds `RustItem::Impl` for trait impls
-44. `emit_module` → builds `RustFile`
+57. `emit_function` → builds `RustItem::Fn`
+58. `emit_class` → builds `RustItem::Struct` + `RustItem::Impl`
+59. `emit_protocol_trait` → builds `RustItem::Trait`
+60. `emit_enum_class` → builds `RustItem::Enum` + `RustItem::Impl`
+61. `emit_operator_impls` → builds `RustItem::Impl` for trait impls
+62. `collect_union_types` + `generate_enum_definitions` → builds `Vec<RustItem::Enum>` for union type enums (these are currently a pre-pass that scans the module for union types and prepends enum definitions to the output; after migration they become `RustItem::Enum` nodes inserted into `RustFile.items`)
+63. `emit_module` → builds `RustFile` (orchestrates all of the above, including the union enum pre-pass)
+64. `generate_rust_test` → builds `RustFile` in test mode (sets `Visibility::Pub` appropriately, adds `#[test]` attributes via `RustItem::Attr`). After migration, this entry point shares the same `lower_*` pipeline as `generate_rust_with_stdlib`, differing only in the `CodegenContext` configuration.
+65. `generate_rust_for_modules` → builds one `RustFile` per module for multi-file projects. Each module uses `Visibility::Pub` for non-main modules. After migration, this creates a `CodegenContext` per module and calls the shared `lower_module` pipeline.
 
 ### Temporal Coupling Flags
 
@@ -639,9 +664,22 @@ As each codegen path is converted to IR, the temporal coupling flags can be elim
 - **`suppress_field_clone`**: Instead of setting a flag before a method call and clearing it after, the `lower_method_call` function inspects the receiver expression and decides whether to wrap it in `RustExpr::Clone` or not. The decision is local to the function, not a global flag.
 - **`in_generator_closure`**: Instead of a flag, `lower_stmt` for `Return` checks whether the enclosing function context is a generator and wraps accordingly. Pass the context as a parameter, not a mutable field.
 - **`in_display_impl`**: Same approach — pass the context as a parameter to `lower_stmt`.
-- **`in_loop_with_else`**: Pass loop context as a parameter.
+- **`in_loop_with_else`**: Pass loop context as a parameter. Replaced by the `for/else` semantic transformation (see below).
+- **`pub_mode`**: Currently checked at ~15 locations to decide whether to emit `pub`. With the IR, this maps directly to `visibility: Visibility::Pub` when building IR items. The flag becomes unnecessary — `CodegenContext` carries whether the current module is a non-main module, and item-building code sets `Visibility` accordingly.
 
 These flags are NOT removed in this milestone if doing so would risk regressions. They are removed only when the corresponding codegen path is fully converted and tested. Some flags may persist as parameters to `lower_*` methods rather than mutable struct fields — this is still an improvement (explicit parameter vs hidden mutable state).
+
+### Semantic Transformations
+
+Several HIR→IR lowerings are not simple syntax mappings — they require non-trivial semantic transformations. These are where bugs will hide during migration and deserve explicit attention:
+
+**`elif` chains → nested `if/else`:** The HIR's `If` statement has `elif_clauses: Vec<(HirExpr, Vec<HirStmt>)>` — a flat list of elif branches. Rust has no `elif`. The lowering must convert this to nested `else { if ... }` chains: the first elif becomes the `else_body` containing a new `RustStmt::If`, whose `else_body` contains the next elif, and so on. The final `else_body` (if any) goes in the innermost `else`. Getting the nesting wrong produces incorrect control flow.
+
+**`for/else` and `while/else`:** The HIR's `For` and `While` have `else_body: Option<Vec<HirStmt>>`. Rust has no `for/else` or `while/else`. The lowering must introduce a flag variable: `{ let mut __loop_completed = true; for ... { if <break condition> { __loop_completed = false; break; } } if __loop_completed { <else_body> } }`. The `lower_for` and `lower_while` methods must detect the presence of `else_body` and wrap accordingly. This replaces the current `in_loop_with_else` temporal coupling flag.
+
+**Type-driven iterator adaptation:** The HIR's `For` has `target_ty: Type` which the codegen uses to determine the correct iterator method: `.iter()` for borrowed iteration, `.into_iter()` for owned, `.chars()` for string iteration, `.drain(..)` for consuming, etc. The `lower_for` method must have access to the HIR's type information (via `CodegenContext`) to produce the correct `iter` expression in the IR. The type information is consumed during lowering — the resulting `RustStmt::For` only has the final `iter: RustExpr`.
+
+**`expr_to_string` elimination:** The current codegen has a hack at lines 4709-4718 that saves the output buffer, emits an expression to a fresh buffer, captures the result as a string, and restores the original buffer. This is used ~10 times for match guards and other contexts where a sub-expression's string output is needed inline. With the IR, this hack disappears naturally — `lower_expr` returns a `RustExpr` that can be placed anywhere in the IR tree. All `expr_to_string` call sites must be identified and replaced with direct `lower_expr` calls during migration.
 
 ### Module Decomposition
 
@@ -660,16 +698,21 @@ The decomposition happens as each `lower_*` function is written — new code goe
 
 ### Definition of Done (milestone_codegen_stmt_expr_migration)
 
-- `lower_expr` handles all `HirExpr` variants (some may use `RawCode` for complex cases)
-- `lower_stmt` handles all `HirStmt` variants (some may use `RawCode` for complex cases)
+- `lower_expr` handles all 30 `HirExpr` variants (some may use `RawCode` for complex cases)
+- `lower_stmt` handles all 26 `HirStmt` variants (some may use `RawCode` for complex cases)
 - `emit_function` and `emit_class` build IR items
 - `emit_module` builds a `RustFile` and renders it
+- `generate_rust_test` and `generate_rust_for_modules` use the shared `lower_module` pipeline
+- Union enum generation (`collect_union_types` + `generate_enum_definitions`) produces `RustItem::Enum` nodes
 - All new `lower_*` methods return `Result<_, CodegenError>` (not panicking)
 - `CodegenContext` and `ScopeContext` structs are defined and used by all `lower_*` methods
 - At least 80% of match arms in `lower_expr` and `lower_stmt` produce structured IR (not `RawCode`)
 - The remaining `RawCode` usages are documented with `// TODO: convert to structured IR` comments
-- At least 3 temporal coupling flags (`suppress_field_clone`, `in_generator_closure`, `in_display_impl`) are eliminated or converted to explicit `ScopeContext` parameters
+- At least 4 temporal coupling flags (`suppress_field_clone`, `in_generator_closure`, `in_display_impl`, `pub_mode`) are eliminated or converted to explicit `ScopeContext` parameters
+- All `expr_to_string` call sites replaced with direct `lower_expr` calls
+- Semantic transformations for `elif` chains, `for/else`, `while/else` are implemented and tested
 - Module decomposition complete: `lower_expr.rs`, `lower_stmt.rs`, `lower_item.rs`, `context.rs`, `preamble.rs` exist as separate files; `lib.rs` is reduced to orchestration
+- Differential test harness verifies semantic parity between old and new codegen paths across the full E2E test corpus
 - All existing E2E tests still pass (zero regressions)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes
 - At least 10 additional Clippy suppressions from the file header can be removed
