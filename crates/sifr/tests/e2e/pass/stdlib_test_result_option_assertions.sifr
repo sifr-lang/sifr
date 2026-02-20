@@ -1,0 +1,15 @@
+# Tests: Result/Option-oriented assertions
+from sifr.test import assert_ok, assert_err, assert_some, assert_none
+
+def parse_num(s: str) -> Result[int, ValueError]:
+    if s == "bad":
+        raise ValueError("parse failure")
+    return 123
+
+def main():
+    assert_ok(parse_num("123"))
+    assert_err(parse_num("bad"))
+    maybe_name: str | None = "sifr"
+    assert_some(maybe_name)
+    maybe_missing: str | None = None
+    assert_none(maybe_missing)

@@ -1,0 +1,12 @@
+# Test: assert_gt requires Comparable values
+from sifr.test import assert_gt
+
+class Blob:
+    data: int
+
+def main():
+    a: Blob = Blob(1)
+    b: Blob = Blob(2)
+    assert_gt(a, b)
+
+# expect-error: does not implement protocol 'Comparable'
