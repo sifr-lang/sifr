@@ -1,5 +1,6 @@
 # sifr.base64 — Base64 encoding/decoding (renamed from sifr.encoding)
 from _sifr.crypto import base64_encode, base64_decode, urlsafe_b64encode, urlsafe_b64decode, b32encode, b32decode
+from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
 
 # CPython-compatible aliases
 def b64encode(s: str) -> str:
@@ -7,3 +8,26 @@ def b64encode(s: str) -> str:
 
 def b64decode(s: str) -> Result[str, ParseError]:
     return base64_decode(s)
+
+def standard_b64encode(s: str) -> str:
+    return base64_encode(s)
+
+def standard_b64decode(s: str) -> Result[str, ParseError]:
+    return base64_decode(s)
+
+def encodebytes(s: str) -> str:
+    return base64_encode(s)
+
+def decodebytes(s: str) -> Result[str, ParseError]:
+    return base64_decode(s)
+
+# NOTE: b16encode uses lowercase hex to match current sifr.bytes behavior.
+def b16encode(s: str) -> Result[str, ParseError]:
+    return bytes_to_hex(encode_utf8(s))
+
+def b16decode(s: str) -> Result[str, ParseError]:
+    try:
+        data: list[int] = bytes_from_hex(s)
+        return decode_utf8(data)
+    except ParseError as e:
+        raise e
