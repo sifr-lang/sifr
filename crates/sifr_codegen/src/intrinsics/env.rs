@@ -63,10 +63,92 @@ pub(super) fn lower_env_set(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __k = {}; let __v = {}; if !__k.is_empty() && !__k.contains('=') && !__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0) {{ std::env::set_var(__k, __v); }} }}",
-        args[0], args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__k".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__v".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[1].clone()),
+            },
+            RustStmt::If {
+                cond: RustExpr::BinOp {
+                    left: Box::new(RustExpr::UnaryOp {
+                        op: "!".to_string(),
+                        operand: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                            method: "is_empty".to_string(),
+                            args: vec![],
+                        }),
+                    }),
+                    op: "&&".to_string(),
+                    right: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::UnaryOp {
+                            op: "!".to_string(),
+                            operand: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                                method: "contains".to_string(),
+                                args: vec![RustExpr::Literal(RustLiteral::Char('='))],
+                            }),
+                        }),
+                        op: "&&".to_string(),
+                        right: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::UnaryOp {
+                                op: "!".to_string(),
+                                operand: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                                        method: "as_bytes".to_string(),
+                                        args: vec![],
+                                    }),
+                                    method: "contains".to_string(),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                                    }],
+                                }),
+                            }),
+                            op: "&&".to_string(),
+                            right: Box::new(RustExpr::UnaryOp {
+                                op: "!".to_string(),
+                                operand: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("__v".to_string())),
+                                        method: "as_bytes".to_string(),
+                                        args: vec![],
+                                    }),
+                                    method: "contains".to_string(),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                                    }],
+                                }),
+                            }),
+                        }),
+                    }),
+                },
+                then_body: vec![RustStmt::Expr(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "env".to_string(),
+                        "set_var".to_string(),
+                    ])),
+                    args: vec![
+                        RustExpr::Ident("__k".to_string()),
+                        RustExpr::Ident("__v".to_string()),
+                    ],
+                })],
+                else_body: None,
+            },
+        ],
+        expr: None,
+    })
 }
 
 pub(super) fn lower_env_unset(args: &[String]) -> Option<RustExpr> {
