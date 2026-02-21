@@ -238,6 +238,7 @@ status: in_progress
 - [x] PR128 slice: continue RawCode-zero gate by replacing `assert_almost_eq` `RawCode` with structured macro/binop-call IR
 - [x] PR129 slice: continue RawCode-zero gate by replacing `chdir` `RawCode` with structured path/call/ref IR (`set_current_dir(...).map_err(...)`)
 - [x] PR130 slice: continue RawCode-zero gate by replacing `which` `RawCode` with structured path/call/closure IR (`var(\"PATH\").ok().and_then(...)`)
+- [x] PR131 slice: continue RawCode-zero gate by replacing `json_loads` `RawCode` with structured path/call/closure/struct-init IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
