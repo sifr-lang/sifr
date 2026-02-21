@@ -1,0 +1,19 @@
+# expect-stdout: len after append = 2
+# expect-stdout: len after extend = 4
+# expect-stdout: contains 5 = true
+# expect-stdout: count 9 = 1
+# expect-stdout: len after insert = 5
+
+def main():
+    xs: list[int] = [2]
+    xs.append(3)
+    print("len after append = " + str(len(xs)))
+
+    ys: list[int] = [4, 5]
+    xs.extend(ys)
+    print("len after extend = " + str(len(xs)))
+    print("contains 5 = " + str(xs.contains(5)))
+
+    xs.insert(1, 9)
+    print("count 9 = " + str(xs.count(9)))
+    print("len after insert = " + str(len(xs)))

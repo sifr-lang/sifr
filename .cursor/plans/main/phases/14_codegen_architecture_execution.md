@@ -141,6 +141,7 @@ status: in_progress
 - [x] PR47 slice: add set method module and route core/relational set methods (`add`, `remove`, `discard`, `contains`, `clear`, `copy`, `issubset`, `issuperset`, `isdisjoint`, `pop`) through registry-first lowering
 - [x] PR48 slice: expand set method module with set-algebra methods (`union`, `intersection`, `difference`, `symmetric_difference`) through registry-first lowering
 - [x] PR49 slice: expand dict method module with lookup methods (`contains`, `get`, `pop`) through registry-first lowering
+- [x] PR50 slice: expand list method module with mutating methods (`append`, `extend`, `insert`) through registry-first lowering and restore deque-specific fallback routing
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules

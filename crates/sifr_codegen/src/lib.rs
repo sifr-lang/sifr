@@ -8322,8 +8322,41 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
     ) -> bool {
+        // Deque internals use VecDeque-specific methods (`push_back/pop_back/...`)
+        // that differ from plain Vec list methods.
+        if self.is_deque_data_field(object)
+            && matches!(method, "append" | "appendleft" | "pop" | "popleft")
+        {
+            return false;
+        }
+
         let rendered_object = self.expr_to_string(object);
-        let rendered_args = args.iter().map(|arg| self.expr_to_string(arg)).collect::<Vec<_>>();
+        let mut rendered_args = args
+            .iter()
+            .map(|arg| self.expr_to_string(arg))
+            .collect::<Vec<_>>();
+
+        if matches!(object_ty, Type::List(_)) && method == "append" && !args.is_empty() {
+            // Preserve legacy behavior: clone TypeVar list args to avoid move issues.
+            if matches!(args[0].ty(), Type::TypeVar(_)) {
+                rendered_args[0] = format!("{}.clone()", rendered_args[0]);
+            }
+        }
+
+        if matches!(object_ty, Type::List(_)) && method == "insert" && args.len() >= 2 {
+            // Preserve legacy behavior: clone borrowed/mut-borrowed move-owned values.
+            let needs_clone = if let HirExpr::Name { name, ty } = &args[1] {
+                (self.borrowed_params.contains(name.as_str())
+                    || self.mut_borrowed_params.contains(name.as_str()))
+                    && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            } else {
+                false
+            };
+            if needs_clone {
+                rendered_args[1] = format!("{}.clone()", rendered_args[1]);
+            }
+        }
+
         let Some(lowered) =
             methods::lower_method(object_ty, method, &rendered_object, &rendered_args)
         else {
