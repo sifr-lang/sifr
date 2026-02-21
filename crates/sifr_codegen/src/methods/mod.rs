@@ -69,6 +69,12 @@ pub(crate) fn lower_method(
         (Type::Set(_), "issuperset") => set::lower_issuperset(rendered_object, rendered_args),
         (Type::Set(_), "isdisjoint") => set::lower_isdisjoint(rendered_object, rendered_args),
         (Type::Set(_), "pop") => set::lower_pop(rendered_object, rendered_args),
+        (Type::Set(_), "union") => set::lower_union(rendered_object, rendered_args),
+        (Type::Set(_), "intersection") => set::lower_intersection(rendered_object, rendered_args),
+        (Type::Set(_), "difference") => set::lower_difference(rendered_object, rendered_args),
+        (Type::Set(_), "symmetric_difference") => {
+            set::lower_symmetric_difference(rendered_object, rendered_args)
+        }
         _ => return None,
     };
 
@@ -319,5 +325,34 @@ mod tests {
 
         let set_pop = lower_method(&set_ty, "pop", "s", &[]).expect("set pop lowers");
         assert!(render_expr(&set_pop.expr).contains("iter().next().cloned()"));
+
+        let set_union = lower_method(&set_ty, "union", "s", &["other".to_string()])
+            .expect("set union lowers");
+        assert_eq!(
+            render_expr(&set_union.expr),
+            "s.union(&other).cloned().collect::<std::collections::HashSet<_>>()"
+        );
+
+        let set_intersection =
+            lower_method(&set_ty, "intersection", "s", &["other".to_string()])
+                .expect("set intersection lowers");
+        assert_eq!(
+            render_expr(&set_intersection.expr),
+            "s.intersection(&other).cloned().collect::<std::collections::HashSet<_>>()"
+        );
+
+        let set_difference = lower_method(&set_ty, "difference", "s", &["other".to_string()])
+            .expect("set difference lowers");
+        assert_eq!(
+            render_expr(&set_difference.expr),
+            "s.difference(&other).cloned().collect::<std::collections::HashSet<_>>()"
+        );
+
+        let set_sdiff = lower_method(&set_ty, "symmetric_difference", "s", &["other".to_string()])
+            .expect("set symmetric_difference lowers");
+        assert_eq!(
+            render_expr(&set_sdiff.expr),
+            "s.symmetric_difference(&other).cloned().collect::<std::collections::HashSet<_>>()"
+        );
     }
 }

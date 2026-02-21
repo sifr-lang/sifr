@@ -139,6 +139,7 @@ status: in_progress
 - [x] PR45 slice: add list method module and route core list methods (`clear`, `copy`, `reverse`, `sort`, `count`, `contains`, `pop`, `remove`, `index`) through registry-first lowering
 - [x] PR46 slice: add dict method module and route core dict methods (`keys`, `values`, `items`, `update`, `clear`, `copy`) through registry-first lowering
 - [x] PR47 slice: add set method module and route core/relational set methods (`add`, `remove`, `discard`, `contains`, `clear`, `copy`, `issubset`, `issuperset`, `isdisjoint`, `pop`) through registry-first lowering
+- [x] PR48 slice: expand set method module with set-algebra methods (`union`, `intersection`, `difference`, `symmetric_difference`) through registry-first lowering
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
