@@ -112,6 +112,7 @@ status: in_progress
 - [x] PR18 slice: migrate `sifr.hash` intrinsics (`sha256`, `md5`) into registry lowerers
 - [x] PR19 slice: migrate `sifr.platform` intrinsics (`platform_system`, `platform_arch`, `platform_node`, `platform_release`, `platform_version`, `platform_processor`) into registry lowerers
 - [x] PR20 slice: migrate `sifr.uuid` intrinsic (`uuid4`) into registry lowerers
+- [x] PR21 slice: migrate `sifr.toml` intrinsic (`toml_parse`) into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules

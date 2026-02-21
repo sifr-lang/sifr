@@ -15,6 +15,7 @@ mod re;
 mod hash;
 mod platform;
 mod uuid;
+mod toml;
 
 use crate::RustExpr;
 
@@ -183,6 +184,7 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "platform_version" => (platform::lower_platform_version(rendered_args), None),
         "platform_processor" => (platform::lower_platform_processor(rendered_args), None),
         "uuid4" => (uuid::lower_uuid4(rendered_args), None),
+        "toml_parse" => (toml::lower_toml_parse(rendered_args), Some("toml")),
         _ => return None,
     };
 
@@ -537,5 +539,13 @@ mod tests {
         let uuid = lower_intrinsic("uuid4", &[]).expect("uuid4");
         assert!(render_expr(&uuid.expr).contains("rand::thread_rng"));
         assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-4{:03x}-{:04x}-{:012x}\""));
+    }
+
+    #[test]
+    fn lowers_toml_intrinsic_with_dependency_metadata() {
+        let parsed = lower_intrinsic("toml_parse", &["payload".to_string()]).expect("toml_parse");
+        assert_eq!(parsed.required_crate, Some("toml"));
+        assert!(render_expr(&parsed.expr).contains("parse::<toml::Value>()"));
+        assert!(render_expr(&parsed.expr).contains("TOMLDecodeError"));
     }
 }
