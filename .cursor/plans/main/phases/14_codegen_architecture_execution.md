@@ -110,6 +110,7 @@ status: in_progress
 - [x] PR16 slice: migrate `sifr.random` intrinsics (`random_int`, `random_float`, `random_choice`, `random_uniform`, `random_shuffle`, `random_sample`, `random_randrange`, `random_gauss`) into registry lowerers
 - [x] PR17 slice: migrate `sifr.re` intrinsics (core and flags variants) into registry lowerers
 - [x] PR18 slice: migrate `sifr.hash` intrinsics (`sha256`, `md5`) into registry lowerers
+- [x] PR19 slice: migrate `sifr.platform` intrinsics (`platform_system`, `platform_arch`, `platform_node`, `platform_release`, `platform_version`, `platform_processor`) into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules

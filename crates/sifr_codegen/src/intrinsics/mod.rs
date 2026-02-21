@@ -13,6 +13,7 @@ mod time;
 mod random;
 mod re;
 mod hash;
+mod platform;
 
 use crate::RustExpr;
 
@@ -174,6 +175,12 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "re_split_flags" => (re::lower_re_split_flags(rendered_args), None),
         "sha256" => (hash::lower_sha256(rendered_args), None),
         "md5" => (hash::lower_md5(rendered_args), None),
+        "platform_system" => (platform::lower_platform_system(rendered_args), None),
+        "platform_arch" => (platform::lower_platform_arch(rendered_args), None),
+        "platform_node" => (platform::lower_platform_node(rendered_args), None),
+        "platform_release" => (platform::lower_platform_release(rendered_args), None),
+        "platform_version" => (platform::lower_platform_version(rendered_args), None),
+        "platform_processor" => (platform::lower_platform_processor(rendered_args), None),
         _ => return None,
     };
 
@@ -500,5 +507,26 @@ mod tests {
         let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
         assert!(render_expr(&md5.expr).contains("md5::compute"));
         assert!(render_expr(&md5.expr).contains(".as_bytes()"));
+    }
+
+    #[test]
+    fn lowers_platform_intrinsics_via_registry() {
+        let system = lower_intrinsic("platform_system", &[]).expect("platform_system");
+        assert_eq!(render_expr(&system.expr), "std::env::consts::OS.to_string()");
+
+        let arch = lower_intrinsic("platform_arch", &[]).expect("platform_arch");
+        assert_eq!(render_expr(&arch.expr), "std::env::consts::ARCH.to_string()");
+
+        let node = lower_intrinsic("platform_node", &[]).expect("platform_node");
+        assert!(render_expr(&node.expr).contains("Command::new(\"hostname\")"));
+
+        let rel = lower_intrinsic("platform_release", &[]).expect("platform_release");
+        assert!(render_expr(&rel.expr).contains("Command::new(\"uname\").arg(\"-r\")"));
+
+        let ver = lower_intrinsic("platform_version", &[]).expect("platform_version");
+        assert!(render_expr(&ver.expr).contains("Command::new(\"uname\").arg(\"-v\")"));
+
+        let proc = lower_intrinsic("platform_processor", &[]).expect("platform_processor");
+        assert_eq!(render_expr(&proc.expr), "std::env::consts::ARCH.to_string()");
     }
 }
