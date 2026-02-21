@@ -271,6 +271,7 @@ status: in_progress
 - [x] PR161 slice: continue RawCode-zero gate by replacing `time_strptime` compat `RawCode` with structured parse/map/map-err/typed-result IR
 - [x] PR162 slice: continue RawCode-zero gate by replacing `decode_utf8` `RawCode` with structured iterator/map/collect/map-err IR
 - [x] PR163 slice: continue RawCode-zero gate by replacing `bytes_to_hex` `RawCode` with structured iterator/map/collect/map IR
+- [x] PR164 slice: continue RawCode-zero gate by replacing `gettempdir` `RawCode` with structured path/fn-call/method-call IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
