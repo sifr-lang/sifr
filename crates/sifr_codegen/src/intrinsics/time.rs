@@ -41,10 +41,22 @@ pub(super) fn lower_sleep(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "std::thread::sleep(std::time::Duration::from_secs_f64({}))",
-        args[0]
-    )))
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "std".to_string(),
+            "thread".to_string(),
+            "sleep".to_string(),
+        ])),
+        args: vec![RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "time".to_string(),
+                "Duration".to_string(),
+                "from_secs_f64".to_string(),
+            ])),
+            args: vec![RustExpr::Ident(args[0].clone())],
+        }],
+    })
 }
 
 pub(super) fn lower_time_format(args: &[String]) -> Option<RustExpr> {
