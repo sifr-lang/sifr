@@ -43,7 +43,13 @@ pub fn try_lower_simple_stmt(
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
             if in_loop_with_else {
-                Some(vec![RustStmt::RawCode("_broke = true;".to_string()), RustStmt::Break])
+                Some(vec![
+                    RustStmt::Assign {
+                        target: crate::RustExpr::Ident("_broke".to_string()),
+                        value: crate::RustExpr::Literal(crate::RustLiteral::Bool(true)),
+                    },
+                    RustStmt::Break,
+                ])
             } else {
                 Some(vec![RustStmt::Break])
             }
@@ -111,7 +117,7 @@ mod tests {
         let brk = try_lower_simple_stmt(&HirStmt::Break, true, &HashSet::new(), &HashSet::new())
             .expect("break lowered");
         assert_eq!(brk.len(), 2);
-        assert!(matches!(brk[0], RustStmt::RawCode(_)));
+        assert!(matches!(brk[0], RustStmt::Assign { .. }));
         assert!(matches!(brk[1], RustStmt::Break));
     }
 

@@ -184,6 +184,7 @@ status: in_progress
 - [x] PR74 slice: remove `format_push_string` suppression by replacing `push_str(&format!(...))` patterns with `write!`/`writeln!` across codegen renderers
 - [x] PR75 slice: remove `doc_markdown` suppression by applying clippy doc-comment backtick fixes in `lib.rs`, `stdlib_filter.rs`, and `intrinsics/gzip.rs`
 - [x] PR76 slice: remove `uninlined_format_args` suppression by applying clippy inline-format interpolation fixes (`{name}` style) in `lib.rs` and `render.rs`
+- [x] PR77 slice: start RawCode-zero gate by lowering int/float leaf expressions and loop-else break marker with structured IR nodes instead of `RawCode`
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
