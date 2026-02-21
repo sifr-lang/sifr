@@ -12,11 +12,9 @@
 #![allow(clippy::wildcard_imports)]
 #![allow(clippy::unused_self)]
 #![allow(dead_code)]
-#![allow(clippy::derivable_impls)]
 #![allow(clippy::assigning_clones)]
 #![allow(clippy::explicit_iter_loop)]
 #![allow(clippy::struct_excessive_bools)]
-#![allow(clippy::if_not_else)]
 #![allow(clippy::unnecessary_unwrap)]
 
 mod rust_ir;
@@ -181,6 +179,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
 
 /// Compiled stdlib information for codegen.
 /// Contains per-module Rust code and intrinsic name sets.
+#[derive(Default)]
 pub struct StdlibCode {
     /// Map of module_name -> compiled Rust source code for pure Sifr functions/constants
     pub module_rust_code: HashMap<String, String>,
@@ -201,20 +200,6 @@ pub struct StdlibCode {
     pub generator_functions: HashMap<String, HashSet<String>>,
     /// Set of class names that have generic type parameters across all stdlib modules.
     pub generic_classes: HashSet<String>,
-}
-
-impl Default for StdlibCode {
-    fn default() -> Self {
-        Self {
-            module_rust_code: HashMap::new(),
-            intrinsic_names: HashMap::new(),
-            module_constants: HashMap::new(),
-            func_signatures: HashMap::new(),
-            transitive_deps: HashMap::new(),
-            generator_functions: HashMap::new(),
-            generic_classes: HashSet::new(),
-        }
-    }
 }
 
 /// Returns the default parameter convention for a type.
@@ -2549,10 +2534,10 @@ impl RustEmitter {
                             let type_params_in_ret: Vec<&String> = func.type_params.iter()
                                 .filter(|tp| type_contains_typevar(&func.return_type, tp))
                                 .collect();
-                            if !type_params_in_ret.is_empty() {
-                                format!("{}<{}>", ret_name, type_params_in_ret.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", "))
-                            } else {
+                            if type_params_in_ret.is_empty() {
                                 func.return_type.rust_type()
+                            } else {
+                                format!("{}<{}>", ret_name, type_params_in_ret.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", "))
                             }
                         } else {
                             func.return_type.rust_type()
@@ -2680,15 +2665,13 @@ impl RustEmitter {
                     let mut post_yield = Vec::new();
                     let mut found_yield = false;
                     for s in body {
-                        if !found_yield {
-                            if let HirStmt::Yield { value } = s {
-                                yield_expr = Some(value);
-                                found_yield = true;
-                            } else {
-                                pre_yield.push(s);
-                            }
-                        } else {
+                        if found_yield {
                             post_yield.push(s);
+                        } else if let HirStmt::Yield { value } = s {
+                            yield_expr = Some(value);
+                            found_yield = true;
+                        } else {
+                            pre_yield.push(s);
                         }
                     }
 
@@ -4387,7 +4370,9 @@ impl RustEmitter {
 
         // Build field guards for class patterns with literal field values
         let class_field_guards: Vec<String> = if let HirPattern::Class { fields, .. } = pattern {
-            if !is_non_option_union {
+            if is_non_option_union {
+                Vec::new()
+            } else {
                 fields.iter().filter_map(|(fname, fpat)| {
                     match fpat {
                         HirPattern::Literal { value } => {
@@ -4400,8 +4385,6 @@ impl RustEmitter {
                         _ => None,
                     }
                 }).collect()
-            } else {
-                Vec::new()
             }
         } else {
             Vec::new()
@@ -5178,7 +5161,9 @@ impl RustEmitter {
                     self.write("true");
                 } else if func == "str" {
                     // str() conversion -> format!("{}", arg) or format!("{:?}", arg) for lists
-                    if !args.is_empty() {
+                    if args.is_empty() {
+                        self.write("String::new()");
+                    } else {
                         if matches!(args[0].ty(), Type::List(_)) {
                             self.write("format!(\"{:?}\", ");
                         } else {
@@ -5186,8 +5171,6 @@ impl RustEmitter {
                         }
                         self.emit_display_expr(&args[0]);
                         self.write(")");
-                    } else {
-                        self.write("String::new()");
                     }
                 } else if func == "pow" {
                     // pow(base, exp)
@@ -5430,7 +5413,7 @@ impl RustEmitter {
                     // Inline the lambda body directly instead of closure-within-closure
                     self.emit_expr(&args[1]);
                     if let HirExpr::Lambda { params, body, .. } = &args[0] {
-                        let param_name = if !params.is_empty() { &params[0].name } else { "x" };
+                        let param_name = if params.is_empty() { "x" } else { &params[0].name };
                         // Use .clone().into_iter() for owned values, then filter with |&var| destructuring
                         self.write(&format!(".clone().into_iter().filter(|&{}| ", param_name));
                         self.emit_expr(body);
@@ -5890,11 +5873,11 @@ impl RustEmitter {
                 if let Some(kind) = io_subclass_kind {
                     // Emit: IOError { message: <arg>.to_string(), kind: "<kind>".to_string() }
                     self.write("IOError { message: ");
-                    if !args.is_empty() {
+                    if args.is_empty() {
+                        self.write("String::new()");
+                    } else {
                         self.emit_expr(&args[0]);
                         self.write(".to_string()");
-                    } else {
-                        self.write("String::new()");
                     }
                     self.write(&format!(", kind: \"{}\".to_string() }}", kind));
                     return;
