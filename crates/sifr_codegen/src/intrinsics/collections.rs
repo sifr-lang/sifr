@@ -205,11 +205,50 @@ pub(super) fn lower_set_intersection(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __a = {}; let __b = {}; __a.iter().filter(|x| __b.contains(x)).cloned().collect::<Vec<i64>>() }}",
-        cloned_vec(&args[0]),
-        cloned_vec(&args[1])
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__a".to_string(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__b".to_string(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[1])))),
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__a".to_string())),
+                        method: "iter".to_string(),
+                        args: vec![],
+                    }),
+                    method: "filter".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "x".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__b".to_string())),
+                            method: "contains".to_string(),
+                            args: vec![RustExpr::Ident("x".to_string())],
+                        }),
+                        is_move: false,
+                    }],
+                }),
+                method: "cloned".to_string(),
+                args: vec![],
+            }),
+            method: "collect::<Vec<i64>>".to_string(),
+            args: vec![],
+        })),
+    })
 }
 
 pub(super) fn lower_counter_from_list(args: &[String]) -> Option<RustExpr> {
