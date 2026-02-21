@@ -44,6 +44,9 @@ pub(crate) fn lower_method(
         (Type::Str, "ljust") => string::lower_ljust(rendered_object, rendered_args),
         (Type::Str, "rjust") => string::lower_rjust(rendered_object, rendered_args),
         (Type::Str, "zfill") => string::lower_zfill(rendered_object, rendered_args),
+        (Type::List(_), "append") => list::lower_append(rendered_object, rendered_args),
+        (Type::List(_), "extend") => list::lower_extend(rendered_object, rendered_args),
+        (Type::List(_), "insert") => list::lower_insert(rendered_object, rendered_args),
         (Type::List(_), "clear") => list::lower_clear(rendered_object, rendered_args),
         (Type::List(_), "copy") => list::lower_copy(rendered_object, rendered_args),
         (Type::List(_), "reverse") => list::lower_reverse(rendered_object, rendered_args),
@@ -202,6 +205,33 @@ mod tests {
         let list_clear = lower_method(&Type::List(Box::new(Type::Int)), "clear", "xs", &[])
             .expect("list clear lowers");
         assert_eq!(render_expr(&list_clear.expr), "xs.clear()");
+
+        let list_append = lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "append",
+            "xs",
+            &["1".to_string()],
+        )
+        .expect("list append lowers");
+        assert_eq!(render_expr(&list_append.expr), "xs.push(1)");
+
+        let list_extend = lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "extend",
+            "xs",
+            &["ys".to_string()],
+        )
+        .expect("list extend lowers");
+        assert_eq!(render_expr(&list_extend.expr), "xs.extend(ys)");
+
+        let list_insert = lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "insert",
+            "xs",
+            &["0".to_string(), "1".to_string()],
+        )
+        .expect("list insert lowers");
+        assert_eq!(render_expr(&list_insert.expr), "xs.insert(0 as usize, 1)");
 
         let list_copy = lower_method(&Type::List(Box::new(Type::Int)), "copy", "xs", &[])
             .expect("list copy lowers");

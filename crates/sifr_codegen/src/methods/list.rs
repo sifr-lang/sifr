@@ -2,6 +2,30 @@
 
 use crate::RustExpr;
 
+pub(super) fn lower_append(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!("{object}.push({})", args[0])))
+}
+
+pub(super) fn lower_extend(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!("{object}.extend({})", args[0])))
+}
+
+pub(super) fn lower_insert(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{object}.insert({} as usize, {})",
+        args[0], args[1]
+    )))
+}
+
 pub(super) fn lower_clear(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
