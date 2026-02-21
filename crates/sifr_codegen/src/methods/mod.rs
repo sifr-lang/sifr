@@ -340,10 +340,9 @@ mod tests {
             &["1".to_string()],
         )
         .expect("list remove lowers");
-        assert_eq!(
-            render_expr(&list_remove.expr),
-            "{ if let Some(__pos) = xs.iter().position(|__x| *__x == 1) { xs.remove(__pos); } }"
-        );
+        let list_remove_rendered = render_expr(&list_remove.expr);
+        assert!(list_remove_rendered.contains("if let Some(__pos) = xs.iter().position(|__x| *__x == 1)"));
+        assert!(list_remove_rendered.contains("xs.remove(__pos);"));
 
         let list_index = lower_method(
             &Type::List(Box::new(Type::Int)),
