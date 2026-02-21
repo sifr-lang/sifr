@@ -75,13 +75,54 @@ pub(super) fn lower_endswith(object: &str, args: &[String]) -> Option<RustExpr> 
 
 pub(super) fn lower_split(object: &str, args: &[String]) -> Option<RustExpr> {
     match args.len() {
-        0 => Some(RustExpr::RawCode(format!(
-            "{object}.split_whitespace().map(|s| s.to_string()).collect::<Vec<String>>()"
-        ))),
-        1 => Some(RustExpr::RawCode(format!(
-            "{object}.split(&({})).map(|s| s.to_string()).collect::<Vec<String>>()",
-            args[0]
-        ))),
+        0 => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    method: "split_whitespace".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "s".to_string(),
+                        ty: RustType::RawCode("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("s".to_string())),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "collect::<Vec<String>>".to_string(),
+            args: vec![],
+        }),
+        1 => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    method: "split".to_string(),
+                    args: vec![render_borrowed_arg_expr(&args[0])],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "s".to_string(),
+                        ty: RustType::RawCode("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("s".to_string())),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "collect::<Vec<String>>".to_string(),
+            args: vec![],
+        }),
         _ => None,
     }
 }
@@ -90,10 +131,14 @@ pub(super) fn lower_replace(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.replace(&({}), &({}))",
-        args[0], args[1]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "replace".to_string(),
+        args: vec![
+            render_borrowed_arg_expr(&args[0]),
+            render_borrowed_arg_expr(&args[1]),
+        ],
+    })
 }
 
 pub(super) fn lower_find(object: &str, args: &[String]) -> Option<RustExpr> {
