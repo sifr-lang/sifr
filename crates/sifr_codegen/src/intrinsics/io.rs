@@ -31,10 +31,22 @@ pub(super) fn lower_exists(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "std::path::Path::new(&({})).exists()",
-        args[0]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "path".to_string(),
+                "Path".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+            }],
+        }),
+        method: "exists".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_read_lines(args: &[String]) -> Option<RustExpr> {
