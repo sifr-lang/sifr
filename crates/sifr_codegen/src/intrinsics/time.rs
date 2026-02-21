@@ -79,3 +79,32 @@ pub(super) fn lower_localtime(args: &[String]) -> Option<RustExpr> {
         args[0]
     )))
 }
+
+pub(super) fn lower_time_strptime_compat(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "(|| -> Result<Vec<i64>, ValueError> {{ let __s = {}; let __fmt = {}; chrono::NaiveDateTime::parse_from_str(__s, __fmt).map(|dt| {{ use chrono::Datelike; use chrono::Timelike; vec![dt.year() as i64, dt.month() as i64, dt.day() as i64, dt.hour() as i64, dt.minute() as i64, dt.second() as i64, dt.weekday().num_days_from_monday() as i64, dt.ordinal() as i64] }}).map_err(|e| ValueError {{ message: e.to_string() }}) }})()",
+        borrowed_str(&args[0]),
+        borrowed_str(&args[1])
+    )))
+}
+
+pub(super) fn lower_time_gmtime_compat(args: &[String]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::RawCode(
+        "{ use chrono::{Datelike, Timelike, Utc}; let __dt = Utc::now().naive_utc(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64, __dt.weekday().num_days_from_monday() as i64, __dt.ordinal() as i64] }".to_string(),
+    ))
+}
+
+pub(super) fn lower_time_localtime_compat(args: &[String]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::RawCode(
+        "{ use chrono::{Datelike, Timelike, Local}; let __dt = Local::now().naive_local(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64, __dt.weekday().num_days_from_monday() as i64, __dt.ordinal() as i64] }".to_string(),
+    ))
+}
