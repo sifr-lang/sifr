@@ -72,3 +72,34 @@ pub(super) fn lower_find(object: &str, args: &[String]) -> Option<RustExpr> {
         args[0]
     )))
 }
+
+pub(super) fn lower_lstrip(object: &str, args: &[String]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!("{object}.trim_start().to_string()")))
+}
+
+pub(super) fn lower_rstrip(object: &str, args: &[String]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!("{object}.trim_end().to_string()")))
+}
+
+pub(super) fn lower_count(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{object}.matches(&({})).count() as i64",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_join(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!("{}.join(&({object}))", args[0])))
+}
