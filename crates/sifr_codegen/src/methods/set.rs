@@ -1,6 +1,6 @@
 //! Set method lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustStmt};
 
 fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
     if arg.ends_with(".as_str()") || arg.starts_with('&') {
@@ -116,9 +116,39 @@ pub(super) fn lower_pop(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __v = {object}.iter().next().cloned(); if let Some(ref __val) = __v {{ {object}.remove(__val); }} __v }}"
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__v".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident(object.to_string())),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "next".to_string(),
+                        args: vec![],
+                    }),
+                    method: "cloned".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::IfLet {
+                pattern: "Some(ref __val)".to_string(),
+                expr: RustExpr::Ident("__v".to_string()),
+                then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    method: "remove".to_string(),
+                    args: vec![RustExpr::Ident("__val".to_string())],
+                })],
+                else_body: None,
+            },
+        ],
+        expr: Some(Box::new(RustExpr::Ident("__v".to_string()))),
+    })
 }
 
 pub(super) fn lower_union(object: &str, args: &[String]) -> Option<RustExpr> {
