@@ -1,6 +1,6 @@
 //! OS intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
 fn borrow_expr(expr: &str) -> String {
     format!("&({expr})")
@@ -65,9 +65,44 @@ pub(super) fn lower_cpu_count(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(
-        "{ let __n = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1); __n as i64 }".to_string(),
-    ))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__n".to_string(),
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "std".to_string(),
+                            "thread".to_string(),
+                            "available_parallelism".to_string(),
+                        ])),
+                        args: vec![],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "n".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("n".to_string())),
+                            method: "get".to_string(),
+                            args: vec![],
+                        }),
+                        is_move: false,
+                    }],
+                }),
+                method: "unwrap_or".to_string(),
+                args: vec![RustExpr::Literal(RustLiteral::Int(1))],
+            },
+        }],
+        expr: Some(Box::new(RustExpr::Cast {
+            expr: Box::new(RustExpr::Ident("__n".to_string())),
+            ty: RustType::I64,
+        })),
+    })
 }
 
 pub(super) fn lower_stat_size(args: &[String]) -> Option<RustExpr> {
