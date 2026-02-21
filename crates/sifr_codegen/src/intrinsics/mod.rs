@@ -25,6 +25,7 @@ mod gzip;
 mod zipfile;
 mod base64;
 mod base32;
+mod hashlib;
 
 use crate::RustExpr;
 
@@ -235,6 +236,12 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "b32decode" => (base32::lower_b32decode(rendered_args), None),
         "b32hexencode" => (base32::lower_b32hexencode(rendered_args), None),
         "b32hexdecode" => (base32::lower_b32hexdecode(rendered_args), None),
+        "sha1" => (hashlib::lower_sha1(rendered_args), Some("sha1")),
+        "sha512" => (hashlib::lower_sha512(rendered_args), Some("sha2")),
+        "sha224" => (hashlib::lower_sha224(rendered_args), Some("sha2")),
+        "sha384" => (hashlib::lower_sha384(rendered_args), Some("sha2")),
+        "blake2b" => (hashlib::lower_blake2b(rendered_args), Some("blake2")),
+        "blake2s" => (hashlib::lower_blake2s(rendered_args), Some("blake2")),
         _ => return None,
     };
 
@@ -773,5 +780,32 @@ mod tests {
 
         let b32hd = lower_intrinsic("b32hexdecode", &["s".to_string()]).expect("b32hexdecode");
         assert!(render_expr(&b32hd.expr).contains("invalid base32hex char"));
+    }
+
+    #[test]
+    fn lowers_hashlib_intrinsics_with_dependency_metadata() {
+        let sha1 = lower_intrinsic("sha1", &["s".to_string()]).expect("sha1");
+        assert_eq!(sha1.required_crate, Some("sha1"));
+        assert!(render_expr(&sha1.expr).contains("sha1::Sha1::digest"));
+
+        let sha512 = lower_intrinsic("sha512", &["s".to_string()]).expect("sha512");
+        assert_eq!(sha512.required_crate, Some("sha2"));
+        assert!(render_expr(&sha512.expr).contains("sha2::Sha512::digest"));
+
+        let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
+        assert_eq!(sha224.required_crate, Some("sha2"));
+        assert!(render_expr(&sha224.expr).contains("sha2::Sha224::new"));
+
+        let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
+        assert_eq!(sha384.required_crate, Some("sha2"));
+        assert!(render_expr(&sha384.expr).contains("sha2::Sha384::new"));
+
+        let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
+        assert_eq!(blake2b.required_crate, Some("blake2"));
+        assert!(render_expr(&blake2b.expr).contains("Blake2b512"));
+
+        let blake2s = lower_intrinsic("blake2s", &["s".to_string()]).expect("blake2s");
+        assert_eq!(blake2s.required_crate, Some("blake2"));
+        assert!(render_expr(&blake2s.expr).contains("Blake2s256"));
     }
 }
