@@ -54,11 +54,42 @@ pub(super) fn lower_set_add(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let mut s = {}; let v = {}; if !s.contains(&v) {{ s.push(v); }} s }}",
-        cloned_vec(&args[0]),
-        args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "s".to_string(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "v".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[1].clone()),
+            },
+            RustStmt::If {
+                cond: RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("s".to_string())),
+                        method: "contains".to_string(),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident("v".to_string())),
+                        }],
+                    }),
+                },
+                then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("s".to_string())),
+                    method: "push".to_string(),
+                    args: vec![RustExpr::Ident("v".to_string())],
+                })],
+                else_body: None,
+            },
+        ],
+        expr: Some(Box::new(RustExpr::Ident("s".to_string()))),
+    })
 }
 
 pub(super) fn lower_set_contains(args: &[String]) -> Option<RustExpr> {
