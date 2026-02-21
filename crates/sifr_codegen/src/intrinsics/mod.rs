@@ -174,14 +174,14 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "time_strptime" => (time::lower_time_strptime_compat(rendered_args), Some("chrono")),
         "time_gmtime" => (time::lower_time_gmtime_compat(rendered_args), Some("chrono")),
         "time_localtime" => (time::lower_time_localtime_compat(rendered_args), Some("chrono")),
-        "random_int" => (random::lower_random_int(rendered_args), None),
-        "random_float" => (random::lower_random_float(rendered_args), None),
-        "random_choice" => (random::lower_random_choice(rendered_args), None),
-        "random_uniform" => (random::lower_random_uniform(rendered_args), None),
-        "random_shuffle" => (random::lower_random_shuffle(rendered_args), None),
-        "random_sample" => (random::lower_random_sample(rendered_args), None),
-        "random_randrange" => (random::lower_random_randrange(rendered_args), None),
-        "random_gauss" => (random::lower_random_gauss(rendered_args), None),
+        "random_int" => (random::lower_random_int(rendered_args), Some("rand")),
+        "random_float" => (random::lower_random_float(rendered_args), Some("rand")),
+        "random_choice" => (random::lower_random_choice(rendered_args), Some("rand")),
+        "random_uniform" => (random::lower_random_uniform(rendered_args), Some("rand")),
+        "random_shuffle" => (random::lower_random_shuffle(rendered_args), Some("rand")),
+        "random_sample" => (random::lower_random_sample(rendered_args), Some("rand")),
+        "random_randrange" => (random::lower_random_randrange(rendered_args), Some("rand")),
+        "random_gauss" => (random::lower_random_gauss(rendered_args), Some("rand")),
         "re_match" => (re::lower_re_match(rendered_args), None),
         "re_find" => (re::lower_re_find(rendered_args), None),
         "re_replace" => (re::lower_re_replace(rendered_args), None),
@@ -194,15 +194,15 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "re_replace_flags" => (re::lower_re_replace_flags(rendered_args), None),
         "re_findall_flags" => (re::lower_re_findall_flags(rendered_args), None),
         "re_split_flags" => (re::lower_re_split_flags(rendered_args), None),
-        "sha256" => (hash::lower_sha256(rendered_args), None),
-        "md5" => (hash::lower_md5(rendered_args), None),
+        "sha256" => (hash::lower_sha256(rendered_args), Some("sha2")),
+        "md5" => (hash::lower_md5(rendered_args), Some("md5")),
         "platform_system" => (platform::lower_platform_system(rendered_args), None),
         "platform_arch" => (platform::lower_platform_arch(rendered_args), None),
         "platform_node" => (platform::lower_platform_node(rendered_args), None),
         "platform_release" => (platform::lower_platform_release(rendered_args), None),
         "platform_version" => (platform::lower_platform_version(rendered_args), None),
         "platform_processor" => (platform::lower_platform_processor(rendered_args), None),
-        "uuid4" => (uuid::lower_uuid4(rendered_args), None),
+        "uuid4" => (uuid::lower_uuid4(rendered_args), Some("rand")),
         "toml_parse" => (toml::lower_toml_parse(rendered_args), Some("toml")),
         "datetime_now" => (datetime::lower_datetime_now(rendered_args), Some("chrono")),
         "datetime_now_struct" => (datetime::lower_datetime_now_struct(rendered_args), Some("chrono")),
@@ -526,9 +526,11 @@ mod tests {
     fn lowers_random_intrinsics_via_registry() {
         let rint = lower_intrinsic("random_int", &["1".to_string(), "9".to_string()])
             .expect("random_int");
+        assert_eq!(rint.required_crate, Some("rand"));
         assert!(render_expr(&rint.expr).contains("gen_range(1..=9)"));
 
         let rfloat = lower_intrinsic("random_float", &[]).expect("random_float");
+        assert_eq!(rfloat.required_crate, Some("rand"));
         assert!(render_expr(&rfloat.expr).contains("gen::<f64>()"));
 
         let choice = lower_intrinsic("random_choice", &["items".to_string()]).expect("random_choice");
@@ -612,10 +614,12 @@ mod tests {
     #[test]
     fn lowers_hash_intrinsics_via_registry() {
         let sha = lower_intrinsic("sha256", &["payload".to_string()]).expect("sha256");
+        assert_eq!(sha.required_crate, Some("sha2"));
         assert!(render_expr(&sha.expr).contains("sha2::Sha256::digest"));
         assert!(render_expr(&sha.expr).contains(".as_bytes()"));
 
         let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
+        assert_eq!(md5.required_crate, Some("md5"));
         assert!(render_expr(&md5.expr).contains("md5::compute"));
         assert!(render_expr(&md5.expr).contains(".as_bytes()"));
     }
@@ -644,6 +648,7 @@ mod tests {
     #[test]
     fn lowers_uuid_intrinsic_via_registry() {
         let uuid = lower_intrinsic("uuid4", &[]).expect("uuid4");
+        assert_eq!(uuid.required_crate, Some("rand"));
         assert!(render_expr(&uuid.expr).contains("rand::thread_rng"));
         assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-4{:03x}-{:04x}-{:012x}\""));
     }

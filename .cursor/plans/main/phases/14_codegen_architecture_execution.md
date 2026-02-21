@@ -127,6 +127,7 @@ status: in_progress
 - [x] PR33 slice: migrate legacy `_sifr.time` compatibility intrinsics (`time_strptime`, `time_gmtime`, `time_localtime`) into registry lowerers
 - [x] PR34 slice: migrate remaining `sifr.pathlib` glob intrinsics (`glob_pattern`, `rglob_pattern`) into registry lowerers
 - [x] PR35 slice: add `chrono` dependency metadata for all registry-backed time intrinsics and compatibility aliases
+- [x] PR36 slice: add dependency metadata for registry intrinsics using `rand`, `sha2`, and `md5`
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
