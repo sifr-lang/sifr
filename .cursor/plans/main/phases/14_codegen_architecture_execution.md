@@ -232,6 +232,7 @@ status: in_progress
 - [x] PR122 slice: continue RawCode-zero gate by replacing `bytes.encode_utf8` `RawCode` with structured path/call/closure IR
 - [x] PR123 slice: continue RawCode-zero gate by replacing `stat_size` `RawCode` with structured path/call/closure IR (`std::fs::metadata(...).map(...).map_err(...)`)
 - [x] PR124 slice: continue RawCode-zero gate by replacing `os_linesep`/`os_name` `RawCode` with structured `If` + `cfg!` + literal-call IR
+- [x] PR125 slice: continue RawCode-zero gate by replacing `assert_true`/`assert_false` `RawCode` with structured macro/unary IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
