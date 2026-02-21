@@ -182,18 +182,18 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "random_sample" => (random::lower_random_sample(rendered_args), Some("rand")),
         "random_randrange" => (random::lower_random_randrange(rendered_args), Some("rand")),
         "random_gauss" => (random::lower_random_gauss(rendered_args), Some("rand")),
-        "re_match" => (re::lower_re_match(rendered_args), None),
-        "re_find" => (re::lower_re_find(rendered_args), None),
-        "re_replace" => (re::lower_re_replace(rendered_args), None),
-        "re_findall" => (re::lower_re_findall(rendered_args), None),
-        "re_split" => (re::lower_re_split(rendered_args), None),
-        "re_find_start" => (re::lower_re_find_start(rendered_args), None),
-        "re_find_end" => (re::lower_re_find_end(rendered_args), None),
-        "re_match_flags" => (re::lower_re_match_flags(rendered_args), None),
-        "re_find_flags" => (re::lower_re_find_flags(rendered_args), None),
-        "re_replace_flags" => (re::lower_re_replace_flags(rendered_args), None),
-        "re_findall_flags" => (re::lower_re_findall_flags(rendered_args), None),
-        "re_split_flags" => (re::lower_re_split_flags(rendered_args), None),
+        "re_match" => (re::lower_re_match(rendered_args), Some("regex")),
+        "re_find" => (re::lower_re_find(rendered_args), Some("regex")),
+        "re_replace" => (re::lower_re_replace(rendered_args), Some("regex")),
+        "re_findall" => (re::lower_re_findall(rendered_args), Some("regex")),
+        "re_split" => (re::lower_re_split(rendered_args), Some("regex")),
+        "re_find_start" => (re::lower_re_find_start(rendered_args), Some("regex")),
+        "re_find_end" => (re::lower_re_find_end(rendered_args), Some("regex")),
+        "re_match_flags" => (re::lower_re_match_flags(rendered_args), Some("regex")),
+        "re_find_flags" => (re::lower_re_find_flags(rendered_args), Some("regex")),
+        "re_replace_flags" => (re::lower_re_replace_flags(rendered_args), Some("regex")),
+        "re_findall_flags" => (re::lower_re_findall_flags(rendered_args), Some("regex")),
+        "re_split_flags" => (re::lower_re_split_flags(rendered_args), Some("regex")),
         "sha256" => (hash::lower_sha256(rendered_args), Some("sha2")),
         "md5" => (hash::lower_md5(rendered_args), Some("md5")),
         "platform_system" => (platform::lower_platform_system(rendered_args), None),
@@ -563,6 +563,7 @@ mod tests {
     #[test]
     fn lowers_re_intrinsics_via_registry() {
         let m = lower_intrinsic("re_match", &["pat".to_string(), "txt".to_string()]).expect("re_match");
+        assert_eq!(m.required_crate, Some("regex"));
         assert!(render_expr(&m.expr).contains("is_match"));
 
         let f = lower_intrinsic("re_find", &["pat".to_string(), "txt".to_string()]).expect("re_find");
@@ -608,6 +609,7 @@ mod tests {
             ],
         )
         .expect("re_replace_flags");
+        assert_eq!(rf.required_crate, Some("regex"));
         assert!(render_expr(&rf.expr).contains("replace_all"));
     }
 
