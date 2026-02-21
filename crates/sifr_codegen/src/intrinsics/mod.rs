@@ -32,6 +32,15 @@ use crate::RustExpr;
 pub(crate) struct LoweredIntrinsic {
     pub(crate) expr: RustExpr,
     pub(crate) required_crate: Option<&'static str>,
+    pub(crate) additional_required_crates: &'static [&'static str],
+}
+
+fn additional_required_crates(name: &str) -> &'static [&'static str] {
+    match name {
+        // random_gauss uses rand_distr::Normal in addition to rand::thread_rng.
+        "random_gauss" => &["rand_distr"],
+        _ => &[],
+    }
 }
 
 pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<LoweredIntrinsic> {
@@ -257,6 +266,7 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
     Some(LoweredIntrinsic {
         expr: expr?,
         required_crate,
+        additional_required_crates: additional_required_crates(name),
     })
 }
 
@@ -557,6 +567,7 @@ mod tests {
 
         let gauss = lower_intrinsic("random_gauss", &["0.0".to_string(), "1.0".to_string()])
             .expect("random_gauss");
+        assert!(gauss.additional_required_crates.contains(&"rand_distr"));
         assert!(render_expr(&gauss.expr).contains("rand_distr"));
     }
 
