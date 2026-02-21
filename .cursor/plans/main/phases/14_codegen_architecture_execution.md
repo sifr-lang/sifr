@@ -161,14 +161,15 @@ status: in_progress
 
 ## milestone_codegen_structural_passes
 
-status: pending
+status: in_progress
 
+- [x] PR56 slice: replace legacy stdlib text filtering with structural top-level item DCE in `stdlib_filter.rs` and remove legacy helper trio by name
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
 - [ ] Add conservative clone optimization pass
 - [ ] Add IR validation pass for structural correctness
-- [ ] Delete legacy string-parser helpers (`parse_rust_blocks`, `extract_top_level_item_name`, `count_braces`)
+- [x] Delete legacy string-parser helpers (`parse_rust_blocks`, `extract_top_level_item_name`, `count_braces`)
 - [ ] Remove at least 20 clippy suppressions from file header
 - [ ] Confirm generated binary size does not increase
 - [ ] Demo: `demos/milestone_codegen_structural_passes_demo.sifr`
