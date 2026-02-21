@@ -95,6 +95,10 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "cpu_count" => (os::lower_cpu_count(rendered_args), None),
         "stat_size" => (os::lower_stat_size(rendered_args), None),
         "which" => (os::lower_which(rendered_args), None),
+        "disk_usage" => (os::lower_disk_usage(rendered_args), None),
+        "os_sep" => (os::lower_os_sep(rendered_args), None),
+        "os_linesep" => (os::lower_os_linesep(rendered_args), None),
+        "os_name" => (os::lower_os_name(rendered_args), None),
         "touch" => (pathlib::lower_touch(rendered_args), None),
         "resolve_path" => (pathlib::lower_resolve_path(rendered_args), None),
         "iterdir" => (pathlib::lower_iterdir(rendered_args), None),
@@ -327,6 +331,18 @@ mod tests {
 
         let which = lower_intrinsic("which", &["tool".to_string()]).expect("which should lower");
         assert!(render_expr(&which.expr).contains("std::env::var(\"PATH\")"));
+
+        let disk = lower_intrinsic("disk_usage", &["path".to_string()]).expect("disk_usage lowers");
+        assert!(render_expr(&disk.expr).contains("std::process::Command::new(\"df\")"));
+
+        let sep = lower_intrinsic("os_sep", &[]).expect("os_sep lowers");
+        assert_eq!(render_expr(&sep.expr), "std::path::MAIN_SEPARATOR.to_string()");
+
+        let linesep = lower_intrinsic("os_linesep", &[]).expect("os_linesep lowers");
+        assert!(render_expr(&linesep.expr).contains("cfg!(target_os = \"windows\")"));
+
+        let name = lower_intrinsic("os_name", &[]).expect("os_name lowers");
+        assert!(render_expr(&name.expr).contains("\"posix\".to_string()"));
     }
 
     #[test]
