@@ -6,6 +6,28 @@ fn borrow_expr(expr: &str) -> String {
     format!("&({expr})")
 }
 
+fn lower_cfg_windows_string(args: &[String], windows: &str, other: &str) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::If {
+        cond: Box::new(RustExpr::MacroCall {
+            name: "cfg".to_string(),
+            args: vec![RustExpr::Ident("target_os = \"windows\"".to_string())],
+        }),
+        then_expr: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(windows.to_string()))),
+            method: "to_string".to_string(),
+            args: vec![],
+        }),
+        else_expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(other.to_string()))),
+            method: "to_string".to_string(),
+            args: vec![],
+        })),
+    })
+}
+
 pub(super) fn lower_run_command(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
@@ -180,21 +202,9 @@ pub(super) fn lower_os_sep(args: &[String]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_os_linesep(args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(
-        "{ if cfg!(target_os = \"windows\") { \"\\r\\n\".to_string() } else { \"\\n\".to_string() } }"
-            .to_string(),
-    ))
+    lower_cfg_windows_string(args, "\r\n", "\n")
 }
 
 pub(super) fn lower_os_name(args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(
-        "{ if cfg!(target_os = \"windows\") { \"nt\".to_string() } else { \"posix\".to_string() } }"
-            .to_string(),
-    ))
+    lower_cfg_windows_string(args, "nt", "posix")
 }
