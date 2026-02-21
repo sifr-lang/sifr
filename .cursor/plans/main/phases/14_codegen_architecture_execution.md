@@ -167,6 +167,7 @@ status: in_progress
 - [x] PR57 slice: add structured shared-import/infrastructure preamble collection pass in `stdlib_filter.rs` and remove `lib.rs` string-contains scanning for stdlib import flags
 - [x] PR58 slice: remove `emitter.output.contains(...)` fallback probes for file-handle/logging globals by using structured emitter/module flags during preamble assembly
 - [x] PR59 slice: remove `stdlib_preamble.contains(\"struct FileHandle {\")` probe by propagating a structured `provides_file_handle_struct` flag from stdlib preamble analysis
+- [x] PR60 slice: remove 5 clippy suppressions (`map_clone`, `if_same_then_else`, `redundant_closure_for_method_calls`, `iter_next_loop`, `useless_format`) and fix surfaced warnings
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
