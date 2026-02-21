@@ -176,6 +176,7 @@ status: in_progress
 - [x] PR66 slice: remove 3 clippy suppressions (`while_let_on_iterator`, `while_let_loop`, `nonminimal_bool`) with no behavior changes needed
 - [x] PR67 slice: remove 2 clippy suppressions (`derivable_impls`, `if_not_else`) by deriving `Default` for `StdlibCode` and simplifying negated conditionals
 - [x] PR68 slice: remove `unnecessary_unwrap` suppression by replacing `parent_class.as_ref().unwrap()` with an `Option`-driven inheritance branch
+- [x] PR69 slice: remove `assigning_clones` suppression by switching stdlib intrinsic map assignment to `clone_from(...)`
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
