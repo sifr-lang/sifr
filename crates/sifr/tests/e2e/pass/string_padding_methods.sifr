@@ -1,0 +1,11 @@
+# expect-stdout: center = [  x  ]
+# expect-stdout: ljust = [x   ]
+# expect-stdout: rjust = [   x]
+# expect-stdout: zfill = [0007]
+
+def main():
+    s: str = "x"
+    print("center = [" + s.center(5) + "]")
+    print("ljust = [" + s.ljust(4) + "]")
+    print("rjust = [" + s.rjust(4) + "]")
+    print("zfill = [" + "7".zfill(4) + "]")

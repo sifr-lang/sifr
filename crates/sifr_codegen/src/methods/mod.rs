@@ -37,6 +37,10 @@ pub(crate) fn lower_method(
         (Type::Str, "isspace") => string::lower_isspace(rendered_object, rendered_args),
         (Type::Str, "isupper") => string::lower_isupper(rendered_object, rendered_args),
         (Type::Str, "islower") => string::lower_islower(rendered_object, rendered_args),
+        (Type::Str, "center") => string::lower_center(rendered_object, rendered_args),
+        (Type::Str, "ljust") => string::lower_ljust(rendered_object, rendered_args),
+        (Type::Str, "rjust") => string::lower_rjust(rendered_object, rendered_args),
+        (Type::Str, "zfill") => string::lower_zfill(rendered_object, rendered_args),
         _ => return None,
     };
 
@@ -132,5 +136,30 @@ mod tests {
 
         let islower = lower_method(&Type::Str, "islower", "s", &[]).expect("islower lowers");
         assert!(render_expr(&islower.expr).contains("is_lowercase"));
+
+        let center = lower_method(&Type::Str, "center", "s", &["5".to_string()])
+            .expect("center lowers");
+        assert!(render_expr(&center.expr).contains("let _w = 5 as usize"));
+
+        let ljust = lower_method(&Type::Str, "ljust", "s", &["5".to_string()])
+            .expect("ljust lowers");
+        assert_eq!(
+            render_expr(&ljust.expr),
+            "format!(\"{:<width$}\", s, width = 5 as usize)"
+        );
+
+        let rjust = lower_method(&Type::Str, "rjust", "s", &["5".to_string()])
+            .expect("rjust lowers");
+        assert_eq!(
+            render_expr(&rjust.expr),
+            "format!(\"{:>width$}\", s, width = 5 as usize)"
+        );
+
+        let zfill = lower_method(&Type::Str, "zfill", "s", &["5".to_string()])
+            .expect("zfill lowers");
+        assert_eq!(
+            render_expr(&zfill.expr),
+            "format!(\"{:0>width$}\", s, width = 5 as usize)"
+        );
     }
 }
