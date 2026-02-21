@@ -1,6 +1,6 @@
 //! Environment intrinsic lowerers for registry migration.
 
-use crate::{RustExpr, RustParam, RustType};
+use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
 pub(super) fn lower_env_get(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
@@ -26,10 +26,65 @@ pub(super) fn lower_env_unset(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __k = {}; if !__k.is_empty() && !__k.contains('=') && !__k.as_bytes().contains(&0) {{ std::env::remove_var(__k); }} }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__k".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::If {
+                cond: RustExpr::BinOp {
+                    left: Box::new(RustExpr::UnaryOp {
+                        op: "!".to_string(),
+                        operand: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                            method: "is_empty".to_string(),
+                            args: vec![],
+                        }),
+                    }),
+                    op: "&&".to_string(),
+                    right: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::UnaryOp {
+                            op: "!".to_string(),
+                            operand: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                                method: "contains".to_string(),
+                                args: vec![RustExpr::Literal(RustLiteral::Char('='))],
+                            }),
+                        }),
+                        op: "&&".to_string(),
+                        right: Box::new(RustExpr::UnaryOp {
+                            op: "!".to_string(),
+                            operand: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                                    method: "as_bytes".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "contains".to_string(),
+                                args: vec![RustExpr::Ref {
+                                    mutable: false,
+                                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                                }],
+                            }),
+                        }),
+                    }),
+                },
+                then_body: vec![RustStmt::Expr(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "env".to_string(),
+                        "remove_var".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ident("__k".to_string())],
+                })],
+                else_body: None,
+            },
+        ],
+        expr: None,
+    })
 }
 
 pub(super) fn lower_env_keys(args: &[String]) -> Option<RustExpr> {
