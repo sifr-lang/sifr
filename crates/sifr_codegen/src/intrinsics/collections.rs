@@ -14,7 +14,13 @@ pub(super) fn lower_new_set(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode("Vec::<i64>::new()".to_string()))
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "Vec::<i64>".to_string(),
+            "new".to_string(),
+        ])),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_set_from_list(args: &[String]) -> Option<RustExpr> {
@@ -42,10 +48,14 @@ pub(super) fn lower_set_contains(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{}.contains(&{})",
-        args[0], args[1]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(args[0].clone())),
+        method: "contains".to_string(),
+        args: vec![RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::Ident(args[1].clone())),
+        }],
+    })
 }
 
 pub(super) fn lower_set_remove(args: &[String]) -> Option<RustExpr> {
