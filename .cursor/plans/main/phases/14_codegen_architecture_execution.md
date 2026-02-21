@@ -196,6 +196,7 @@ status: in_progress
 - [x] PR86 slice: continue RawCode-zero gate by structuring `list.count` as chained iterator/closure IR + cast node and fixing borrowed-arg cast precedence in list/set methods
 - [x] PR87 slice: continue RawCode-zero gate by structuring `list.remove` as `RustExpr::Block` + `RustStmt::IfLet` (no raw templated control-flow string)
 - [x] PR88 slice: continue RawCode-zero gate by structuring `set.pop` as `RustExpr::Block` with `Let`/`IfLet`/trailing expr nodes
+- [x] PR89 slice: continue RawCode-zero gate by structuring `dict.keys`/`dict.values` as chained `RustExpr::MethodCall` nodes (including turbofish collect)
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass

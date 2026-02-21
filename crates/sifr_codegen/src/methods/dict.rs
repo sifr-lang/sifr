@@ -17,18 +17,38 @@ pub(super) fn lower_keys(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.keys().cloned().collect::<Vec<_>>()"
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "keys".to_string(),
+                args: vec![],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        }),
+        method: "collect::<Vec<_>>".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_values(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.values().cloned().collect::<Vec<_>>()"
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "values".to_string(),
+                args: vec![],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        }),
+        method: "collect::<Vec<_>>".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_items(object: &str, args: &[String]) -> Option<RustExpr> {
