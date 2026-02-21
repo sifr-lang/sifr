@@ -256,6 +256,7 @@ status: in_progress
 - [x] PR146 slice: continue RawCode-zero gate by replacing `defaultdict_set` `RawCode` with structured block/insert/macro-call IR
 - [x] PR147 slice: continue RawCode-zero gate by replacing `counter_get` `RawCode` with structured block/key-lookup/default IR
 - [x] PR148 slice: continue RawCode-zero gate by replacing `counter_items` `RawCode` with structured block/sort/map/format IR
+- [x] PR149 slice: continue RawCode-zero gate by replacing `counter_most_common` `RawCode` with structured block/sort/truncate/map/format IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass

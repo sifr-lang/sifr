@@ -369,11 +369,131 @@ pub(super) fn lower_counter_most_common(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let data: std::collections::HashMap<String, i64> = serde_json::from_str({}).unwrap_or_default(); let mut pairs: Vec<(String, i64)> = data.into_iter().collect(); pairs.sort_by(|a, b| b.1.cmp(&a.1)); pairs.truncate({} as usize); let items: Vec<String> = pairs.iter().map(|(k, v)| format!(\"[\\\"{{}}\\\",{{}}]\", k, v)).collect(); format!(\"[{{}}]\", items.join(\",\")) }}",
-        borrowed_str(&args[0]),
-        args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "data".to_string(),
+                ty: Some(RustType::Named(
+                    "std::collections::HashMap<String, i64>".to_string(),
+                )),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "serde_json".to_string(),
+                            "from_str".to_string(),
+                        ])),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                        }],
+                    }),
+                    method: "unwrap_or_default".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "pairs".to_string(),
+                ty: Some(RustType::Named("Vec<(String, i64)>".to_string())),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("data".to_string())),
+                        method: "into_iter".to_string(),
+                        args: vec![],
+                    }),
+                    method: "collect".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("pairs".to_string())),
+                method: "sort_by".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![
+                        RustParam::Named {
+                            name: "a".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        },
+                        RustParam::Named {
+                            name: "b".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        },
+                    ],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("b".to_string())),
+                            field: "1".to_string(),
+                        }),
+                        method: "cmp".to_string(),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("a".to_string())),
+                                field: "1".to_string(),
+                            }),
+                        }],
+                    }),
+                    is_move: false,
+                }],
+            }),
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("pairs".to_string())),
+                method: "truncate".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                    ty: RustType::Named("usize".to_string()),
+                }],
+            }),
+            RustStmt::Let {
+                mutable: false,
+                name: "items".to_string(),
+                ty: Some(RustType::Named("Vec<String>".to_string())),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("pairs".to_string())),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![RustExpr::Closure {
+                            params: vec![RustParam::Named {
+                                name: "__pair".to_string(),
+                                ty: RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(RustExpr::FormatMacro {
+                                name: "format".to_string(),
+                                format_str: "[\"{}\",{}]".to_string(),
+                                args: vec![
+                                    RustExpr::Field {
+                                        expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                        field: "0".to_string(),
+                                    },
+                                    RustExpr::Field {
+                                        expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                        field: "1".to_string(),
+                                    },
+                                ],
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    method: "collect::<Vec<String>>".to_string(),
+                    args: vec![],
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::FormatMacro {
+            name: "format".to_string(),
+            format_str: "[{}]".to_string(),
+            args: vec![RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("items".to_string())),
+                method: "join".to_string(),
+                args: vec![RustExpr::Ident("\",\"".to_string())],
+            }],
+        })),
+    })
 }
 
 pub(super) fn lower_counter_total(args: &[String]) -> Option<RustExpr> {
