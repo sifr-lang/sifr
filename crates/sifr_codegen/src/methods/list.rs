@@ -1,6 +1,6 @@
 //! List method lowerers for registry migration.
 
-use crate::{RustExpr, RustParam, RustType};
+use crate::{RustExpr, RustParam, RustStmt, RustType};
 
 fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
     if arg.ends_with(".as_str()") || arg.starts_with('&') {
@@ -157,10 +157,40 @@ pub(super) fn lower_remove(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ if let Some(__pos) = {object}.iter().position(|__x| *__x == {}) {{ {object}.remove(__pos); }} }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::IfLet {
+            pattern: "Some(__pos)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "position".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "__x".to_string(),
+                        ty: RustType::RawCode("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "__x".to_string(),
+                        )))),
+                        op: "==".to_string(),
+                        right: Box::new(RustExpr::RawCode(args[0].clone())),
+                    }),
+                    is_move: false,
+                }],
+            },
+            then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "remove".to_string(),
+                args: vec![RustExpr::Ident("__pos".to_string())],
+            })],
+            else_body: None,
+        }],
+        expr: None,
+    })
 }
 
 pub(super) fn lower_index(object: &str, args: &[String]) -> Option<RustExpr> {
