@@ -159,11 +159,46 @@ pub(super) fn lower_set_union(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let mut s = {}; for v in {}.iter() {{ if !s.contains(v) {{ s.push(*v); }} }} s.sort(); s }}",
-        cloned_vec(&args[0]),
-        args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "s".to_string(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+            },
+            RustStmt::For {
+                var: "v".to_string(),
+                iter: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                    method: "iter".to_string(),
+                    args: vec![],
+                },
+                body: vec![RustStmt::If {
+                    cond: RustExpr::UnaryOp {
+                        op: "!".to_string(),
+                        operand: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("s".to_string())),
+                            method: "contains".to_string(),
+                            args: vec![RustExpr::Ident("v".to_string())],
+                        }),
+                    },
+                    then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("s".to_string())),
+                        method: "push".to_string(),
+                        args: vec![RustExpr::Deref(Box::new(RustExpr::Ident("v".to_string())))],
+                    })],
+                    else_body: None,
+                }],
+            },
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("s".to_string())),
+                method: "sort".to_string(),
+                args: vec![],
+            }),
+        ],
+        expr: Some(Box::new(RustExpr::Ident("s".to_string()))),
+    })
 }
 
 pub(super) fn lower_set_intersection(args: &[String]) -> Option<RustExpr> {
