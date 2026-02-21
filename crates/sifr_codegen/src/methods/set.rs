@@ -4,11 +4,11 @@ use crate::{RustExpr, RustStmt};
 
 fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
     if arg.ends_with(".as_str()") || arg.starts_with('&') {
-        RustExpr::RawCode(arg.to_string())
+        RustExpr::Ident(arg.to_string())
     } else {
         RustExpr::Ref {
             mutable: false,
-            expr: Box::new(RustExpr::RawCode(format!("({arg})"))),
+            expr: Box::new(RustExpr::Ident(format!("({arg})"))),
         }
     }
 }
@@ -39,7 +39,7 @@ pub(super) fn lower_add(object: &str, args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "insert".to_string(),
-        args: vec![RustExpr::RawCode(args[0].clone())],
+        args: vec![RustExpr::Ident(args[0].clone())],
     })
 }
 
