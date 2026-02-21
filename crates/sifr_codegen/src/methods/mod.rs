@@ -370,7 +370,7 @@ mod tests {
         let dict_items = lower_method(&dict_ty, "items", "d", &[]).expect("dict items lowers");
         assert_eq!(
             render_expr(&dict_items.expr),
-            "d.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()"
+            "d.iter().map(|__kv| (__kv.0.clone(), __kv.1.clone())).collect::<Vec<_>>()"
         );
 
         let dict_update = lower_method(&dict_ty, "update", "d", &["other".to_string()])

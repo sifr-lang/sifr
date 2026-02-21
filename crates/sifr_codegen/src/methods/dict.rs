@@ -1,6 +1,6 @@
 //! Dict method lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustParam, RustType};
 
 fn render_key_arg_expr(arg: &str) -> RustExpr {
     if arg.ends_with(".as_str()") || arg.starts_with('&') {
@@ -55,9 +55,43 @@ pub(super) fn lower_items(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()"
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "iter".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "__kv".to_string(),
+                    ty: RustType::RawCode("_".to_string()),
+                }],
+                body: Box::new(RustExpr::Tuple(vec![
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("__kv".to_string())),
+                            field: "0".to_string(),
+                        }),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    },
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("__kv".to_string())),
+                            field: "1".to_string(),
+                        }),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    },
+                ])),
+                is_move: false,
+            }],
+        }),
+        method: "collect::<Vec<_>>".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_update(object: &str, args: &[String]) -> Option<RustExpr> {
