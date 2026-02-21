@@ -21,7 +21,6 @@
 #![allow(clippy::while_let_on_iterator)]
 #![allow(clippy::assigning_clones)]
 #![allow(clippy::explicit_iter_loop)]
-#![allow(clippy::unnecessary_map_or)]
 #![allow(clippy::struct_excessive_bools)]
 #![allow(clippy::if_not_else)]
 #![allow(clippy::unnecessary_unwrap)]
@@ -341,7 +340,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                 let filtered = if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
                     let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
                     let pure_sifr_imports: HashSet<String> = imported_names.iter()
-                        .filter(|name| !intrinsic_set.map_or(false, |iset| iset.contains(*name)))
+                        .filter(|name| !intrinsic_set.is_some_and(|iset| iset.contains(*name)))
                         .cloned()
                         .collect();
                     if pure_sifr_imports.is_empty() {
@@ -2225,7 +2224,7 @@ impl RustEmitter {
                             }
                             // Wrap Callable values in Box::new() for struct fields
                             let field_ty = class.fields.iter().find(|(n, _)| n == field_name).map(|(_, t)| t);
-                            let needs_box = field_ty.map_or(false, |t| matches!(t, Type::Callable(..)));
+                            let needs_box = field_ty.is_some_and(|t| matches!(t, Type::Callable(..)));
                             if needs_box {
                                 self.write("Box::new(");
                                 self.emit_expr(value);
@@ -2975,9 +2974,8 @@ impl RustEmitter {
                     }
                     return;
                 }
-                let ret_is_option =
-                    self.current_return_type.as_ref().map_or(false, is_option_type);
-                let ret_is_non_option_union = self.current_return_type.as_ref().map_or(false, |t| {
+                let ret_is_option = self.current_return_type.as_ref().is_some_and(is_option_type);
+                let ret_is_non_option_union = self.current_return_type.as_ref().is_some_and(|t| {
                     matches!(t, Type::Union(_)) && !is_option_type(t)
                 });
                 self.write_indent();
@@ -3498,7 +3496,9 @@ impl RustEmitter {
 
                 // Check if any handler catches an IOError subclass specifically
                 let has_io_subclass_handler = handlers.iter().any(|h| {
-                    h.error_type.as_ref().map_or(false, |et| io_subclass_kind(et).is_some())
+                    h.error_type
+                        .as_ref()
+                        .is_some_and(|et| io_subclass_kind(et).is_some())
                 });
 
                 let needs_enum = error_type_names.len() > 1;
@@ -4780,7 +4780,7 @@ impl RustEmitter {
         }
         // If the parameter type is a TypeVar, always emit the borrow prefix
         // because the generated Rust signature uses &T for borrowed TypeVar params
-        let is_generic_param = param_ty.map_or(false, |t| matches!(t, Type::TypeVar(_)));
+        let is_generic_param = param_ty.is_some_and(|t| matches!(t, Type::TypeVar(_)));
         // Copy types are always passed by value regardless of convention,
         // unless the parameter is generic (TypeVar)
         if !is_generic_param && arg_ty.ownership() == sifr_type_system::OwnershipKind::Copy {
@@ -5884,8 +5884,8 @@ impl RustEmitter {
                         self.write(", ");
                     }
                     // Check if this argument corresponds to a recursive field
-                    let is_recursive = field_names.as_ref().map_or(false, |names| {
-                        names.get(i).map_or(false, |fname| {
+                    let is_recursive = field_names.as_ref().is_some_and(|names| {
+                        names.get(i).is_some_and(|fname| {
                             self.recursive_fields.contains(&(class_name.clone(), fname.clone()))
                         })
                     });
@@ -8060,7 +8060,9 @@ fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
             HirStmt::If { then_body, elif_clauses, else_body, .. } => {
                 body_contains_field_assign_codegen(then_body)
                     || elif_clauses.iter().any(|(_, body)| body_contains_field_assign_codegen(body))
-                    || else_body.as_ref().map_or(false, |b| body_contains_field_assign_codegen(b))
+                    || else_body
+                        .as_ref()
+                        .is_some_and(|b| body_contains_field_assign_codegen(b))
             }
             HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
                 body_contains_field_assign_codegen(body)
@@ -8253,7 +8255,10 @@ fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
         HirExpr::Lambda { body, .. } => expr_references_var(body, var_name),
         HirExpr::ListComp { expr: e, generators, .. } => {
             expr_references_var(e, var_name) || generators.iter().any(|(_, iter, filter)| {
-                expr_references_var(iter, var_name) || filter.as_ref().map_or(false, |f| expr_references_var(f, var_name))
+                expr_references_var(iter, var_name)
+                    || filter
+                        .as_ref()
+                        .is_some_and(|f| expr_references_var(f, var_name))
             })
         }
         HirExpr::QuestionMark { expr, .. } => expr_references_var(expr, var_name),
