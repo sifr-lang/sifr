@@ -1,6 +1,6 @@
 //! Expression lowering scaffolds for the IR migration.
 
-use crate::{CodegenError, RustExpr, RustLiteral};
+use crate::{CodegenError, RustExpr, RustLiteral, RustType};
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 
@@ -13,13 +13,15 @@ pub fn lower_expr_raw(raw: &str) -> Result<RustExpr, CodegenError> {
 /// to IR + renderer output.
 pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
     match expr {
-        HirExpr::IntLiteral(v) => Some(RustExpr::RawCode(format!("{v}_i64"))),
+        HirExpr::IntLiteral(v) => Some(RustExpr::Cast {
+            expr: Box::new(RustExpr::Literal(RustLiteral::Int(*v))),
+            ty: RustType::I64,
+        }),
         HirExpr::FloatLiteral(v) => {
-            let mut s = v.to_string();
-            if !s.contains('.') {
-                s.push_str(".0");
-            }
-            Some(RustExpr::RawCode(format!("{s}_f64")))
+            Some(RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Float(*v))),
+                ty: RustType::F64,
+            })
         }
         HirExpr::StringLiteral(s) => Some(RustExpr::Literal(RustLiteral::Str(s.clone()))),
         HirExpr::BoolLiteral(v) => Some(RustExpr::Literal(RustLiteral::Bool(*v))),
@@ -168,7 +170,13 @@ mod tests {
         })
         .expect("enum variant lowered");
 
-        assert!(matches!(int_expr, RustExpr::RawCode(_)));
+        assert!(matches!(
+            int_expr,
+            RustExpr::Cast {
+                ty: RustType::I64,
+                ..
+            }
+        ));
         assert!(matches!(str_expr, RustExpr::Literal(RustLiteral::Str(_))));
         assert!(matches!(bool_expr, RustExpr::Literal(RustLiteral::Bool(true))));
         assert!(matches!(none_expr, RustExpr::Literal(RustLiteral::None)));

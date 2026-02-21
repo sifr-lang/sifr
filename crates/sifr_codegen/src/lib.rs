@@ -9213,7 +9213,7 @@ mod tests {
     fn test_expr_to_string_fast_path_for_lowered_leafs() {
         let mut emitter = RustEmitter::new();
         let int_code = emitter.expr_to_string(&HirExpr::IntLiteral(7));
-        assert_eq!(int_code, "7_i64");
+        assert_eq!(int_code, "7 as i64");
 
         let bool_op = HirExpr::BoolOp {
             op: "and".to_string(),
