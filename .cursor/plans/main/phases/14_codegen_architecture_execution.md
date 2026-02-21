@@ -222,6 +222,7 @@ status: in_progress
 - [x] PR112 slice: continue RawCode-zero gate by replacing simple `sys` intrinsic `RawCode` returns with structured IR (`sys.version`, `sys.platform`, `sys.maxsize`)
 - [x] PR113 slice: continue RawCode-zero gate by replacing simple `platform` const-return `RawCode` with structured path+call IR (`platform.system`, `platform.arch`, `platform.processor`)
 - [x] PR114 slice: continue RawCode-zero gate by replacing `json.dumps` `RawCode` with structured path/call IR (`serde_json::to_string(...).unwrap_or_default()`)
+- [x] PR115 slice: continue RawCode-zero gate by replacing simple `os` intrinsic `RawCode` returns with structured IR (`get_args`, `getpid`)
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
