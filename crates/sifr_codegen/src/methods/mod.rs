@@ -22,6 +22,8 @@ pub(crate) fn lower_method(
         (Type::Str, "startswith") => string::lower_startswith(rendered_object, rendered_args),
         (Type::Str, "endswith") => string::lower_endswith(rendered_object, rendered_args),
         (Type::Str, "split") => string::lower_split(rendered_object, rendered_args),
+        (Type::Str, "replace") => string::lower_replace(rendered_object, rendered_args),
+        (Type::Str, "find") => string::lower_find(rendered_object, rendered_args),
         _ => return None,
     };
 
@@ -63,5 +65,18 @@ mod tests {
             render_expr(&split_sep.expr),
             "s.split(&(sep)).map(|s| s.to_string()).collect::<Vec<String>>()"
         );
+
+        let replace = lower_method(
+            &Type::Str,
+            "replace",
+            "s",
+            &["old".to_string(), "new".to_string()],
+        )
+        .expect("replace lowers");
+        assert_eq!(render_expr(&replace.expr), "s.replace(&(old), &(new))");
+
+        let find = lower_method(&Type::Str, "find", "s", &["needle".to_string()])
+            .expect("find lowers");
+        assert_eq!(render_expr(&find.expr), "s.find(&(needle)).map(|i| i as i64)");
     }
 }

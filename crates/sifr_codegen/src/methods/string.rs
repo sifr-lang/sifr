@@ -52,3 +52,23 @@ pub(super) fn lower_split(object: &str, args: &[String]) -> Option<RustExpr> {
         _ => None,
     }
 }
+
+pub(super) fn lower_replace(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{object}.replace(&({}), &({}))",
+        args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_find(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{object}.find(&({})).map(|i| i as i64)",
+        args[0]
+    )))
+}
