@@ -169,6 +169,9 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "_strptime_intrinsic" => (time::lower_strptime(rendered_args), None),
         "_gmtime_intrinsic" => (time::lower_gmtime(rendered_args), None),
         "_localtime_intrinsic" => (time::lower_localtime(rendered_args), None),
+        "time_strptime" => (time::lower_time_strptime_compat(rendered_args), None),
+        "time_gmtime" => (time::lower_time_gmtime_compat(rendered_args), None),
+        "time_localtime" => (time::lower_time_localtime_compat(rendered_args), None),
         "random_int" => (random::lower_random_int(rendered_args), None),
         "random_float" => (random::lower_random_float(rendered_args), None),
         "random_choice" => (random::lower_random_choice(rendered_args), None),
@@ -486,6 +489,17 @@ mod tests {
         let parse_alias = lower_intrinsic("_strptime_intrinsic", &["s".to_string(), "f".to_string()])
             .expect("_strptime_intrinsic");
         assert!(render_expr(&parse_alias.expr).contains("NaiveDateTime::parse_from_str"));
+
+        let compat_parse =
+            lower_intrinsic("time_strptime", &["s".to_string(), "f".to_string()])
+                .expect("time_strptime");
+        assert!(render_expr(&compat_parse.expr).contains("Result<Vec<i64>, ValueError>"));
+
+        let compat_gmt = lower_intrinsic("time_gmtime", &[]).expect("time_gmtime");
+        assert!(render_expr(&compat_gmt.expr).contains("Utc::now().naive_utc()"));
+
+        let compat_local = lower_intrinsic("time_localtime", &[]).expect("time_localtime");
+        assert!(render_expr(&compat_local.expr).contains("Local::now().naive_local()"));
     }
 
     #[test]
