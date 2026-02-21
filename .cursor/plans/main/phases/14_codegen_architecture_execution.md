@@ -174,13 +174,14 @@ status: in_progress
 - [x] PR64 slice: remove 2 clippy suppressions (`collapsible_match`, `needless_borrow`) and fix surfaced warnings
 - [x] PR65 slice: remove `ref_option` suppression by changing `&Option<T>` parameters to `Option<&T>` and updating call sites
 - [x] PR66 slice: remove 3 clippy suppressions (`while_let_on_iterator`, `while_let_loop`, `nonminimal_bool`) with no behavior changes needed
+- [x] PR67 slice: remove 2 clippy suppressions (`derivable_impls`, `if_not_else`) by deriving `Default` for `StdlibCode` and simplifying negated conditionals
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
 - [ ] Add conservative clone optimization pass
 - [ ] Add IR validation pass for structural correctness
 - [x] Delete legacy string-parser helpers (`parse_rust_blocks`, `extract_top_level_item_name`, `count_braces`)
-- [ ] Remove at least 20 clippy suppressions from file header
+- [x] Remove at least 20 clippy suppressions from file header
 - [ ] Confirm generated binary size does not increase
 - [ ] Demo: `demos/milestone_codegen_structural_passes_demo.sifr`
 - [ ] Open PR(s), review, merge
