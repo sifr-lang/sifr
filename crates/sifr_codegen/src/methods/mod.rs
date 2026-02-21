@@ -59,6 +59,9 @@ pub(crate) fn lower_method(
         (Type::Dict(_, _), "update") => dict::lower_update(rendered_object, rendered_args),
         (Type::Dict(_, _), "clear") => dict::lower_clear(rendered_object, rendered_args),
         (Type::Dict(_, _), "copy") => dict::lower_copy(rendered_object, rendered_args),
+        (Type::Dict(_, _), "contains") => dict::lower_contains(rendered_object, rendered_args),
+        (Type::Dict(_, _), "get") => dict::lower_get(rendered_object, rendered_args),
+        (Type::Dict(_, _), "pop") => dict::lower_pop(rendered_object, rendered_args),
         (Type::Set(_), "add") => set::lower_add(rendered_object, rendered_args),
         (Type::Set(_), "remove") => set::lower_remove(rendered_object, rendered_args),
         (Type::Set(_), "discard") => set::lower_discard(rendered_object, rendered_args),
@@ -287,6 +290,34 @@ mod tests {
 
         let dict_copy = lower_method(&dict_ty, "copy", "d", &[]).expect("dict copy lowers");
         assert_eq!(render_expr(&dict_copy.expr), "d.clone()");
+
+        let dict_contains_lit = lower_method(&dict_ty, "contains", "d", &["\"k\"".to_string()])
+            .expect("dict contains literal lowers");
+        assert_eq!(render_expr(&dict_contains_lit.expr), "d.contains_key(&(\"k\"))");
+
+        let dict_contains_name = lower_method(&dict_ty, "contains", "d", &["k".to_string()])
+            .expect("dict contains name lowers");
+        assert_eq!(render_expr(&dict_contains_name.expr), "d.contains_key(&(k))");
+
+        let dict_get_one = lower_method(&dict_ty, "get", "d", &["\"k\"".to_string()])
+            .expect("dict get one lowers");
+        assert_eq!(render_expr(&dict_get_one.expr), "d.get(&(\"k\")).cloned()");
+
+        let dict_get_two = lower_method(
+            &dict_ty,
+            "get",
+            "d",
+            &["\"k\"".to_string(), "0".to_string()],
+        )
+        .expect("dict get default lowers");
+        assert_eq!(
+            render_expr(&dict_get_two.expr),
+            "d.get(&(\"k\")).cloned().unwrap_or(0)"
+        );
+
+        let dict_pop = lower_method(&dict_ty, "pop", "d", &["\"k\"".to_string()])
+            .expect("dict pop lowers");
+        assert_eq!(render_expr(&dict_pop.expr), "d.remove(&(\"k\"))");
 
         let set_ty = Type::Set(Box::new(Type::Int));
         let set_add = lower_method(&set_ty, "add", "s", &["1".to_string()])
