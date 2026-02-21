@@ -203,7 +203,7 @@ pub(crate) fn filter_rust_code_to_needed(
 /// - `impl X {` → key = "impl X"
 /// - `impl Trait for X {` → key = "impl Trait for X"
 ///
-/// The `skip_types` set contains type names (e.g., "IOError") for which ALL items
+/// The `skip_types` set contains type names (e.g., "`IOError`") for which ALL items
 /// (struct, impl, trait impls) should be unconditionally stripped.
 pub(crate) fn dedup_rust_items(
     rust_code: &str,
