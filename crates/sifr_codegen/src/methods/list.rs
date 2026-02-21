@@ -4,11 +4,11 @@ use crate::{RustExpr, RustParam, RustStmt, RustType};
 
 fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
     if arg.ends_with(".as_str()") || arg.starts_with('&') {
-        RustExpr::RawCode(arg.to_string())
+        RustExpr::Ident(arg.to_string())
     } else {
         RustExpr::Ref {
             mutable: false,
-            expr: Box::new(RustExpr::RawCode(format!("({arg})"))),
+            expr: Box::new(RustExpr::Ident(format!("({arg})"))),
         }
     }
 }
@@ -44,10 +44,10 @@ pub(super) fn lower_insert(object: &str, args: &[String]) -> Option<RustExpr> {
         method: "insert".to_string(),
         args: vec![
             RustExpr::Cast {
-                expr: Box::new(RustExpr::RawCode(args[0].clone())),
-                ty: RustType::RawCode("usize".to_string()),
+                expr: Box::new(RustExpr::Ident(args[0].clone())),
+                ty: RustType::Named("usize".to_string()),
             },
-            RustExpr::RawCode(args[1].clone()),
+            RustExpr::Ident(args[1].clone()),
         ],
     })
 }
