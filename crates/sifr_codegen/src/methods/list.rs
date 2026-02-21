@@ -30,28 +30,44 @@ pub(super) fn lower_clear(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.clear()")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "clear".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_copy(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.clone()")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "clone".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_reverse(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.reverse()")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "reverse".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_sort(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.sort()")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "sort".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_count(object: &str, args: &[String]) -> Option<RustExpr> {
@@ -75,7 +91,11 @@ pub(super) fn lower_pop(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.pop()")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "pop".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_remove(object: &str, args: &[String]) -> Option<RustExpr> {
