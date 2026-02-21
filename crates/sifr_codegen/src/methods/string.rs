@@ -316,9 +316,50 @@ pub(super) fn lower_swapcase(object: &str, args: &[String]) -> Option<RustExpr> 
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.chars().map(|c| if c.is_uppercase() {{ c.to_lowercase().to_string() }} else {{ c.to_uppercase().to_string() }}).collect::<String>()"
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "chars".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "c".to_string(),
+                    ty: RustType::RawCode("_".to_string()),
+                }],
+                body: Box::new(RustExpr::If {
+                    cond: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("c".to_string())),
+                        method: "is_uppercase".to_string(),
+                        args: vec![],
+                    }),
+                    then_expr: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("c".to_string())),
+                            method: "to_lowercase".to_string(),
+                            args: vec![],
+                        }),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    }),
+                    else_expr: Some(Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("c".to_string())),
+                            method: "to_uppercase".to_string(),
+                            args: vec![],
+                        }),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    })),
+                }),
+                is_move: false,
+            }],
+        }),
+        method: "collect::<String>".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_isdigit(object: &str, args: &[String]) -> Option<RustExpr> {
