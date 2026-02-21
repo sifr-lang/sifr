@@ -24,6 +24,10 @@ pub(crate) fn lower_method(
         (Type::Str, "split") => string::lower_split(rendered_object, rendered_args),
         (Type::Str, "replace") => string::lower_replace(rendered_object, rendered_args),
         (Type::Str, "find") => string::lower_find(rendered_object, rendered_args),
+        (Type::Str, "lstrip") => string::lower_lstrip(rendered_object, rendered_args),
+        (Type::Str, "rstrip") => string::lower_rstrip(rendered_object, rendered_args),
+        (Type::Str, "count") => string::lower_count(rendered_object, rendered_args),
+        (Type::Str, "join") => string::lower_join(rendered_object, rendered_args),
         _ => return None,
     };
 
@@ -78,5 +82,19 @@ mod tests {
         let find = lower_method(&Type::Str, "find", "s", &["needle".to_string()])
             .expect("find lowers");
         assert_eq!(render_expr(&find.expr), "s.find(&(needle)).map(|i| i as i64)");
+
+        let lstrip = lower_method(&Type::Str, "lstrip", "s", &[]).expect("lstrip lowers");
+        assert_eq!(render_expr(&lstrip.expr), "s.trim_start().to_string()");
+
+        let rstrip = lower_method(&Type::Str, "rstrip", "s", &[]).expect("rstrip lowers");
+        assert_eq!(render_expr(&rstrip.expr), "s.trim_end().to_string()");
+
+        let count = lower_method(&Type::Str, "count", "s", &["needle".to_string()])
+            .expect("count lowers");
+        assert_eq!(render_expr(&count.expr), "s.matches(&(needle)).count() as i64");
+
+        let join =
+            lower_method(&Type::Str, "join", "sep", &["parts".to_string()]).expect("join lowers");
+        assert_eq!(render_expr(&join.expr), "parts.join(&(sep))");
     }
 }
