@@ -359,28 +359,40 @@ pub(super) fn lower_ljust(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "format!(\"{{:<width$}}\", {object}, width = {} as usize)",
-        args[0]
-    )))
+    Some(RustExpr::FormatMacro {
+        name: "format".to_string(),
+        format_str: "{:<width$}".to_string(),
+        args: vec![
+            RustExpr::RawCode(object.to_string()),
+            RustExpr::RawCode(format!("width = {} as usize", args[0])),
+        ],
+    })
 }
 
 pub(super) fn lower_rjust(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "format!(\"{{:>width$}}\", {object}, width = {} as usize)",
-        args[0]
-    )))
+    Some(RustExpr::FormatMacro {
+        name: "format".to_string(),
+        format_str: "{:>width$}".to_string(),
+        args: vec![
+            RustExpr::RawCode(object.to_string()),
+            RustExpr::RawCode(format!("width = {} as usize", args[0])),
+        ],
+    })
 }
 
 pub(super) fn lower_zfill(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "format!(\"{{:0>width$}}\", {object}, width = {} as usize)",
-        args[0]
-    )))
+    Some(RustExpr::FormatMacro {
+        name: "format".to_string(),
+        format_str: "{:0>width$}".to_string(),
+        args: vec![
+            RustExpr::RawCode(object.to_string()),
+            RustExpr::RawCode(format!("width = {} as usize", args[0])),
+        ],
+    })
 }
