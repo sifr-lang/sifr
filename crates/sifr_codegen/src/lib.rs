@@ -10,7 +10,6 @@
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
 #![allow(dead_code)]
-#![allow(clippy::explicit_iter_loop)]
 #![allow(clippy::struct_excessive_bools)]
 
 mod rust_ir;
@@ -249,7 +248,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                 }
                 // Also load class method signatures (ClassName::method entries)
                 let prefix = format!("{}::", name);
-                for (key, sig) in sig_map.iter() {
+                for (key, sig) in sig_map {
                     if key.starts_with(&prefix) {
                         emitter.func_signatures.insert(key.clone(), sig.clone());
                     }
@@ -258,7 +257,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             // Load class method signatures for classes returned by imported functions.
             // This handles cases like `compile_flags` returning `Pattern` - we need
             // `Pattern::search` etc. to be available for correct borrow prefix emission.
-            for (key, sig) in sig_map.iter() {
+            for (key, sig) in sig_map {
                 if key.contains("::") && !emitter.func_signatures.contains_key(key) {
                     emitter.func_signatures.insert(key.clone(), sig.clone());
                 }
