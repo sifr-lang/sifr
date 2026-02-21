@@ -109,6 +109,28 @@ status: in_progress
 - [x] PR15 slice: migrate `sifr.time` intrinsics (`time_now`, `sleep`, `time_format`, `perf_counter`, `monotonic`, `strptime`, `gmtime`, `localtime`) into registry lowerers
 - [x] PR16 slice: migrate `sifr.random` intrinsics (`random_int`, `random_float`, `random_choice`, `random_uniform`, `random_shuffle`, `random_sample`, `random_randrange`, `random_gauss`) into registry lowerers
 - [x] PR17 slice: migrate `sifr.re` intrinsics (core and flags variants) into registry lowerers
+- [x] PR18 slice: migrate `sifr.hash` intrinsics (`sha256`, `md5`) into registry lowerers
+- [x] PR19 slice: migrate `sifr.platform` intrinsics (`platform_system`, `platform_arch`, `platform_node`, `platform_release`, `platform_version`, `platform_processor`) into registry lowerers
+- [x] PR20 slice: migrate `sifr.uuid` intrinsic (`uuid4`) into registry lowerers
+- [x] PR21 slice: migrate `sifr.toml` intrinsic (`toml_parse`) into registry lowerers
+- [x] PR22 slice: migrate `sifr.datetime` intrinsics (`datetime_now`, `datetime_now_struct`, `datetime_format`, `datetime_from_timestamp`) into registry lowerers
+- [x] PR23 slice: migrate `sifr.sys` intrinsics (`sys_exit`, `sys_version`, `sys_platform`, `sys_maxsize`) into registry lowerers
+- [x] PR24 slice: migrate `sifr.subprocess` intrinsics (`subprocess_run`, `subprocess_run_with_input`, `subprocess_run_structured`) into registry lowerers
+- [x] PR25 slice: migrate `sifr.html` intrinsics (`html_escape`, `html_unescape`) into registry lowerers
+- [x] PR26 slice: migrate `sifr.calendar` intrinsics (`calendar_isleap`, `calendar_weekday`, `calendar_monthrange`) into registry lowerers
+- [x] PR27 slice: migrate `sifr.gzip` intrinsics (`gzip_compress`, `gzip_decompress`) into registry lowerers
+- [x] PR28 slice: migrate `sifr.zipfile` intrinsics (`zip_create`, `zip_add_file`, `zip_read_file`, `zip_namelist`) into registry lowerers
+- [x] PR29 slice: migrate core `sifr.base64` intrinsics (`base64_encode`, `base64_decode`, `base64_encode_opts`, `base64_decode_opts`, `urlsafe_b64encode`, `urlsafe_b64decode`) into registry lowerers
+- [x] PR30 slice: migrate remaining `sifr.base64` intrinsics (`b32encode`, `b32decode`, `b32hexencode`, `b32hexdecode`) into registry lowerers
+- [x] PR31 slice: migrate `sifr.hashlib` intrinsics (`sha1`, `sha512`, `sha224`, `sha384`, `blake2b`, `blake2s`) into registry lowerers
+- [x] PR32 slice: migrate remaining `_sifr.fs` OS-adjacent intrinsics (`disk_usage`, `os_sep`, `os_linesep`, `os_name`) into registry lowerers
+- [x] PR33 slice: migrate legacy `_sifr.time` compatibility intrinsics (`time_strptime`, `time_gmtime`, `time_localtime`) into registry lowerers
+- [x] PR34 slice: migrate remaining `sifr.pathlib` glob intrinsics (`glob_pattern`, `rglob_pattern`) into registry lowerers
+- [x] PR35 slice: add `chrono` dependency metadata for all registry-backed time intrinsics and compatibility aliases
+- [x] PR36 slice: add dependency metadata for registry intrinsics using `rand`, `sha2`, and `md5`
+- [x] PR37 slice: add `regex` dependency metadata for all registry-backed `sifr.re` intrinsics
+- [x] PR38 slice: add supplemental dependency metadata plumbing (`random_gauss` now declares `rand_distr`)
+- [x] PR39 slice: add method-registry scaffold and route `str.upper/lower/strip` through registry-first lowering
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
