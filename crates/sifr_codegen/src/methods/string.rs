@@ -184,3 +184,43 @@ pub(super) fn lower_islower(object: &str, args: &[String]) -> Option<RustExpr> {
         "{object}.chars().any(|c| c.is_alphabetic()) && {object}.chars().filter(|c| c.is_alphabetic()).all(|c| c.is_lowercase())"
     )))
 }
+
+pub(super) fn lower_center(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let _s = ({object}).clone(); let _w = {} as usize; let _len = _s.chars().count(); if _len >= _w {{ _s }} else {{ let _pad = _w - _len; let _left = _pad / 2; let _right = _pad - _left; format!(\"{{}}{{}}{{}}\", \" \".repeat(_left), _s, \" \".repeat(_right)) }} }}",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_ljust(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "format!(\"{{:<width$}}\", {object}, width = {} as usize)",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_rjust(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "format!(\"{{:>width$}}\", {object}, width = {} as usize)",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_zfill(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "format!(\"{{:0>width$}}\", {object}, width = {} as usize)",
+        args[0]
+    )))
+}
