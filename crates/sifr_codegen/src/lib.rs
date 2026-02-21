@@ -52,6 +52,7 @@ pub use lower_stmt::*;
 mod lower_item;
 pub use lower_item::*;
 mod intrinsics;
+mod methods;
 
 use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};
@@ -4948,6 +4949,9 @@ impl RustEmitter {
             self.suppress_field_clone = true;
         }
         let obj_ty = object.ty();
+        if self.try_emit_method_via_registry(obj_ty, object, method, args) {
+            return;
+        }
         match (obj_ty, method) {
             // String methods
             (Type::Str, "upper") => {
@@ -8307,6 +8311,24 @@ impl RustEmitter {
                 .insert(required_crate.to_string());
         }
 
+        self.write(&crate::render_expr(&lowered.expr));
+        true
+    }
+
+    fn try_emit_method_via_registry(
+        &mut self,
+        object_ty: &Type,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+    ) -> bool {
+        let rendered_object = self.expr_to_string(object);
+        let rendered_args = args.iter().map(|arg| self.expr_to_string(arg)).collect::<Vec<_>>();
+        let Some(lowered) =
+            methods::lower_method(object_ty, method, &rendered_object, &rendered_args)
+        else {
+            return false;
+        };
         self.write(&crate::render_expr(&lowered.expr));
         true
     }
