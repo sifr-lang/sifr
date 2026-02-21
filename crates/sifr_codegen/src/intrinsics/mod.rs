@@ -12,6 +12,7 @@ mod bytes;
 mod time;
 mod random;
 mod re;
+mod hash;
 
 use crate::RustExpr;
 
@@ -171,6 +172,8 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "re_replace_flags" => (re::lower_re_replace_flags(rendered_args), None),
         "re_findall_flags" => (re::lower_re_findall_flags(rendered_args), None),
         "re_split_flags" => (re::lower_re_split_flags(rendered_args), None),
+        "sha256" => (hash::lower_sha256(rendered_args), None),
+        "md5" => (hash::lower_md5(rendered_args), None),
         _ => return None,
     };
 
@@ -486,5 +489,16 @@ mod tests {
         )
         .expect("re_replace_flags");
         assert!(render_expr(&rf.expr).contains("replace_all"));
+    }
+
+    #[test]
+    fn lowers_hash_intrinsics_via_registry() {
+        let sha = lower_intrinsic("sha256", &["payload".to_string()]).expect("sha256");
+        assert!(render_expr(&sha.expr).contains("sha2::Sha256::digest"));
+        assert!(render_expr(&sha.expr).contains(".as_bytes()"));
+
+        let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
+        assert!(render_expr(&md5.expr).contains("md5::compute"));
+        assert!(render_expr(&md5.expr).contains(".as_bytes()"));
     }
 }
