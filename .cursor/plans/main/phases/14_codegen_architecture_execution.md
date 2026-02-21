@@ -220,6 +220,7 @@ status: in_progress
 - [x] PR110 slice: continue RawCode-zero gate by replacing list closure placeholder type `RawCode(\"_\")` with structured `Named(\"_\")`
 - [x] PR111 slice: continue RawCode-zero gate by replacing list predicate/index compare-right `RawCode` with structured `Ident` (`count`, `remove`, `index`)
 - [x] PR112 slice: continue RawCode-zero gate by replacing simple `sys` intrinsic `RawCode` returns with structured IR (`sys.version`, `sys.platform`, `sys.maxsize`)
+- [x] PR113 slice: continue RawCode-zero gate by replacing simple `platform` const-return `RawCode` with structured path+call IR (`platform.system`, `platform.arch`, `platform.processor`)
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
