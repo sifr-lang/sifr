@@ -57,7 +57,11 @@ mod stdlib_filter;
 
 use sifr_hir::*;
 use sifr_type_system::{Type, ParamConvention};
-use stdlib_filter::{dedup_rust_items, filter_rust_code_to_needed};
+use stdlib_filter::{
+    collect_and_strip_shared_prelude,
+    dedup_rust_items,
+    filter_rust_code_to_needed,
+};
 use std::collections::{HashMap, HashSet};
 
 /// Built-in error class names that the compiler provides.
@@ -367,73 +371,12 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     rust_code.clone()
                 };
                 if !filtered.trim().is_empty() {
-                    // Track and strip per-module use imports; they'll be emitted once at the top
-                    if filtered.contains("use std::collections::HashMap;") {
-                        stdlib_needs_hashmap = true;
-                    }
-                    if filtered.contains("use std::collections::HashSet;") {
-                        stdlib_needs_hashset = true;
-                    }
-                    if filtered.contains("use std::collections::VecDeque;") {
-                        stdlib_needs_vecdeque = true;
-                    }
-                    // Track if any stdlib module needs file handle infrastructure
-                    if filtered.contains("__SIFR_FILE_HANDLES") {
-                        stdlib_needs_file_handles = true;
-                    }
-                    // Strip per-module imports and file handle infrastructure (emitted once at top)
-                    let stripped: String = {
-                        let mut in_file_handle_block = false;
-                        let mut skip_next_blank = false;
-                        let mut skip_file_handle_continuation = false;
-                        let mut lines_out: Vec<&str> = Vec::new();
-                        for line in filtered.lines() {
-                            let t = line.trim();
-                            // Skip use imports
-                            if t == "use std::collections::HashMap;"
-                                || t == "use std::collections::HashSet;"
-                                || t == "use std::collections::VecDeque;"
-                                || t == "use std::sync::Mutex;"
-                            {
-                                continue;
-                            }
-                            // Skip file handle infrastructure block (SifrFileHandle enum)
-                            if t.starts_with("enum SifrFileHandle {") {
-                                in_file_handle_block = true;
-                                continue;
-                            }
-                            if in_file_handle_block {
-                                if t == "}" {
-                                    in_file_handle_block = false;
-                                    skip_next_blank = true;
-                                }
-                                continue;
-                            }
-                            // Skip __SIFR_FILE_HANDLES static declaration (multi-line)
-                            if t.starts_with("static __SIFR_FILE_HANDLES:") {
-                                skip_file_handle_continuation = true;
-                                skip_next_blank = true;
-                                continue;
-                            }
-                            // Skip __SIFR_GLOBAL_LOG_LEVEL static declaration (multi-line)
-                            if t.starts_with("static __SIFR_GLOBAL_LOG_LEVEL:") {
-                                skip_file_handle_continuation = true;
-                                skip_next_blank = true;
-                                continue;
-                            }
-                            if skip_file_handle_continuation {
-                                skip_file_handle_continuation = false;
-                                continue;
-                            }
-                            if skip_next_blank && t.is_empty() {
-                                skip_next_blank = false;
-                                continue;
-                            }
-                            skip_next_blank = false;
-                            lines_out.push(line);
-                        }
-                        lines_out.join("\n")
-                    };
+                    let prepared = collect_and_strip_shared_prelude(&filtered);
+                    stdlib_needs_hashmap |= prepared.shared_needs.needs_hashmap;
+                    stdlib_needs_hashset |= prepared.shared_needs.needs_hashset;
+                    stdlib_needs_vecdeque |= prepared.shared_needs.needs_vecdeque;
+                    stdlib_needs_file_handles |= prepared.shared_needs.needs_file_handles;
+                    let stripped = prepared.stripped_code;
                     if !stripped.trim().is_empty() {
                         let deduped = dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
                         if !deduped.trim().is_empty() {
