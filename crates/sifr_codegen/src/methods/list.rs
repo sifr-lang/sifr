@@ -1,6 +1,6 @@
 //! List method lowerers for registry migration.
 
-use crate::{RustExpr, RustType};
+use crate::{RustExpr, RustParam, RustType};
 
 pub(super) fn lower_append(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
@@ -134,8 +134,40 @@ pub(super) fn lower_index(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.iter().position(|__x| *__x == {}).map(|__p| __p as i64)",
-        args[0]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "iter".to_string(),
+                args: vec![],
+            }),
+            method: "position".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "__x".to_string(),
+                    ty: RustType::RawCode("_".to_string()),
+                }],
+                body: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                        "__x".to_string(),
+                    )))),
+                    op: "==".to_string(),
+                    right: Box::new(RustExpr::RawCode(args[0].clone())),
+                }),
+                is_move: false,
+            }],
+        }),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "__p".to_string(),
+                ty: RustType::RawCode("_".to_string()),
+            }],
+            body: Box::new(RustExpr::Cast {
+                expr: Box::new(RustExpr::Ident("__p".to_string())),
+                ty: RustType::I64,
+            }),
+            is_move: false,
+        }],
+    })
 }
