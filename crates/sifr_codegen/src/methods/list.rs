@@ -92,7 +92,14 @@ pub(super) fn lower_contains(object: &str, args: &[String]) -> Option<RustExpr> 
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.contains(&{})", args[0])))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "contains".to_string(),
+        args: vec![RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::RawCode(args[0].clone())),
+        }],
+    })
 }
 
 pub(super) fn lower_pop(object: &str, args: &[String]) -> Option<RustExpr> {
