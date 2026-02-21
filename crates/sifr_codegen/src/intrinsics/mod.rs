@@ -162,18 +162,18 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "bytes_from_hex" => (bytes::lower_bytes_from_hex(rendered_args), None),
         "time_now" => (time::lower_time_now(rendered_args), None),
         "sleep" => (time::lower_sleep(rendered_args), None),
-        "time_format" => (time::lower_time_format(rendered_args), None),
+        "time_format" => (time::lower_time_format(rendered_args), Some("chrono")),
         "perf_counter" => (time::lower_perf_counter(rendered_args), None),
         "monotonic" => (time::lower_monotonic(rendered_args), None),
-        "strptime" => (time::lower_strptime(rendered_args), None),
-        "gmtime" => (time::lower_gmtime(rendered_args), None),
-        "localtime" => (time::lower_localtime(rendered_args), None),
-        "_strptime_intrinsic" => (time::lower_strptime(rendered_args), None),
-        "_gmtime_intrinsic" => (time::lower_gmtime(rendered_args), None),
-        "_localtime_intrinsic" => (time::lower_localtime(rendered_args), None),
-        "time_strptime" => (time::lower_time_strptime_compat(rendered_args), None),
-        "time_gmtime" => (time::lower_time_gmtime_compat(rendered_args), None),
-        "time_localtime" => (time::lower_time_localtime_compat(rendered_args), None),
+        "strptime" => (time::lower_strptime(rendered_args), Some("chrono")),
+        "gmtime" => (time::lower_gmtime(rendered_args), Some("chrono")),
+        "localtime" => (time::lower_localtime(rendered_args), Some("chrono")),
+        "_strptime_intrinsic" => (time::lower_strptime(rendered_args), Some("chrono")),
+        "_gmtime_intrinsic" => (time::lower_gmtime(rendered_args), Some("chrono")),
+        "_localtime_intrinsic" => (time::lower_localtime(rendered_args), Some("chrono")),
+        "time_strptime" => (time::lower_time_strptime_compat(rendered_args), Some("chrono")),
+        "time_gmtime" => (time::lower_time_gmtime_compat(rendered_args), Some("chrono")),
+        "time_localtime" => (time::lower_time_localtime_compat(rendered_args), Some("chrono")),
         "random_int" => (random::lower_random_int(rendered_args), None),
         "random_float" => (random::lower_random_float(rendered_args), None),
         "random_choice" => (random::lower_random_choice(rendered_args), None),
@@ -480,6 +480,7 @@ mod tests {
 
         let fmt = lower_intrinsic("time_format", &["secs".to_string(), "mask".to_string()])
             .expect("time_format");
+        assert_eq!(fmt.required_crate, Some("chrono"));
         assert!(render_expr(&fmt.expr).contains("DateTime::from_timestamp"));
 
         let perf = lower_intrinsic("perf_counter", &[]).expect("perf_counter");
@@ -490,27 +491,34 @@ mod tests {
 
         let parse =
             lower_intrinsic("strptime", &["s".to_string(), "f".to_string()]).expect("strptime");
+        assert_eq!(parse.required_crate, Some("chrono"));
         assert!(render_expr(&parse.expr).contains("NaiveDateTime::parse_from_str"));
 
         let gmt = lower_intrinsic("gmtime", &["ts".to_string()]).expect("gmtime");
+        assert_eq!(gmt.required_crate, Some("chrono"));
         assert!(render_expr(&gmt.expr).contains("DateTime::<Utc>::from_timestamp"));
 
         let local = lower_intrinsic("localtime", &["ts".to_string()]).expect("localtime");
+        assert_eq!(local.required_crate, Some("chrono"));
         assert!(render_expr(&local.expr).contains("with_timezone(&Local)"));
 
         let parse_alias = lower_intrinsic("_strptime_intrinsic", &["s".to_string(), "f".to_string()])
             .expect("_strptime_intrinsic");
+        assert_eq!(parse_alias.required_crate, Some("chrono"));
         assert!(render_expr(&parse_alias.expr).contains("NaiveDateTime::parse_from_str"));
 
         let compat_parse =
             lower_intrinsic("time_strptime", &["s".to_string(), "f".to_string()])
                 .expect("time_strptime");
+        assert_eq!(compat_parse.required_crate, Some("chrono"));
         assert!(render_expr(&compat_parse.expr).contains("Result<Vec<i64>, ValueError>"));
 
         let compat_gmt = lower_intrinsic("time_gmtime", &[]).expect("time_gmtime");
+        assert_eq!(compat_gmt.required_crate, Some("chrono"));
         assert!(render_expr(&compat_gmt.expr).contains("Utc::now().naive_utc()"));
 
         let compat_local = lower_intrinsic("time_localtime", &[]).expect("time_localtime");
+        assert_eq!(compat_local.required_crate, Some("chrono"));
         assert!(render_expr(&compat_local.expr).contains("Local::now().naive_local()"));
     }
 
