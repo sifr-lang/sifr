@@ -305,11 +305,177 @@ pub(super) fn lower_time_strptime_compat(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "(|| -> Result<Vec<i64>, ValueError> {{ let __s = {}; let __fmt = {}; chrono::NaiveDateTime::parse_from_str(__s, __fmt).map(|dt| {{ use chrono::Datelike; use chrono::Timelike; vec![dt.year() as i64, dt.month() as i64, dt.day() as i64, dt.hour() as i64, dt.minute() as i64, dt.second() as i64, dt.weekday().num_days_from_monday() as i64, dt.ordinal() as i64] }}).map_err(|e| ValueError {{ message: e.to_string() }}) }})()",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1])
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__parsed".to_string(),
+            ty: Some(RustType::Result(
+                Box::new(RustType::Vec(Box::new(RustType::I64))),
+                Box::new(RustType::Named("ValueError".to_string())),
+            )),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "chrono".to_string(),
+                            "NaiveDateTime".to_string(),
+                            "parse_from_str".to_string(),
+                        ])),
+                        args: vec![
+                            RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                            },
+                            RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                            },
+                        ],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "dt".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Vec(vec![
+                            RustExpr::Cast {
+                                expr: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "chrono".to_string(),
+                                        "Datelike".to_string(),
+                                        "year".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Ident("dt".to_string())),
+                                    }],
+                                }),
+                                ty: RustType::I64,
+                            },
+                            RustExpr::Cast {
+                                expr: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "chrono".to_string(),
+                                        "Datelike".to_string(),
+                                        "month".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Ident("dt".to_string())),
+                                    }],
+                                }),
+                                ty: RustType::I64,
+                            },
+                            RustExpr::Cast {
+                                expr: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "chrono".to_string(),
+                                        "Datelike".to_string(),
+                                        "day".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Ident("dt".to_string())),
+                                    }],
+                                }),
+                                ty: RustType::I64,
+                            },
+                            RustExpr::Cast {
+                                expr: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "chrono".to_string(),
+                                        "Timelike".to_string(),
+                                        "hour".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Ident("dt".to_string())),
+                                    }],
+                                }),
+                                ty: RustType::I64,
+                            },
+                            RustExpr::Cast {
+                                expr: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "chrono".to_string(),
+                                        "Timelike".to_string(),
+                                        "minute".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Ident("dt".to_string())),
+                                    }],
+                                }),
+                                ty: RustType::I64,
+                            },
+                            RustExpr::Cast {
+                                expr: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "chrono".to_string(),
+                                        "Timelike".to_string(),
+                                        "second".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Ident("dt".to_string())),
+                                    }],
+                                }),
+                                ty: RustType::I64,
+                            },
+                            RustExpr::Cast {
+                                expr: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("dt".to_string())),
+                                        method: "weekday".to_string(),
+                                        args: vec![],
+                                    }),
+                                    method: "num_days_from_monday".to_string(),
+                                    args: vec![],
+                                }),
+                                ty: RustType::I64,
+                            },
+                            RustExpr::Cast {
+                                expr: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "chrono".to_string(),
+                                        "Datelike".to_string(),
+                                        "ordinal".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Ident("dt".to_string())),
+                                    }],
+                                }),
+                                ty: RustType::I64,
+                            },
+                        ])),
+                        is_move: false,
+                    }],
+                }),
+                method: "map_err".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "e".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::StructInit {
+                        name: "ValueError".to_string(),
+                        fields: vec![(
+                            "message".to_string(),
+                            RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("e".to_string())),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            },
+                        )],
+                    }),
+                    is_move: false,
+                }],
+            },
+        }],
+        expr: Some(Box::new(RustExpr::Ident("__parsed".to_string()))),
+    })
 }
 
 pub(super) fn lower_time_gmtime_compat(args: &[String]) -> Option<RustExpr> {
