@@ -250,6 +250,7 @@ status: in_progress
 - [x] PR140 slice: continue RawCode-zero gate by replacing `counter_total` `RawCode` with structured block/let/method-call IR
 - [x] PR141 slice: continue RawCode-zero gate by replacing `counter_values` `RawCode` with structured block/let/method-call IR
 - [x] PR142 slice: continue RawCode-zero gate by replacing `counter_keys` `RawCode` with structured block/let/method-call IR
+- [x] PR143 slice: continue RawCode-zero gate by replacing `counter_increment` `RawCode` with structured block/aug-assign/serialize IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
