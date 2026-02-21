@@ -131,6 +131,7 @@ status: in_progress
 - [x] PR37 slice: add `regex` dependency metadata for all registry-backed `sifr.re` intrinsics
 - [x] PR38 slice: add supplemental dependency metadata plumbing (`random_gauss` now declares `rand_distr`)
 - [x] PR39 slice: add method-registry scaffold and route `str.upper/lower/strip` through registry-first lowering
+- [x] PR40 slice: expand method-registry coverage for string methods (`startswith`, `endswith`, `split`)
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
