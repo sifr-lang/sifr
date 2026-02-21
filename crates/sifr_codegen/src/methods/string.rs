@@ -2,25 +2,42 @@
 
 use crate::RustExpr;
 
-pub(super) fn lower_upper(object: &str, args: &[String]) -> Option<RustExpr> {
+fn lower_zero_arg_method(object: &str, args: &[String], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.to_uppercase()")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: method.to_string(),
+        args: vec![],
+    })
+}
+
+fn lower_trim_to_string(object: &str, args: &[String], trim_method: &str) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(object.to_string())),
+            method: trim_method.to_string(),
+            args: vec![],
+        }),
+        method: "to_string".to_string(),
+        args: vec![],
+    })
+}
+
+pub(super) fn lower_upper(object: &str, args: &[String]) -> Option<RustExpr> {
+    lower_zero_arg_method(object, args, "to_uppercase")
 }
 
 pub(super) fn lower_lower(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!("{object}.to_lowercase()")))
+    lower_zero_arg_method(object, args, "to_lowercase")
 }
 
 pub(super) fn lower_strip(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!("{object}.trim().to_string()")))
+    lower_trim_to_string(object, args, "trim")
 }
 
 pub(super) fn lower_startswith(object: &str, args: &[String]) -> Option<RustExpr> {
@@ -74,17 +91,11 @@ pub(super) fn lower_find(object: &str, args: &[String]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_lstrip(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!("{object}.trim_start().to_string()")))
+    lower_trim_to_string(object, args, "trim_start")
 }
 
 pub(super) fn lower_rstrip(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!("{object}.trim_end().to_string()")))
+    lower_trim_to_string(object, args, "trim_end")
 }
 
 pub(super) fn lower_count(object: &str, args: &[String]) -> Option<RustExpr> {
