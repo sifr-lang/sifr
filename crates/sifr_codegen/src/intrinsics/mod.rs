@@ -24,6 +24,7 @@ mod calendar;
 mod gzip;
 mod zipfile;
 mod base64;
+mod base32;
 
 use crate::RustExpr;
 
@@ -230,6 +231,10 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "base64_decode_opts" => (base64::lower_base64_decode_opts(rendered_args), Some("base64")),
         "urlsafe_b64encode" => (base64::lower_urlsafe_b64encode(rendered_args), Some("base64")),
         "urlsafe_b64decode" => (base64::lower_urlsafe_b64decode(rendered_args), Some("base64")),
+        "b32encode" => (base32::lower_b32encode(rendered_args), None),
+        "b32decode" => (base32::lower_b32decode(rendered_args), None),
+        "b32hexencode" => (base32::lower_b32hexencode(rendered_args), None),
+        "b32hexdecode" => (base32::lower_b32hexdecode(rendered_args), None),
         _ => return None,
     };
 
@@ -753,5 +758,20 @@ mod tests {
             lower_intrinsic("urlsafe_b64decode", &["s".to_string()]).expect("urlsafe_b64decode");
         assert_eq!(url_dec.required_crate, Some("base64"));
         assert!(render_expr(&url_dec.expr).contains("general_purpose::URL_SAFE.decode"));
+    }
+
+    #[test]
+    fn lowers_base32_intrinsics_via_registry() {
+        let b32e = lower_intrinsic("b32encode", &["s".to_string()]).expect("b32encode");
+        assert!(render_expr(&b32e.expr).contains("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"));
+
+        let b32d = lower_intrinsic("b32decode", &["s".to_string()]).expect("b32decode");
+        assert!(render_expr(&b32d.expr).contains("invalid base32 char"));
+
+        let b32he = lower_intrinsic("b32hexencode", &["s".to_string()]).expect("b32hexencode");
+        assert!(render_expr(&b32he.expr).contains("0123456789ABCDEFGHIJKLMNOPQRSTUV"));
+
+        let b32hd = lower_intrinsic("b32hexdecode", &["s".to_string()]).expect("b32hexdecode");
+        assert!(render_expr(&b32hd.expr).contains("invalid base32hex char"));
     }
 }
