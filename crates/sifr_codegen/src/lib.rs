@@ -5,7 +5,6 @@
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::format_push_string)]
-#![allow(clippy::type_complexity)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
@@ -48,6 +47,13 @@ use stdlib_filter::{
     filter_rust_code_to_needed,
 };
 use std::collections::{HashMap, HashSet};
+
+type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
+type ModuleFuncSignatures = HashMap<String, FuncSignature>;
+type StdlibFuncSignatures = HashMap<String, ModuleFuncSignatures>;
+type UnionVariantTypes = Vec<(String, Type)>;
+type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
+type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
 /// Built-in error class names that the compiler provides.
 const BUILTIN_ERROR_CLASSES: &[&str] = &[
@@ -195,7 +201,7 @@ pub struct StdlibCode {
     pub module_constants: HashMap<String, HashMap<String, (Type, String)>>,
     /// Map of module_name -> (func_name -> (param_types_with_conventions, return_type))
     /// for pure Sifr stdlib functions. Used to emit correct borrow prefixes at call sites.
-    pub func_signatures: HashMap<String, HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>,
+    pub func_signatures: StdlibFuncSignatures,
     /// Map of module_name -> set of transitive intrinsic module dependencies.
     /// E.g., sifr.secrets depends on _sifr.crypto, so when user imports sifr.secrets,
     /// the Cargo dependencies for _sifr.crypto (rand) must be included.
@@ -7865,7 +7871,7 @@ fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
 
 /// Detect `isinstance(x, type)` where x is a non-Option union type.
 /// Returns (var_name, variant_name, enum_name, other_variants: Vec<(variant_name, type)>).
-fn detect_isinstance_union(expr: &HirExpr) -> Option<(String, String, String, Vec<(String, Type)>)> {
+fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionMatch> {
     if let HirExpr::Call { func, args, .. } = expr {
         if func == "isinstance" && args.len() == 2 {
             if let HirExpr::Name { name, ty } = &args[0] {
@@ -7948,7 +7954,7 @@ fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
 
 /// Detect `x is None` pattern for 3+ member unions containing None.
 /// Returns (var_name, enum_name, non_none_variants).
-fn detect_is_none_union_var(expr: &HirExpr) -> Option<(String, String, Vec<(String, Type)>)> {
+fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatch> {
     if let HirExpr::Compare { left, ops, comparators, .. } = expr {
         if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
             if let HirExpr::Name { name, ty } = left.as_ref() {
@@ -8386,13 +8392,13 @@ fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
     mutated
 }
 
-fn collect_mutated_vars_with_sigs(stmts: &[HirStmt], func_signatures: &HashMap<String, (Vec<(Type, ParamConvention)>, Type)>) -> HashSet<String> {
+fn collect_mutated_vars_with_sigs(stmts: &[HirStmt], func_signatures: &ModuleFuncSignatures) -> HashSet<String> {
     let mut mutated = HashSet::new();
     collect_mutated_vars_inner(stmts, &mut mutated, Some(func_signatures));
     mutated
 }
 
-fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, func_signatures: Option<&HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>) {
+fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, func_signatures: Option<&ModuleFuncSignatures>) {
     for stmt in stmts {
         match stmt {
             HirStmt::Assign { name, .. } => {
@@ -8470,7 +8476,7 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, 
     }
 }
 
-fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>, func_signatures: Option<&HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>) {
+fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>, func_signatures: Option<&ModuleFuncSignatures>) {
     match expr {
         HirExpr::MethodCall { object, method, args, .. } => {
             if MUTATING_METHODS.contains(&method.as_str()) {
