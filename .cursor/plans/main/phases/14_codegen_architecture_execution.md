@@ -116,6 +116,7 @@ status: in_progress
 - [x] PR22 slice: migrate `sifr.datetime` intrinsics (`datetime_now`, `datetime_now_struct`, `datetime_format`, `datetime_from_timestamp`) into registry lowerers
 - [x] PR23 slice: migrate `sifr.sys` intrinsics (`sys_exit`, `sys_version`, `sys_platform`, `sys_maxsize`) into registry lowerers
 - [x] PR24 slice: migrate `sifr.subprocess` intrinsics (`subprocess_run`, `subprocess_run_with_input`, `subprocess_run_structured`) into registry lowerers
+- [x] PR25 slice: migrate `sifr.html` intrinsics (`html_escape`, `html_unescape`) into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
