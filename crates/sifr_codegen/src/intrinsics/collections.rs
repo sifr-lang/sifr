@@ -255,10 +255,61 @@ pub(super) fn lower_counter_from_list(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let mut counts = std::collections::HashMap::<String, i64>::new(); for item in {}.iter() {{ *counts.entry(item.clone()).or_insert(0) += 1; }} serde_json::to_string(&counts).unwrap_or_default() }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "counts".to_string(),
+                ty: None,
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "collections".to_string(),
+                        "HashMap::<String, i64>".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![],
+                },
+            },
+            RustStmt::For {
+                var: "item".to_string(),
+                iter: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                    method: "iter".to_string(),
+                    args: vec![],
+                },
+                body: vec![RustStmt::AugAssign {
+                    target: RustExpr::Deref(Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("counts".to_string())),
+                            method: "entry".to_string(),
+                            args: vec![RustExpr::Clone(Box::new(RustExpr::Ident(
+                                "item".to_string(),
+                            )))],
+                        }),
+                        method: "or_insert".to_string(),
+                        args: vec![RustExpr::Literal(crate::RustLiteral::Int(0))],
+                    })),
+                    op: "+".to_string(),
+                    value: RustExpr::Literal(crate::RustLiteral::Int(1)),
+                }],
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "serde_json".to_string(),
+                    "to_string".to_string(),
+                ])),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident("counts".to_string())),
+                }],
+            }),
+            method: "unwrap_or_default".to_string(),
+            args: vec![],
+        })),
+    })
 }
 
 pub(super) fn lower_counter_get(args: &[String]) -> Option<RustExpr> {
