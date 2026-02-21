@@ -2,18 +2,28 @@
 
 use crate::RustExpr;
 
-pub(super) fn lower_platform_system(args: &[String]) -> Option<RustExpr> {
+fn lower_const_to_string(args: &[String], constant: &str) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode("std::env::consts::OS.to_string()".to_string()))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Path(vec![
+            "std".to_string(),
+            "env".to_string(),
+            "consts".to_string(),
+            constant.to_string(),
+        ])),
+        method: "to_string".to_string(),
+        args: vec![],
+    })
+}
+
+pub(super) fn lower_platform_system(args: &[String]) -> Option<RustExpr> {
+    lower_const_to_string(args, "OS")
 }
 
 pub(super) fn lower_platform_arch(args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode("std::env::consts::ARCH.to_string()".to_string()))
+    lower_const_to_string(args, "ARCH")
 }
 
 pub(super) fn lower_platform_node(args: &[String]) -> Option<RustExpr> {
@@ -44,8 +54,5 @@ pub(super) fn lower_platform_version(args: &[String]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_platform_processor(args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode("std::env::consts::ARCH.to_string()".to_string()))
+    lower_const_to_string(args, "ARCH")
 }
