@@ -145,6 +145,7 @@ status: in_progress
 - [x] PR51 slice: remove driver bigint string-scanning dependency detection and plumb codegen-reported `required_crates` (`HashSet<String>`) into Cargo dependency generation
 - [x] PR52 slice: prune legacy `Type::Str` fallback branches from `emit_method_call` now that string methods are registry-backed
 - [x] PR53 slice: prune legacy list/dict/set fallback branches from `emit_method_call` where registry-backed lowering now applies (deque-specific branches retained)
+- [x] PR54 slice: extract stdlib Rust filtering/dedup helpers from `lib.rs` into `stdlib_filter.rs` to continue codegen decomposition
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
