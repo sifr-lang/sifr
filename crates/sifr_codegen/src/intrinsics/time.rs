@@ -127,11 +127,65 @@ pub(super) fn lower_strptime(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "(|| -> Result<String, ValueError> {{ use chrono::NaiveDateTime; let __s = {}; let __fmt = {}; NaiveDateTime::parse_from_str(__s, __fmt).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).map_err(|e| ValueError {{ message: e.to_string() }}) }})()",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1])
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "chrono".to_string(),
+                    "NaiveDateTime".to_string(),
+                    "parse_from_str".to_string(),
+                ])),
+                args: vec![
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                    },
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                    },
+                ],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "dt".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("dt".to_string())),
+                        method: "format".to_string(),
+                        args: vec![RustExpr::Literal(RustLiteral::Str(
+                            "%Y-%m-%dT%H:%M:%S".to_string(),
+                        ))],
+                    }),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                }),
+                is_move: false,
+            }],
+        }),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "e".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::StructInit {
+                name: "ValueError".to_string(),
+                fields: vec![(
+                    "message".to_string(),
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("e".to_string())),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    },
+                )],
+            }),
+            is_move: false,
+        }],
+    })
 }
 
 pub(super) fn lower_gmtime(args: &[String]) -> Option<RustExpr> {
