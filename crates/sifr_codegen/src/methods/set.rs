@@ -6,7 +6,11 @@ pub(super) fn lower_add(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.insert({})", args[0])))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "insert".to_string(),
+        args: vec![RustExpr::RawCode(args[0].clone())],
+    })
 }
 
 pub(super) fn lower_remove(object: &str, args: &[String]) -> Option<RustExpr> {
