@@ -6,20 +6,26 @@ pub(super) fn lower_assert_eq(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "assert_eq!({}, {})",
-        args[0], args[1]
-    )))
+    Some(RustExpr::MacroCall {
+        name: "assert_eq".to_string(),
+        args: vec![
+            RustExpr::Ident(args[0].clone()),
+            RustExpr::Ident(args[1].clone()),
+        ],
+    })
 }
 
 pub(super) fn lower_assert_ne(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "assert_ne!({}, {})",
-        args[0], args[1]
-    )))
+    Some(RustExpr::MacroCall {
+        name: "assert_ne".to_string(),
+        args: vec![
+            RustExpr::Ident(args[0].clone()),
+            RustExpr::Ident(args[1].clone()),
+        ],
+    })
 }
 
 pub(super) fn lower_assert_true(args: &[String]) -> Option<RustExpr> {
