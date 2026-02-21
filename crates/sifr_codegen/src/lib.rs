@@ -3,7 +3,6 @@
 //! Translates the typed HIR into Rust source code.
 
 #![allow(clippy::uninlined_format_args)]
-#![allow(clippy::doc_markdown)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
@@ -71,7 +70,7 @@ const IO_ERROR_SUBCLASSES: &[&str] = &[
 ];
 
 /// Check if a built-in error class name is referenced in the generated Rust code.
-/// Uses word-boundary-aware matching to avoid false positives like "EmailError" matching "Error".
+/// Uses word-boundary-aware matching to avoid false positives like "`EmailError`" matching "Error".
 /// Check if a type can be auto-formatted with `{}` (implements Display).
 /// Used to determine if auto-generated Display impl is safe for a class field.
 fn is_auto_display_type(ty: &Type) -> bool {
@@ -124,7 +123,7 @@ pub struct CodegenResult {
     pub used_intrinsic_modules: HashSet<String>,
     /// Required external crates discovered during structured lowering/codegen.
     pub required_crates: HashSet<String>,
-    /// Map of constant_name -> (type, rust_name) for module-level constants
+    /// Map of `constant_name` -> (type, `rust_name`) for module-level constants
     pub constant_mappings: HashMap<String, (Type, String)>,
 }
 
@@ -192,22 +191,22 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
 /// Contains per-module Rust code and intrinsic name sets.
 #[derive(Default)]
 pub struct StdlibCode {
-    /// Map of module_name -> compiled Rust source code for pure Sifr functions/constants
+    /// Map of `module_name` -> compiled Rust source code for pure Sifr functions/constants
     pub module_rust_code: HashMap<String, String>,
-    /// Map of module_name -> set of names that are intrinsic re-exports (from _sifr.*)
+    /// Map of `module_name` -> set of names that are intrinsic re-exports (from _sifr.*)
     pub intrinsic_names: HashMap<String, HashSet<String>>,
-    /// Map of module_name -> (constant_name -> (type, rust_name)) for stdlib constants
+    /// Map of `module_name` -> (`constant_name` -> (type, `rust_name`)) for stdlib constants
     /// This allows user code to reference stdlib constants with the correct Rust names.
     pub module_constants: HashMap<String, HashMap<String, (Type, String)>>,
-    /// Map of module_name -> (func_name -> (param_types_with_conventions, return_type))
+    /// Map of `module_name` -> (`func_name` -> (`param_types_with_conventions`, `return_type`))
     /// for pure Sifr stdlib functions. Used to emit correct borrow prefixes at call sites.
     pub func_signatures: StdlibFuncSignatures,
-    /// Map of module_name -> set of transitive intrinsic module dependencies.
+    /// Map of `module_name` -> set of transitive intrinsic module dependencies.
     /// E.g., sifr.secrets depends on _sifr.crypto, so when user imports sifr.secrets,
     /// the Cargo dependencies for _sifr.crypto (rand) must be included.
     pub transitive_deps: HashMap<String, HashSet<String>>,
-    /// Map of module_name -> set of function names that are generators (contain yield).
-    /// Used to emit .collect() when assigning generator results to list[T] in user code.
+    /// Map of `module_name` -> set of function names that are generators (contain yield).
+    /// Used to emit .`collect()` when assigning generator results to list[T] in user code.
     pub generator_functions: HashMap<String, HashSet<String>>,
     /// Set of class names that have generic type parameters across all stdlib modules.
     pub generic_classes: HashSet<String>,
@@ -807,7 +806,7 @@ struct RustEmitter {
     current_return_type: Option<Type>,
     /// Set of variable names currently narrowed via `if let Some(...)` unwrap
     option_unwrapped_vars: HashSet<String>,
-    /// Function signatures: name -> (param_types_with_conventions, return_type)
+    /// Function signatures: name -> (`param_types_with_conventions`, `return_type`)
     func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
     /// Whether we're inside a loop that has an else clause
     in_loop_with_else: bool,
@@ -829,16 +828,16 @@ struct RustEmitter {
     intrinsic_registry_crates: HashSet<String>,
     /// Whether to emit in test mode (#[test] on test_* functions, no main)
     test_mode: bool,
-    /// Set of (class_name, field_name) pairs that are self-referential and need Box<T>
+    /// Set of (`class_name`, `field_name`) pairs that are self-referential and need Box<T>
     recursive_fields: HashSet<(String, String)>,
     /// Map from class name -> ordered list of field names (for constructor arg mapping)
     class_field_order: HashMap<String, Vec<String>>,
     /// Map from nested function name -> list of captured variable (name, type) pairs
     /// Used to pass extra args at call sites for recursive+capturing nested functions
     nested_fn_captures: HashMap<String, Vec<(String, Type)>>,
-    /// Map from module-level constant name -> (type, rust_name)
-    /// For primitives: rust_name is the UPPERCASE const name
-    /// For strings/complex: rust_name is __const_name() function call
+    /// Map from module-level constant name -> (type, `rust_name`)
+    /// For primitives: `rust_name` is the UPPERCASE const name
+    /// For strings/complex: `rust_name` is __`const_name()` function call
     module_constants: HashMap<String, (Type, String)>,
     /// Set of class names that have generic type parameters
     generic_classes: HashSet<String>,
@@ -851,19 +850,19 @@ struct RustEmitter {
     /// Used to avoid double-borrowing: when a &mut param is passed to another &mut param,
     /// we must NOT emit `&mut name` (it's already &mut T); just pass `name` directly.
     mut_borrowed_params: HashSet<String>,
-    /// Map of module_name -> set of names that are intrinsic re-exports (from _sifr.*)
+    /// Map of `module_name` -> set of names that are intrinsic re-exports (from _sifr.*)
     /// Used to distinguish intrinsic function calls from pure Sifr function calls
     stdlib_intrinsic_names: HashMap<String, HashSet<String>>,
     /// Set of function names that are generators (contain yield statements)
-    /// Used to emit .collect() when assigning generator results to list[T]
+    /// Used to emit .`collect()` when assigning generator results to list[T]
     generator_functions: HashSet<String>,
-    /// Map of module_name -> set of imported names (for filtering preamble to only used functions)
+    /// Map of `module_name` -> set of imported names (for filtering preamble to only used functions)
     imported_stdlib_names: HashMap<String, HashSet<String>>,
-    /// Temporarily suppress .clone() on field access (for mutating method calls on self.field)
+    /// Temporarily suppress .`clone()` on field access (for mutating method calls on self.field)
     suppress_field_clone: bool,
     /// Whether we're inside a generator closure (yield -> return Some(val))
     in_generator_closure: bool,
-    /// Whether we're inside a Display::fmt implementation (for __str__ methods)
+    /// Whether we're inside a `Display::fmt` implementation (for __str__ methods)
     /// Return statements in this context become write!(f, "{}", val) + return Ok(())
     in_display_impl: bool,
     /// Counter for generating unique try-block error enum names
@@ -938,7 +937,7 @@ impl RustEmitter {
     }
 
     /// Check if a generic class needs Hash + Eq bounds on its type parameters.
-    /// This is true when a type parameter is used as a HashMap key (dict field with TypeVar key).
+    /// This is true when a type parameter is used as a `HashMap` key (dict field with `TypeVar` key).
     fn class_needs_hash_eq(class: &HirClass) -> bool {
         fn type_has_typevar_dict_key(ty: &Type) -> bool {
             match ty {
@@ -951,7 +950,7 @@ impl RustEmitter {
         class.fields.iter().any(|(_, ty)| type_has_typevar_dict_key(ty))
     }
 
-    /// Check if a generic function needs Hash + Eq bounds (uses TypeVar as dict key
+    /// Check if a generic function needs Hash + Eq bounds (uses `TypeVar` as dict key
     /// or returns a generic class that needs Hash + Eq).
     fn func_needs_hash_eq(func: &HirFunction) -> bool {
         fn type_has_typevar_dict_key(ty: &Type) -> bool {
@@ -4780,7 +4779,7 @@ impl RustEmitter {
 
     /// Emit `&` or `&mut` prefix for a function argument based on parameter convention.
     /// Copy types never get a borrow prefix (they're passed by value),
-    /// unless the parameter type is a TypeVar (generic), in which case we always borrow.
+    /// unless the parameter type is a `TypeVar` (generic), in which case we always borrow.
     fn emit_borrow_prefix(&mut self, convention: ParamConvention, arg_ty: &Type, param_ty: Option<&Type>) {
         self.emit_borrow_prefix_for_name(convention, arg_ty, param_ty, None);
     }
@@ -6244,7 +6243,7 @@ impl RustEmitter {
     /// Emit an f-string as a Rust format macro call (format!, println!, etc.).
     /// This avoids the double-format pattern `println!("{}", format!(...))`.
     /// Emit a lambda expression without type annotations on parameters.
-    /// Used when the lambda is passed to .map()/.filter() where Rust can infer types.
+    /// Used when the lambda is passed to .`map()/.filter()` where Rust can infer types.
     /// Check if a name is a stdlib constant.
     fn is_stdlib_constant(&self, name: &str) -> bool {
         matches!(name, "pi" | "e" | "tau" | "inf" | "nan") && self.intrinsic_functions.contains(name)
@@ -7691,8 +7690,8 @@ impl RustEmitter {
         self.write(")");
     }
 
-    /// Emit an expression as a HashMap key reference.
-    /// String literals are emitted directly (e.g., `"key"`) since HashMap::get accepts &str via Borrow.
+    /// Emit an expression as a `HashMap` key reference.
+    /// String literals are emitted directly (e.g., `"key"`) since `HashMap::get` accepts &str via Borrow.
     /// Other expressions are emitted with `&` prefix (e.g., `&var`).
     fn emit_key_ref_expr(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
@@ -7784,7 +7783,7 @@ impl RustEmitter {
         }
     }
 
-    /// Check if an expression is a list literal (HirExpr::ListLiteral).
+    /// Check if an expression is a list literal (`HirExpr::ListLiteral`).
     fn is_list_literal(expr: &HirExpr) -> bool {
         matches!(expr, HirExpr::ListLiteral { .. })
     }
@@ -7873,7 +7872,7 @@ fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
 }
 
 /// Detect `isinstance(x, type)` where x is a non-Option union type.
-/// Returns (var_name, variant_name, enum_name, other_variants: Vec<(variant_name, type)>).
+/// Returns (`var_name`, `variant_name`, `enum_name`, `other_variants`: Vec<(`variant_name`, type)>).
 fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionMatch> {
     if let HirExpr::Call { func, args, .. } = expr {
         if func == "isinstance" && args.len() == 2 {
@@ -7956,7 +7955,7 @@ fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
 }
 
 /// Detect `x is None` pattern for 3+ member unions containing None.
-/// Returns (var_name, enum_name, non_none_variants).
+/// Returns (`var_name`, `enum_name`, `non_none_variants`).
 fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatch> {
     if let HirExpr::Compare { left, ops, comparators, .. } = expr {
         if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
@@ -7980,7 +7979,7 @@ fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatch> {
 }
 
 /// Check if a type is hashable (for codegen derive decisions).
-/// Emit a BigInt expression, cloning if it's a variable name (to avoid move).
+/// Emit a `BigInt` expression, cloning if it's a variable name (to avoid move).
 impl RustEmitter {
     fn emit_expr_with_bigint_clone(&mut self, expr: &HirExpr) {
         match expr {
@@ -8057,7 +8056,7 @@ fn module_uses_bigint(module: &HirModule) -> bool {
 }
 
 /// Collect all parts of a chained string concatenation (`a + b + c`).
-/// Recursively flattens nested BinOp::Add on strings into a flat list of expressions.
+/// Recursively flattens nested `BinOp::Add` on strings into a flat list of expressions.
 fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
     if let HirExpr::BinOp { left, op, right, ty } = expr {
         if op == "+" && *ty == Type::Str {
@@ -8360,7 +8359,7 @@ pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
     false
 }
 
-/// Check if a type needs .clone() when accessed from &self (non-Copy types).
+/// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
 fn needs_clone_for_type(ty: &Type) -> bool {
     match ty {
         Type::Int | Type::Float | Type::Bool | Type::None => false,

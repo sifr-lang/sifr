@@ -182,6 +182,7 @@ status: in_progress
 - [x] PR72 slice: remove `explicit_iter_loop` suppression by iterating directly over stdlib signature maps instead of calling `.iter()` in `for` loops
 - [x] PR73 slice: remove `type_complexity` suppression by introducing shared type aliases for function signatures and union-analysis tuples
 - [x] PR74 slice: remove `format_push_string` suppression by replacing `push_str(&format!(...))` patterns with `write!`/`writeln!` across codegen renderers
+- [x] PR75 slice: remove `doc_markdown` suppression by applying clippy doc-comment backtick fixes in `lib.rs`, `stdlib_filter.rs`, and `intrinsics/gzip.rs`
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
