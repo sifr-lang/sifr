@@ -260,6 +260,7 @@ status: in_progress
 - [x] PR150 slice: continue RawCode-zero gate by replacing `env_unset` `RawCode` with structured block/if/path-call IR
 - [x] PR151 slice: continue RawCode-zero gate by replacing `env_get` `RawCode` with structured block/if/path-call IR
 - [x] PR152 slice: continue RawCode-zero gate by replacing `env_set` `RawCode` with structured block/if/path-call IR
+- [x] PR153 slice: continue RawCode-zero gate by replacing `time_now` `RawCode` with structured path/fn-call/method-call IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass

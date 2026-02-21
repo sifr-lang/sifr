@@ -10,9 +10,31 @@ pub(super) fn lower_time_now(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(
-        "std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs_f64()".to_string(),
-    ))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "time".to_string(),
+                        "SystemTime".to_string(),
+                        "now".to_string(),
+                    ])),
+                    args: vec![],
+                }),
+                method: "duration_since".to_string(),
+                args: vec![RustExpr::Path(vec![
+                    "std".to_string(),
+                    "time".to_string(),
+                    "UNIX_EPOCH".to_string(),
+                ])],
+            }),
+            method: "unwrap_or_default".to_string(),
+            args: vec![],
+        }),
+        method: "as_secs_f64".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_sleep(args: &[String]) -> Option<RustExpr> {
