@@ -1,15 +1,40 @@
 //! Bytes intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustParam, RustType};
 
 pub(super) fn lower_encode_utf8(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "({}).as_bytes().iter().map(|b| *b as i64).collect::<Vec<i64>>()",
-        args[0]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                    method: "as_bytes".to_string(),
+                    args: vec![],
+                }),
+                method: "iter".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "b".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::Cast {
+                    expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                        "b".to_string(),
+                    )))),
+                    ty: RustType::I64,
+                }),
+                is_move: false,
+            }],
+        }),
+        method: "collect::<Vec<i64>>".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_decode_utf8(args: &[String]) -> Option<RustExpr> {
