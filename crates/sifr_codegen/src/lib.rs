@@ -8,9 +8,7 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::nonminimal_bool)]
 #![allow(clippy::while_let_loop)]
-#![allow(clippy::needless_borrow)]
 #![allow(clippy::ref_option)]
-#![allow(clippy::collapsible_match)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
@@ -6026,10 +6024,10 @@ impl RustEmitter {
                         self.write(" in ");
                         if is_range {
                             self.write("(");
-                            self.emit_expr(&iter_e);
+                            self.emit_expr(iter_e);
                             self.write(")");
                         } else {
-                            self.emit_expr(&iter_e);
+                            self.emit_expr(iter_e);
                             self.write(".clone().into_iter()");
                         }
                         self.write(" { ");
@@ -6090,7 +6088,7 @@ impl RustEmitter {
                         self.write("for ");
                         self.write(var);
                         self.write(" in ");
-                        self.emit_expr(&iter_e);
+                        self.emit_expr(iter_e);
                         self.write(".clone().into_iter() { ");
                         if let Some(ref cond) = filter {
                             self.write("if ");
@@ -6154,7 +6152,7 @@ impl RustEmitter {
                         self.write("for ");
                         self.write(&var_pattern);
                         self.write(" in ");
-                        self.emit_expr(&iter_e);
+                        self.emit_expr(iter_e);
                         self.write(".clone().into_iter() { ");
                         if let Some(ref cond) = filter {
                             self.write("if ");
@@ -8157,11 +8155,10 @@ fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
             HirStmt::Expr { expr } => {
                 if expr_references_var(expr, var_name) { return true; }
             }
-            HirStmt::Return { value } => {
-                if let Some(expr) = value {
-                    if expr_references_var(expr, var_name) { return true; }
-                }
+            HirStmt::Return { value: Some(expr) } => {
+                if expr_references_var(expr, var_name) { return true; }
             }
+            HirStmt::Return { value: None } => {}
             HirStmt::Yield { value } => {
                 if expr_references_var(value, var_name) { return true; }
             }
@@ -8441,10 +8438,8 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, 
             HirStmt::AttributeAugAssign { object, .. } => {
                 mutated.insert(object.clone());
             }
-            HirStmt::Delete { object, .. } => {
-                if let HirExpr::Name { name, .. } = object {
-                    mutated.insert(name.clone());
-                }
+            HirStmt::Delete { object: HirExpr::Name { name, .. }, .. } => {
+                mutated.insert(name.clone());
             }
             HirStmt::Yield { value } => {
                 collect_mutated_vars_in_expr(value, mutated, func_signatures);
