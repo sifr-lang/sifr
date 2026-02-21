@@ -267,6 +267,7 @@ status: in_progress
 - [x] PR157 slice: continue RawCode-zero gate by replacing `time_format` `RawCode` with structured block/let/cast/method-call IR
 - [x] PR158 slice: continue RawCode-zero gate by replacing `strptime` `RawCode` with structured path/fn-call/map/map-err IR
 - [x] PR159 slice: continue RawCode-zero gate by replacing `time_gmtime` compat `RawCode` with structured block/vec/cast IR
+- [x] PR160 slice: continue RawCode-zero gate by replacing `time_localtime` compat `RawCode` with structured block/vec/cast IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass

@@ -453,7 +453,135 @@ pub(super) fn lower_time_localtime_compat(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(
-        "{ use chrono::{Datelike, Timelike, Local}; let __dt = Local::now().naive_local(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64, __dt.weekday().num_days_from_monday() as i64, __dt.ordinal() as i64] }".to_string(),
-    ))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__dt".to_string(),
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "Local".to_string(),
+                        "now".to_string(),
+                    ])),
+                    args: vec![],
+                }),
+                method: "naive_local".to_string(),
+                args: vec![],
+            },
+        }],
+        expr: Some(Box::new(RustExpr::Vec(vec![
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "Datelike".to_string(),
+                        "year".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__dt".to_string())),
+                    }],
+                }),
+                ty: RustType::I64,
+            },
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "Datelike".to_string(),
+                        "month".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__dt".to_string())),
+                    }],
+                }),
+                ty: RustType::I64,
+            },
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "Datelike".to_string(),
+                        "day".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__dt".to_string())),
+                    }],
+                }),
+                ty: RustType::I64,
+            },
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "Timelike".to_string(),
+                        "hour".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__dt".to_string())),
+                    }],
+                }),
+                ty: RustType::I64,
+            },
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "Timelike".to_string(),
+                        "minute".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__dt".to_string())),
+                    }],
+                }),
+                ty: RustType::I64,
+            },
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "Timelike".to_string(),
+                        "second".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__dt".to_string())),
+                    }],
+                }),
+                ty: RustType::I64,
+            },
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__dt".to_string())),
+                        method: "weekday".to_string(),
+                        args: vec![],
+                    }),
+                    method: "num_days_from_monday".to_string(),
+                    args: vec![],
+                }),
+                ty: RustType::I64,
+            },
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "Datelike".to_string(),
+                        "ordinal".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__dt".to_string())),
+                    }],
+                }),
+                ty: RustType::I64,
+            },
+        ]))),
+    })
 }
