@@ -287,7 +287,7 @@ mod tests {
             &["1".to_string()],
         )
         .expect("list contains lowers");
-        assert_eq!(render_expr(&list_contains.expr), "xs.contains(&1)");
+        assert_eq!(render_expr(&list_contains.expr), "xs.contains(&(1))");
 
         let list_pop = lower_method(&Type::List(Box::new(Type::Int)), "pop", "xs", &[])
             .expect("list pop lowers");
@@ -419,15 +419,15 @@ mod tests {
 
         let set_remove = lower_method(&set_ty, "remove", "s", &["1".to_string()])
             .expect("set remove lowers");
-        assert_eq!(render_expr(&set_remove.expr), "s.remove(&1)");
+        assert_eq!(render_expr(&set_remove.expr), "s.remove(&(1))");
 
         let set_discard = lower_method(&set_ty, "discard", "s", &["1".to_string()])
             .expect("set discard lowers");
-        assert_eq!(render_expr(&set_discard.expr), "s.remove(&1)");
+        assert_eq!(render_expr(&set_discard.expr), "s.remove(&(1))");
 
         let set_contains = lower_method(&set_ty, "contains", "s", &["1".to_string()])
             .expect("set contains lowers");
-        assert_eq!(render_expr(&set_contains.expr), "s.contains(&1)");
+        assert_eq!(render_expr(&set_contains.expr), "s.contains(&(1))");
 
         let set_clear = lower_method(&set_ty, "clear", "s", &[]).expect("set clear lowers");
         assert_eq!(render_expr(&set_clear.expr), "s.clear()");
@@ -437,15 +437,15 @@ mod tests {
 
         let set_subset = lower_method(&set_ty, "issubset", "s", &["other".to_string()])
             .expect("set issubset lowers");
-        assert_eq!(render_expr(&set_subset.expr), "s.is_subset(&other)");
+        assert_eq!(render_expr(&set_subset.expr), "s.is_subset(&(other))");
 
         let set_superset = lower_method(&set_ty, "issuperset", "s", &["other".to_string()])
             .expect("set issuperset lowers");
-        assert_eq!(render_expr(&set_superset.expr), "s.is_superset(&other)");
+        assert_eq!(render_expr(&set_superset.expr), "s.is_superset(&(other))");
 
         let set_disjoint = lower_method(&set_ty, "isdisjoint", "s", &["other".to_string()])
             .expect("set isdisjoint lowers");
-        assert_eq!(render_expr(&set_disjoint.expr), "s.is_disjoint(&other)");
+        assert_eq!(render_expr(&set_disjoint.expr), "s.is_disjoint(&(other))");
 
         let set_pop = lower_method(&set_ty, "pop", "s", &[]).expect("set pop lowers");
         assert!(render_expr(&set_pop.expr).contains("iter().next().cloned()"));

@@ -2,6 +2,17 @@
 
 use crate::RustExpr;
 
+fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
+    if arg.ends_with(".as_str()") || arg.starts_with('&') {
+        RustExpr::RawCode(arg.to_string())
+    } else {
+        RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::RawCode(format!("({arg})"))),
+        }
+    }
+}
+
 pub(super) fn lower_add(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
@@ -20,10 +31,7 @@ pub(super) fn lower_remove(object: &str, args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "remove".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::RawCode(args[0].clone())),
-        }],
+        args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 
@@ -34,10 +42,7 @@ pub(super) fn lower_discard(object: &str, args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "remove".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::RawCode(args[0].clone())),
-        }],
+        args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 
@@ -48,10 +53,7 @@ pub(super) fn lower_contains(object: &str, args: &[String]) -> Option<RustExpr> 
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "contains".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::RawCode(args[0].clone())),
-        }],
+        args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 
@@ -84,10 +86,7 @@ pub(super) fn lower_issubset(object: &str, args: &[String]) -> Option<RustExpr> 
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "is_subset".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::RawCode(args[0].clone())),
-        }],
+        args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 
@@ -98,10 +97,7 @@ pub(super) fn lower_issuperset(object: &str, args: &[String]) -> Option<RustExpr
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "is_superset".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::RawCode(args[0].clone())),
-        }],
+        args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 
@@ -112,10 +108,7 @@ pub(super) fn lower_isdisjoint(object: &str, args: &[String]) -> Option<RustExpr
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "is_disjoint".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::RawCode(args[0].clone())),
-        }],
+        args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 
