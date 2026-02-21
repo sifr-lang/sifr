@@ -202,6 +202,7 @@ status: in_progress
 - [x] PR92 slice: continue RawCode-zero gate by structuring zero-arg string method lowerers (`upper`/`lower`/`strip`/`lstrip`/`rstrip`) as method-call IR chains
 - [x] PR93 slice: continue RawCode-zero gate by structuring single-arg string method lowerers (`startswith`/`endswith`/`find`/`count`/`join`) as method-call IR
 - [x] PR94 slice: continue RawCode-zero gate by structuring string `split`/`replace` lowerers as closure-based/chained method-call IR
+- [x] PR95 slice: continue RawCode-zero gate by structuring string predicate lowerers (`isdigit`/`isalpha`/`isalnum`/`isspace`) as non-empty + `chars().all(...)` IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass

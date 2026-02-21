@@ -39,6 +39,47 @@ fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
     }
 }
 
+fn lower_non_empty_char_all(
+    object: &str,
+    args: &[String],
+    char_predicate_method: &str,
+) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::BinOp {
+        left: Box::new(RustExpr::UnaryOp {
+            op: "!".to_string(),
+            operand: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "is_empty".to_string(),
+                args: vec![],
+            }),
+        }),
+        op: "&&".to_string(),
+        right: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "chars".to_string(),
+                args: vec![],
+            }),
+            method: "all".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "c".to_string(),
+                    ty: RustType::RawCode("_".to_string()),
+                }],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("c".to_string())),
+                    method: char_predicate_method.to_string(),
+                    args: vec![],
+                }),
+                is_move: false,
+            }],
+        }),
+    })
+}
+
 pub(super) fn lower_upper(object: &str, args: &[String]) -> Option<RustExpr> {
     lower_zero_arg_method(object, args, "to_uppercase")
 }
@@ -231,39 +272,19 @@ pub(super) fn lower_swapcase(object: &str, args: &[String]) -> Option<RustExpr> 
 }
 
 pub(super) fn lower_isdigit(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "!{object}.is_empty() && {object}.chars().all(|c| c.is_ascii_digit())"
-    )))
+    lower_non_empty_char_all(object, args, "is_ascii_digit")
 }
 
 pub(super) fn lower_isalpha(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "!{object}.is_empty() && {object}.chars().all(|c| c.is_alphabetic())"
-    )))
+    lower_non_empty_char_all(object, args, "is_alphabetic")
 }
 
 pub(super) fn lower_isalnum(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "!{object}.is_empty() && {object}.chars().all(|c| c.is_alphanumeric())"
-    )))
+    lower_non_empty_char_all(object, args, "is_alphanumeric")
 }
 
 pub(super) fn lower_isspace(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "!{object}.is_empty() && {object}.chars().all(|c| c.is_whitespace())"
-    )))
+    lower_non_empty_char_all(object, args, "is_whitespace")
 }
 
 pub(super) fn lower_isupper(object: &str, args: &[String]) -> Option<RustExpr> {
