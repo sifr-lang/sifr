@@ -73,3 +73,43 @@ pub(super) fn lower_pop(object: &str, args: &[String]) -> Option<RustExpr> {
         "{{ let __v = {object}.iter().next().cloned(); if let Some(ref __val) = __v {{ {object}.remove(__val); }} __v }}"
     )))
 }
+
+pub(super) fn lower_union(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{object}.union(&{}).cloned().collect::<std::collections::HashSet<_>>()",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_intersection(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{object}.intersection(&{}).cloned().collect::<std::collections::HashSet<_>>()",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_difference(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{object}.difference(&{}).cloned().collect::<std::collections::HashSet<_>>()",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_symmetric_difference(object: &str, args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{object}.symmetric_difference(&{}).cloned().collect::<std::collections::HashSet<_>>()",
+        args[0]
+    )))
+}
