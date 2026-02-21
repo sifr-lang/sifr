@@ -16,8 +16,18 @@ pub(super) fn lower_json_dumps(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "serde_json::to_string(&{}).unwrap_or_default()",
-        args[0]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "serde_json".to_string(),
+                "to_string".to_string(),
+            ])),
+            args: vec![RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Ident(args[0].clone())),
+            }],
+        }),
+        method: "unwrap_or_default".to_string(),
+        args: vec![],
+    })
 }
