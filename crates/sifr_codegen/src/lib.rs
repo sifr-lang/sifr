@@ -14,7 +14,6 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::cloned_instead_of_copied)]
 #![allow(clippy::wildcard_imports)]
 #![allow(clippy::unused_self)]
 #![allow(dead_code)]
@@ -23,9 +22,7 @@
 #![allow(clippy::assigning_clones)]
 #![allow(clippy::explicit_iter_loop)]
 #![allow(clippy::unnecessary_map_or)]
-#![allow(clippy::inefficient_to_string)]
 #![allow(clippy::struct_excessive_bools)]
-#![allow(clippy::doc_link_with_quotes)]
 #![allow(clippy::if_not_else)]
 #![allow(clippy::unnecessary_unwrap)]
 
@@ -599,7 +596,7 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
 
         result.push_str(&emitter.output);
 
-        files.insert(module_name.to_string(), result);
+        files.insert((*module_name).to_string(), result);
     }
 
     files
@@ -854,7 +851,7 @@ struct RustEmitter {
     module_constants: HashMap<String, (Type, String)>,
     /// Set of class names that have generic type parameters
     generic_classes: HashSet<String>,
-    /// Map of generic class name -> list of type parameter names (e.g., "Counter" -> ["T"])
+    /// Map of generic class name -> list of type parameter names (e.g., `Counter` -> `T`)
     generic_class_params: HashMap<String, Vec<String>>,
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
@@ -7564,7 +7561,7 @@ impl RustEmitter {
         }
         for required_crate in lowered.additional_required_crates {
             self.intrinsic_registry_crates
-                .insert(required_crate.to_string());
+                .insert((*required_crate).to_string());
         }
 
         self.write(&crate::render_expr(&lowered.expr));
