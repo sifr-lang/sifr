@@ -173,6 +173,7 @@ status: in_progress
 - [x] PR63 slice: remove `unnecessary_map_or` suppression by converting `map_or(false, ...)` patterns to `is_some_and(...)`
 - [x] PR64 slice: remove 2 clippy suppressions (`collapsible_match`, `needless_borrow`) and fix surfaced warnings
 - [x] PR65 slice: remove `ref_option` suppression by changing `&Option<T>` parameters to `Option<&T>` and updating call sites
+- [x] PR66 slice: remove 3 clippy suppressions (`while_let_on_iterator`, `while_let_loop`, `nonminimal_bool`) with no behavior changes needed
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
