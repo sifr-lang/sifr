@@ -18,6 +18,7 @@ mod uuid;
 mod toml;
 mod datetime;
 mod sys;
+mod subprocess;
 
 use crate::RustExpr;
 
@@ -198,6 +199,15 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "sys_version" => (sys::lower_sys_version(rendered_args), None),
         "sys_platform" => (sys::lower_sys_platform(rendered_args), None),
         "sys_maxsize" => (sys::lower_sys_maxsize(rendered_args), None),
+        "subprocess_run" => (subprocess::lower_subprocess_run(rendered_args), None),
+        "subprocess_run_with_input" => (
+            subprocess::lower_subprocess_run_with_input(rendered_args),
+            None,
+        ),
+        "subprocess_run_structured" => (
+            subprocess::lower_subprocess_run_structured(rendered_args),
+            None,
+        ),
         _ => return None,
     };
 
@@ -595,5 +605,25 @@ mod tests {
 
         let maxsize = lower_intrinsic("sys_maxsize", &[]).expect("sys_maxsize");
         assert_eq!(render_expr(&maxsize.expr), "i64::MAX");
+    }
+
+    #[test]
+    fn lowers_subprocess_intrinsics_via_registry() {
+        let run = lower_intrinsic("subprocess_run", &["cmd".to_string()]).expect("subprocess_run");
+        assert!(render_expr(&run.expr).contains("Command::new(\"sh\")"));
+        assert!(render_expr(&run.expr).contains("Result<String, IOError>"));
+
+        let with_input = lower_intrinsic(
+            "subprocess_run_with_input",
+            &["cmd".to_string(), "stdin_data".to_string()],
+        )
+        .expect("subprocess_run_with_input");
+        assert!(render_expr(&with_input.expr).contains("use std::io::Write"));
+        assert!(render_expr(&with_input.expr).contains("stdin.write_all"));
+
+        let structured = lower_intrinsic("subprocess_run_structured", &["cmd".to_string()])
+            .expect("subprocess_run_structured");
+        assert!(render_expr(&structured.expr).contains("Result<Vec<String>, IOError>"));
+        assert!(render_expr(&structured.expr).contains("returncode"));
     }
 }
