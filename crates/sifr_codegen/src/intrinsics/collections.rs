@@ -376,10 +376,42 @@ pub(super) fn lower_counter_values(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let data: std::collections::HashMap<String, i64> = serde_json::from_str({}).unwrap_or_default(); data.values().cloned().collect::<Vec<i64>>() }}",
-        borrowed_str(&args[0])
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "data".to_string(),
+            ty: Some(RustType::Named(
+                "std::collections::HashMap<String, i64>".to_string(),
+            )),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "serde_json".to_string(),
+                        "from_str".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                    }],
+                }),
+                method: "unwrap_or_default".to_string(),
+                args: vec![],
+            },
+        }],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("data".to_string())),
+                    method: "values".to_string(),
+                    args: vec![],
+                }),
+                method: "cloned".to_string(),
+                args: vec![],
+            }),
+            method: "collect::<Vec<i64>>".to_string(),
+            args: vec![],
+        })),
+    })
 }
 
 pub(super) fn lower_counter_keys(args: &[String]) -> Option<RustExpr> {
