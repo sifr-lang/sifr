@@ -124,6 +124,7 @@ status: in_progress
 - [x] PR30 slice: migrate remaining `sifr.base64` intrinsics (`b32encode`, `b32decode`, `b32hexencode`, `b32hexdecode`) into registry lowerers
 - [x] PR31 slice: migrate `sifr.hashlib` intrinsics (`sha1`, `sha512`, `sha224`, `sha384`, `blake2b`, `blake2s`) into registry lowerers
 - [x] PR32 slice: migrate remaining `_sifr.fs` OS-adjacent intrinsics (`disk_usage`, `os_sep`, `os_linesep`, `os_name`) into registry lowerers
+- [x] PR33 slice: migrate legacy `_sifr.time` compatibility intrinsics (`time_strptime`, `time_gmtime`, `time_localtime`) into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
