@@ -80,7 +80,7 @@ impl Renderer {
             } => {
                 self.render_derives(derives);
                 if let Some(repr_name) = repr {
-                    self.writeln(&format!("#[repr({})]", repr_name));
+                    self.writeln(&format!("#[repr({repr_name})]"));
                 }
                 self.writeln(&format!(
                     "{}enum {} {{",
