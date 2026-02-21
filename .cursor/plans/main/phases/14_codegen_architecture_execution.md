@@ -142,10 +142,11 @@ status: in_progress
 - [x] PR48 slice: expand set method module with set-algebra methods (`union`, `intersection`, `difference`, `symmetric_difference`) through registry-first lowering
 - [x] PR49 slice: expand dict method module with lookup methods (`contains`, `get`, `pop`) through registry-first lowering
 - [x] PR50 slice: expand list method module with mutating methods (`append`, `extend`, `insert`) through registry-first lowering and restore deque-specific fallback routing
+- [x] PR51 slice: remove driver bigint string-scanning dependency detection and plumb codegen-reported `required_crates` (`HashSet<String>`) into Cargo dependency generation
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
-- [ ] Remove driver string-scanning dependency detection; return `HashSet<String>` dependencies
+- [x] Remove driver string-scanning dependency detection; return `HashSet<String>` dependencies
 - [ ] Convert all intrinsic/method lowering to structured IR (no `RawCode`)
 - [ ] Reduce `lib.rs` by >= 2000 lines via decomposition
 - [ ] Demo: `demos/milestone_codegen_intrinsic_migration_demo.sifr` (final milestone gate)
