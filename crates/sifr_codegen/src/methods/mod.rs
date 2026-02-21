@@ -177,7 +177,7 @@ mod tests {
         assert!(render_expr(&title.expr).contains("split_whitespace"));
 
         let cap = lower_method(&Type::Str, "capitalize", "s", &[]).expect("capitalize lowers");
-        assert!(render_expr(&cap.expr).contains("let _s = (s).clone()"));
+        assert!(render_expr(&cap.expr).contains("let _s = s.clone();"));
 
         let swap = lower_method(&Type::Str, "swapcase", "s", &[]).expect("swapcase lowers");
         assert!(render_expr(&swap.expr).contains("is_uppercase"));

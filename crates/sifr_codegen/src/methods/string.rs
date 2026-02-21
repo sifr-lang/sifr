@@ -1,6 +1,6 @@
 //! String method lowerers for registry migration.
 
-use crate::{RustExpr, RustParam, RustType};
+use crate::{RustExpr, RustParam, RustStmt, RustType};
 
 fn lower_zero_arg_method(object: &str, args: &[String], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
@@ -307,9 +307,69 @@ pub(super) fn lower_capitalize(object: &str, args: &[String]) -> Option<RustExpr
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let _s = ({object}).clone(); let mut _c = _s.chars(); match _c.next() {{ None => String::new(), Some(f) => f.to_uppercase().to_string() + &_c.as_str().to_lowercase() }} }}"
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "_s".to_string(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(object.to_string()))),
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "_c".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("_s".to_string())),
+                    method: "chars".to_string(),
+                    args: vec![],
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("_c".to_string())),
+                    method: "next".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "f".to_string(),
+                        ty: RustType::RawCode("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("f".to_string())),
+                                method: "to_uppercase".to_string(),
+                                args: vec![],
+                            }),
+                            method: "to_string".to_string(),
+                            args: vec![],
+                        }),
+                        op: "+".to_string(),
+                        right: Box::new(RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("_c".to_string())),
+                                    method: "as_str".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "to_lowercase".to_string(),
+                                args: vec![],
+                            }),
+                        }),
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "unwrap_or_default".to_string(),
+            args: vec![],
+        })),
+    })
 }
 
 pub(super) fn lower_swapcase(object: &str, args: &[String]) -> Option<RustExpr> {
