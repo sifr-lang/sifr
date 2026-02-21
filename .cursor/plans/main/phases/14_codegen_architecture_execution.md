@@ -228,6 +228,7 @@ status: in_progress
 - [x] PR118 slice: continue RawCode-zero gate by replacing `env.items` `RawCode` with structured path/call/closure IR (`vars_os().map(...).collect()`)
 - [x] PR119 slice: continue RawCode-zero gate by replacing `sys.exit` `RawCode` with structured path/call/cast IR
 - [x] PR120 slice: continue RawCode-zero gate by replacing `os_sep` `RawCode` with structured path/call IR (`std::path::MAIN_SEPARATOR.to_string()`)
+- [x] PR121 slice: continue RawCode-zero gate by replacing `cpu_count` `RawCode` with structured block/path/call/closure IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
