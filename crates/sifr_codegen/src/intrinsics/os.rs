@@ -104,7 +104,15 @@ pub(super) fn lower_os_sep(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode("std::path::MAIN_SEPARATOR.to_string()".to_string()))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Path(vec![
+            "std".to_string(),
+            "path".to_string(),
+            "MAIN_SEPARATOR".to_string(),
+        ])),
+        method: "to_string".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_os_linesep(args: &[String]) -> Option<RustExpr> {
