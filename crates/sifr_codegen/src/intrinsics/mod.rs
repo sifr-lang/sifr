@@ -19,6 +19,7 @@ mod toml;
 mod datetime;
 mod sys;
 mod subprocess;
+mod html;
 
 use crate::RustExpr;
 
@@ -208,6 +209,8 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
             subprocess::lower_subprocess_run_structured(rendered_args),
             None,
         ),
+        "html_escape" => (html::lower_html_escape(rendered_args), None),
+        "html_unescape" => (html::lower_html_unescape(rendered_args), None),
         _ => return None,
     };
 
@@ -625,5 +628,14 @@ mod tests {
             .expect("subprocess_run_structured");
         assert!(render_expr(&structured.expr).contains("Result<Vec<String>, IOError>"));
         assert!(render_expr(&structured.expr).contains("returncode"));
+    }
+
+    #[test]
+    fn lowers_html_intrinsics_via_registry() {
+        let esc = lower_intrinsic("html_escape", &["s".to_string()]).expect("html_escape");
+        assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\")"));
+
+        let unesc = lower_intrinsic("html_unescape", &["s".to_string()]).expect("html_unescape");
+        assert!(render_expr(&unesc.expr).contains("replace(\"&amp;\", \"&\")"));
     }
 }
