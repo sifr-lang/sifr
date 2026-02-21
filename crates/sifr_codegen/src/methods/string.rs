@@ -1,6 +1,6 @@
 //! String method lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustParam, RustType};
 
 fn lower_zero_arg_method(object: &str, args: &[String], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
@@ -28,6 +28,17 @@ fn lower_trim_to_string(object: &str, args: &[String], trim_method: &str) -> Opt
     })
 }
 
+fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
+    if arg.ends_with(".as_str()") || arg.starts_with('&') {
+        RustExpr::RawCode(arg.to_string())
+    } else {
+        RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::RawCode(format!("({arg})"))),
+        }
+    }
+}
+
 pub(super) fn lower_upper(object: &str, args: &[String]) -> Option<RustExpr> {
     lower_zero_arg_method(object, args, "to_uppercase")
 }
@@ -44,17 +55,22 @@ pub(super) fn lower_startswith(object: &str, args: &[String]) -> Option<RustExpr
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.starts_with(&({}))",
-        args[0]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "starts_with".to_string(),
+        args: vec![render_borrowed_arg_expr(&args[0])],
+    })
 }
 
 pub(super) fn lower_endswith(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.ends_with(&({}))", args[0])))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "ends_with".to_string(),
+        args: vec![render_borrowed_arg_expr(&args[0])],
+    })
 }
 
 pub(super) fn lower_split(object: &str, args: &[String]) -> Option<RustExpr> {
@@ -84,10 +100,25 @@ pub(super) fn lower_find(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.find(&({})).map(|i| i as i64)",
-        args[0]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(object.to_string())),
+            method: "find".to_string(),
+            args: vec![render_borrowed_arg_expr(&args[0])],
+        }),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "i".to_string(),
+                ty: RustType::RawCode("_".to_string()),
+            }],
+            body: Box::new(RustExpr::Cast {
+                expr: Box::new(RustExpr::Ident("i".to_string())),
+                ty: RustType::I64,
+            }),
+            is_move: false,
+        }],
+    })
 }
 
 pub(super) fn lower_lstrip(object: &str, args: &[String]) -> Option<RustExpr> {
@@ -102,17 +133,29 @@ pub(super) fn lower_count(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.matches(&({})).count() as i64",
-        args[0]
-    )))
+    Some(RustExpr::Cast {
+        expr: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "matches".to_string(),
+                args: vec![render_borrowed_arg_expr(&args[0])],
+            }),
+            method: "count".to_string(),
+            args: vec![],
+        }),
+        ty: RustType::I64,
+    })
 }
 
 pub(super) fn lower_join(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{}.join(&({object}))", args[0])))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::RawCode(args[0].clone())),
+        method: "join".to_string(),
+        args: vec![render_borrowed_arg_expr(object)],
+    })
 }
 
 pub(super) fn lower_title(object: &str, args: &[String]) -> Option<RustExpr> {
