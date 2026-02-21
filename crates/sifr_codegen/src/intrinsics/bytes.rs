@@ -166,10 +166,106 @@ pub(super) fn lower_bytes_to_hex(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "(|| -> Result<String, ParseError> {{ let __vals = {}; let mut __out = String::new(); for (__idx, __b) in __vals.iter().enumerate() {{ if *__b < 0 || *__b > 255 {{ return Err(ParseError {{ message: format!(\"byte out of range at index {{}}: {{}}\", __idx, *__b) }}); }} __out.push_str(&format!(\"{{:02x}}\", *__b as u8)); }} Ok(__out) }})()",
-        args[0]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(args[0].clone())),
+                        method: "iter".to_string(),
+                        args: vec![],
+                    }),
+                    method: "enumerate".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "__pair".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::If {
+                        cond: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Deref(Box::new(RustExpr::Field {
+                                    expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                    field: "1".to_string(),
+                                }))),
+                                op: "<".to_string(),
+                                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                            }),
+                            op: "||".to_string(),
+                            right: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Deref(Box::new(RustExpr::Field {
+                                    expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                    field: "1".to_string(),
+                                }))),
+                                op: ">".to_string(),
+                                right: Box::new(RustExpr::Literal(RustLiteral::Int(255))),
+                            }),
+                        }),
+                        then_expr: Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                            args: vec![RustExpr::StructInit {
+                                name: "ParseError".to_string(),
+                                fields: vec![(
+                                    "message".to_string(),
+                                    RustExpr::FormatMacro {
+                                        name: "format".to_string(),
+                                        format_str: "byte out of range at index {}: {}".to_string(),
+                                        args: vec![
+                                            RustExpr::Field {
+                                                expr: Box::new(RustExpr::Ident(
+                                                    "__pair".to_string(),
+                                                )),
+                                                field: "0".to_string(),
+                                            },
+                                            RustExpr::Deref(Box::new(RustExpr::Field {
+                                                expr: Box::new(RustExpr::Ident(
+                                                    "__pair".to_string(),
+                                                )),
+                                                field: "1".to_string(),
+                                            })),
+                                        ],
+                                    },
+                                )],
+                            }],
+                        }),
+                        else_expr: Some(Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                            args: vec![RustExpr::FormatMacro {
+                                name: "format".to_string(),
+                                format_str: "{:02x}".to_string(),
+                                args: vec![RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Field {
+                                        expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                        field: "1".to_string(),
+                                    }))),
+                                    ty: RustType::Named("u8".to_string()),
+                                }],
+                            }],
+                        })),
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "collect::<Result<Vec<String>, ParseError>>".to_string(),
+            args: vec![],
+        }),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "__parts".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__parts".to_string())),
+                method: "join".to_string(),
+                args: vec![RustExpr::Literal(RustLiteral::Str(String::new()))],
+            }),
+            is_move: false,
+        }],
+    })
 }
 
 pub(super) fn lower_bytes_from_hex(args: &[String]) -> Option<RustExpr> {
