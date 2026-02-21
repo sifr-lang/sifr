@@ -180,6 +180,7 @@ status: in_progress
 - [x] PR70 slice: remove `wildcard_imports` suppression by replacing `use sifr_hir::*;` with an explicit `sifr_hir::{...}` import list
 - [x] PR71 slice: remove `unused_self` suppression by converting `substitute_class_captures_in_guard` to an associated helper and updating call sites
 - [x] PR72 slice: remove `explicit_iter_loop` suppression by iterating directly over stdlib signature maps instead of calling `.iter()` in `for` loops
+- [x] PR73 slice: remove `type_complexity` suppression by introducing shared type aliases for function signatures and union-analysis tuples
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
