@@ -532,10 +532,11 @@ pub(super) fn lower_defaultdict_new(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "format!(\"{{\\\"__default__\\\":{{}}}}\", {})",
-        args[0]
-    )))
+    Some(RustExpr::FormatMacro {
+        name: "format".to_string(),
+        format_str: "{{\"__default__\":{}}}".to_string(),
+        args: vec![RustExpr::Ident(args[0].clone())],
+    })
 }
 
 pub(super) fn lower_defaultdict_get(args: &[String]) -> Option<RustExpr> {
