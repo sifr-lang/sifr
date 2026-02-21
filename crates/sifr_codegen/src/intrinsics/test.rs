@@ -26,14 +26,23 @@ pub(super) fn lower_assert_true(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!("assert!({})", args[0])))
+    Some(RustExpr::MacroCall {
+        name: "assert".to_string(),
+        args: vec![RustExpr::Ident(args[0].clone())],
+    })
 }
 
 pub(super) fn lower_assert_false(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!("assert!(!({}))", args[0])))
+    Some(RustExpr::MacroCall {
+        name: "assert".to_string(),
+        args: vec![RustExpr::UnaryOp {
+            op: "!".to_string(),
+            operand: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+        }],
+    })
 }
 
 pub(super) fn lower_assert_almost_eq(args: &[String]) -> Option<RustExpr> {
