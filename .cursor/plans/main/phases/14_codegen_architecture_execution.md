@@ -214,6 +214,7 @@ status: in_progress
 - [x] PR104 slice: continue RawCode-zero gate by replacing string closure placeholder type `RawCode(\"_\")` with structured `Named(\"_\")`
 - [x] PR105 slice: continue RawCode-zero gate by replacing deque by-value arg `RawCode` with structured `Ident` (`append`, `appendleft`)
 - [x] PR106 slice: continue RawCode-zero gate by replacing set borrowed/by-value helper `RawCode` with structured `Ident` (`render_borrowed_arg_expr`, `add`)
+- [x] PR107 slice: continue RawCode-zero gate by replacing list by-value arg `RawCode` with structured `Ident` (`append`, `extend`)
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
