@@ -20,9 +20,18 @@ pub(super) fn lower_get_args(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(
-        "std::env::args().collect::<Vec<String>>()".to_string(),
-    ))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "env".to_string(),
+                "args".to_string(),
+            ])),
+            args: vec![],
+        }),
+        method: "collect::<Vec<String>>".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_chdir(args: &[String]) -> Option<RustExpr> {
@@ -39,7 +48,17 @@ pub(super) fn lower_getpid(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode("std::process::id() as i64".to_string()))
+    Some(RustExpr::Cast {
+        expr: Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "process".to_string(),
+                "id".to_string(),
+            ])),
+            args: vec![],
+        }),
+        ty: crate::RustType::I64,
+    })
 }
 
 pub(super) fn lower_cpu_count(args: &[String]) -> Option<RustExpr> {
