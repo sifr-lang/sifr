@@ -137,6 +137,7 @@ status: in_progress
 - [x] PR43 slice: expand method-registry coverage for string case/predicate methods (`capitalize`, `title`, `swapcase`, `isdigit`, `isalpha`, `isalnum`, `isspace`, `isupper`, `islower`)
 - [x] PR44 slice: expand method-registry coverage for string padding methods (`center`, `ljust`, `rjust`, `zfill`)
 - [x] PR45 slice: add list method module and route core list methods (`clear`, `copy`, `reverse`, `sort`, `count`, `contains`, `pop`, `remove`, `index`) through registry-first lowering
+- [x] PR46 slice: add dict method module and route core dict methods (`keys`, `values`, `items`, `update`, `clear`, `copy`) through registry-first lowering
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
