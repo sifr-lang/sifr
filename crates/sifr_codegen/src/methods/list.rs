@@ -112,7 +112,7 @@ pub(super) fn lower_count(object: &str, args: &[String]) -> Option<RustExpr> {
                 args: vec![RustExpr::Closure {
                     params: vec![RustParam::Named {
                         name: "x".to_string(),
-                        ty: RustType::RawCode("_".to_string()),
+                        ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::BinOp {
                         left: Box::new(RustExpr::Deref(Box::new(RustExpr::Deref(Box::new(
@@ -170,7 +170,7 @@ pub(super) fn lower_remove(object: &str, args: &[String]) -> Option<RustExpr> {
                 args: vec![RustExpr::Closure {
                     params: vec![RustParam::Named {
                         name: "__x".to_string(),
-                        ty: RustType::RawCode("_".to_string()),
+                        ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::BinOp {
                         left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
@@ -208,7 +208,7 @@ pub(super) fn lower_index(object: &str, args: &[String]) -> Option<RustExpr> {
             args: vec![RustExpr::Closure {
                 params: vec![RustParam::Named {
                     name: "__x".to_string(),
-                    ty: RustType::RawCode("_".to_string()),
+                    ty: RustType::Named("_".to_string()),
                 }],
                 body: Box::new(RustExpr::BinOp {
                     left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
@@ -224,7 +224,7 @@ pub(super) fn lower_index(object: &str, args: &[String]) -> Option<RustExpr> {
         args: vec![RustExpr::Closure {
             params: vec![RustParam::Named {
                 name: "__p".to_string(),
-                ty: RustType::RawCode("_".to_string()),
+                ty: RustType::Named("_".to_string()),
             }],
             body: Box::new(RustExpr::Cast {
                 expr: Box::new(RustExpr::Ident("__p".to_string())),
