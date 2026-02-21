@@ -9,7 +9,6 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::wildcard_imports)]
 #![allow(clippy::unused_self)]
 #![allow(dead_code)]
 #![allow(clippy::explicit_iter_loop)]
@@ -33,7 +32,17 @@ mod intrinsics;
 mod methods;
 mod stdlib_filter;
 
-use sifr_hir::*;
+use sifr_hir::{
+    HirClass,
+    HirExpr,
+    HirFStringPart,
+    HirFunction,
+    HirMatchArm,
+    HirModule,
+    HirPattern,
+    HirStmt,
+    MethodKind,
+};
 use sifr_type_system::{Type, ParamConvention};
 use stdlib_filter::{
     collect_and_strip_shared_prelude,
