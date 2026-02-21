@@ -12,7 +12,6 @@
 #![allow(clippy::wildcard_imports)]
 #![allow(clippy::unused_self)]
 #![allow(dead_code)]
-#![allow(clippy::assigning_clones)]
 #![allow(clippy::explicit_iter_loop)]
 #![allow(clippy::struct_excessive_bools)]
 
@@ -220,7 +219,9 @@ pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
 /// Generate Rust source code from a HIR module with compiled stdlib code.
 pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
     let mut emitter = RustEmitter::new();
-    emitter.stdlib_intrinsic_names = stdlib_code.intrinsic_names.clone();
+    emitter
+        .stdlib_intrinsic_names
+        .clone_from(&stdlib_code.intrinsic_names);
     // Register stdlib generic classes so user code skips explicit type annotations
     emitter.generic_classes.extend(stdlib_code.generic_classes.iter().cloned());
 
