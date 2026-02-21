@@ -2,6 +2,7 @@
 
 mod dict;
 mod list;
+mod set;
 mod string;
 
 use crate::RustExpr;
@@ -58,6 +59,16 @@ pub(crate) fn lower_method(
         (Type::Dict(_, _), "update") => dict::lower_update(rendered_object, rendered_args),
         (Type::Dict(_, _), "clear") => dict::lower_clear(rendered_object, rendered_args),
         (Type::Dict(_, _), "copy") => dict::lower_copy(rendered_object, rendered_args),
+        (Type::Set(_), "add") => set::lower_add(rendered_object, rendered_args),
+        (Type::Set(_), "remove") => set::lower_remove(rendered_object, rendered_args),
+        (Type::Set(_), "discard") => set::lower_discard(rendered_object, rendered_args),
+        (Type::Set(_), "contains") => set::lower_contains(rendered_object, rendered_args),
+        (Type::Set(_), "clear") => set::lower_clear(rendered_object, rendered_args),
+        (Type::Set(_), "copy") => set::lower_copy(rendered_object, rendered_args),
+        (Type::Set(_), "issubset") => set::lower_issubset(rendered_object, rendered_args),
+        (Type::Set(_), "issuperset") => set::lower_issuperset(rendered_object, rendered_args),
+        (Type::Set(_), "isdisjoint") => set::lower_isdisjoint(rendered_object, rendered_args),
+        (Type::Set(_), "pop") => set::lower_pop(rendered_object, rendered_args),
         _ => return None,
     };
 
@@ -270,5 +281,43 @@ mod tests {
 
         let dict_copy = lower_method(&dict_ty, "copy", "d", &[]).expect("dict copy lowers");
         assert_eq!(render_expr(&dict_copy.expr), "d.clone()");
+
+        let set_ty = Type::Set(Box::new(Type::Int));
+        let set_add = lower_method(&set_ty, "add", "s", &["1".to_string()])
+            .expect("set add lowers");
+        assert_eq!(render_expr(&set_add.expr), "s.insert(1)");
+
+        let set_remove = lower_method(&set_ty, "remove", "s", &["1".to_string()])
+            .expect("set remove lowers");
+        assert_eq!(render_expr(&set_remove.expr), "s.remove(&1)");
+
+        let set_discard = lower_method(&set_ty, "discard", "s", &["1".to_string()])
+            .expect("set discard lowers");
+        assert_eq!(render_expr(&set_discard.expr), "s.remove(&1)");
+
+        let set_contains = lower_method(&set_ty, "contains", "s", &["1".to_string()])
+            .expect("set contains lowers");
+        assert_eq!(render_expr(&set_contains.expr), "s.contains(&1)");
+
+        let set_clear = lower_method(&set_ty, "clear", "s", &[]).expect("set clear lowers");
+        assert_eq!(render_expr(&set_clear.expr), "s.clear()");
+
+        let set_copy = lower_method(&set_ty, "copy", "s", &[]).expect("set copy lowers");
+        assert_eq!(render_expr(&set_copy.expr), "s.clone()");
+
+        let set_subset = lower_method(&set_ty, "issubset", "s", &["other".to_string()])
+            .expect("set issubset lowers");
+        assert_eq!(render_expr(&set_subset.expr), "s.is_subset(&other)");
+
+        let set_superset = lower_method(&set_ty, "issuperset", "s", &["other".to_string()])
+            .expect("set issuperset lowers");
+        assert_eq!(render_expr(&set_superset.expr), "s.is_superset(&other)");
+
+        let set_disjoint = lower_method(&set_ty, "isdisjoint", "s", &["other".to_string()])
+            .expect("set isdisjoint lowers");
+        assert_eq!(render_expr(&set_disjoint.expr), "s.is_disjoint(&other)");
+
+        let set_pop = lower_method(&set_ty, "pop", "s", &[]).expect("set pop lowers");
+        assert!(render_expr(&set_pop.expr).contains("iter().next().cloned()"));
     }
 }
