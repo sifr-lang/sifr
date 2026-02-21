@@ -1,5 +1,6 @@
 //! Method registry and dispatch for incremental migration.
 
+mod deque;
 mod dict;
 mod list;
 mod set;
@@ -17,6 +18,16 @@ pub(crate) fn lower_method(
     method: &str,
     rendered_object: &str,
     rendered_args: &[String],
+) -> Option<LoweredMethod> {
+    lower_method_with_context(object_ty, method, rendered_object, rendered_args, false)
+}
+
+pub(crate) fn lower_method_with_context(
+    object_ty: &Type,
+    method: &str,
+    rendered_object: &str,
+    rendered_args: &[String],
+    is_deque_data_field: bool,
 ) -> Option<LoweredMethod> {
     let expr = match (object_ty, method) {
         (Type::Str, "upper") => string::lower_upper(rendered_object, rendered_args),
@@ -44,6 +55,18 @@ pub(crate) fn lower_method(
         (Type::Str, "ljust") => string::lower_ljust(rendered_object, rendered_args),
         (Type::Str, "rjust") => string::lower_rjust(rendered_object, rendered_args),
         (Type::Str, "zfill") => string::lower_zfill(rendered_object, rendered_args),
+        (Type::List(_), "append") if is_deque_data_field => {
+            deque::lower_append(rendered_object, rendered_args)
+        }
+        (Type::List(_), "appendleft") if is_deque_data_field => {
+            deque::lower_appendleft(rendered_object, rendered_args)
+        }
+        (Type::List(_), "pop") if is_deque_data_field => {
+            deque::lower_pop(rendered_object, rendered_args)
+        }
+        (Type::List(_), "popleft") if is_deque_data_field => {
+            deque::lower_popleft(rendered_object, rendered_args)
+        }
         (Type::List(_), "append") => list::lower_append(rendered_object, rendered_args),
         (Type::List(_), "extend") => list::lower_extend(rendered_object, rendered_args),
         (Type::List(_), "insert") => list::lower_insert(rendered_object, rendered_args),
@@ -269,6 +292,46 @@ mod tests {
         let list_pop = lower_method(&Type::List(Box::new(Type::Int)), "pop", "xs", &[])
             .expect("list pop lowers");
         assert_eq!(render_expr(&list_pop.expr), "xs.pop()");
+
+        let deque_append = lower_method_with_context(
+            &Type::List(Box::new(Type::Int)),
+            "append",
+            "dq",
+            &["1".to_string()],
+            true,
+        )
+        .expect("deque append lowers");
+        assert_eq!(render_expr(&deque_append.expr), "dq.push_back(1)");
+
+        let deque_appendleft = lower_method_with_context(
+            &Type::List(Box::new(Type::Int)),
+            "appendleft",
+            "dq",
+            &["1".to_string()],
+            true,
+        )
+        .expect("deque appendleft lowers");
+        assert_eq!(render_expr(&deque_appendleft.expr), "dq.push_front(1)");
+
+        let deque_pop = lower_method_with_context(
+            &Type::List(Box::new(Type::Int)),
+            "pop",
+            "dq",
+            &[],
+            true,
+        )
+        .expect("deque pop lowers");
+        assert_eq!(render_expr(&deque_pop.expr), "dq.pop_back()");
+
+        let deque_popleft = lower_method_with_context(
+            &Type::List(Box::new(Type::Int)),
+            "popleft",
+            "dq",
+            &[],
+            true,
+        )
+        .expect("deque popleft lowers");
+        assert_eq!(render_expr(&deque_popleft.expr), "dq.pop_front()");
 
         let list_remove = lower_method(
             &Type::List(Box::new(Type::Int)),

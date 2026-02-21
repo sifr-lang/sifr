@@ -4742,37 +4742,6 @@ impl RustEmitter {
             return;
         }
         match (obj_ty, method) {
-            // VecDeque methods (deque class _data field)
-            (Type::List(_), "append") if self.is_deque_data_field(object) => {
-                self.emit_expr(object);
-                self.write(".push_back(");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    if matches!(args[0].ty(), Type::TypeVar(_)) {
-                        self.write(".clone()");
-                    }
-                }
-                self.write(")");
-            }
-            (Type::List(_), "appendleft") if self.is_deque_data_field(object) => {
-                self.emit_expr(object);
-                self.write(".push_front(");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    if matches!(args[0].ty(), Type::TypeVar(_)) {
-                        self.write(".clone()");
-                    }
-                }
-                self.write(")");
-            }
-            (Type::List(_), "pop") if self.is_deque_data_field(object) => {
-                self.emit_expr(object);
-                self.write(".pop_back()");
-            }
-            (Type::List(_), "popleft") if self.is_deque_data_field(object) => {
-                self.emit_expr(object);
-                self.write(".pop_front()");
-            }
             (Type::Set(_), "len") => {
                 self.write("(");
                 self.emit_expr(object);
@@ -7671,21 +7640,17 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
     ) -> bool {
-        // Deque internals use VecDeque-specific methods (`push_back/pop_back/...`)
-        // that differ from plain Vec list methods.
-        if self.is_deque_data_field(object)
-            && matches!(method, "append" | "appendleft" | "pop" | "popleft")
-        {
-            return false;
-        }
-
+        let is_deque_data_field = self.is_deque_data_field(object);
         let rendered_object = self.expr_to_string(object);
         let mut rendered_args = args
             .iter()
             .map(|arg| self.expr_to_string(arg))
             .collect::<Vec<_>>();
 
-        if matches!(object_ty, Type::List(_)) && method == "append" && !args.is_empty() {
+        if matches!(object_ty, Type::List(_))
+            && matches!(method, "append" | "appendleft")
+            && !args.is_empty()
+        {
             // Preserve legacy behavior: clone TypeVar list args to avoid move issues.
             if matches!(args[0].ty(), Type::TypeVar(_)) {
                 rendered_args[0] = format!("{}.clone()", rendered_args[0]);
@@ -7706,8 +7671,13 @@ impl RustEmitter {
             }
         }
 
-        let Some(lowered) =
-            methods::lower_method(object_ty, method, &rendered_object, &rendered_args)
+        let Some(lowered) = methods::lower_method_with_context(
+            object_ty,
+            method,
+            &rendered_object,
+            &rendered_args,
+            is_deque_data_field,
+        )
         else {
             return false;
         };
