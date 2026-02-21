@@ -298,9 +298,86 @@ pub(super) fn lower_title(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.split_whitespace().map(|w| {{ let mut c = w.chars(); match c.next() {{ None => String::new(), Some(f) => f.to_uppercase().to_string() + &c.as_str().to_lowercase() }} }}).collect::<Vec<_>>().join(\" \")"
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    method: "split_whitespace".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "w".to_string(),
+                        ty: RustType::RawCode("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Block {
+                        stmts: vec![RustStmt::Let {
+                            mutable: true,
+                            name: "c".to_string(),
+                            ty: None,
+                            value: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("w".to_string())),
+                                method: "chars".to_string(),
+                                args: vec![],
+                            },
+                        }],
+                        expr: Some(Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("c".to_string())),
+                                    method: "next".to_string(),
+                                    args: vec![],
+                                }),
+                                method: "map".to_string(),
+                                args: vec![RustExpr::Closure {
+                                    params: vec![RustParam::Named {
+                                        name: "f".to_string(),
+                                        ty: RustType::RawCode("_".to_string()),
+                                    }],
+                                    body: Box::new(RustExpr::BinOp {
+                                        left: Box::new(RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident("f".to_string())),
+                                                method: "to_uppercase".to_string(),
+                                                args: vec![],
+                                            }),
+                                            method: "to_string".to_string(),
+                                            args: vec![],
+                                        }),
+                                        op: "+".to_string(),
+                                        right: Box::new(RustExpr::Ref {
+                                            mutable: false,
+                                            expr: Box::new(RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::MethodCall {
+                                                    receiver: Box::new(RustExpr::Ident(
+                                                        "c".to_string(),
+                                                    )),
+                                                    method: "as_str".to_string(),
+                                                    args: vec![],
+                                                }),
+                                                method: "to_lowercase".to_string(),
+                                                args: vec![],
+                                            }),
+                                        }),
+                                    }),
+                                    is_move: false,
+                                }],
+                            }),
+                            method: "unwrap_or_default".to_string(),
+                            args: vec![],
+                        })),
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "collect::<Vec<_>>".to_string(),
+            args: vec![],
+        }),
+        method: "join".to_string(),
+        args: vec![render_borrowed_arg_expr("\" \"")],
+    })
 }
 
 pub(super) fn lower_capitalize(object: &str, args: &[String]) -> Option<RustExpr> {
