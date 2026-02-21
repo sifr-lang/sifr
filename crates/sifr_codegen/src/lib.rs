@@ -8,7 +8,6 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::nonminimal_bool)]
 #![allow(clippy::while_let_loop)]
-#![allow(clippy::ref_option)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
@@ -4248,7 +4247,14 @@ impl RustEmitter {
             if matches!(arm.pattern, HirPattern::Wildcard) {
                 has_wildcard = true;
             }
-            self.emit_match_arm(&arm.pattern, subject_ty, &arm.guard, &arm.body, is_option, is_non_option_union);
+            self.emit_match_arm(
+                &arm.pattern,
+                subject_ty,
+                arm.guard.as_ref(),
+                &arm.body,
+                is_option,
+                is_non_option_union,
+            );
         }
 
         // If no wildcard and not a union type, add a wildcard arm to make it exhaustive
@@ -4264,7 +4270,7 @@ impl RustEmitter {
         &mut self,
         pattern: &HirPattern,
         subject_ty: &Type,
-        guard: &Option<HirExpr>,
+        guard: Option<&HirExpr>,
         body: &[HirStmt],
         is_option: bool,
         is_non_option_union: bool,
@@ -4524,7 +4530,13 @@ impl RustEmitter {
         }
     }
 
-    fn emit_list_slice(&mut self, object: &HirExpr, start: &Option<Box<HirExpr>>, stop: &Option<Box<HirExpr>>, step: &Option<Box<HirExpr>>) {
+    fn emit_list_slice(
+        &mut self,
+        object: &HirExpr,
+        start: Option<&HirExpr>,
+        stop: Option<&HirExpr>,
+        step: Option<&HirExpr>,
+    ) {
         if let Some(step_expr) = step {
             // Step slicing
             self.write("{ let _v = &");
@@ -4590,7 +4602,13 @@ impl RustEmitter {
         }
     }
 
-    fn emit_string_slice(&mut self, object: &HirExpr, start: &Option<Box<HirExpr>>, stop: &Option<Box<HirExpr>>, step: &Option<Box<HirExpr>>) {
+    fn emit_string_slice(
+        &mut self,
+        object: &HirExpr,
+        start: Option<&HirExpr>,
+        stop: Option<&HirExpr>,
+        step: Option<&HirExpr>,
+    ) {
         if let Some(step_expr) = step {
             self.write("{ let _s: Vec<char> = ");
             self.emit_expr(object);
@@ -5766,7 +5784,12 @@ impl RustEmitter {
                 let obj_ty = object.ty();
                 match obj_ty {
                     Type::Str => {
-                        self.emit_string_slice(object, start, stop, step);
+                        self.emit_string_slice(
+                            object,
+                            start.as_deref(),
+                            stop.as_deref(),
+                            step.as_deref(),
+                        );
                     }
                     Type::Tuple(_) => {
                         // Compile-time tuple slicing: direct field access
@@ -5788,7 +5811,12 @@ impl RustEmitter {
                     }
                     _ => {
                         // List slicing
-                        self.emit_list_slice(object, start, stop, step);
+                        self.emit_list_slice(
+                            object,
+                            start.as_deref(),
+                            stop.as_deref(),
+                            step.as_deref(),
+                        );
                     }
                 }
             }
