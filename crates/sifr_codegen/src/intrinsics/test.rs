@@ -65,18 +65,40 @@ pub(super) fn lower_assert_gt(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "assert!({} > {}, \"assert_gt failed: {{}} is not > {{}}\", {}, {})",
-        args[0], args[1], args[0], args[1]
-    )))
+    Some(RustExpr::MacroCall {
+        name: "assert".to_string(),
+        args: vec![
+            RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident(args[0].clone())),
+                op: ">".to_string(),
+                right: Box::new(RustExpr::Ident(args[1].clone())),
+            },
+            RustExpr::Literal(crate::RustLiteral::Str(
+                "assert_gt failed: {} is not > {}".to_string(),
+            )),
+            RustExpr::Ident(args[0].clone()),
+            RustExpr::Ident(args[1].clone()),
+        ],
+    })
 }
 
 pub(super) fn lower_assert_lt(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "assert!({} < {}, \"assert_lt failed: {{}} is not < {{}}\", {}, {})",
-        args[0], args[1], args[0], args[1]
-    )))
+    Some(RustExpr::MacroCall {
+        name: "assert".to_string(),
+        args: vec![
+            RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident(args[0].clone())),
+                op: "<".to_string(),
+                right: Box::new(RustExpr::Ident(args[1].clone())),
+            },
+            RustExpr::Literal(crate::RustLiteral::Str(
+                "assert_lt failed: {} is not < {}".to_string(),
+            )),
+            RustExpr::Ident(args[0].clone()),
+            RustExpr::Ident(args[1].clone()),
+        ],
+    })
 }
