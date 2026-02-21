@@ -63,11 +63,51 @@ pub(super) fn lower_time_format(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let secs = {} as i64; let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap_or_default(); dt.format({}).to_string() }}",
-        args[0],
-        borrowed_str(&args[1])
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "secs".to_string(),
+                ty: None,
+                value: RustExpr::Cast {
+                    expr: Box::new(RustExpr::Ident(args[0].clone())),
+                    ty: RustType::I64,
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "dt".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "chrono".to_string(),
+                            "DateTime".to_string(),
+                            "from_timestamp".to_string(),
+                        ])),
+                        args: vec![
+                            RustExpr::Ident("secs".to_string()),
+                            RustExpr::Literal(RustLiteral::Int(0)),
+                        ],
+                    }),
+                    method: "unwrap_or_default".to_string(),
+                    args: vec![],
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("dt".to_string())),
+                method: "format".to_string(),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                }],
+            }),
+            method: "to_string".to_string(),
+            args: vec![],
+        })),
+    })
 }
 
 pub(super) fn lower_perf_counter(args: &[String]) -> Option<RustExpr> {
