@@ -218,6 +218,7 @@ status: in_progress
 - [x] PR108 slice: continue RawCode-zero gate by replacing dict helper/by-value `RawCode` with structured `Ident`/`Named` (`render_key_arg_expr`, `items` closure placeholder type, `update`, `get` default)
 - [x] PR109 slice: continue RawCode-zero gate by replacing list borrowed/helper and insert cast `RawCode` with structured `Ident`/`Named` (`render_borrowed_arg_expr`, `insert`)
 - [x] PR110 slice: continue RawCode-zero gate by replacing list closure placeholder type `RawCode(\"_\")` with structured `Named(\"_\")`
+- [x] PR111 slice: continue RawCode-zero gate by replacing list predicate/index compare-right `RawCode` with structured `Ident` (`count`, `remove`, `index`)
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
