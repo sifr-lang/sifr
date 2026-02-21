@@ -330,6 +330,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut stdlib_needs_hashset = false;
     let mut stdlib_needs_vecdeque = false;
     let mut stdlib_needs_file_handles = false;
+    let mut stdlib_provides_file_handle_struct = false;
     for module_name in &emitter.used_stdlib_modules {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             for dep in deps {
@@ -376,6 +377,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     stdlib_needs_hashset |= prepared.shared_needs.needs_hashset;
                     stdlib_needs_vecdeque |= prepared.shared_needs.needs_vecdeque;
                     stdlib_needs_file_handles |= prepared.shared_needs.needs_file_handles;
+                    stdlib_provides_file_handle_struct |=
+                        prepared.shared_needs.provides_file_handle_struct;
                     let stripped = prepared.stripped_code;
                     if !stripped.trim().is_empty() {
                         let deduped = dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
@@ -506,7 +509,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Emit file handle global state if open() built-in or any file handle intrinsic is used.
     if needs_file_handles {
         preamble_items.extend(build_file_handle_infra_items());
-        if !stdlib_preamble.contains("struct FileHandle {")
+        if !stdlib_provides_file_handle_struct
             && !user_defined_file_handle_struct
         {
             preamble_items.extend(build_file_handle_struct_items());

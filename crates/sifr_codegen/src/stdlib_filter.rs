@@ -19,6 +19,7 @@ pub(crate) struct SharedPreludeNeeds {
     pub(crate) needs_hashset: bool,
     pub(crate) needs_vecdeque: bool,
     pub(crate) needs_file_handles: bool,
+    pub(crate) provides_file_handle_struct: bool,
 }
 
 pub(crate) struct PreparedStdlibModule {
@@ -39,6 +40,9 @@ pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlib
 
         if line.contains("__SIFR_FILE_HANDLES") {
             shared_needs.needs_file_handles = true;
+        }
+        if t.starts_with("struct FileHandle {") {
+            shared_needs.provides_file_handle_struct = true;
         }
         if t == "use std::collections::HashMap;" {
             shared_needs.needs_hashmap = true;
@@ -479,6 +483,10 @@ static __SIFR_FILE_HANDLES: std::sync::OnceLock<
     Mutex<HashMap<i64, SifrFileHandle>>
 > = std::sync::OnceLock::new();
 
+struct FileHandle {
+    _handle: i64,
+}
+
 fn keep_me() {
     let _ = __SIFR_FILE_HANDLES.get();
 }
@@ -488,6 +496,7 @@ fn keep_me() {
         assert!(prepared.shared_needs.needs_hashset);
         assert!(prepared.shared_needs.needs_vecdeque);
         assert!(prepared.shared_needs.needs_file_handles);
+        assert!(prepared.shared_needs.provides_file_handle_struct);
         assert!(!prepared.stripped_code.contains("use std::collections::HashMap;"));
         assert!(!prepared.stripped_code.contains("enum SifrFileHandle {"));
         assert!(!prepared.stripped_code.contains("static __SIFR_FILE_HANDLES:"));
