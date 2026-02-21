@@ -16,9 +16,6 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::iter_next_loop)]
-#![allow(clippy::map_clone)]
-#![allow(clippy::useless_format)]
 #![allow(clippy::cloned_instead_of_copied)]
 #![allow(clippy::wildcard_imports)]
 #![allow(clippy::unused_self)]
@@ -32,8 +29,6 @@
 #![allow(clippy::inefficient_to_string)]
 #![allow(clippy::struct_excessive_bools)]
 #![allow(clippy::doc_link_with_quotes)]
-#![allow(clippy::redundant_closure_for_method_calls)]
-#![allow(clippy::if_same_then_else)]
 #![allow(clippy::if_not_else)]
 #![allow(clippy::unnecessary_unwrap)]
 
@@ -1128,7 +1123,7 @@ impl RustEmitter {
 
         for (enum_name, members) in &enums {
             // Generate the enum definition
-            self.enum_defs.push_str(&format!("#[derive(Debug, Clone)]\n"));
+            self.enum_defs.push_str("#[derive(Debug, Clone)]\n");
             self.enum_defs.push_str(&format!("enum {} {{\n", enum_name));
             for member in members {
                 let variant = member.union_variant_name();
@@ -1836,7 +1831,7 @@ impl RustEmitter {
         let is_generic = !class.type_params.is_empty();
         let bounds = Self::generic_bounds_for_class(class);
         let generic_suffix = if is_generic {
-            let params: Vec<String> = class.type_params.iter().map(|p| p.clone()).collect();
+            let params: Vec<String> = class.type_params.clone();
             format!("<{}>", params.join(", "))
         } else {
             String::new()
@@ -2033,11 +2028,7 @@ impl RustEmitter {
                 self.indent += 1;
                 // Delegate to the inherent impl method
                 self.write_indent();
-                if method.return_type != Type::None {
-                    self.write(&format!("{}::{}(self", class.name, method.name));
-                } else {
-                    self.write(&format!("{}::{}(self", class.name, method.name));
-                }
+                self.write(&format!("{}::{}(self", class.name, method.name));
                 for param in &method.params {
                     self.write(", ");
                     self.write(&param.name);
