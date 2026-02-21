@@ -6,10 +6,57 @@ pub(super) fn lower_env_get(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __k = {}; if __k.is_empty() || __k.contains('=') || __k.as_bytes().contains(&0) {{ None }} else {{ std::env::var(__k).ok() }} }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__k".to_string(),
+            ty: None,
+            value: RustExpr::Ident(args[0].clone()),
+        }],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                    method: "is_empty".to_string(),
+                    args: vec![],
+                }),
+                op: "||".to_string(),
+                right: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                        method: "contains".to_string(),
+                        args: vec![RustExpr::Literal(RustLiteral::Char('='))],
+                    }),
+                    op: "||".to_string(),
+                    right: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__k".to_string())),
+                            method: "as_bytes".to_string(),
+                            args: vec![],
+                        }),
+                        method: "contains".to_string(),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                        }],
+                    }),
+                }),
+            }),
+            then_expr: Box::new(RustExpr::Literal(RustLiteral::None)),
+            else_expr: Some(Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "env".to_string(),
+                        "var".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ident("__k".to_string())],
+                }),
+                method: "ok".to_string(),
+                args: vec![],
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_env_set(args: &[String]) -> Option<RustExpr> {
