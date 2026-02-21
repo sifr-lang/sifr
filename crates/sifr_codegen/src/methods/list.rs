@@ -2,6 +2,17 @@
 
 use crate::{RustExpr, RustParam, RustType};
 
+fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
+    if arg.ends_with(".as_str()") || arg.starts_with('&') {
+        RustExpr::RawCode(arg.to_string())
+    } else {
+        RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::RawCode(format!("({arg})"))),
+        }
+    }
+}
+
 pub(super) fn lower_append(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
@@ -89,10 +100,35 @@ pub(super) fn lower_count(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.iter().filter(|x| **x == {}).count() as i64",
-        args[0]
-    )))
+    Some(RustExpr::Cast {
+        expr: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "filter".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "x".to_string(),
+                        ty: RustType::RawCode("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Deref(Box::new(
+                            RustExpr::Ident("x".to_string()),
+                        ))))),
+                        op: "==".to_string(),
+                        right: Box::new(RustExpr::RawCode(args[0].clone())),
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "count".to_string(),
+            args: vec![],
+        }),
+        ty: RustType::I64,
+    })
 }
 
 pub(super) fn lower_contains(object: &str, args: &[String]) -> Option<RustExpr> {
@@ -102,10 +138,7 @@ pub(super) fn lower_contains(object: &str, args: &[String]) -> Option<RustExpr> 
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "contains".to_string(),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::RawCode(args[0].clone())),
-        }],
+        args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 

@@ -193,6 +193,7 @@ status: in_progress
 - [x] PR83 slice: continue RawCode-zero gate by structuring dict lookup method lowerers (`dict.contains/get/pop`) as chained `RustExpr::MethodCall` + `RustExpr::Ref` args
 - [x] PR84 slice: continue RawCode-zero gate by structuring `list.insert` as `RustExpr::MethodCall` with structured cast to `usize`
 - [x] PR85 slice: continue RawCode-zero gate by structuring `list.index` as chained `RustExpr::MethodCall` + closure IR nodes
+- [x] PR86 slice: continue RawCode-zero gate by structuring `list.count` as chained iterator/closure IR + cast node and fixing borrowed-arg cast precedence in list/set methods
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
