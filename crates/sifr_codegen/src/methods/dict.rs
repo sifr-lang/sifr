@@ -41,7 +41,11 @@ pub(super) fn lower_update(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.extend({})", args[0])))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "extend".to_string(),
+        args: vec![RustExpr::RawCode(args[0].clone())],
+    })
 }
 
 pub(super) fn lower_clear(object: &str, args: &[String]) -> Option<RustExpr> {

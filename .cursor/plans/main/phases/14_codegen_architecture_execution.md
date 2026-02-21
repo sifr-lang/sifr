@@ -188,6 +188,7 @@ status: in_progress
 - [x] PR78 slice: continue RawCode-zero gate by structuring deque method lowerers (`push_back`/`push_front`/`pop_back`/`pop_front`) and fixing cast-parentheses rendering precedence
 - [x] PR79 slice: continue RawCode-zero gate by structuring zero-arg list method lowerers (`clear`, `copy`, `reverse`, `sort`, `pop`) as `RustExpr::MethodCall`
 - [x] PR80 slice: continue RawCode-zero gate by structuring zero-arg dict/set method lowerers (`clear`, `copy`) as `RustExpr::MethodCall`
+- [x] PR81 slice: continue RawCode-zero gate by structuring one-arg by-value method lowerers (`list.append/extend`, `dict.update`, `set.add`) as `RustExpr::MethodCall`
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
