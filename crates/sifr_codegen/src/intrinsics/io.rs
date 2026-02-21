@@ -174,9 +174,22 @@ pub(super) fn lower_gettempdir(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(
-        "std::env::temp_dir().display().to_string()".to_string(),
-    ))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "env".to_string(),
+                    "temp_dir".to_string(),
+                ])),
+                args: vec![],
+            }),
+            method: "display".to_string(),
+            args: vec![],
+        }),
+        method: "to_string".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_makedirs(args: &[String]) -> Option<RustExpr> {
