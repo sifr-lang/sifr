@@ -70,3 +70,40 @@ pub(super) fn lower_which(args: &[String]) -> Option<RustExpr> {
         borrow_expr(&args[0])
     )))
 }
+
+pub(super) fn lower_disk_usage(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __path = {}; let __stat = std::fs::metadata(__path); match __stat {{ Ok(_) => {{ let __out = std::process::Command::new(\"df\").args([\"-k\", __path]).output(); match __out {{ Ok(__o) => {{ let __s = String::from_utf8_lossy(&__o.stdout); let __lines: Vec<&str> = __s.lines().collect(); if __lines.len() >= 2 {{ let __parts: Vec<&str> = __lines[1].split_whitespace().collect(); if __parts.len() >= 4 {{ let __total = __parts[1].parse::<i64>().unwrap_or(0) * 1024; let __used = __parts[2].parse::<i64>().unwrap_or(0) * 1024; let __free = __parts[3].parse::<i64>().unwrap_or(0) * 1024; vec![__total, __used, __free] }} else {{ vec![0i64, 0, 0] }} }} else {{ vec![0i64, 0, 0] }} }}, Err(_) => vec![0i64, 0, 0] }} }}, Err(_) => vec![0i64, 0, 0] }} }}",
+        borrow_expr(&args[0])
+    )))
+}
+
+pub(super) fn lower_os_sep(args: &[String]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::RawCode("std::path::MAIN_SEPARATOR.to_string()".to_string()))
+}
+
+pub(super) fn lower_os_linesep(args: &[String]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::RawCode(
+        "{ if cfg!(target_os = \"windows\") { \"\\r\\n\".to_string() } else { \"\\n\".to_string() } }"
+            .to_string(),
+    ))
+}
+
+pub(super) fn lower_os_name(args: &[String]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::RawCode(
+        "{ if cfg!(target_os = \"windows\") { \"nt\".to_string() } else { \"posix\".to_string() } }"
+            .to_string(),
+    ))
+}
