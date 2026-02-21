@@ -67,7 +67,7 @@ fn lower_non_empty_char_all(
             args: vec![RustExpr::Closure {
                 params: vec![RustParam::Named {
                     name: "c".to_string(),
-                    ty: RustType::RawCode("_".to_string()),
+                    ty: RustType::Named("_".to_string()),
                 }],
                 body: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident("c".to_string())),
@@ -84,7 +84,7 @@ fn char_predicate_closure(method: &str) -> RustExpr {
     RustExpr::Closure {
         params: vec![RustParam::Named {
             name: "c".to_string(),
-            ty: RustType::RawCode("_".to_string()),
+            ty: RustType::Named("_".to_string()),
         }],
         body: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("c".to_string())),
@@ -177,7 +177,7 @@ pub(super) fn lower_split(object: &str, args: &[String]) -> Option<RustExpr> {
                 args: vec![RustExpr::Closure {
                     params: vec![RustParam::Named {
                         name: "s".to_string(),
-                        ty: RustType::RawCode("_".to_string()),
+                        ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Ident("s".to_string())),
@@ -201,7 +201,7 @@ pub(super) fn lower_split(object: &str, args: &[String]) -> Option<RustExpr> {
                 args: vec![RustExpr::Closure {
                     params: vec![RustParam::Named {
                         name: "s".to_string(),
-                        ty: RustType::RawCode("_".to_string()),
+                        ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Ident("s".to_string())),
@@ -246,7 +246,7 @@ pub(super) fn lower_find(object: &str, args: &[String]) -> Option<RustExpr> {
         args: vec![RustExpr::Closure {
             params: vec![RustParam::Named {
                 name: "i".to_string(),
-                ty: RustType::RawCode("_".to_string()),
+                ty: RustType::Named("_".to_string()),
             }],
             body: Box::new(RustExpr::Cast {
                 expr: Box::new(RustExpr::Ident("i".to_string())),
@@ -310,7 +310,7 @@ pub(super) fn lower_title(object: &str, args: &[String]) -> Option<RustExpr> {
                 args: vec![RustExpr::Closure {
                     params: vec![RustParam::Named {
                         name: "w".to_string(),
-                        ty: RustType::RawCode("_".to_string()),
+                        ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::Block {
                         stmts: vec![RustStmt::Let {
@@ -334,7 +334,7 @@ pub(super) fn lower_title(object: &str, args: &[String]) -> Option<RustExpr> {
                                 args: vec![RustExpr::Closure {
                                     params: vec![RustParam::Named {
                                         name: "f".to_string(),
-                                        ty: RustType::RawCode("_".to_string()),
+                                        ty: RustType::Named("_".to_string()),
                                     }],
                                     body: Box::new(RustExpr::BinOp {
                                         left: Box::new(RustExpr::MethodCall {
@@ -414,7 +414,7 @@ pub(super) fn lower_capitalize(object: &str, args: &[String]) -> Option<RustExpr
                 args: vec![RustExpr::Closure {
                     params: vec![RustParam::Named {
                         name: "f".to_string(),
-                        ty: RustType::RawCode("_".to_string()),
+                        ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::BinOp {
                         left: Box::new(RustExpr::MethodCall {
@@ -464,7 +464,7 @@ pub(super) fn lower_swapcase(object: &str, args: &[String]) -> Option<RustExpr> 
             args: vec![RustExpr::Closure {
                 params: vec![RustParam::Named {
                     name: "c".to_string(),
-                    ty: RustType::RawCode("_".to_string()),
+                    ty: RustType::Named("_".to_string()),
                 }],
                 body: Box::new(RustExpr::If {
                     cond: Box::new(RustExpr::MethodCall {
