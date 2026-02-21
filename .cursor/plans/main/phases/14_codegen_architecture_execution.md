@@ -178,6 +178,7 @@ status: in_progress
 - [x] PR68 slice: remove `unnecessary_unwrap` suppression by replacing `parent_class.as_ref().unwrap()` with an `Option`-driven inheritance branch
 - [x] PR69 slice: remove `assigning_clones` suppression by switching stdlib intrinsic map assignment to `clone_from(...)`
 - [x] PR70 slice: remove `wildcard_imports` suppression by replacing `use sifr_hir::*;` with an explicit `sifr_hir::{...}` import list
+- [x] PR71 slice: remove `unused_self` suppression by converting `substitute_class_captures_in_guard` to an associated helper and updating call sites
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
