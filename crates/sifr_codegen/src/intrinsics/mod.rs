@@ -17,6 +17,7 @@ mod platform;
 mod uuid;
 mod toml;
 mod datetime;
+mod sys;
 
 use crate::RustExpr;
 
@@ -193,6 +194,10 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
             datetime::lower_datetime_from_timestamp(rendered_args),
             Some("chrono"),
         ),
+        "sys_exit" => (sys::lower_sys_exit(rendered_args), None),
+        "sys_version" => (sys::lower_sys_version(rendered_args), None),
+        "sys_platform" => (sys::lower_sys_platform(rendered_args), None),
+        "sys_maxsize" => (sys::lower_sys_maxsize(rendered_args), None),
         _ => return None,
     };
 
@@ -575,5 +580,20 @@ mod tests {
             lower_intrinsic("datetime_from_timestamp", &["ts".to_string()]).expect("from_timestamp");
         assert_eq!(from_ts.required_crate, Some("chrono"));
         assert!(render_expr(&from_ts.expr).contains("DateTime::from_timestamp"));
+    }
+
+    #[test]
+    fn lowers_sys_intrinsics_via_registry() {
+        let exit = lower_intrinsic("sys_exit", &["code".to_string()]).expect("sys_exit");
+        assert!(render_expr(&exit.expr).contains("std::process::exit(code as i32)"));
+
+        let version = lower_intrinsic("sys_version", &[]).expect("sys_version");
+        assert_eq!(render_expr(&version.expr), "\"sifr 0.1.0\".to_string()");
+
+        let platform = lower_intrinsic("sys_platform", &[]).expect("sys_platform");
+        assert_eq!(render_expr(&platform.expr), "std::env::consts::OS.to_string()");
+
+        let maxsize = lower_intrinsic("sys_maxsize", &[]).expect("sys_maxsize");
+        assert_eq!(render_expr(&maxsize.expr), "i64::MAX");
     }
 }

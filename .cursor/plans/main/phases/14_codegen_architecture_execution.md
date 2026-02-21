@@ -114,6 +114,7 @@ status: in_progress
 - [x] PR20 slice: migrate `sifr.uuid` intrinsic (`uuid4`) into registry lowerers
 - [x] PR21 slice: migrate `sifr.toml` intrinsic (`toml_parse`) into registry lowerers
 - [x] PR22 slice: migrate `sifr.datetime` intrinsics (`datetime_now`, `datetime_now_struct`, `datetime_format`, `datetime_from_timestamp`) into registry lowerers
+- [x] PR23 slice: migrate `sifr.sys` intrinsics (`sys_exit`, `sys_version`, `sys_platform`, `sys_maxsize`) into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
