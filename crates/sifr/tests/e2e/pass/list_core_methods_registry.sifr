@@ -1,0 +1,27 @@
+# expect-stdout: count 1 = 2
+# expect-stdout: contains 2 = true
+# expect-stdout: len copy = 4
+# expect-stdout: count 1 after remove = 1
+# expect-stdout: contains 3 after sort = true
+# expect-stdout: contains 3 after reverse = true
+# expect-stdout: len after clear = 0
+
+def main():
+    xs: list[int] = [3, 1, 2, 1]
+    print("count 1 = " + str(xs.count(1)))
+    print("contains 2 = " + str(xs.contains(2)))
+
+    ys: list[int] = xs.copy()
+    print("len copy = " + str(len(ys)))
+
+    ys.remove(1)
+    print("count 1 after remove = " + str(ys.count(1)))
+
+    ys.sort()
+    print("contains 3 after sort = " + str(ys.contains(3)))
+
+    ys.reverse()
+    print("contains 3 after reverse = " + str(ys.contains(3)))
+
+    ys.clear()
+    print("len after clear = " + str(len(ys)))

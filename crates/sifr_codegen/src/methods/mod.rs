@@ -1,5 +1,6 @@
 //! Method registry and dispatch for incremental migration.
 
+mod list;
 mod string;
 
 use crate::RustExpr;
@@ -41,6 +42,15 @@ pub(crate) fn lower_method(
         (Type::Str, "ljust") => string::lower_ljust(rendered_object, rendered_args),
         (Type::Str, "rjust") => string::lower_rjust(rendered_object, rendered_args),
         (Type::Str, "zfill") => string::lower_zfill(rendered_object, rendered_args),
+        (Type::List(_), "clear") => list::lower_clear(rendered_object, rendered_args),
+        (Type::List(_), "copy") => list::lower_copy(rendered_object, rendered_args),
+        (Type::List(_), "reverse") => list::lower_reverse(rendered_object, rendered_args),
+        (Type::List(_), "sort") => list::lower_sort(rendered_object, rendered_args),
+        (Type::List(_), "count") => list::lower_count(rendered_object, rendered_args),
+        (Type::List(_), "contains") => list::lower_contains(rendered_object, rendered_args),
+        (Type::List(_), "pop") => list::lower_pop(rendered_object, rendered_args),
+        (Type::List(_), "remove") => list::lower_remove(rendered_object, rendered_args),
+        (Type::List(_), "index") => list::lower_index(rendered_object, rendered_args),
         _ => return None,
     };
 
@@ -160,6 +170,71 @@ mod tests {
         assert_eq!(
             render_expr(&zfill.expr),
             "format!(\"{:0>width$}\", s, width = 5 as usize)"
+        );
+
+        let list_clear = lower_method(&Type::List(Box::new(Type::Int)), "clear", "xs", &[])
+            .expect("list clear lowers");
+        assert_eq!(render_expr(&list_clear.expr), "xs.clear()");
+
+        let list_copy = lower_method(&Type::List(Box::new(Type::Int)), "copy", "xs", &[])
+            .expect("list copy lowers");
+        assert_eq!(render_expr(&list_copy.expr), "xs.clone()");
+
+        let list_reverse = lower_method(&Type::List(Box::new(Type::Int)), "reverse", "xs", &[])
+            .expect("list reverse lowers");
+        assert_eq!(render_expr(&list_reverse.expr), "xs.reverse()");
+
+        let list_sort = lower_method(&Type::List(Box::new(Type::Int)), "sort", "xs", &[])
+            .expect("list sort lowers");
+        assert_eq!(render_expr(&list_sort.expr), "xs.sort()");
+
+        let list_count = lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "count",
+            "xs",
+            &["1".to_string()],
+        )
+        .expect("list count lowers");
+        assert_eq!(
+            render_expr(&list_count.expr),
+            "xs.iter().filter(|x| **x == 1).count() as i64"
+        );
+
+        let list_contains = lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "contains",
+            "xs",
+            &["1".to_string()],
+        )
+        .expect("list contains lowers");
+        assert_eq!(render_expr(&list_contains.expr), "xs.contains(&1)");
+
+        let list_pop = lower_method(&Type::List(Box::new(Type::Int)), "pop", "xs", &[])
+            .expect("list pop lowers");
+        assert_eq!(render_expr(&list_pop.expr), "xs.pop()");
+
+        let list_remove = lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "remove",
+            "xs",
+            &["1".to_string()],
+        )
+        .expect("list remove lowers");
+        assert_eq!(
+            render_expr(&list_remove.expr),
+            "{ if let Some(__pos) = xs.iter().position(|__x| *__x == 1) { xs.remove(__pos); } }"
+        );
+
+        let list_index = lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "index",
+            "xs",
+            &["1".to_string()],
+        )
+        .expect("list index lowers");
+        assert_eq!(
+            render_expr(&list_index.expr),
+            "xs.iter().position(|__x| *__x == 1).map(|__p| __p as i64)"
         );
     }
 }
