@@ -4,6 +4,7 @@ use crate::{
     RustExpr, RustFile, RustItem, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType,
     Visibility,
 };
+use std::fmt::Write as _;
 
 pub struct Renderer {
     output: String,
@@ -590,7 +591,7 @@ impl Renderer {
                     Self::render_expr_string(then_expr)
                 );
                 if let Some(else_expr) = else_expr {
-                    out.push_str(&format!(" else {{ {} }}", Self::render_expr_string(else_expr)));
+                    let _ = write!(out, " else {{ {} }}", Self::render_expr_string(else_expr));
                 }
                 out
             }

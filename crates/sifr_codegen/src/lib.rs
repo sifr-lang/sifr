@@ -4,7 +4,6 @@
 
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::doc_markdown)]
-#![allow(clippy::format_push_string)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
@@ -47,6 +46,7 @@ use stdlib_filter::{
     filter_rust_code_to_needed,
 };
 use std::collections::{HashMap, HashSet};
+use std::fmt::Write as _;
 
 type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
 type ModuleFuncSignatures = HashMap<String, FuncSignature>;
@@ -363,7 +363,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     if !stripped.trim().is_empty() {
                         let deduped = dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
                         if !deduped.trim().is_empty() {
-                            stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
+                            let _ = writeln!(stdlib_preamble, "// --- stdlib: {} ---", module_name);
                             stdlib_preamble.push_str(&deduped);
                             stdlib_preamble.push('\n');
                         }
@@ -558,9 +558,9 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
             for name in &import.names {
                 // Check if this name has an alias
                 if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
-                    result.push_str(&format!("use crate::{}::{} as {};\n", import.module, name, alias));
+                    let _ = writeln!(result, "use crate::{}::{} as {};", import.module, name, alias);
                 } else {
-                    result.push_str(&format!("use crate::{}::{};\n", import.module, name));
+                    let _ = writeln!(result, "use crate::{}::{};", import.module, name);
                 }
             }
         }
@@ -1109,26 +1109,29 @@ impl RustEmitter {
         for (enum_name, members) in &enums {
             // Generate the enum definition
             self.enum_defs.push_str("#[derive(Debug, Clone)]\n");
-            self.enum_defs.push_str(&format!("enum {} {{\n", enum_name));
+            let _ = writeln!(self.enum_defs, "enum {} {{", enum_name);
             for member in members {
                 let variant = member.union_variant_name();
                 let rust_ty = member.rust_type();
-                self.enum_defs.push_str(&format!("    {}({}),\n", variant, rust_ty));
+                let _ = writeln!(self.enum_defs, "    {}({}),", variant, rust_ty);
             }
             self.enum_defs.push_str("}\n\n");
 
             // Generate Display impl so println!("{}", x) works
-            self.enum_defs.push_str(&format!("impl std::fmt::Display for {} {{\n", enum_name));
+            let _ = writeln!(self.enum_defs, "impl std::fmt::Display for {} {{", enum_name);
             self.enum_defs.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
             self.enum_defs.push_str("        match self {\n");
             for member in members {
                 let variant = member.union_variant_name();
                 // Use {:?} for class types (they derive Debug, not Display)
                 let fmt_spec = if matches!(member, Type::Class { .. }) { "{:?}" } else { "{}" };
-                self.enum_defs.push_str(&format!(
-                    "            {}::{}(v) => write!(f, \"{}\", v),\n",
-                    enum_name, variant, fmt_spec
-                ));
+                let _ = writeln!(
+                    self.enum_defs,
+                    "            {}::{}(v) => write!(f, \"{}\", v),",
+                    enum_name,
+                    variant,
+                    fmt_spec
+                );
             }
             self.enum_defs.push_str("        }\n");
             self.enum_defs.push_str("    }\n");
@@ -2342,10 +2345,10 @@ impl RustEmitter {
         Self::scan_body_for_typevar_ops(tp, body, &mut needs_add, &mut needs_sub);
         let mut extra = String::new();
         if needs_add {
-            extra.push_str(&format!(" + std::ops::Add<Output = {}>", tp));
+            let _ = write!(extra, " + std::ops::Add<Output = {}>", tp);
         }
         if needs_sub {
-            extra.push_str(&format!(" + std::ops::Sub<Output = {}>", tp));
+            let _ = write!(extra, " + std::ops::Sub<Output = {}>", tp);
         }
         extra
     }
