@@ -171,6 +171,7 @@ status: in_progress
 - [x] PR61 slice: remove 3 clippy suppressions (`option_map_or_none`, `unnecessary_semicolon`, `redundant_closure`) and fix surfaced warnings
 - [x] PR62 slice: remove 3 clippy suppressions (`cloned_instead_of_copied`, `doc_link_with_quotes`, `inefficient_to_string`) and fix surfaced warnings
 - [x] PR63 slice: remove `unnecessary_map_or` suppression by converting `map_or(false, ...)` patterns to `is_some_and(...)`
+- [x] PR64 slice: remove 2 clippy suppressions (`collapsible_match`, `needless_borrow`) and fix surfaced warnings
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
