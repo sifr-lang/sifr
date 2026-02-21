@@ -80,6 +80,56 @@ fn lower_non_empty_char_all(
     })
 }
 
+fn char_predicate_closure(method: &str) -> RustExpr {
+    RustExpr::Closure {
+        params: vec![RustParam::Named {
+            name: "c".to_string(),
+            ty: RustType::RawCode("_".to_string()),
+        }],
+        body: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("c".to_string())),
+            method: method.to_string(),
+            args: vec![],
+        }),
+        is_move: false,
+    }
+}
+
+fn lower_has_alpha_and_filtered_all(
+    object: &str,
+    args: &[String],
+    alpha_case_method: &str,
+) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::BinOp {
+        left: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "chars".to_string(),
+                args: vec![],
+            }),
+            method: "any".to_string(),
+            args: vec![char_predicate_closure("is_alphabetic")],
+        }),
+        op: "&&".to_string(),
+        right: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    method: "chars".to_string(),
+                    args: vec![],
+                }),
+                method: "filter".to_string(),
+                args: vec![char_predicate_closure("is_alphabetic")],
+            }),
+            method: "all".to_string(),
+            args: vec![char_predicate_closure(alpha_case_method)],
+        }),
+    })
+}
+
 pub(super) fn lower_upper(object: &str, args: &[String]) -> Option<RustExpr> {
     lower_zero_arg_method(object, args, "to_uppercase")
 }
@@ -288,21 +338,11 @@ pub(super) fn lower_isspace(object: &str, args: &[String]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_isupper(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "{object}.chars().any(|c| c.is_alphabetic()) && {object}.chars().filter(|c| c.is_alphabetic()).all(|c| c.is_uppercase())"
-    )))
+    lower_has_alpha_and_filtered_all(object, args, "is_uppercase")
 }
 
 pub(super) fn lower_islower(object: &str, args: &[String]) -> Option<RustExpr> {
-    if !args.is_empty() {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "{object}.chars().any(|c| c.is_alphabetic()) && {object}.chars().filter(|c| c.is_alphabetic()).all(|c| c.is_lowercase())"
-    )))
+    lower_has_alpha_and_filtered_all(object, args, "is_lowercase")
 }
 
 pub(super) fn lower_center(object: &str, args: &[String]) -> Option<RustExpr> {
