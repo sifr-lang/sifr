@@ -145,7 +145,7 @@ pub(crate) fn filter_rust_code_to_needed(
         "DirectoryNotEmptyError",
     ]
     .iter()
-    .cloned()
+    .copied()
     .collect();
     for item in &items {
         let mut called = HashSet::new();
