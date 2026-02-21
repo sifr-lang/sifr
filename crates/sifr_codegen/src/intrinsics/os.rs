@@ -60,10 +60,21 @@ pub(super) fn lower_chdir(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "std::env::set_current_dir({}).map_err(__io_err)",
-        borrow_expr(&args[0])
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "env".to_string(),
+                "set_current_dir".to_string(),
+            ])),
+            args: vec![RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+            }],
+        }),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Ident("__io_err".to_string())],
+    })
 }
 
 pub(super) fn lower_getpid(args: &[String]) -> Option<RustExpr> {
