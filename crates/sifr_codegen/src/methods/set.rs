@@ -34,14 +34,22 @@ pub(super) fn lower_clear(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.clear()")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "clear".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_copy(object: &str, args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{object}.clone()")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "clone".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_issubset(object: &str, args: &[String]) -> Option<RustExpr> {
