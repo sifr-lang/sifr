@@ -392,12 +392,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     // Now assemble result: imports, enums, IR-backed preamble items, stdlib preamble, main output.
-    let needs_file_handles = emitter.needs_file_handles
-        || stdlib_needs_file_handles
-        || emitter.output.contains("__SIFR_FILE_HANDLES");
+    let needs_file_handles = emitter.needs_file_handles || stdlib_needs_file_handles;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
-        || emitter.output.contains("__SIFR_GLOBAL_LOG_LEVEL");
+        || emitter.needs_logging_state;
 
     // File handle infrastructure always relies on HashMap + Mutex.
     let needs_hashmap = emitter.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
@@ -460,6 +458,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         .filter(|c| c.is_error_type)
         .map(|c| c.name.clone())
         .collect();
+    let user_defined_file_handle_struct = module.classes.iter().any(|c| c.name == "FileHandle");
     let io_error_referenced = is_builtin_error_referenced(&combined_code, "IOError")
         || IO_ERROR_SUBCLASSES
             .iter()
@@ -508,7 +507,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if needs_file_handles {
         preamble_items.extend(build_file_handle_infra_items());
         if !stdlib_preamble.contains("struct FileHandle {")
-            && !emitter.output.contains("struct FileHandle {")
+            && !user_defined_file_handle_struct
         {
             preamble_items.extend(build_file_handle_struct_items());
         }
@@ -814,6 +813,7 @@ struct RustEmitter {
     needs_hashmap: bool,
     needs_hashset: bool,
     needs_file_handles: bool,
+    needs_logging_state: bool,
     needs_bigint: bool,
     needs_vecdeque: bool,
     /// Track union enum types that need to be defined (name -> member types)
@@ -901,6 +901,7 @@ impl RustEmitter {
             needs_hashmap: false,
             needs_hashset: false,
             needs_file_handles: false,
+            needs_logging_state: false,
             needs_bigint: false,
             needs_vecdeque: false,
             union_enums: HashMap::new(),
@@ -7536,11 +7537,13 @@ impl RustEmitter {
             }
             // sifr.logging
             "set_global_level" => {
+                self.needs_logging_state = true;
                 self.write("{ *__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap() = ");
                 self.emit_expr(&args[0]);
                 self.write("; }");
             }
             "get_global_level" => {
+                self.needs_logging_state = true;
                 self.write("*__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap()");
             }
             _ => {
