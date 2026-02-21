@@ -4,11 +4,11 @@ use crate::{RustExpr, RustParam, RustType};
 
 fn render_key_arg_expr(arg: &str) -> RustExpr {
     if arg.ends_with(".as_str()") || arg.starts_with('&') {
-        RustExpr::RawCode(arg.to_string())
+        RustExpr::Ident(arg.to_string())
     } else {
         RustExpr::Ref {
             mutable: false,
-            expr: Box::new(RustExpr::RawCode(format!("({arg})"))),
+            expr: Box::new(RustExpr::Ident(format!("({arg})"))),
         }
     }
 }
@@ -66,7 +66,7 @@ pub(super) fn lower_items(object: &str, args: &[String]) -> Option<RustExpr> {
             args: vec![RustExpr::Closure {
                 params: vec![RustParam::Named {
                     name: "__kv".to_string(),
-                    ty: RustType::RawCode("_".to_string()),
+                    ty: RustType::Named("_".to_string()),
                 }],
                 body: Box::new(RustExpr::Tuple(vec![
                     RustExpr::MethodCall {
@@ -101,7 +101,7 @@ pub(super) fn lower_update(object: &str, args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "extend".to_string(),
-        args: vec![RustExpr::RawCode(args[0].clone())],
+        args: vec![RustExpr::Ident(args[0].clone())],
     })
 }
 
@@ -160,7 +160,7 @@ pub(super) fn lower_get(object: &str, args: &[String]) -> Option<RustExpr> {
                 args: vec![],
             }),
             method: "unwrap_or".to_string(),
-            args: vec![RustExpr::RawCode(args[1].clone())],
+            args: vec![RustExpr::Ident(args[1].clone())],
         }),
         _ => None,
     }
