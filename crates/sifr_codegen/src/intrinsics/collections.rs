@@ -607,10 +607,58 @@ pub(super) fn lower_defaultdict_set(args: &[String]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let mut data: std::collections::HashMap<String, serde_json::Value> = serde_json::from_str({}).unwrap_or_default(); data.insert({}.to_string(), serde_json::json!({})); serde_json::to_string(&data).unwrap_or_default() }}",
-        borrowed_str(&args[0]),
-        args[1],
-        args[2]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "data".to_string(),
+                ty: Some(RustType::Named(
+                    "std::collections::HashMap<String, serde_json::Value>".to_string(),
+                )),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "serde_json".to_string(),
+                            "from_str".to_string(),
+                        ])),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                        }],
+                    }),
+                    method: "unwrap_or_default".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("data".to_string())),
+                method: "insert".to_string(),
+                args: vec![
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    },
+                    RustExpr::MacroCall {
+                        name: "serde_json::json".to_string(),
+                        args: vec![RustExpr::Ident(args[2].clone())],
+                    },
+                ],
+            }),
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "serde_json".to_string(),
+                    "to_string".to_string(),
+                ])),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident("data".to_string())),
+                }],
+            }),
+            method: "unwrap_or_default".to_string(),
+            args: vec![],
+        })),
+    })
 }
