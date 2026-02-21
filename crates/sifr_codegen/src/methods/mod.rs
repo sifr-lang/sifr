@@ -1,5 +1,6 @@
 //! Method registry and dispatch for incremental migration.
 
+mod dict;
 mod list;
 mod string;
 
@@ -51,6 +52,12 @@ pub(crate) fn lower_method(
         (Type::List(_), "pop") => list::lower_pop(rendered_object, rendered_args),
         (Type::List(_), "remove") => list::lower_remove(rendered_object, rendered_args),
         (Type::List(_), "index") => list::lower_index(rendered_object, rendered_args),
+        (Type::Dict(_, _), "keys") => dict::lower_keys(rendered_object, rendered_args),
+        (Type::Dict(_, _), "values") => dict::lower_values(rendered_object, rendered_args),
+        (Type::Dict(_, _), "items") => dict::lower_items(rendered_object, rendered_args),
+        (Type::Dict(_, _), "update") => dict::lower_update(rendered_object, rendered_args),
+        (Type::Dict(_, _), "clear") => dict::lower_clear(rendered_object, rendered_args),
+        (Type::Dict(_, _), "copy") => dict::lower_copy(rendered_object, rendered_args),
         _ => return None,
     };
 
@@ -236,5 +243,32 @@ mod tests {
             render_expr(&list_index.expr),
             "xs.iter().position(|__x| *__x == 1).map(|__p| __p as i64)"
         );
+
+        let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
+        let dict_keys = lower_method(&dict_ty, "keys", "d", &[]).expect("dict keys lowers");
+        assert_eq!(render_expr(&dict_keys.expr), "d.keys().cloned().collect::<Vec<_>>()");
+
+        let dict_values = lower_method(&dict_ty, "values", "d", &[])
+            .expect("dict values lowers");
+        assert_eq!(
+            render_expr(&dict_values.expr),
+            "d.values().cloned().collect::<Vec<_>>()"
+        );
+
+        let dict_items = lower_method(&dict_ty, "items", "d", &[]).expect("dict items lowers");
+        assert_eq!(
+            render_expr(&dict_items.expr),
+            "d.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()"
+        );
+
+        let dict_update = lower_method(&dict_ty, "update", "d", &["other".to_string()])
+            .expect("dict update lowers");
+        assert_eq!(render_expr(&dict_update.expr), "d.extend(other)");
+
+        let dict_clear = lower_method(&dict_ty, "clear", "d", &[]).expect("dict clear lowers");
+        assert_eq!(render_expr(&dict_clear.expr), "d.clear()");
+
+        let dict_copy = lower_method(&dict_ty, "copy", "d", &[]).expect("dict copy lowers");
+        assert_eq!(render_expr(&dict_copy.expr), "d.clone()");
     }
 }
