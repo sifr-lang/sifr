@@ -16,6 +16,7 @@ mod hash;
 mod platform;
 mod uuid;
 mod toml;
+mod datetime;
 
 use crate::RustExpr;
 
@@ -185,6 +186,13 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "platform_processor" => (platform::lower_platform_processor(rendered_args), None),
         "uuid4" => (uuid::lower_uuid4(rendered_args), None),
         "toml_parse" => (toml::lower_toml_parse(rendered_args), Some("toml")),
+        "datetime_now" => (datetime::lower_datetime_now(rendered_args), Some("chrono")),
+        "datetime_now_struct" => (datetime::lower_datetime_now_struct(rendered_args), Some("chrono")),
+        "datetime_format" => (datetime::lower_datetime_format(rendered_args), None),
+        "datetime_from_timestamp" => (
+            datetime::lower_datetime_from_timestamp(rendered_args),
+            Some("chrono"),
+        ),
         _ => return None,
     };
 
@@ -547,5 +555,25 @@ mod tests {
         assert_eq!(parsed.required_crate, Some("toml"));
         assert!(render_expr(&parsed.expr).contains("parse::<toml::Value>()"));
         assert!(render_expr(&parsed.expr).contains("TOMLDecodeError"));
+    }
+
+    #[test]
+    fn lowers_datetime_intrinsics_via_registry() {
+        let now = lower_intrinsic("datetime_now", &[]).expect("datetime_now");
+        assert_eq!(now.required_crate, Some("chrono"));
+        assert!(render_expr(&now.expr).contains("chrono::Local::now()"));
+
+        let now_struct = lower_intrinsic("datetime_now_struct", &[]).expect("datetime_now_struct");
+        assert_eq!(now_struct.required_crate, Some("chrono"));
+        assert!(render_expr(&now_struct.expr).contains("vec![__dt.year() as i64"));
+
+        let fmt = lower_intrinsic("datetime_format", &["dt".to_string(), "mask".to_string()])
+            .expect("datetime_format");
+        assert!(render_expr(&fmt.expr).contains("__dt_str.to_string()"));
+
+        let from_ts =
+            lower_intrinsic("datetime_from_timestamp", &["ts".to_string()]).expect("from_timestamp");
+        assert_eq!(from_ts.required_crate, Some("chrono"));
+        assert!(render_expr(&from_ts.expr).contains("DateTime::from_timestamp"));
     }
 }
