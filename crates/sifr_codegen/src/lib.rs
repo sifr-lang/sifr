@@ -2,7 +2,6 @@
 //!
 //! Translates the typed HIR into Rust source code.
 
-#![allow(clippy::uninlined_format_args)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
@@ -252,7 +251,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     emitter.func_signatures.insert(name.clone(), sig.clone());
                 }
                 // Also load class method signatures (ClassName::method entries)
-                let prefix = format!("{}::", name);
+                let prefix = format!("{name}::");
                 for (key, sig) in sig_map {
                     if key.starts_with(&prefix) {
                         emitter.func_signatures.insert(key.clone(), sig.clone());
@@ -341,7 +340,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         if let Some(const_map) = stdlib_code.module_constants.get(module_name) {
                             for name in &pure_sifr_imports {
                                 if const_map.contains_key(name) {
-                                    expanded_imports.insert(format!("__const_{}", name));
+                                    expanded_imports.insert(format!("__const_{name}"));
                                 }
                             }
                         }
@@ -362,7 +361,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     if !stripped.trim().is_empty() {
                         let deduped = dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
                         if !deduped.trim().is_empty() {
-                            let _ = writeln!(stdlib_preamble, "// --- stdlib: {} ---", module_name);
+                            let _ = writeln!(stdlib_preamble, "// --- stdlib: {module_name} ---");
                             stdlib_preamble.push_str(&deduped);
                             stdlib_preamble.push('\n');
                         }
@@ -1108,16 +1107,16 @@ impl RustEmitter {
         for (enum_name, members) in &enums {
             // Generate the enum definition
             self.enum_defs.push_str("#[derive(Debug, Clone)]\n");
-            let _ = writeln!(self.enum_defs, "enum {} {{", enum_name);
+            let _ = writeln!(self.enum_defs, "enum {enum_name} {{");
             for member in members {
                 let variant = member.union_variant_name();
                 let rust_ty = member.rust_type();
-                let _ = writeln!(self.enum_defs, "    {}({}),", variant, rust_ty);
+                let _ = writeln!(self.enum_defs, "    {variant}({rust_ty}),");
             }
             self.enum_defs.push_str("}\n\n");
 
             // Generate Display impl so println!("{}", x) works
-            let _ = writeln!(self.enum_defs, "impl std::fmt::Display for {} {{", enum_name);
+            let _ = writeln!(self.enum_defs, "impl std::fmt::Display for {enum_name} {{");
             self.enum_defs.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
             self.enum_defs.push_str("        match self {\n");
             for member in members {
@@ -1126,10 +1125,7 @@ impl RustEmitter {
                 let fmt_spec = if matches!(member, Type::Class { .. }) { "{:?}" } else { "{}" };
                 let _ = writeln!(
                     self.enum_defs,
-                    "            {}::{}(v) => write!(f, \"{}\", v),",
-                    enum_name,
-                    variant,
-                    fmt_spec
+                    "            {enum_name}::{variant}(v) => write!(f, \"{fmt_spec}\", v),"
                 );
             }
             self.enum_defs.push_str("        }\n");
@@ -1256,18 +1252,18 @@ impl RustEmitter {
                     self.module_constants.insert(name.clone(), (ty.clone(), rust_name));
                 }
                 Type::Str => {
-                    let rust_name = format!("__const_{}", name);
-                    self.write(&format!("fn {}() -> String {{ ", rust_name));
+                    let rust_name = format!("__const_{name}");
+                    self.write(&format!("fn {rust_name}() -> String {{ "));
                     self.emit_expr(value);
                     self.write(".to_string() }\n");
-                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{}()", rust_name)));
+                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
                 }
                 _ => {
-                    let rust_name = format!("__const_{}", name);
+                    let rust_name = format!("__const_{name}");
                     self.write(&format!("fn {}() -> {} {{ ", rust_name, ty.rust_type()));
                     self.emit_expr(value);
                     self.write(" }\n");
-                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{}()", rust_name)));
+                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
                 }
             }
         }
@@ -1342,7 +1338,7 @@ impl RustEmitter {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
                 if i > 0 { self.write(", "); }
-                self.write(&format!("{}: {}", tp, class_bounds));
+                self.write(&format!("{tp}: {class_bounds}"));
             }
             self.write(">");
         }
@@ -1401,7 +1397,7 @@ impl RustEmitter {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
                 if i > 0 { self.write(", "); }
-                self.write(&format!("{}: {}", tp, class_bounds));
+                self.write(&format!("{tp}: {class_bounds}"));
             }
             self.write(">");
         }
@@ -1667,7 +1663,7 @@ impl RustEmitter {
             self.write_indent();
             self.write(variant_name);
             let v = value.unwrap_or(auto_value);
-            self.write(&format!(" = {}", v));
+            self.write(&format!(" = {v}"));
             self.write(",\n");
             auto_value = v + 1;
         }
@@ -1827,12 +1823,12 @@ impl RustEmitter {
 
         let rhs_ty = if let Some(param) = func.params.first() {
             if param.ty.rust_type() == class.name {
-                format!("&{}", class_with_generics)
+                format!("&{class_with_generics}")
             } else {
                 param.ty.rust_type()
             }
         } else {
-            format!("&{}", class_with_generics)
+            format!("&{class_with_generics}")
         };
         let output_ty = if func.return_type.rust_type() == class.name {
             class_with_generics.clone()
@@ -1844,7 +1840,7 @@ impl RustEmitter {
         self.write_indent();
         if is_generic {
             let bounded_params: Vec<String> = class.type_params.iter()
-                .map(|p| format!("{}: {}", p, bounds))
+                .map(|p| format!("{p}: {bounds}"))
                 .collect();
             self.write(&format!("impl<{}> std::ops::{}<{}> for &{} {{\n",
                 bounded_params.join(", "), trait_name, rhs_ty, class_with_generics));
@@ -1853,9 +1849,9 @@ impl RustEmitter {
         }
         self.indent += 1;
         self.write_indent();
-        self.write(&format!("type Output = {};\n\n", output_ty));
+        self.write(&format!("type Output = {output_ty};\n\n"));
         self.write_indent();
-        self.write(&format!("fn {}(self, ", method_name));
+        self.write(&format!("fn {method_name}(self, "));
         if let Some(param) = func.params.first() {
             self.write(&param.name);
         } else {
@@ -1890,9 +1886,9 @@ impl RustEmitter {
         self.write(&format!("impl std::ops::{} for {} {{\n", trait_name, class.name));
         self.indent += 1;
         self.write_indent();
-        self.write(&format!("type Output = {};\n\n", output_ty));
+        self.write(&format!("type Output = {output_ty};\n\n"));
         self.write_indent();
-        self.write(&format!("fn {}(self) -> Self::Output {{\n", method_name));
+        self.write(&format!("fn {method_name}(self) -> Self::Output {{\n"));
         self.indent += 1;
 
         for stmt in &func.body {
@@ -2095,7 +2091,7 @@ impl RustEmitter {
             MethodKind::Regular => {
                 if method.name == "new" {
                     // Constructor: fn new(params) -> Self
-                    self.write(&format!("{}fn new(", pub_prefix));
+                    self.write(&format!("{pub_prefix}fn new("));
                     for (i, param) in method.params.iter().enumerate() {
                         if i > 0 {
                             self.write(", ");
@@ -2235,7 +2231,7 @@ impl RustEmitter {
                                     self.write_indent();
                                     // Wrap Callable params in Box::new() for struct fields
                                     if matches!(field_ty, Type::Callable(..)) {
-                                        self.write(&format!("{}: Box::new({})", field_name, field_name));
+                                        self.write(&format!("{field_name}: Box::new({field_name})"));
                                     } else {
                                         self.write(field_name);
                                     }
@@ -2255,11 +2251,11 @@ impl RustEmitter {
                     // Regular method: determine &self vs &mut self
                     let is_mutating = body_contains_field_assign_codegen(&method.body);
                     if is_mutating {
-                        self.write(&format!("{}fn ", pub_prefix));
+                        self.write(&format!("{pub_prefix}fn "));
                         self.write(&method.name);
                         self.write("(&mut self");
                     } else {
-                        self.write(&format!("{}fn ", pub_prefix));
+                        self.write(&format!("{pub_prefix}fn "));
                         self.write(&method.name);
                         self.write("(&self");
                     }
@@ -2273,11 +2269,11 @@ impl RustEmitter {
                                 if param.ty.ownership() == sifr_type_system::OwnershipKind::Copy {
                                     self.write(&rust_ty);
                                 } else {
-                                    self.write(&format!("&{}", rust_ty));
+                                    self.write(&format!("&{rust_ty}"));
                                 }
                             }
                             ParamConvention::MutBorrow => {
-                                self.write(&format!("&mut {}", rust_ty));
+                                self.write(&format!("&mut {rust_ty}"));
                             }
                             ParamConvention::Own => {
                                 self.write(&rust_ty);
@@ -2344,10 +2340,10 @@ impl RustEmitter {
         Self::scan_body_for_typevar_ops(tp, body, &mut needs_add, &mut needs_sub);
         let mut extra = String::new();
         if needs_add {
-            let _ = write!(extra, " + std::ops::Add<Output = {}>", tp);
+            let _ = write!(extra, " + std::ops::Add<Output = {tp}>");
         }
         if needs_sub {
-            let _ = write!(extra, " + std::ops::Sub<Output = {}>", tp);
+            let _ = write!(extra, " + std::ops::Sub<Output = {tp}>");
         }
         extra
     }
@@ -2454,7 +2450,7 @@ impl RustEmitter {
         // Emit decorator comments before the function
         for decorator in &func.decorators {
             self.write_indent();
-            self.write(&format!("// @{}\n", decorator));
+            self.write(&format!("// @{decorator}\n"));
         }
 
         // In test mode, add #[test] attribute for test_* functions
@@ -2487,7 +2483,7 @@ impl RustEmitter {
                 } else {
                     "Clone + std::fmt::Display + PartialOrd"
                 };
-                self.write(&format!("{}: {}{}", tp, base, extra));
+                self.write(&format!("{tp}: {base}{extra}"));
             }
             self.write(">");
         }
@@ -2512,11 +2508,11 @@ impl RustEmitter {
                         // Copy types are always passed by value
                         self.write(&rust_ty);
                     } else {
-                        self.write(&format!("&{}", rust_ty));
+                        self.write(&format!("&{rust_ty}"));
                     }
                 }
                 ParamConvention::MutBorrow => {
-                    self.write(&format!("&mut {}", rust_ty));
+                    self.write(&format!("&mut {rust_ty}"));
                 }
                 ParamConvention::Own => {
                     self.write(&rust_ty);
@@ -2540,7 +2536,7 @@ impl RustEmitter {
                     } else {
                         "i64".to_string()
                     };
-                    self.write(&format!("impl Iterator<Item = {}>", yield_ty));
+                    self.write(&format!("impl Iterator<Item = {yield_ty}>"));
                 } else {
                     // If return type is a generic class and this function has type params,
                     // include the type params in the return type
@@ -2598,7 +2594,7 @@ impl RustEmitter {
 
             // Emit the lazy iterator
             self.write_indent();
-            self.write(&format!("std::iter::from_fn(move || -> Option<{}> {{\n", yield_ty));
+            self.write(&format!("std::iter::from_fn(move || -> Option<{yield_ty}> {{\n"));
             self.indent += 1;
 
             if let Some(HirStmt::While { condition, body, .. }) = while_stmt {
@@ -2623,7 +2619,7 @@ impl RustEmitter {
 
                     // Emit __yielded variable
                     self.write_indent();
-                    self.write(&format!("let mut __yielded: Option<{}> = None;\n", yield_ty));
+                    self.write(&format!("let mut __yielded: Option<{yield_ty}> = None;\n"));
 
                     // Emit body with yield replaced by __yielded = Some(val)
                     for s in body {
@@ -2829,7 +2825,7 @@ impl RustEmitter {
                 } else if matches!(ty, Type::BigInt) && matches!(value, HirExpr::IntLiteral(_)) {
                     // `x: bigint = 42` -> `BigInt::from(42_i64)`
                     if let HirExpr::IntLiteral(v) = value {
-                        self.write(&format!("BigInt::from({}_i64)", v));
+                        self.write(&format!("BigInt::from({v}_i64)"));
                     }
                 } else if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
                     // `x: str | None = None` -> `let x: Option<String> = None`
@@ -2908,7 +2904,7 @@ impl RustEmitter {
                     }
                     "-=" | "*=" | "%=" => {
                         self.write(name);
-                        self.write(&format!(" {} ", op));
+                        self.write(&format!(" {op} "));
                         self.emit_expr(value);
                         self.write(";\n");
                     }
@@ -2930,20 +2926,20 @@ impl RustEmitter {
                         if matches!(var_ty, Type::Int) {
                             self.write(name);
                             self.write(" = ");
-                            self.write(&format!("{}.pow(", name));
+                            self.write(&format!("{name}.pow("));
                             self.emit_expr(value);
                             self.write(" as u32);\n");
                         } else {
                             self.write(name);
                             self.write(" = ");
-                            self.write(&format!("({} as f64).powf(", name));
+                            self.write(&format!("({name} as f64).powf("));
                             self.emit_expr(value);
                             self.write(" as f64);\n");
                         }
                     }
                     _ => {
                         self.write(name);
-                        self.write(&format!(" {} ", op));
+                        self.write(&format!(" {op} "));
                         self.emit_expr(value);
                         self.write(";\n");
                     }
@@ -2988,7 +2984,7 @@ impl RustEmitter {
                                 let arg_ty = val.ty();
                                 if let Some(variant) = find_union_variant(members, arg_ty) {
                                     let enum_name = ret_ty.union_enum_name();
-                                    self.write(&format!("{}::{}(", enum_name, variant));
+                                    self.write(&format!("{enum_name}::{variant}("));
                                     self.emit_expr(val);
                                     self.write(")");
                                 } else {
@@ -3050,14 +3046,14 @@ impl RustEmitter {
                 // `if isinstance(x, int):` -> `match x { IntOrStr::Int(x) => { ... }, IntOrStr::Str(x) => { ... } }`
                 if let Some((var_name, variant_name, enum_name, other_variants)) = detect_isinstance_union(condition) {
                     self.write_indent();
-                    self.write(&format!("match {} {{\n", var_name));
+                    self.write(&format!("match {var_name} {{\n"));
                     self.indent += 1;
 
                     // Then branch: the matched variant
                     let then_mutated = collect_mutated_vars(then_body);
                     let var_mut = if then_mutated.contains(&var_name) { "mut " } else { "" };
                     self.write_indent();
-                    self.write(&format!("{}::{}({}{}) => {{\n", enum_name, variant_name, var_mut, var_name));
+                    self.write(&format!("{enum_name}::{variant_name}({var_mut}{var_name}) => {{\n"));
                     self.indent += 1;
                     for s in then_body {
                         self.emit_stmt(s);
@@ -3072,7 +3068,7 @@ impl RustEmitter {
                             let elif_mutated = collect_mutated_vars(elif_body);
                             let elif_var_mut = if elif_mutated.contains(&var_name) { "mut " } else { "" };
                             self.write_indent();
-                            self.write(&format!("{}::{}({}{}) => {{\n", enum_name, elif_variant, elif_var_mut, var_name));
+                            self.write(&format!("{enum_name}::{elif_variant}({elif_var_mut}{var_name}) => {{\n"));
                             self.indent += 1;
                             for s in elif_body {
                                 self.emit_stmt(s);
@@ -3091,7 +3087,7 @@ impl RustEmitter {
                         if remaining_variants.len() == 1 {
                             let (other_variant, _) = &remaining_variants[0];
                             self.write_indent();
-                            self.write(&format!("{}::{}({}{}) => {{\n", enum_name, other_variant, else_var_mut, var_name));
+                            self.write(&format!("{enum_name}::{other_variant}({else_var_mut}{var_name}) => {{\n"));
                         } else {
                             self.write_indent();
                             self.write("_ => {\n");
@@ -3114,7 +3110,7 @@ impl RustEmitter {
                 // Detect truthiness on Option: `if x:` where x is Option -> `if let Some(x) = x {`
                 else if let Some(var_name) = detect_option_truthiness(condition) {
                     self.write_indent();
-                    self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                    self.write(&format!("if let Some({var_name}) = {var_name} {{\n"));
                     self.indent += 1;
                     self.option_unwrapped_vars.insert(var_name.clone());
                     for s in then_body {
@@ -3139,7 +3135,7 @@ impl RustEmitter {
                     // Emit nested if-let-Some for each variable
                     for (i, var_name) in vars.iter().enumerate() {
                         self.write_indent();
-                        self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                        self.write(&format!("if let Some({var_name}) = {var_name} {{\n"));
                         self.indent += 1;
                         self.option_unwrapped_vars.insert(var_name.clone());
                         if i < vars.len() - 1 {
@@ -3173,7 +3169,7 @@ impl RustEmitter {
                 else if let Some(var_name) = detect_is_not_none_var(condition) {
                     self.write_indent();
                     // Use `if let Some(var) = var` to unwrap and shadow the variable
-                    self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                    self.write(&format!("if let Some({var_name}) = {var_name} {{\n"));
                     self.indent += 1;
                     self.option_unwrapped_vars.insert(var_name.clone());
                     for s in then_body {
@@ -3195,12 +3191,12 @@ impl RustEmitter {
                 } else if let Some((var_name, enum_name, _non_none_variants)) = detect_is_none_union_var(condition) {
                     // 3+ member union `is None` check: use match with None variant
                     self.write_indent();
-                    self.write(&format!("match {} {{\n", var_name));
+                    self.write(&format!("match {var_name} {{\n"));
                     self.indent += 1;
 
                     // None arm -> then_body
                     self.write_indent();
-                    self.write(&format!("{}::None(()) => {{\n", enum_name));
+                    self.write(&format!("{enum_name}::None(()) => {{\n"));
                     self.indent += 1;
                     for s in then_body {
                         self.emit_stmt(s);
@@ -3228,7 +3224,7 @@ impl RustEmitter {
                     self.writeln("}");
                 } else if let Some(var_name) = detect_is_none_var(condition) {
                     self.write_indent();
-                    self.write(&format!("if {}.is_none() {{\n", var_name));
+                    self.write(&format!("if {var_name}.is_none() {{\n"));
                     self.indent += 1;
                     let then_exits = codegen_body_always_exits(then_body);
                     for s in then_body {
@@ -3239,7 +3235,7 @@ impl RustEmitter {
                     if let Some(else_stmts) = else_body {
                         // In the else branch of `if x is None`, x is not None
                         self.write_indent();
-                        self.write(&format!("}} else if let Some({}) = {} {{\n", var_name, var_name));
+                        self.write(&format!("}} else if let Some({var_name}) = {var_name} {{\n"));
                         self.indent += 1;
                         self.option_unwrapped_vars.insert(var_name.clone());
                         for s in else_stmts {
@@ -3254,7 +3250,7 @@ impl RustEmitter {
                     // unwrap the variable after the if block so subsequent code can use it directly
                     if then_exits && else_body.is_none() {
                         self.write_indent();
-                        self.write(&format!("let {} = {}.unwrap();\n", var_name, var_name));
+                        self.write(&format!("let {var_name} = {var_name}.unwrap();\n"));
                         self.option_unwrapped_vars.insert(var_name.clone());
                     }
                 } else {
@@ -3417,7 +3413,7 @@ impl RustEmitter {
                 // Emit before vars
                 for (i, (name, _ty)) in before.iter().enumerate() {
                     self.write_indent();
-                    self.write(&format!("let {} = _star_tmp[{}].clone();\n", name, i));
+                    self.write(&format!("let {name} = _star_tmp[{i}].clone();\n"));
                 }
                 // Emit star var
                 let (star_name, _star_ty) = star;
@@ -3504,11 +3500,11 @@ impl RustEmitter {
                     self.write_indent();
                     self.write("#[allow(non_camel_case_types)]\n");
                     self.write_indent();
-                    self.write(&format!("enum {} {{\n", enum_name));
+                    self.write(&format!("enum {enum_name} {{\n"));
                     self.indent += 1;
                     for et in &error_type_names {
                         self.write_indent();
-                        self.write(&format!("{}({}),\n", et, et));
+                        self.write(&format!("{et}({et}),\n"));
                     }
                     self.indent -= 1;
                     self.write_indent();
@@ -3517,10 +3513,10 @@ impl RustEmitter {
                     // Emit From impls for each error type
                     for et in &error_type_names {
                         self.write_indent();
-                        self.write(&format!("impl From<{}> for {} {{\n", et, enum_name));
+                        self.write(&format!("impl From<{et}> for {enum_name} {{\n"));
                         self.indent += 1;
                         self.write_indent();
-                        self.write(&format!("fn from(e: {}) -> Self {{ {}::{}(e) }}\n", et, enum_name, et));
+                        self.write(&format!("fn from(e: {et}) -> Self {{ {enum_name}::{et}(e) }}\n"));
                         self.indent -= 1;
                         self.write_indent();
                         self.write("}\n");
@@ -3539,7 +3535,7 @@ impl RustEmitter {
                     };
 
                     self.write_indent();
-                    self.write(&format!("match (|| -> Result<{}, {}> {{\n", closure_ok_type_multi, enum_name));
+                    self.write(&format!("match (|| -> Result<{closure_ok_type_multi}, {enum_name}> {{\n"));
                     self.indent += 1;
                     for stmt in body {
                         self.emit_stmt(stmt);
@@ -3555,7 +3551,7 @@ impl RustEmitter {
                     self.write("})() {\n");
                     self.indent += 1;
                     self.write_indent();
-                    self.write(&format!("{}\n", ok_arm_multi));
+                    self.write(&format!("{ok_arm_multi}\n"));
 
                     // Emit match arms
                     for handler in handlers {
@@ -3564,7 +3560,7 @@ impl RustEmitter {
                                 // Catch-all: match on any remaining variant
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({}) => {{\n", var_name));
+                                self.write(&format!("Err({var_name}) => {{\n"));
                                 if handler.name.is_some() {
                                     self.indent += 1;
                                     self.write_indent();
@@ -3575,31 +3571,30 @@ impl RustEmitter {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
                                 self.write(&format!(
-                                    "Err({}::IOError(ref {})) if {}.kind == \"{}\" => {{\n",
-                                    enum_name, var_name, var_name, kind
+                                    "Err({enum_name}::IOError(ref {var_name})) if {var_name}.kind == \"{kind}\" => {{\n"
                                 ));
                                 // Clone the variable so handler body can use it as owned
                                 if handler.name.is_some() {
                                     self.indent += 1;
                                     self.write_indent();
-                                    self.write(&format!("let {} = {}.clone();\n", var_name, var_name));
+                                    self.write(&format!("let {var_name} = {var_name}.clone();\n"));
                                     self.indent -= 1;
                                 }
                             } else if et == "IOError" && has_io_subclass_handler {
                                 // IOError parent catch-all (when subclass handlers exist)
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({}::IOError({})) => {{\n", enum_name, var_name));
+                                self.write(&format!("Err({enum_name}::IOError({var_name})) => {{\n"));
                             } else {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({}::{}({})) => {{\n", enum_name, et, var_name));
+                                self.write(&format!("Err({enum_name}::{et}({var_name})) => {{\n"));
                             }
                         } else {
                             // Bare except — catch-all
                             let var_name = handler.name.as_deref().unwrap_or("_e");
                             self.write_indent();
-                            self.write(&format!("Err({}) => {{\n", var_name));
+                            self.write(&format!("Err({var_name}) => {{\n"));
                         }
                         self.indent += 1;
                         for stmt in &handler.body {
@@ -3646,7 +3641,7 @@ impl RustEmitter {
                     };
 
                     self.write_indent();
-                    self.write(&format!("match (|| -> Result<{}, {}> {{\n", closure_ok_type, error_rust_type));
+                    self.write(&format!("match (|| -> Result<{closure_ok_type}, {error_rust_type}> {{\n"));
                     self.indent += 1;
                     for stmt in body {
                         self.emit_stmt(stmt);
@@ -3662,7 +3657,7 @@ impl RustEmitter {
                     self.write("})() {\n");
                     self.indent += 1;
                     self.write_indent();
-                    self.write(&format!("{}\n", ok_arm));
+                    self.write(&format!("{ok_arm}\n"));
 
                     if has_io_subclass_handler && error_rust_type == "IOError" {
                         // IOError with subclass dispatch: use guard-based matching
@@ -3672,31 +3667,30 @@ impl RustEmitter {
                                     // Parent catch-all
                                     let var_name = handler.name.as_deref().unwrap_or("_e");
                                     self.write_indent();
-                                    self.write(&format!("Err({}) => {{\n", var_name));
+                                    self.write(&format!("Err({var_name}) => {{\n"));
                                 } else if let Some(kind) = io_subclass_kind(et) {
                                     // Subclass match with guard
                                     let var_name = handler.name.as_deref().unwrap_or("_e");
                                     self.write_indent();
                                     self.write(&format!(
-                                        "Err(ref {}) if {}.kind == \"{}\" => {{\n",
-                                        var_name, var_name, kind
+                                        "Err(ref {var_name}) if {var_name}.kind == \"{kind}\" => {{\n"
                                     ));
                                     // Clone the variable so handler body can use it as owned
                                     if handler.name.is_some() {
                                         self.indent += 1;
                                         self.write_indent();
-                                        self.write(&format!("let {} = {}.clone();\n", var_name, var_name));
+                                        self.write(&format!("let {var_name} = {var_name}.clone();\n"));
                                         self.indent -= 1;
                                     }
                                 } else {
                                     let var_name = handler.name.as_deref().unwrap_or("_e");
                                     self.write_indent();
-                                    self.write(&format!("Err({}) => {{\n", var_name));
+                                    self.write(&format!("Err({var_name}) => {{\n"));
                                 }
                             } else {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({}) => {{\n", var_name));
+                                self.write(&format!("Err({var_name}) => {{\n"));
                             }
                             self.indent += 1;
                             for stmt in &handler.body {
@@ -3711,7 +3705,7 @@ impl RustEmitter {
                         for handler in handlers {
                             self.write_indent();
                             if let Some(ref name) = handler.name {
-                                self.write(&format!("Err({}) => {{\n", name));
+                                self.write(&format!("Err({name}) => {{\n"));
                             } else {
                                 self.write("Err(_e) => {\n");
                             }
@@ -3862,13 +3856,13 @@ impl RustEmitter {
                 self.write(object);
                 self.write(".");
                 self.write(field);
-                self.write(&format!(" {} ", op));
+                self.write(&format!(" {op} "));
                 self.emit_expr(value);
                 self.write(";\n");
             }
             HirStmt::AttributeSubscriptAssign { object, field, index, value, field_ty } => {
                 self.write_indent();
-                let field_access = format!("{}.{}", object, field);
+                let field_access = format!("{object}.{field}");
                 match field_ty {
                     Type::List(_) => {
                         // self.field[i] = val -> bounds-checked assignment
@@ -3963,9 +3957,9 @@ impl RustEmitter {
                 // This ensures __exit__() is called on ALL exit paths:
                 // normal completion, early return, break, continue
                 for (i, (var, value, has_cm)) in items.iter().enumerate() {
-                    let ctx_name = format!("__ctx_{}", i);
-                    let guard_type = format!("__WithGuard{}", i);
-                    let guard_var = format!("__guard_{}", i);
+                    let ctx_name = format!("__ctx_{i}");
+                    let guard_type = format!("__WithGuard{i}");
+                    let guard_var = format!("__guard_{i}");
                     if *has_cm {
                         // Extract the class type name for the guard struct
                         let class_name = if let Type::Class { name, .. } = value.ty() {
@@ -3982,9 +3976,9 @@ impl RustEmitter {
                         self.write(";\n");
                         // Emit Drop guard struct that calls __exit__() on scope exit
                         self.write_indent();
-                        self.write(&format!("struct {} {{ ctx: {} }}\n", guard_type, class_name));
+                        self.write(&format!("struct {guard_type} {{ ctx: {class_name} }}\n"));
                         self.write_indent();
-                        self.write(&format!("impl Drop for {} {{\n", guard_type));
+                        self.write(&format!("impl Drop for {guard_type} {{\n"));
                         self.indent += 1;
                         self.write_indent();
                         self.write("fn drop(&mut self) { self.ctx.__exit__(); }\n");
@@ -3993,7 +3987,7 @@ impl RustEmitter {
                         self.write("}\n");
                         // Create guard instance, moving ctx into it
                         self.write_indent();
-                        self.write(&format!("let mut {} = {} {{ ctx: {} }};\n", guard_var, guard_type, ctx_name));
+                        self.write(&format!("let mut {guard_var} = {guard_type} {{ ctx: {ctx_name} }};\n"));
                         // Call __enter__() on guard's ctx and bind result to var
                         self.write_indent();
                         if stmts_reference_var(body, var) || items.iter().any(|(v, _, _)| v != var && v.contains(var)) {
@@ -4184,7 +4178,7 @@ impl RustEmitter {
             let mut result = guard_code.to_string();
             for (fname, fpat) in fields {
                 if let HirPattern::Capture { name, .. } = fpat {
-                    let replacement = format!("{}.{}", prefix, fname);
+                    let replacement = format!("{prefix}.{fname}");
                     result = Self::replace_identifier(&result, name, &replacement);
                 }
             }
@@ -4228,11 +4222,11 @@ impl RustEmitter {
         if is_option || is_non_option_union {
             // For union types, emit as a Rust match on the enum/Option
             let subject_code = self.expr_to_string(subject);
-            self.write(&format!("match {} {{\n", subject_code));
+            self.write(&format!("match {subject_code} {{\n"));
         } else {
             // For simple types (literals, etc.), emit as a Rust match
             let subject_code = self.expr_to_string(subject);
-            self.write(&format!("match {} {{\n", subject_code));
+            self.write(&format!("match {subject_code} {{\n"));
         }
 
         self.indent += 1;
@@ -4290,7 +4284,7 @@ impl RustEmitter {
             HirPattern::Capture { name, ty } => {
                 if is_option {
                     let _ = ty;
-                    self.write(&format!("Some({})", name));
+                    self.write(&format!("Some({name})"));
                 } else {
                     self.write(name);
                 }
@@ -4352,9 +4346,9 @@ impl RustEmitter {
                         class_name.clone()
                     };
                     if fields.is_empty() {
-                        self.write(&format!("{}::{}(_)", enum_name, variant_name));
+                        self.write(&format!("{enum_name}::{variant_name}(_)"));
                     } else {
-                        self.write(&format!("{}::{}(__inner)", enum_name, variant_name));
+                        self.write(&format!("{enum_name}::{variant_name}(__inner)"));
                     }
                 } else {
                     // For direct struct patterns, use __matched with field guards
@@ -4392,10 +4386,10 @@ impl RustEmitter {
                     match fpat {
                         HirPattern::Literal { value } => {
                             let lit_code = self.expr_to_string(value);
-                            Some(format!("__matched.{} == {}", fname, lit_code))
+                            Some(format!("__matched.{fname} == {lit_code}"))
                         }
                         HirPattern::None => {
-                            Some(format!("__matched.{}.is_none()", fname))
+                            Some(format!("__matched.{fname}.is_none()"))
                         }
                         _ => None,
                     }
@@ -4410,13 +4404,13 @@ impl RustEmitter {
             // Build string guard condition
             let str_guard = match pattern {
                 HirPattern::Literal { value: HirExpr::StringLiteral(s) } => {
-                    format!("__s == {:?}", s)
+                    format!("__s == {s:?}")
                 }
                 HirPattern::Or { patterns } => {
                     let conditions: Vec<String> = patterns.iter().map(|p| {
                         match p {
                             HirPattern::Literal { value: HirExpr::StringLiteral(s) } => {
-                                format!("__s == {:?}", s)
+                                format!("__s == {s:?}")
                             }
                             _ => "__s == _".to_string(),
                         }
@@ -4427,9 +4421,9 @@ impl RustEmitter {
             };
             if let Some(guard_expr) = guard {
                 let guard_code = self.expr_to_string(guard_expr);
-                self.write(&format!(" if ({}) && ({})", str_guard, guard_code));
+                self.write(&format!(" if ({str_guard}) && ({guard_code})"));
             } else {
-                self.write(&format!(" if {}", str_guard));
+                self.write(&format!(" if {str_guard}"));
             }
         } else if !class_field_guards.is_empty() {
             let mut all_guards = class_field_guards;
@@ -4442,7 +4436,7 @@ impl RustEmitter {
         } else if let Some(guard_expr) = guard {
             let mut guard_code = self.expr_to_string(guard_expr);
             guard_code = Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
-            self.write(&format!(" if {}", guard_code));
+            self.write(&format!(" if {guard_code}"));
         }
 
         self.write(" => {\n");
@@ -4454,14 +4448,14 @@ impl RustEmitter {
                 for (fname, fpat) in fields {
                     if let HirPattern::Capture { name, .. } = fpat {
                         self.write_indent();
-                        self.write(&format!("let {} = __inner.{};\n", name, fname));
+                        self.write(&format!("let {name} = __inner.{fname};\n"));
                     }
                 }
             } else if !is_non_option_union {
                 for (fname, fpat) in fields {
                     if let HirPattern::Capture { name, .. } = fpat {
                         self.write_indent();
-                        self.write(&format!("let {} = __matched.{};\n", name, fname));
+                        self.write(&format!("let {name} = __matched.{fname};\n"));
                     }
                 }
             }
@@ -4728,7 +4722,7 @@ impl RustEmitter {
                     // Callable field: emit (obj.field)(args) instead of obj.method(args)
                     self.write("(");
                     self.emit_expr(object);
-                    self.write(&format!(".{})(", method));
+                    self.write(&format!(".{method})("));
                     for (i, arg) in args.iter().enumerate() {
                         if i > 0 {
                             self.write(", ");
@@ -4739,9 +4733,9 @@ impl RustEmitter {
                 } else {
                     // Regular class instance method call -- use convention-aware argument emission
                     self.emit_expr(object);
-                    self.write(&format!(".{}(", method));
+                    self.write(&format!(".{method}("));
                     // Look up method conventions from func_signatures
-                    let method_key = format!("{}::{}", class_name, method);
+                    let method_key = format!("{class_name}::{method}");
                     let method_info = self.func_signatures.get(&method_key).cloned();
                     for (i, arg) in args.iter().enumerate() {
                         if i > 0 {
@@ -4765,7 +4759,7 @@ impl RustEmitter {
             _ => {
                 // Fallback: emit as-is
                 self.emit_expr(object);
-                self.write(&format!(".{}(", method));
+                self.write(&format!(".{method}("));
                 for (i, arg) in args.iter().enumerate() {
                     if i > 0 {
                         self.write(", ");
@@ -4846,7 +4840,7 @@ impl RustEmitter {
                 self.write("_f64");
             }
             HirExpr::StringLiteral(val) => {
-                self.write(&format!("{:?}.to_string()", val));
+                self.write(&format!("{val:?}.to_string()"));
             }
             HirExpr::BoolLiteral(val) => {
                 self.write(if *val { "true" } else { "false" });
@@ -4877,7 +4871,7 @@ impl RustEmitter {
                         self.emit_expr_with_bigint_clone(right);
                     } else {
                         self.emit_expr_with_bigint_clone(left);
-                        self.write(&format!(" {} ", op));
+                        self.write(&format!(" {op} "));
                         self.emit_expr_with_bigint_clone(right);
                     }
                     return;
@@ -4902,9 +4896,9 @@ impl RustEmitter {
                     }
                     if format_args.is_empty() {
                         // All parts are literals, just emit a string literal
-                        self.write(&format!("\"{}\".to_string()", format_str));
+                        self.write(&format!("\"{format_str}\".to_string()"));
                     } else {
-                        self.write(&format!("format!(\"{}\"", format_str));
+                        self.write(&format!("format!(\"{format_str}\""));
                         for arg in &format_args {
                             self.write(", ");
                             self.emit_expr(arg);
@@ -4978,7 +4972,7 @@ impl RustEmitter {
                     // Class type with operator overloading: use reference-based ops
                     self.write("&");
                     self.emit_expr(left);
-                    self.write(&format!(" {} ", op));
+                    self.write(&format!(" {op} "));
                     self.write("&");
                     self.emit_expr(right);
                 } else if is_option_type(left.ty()) || is_option_type(right.ty()) {
@@ -4989,7 +4983,7 @@ impl RustEmitter {
                     } else {
                         self.emit_expr(left);
                     }
-                    self.write(&format!(" {} ", op));
+                    self.write(&format!(" {op} "));
                     if is_option_type(right.ty()) {
                         self.emit_expr(right);
                         self.write(".unwrap()");
@@ -5012,7 +5006,7 @@ impl RustEmitter {
                     self.emit_expr(left);
                     if needs_left_parens || needs_left_cast { self.write(")"); }
                     if needs_left_cast { self.write(" as f64"); }
-                    self.write(&format!(" {} ", op));
+                    self.write(&format!(" {op} "));
                     if needs_right_parens || needs_right_cast { self.write("("); }
                     self.emit_expr(right);
                     if needs_right_parens || needs_right_cast { self.write(")"); }
@@ -5084,19 +5078,19 @@ impl RustEmitter {
                         let right_is_option = is_option_type(comparators[0].ty());
                         if left_is_option && !right_is_option && !matches!(comparators[0], HirExpr::NoneLiteral) {
                             self.emit_expr(left);
-                            self.write(&format!(" {} Some(", op));
+                            self.write(&format!(" {op} Some("));
                             self.emit_expr(&comparators[0]);
                             self.write(")");
                         } else if !left_is_option && right_is_option && !matches!(left.as_ref(), HirExpr::NoneLiteral) {
                             self.write("Some(");
                             self.emit_expr(left);
                             self.write(")");
-                            self.write(&format!(" {} ", op));
+                            self.write(&format!(" {op} "));
                             self.emit_expr(&comparators[0]);
                         } else {
                             // Dereference borrowed params in comparisons to avoid &String == String
                             self.emit_expr_for_compare(left);
-                            self.write(&format!(" {} ", op));
+                            self.write(&format!(" {op} "));
                             self.emit_expr_for_compare(&comparators[0]);
                         }
                     }
@@ -5119,7 +5113,7 @@ impl RustEmitter {
                 let rust_op = if op == "and" { "&&" } else { "||" };
                 for (i, val) in values.iter().enumerate() {
                     if i > 0 {
-                        self.write(&format!(" {} ", rust_op));
+                        self.write(&format!(" {rust_op} "));
                     }
                     self.emit_expr(val);
                 }
@@ -5136,7 +5130,7 @@ impl RustEmitter {
                         // Inline string literal directly: println!("hello") instead of println!("{}", "hello")
                         // Escape backslashes and double quotes for valid Rust string
                         let escaped = val.replace('\\', "\\\\").replace('"', "\\\"").replace('{', "{{").replace('}', "}}");
-                        self.write(&format!("println!(\"{}\")", escaped));
+                        self.write(&format!("println!(\"{escaped}\")"));
                     } else if let HirExpr::FString { parts, .. } = &args[0] {
                         // Inline f-string directly into println! to avoid double-format
                         self.emit_fstring_macro("println!", parts);
@@ -5430,7 +5424,7 @@ impl RustEmitter {
                     if let HirExpr::Lambda { params, body, .. } = &args[0] {
                         let param_name = if params.is_empty() { "x" } else { &params[0].name };
                         // Use .clone().into_iter() for owned values, then filter with |&var| destructuring
-                        self.write(&format!(".clone().into_iter().filter(|&{}| ", param_name));
+                        self.write(&format!(".clone().into_iter().filter(|&{param_name}| "));
                         self.emit_expr(body);
                         self.write(").collect::<Vec<_>>()");
                     } else {
@@ -5499,7 +5493,7 @@ impl RustEmitter {
                                             // Use param_ty for ownership check: the wrapped enum value is a Union (Move),
                                             // not the inner arg type which may be Copy (e.g., Int inside IntOrStr)
                                             self.emit_borrow_prefix(convention, param_ty, Some(param_ty));
-                                            self.write(&format!("{}::{}(", enum_name, variant));
+                                            self.write(&format!("{enum_name}::{variant}("));
                                             self.emit_expr(arg);
                                             self.write(")");
                                             continue;
@@ -5528,11 +5522,11 @@ impl RustEmitter {
                                                     self.write("|");
                                                     for (pi, (cp, cc)) in callable_params.iter().zip(callable_convs.iter()).enumerate() {
                                                         if pi > 0 { self.write(", "); }
-                                                        let pname = format!("__a{}", pi);
+                                                        let pname = format!("__a{pi}");
                                                         if matches!(cp, Type::TypeVar(_)) || (*cc == ParamConvention::Borrow && cp.ownership() == sifr_type_system::OwnershipKind::Move) {
-                                                            self.write(&format!("{}: &_", pname));
+                                                            self.write(&format!("{pname}: &_"));
                                                         } else {
-                                                            self.write(&format!("{}: _", pname));
+                                                            self.write(&format!("{pname}: _"));
                                                         }
                                                     }
                                                     self.write("| ");
@@ -5540,9 +5534,9 @@ impl RustEmitter {
                                                     self.write("(");
                                                     for (pi, (cp, (ct, _))) in callable_params.iter().zip(concrete_params.iter()).enumerate() {
                                                         if pi > 0 { self.write(", "); }
-                                                        let pname = format!("__a{}", pi);
+                                                        let pname = format!("__a{pi}");
                                                         if matches!(cp, Type::TypeVar(_)) && ct.ownership() == sifr_type_system::OwnershipKind::Copy {
-                                                            self.write(&format!("*{}", pname));
+                                                            self.write(&format!("*{pname}"));
                                                         } else {
                                                             self.write(&pname);
                                                         }
@@ -5706,12 +5700,12 @@ impl RustEmitter {
                                 if let Type::Tuple(elems) = obj_ty {
                                     let resolved = (elems.len() as i64 + val) as usize;
                                     self.emit_expr(object);
-                                    self.write(&format!(".{}", resolved));
+                                    self.write(&format!(".{resolved}"));
                                 }
                             } else {
                                 // Emit raw integer for tuple field access (e.g., .0 not .0_i64)
                                 self.emit_expr(object);
-                                self.write(&format!(".{}", val));
+                                self.write(&format!(".{val}"));
                             }
                         } else {
                             // Non-literal index: emit as raw integer (tuples require compile-time indices)
@@ -5894,7 +5888,7 @@ impl RustEmitter {
                         self.emit_expr(&args[0]);
                         self.write(".to_string()");
                     }
-                    self.write(&format!(", kind: \"{}\".to_string() }}", kind));
+                    self.write(&format!(", kind: \"{kind}\".to_string() }}"));
                     return;
                 }
                 self.write(class_name);
@@ -7695,7 +7689,7 @@ impl RustEmitter {
     /// Other expressions are emitted with `&` prefix (e.g., `&var`).
     fn emit_key_ref_expr(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{:?}", val));
+            self.write(&format!("{val:?}"));
         } else if let HirExpr::Name { name, ty } = expr {
             // If the name is already a borrowed parameter (&String or &mut String),
             // emitting `&name` would produce `&&String` which fails Borrow<str> bounds.
@@ -7727,7 +7721,7 @@ impl RustEmitter {
     /// Other string expressions are emitted with `.as_str()` (e.g., `s.as_str()`).
     fn emit_str_ref_expr(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{:?}", val));
+            self.write(&format!("{val:?}"));
         } else {
             self.emit_expr(expr);
             self.write(".as_str()");
@@ -7741,7 +7735,7 @@ impl RustEmitter {
     /// Use this for Rust APIs that accept `&str`, `AsRef<str>`, `AsRef<Path>`, `AsRef<OsStr>`, etc.
     fn emit_expr_as_str_ref(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{:?}", val));
+            self.write(&format!("{val:?}"));
         } else if let HirExpr::Name { name, .. } = expr {
             if self.borrowed_params.contains(name) {
                 // Already &String, no extra & needed
@@ -7776,7 +7770,7 @@ impl RustEmitter {
     /// Other expressions are emitted as `expr.as_bytes()` (String has `.as_bytes()`).
     fn emit_expr_as_bytes(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{:?}.as_bytes()", val));
+            self.write(&format!("{val:?}.as_bytes()"));
         } else {
             self.emit_expr(expr);
             self.write(".as_bytes()");
@@ -7809,7 +7803,7 @@ impl RustEmitter {
             self.write(").map_or(\"None\".to_string(), |_v| format!(\"{}\", _v))");
         } else if let HirExpr::StringLiteral(val) = expr {
             // In display contexts, string literals don't need .to_string()
-            self.write(&format!("{:?}", val));
+            self.write(&format!("{val:?}"));
         } else {
             self.emit_expr(expr);
         }
@@ -8165,7 +8159,7 @@ fn recursive_field_rust_type(ty: &Type, class_name: &str) -> String {
             }
         }
         Type::Class { name, .. } if name == class_name => {
-            format!("Box<{}>", name)
+            format!("Box<{name}>")
         }
         _ => format!("Box<{}>", ty.rust_type()),
     }
