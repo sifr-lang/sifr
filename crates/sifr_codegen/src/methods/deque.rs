@@ -9,7 +9,7 @@ pub(super) fn lower_append(object: &str, args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "push_back".to_string(),
-        args: vec![RustExpr::RawCode(args[0].clone())],
+        args: vec![RustExpr::Ident(args[0].clone())],
     })
 }
 
@@ -20,7 +20,7 @@ pub(super) fn lower_appendleft(object: &str, args: &[String]) -> Option<RustExpr
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(object.to_string())),
         method: "push_front".to_string(),
-        args: vec![RustExpr::RawCode(args[0].clone())],
+        args: vec![RustExpr::Ident(args[0].clone())],
     })
 }
 
