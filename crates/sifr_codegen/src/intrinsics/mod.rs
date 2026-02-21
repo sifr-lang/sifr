@@ -23,6 +23,7 @@ mod html;
 mod calendar;
 mod gzip;
 mod zipfile;
+mod base64;
 
 use crate::RustExpr;
 
@@ -223,6 +224,12 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "zip_add_file" => (zipfile::lower_zip_add_file(rendered_args), Some("zip")),
         "zip_read_file" => (zipfile::lower_zip_read_file(rendered_args), Some("zip")),
         "zip_namelist" => (zipfile::lower_zip_namelist(rendered_args), Some("zip")),
+        "base64_encode" => (base64::lower_base64_encode(rendered_args), Some("base64")),
+        "base64_decode" => (base64::lower_base64_decode(rendered_args), Some("base64")),
+        "base64_encode_opts" => (base64::lower_base64_encode_opts(rendered_args), Some("base64")),
+        "base64_decode_opts" => (base64::lower_base64_decode_opts(rendered_args), Some("base64")),
+        "urlsafe_b64encode" => (base64::lower_urlsafe_b64encode(rendered_args), Some("base64")),
+        "urlsafe_b64decode" => (base64::lower_urlsafe_b64decode(rendered_args), Some("base64")),
         _ => return None,
     };
 
@@ -704,5 +711,47 @@ mod tests {
         let names = lower_intrinsic("zip_namelist", &["path".to_string()]).expect("zip_namelist");
         assert_eq!(names.required_crate, Some("zip"));
         assert!(render_expr(&names.expr).contains("__zip.by_index"));
+    }
+
+    #[test]
+    fn lowers_base64_intrinsics_with_dependency_metadata() {
+        let enc = lower_intrinsic("base64_encode", &["text".to_string()]).expect("base64_encode");
+        assert_eq!(enc.required_crate, Some("base64"));
+        assert!(render_expr(&enc.expr).contains("general_purpose::STANDARD.encode"));
+
+        let dec = lower_intrinsic("base64_decode", &["s".to_string()]).expect("base64_decode");
+        assert_eq!(dec.required_crate, Some("base64"));
+        assert!(render_expr(&dec.expr).contains("general_purpose::STANDARD.decode"));
+
+        let enc_opts = lower_intrinsic(
+            "base64_encode_opts",
+            &["s".to_string(), "alt".to_string(), "wrap".to_string()],
+        )
+        .expect("base64_encode_opts");
+        assert_eq!(enc_opts.required_crate, Some("base64"));
+        assert!(render_expr(&enc_opts.expr).contains("wrapcol must be >= 0"));
+
+        let dec_opts = lower_intrinsic(
+            "base64_decode_opts",
+            &[
+                "s".to_string(),
+                "alt".to_string(),
+                "validate".to_string(),
+                "ignore".to_string(),
+            ],
+        )
+        .expect("base64_decode_opts");
+        assert_eq!(dec_opts.required_crate, Some("base64"));
+        assert!(render_expr(&dec_opts.expr).contains("invalid base64 character"));
+
+        let url_enc =
+            lower_intrinsic("urlsafe_b64encode", &["s".to_string()]).expect("urlsafe_b64encode");
+        assert_eq!(url_enc.required_crate, Some("base64"));
+        assert!(render_expr(&url_enc.expr).contains("general_purpose::URL_SAFE.encode"));
+
+        let url_dec =
+            lower_intrinsic("urlsafe_b64decode", &["s".to_string()]).expect("urlsafe_b64decode");
+        assert_eq!(url_dec.required_crate, Some("base64"));
+        assert!(render_expr(&url_dec.expr).contains("general_purpose::URL_SAFE.decode"));
     }
 }
