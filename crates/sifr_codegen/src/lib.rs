@@ -9,7 +9,6 @@
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::unused_self)]
 #![allow(dead_code)]
 #![allow(clippy::explicit_iter_loop)]
 #![allow(clippy::struct_excessive_bools)]
@@ -4172,7 +4171,7 @@ impl RustEmitter {
         }
     }
 
-    fn substitute_class_captures_in_guard(&self, guard_code: &str, pattern: &HirPattern, is_non_option_union: bool) -> String {
+    fn substitute_class_captures_in_guard(guard_code: &str, pattern: &HirPattern, is_non_option_union: bool) -> String {
         if let HirPattern::Class { fields, .. } = pattern {
             let prefix = if is_non_option_union { "__inner" } else { "__matched" };
             let mut result = guard_code.to_string();
@@ -4429,13 +4428,13 @@ impl RustEmitter {
             let mut all_guards = class_field_guards;
             if let Some(guard_expr) = guard {
                 let mut guard_code = self.expr_to_string(guard_expr);
-                guard_code = self.substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
+                guard_code = Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
                 all_guards.push(guard_code);
             }
             self.write(&format!(" if {}", all_guards.join(" && ")));
         } else if let Some(guard_expr) = guard {
             let mut guard_code = self.expr_to_string(guard_expr);
-            guard_code = self.substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
+            guard_code = Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
             self.write(&format!(" if {}", guard_code));
         }
 
