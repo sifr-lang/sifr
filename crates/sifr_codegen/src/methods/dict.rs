@@ -2,11 +2,14 @@
 
 use crate::RustExpr;
 
-fn render_key_arg(arg: &str) -> String {
+fn render_key_arg_expr(arg: &str) -> RustExpr {
     if arg.ends_with(".as_str()") || arg.starts_with('&') {
-        arg.to_string()
+        RustExpr::RawCode(arg.to_string())
     } else {
-        format!("&({arg})")
+        RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::RawCode(format!("({arg})"))),
+        }
     }
 }
 
@@ -74,23 +77,37 @@ pub(super) fn lower_contains(object: &str, args: &[String]) -> Option<RustExpr> 
     if args.len() != 1 {
         return None;
     }
-    let key = render_key_arg(&args[0]);
-    Some(RustExpr::RawCode(format!("{object}.contains_key({key})")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "contains_key".to_string(),
+        args: vec![render_key_arg_expr(&args[0])],
+    })
 }
 
 pub(super) fn lower_get(object: &str, args: &[String]) -> Option<RustExpr> {
     match args.len() {
-        1 => {
-            let key = render_key_arg(&args[0]);
-            Some(RustExpr::RawCode(format!("{object}.get({key}).cloned()")))
-        }
-        2 => {
-            let key = render_key_arg(&args[0]);
-            Some(RustExpr::RawCode(format!(
-                "{object}.get({key}).cloned().unwrap_or({})",
-                args[1]
-            )))
-        }
+        1 => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "get".to_string(),
+                args: vec![render_key_arg_expr(&args[0])],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        }),
+        2 => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    method: "get".to_string(),
+                    args: vec![render_key_arg_expr(&args[0])],
+                }),
+                method: "cloned".to_string(),
+                args: vec![],
+            }),
+            method: "unwrap_or".to_string(),
+            args: vec![RustExpr::RawCode(args[1].clone())],
+        }),
         _ => None,
     }
 }
@@ -99,6 +116,9 @@ pub(super) fn lower_pop(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    let key = render_key_arg(&args[0]);
-    Some(RustExpr::RawCode(format!("{object}.remove({key})")))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "remove".to_string(),
+        args: vec![render_key_arg_expr(&args[0])],
+    })
 }
