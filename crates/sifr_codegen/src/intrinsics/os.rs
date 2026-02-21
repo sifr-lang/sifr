@@ -181,10 +181,93 @@ pub(super) fn lower_which(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __name = {}; std::env::var(\"PATH\").ok().and_then(|__path| __path.split(':').map(|d| std::path::Path::new(d).join(__name)).find(|p| p.is_file()).map(|p| p.to_string_lossy().to_string())) }}",
-        borrow_expr(&args[0])
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "env".to_string(),
+                    "var".to_string(),
+                ])),
+                args: vec![RustExpr::Ident("\"PATH\"".to_string())],
+            }),
+            method: "ok".to_string(),
+            args: vec![],
+        }),
+        method: "and_then".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "__path".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                            method: "split".to_string(),
+                            args: vec![RustExpr::Literal(RustLiteral::Char(':'))],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![RustExpr::Closure {
+                            params: vec![RustParam::Named {
+                                name: "d".to_string(),
+                                ty: RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "std".to_string(),
+                                        "path".to_string(),
+                                        "Path".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ident("d".to_string())],
+                                }),
+                                method: "join".to_string(),
+                                args: vec![RustExpr::Ref {
+                                    mutable: false,
+                                    expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                                }],
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    method: "find".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "p".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("p".to_string())),
+                            method: "is_file".to_string(),
+                            args: vec![],
+                        }),
+                        is_move: false,
+                    }],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "p".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("p".to_string())),
+                            method: "to_string_lossy".to_string(),
+                            args: vec![],
+                        }),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: false,
+                }],
+            }),
+            is_move: false,
+        }],
+    })
 }
 
 pub(super) fn lower_disk_usage(args: &[String]) -> Option<RustExpr> {
