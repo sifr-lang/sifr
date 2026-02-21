@@ -13,6 +13,91 @@ enum TopLevelChunk {
     OtherLine(String),
 }
 
+#[derive(Debug, Default, Clone, Copy)]
+pub(crate) struct SharedPreludeNeeds {
+    pub(crate) needs_hashmap: bool,
+    pub(crate) needs_hashset: bool,
+    pub(crate) needs_vecdeque: bool,
+    pub(crate) needs_file_handles: bool,
+}
+
+pub(crate) struct PreparedStdlibModule {
+    pub(crate) stripped_code: String,
+    pub(crate) shared_needs: SharedPreludeNeeds,
+}
+
+/// Strip per-module shared imports/infrastructure and return dependency flags.
+pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlibModule {
+    let mut shared_needs = SharedPreludeNeeds::default();
+    let mut in_file_handle_block = false;
+    let mut skip_next_blank = false;
+    let mut skip_file_handle_continuation = false;
+    let mut lines_out: Vec<&str> = Vec::new();
+
+    for line in filtered.lines() {
+        let t = line.trim();
+
+        if line.contains("__SIFR_FILE_HANDLES") {
+            shared_needs.needs_file_handles = true;
+        }
+        if t == "use std::collections::HashMap;" {
+            shared_needs.needs_hashmap = true;
+            continue;
+        }
+        if t == "use std::collections::HashSet;" {
+            shared_needs.needs_hashset = true;
+            continue;
+        }
+        if t == "use std::collections::VecDeque;" {
+            shared_needs.needs_vecdeque = true;
+            continue;
+        }
+        if t == "use std::sync::Mutex;" {
+            continue;
+        }
+
+        // Skip file handle infrastructure block (SifrFileHandle enum)
+        if t.starts_with("enum SifrFileHandle {") {
+            in_file_handle_block = true;
+            continue;
+        }
+        if in_file_handle_block {
+            if t == "}" {
+                in_file_handle_block = false;
+                skip_next_blank = true;
+            }
+            continue;
+        }
+        // Skip __SIFR_FILE_HANDLES static declaration (multi-line)
+        if t.starts_with("static __SIFR_FILE_HANDLES:") {
+            skip_file_handle_continuation = true;
+            skip_next_blank = true;
+            continue;
+        }
+        // Skip __SIFR_GLOBAL_LOG_LEVEL static declaration (multi-line)
+        if t.starts_with("static __SIFR_GLOBAL_LOG_LEVEL:") {
+            skip_file_handle_continuation = true;
+            skip_next_blank = true;
+            continue;
+        }
+        if skip_file_handle_continuation {
+            skip_file_handle_continuation = false;
+            continue;
+        }
+        if skip_next_blank && t.is_empty() {
+            skip_next_blank = false;
+            continue;
+        }
+        skip_next_blank = false;
+        lines_out.push(line);
+    }
+
+    PreparedStdlibModule {
+        stripped_code: lines_out.join("\n"),
+        shared_needs,
+    }
+}
+
 /// Filter compiled Rust source code to only include top-level items whose names
 /// are in the given set (or are transitively called by them).
 pub(crate) fn filter_rust_code_to_needed(
@@ -376,5 +461,36 @@ impl std::fmt::Display for Item {
         assert!(once.contains("impl Item {"));
         assert!(once.contains("impl std::fmt::Display for Item {"));
         assert!(twice.trim().is_empty());
+    }
+
+    #[test]
+    fn collects_and_strips_shared_prelude_bits() {
+        let input = r#"
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
+use std::sync::Mutex;
+
+enum SifrFileHandle {
+    Reader(std::fs::File),
+}
+
+static __SIFR_FILE_HANDLES: std::sync::OnceLock<
+    Mutex<HashMap<i64, SifrFileHandle>>
+> = std::sync::OnceLock::new();
+
+fn keep_me() {
+    let _ = __SIFR_FILE_HANDLES.get();
+}
+"#;
+        let prepared = collect_and_strip_shared_prelude(input);
+        assert!(prepared.shared_needs.needs_hashmap);
+        assert!(prepared.shared_needs.needs_hashset);
+        assert!(prepared.shared_needs.needs_vecdeque);
+        assert!(prepared.shared_needs.needs_file_handles);
+        assert!(!prepared.stripped_code.contains("use std::collections::HashMap;"));
+        assert!(!prepared.stripped_code.contains("enum SifrFileHandle {"));
+        assert!(!prepared.stripped_code.contains("static __SIFR_FILE_HANDLES:"));
+        assert!(prepared.stripped_code.contains("fn keep_me()"));
     }
 }
