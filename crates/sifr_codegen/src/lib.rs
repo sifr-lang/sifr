@@ -15,7 +15,6 @@
 #![allow(clippy::assigning_clones)]
 #![allow(clippy::explicit_iter_loop)]
 #![allow(clippy::struct_excessive_bools)]
-#![allow(clippy::unnecessary_unwrap)]
 
 mod rust_ir;
 pub use rust_ir::*;
@@ -2110,9 +2109,9 @@ impl RustEmitter {
                         }
                     });
 
-                    if has_super && class.parent_class.is_some() {
+                    let inheritance_parent = if has_super { class.parent_class.as_ref() } else { None };
+                    if let Some(parent_name) = inheritance_parent {
                         // Inheritance constructor: emit super call, then Self { parent: ..., own fields }
-                        let parent_name = class.parent_class.as_ref().unwrap();
                         let mut super_args: Option<&Vec<HirExpr>> = None;
                         let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
                         let mut other_stmts: Vec<&HirStmt> = Vec::new();
