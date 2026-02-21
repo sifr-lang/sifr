@@ -1,6 +1,6 @@
 //! String method lowerers for registry migration.
 
-use crate::{RustExpr, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
 fn lower_zero_arg_method(object: &str, args: &[String], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
@@ -527,10 +527,102 @@ pub(super) fn lower_center(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let _s = ({object}).clone(); let _w = {} as usize; let _len = _s.chars().count(); if _len >= _w {{ _s }} else {{ let _pad = _w - _len; let _left = _pad / 2; let _right = _pad - _left; format!(\"{{}}{{}}{{}}\", \" \".repeat(_left), _s, \" \".repeat(_right)) }} }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "_s".to_string(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(object.to_string()))),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "_w".to_string(),
+                ty: None,
+                value: RustExpr::Cast {
+                    expr: Box::new(RustExpr::RawCode(args[0].clone())),
+                    ty: RustType::RawCode("usize".to_string()),
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "_len".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("_s".to_string())),
+                        method: "chars".to_string(),
+                        args: vec![],
+                    }),
+                    method: "count".to_string(),
+                    args: vec![],
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("_len".to_string())),
+                op: ">=".to_string(),
+                right: Box::new(RustExpr::Ident("_w".to_string())),
+            }),
+            then_expr: Box::new(RustExpr::Ident("_s".to_string())),
+            else_expr: Some(Box::new(RustExpr::Block {
+                stmts: vec![
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "_pad".to_string(),
+                        ty: None,
+                        value: RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("_w".to_string())),
+                            op: "-".to_string(),
+                            right: Box::new(RustExpr::Ident("_len".to_string())),
+                        },
+                    },
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "_left".to_string(),
+                        ty: None,
+                        value: RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("_pad".to_string())),
+                            op: "/".to_string(),
+                            right: Box::new(RustExpr::Literal(RustLiteral::Int(2))),
+                        },
+                    },
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "_right".to_string(),
+                        ty: None,
+                        value: RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("_pad".to_string())),
+                            op: "-".to_string(),
+                            right: Box::new(RustExpr::Ident("_left".to_string())),
+                        },
+                    },
+                ],
+                expr: Some(Box::new(RustExpr::FormatMacro {
+                    name: "format".to_string(),
+                    format_str: "{}{}{}".to_string(),
+                    args: vec![
+                        RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(
+                                " ".to_string(),
+                            ))),
+                            method: "repeat".to_string(),
+                            args: vec![RustExpr::Ident("_left".to_string())],
+                        },
+                        RustExpr::Ident("_s".to_string()),
+                        RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(
+                                " ".to_string(),
+                            ))),
+                            method: "repeat".to_string(),
+                            args: vec![RustExpr::Ident("_right".to_string())],
+                        },
+                    ],
+                })),
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_ljust(object: &str, args: &[String]) -> Option<RustExpr> {

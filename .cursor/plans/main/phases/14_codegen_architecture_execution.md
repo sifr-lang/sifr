@@ -208,6 +208,7 @@ status: in_progress
 - [x] PR98 slice: continue RawCode-zero gate by structuring `string.swapcase` as chained iterator/closure/if-expression IR
 - [x] PR99 slice: continue RawCode-zero gate by structuring `string.capitalize` as block + iterator/closure IR
 - [x] PR100 slice: continue RawCode-zero gate by structuring `string.title` as split/map/closure+block/join IR
+- [x] PR101 slice: continue RawCode-zero gate by structuring `string.center` as block/if/binop/format IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
