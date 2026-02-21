@@ -235,6 +235,7 @@ status: in_progress
 - [x] PR125 slice: continue RawCode-zero gate by replacing `assert_true`/`assert_false` `RawCode` with structured macro/unary IR
 - [x] PR126 slice: continue RawCode-zero gate by replacing `assert_eq`/`assert_ne` `RawCode` with structured macro IR
 - [x] PR127 slice: continue RawCode-zero gate by replacing `assert_gt`/`assert_lt` `RawCode` with structured macro/binop IR
+- [x] PR128 slice: continue RawCode-zero gate by replacing `assert_almost_eq` `RawCode` with structured macro/binop-call IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass

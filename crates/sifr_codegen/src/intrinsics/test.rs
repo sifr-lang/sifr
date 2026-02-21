@@ -1,6 +1,6 @@
 //! Test/assertion intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustLiteral};
 
 pub(super) fn lower_assert_eq(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
@@ -55,10 +55,30 @@ pub(super) fn lower_assert_almost_eq(args: &[String]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "assert!(({} - ({})).abs() < {}, \"assert_almost_eq failed: {{}} != {{}} (tolerance {{}})\", {}, {}, {})",
-        args[0], args[1], args[2], args[0], args[1], args[2]
-    )))
+    Some(RustExpr::MacroCall {
+        name: "assert".to_string(),
+        args: vec![
+            RustExpr::BinOp {
+                left: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident(args[0].clone())),
+                        op: "-".to_string(),
+                        right: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                    }),
+                    method: "abs".to_string(),
+                    args: vec![],
+                }),
+                op: "<".to_string(),
+                right: Box::new(RustExpr::Ident(args[2].clone())),
+            },
+            RustExpr::Literal(RustLiteral::Str(
+                "assert_almost_eq failed: {} != {} (tolerance {})".to_string(),
+            )),
+            RustExpr::Ident(args[0].clone()),
+            RustExpr::Ident(args[1].clone()),
+            RustExpr::Ident(args[2].clone()),
+        ],
+    })
 }
 
 pub(super) fn lower_assert_gt(args: &[String]) -> Option<RustExpr> {
