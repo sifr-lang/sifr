@@ -210,6 +210,7 @@ status: in_progress
 - [x] PR100 slice: continue RawCode-zero gate by structuring `string.title` as split/map/closure+block/join IR
 - [x] PR101 slice: continue RawCode-zero gate by structuring `string.center` as block/if/binop/format IR
 - [x] PR102 slice: continue RawCode-zero gate by replacing string lowerer expression-slot `RawCode` with structured `Ident` where safe (`join`, `ljust`, `rjust`, `zfill`)
+- [x] PR103 slice: continue RawCode-zero gate by replacing additional string expression/type `RawCode` with structured `Ident`/`Named` (`render_borrowed_arg_expr`, `center` width cast, width args)
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
