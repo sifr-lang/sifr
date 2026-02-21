@@ -1,6 +1,6 @@
 //! Collections intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustStmt};
 
 fn cloned_vec(expr: &str) -> String {
     format!("({expr}).clone()")
@@ -27,10 +27,27 @@ pub(super) fn lower_set_from_list(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let mut s = {}; s.sort(); s.dedup(); s }}",
-        cloned_vec(&args[0])
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "s".to_string(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+            },
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("s".to_string())),
+                method: "sort".to_string(),
+                args: vec![],
+            }),
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("s".to_string())),
+                method: "dedup".to_string(),
+                args: vec![],
+            }),
+        ],
+        expr: Some(Box::new(RustExpr::Ident("s".to_string()))),
+    })
 }
 
 pub(super) fn lower_set_add(args: &[String]) -> Option<RustExpr> {
