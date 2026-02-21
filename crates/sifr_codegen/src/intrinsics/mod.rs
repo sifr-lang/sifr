@@ -20,6 +20,7 @@ mod datetime;
 mod sys;
 mod subprocess;
 mod html;
+mod calendar;
 
 use crate::RustExpr;
 
@@ -211,6 +212,9 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         ),
         "html_escape" => (html::lower_html_escape(rendered_args), None),
         "html_unescape" => (html::lower_html_unescape(rendered_args), None),
+        "calendar_isleap" => (calendar::lower_calendar_isleap(rendered_args), None),
+        "calendar_weekday" => (calendar::lower_calendar_weekday(rendered_args), None),
+        "calendar_monthrange" => (calendar::lower_calendar_monthrange(rendered_args), None),
         _ => return None,
     };
 
@@ -637,5 +641,24 @@ mod tests {
 
         let unesc = lower_intrinsic("html_unescape", &["s".to_string()]).expect("html_unescape");
         assert!(render_expr(&unesc.expr).contains("replace(\"&amp;\", \"&\")"));
+    }
+
+    #[test]
+    fn lowers_calendar_intrinsics_via_registry() {
+        let leap = lower_intrinsic("calendar_isleap", &["year".to_string()])
+            .expect("calendar_isleap");
+        assert!(render_expr(&leap.expr).contains("__y % 4 == 0"));
+
+        let weekday = lower_intrinsic(
+            "calendar_weekday",
+            &["y".to_string(), "m".to_string(), "d".to_string()],
+        )
+        .expect("calendar_weekday");
+        assert!(render_expr(&weekday.expr).contains("__t = [0i64, 3, 2, 5"));
+        assert!(render_expr(&weekday.expr).contains("__t[(__m0-1) as usize]"));
+
+        let monthrange = lower_intrinsic("calendar_monthrange", &["y".to_string(), "m".to_string()])
+            .expect("calendar_monthrange");
+        assert!(render_expr(&monthrange.expr).contains("vec![__wd, __days]"));
     }
 }
