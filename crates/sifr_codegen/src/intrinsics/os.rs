@@ -109,10 +109,39 @@ pub(super) fn lower_stat_size(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "std::fs::metadata({}).map(|m| m.len() as i64).map_err(__io_err)",
-        borrow_expr(&args[0])
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "fs".to_string(),
+                    "metadata".to_string(),
+                ])),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                }],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "m".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::Cast {
+                    expr: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("m".to_string())),
+                        method: "len".to_string(),
+                        args: vec![],
+                    }),
+                    ty: RustType::I64,
+                }),
+                is_move: false,
+            }],
+        }),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Ident("__io_err".to_string())],
+    })
 }
 
 pub(super) fn lower_which(args: &[String]) -> Option<RustExpr> {
