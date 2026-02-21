@@ -1,15 +1,22 @@
 //! Sys intrinsic lowerers for registry migration.
 
-use crate::{RustExpr, RustLiteral};
+use crate::{RustExpr, RustLiteral, RustType};
 
 pub(super) fn lower_sys_exit(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ std::process::exit({} as i32) }}",
-        args[0]
-    )))
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "std".to_string(),
+            "process".to_string(),
+            "exit".to_string(),
+        ])),
+        args: vec![RustExpr::Cast {
+            expr: Box::new(RustExpr::Ident(args[0].clone())),
+            ty: RustType::Named("i32".to_string()),
+        }],
+    })
 }
 
 pub(super) fn lower_sys_version(args: &[String]) -> Option<RustExpr> {
