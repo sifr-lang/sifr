@@ -28,6 +28,15 @@ pub(crate) fn lower_method(
         (Type::Str, "rstrip") => string::lower_rstrip(rendered_object, rendered_args),
         (Type::Str, "count") => string::lower_count(rendered_object, rendered_args),
         (Type::Str, "join") => string::lower_join(rendered_object, rendered_args),
+        (Type::Str, "title") => string::lower_title(rendered_object, rendered_args),
+        (Type::Str, "capitalize") => string::lower_capitalize(rendered_object, rendered_args),
+        (Type::Str, "swapcase") => string::lower_swapcase(rendered_object, rendered_args),
+        (Type::Str, "isdigit") => string::lower_isdigit(rendered_object, rendered_args),
+        (Type::Str, "isalpha") => string::lower_isalpha(rendered_object, rendered_args),
+        (Type::Str, "isalnum") => string::lower_isalnum(rendered_object, rendered_args),
+        (Type::Str, "isspace") => string::lower_isspace(rendered_object, rendered_args),
+        (Type::Str, "isupper") => string::lower_isupper(rendered_object, rendered_args),
+        (Type::Str, "islower") => string::lower_islower(rendered_object, rendered_args),
         _ => return None,
     };
 
@@ -96,5 +105,32 @@ mod tests {
         let join =
             lower_method(&Type::Str, "join", "sep", &["parts".to_string()]).expect("join lowers");
         assert_eq!(render_expr(&join.expr), "parts.join(&(sep))");
+
+        let title = lower_method(&Type::Str, "title", "s", &[]).expect("title lowers");
+        assert!(render_expr(&title.expr).contains("split_whitespace"));
+
+        let cap = lower_method(&Type::Str, "capitalize", "s", &[]).expect("capitalize lowers");
+        assert!(render_expr(&cap.expr).contains("let _s = (s).clone()"));
+
+        let swap = lower_method(&Type::Str, "swapcase", "s", &[]).expect("swapcase lowers");
+        assert!(render_expr(&swap.expr).contains("is_uppercase"));
+
+        let isdigit = lower_method(&Type::Str, "isdigit", "s", &[]).expect("isdigit lowers");
+        assert!(render_expr(&isdigit.expr).contains("is_ascii_digit"));
+
+        let isalpha = lower_method(&Type::Str, "isalpha", "s", &[]).expect("isalpha lowers");
+        assert!(render_expr(&isalpha.expr).contains("is_alphabetic"));
+
+        let isalnum = lower_method(&Type::Str, "isalnum", "s", &[]).expect("isalnum lowers");
+        assert!(render_expr(&isalnum.expr).contains("is_alphanumeric"));
+
+        let isspace = lower_method(&Type::Str, "isspace", "s", &[]).expect("isspace lowers");
+        assert!(render_expr(&isspace.expr).contains("is_whitespace"));
+
+        let isupper = lower_method(&Type::Str, "isupper", "s", &[]).expect("isupper lowers");
+        assert!(render_expr(&isupper.expr).contains("is_uppercase"));
+
+        let islower = lower_method(&Type::Str, "islower", "s", &[]).expect("islower lowers");
+        assert!(render_expr(&islower.expr).contains("is_lowercase"));
     }
 }
