@@ -21,6 +21,7 @@ mod sys;
 mod subprocess;
 mod html;
 mod calendar;
+mod gzip;
 
 use crate::RustExpr;
 
@@ -215,6 +216,8 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "calendar_isleap" => (calendar::lower_calendar_isleap(rendered_args), None),
         "calendar_weekday" => (calendar::lower_calendar_weekday(rendered_args), None),
         "calendar_monthrange" => (calendar::lower_calendar_monthrange(rendered_args), None),
+        "gzip_compress" => (gzip::lower_gzip_compress(rendered_args), Some("flate2")),
+        "gzip_decompress" => (gzip::lower_gzip_decompress(rendered_args), Some("flate2")),
         _ => return None,
     };
 
@@ -660,5 +663,17 @@ mod tests {
         let monthrange = lower_intrinsic("calendar_monthrange", &["y".to_string(), "m".to_string()])
             .expect("calendar_monthrange");
         assert!(render_expr(&monthrange.expr).contains("vec![__wd, __days]"));
+    }
+
+    #[test]
+    fn lowers_gzip_intrinsics_with_dependency_metadata() {
+        let compress = lower_intrinsic("gzip_compress", &["data".to_string()]).expect("gzip_compress");
+        assert_eq!(compress.required_crate, Some("flate2"));
+        assert!(render_expr(&compress.expr).contains("GzEncoder"));
+
+        let decompress =
+            lower_intrinsic("gzip_decompress", &["bytes".to_string()]).expect("gzip_decompress");
+        assert_eq!(decompress.required_crate, Some("flate2"));
+        assert!(render_expr(&decompress.expr).contains("GzDecoder"));
     }
 }
