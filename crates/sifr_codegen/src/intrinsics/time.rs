@@ -1,6 +1,6 @@
 //! Time intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
 fn borrowed_str(expr: &str) -> String {
     format!("&({expr})")
@@ -98,10 +98,53 @@ pub(super) fn lower_gmtime(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ use chrono::{{DateTime, Utc}}; let __ts = {} as i64; DateTime::<Utc>::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).unwrap_or_default() }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__ts".to_string(),
+            ty: None,
+            value: RustExpr::Cast {
+                expr: Box::new(RustExpr::Ident(args[0].clone())),
+                ty: RustType::I64,
+            },
+        }],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "DateTime::<Utc>".to_string(),
+                        "from_timestamp".to_string(),
+                    ])),
+                    args: vec![
+                        RustExpr::Ident("__ts".to_string()),
+                        RustExpr::Literal(RustLiteral::Int(0)),
+                    ],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "dt".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("dt".to_string())),
+                            method: "format".to_string(),
+                            args: vec![RustExpr::Literal(RustLiteral::Str(
+                                "%Y-%m-%dT%H:%M:%S".to_string(),
+                            ))],
+                        }),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "unwrap_or_default".to_string(),
+            args: vec![],
+        })),
+    })
 }
 
 pub(super) fn lower_localtime(args: &[String]) -> Option<RustExpr> {
