@@ -288,7 +288,7 @@ pub(super) fn lower_join(object: &str, args: &[String]) -> Option<RustExpr> {
         return None;
     }
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::RawCode(args[0].clone())),
+        receiver: Box::new(RustExpr::Ident(args[0].clone())),
         method: "join".to_string(),
         args: vec![render_borrowed_arg_expr(object)],
     })
@@ -633,7 +633,7 @@ pub(super) fn lower_ljust(object: &str, args: &[String]) -> Option<RustExpr> {
         name: "format".to_string(),
         format_str: "{:<width$}".to_string(),
         args: vec![
-            RustExpr::RawCode(object.to_string()),
+            RustExpr::Ident(object.to_string()),
             RustExpr::RawCode(format!("width = {} as usize", args[0])),
         ],
     })
@@ -647,7 +647,7 @@ pub(super) fn lower_rjust(object: &str, args: &[String]) -> Option<RustExpr> {
         name: "format".to_string(),
         format_str: "{:>width$}".to_string(),
         args: vec![
-            RustExpr::RawCode(object.to_string()),
+            RustExpr::Ident(object.to_string()),
             RustExpr::RawCode(format!("width = {} as usize", args[0])),
         ],
     })
@@ -661,7 +661,7 @@ pub(super) fn lower_zfill(object: &str, args: &[String]) -> Option<RustExpr> {
         name: "format".to_string(),
         format_str: "{:0>width$}".to_string(),
         args: vec![
-            RustExpr::RawCode(object.to_string()),
+            RustExpr::Ident(object.to_string()),
             RustExpr::RawCode(format!("width = {} as usize", args[0])),
         ],
     })
