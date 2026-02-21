@@ -146,9 +146,10 @@ status: in_progress
 - [x] PR52 slice: prune legacy `Type::Str` fallback branches from `emit_method_call` now that string methods are registry-backed
 - [x] PR53 slice: prune legacy list/dict/set fallback branches from `emit_method_call` where registry-backed lowering now applies (deque-specific branches retained)
 - [x] PR54 slice: extract stdlib Rust filtering/dedup helpers from `lib.rs` into `stdlib_filter.rs` to continue codegen decomposition
+- [x] PR55 slice: route deque `_data` methods through method registry (`methods/deque.rs`) and remove deque-specific fallback branches from `emit_method_call`
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
-- [ ] Add method registry and type-specific method modules
+- [x] Add method registry and type-specific method modules
 - [x] Remove driver string-scanning dependency detection; return `HashSet<String>` dependencies
 - [ ] Convert all intrinsic/method lowering to structured IR (no `RawCode`)
 - [ ] Reduce `lib.rs` by >= 2000 lines via decomposition
