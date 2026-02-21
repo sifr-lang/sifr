@@ -242,6 +242,7 @@ status: in_progress
 - [x] PR132 slice: continue RawCode-zero gate by replacing `set_len` `RawCode` with structured cast+method-call IR
 - [x] PR133 slice: continue RawCode-zero gate by replacing `new_set`/`set_contains` `RawCode` with structured fn-call/method-call+ref IR
 - [x] PR134 slice: continue RawCode-zero gate by replacing `set_from_list` `RawCode` with structured block/let/expr IR
+- [x] PR135 slice: continue RawCode-zero gate by replacing `set_add` `RawCode` with structured block/let/if/method-call IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
