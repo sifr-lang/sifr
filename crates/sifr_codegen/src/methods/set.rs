@@ -13,6 +13,25 @@ fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
     }
 }
 
+fn lower_set_op_collect(object: &str, args: &[String], method: &str) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: method.to_string(),
+                args: vec![render_borrowed_arg_expr(&args[0])],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        }),
+        method: "collect::<std::collections::HashSet<_>>".to_string(),
+        args: vec![],
+    })
+}
+
 pub(super) fn lower_add(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
@@ -152,41 +171,17 @@ pub(super) fn lower_pop(object: &str, args: &[String]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_union(object: &str, args: &[String]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "{object}.union(&{}).cloned().collect::<std::collections::HashSet<_>>()",
-        args[0]
-    )))
+    lower_set_op_collect(object, args, "union")
 }
 
 pub(super) fn lower_intersection(object: &str, args: &[String]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "{object}.intersection(&{}).cloned().collect::<std::collections::HashSet<_>>()",
-        args[0]
-    )))
+    lower_set_op_collect(object, args, "intersection")
 }
 
 pub(super) fn lower_difference(object: &str, args: &[String]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "{object}.difference(&{}).cloned().collect::<std::collections::HashSet<_>>()",
-        args[0]
-    )))
+    lower_set_op_collect(object, args, "difference")
 }
 
 pub(super) fn lower_symmetric_difference(object: &str, args: &[String]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::RawCode(format!(
-        "{object}.symmetric_difference(&{}).cloned().collect::<std::collections::HashSet<_>>()",
-        args[0]
-    )))
+    lower_set_op_collect(object, args, "symmetric_difference")
 }

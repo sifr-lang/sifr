@@ -453,7 +453,7 @@ mod tests {
             .expect("set union lowers");
         assert_eq!(
             render_expr(&set_union.expr),
-            "s.union(&other).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.union(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
         );
 
         let set_intersection =
@@ -461,21 +461,21 @@ mod tests {
                 .expect("set intersection lowers");
         assert_eq!(
             render_expr(&set_intersection.expr),
-            "s.intersection(&other).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.intersection(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
         );
 
         let set_difference = lower_method(&set_ty, "difference", "s", &["other".to_string()])
             .expect("set difference lowers");
         assert_eq!(
             render_expr(&set_difference.expr),
-            "s.difference(&other).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.difference(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
         );
 
         let set_sdiff = lower_method(&set_ty, "symmetric_difference", "s", &["other".to_string()])
             .expect("set symmetric_difference lowers");
         assert_eq!(
             render_expr(&set_sdiff.expr),
-            "s.symmetric_difference(&other).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.symmetric_difference(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
         );
     }
 }
