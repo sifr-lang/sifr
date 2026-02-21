@@ -30,11 +30,11 @@ fn lower_trim_to_string(object: &str, args: &[String], trim_method: &str) -> Opt
 
 fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
     if arg.ends_with(".as_str()") || arg.starts_with('&') {
-        RustExpr::RawCode(arg.to_string())
+        RustExpr::Ident(arg.to_string())
     } else {
         RustExpr::Ref {
             mutable: false,
-            expr: Box::new(RustExpr::RawCode(format!("({arg})"))),
+            expr: Box::new(RustExpr::Ident(format!("({arg})"))),
         }
     }
 }
@@ -540,8 +540,8 @@ pub(super) fn lower_center(object: &str, args: &[String]) -> Option<RustExpr> {
                 name: "_w".to_string(),
                 ty: None,
                 value: RustExpr::Cast {
-                    expr: Box::new(RustExpr::RawCode(args[0].clone())),
-                    ty: RustType::RawCode("usize".to_string()),
+                    expr: Box::new(RustExpr::Ident(args[0].clone())),
+                    ty: RustType::Named("usize".to_string()),
                 },
             },
             RustStmt::Let {
@@ -634,7 +634,7 @@ pub(super) fn lower_ljust(object: &str, args: &[String]) -> Option<RustExpr> {
         format_str: "{:<width$}".to_string(),
         args: vec![
             RustExpr::Ident(object.to_string()),
-            RustExpr::RawCode(format!("width = {} as usize", args[0])),
+            RustExpr::Ident(format!("width = {} as usize", args[0])),
         ],
     })
 }
@@ -648,7 +648,7 @@ pub(super) fn lower_rjust(object: &str, args: &[String]) -> Option<RustExpr> {
         format_str: "{:>width$}".to_string(),
         args: vec![
             RustExpr::Ident(object.to_string()),
-            RustExpr::RawCode(format!("width = {} as usize", args[0])),
+            RustExpr::Ident(format!("width = {} as usize", args[0])),
         ],
     })
 }
@@ -662,7 +662,7 @@ pub(super) fn lower_zfill(object: &str, args: &[String]) -> Option<RustExpr> {
         format_str: "{:0>width$}".to_string(),
         args: vec![
             RustExpr::Ident(object.to_string()),
-            RustExpr::RawCode(format!("width = {} as usize", args[0])),
+            RustExpr::Ident(format!("width = {} as usize", args[0])),
         ],
     })
 }
