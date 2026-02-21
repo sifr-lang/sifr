@@ -253,6 +253,7 @@ status: in_progress
 - [x] PR143 slice: continue RawCode-zero gate by replacing `counter_increment` `RawCode` with structured block/aug-assign/serialize IR
 - [x] PR144 slice: continue RawCode-zero gate by replacing `defaultdict_new` `RawCode` with structured format-macro IR
 - [x] PR145 slice: continue RawCode-zero gate by replacing `defaultdict_get` `RawCode` with structured block/let/get-default IR
+- [x] PR146 slice: continue RawCode-zero gate by replacing `defaultdict_set` `RawCode` with structured block/insert/macro-call IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
