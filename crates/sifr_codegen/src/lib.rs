@@ -125,6 +125,8 @@ pub struct CodegenResult {
     pub rust_source: String,
     pub used_stdlib_modules: HashSet<String>,
     pub used_intrinsic_modules: HashSet<String>,
+    /// Required external crates discovered during structured lowering/codegen.
+    pub required_crates: HashSet<String>,
     /// Map of constant_name -> (type, rust_name) for module-level constants
     pub constant_mappings: HashMap<String, (Type, String)>,
 }
@@ -177,6 +179,14 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         rust_source: result,
         used_stdlib_modules: emitter.used_stdlib_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
+        required_crates: {
+            let mut crates = emitter.intrinsic_registry_crates;
+            if emitter.needs_bigint {
+                crates.insert("num-bigint".to_string());
+                crates.insert("num-traits".to_string());
+            }
+            crates
+        },
         constant_mappings: emitter.module_constants,
     }
 }
@@ -912,6 +922,14 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         rust_source: result,
         used_stdlib_modules: all_used_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
+        required_crates: {
+            let mut crates = emitter.intrinsic_registry_crates;
+            if needs_bigint {
+                crates.insert("num-bigint".to_string());
+                crates.insert("num-traits".to_string());
+            }
+            crates
+        },
         constant_mappings: emitter.module_constants,
     }
 }
@@ -980,6 +998,16 @@ pub fn generate_project(module: &HirModule, project_name: &str) -> (String, Stri
 
 /// Generate a complete Rust project with stdlib dependencies.
 pub fn generate_project_with_deps(module: &HirModule, project_name: &str, stdlib_modules: &HashSet<String>) -> (String, String) {
+    generate_project_with_deps_and_crates(module, project_name, stdlib_modules, &HashSet::new())
+}
+
+/// Generate a complete Rust project with stdlib and explicit crate dependencies.
+pub fn generate_project_with_deps_and_crates(
+    module: &HirModule,
+    project_name: &str,
+    stdlib_modules: &HashSet<String>,
+    required_crates: &HashSet<String>,
+) -> (String, String) {
     let mut cargo_toml = format!(
         r#"[package]
 name = "{project_name}"
@@ -1060,6 +1088,90 @@ edition = "2021"
             }
             // sifr.io, sifr.env, sifr.os, sifr.math, sifr.test, sifr.bytes, sifr.sys,
             // sifr.subprocess, sifr.html, sifr.calendar, sifr.operator use only std library
+            _ => {}
+        }
+    }
+
+    for crate_name in required_crates {
+        match crate_name.as_str() {
+            "serde_json" => {
+                if !deps.contains(&"serde_json = \"1\"".to_string()) {
+                    deps.push("serde_json = \"1\"".to_string());
+                }
+                if !deps.contains(&"serde = { version = \"1\", features = [\"derive\"] }".to_string()) {
+                    deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
+                }
+            }
+            "chrono" => {
+                if !deps.contains(&"chrono = \"0.4\"".to_string()) {
+                    deps.push("chrono = \"0.4\"".to_string());
+                }
+            }
+            "rand" => {
+                if !deps.contains(&"rand = \"0.8\"".to_string()) {
+                    deps.push("rand = \"0.8\"".to_string());
+                }
+            }
+            "rand_distr" => {
+                if !deps.contains(&"rand_distr = \"0.4\"".to_string()) {
+                    deps.push("rand_distr = \"0.4\"".to_string());
+                }
+            }
+            "regex" => {
+                if !deps.contains(&"regex = \"1\"".to_string()) {
+                    deps.push("regex = \"1\"".to_string());
+                }
+            }
+            "sha2" => {
+                if !deps.contains(&"sha2 = \"0.10\"".to_string()) {
+                    deps.push("sha2 = \"0.10\"".to_string());
+                }
+            }
+            "md5" => {
+                if !deps.contains(&"md5 = \"0.7\"".to_string()) {
+                    deps.push("md5 = \"0.7\"".to_string());
+                }
+            }
+            "sha1" => {
+                if !deps.contains(&"sha1 = \"0.10\"".to_string()) {
+                    deps.push("sha1 = \"0.10\"".to_string());
+                }
+            }
+            "blake2" => {
+                if !deps.contains(&"blake2 = \"0.10\"".to_string()) {
+                    deps.push("blake2 = \"0.10\"".to_string());
+                }
+            }
+            "base64" => {
+                if !deps.contains(&"base64 = \"0.22\"".to_string()) {
+                    deps.push("base64 = \"0.22\"".to_string());
+                }
+            }
+            "toml" => {
+                if !deps.contains(&"toml = \"0.8\"".to_string()) {
+                    deps.push("toml = \"0.8\"".to_string());
+                }
+            }
+            "flate2" => {
+                if !deps.contains(&"flate2 = \"1\"".to_string()) {
+                    deps.push("flate2 = \"1\"".to_string());
+                }
+            }
+            "zip" => {
+                if !deps.contains(&"zip = \"0.6\"".to_string()) {
+                    deps.push("zip = \"0.6\"".to_string());
+                }
+            }
+            "num-bigint" => {
+                if !deps.contains(&"num-bigint = \"0.4\"".to_string()) {
+                    deps.push("num-bigint = \"0.4\"".to_string());
+                }
+            }
+            "num-traits" => {
+                if !deps.contains(&"num-traits = \"0.2\"".to_string()) {
+                    deps.push("num-traits = \"0.2\"".to_string());
+                }
+            }
             _ => {}
         }
     }
