@@ -6,11 +6,9 @@
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::format_push_string)]
 #![allow(clippy::type_complexity)]
-#![allow(clippy::option_map_or_none)]
 #![allow(clippy::nonminimal_bool)]
 #![allow(clippy::while_let_loop)]
 #![allow(clippy::needless_borrow)]
-#![allow(clippy::redundant_closure)]
 #![allow(clippy::ref_option)]
 #![allow(clippy::collapsible_match)]
 #![allow(clippy::cast_sign_loss)]
@@ -19,7 +17,6 @@
 #![allow(clippy::cloned_instead_of_copied)]
 #![allow(clippy::wildcard_imports)]
 #![allow(clippy::unused_self)]
-#![allow(clippy::unnecessary_semicolon)]
 #![allow(dead_code)]
 #![allow(clippy::derivable_impls)]
 #![allow(clippy::while_let_on_iterator)]
@@ -2981,7 +2978,8 @@ impl RustEmitter {
                     }
                     return;
                 }
-                let ret_is_option = self.current_return_type.as_ref().map_or(false, |t| is_option_type(t));
+                let ret_is_option =
+                    self.current_return_type.as_ref().map_or(false, is_option_type);
                 let ret_is_non_option_union = self.current_return_type.as_ref().map_or(false, |t| {
                     matches!(t, Type::Union(_)) && !is_option_type(t)
                 });
@@ -5160,7 +5158,7 @@ impl RustEmitter {
                         self.write("println!(\"{}\", ");
                         self.emit_display_expr(&args[0]);
                         self.write(")");
-                    };
+                    }
                 } else if func == "isinstance" {
                     // isinstance() is handled by narrowing at the HIR level.
                     // At codegen time, we emit `true` since the narrowing has
@@ -8006,12 +8004,12 @@ fn module_uses_bigint(module: &HirModule) -> bool {
         type_has_bigint(expr.ty())
     }
     fn stmts_have_bigint(stmts: &[HirStmt]) -> bool {
-        stmts.iter().any(|s| stmt_has_bigint(s))
+        stmts.iter().any(stmt_has_bigint)
     }
     fn stmt_has_bigint(stmt: &HirStmt) -> bool {
         match stmt {
             HirStmt::Let { ty, value, .. } => type_has_bigint(ty) || expr_has_bigint(value),
-            HirStmt::Return { value } => value.as_ref().map(|e| expr_has_bigint(e)).unwrap_or(false),
+            HirStmt::Return { value } => value.as_ref().map(expr_has_bigint).unwrap_or(false),
             HirStmt::Expr { expr } => expr_has_bigint(expr),
             HirStmt::If { condition, then_body, else_body, elif_clauses, .. } => {
                 expr_has_bigint(condition) || stmts_have_bigint(then_body)
