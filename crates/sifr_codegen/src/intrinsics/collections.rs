@@ -63,7 +63,14 @@ pub(super) fn lower_set_len(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{}.len() as i64", args[0])))
+    Some(RustExpr::Cast {
+        expr: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(args[0].clone())),
+            method: "len".to_string(),
+            args: vec![],
+        }),
+        ty: crate::RustType::I64,
+    })
 }
 
 pub(super) fn lower_set_union(args: &[String]) -> Option<RustExpr> {
