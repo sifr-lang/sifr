@@ -1,6 +1,6 @@
 //! Collections intrinsic lowerers for registry migration.
 
-use crate::{RustExpr, RustStmt};
+use crate::{RustExpr, RustParam, RustStmt, RustType};
 
 fn cloned_vec(expr: &str) -> String {
     format!("({expr}).clone()")
@@ -110,11 +110,35 @@ pub(super) fn lower_set_remove(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let mut s = {}; s.retain(|x| *x != {}); s }}",
-        cloned_vec(&args[0]),
-        args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "s".to_string(),
+                ty: None,
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+            },
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("s".to_string())),
+                method: "retain".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "x".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "x".to_string(),
+                        )))),
+                        op: "!=".to_string(),
+                        right: Box::new(RustExpr::Ident(args[1].clone())),
+                    }),
+                    is_move: false,
+                }],
+            }),
+        ],
+        expr: Some(Box::new(RustExpr::Ident("s".to_string()))),
+    })
 }
 
 pub(super) fn lower_set_len(args: &[String]) -> Option<RustExpr> {
