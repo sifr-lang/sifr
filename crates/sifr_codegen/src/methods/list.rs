@@ -1,6 +1,6 @@
 //! List method lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustType};
 
 pub(super) fn lower_append(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
@@ -28,10 +28,17 @@ pub(super) fn lower_insert(object: &str, args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{object}.insert({} as usize, {})",
-        args[0], args[1]
-    )))
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        method: "insert".to_string(),
+        args: vec![
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::RawCode(args[0].clone())),
+                ty: RustType::RawCode("usize".to_string()),
+            },
+            RustExpr::RawCode(args[1].clone()),
+        ],
+    })
 }
 
 pub(super) fn lower_clear(object: &str, args: &[String]) -> Option<RustExpr> {
