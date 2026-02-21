@@ -134,6 +134,7 @@ status: in_progress
 - [x] PR40 slice: expand method-registry coverage for string methods (`startswith`, `endswith`, `split`)
 - [x] PR41 slice: expand method-registry coverage for string methods (`replace`, `find`)
 - [x] PR42 slice: expand method-registry coverage for string methods (`lstrip`, `rstrip`, `count`, `join`)
+- [x] PR43 slice: expand method-registry coverage for string case/predicate methods (`capitalize`, `title`, `swapcase`, `isdigit`, `isalpha`, `isalnum`, `isspace`, `isupper`, `islower`)
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
