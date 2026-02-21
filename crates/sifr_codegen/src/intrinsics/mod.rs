@@ -22,6 +22,7 @@ mod subprocess;
 mod html;
 mod calendar;
 mod gzip;
+mod zipfile;
 
 use crate::RustExpr;
 
@@ -218,6 +219,10 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "calendar_monthrange" => (calendar::lower_calendar_monthrange(rendered_args), None),
         "gzip_compress" => (gzip::lower_gzip_compress(rendered_args), Some("flate2")),
         "gzip_decompress" => (gzip::lower_gzip_decompress(rendered_args), Some("flate2")),
+        "zip_create" => (zipfile::lower_zip_create(rendered_args), Some("zip")),
+        "zip_add_file" => (zipfile::lower_zip_add_file(rendered_args), Some("zip")),
+        "zip_read_file" => (zipfile::lower_zip_read_file(rendered_args), Some("zip")),
+        "zip_namelist" => (zipfile::lower_zip_namelist(rendered_args), Some("zip")),
         _ => return None,
     };
 
@@ -675,5 +680,29 @@ mod tests {
             lower_intrinsic("gzip_decompress", &["bytes".to_string()]).expect("gzip_decompress");
         assert_eq!(decompress.required_crate, Some("flate2"));
         assert!(render_expr(&decompress.expr).contains("GzDecoder"));
+    }
+
+    #[test]
+    fn lowers_zip_intrinsics_with_dependency_metadata() {
+        let create = lower_intrinsic("zip_create", &["path".to_string()]).expect("zip_create");
+        assert_eq!(create.required_crate, Some("zip"));
+        assert!(render_expr(&create.expr).contains("ZipWriter::new"));
+
+        let add = lower_intrinsic(
+            "zip_add_file",
+            &["path".to_string(), "name".to_string(), "content".to_string()],
+        )
+        .expect("zip_add_file");
+        assert_eq!(add.required_crate, Some("zip"));
+        assert!(render_expr(&add.expr).contains("start_file"));
+
+        let read =
+            lower_intrinsic("zip_read_file", &["path".to_string(), "name".to_string()]).expect("zip_read_file");
+        assert_eq!(read.required_crate, Some("zip"));
+        assert!(render_expr(&read.expr).contains("ZipArchive::new"));
+
+        let names = lower_intrinsic("zip_namelist", &["path".to_string()]).expect("zip_namelist");
+        assert_eq!(names.required_crate, Some("zip"));
+        assert!(render_expr(&names.expr).contains("__zip.by_index"));
     }
 }

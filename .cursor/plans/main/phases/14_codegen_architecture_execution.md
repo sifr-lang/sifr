@@ -119,6 +119,7 @@ status: in_progress
 - [x] PR25 slice: migrate `sifr.html` intrinsics (`html_escape`, `html_unescape`) into registry lowerers
 - [x] PR26 slice: migrate `sifr.calendar` intrinsics (`calendar_isleap`, `calendar_weekday`, `calendar_monthrange`) into registry lowerers
 - [x] PR27 slice: migrate `sifr.gzip` intrinsics (`gzip_compress`, `gzip_decompress`) into registry lowerers
+- [x] PR28 slice: migrate `sifr.zipfile` intrinsics (`zip_create`, `zip_add_file`, `zip_read_file`, `zip_namelist`) into registry lowerers
 - [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
 - [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [ ] Add method registry and type-specific method modules
