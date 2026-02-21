@@ -185,6 +185,7 @@ status: in_progress
 - [x] PR75 slice: remove `doc_markdown` suppression by applying clippy doc-comment backtick fixes in `lib.rs`, `stdlib_filter.rs`, and `intrinsics/gzip.rs`
 - [x] PR76 slice: remove `uninlined_format_args` suppression by applying clippy inline-format interpolation fixes (`{name}` style) in `lib.rs` and `render.rs`
 - [x] PR77 slice: start RawCode-zero gate by lowering int/float leaf expressions and loop-else break marker with structured IR nodes instead of `RawCode`
+- [x] PR78 slice: continue RawCode-zero gate by structuring deque method lowerers (`push_back`/`push_front`/`pop_back`/`pop_front`) and fixing cast-parentheses rendering precedence
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass

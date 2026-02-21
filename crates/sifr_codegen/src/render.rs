@@ -707,6 +707,7 @@ impl Renderer {
         matches!(
             expr,
             RustExpr::BinOp { .. }
+                | RustExpr::Cast { .. }
                 | RustExpr::If { .. }
                 | RustExpr::Match { .. }
                 | RustExpr::Closure { .. }
