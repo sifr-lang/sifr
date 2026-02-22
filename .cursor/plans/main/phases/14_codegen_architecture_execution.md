@@ -287,6 +287,7 @@ status: in_progress
 - [x] PR180 corrective slice: convert `subprocess` intrinsic lowerers from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
 - [x] PR181 corrective slice: convert `zipfile` intrinsic lowerers from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
 - [x] PR182 corrective slice: convert `base64` intrinsic lowerers from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
+- [x] PR183 corrective slice: convert `pathlib` intrinsic lowerers from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
 - [ ] PR170 slice: reduce remaining preamble-level `RawCode` usage to preamble-only documented exceptions (target <= 5) and wire docs/tests for gate accounting
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist

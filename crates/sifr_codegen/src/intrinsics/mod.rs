@@ -111,8 +111,8 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "touch" => (pathlib::lower_touch(rendered_args), None),
         "resolve_path" => (pathlib::lower_resolve_path(rendered_args), None),
         "iterdir" => (pathlib::lower_iterdir(rendered_args), None),
-        "glob_pattern" => (pathlib::lower_glob_pattern(rendered_args), None),
-        "rglob_pattern" => (pathlib::lower_rglob_pattern(rendered_args), None),
+        "glob_pattern" => (pathlib::lower_glob_pattern(rendered_args), Some("regex")),
+        "rglob_pattern" => (pathlib::lower_rglob_pattern(rendered_args), Some("regex")),
         "read_text" => (io::lower_read_text(rendered_args), None),
         "write_text" => (io::lower_write_text(rendered_args), None),
         "exists" => (io::lower_exists(rendered_args), None),
@@ -401,12 +401,16 @@ mod tests {
         let glob =
             lower_intrinsic("glob_pattern", &["dir".to_string(), "pat".to_string()])
                 .expect("glob_pattern lowers");
-        assert!(render_expr(&glob.expr).contains("fn __matches_glob"));
+        assert_eq!(glob.required_crate, Some("regex"));
+        assert!(render_expr(&glob.expr).contains("regex::Regex::new"));
+        assert!(render_expr(&glob.expr).contains("__re.is_match(&__name)"));
 
         let rglob =
             lower_intrinsic("rglob_pattern", &["dir".to_string(), "pat".to_string()])
                 .expect("rglob_pattern lowers");
-        assert!(render_expr(&rglob.expr).contains("fn __rglob_walk"));
+        assert_eq!(rglob.required_crate, Some("regex"));
+        assert!(render_expr(&rglob.expr).contains("__stack.pop()"));
+        assert!(render_expr(&rglob.expr).contains("__re.is_match(&__name)"));
     }
 
     #[test]
