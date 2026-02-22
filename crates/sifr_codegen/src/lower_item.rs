@@ -1,6 +1,9 @@
 //! Item lowering scaffolds for the IR migration.
 
-use crate::{try_lower_leaf_expr, CodegenError, RustExpr, RustItem, RustStmt, RustType, Visibility};
+use crate::{
+    try_lower_leaf_expr, CodegenError, RustExpr, RustItem, RustLiteral, RustStmt, RustType,
+    Visibility,
+};
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 
@@ -54,6 +57,30 @@ pub fn try_lower_simple_module_string_const_item(
                 method: "to_string".to_string(),
                 args: vec![],
             }))],
+            is_async: false,
+        },
+        format!("{rust_name}()"),
+    ))
+}
+
+/// Conservatively lowers module-level `None` constants via IR helper function.
+pub fn try_lower_simple_module_none_const_item(
+    name: &str,
+    ty: &Type,
+    value: &HirExpr,
+) -> Option<(RustItem, String)> {
+    if !matches!(ty, Type::None) || !matches!(value, HirExpr::NoneLiteral) {
+        return None;
+    }
+    let rust_name = format!("__const_{name}");
+    Some((
+        RustItem::Fn {
+            name: rust_name.clone(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: Some(RustType::Unit),
+            body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Unit)))],
             is_async: false,
         },
         format!("{rust_name}()"),
@@ -225,6 +252,33 @@ mod tests {
                 ..
             } if name == "__const_greeting"
         ));
+    }
+
+    #[test]
+    fn lowers_simple_module_none_const_item() {
+        let (item, rust_name_call) =
+            try_lower_simple_module_none_const_item("nothing", &Type::None, &HirExpr::NoneLiteral)
+                .expect("none const should lower");
+        assert_eq!(rust_name_call, "__const_nothing()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::Unit),
+                ..
+            } if name == "__const_nothing"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_non_none_module_none_const_item() {
+        assert!(try_lower_simple_module_none_const_item(
+            "nothing",
+            &Type::None,
+            &HirExpr::IntLiteral(0),
+        )
+        .is_none());
     }
 
     #[test]
