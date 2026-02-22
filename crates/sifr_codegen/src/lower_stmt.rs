@@ -85,10 +85,17 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         }
         HirStmt::Return { value: None } => try_lower_simple_bare_return_stmt(ctx),
         HirStmt::Return { value: Some(value) } => try_lower_simple_return_stmt(value, ctx),
-        HirStmt::Assert { test, msg } => Some(vec![try_lower_simple_assert_stmt(
-            test,
-            msg.as_ref(),
-        )?]),
+        HirStmt::Assert { test, msg } => {
+            let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
+                Some(try_lower_assert_msg_expr(msg_expr)?)
+            } else {
+                None
+            };
+            Some(vec![RustStmt::Assert {
+                cond: try_lower_simple_condition_test_expr(test)?,
+                msg: lowered_msg,
+            }])
+        }
         HirStmt::Raise { value } => Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
             args: vec![try_lower_leaf_or_name_expr(value)?],
@@ -488,18 +495,6 @@ fn normalize_aug_assign_op(op: &str) -> &str {
         return "/";
     }
     op.strip_suffix('=').unwrap_or(op)
-}
-
-fn try_lower_simple_assert_stmt(test: &HirExpr, msg: Option<&HirExpr>) -> Option<RustStmt> {
-    let lowered_msg = if let Some(msg_expr) = msg {
-        Some(try_lower_assert_msg_expr(msg_expr)?)
-    } else {
-        None
-    };
-    Some(RustStmt::Assert {
-        cond: try_lower_simple_condition_test_expr(test)?,
-        msg: lowered_msg,
-    })
 }
 
 fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
