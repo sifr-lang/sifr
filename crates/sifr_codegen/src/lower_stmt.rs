@@ -164,7 +164,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             ..
         } if !target.contains(',') => Some(vec![RustStmt::For {
             var: target.clone(),
-            iter: try_lower_simple_for_iter_expr(iter)?,
+            iter: try_lower_leaf_or_name_expr(iter)?,
             // Entering a nested for without else resets loop-else break marker context.
             body: try_lower_simple_stmt_block(
                 body,
@@ -189,7 +189,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             },
             RustStmt::For {
                 var: target.clone(),
-                iter: try_lower_simple_for_iter_expr(iter)?,
+                iter: try_lower_leaf_or_name_expr(iter)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
                 body: try_lower_simple_stmt_block(
                     body,
@@ -357,10 +357,6 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
         return Some(lowered);
     }
     try_lower_name_ident_expr(expr)
-}
-
-fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
-    try_lower_leaf_or_name_expr(iter)
 }
 
 fn try_lower_simple_bare_return_stmt(ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
