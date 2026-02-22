@@ -8,7 +8,6 @@ pub fn generate_rust(module: &HirModule) -> String {
 /// Generate Rust source code for a test module (with #[test] attributes).
 pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     let mut emitter = RustEmitter::new();
-    emitter.test_mode = true;
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
@@ -20,7 +19,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     emitter.generate_enum_definitions();
 
     // Second pass: emit the actual code
-    emitter.emit_module(module, false);
+    emitter.emit_module(module, false, true);
 
     let mut result = String::new();
     if emitter.needs_hashmap {

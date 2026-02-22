@@ -614,3 +614,49 @@ fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
     assert!(rust_code.contains("if !_broke {"));
     assert!(!rust_code.contains("_broke = true;"));
 }
+
+#[test]
+fn test_generate_rust_test_uses_explicit_test_mode_context() {
+    let module = HirModule {
+        functions: vec![
+            HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Pass],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+            HirFunction {
+                name: "test_sample".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Pass],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+            HirFunction {
+                name: "helper".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Pass],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        ],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust_test(&module).rust_source;
+    assert!(!rust_code.contains("fn main("));
+    assert!(rust_code.contains("#[test]\nfn test_sample()"));
+    assert!(rust_code.contains("fn helper()"));
+    assert!(!rust_code.contains("#[test]\nfn helper()"));
+}
