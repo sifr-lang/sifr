@@ -39,6 +39,13 @@ pub fn try_lower_simple_stmt(
                 value: try_lower_leaf_expr(value)?,
             }])
         }
+        HirStmt::AugAssign { name, op, value } if can_lower_simple_aug_assign(op, value) => {
+            Some(vec![RustStmt::AugAssign {
+                target: crate::RustExpr::Ident(name.clone()),
+                op: normalize_aug_assign_op(op).to_string(),
+                value: try_lower_leaf_expr(value)?,
+            }])
+        }
         HirStmt::If {
             condition,
             then_body,
@@ -266,6 +273,14 @@ fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -
     try_lower_leaf_expr(value).is_some()
 }
 
+fn can_lower_simple_aug_assign(op: &str, value: &HirExpr) -> bool {
+    matches!(op, "-=" | "*=" | "/=" | "%=") && try_lower_leaf_expr(value).is_some()
+}
+
+fn normalize_aug_assign_op(op: &str) -> &str {
+    op.strip_suffix('=').unwrap_or(op)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -335,6 +350,51 @@ mod tests {
         )
         .expect("assign lowered");
         assert!(matches!(lowered[0], RustStmt::Assign { .. }));
+    }
+
+    #[test]
+    fn lowers_simple_augassign_for_supported_ops() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "-=".to_string(),
+            value: HirExpr::IntLiteral(2),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("augassign lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::AugAssign {
+                target: RustExpr::Ident(ref name),
+                op: ref lowered_op,
+                ..
+            } if name == "x" && lowered_op == "-"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_augassign_plus_equal() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "+=".to_string(),
+            value: HirExpr::IntLiteral(1),
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
     }
 
     #[test]
