@@ -298,6 +298,7 @@ status: in_progress
 - [x] PR191 corrective slice: convert `collections` set-lowerer wrappers (`set_from_list`/`set_add`/`set_remove`/`set_union`/`set_intersection`) from parenthesized expression strings to structured IR bindings
 - [x] PR192 corrective slice: convert `collections` counter-lowerer wrappers (`counter_from_list`/`counter_get`/`counter_most_common`/`counter_total`/`counter_values`/`counter_keys`/`counter_items`/`counter_increment`) from parenthesized expression strings to structured IR bindings
 - [x] PR193 corrective slice: convert `collections` defaultdict-lowerer wrappers (`defaultdict_get`/`defaultdict_set`) from parenthesized expression strings to structured IR bindings
+- [x] PR194 corrective slice: reduce `preamble` `RawCode` usage by structuring error/logging/static/file-handle read+write+close paths and add gate-accounting test for documented exceptions (<=5)
 - [ ] PR170 slice: reduce remaining preamble-level `RawCode` usage to preamble-only documented exceptions (target <= 5) and wire docs/tests for gate accounting
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
