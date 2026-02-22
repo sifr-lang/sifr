@@ -323,17 +323,10 @@ fn try_lower_simple_if_clause(
     }
 
     Some(RustStmt::If {
-        cond: try_lower_simple_bool_condition_expr(condition)?,
+        cond: try_lower_leaf_expr(condition)?,
         then_body: lowered_then_body,
         else_body: nested_else,
     })
-}
-
-fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(condition) {
-        return Some(lowered);
-    }
-    None
 }
 
 fn try_lower_simple_option_truthiness_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
@@ -346,7 +339,7 @@ fn try_lower_simple_option_truthiness_condition_expr(condition: &HirExpr) -> Opt
 }
 
 fn try_lower_simple_while_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_simple_bool_condition_expr(condition) {
+    if let Some(lowered) = try_lower_leaf_expr(condition) {
         return Some(lowered);
     }
     if let Some(lowered) = try_lower_simple_option_truthiness_condition_expr(condition) {
