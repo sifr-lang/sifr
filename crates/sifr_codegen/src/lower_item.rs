@@ -15,7 +15,7 @@ pub fn try_lower_simple_module_const_item(
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if !matches!(ty, Type::Int | Type::Float | Type::Bool) {
+    if !matches!(ty, Type::Int | Type::Float | Type::Bool | Type::LiteralInt(_) | Type::LiteralBool(_)) {
         return None;
     }
     let rust_name = name.to_uppercase();
@@ -37,7 +37,7 @@ pub fn try_lower_simple_module_string_const_item(
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if !matches!(ty, Type::Str) || !matches!(value, HirExpr::StringLiteral(_)) {
+    if !matches!(ty, Type::Str | Type::LiteralStr(_)) || !matches!(value, HirExpr::StringLiteral(_)) {
         return None;
     }
     let rust_name = format!("__const_{name}");
@@ -135,6 +135,46 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_module_literal_int_const_item() {
+        let (item, rust_name) = try_lower_simple_module_const_item(
+            "answer",
+            &Type::LiteralInt(42),
+            &HirExpr::IntLiteral(42),
+        )
+        .expect("literal int const should lower");
+        assert_eq!(rust_name, "ANSWER");
+        assert!(matches!(
+            item,
+            RustItem::Const {
+                name,
+                visibility: Visibility::Private,
+                ty: crate::RustType::I64,
+                ..
+            } if name == "ANSWER"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_module_literal_bool_const_item() {
+        let (item, rust_name) = try_lower_simple_module_const_item(
+            "enabled",
+            &Type::LiteralBool(true),
+            &HirExpr::BoolLiteral(true),
+        )
+        .expect("literal bool const should lower");
+        assert_eq!(rust_name, "ENABLED");
+        assert!(matches!(
+            item,
+            RustItem::Const {
+                name,
+                visibility: Visibility::Private,
+                ty: crate::RustType::Bool,
+                ..
+            } if name == "ENABLED"
+        ));
+    }
+
+    #[test]
     fn lowers_simple_module_string_const_item() {
         let (item, rust_name_call) = try_lower_simple_module_string_const_item(
             "greeting",
@@ -165,6 +205,26 @@ mod tests {
             },
         )
         .is_none());
+    }
+
+    #[test]
+    fn lowers_simple_module_literal_string_const_item() {
+        let (item, rust_name_call) = try_lower_simple_module_string_const_item(
+            "greeting",
+            &Type::LiteralStr("hi".to_string()),
+            &HirExpr::StringLiteral("hi".to_string()),
+        )
+        .expect("literal string const should lower");
+        assert_eq!(rust_name_call, "__const_greeting()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::String_),
+                ..
+            } if name == "__const_greeting"
+        ));
     }
 
     #[test]
