@@ -78,7 +78,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             Some(vec![RustStmt::AugAssign {
                 target: crate::RustExpr::Ident(name.clone()),
                 op: normalize_aug_assign_op(op).to_string(),
-                value: try_lower_leaf_expr(value)?,
+                value: try_lower_simple_aug_assign_value(op, value)?,
             }])
         }
         HirStmt::Return { value: None } => try_lower_simple_bare_return_stmt(ctx),
@@ -373,9 +373,25 @@ fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -
 }
 
 fn can_lower_simple_aug_assign(op: &str, value: &HirExpr) -> bool {
-    let is_safe_plus_eq = op == "+=" && matches!(value.ty(), Type::Int | Type::Float | Type::LiteralInt(_));
-    (matches!(op, "-=" | "*=" | "/=" | "//=" | "%=") || is_safe_plus_eq)
-        && try_lower_leaf_expr(value).is_some()
+    try_lower_simple_aug_assign_value(op, value).is_some()
+}
+
+fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
+    if !can_lower_simple_aug_assign_name(op, value.ty()) {
+        return None;
+    }
+    if let Some(lowered) = try_lower_leaf_expr(value) {
+        return Some(lowered);
+    }
+    if let HirExpr::Name { name, .. } = value {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
+}
+
+fn can_lower_simple_aug_assign_name(op: &str, ty: &Type) -> bool {
+    let is_numeric = matches!(ty, Type::Int | Type::Float | Type::LiteralInt(_));
+    is_numeric && matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=")
 }
 
 fn normalize_aug_assign_op(op: &str) -> &str {
@@ -578,6 +594,57 @@ mod tests {
                 ..
             } if name == "x" && lowered_op == "+"
         ));
+    }
+
+    #[test]
+    fn lowers_simple_augassign_plus_equal_numeric_name() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "+=".to_string(),
+            value: HirExpr::Name {
+                name: "delta".to_string(),
+                ty: Type::Int,
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("numeric name += lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::AugAssign {
+                target: RustExpr::Ident(ref name),
+                op: ref lowered_op,
+                value: RustExpr::Ident(ref rhs),
+            } if name == "x" && lowered_op == "+" && rhs == "delta"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_augassign_plus_equal_string_name() {
+        let stmt = HirStmt::AugAssign {
+            name: "s".to_string(),
+            op: "+=".to_string(),
+            value: HirExpr::Name {
+                name: "suffix".to_string(),
+                ty: Type::Str,
+            },
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
     }
 
     #[test]
