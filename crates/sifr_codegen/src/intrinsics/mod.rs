@@ -716,21 +716,22 @@ mod tests {
     #[test]
     fn lowers_subprocess_intrinsics_via_registry() {
         let run = lower_intrinsic("subprocess_run", &["cmd".to_string()]).expect("subprocess_run");
-        assert!(render_expr(&run.expr).contains("Command::new(\"sh\")"));
-        assert!(render_expr(&run.expr).contains("Result<String, IOError>"));
+        assert!(render_expr(&run.expr).contains("Command::new(\"sh\".to_string())"));
+        assert!(render_expr(&run.expr).contains(".arg(\"-c\".to_string())"));
+        assert!(render_expr(&run.expr).contains("String::from_utf8_lossy"));
 
         let with_input = lower_intrinsic(
             "subprocess_run_with_input",
             &["cmd".to_string(), "stdin_data".to_string()],
         )
         .expect("subprocess_run_with_input");
-        assert!(render_expr(&with_input.expr).contains("use std::io::Write"));
-        assert!(render_expr(&with_input.expr).contains("stdin.write_all"));
+        assert!(render_expr(&with_input.expr).contains("std::io::Write::write_all"));
+        assert!(render_expr(&with_input.expr).contains("__child.stdin.take()"));
 
         let structured = lower_intrinsic("subprocess_run_structured", &["cmd".to_string()])
             .expect("subprocess_run_structured");
-        assert!(render_expr(&structured.expr).contains("Result<Vec<String>, IOError>"));
-        assert!(render_expr(&structured.expr).contains("returncode"));
+        assert!(render_expr(&structured.expr).contains("__output.status.code().unwrap_or(-1)"));
+        assert!(render_expr(&structured.expr).contains("vec![__stdout, __stderr, __returncode]"));
     }
 
     #[test]
