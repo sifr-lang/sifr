@@ -135,9 +135,8 @@ pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlib
     }
 }
 
-/// Filter compiled Rust source code to only include top-level items whose names
-/// are in the given set (or are transitively called by them).
-pub(crate) fn filter_rust_code_to_needed(
+/// Run stdlib IR DCE over compiled Rust source and keep only transitively-needed items.
+pub(crate) fn filter_stdlib_ir_to_needed(
     rust_code: &str,
     imported_names: &HashSet<String>,
 ) -> String {
@@ -735,7 +734,7 @@ fn leaf() {}
 fn unused() {}
 "#;
         let imported = HashSet::from(["root".to_string()]);
-        let filtered = filter_rust_code_to_needed(code, &imported);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
 
         assert!(filtered.contains("use std::collections::HashMap;"));
         assert!(filtered.contains("fn root()"));
@@ -756,7 +755,7 @@ fn root() {
 fn helper() {}
 "#;
         let imported = HashSet::from(["root".to_string()]);
-        let filtered = filter_rust_code_to_needed(code, &imported);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
 
         assert!(filtered.contains("fn root()"));
         assert!(!filtered.contains("fn helper()"));
@@ -772,7 +771,7 @@ fn root() -> Node {
 }
 "#;
         let imported = HashSet::from(["root".to_string()]);
-        let filtered = filter_rust_code_to_needed(code, &imported);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
 
         assert!(filtered.contains("fn root()"));
         assert!(filtered.contains("struct Node {}"));
@@ -803,7 +802,7 @@ pub fn root() -> Box<dyn Worker> {
 }
 "#;
         let imported = HashSet::from(["root".to_string()]);
-        let filtered = filter_rust_code_to_needed(code, &imported);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
 
         assert!(filtered.contains("pub fn root()"));
         assert!(filtered.contains("pub enum Mode"));
@@ -831,7 +830,7 @@ pub async fn root() -> i64 {
 }
 "#;
         let imported = HashSet::from(["root".to_string()]);
-        let filtered = filter_rust_code_to_needed(code, &imported);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
 
         assert!(filtered.contains("pub async fn root()"));
         assert!(filtered.contains("pub unsafe fn tick()"));
@@ -852,7 +851,7 @@ pub fn root() -> UsedAlias {
 }
 "#;
         let imported = HashSet::from(["root".to_string()]);
-        let filtered = filter_rust_code_to_needed(code, &imported);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
 
         assert!(filtered.contains("pub fn root() -> UsedAlias"));
         assert!(filtered.contains("pub type UsedAlias = Node;"));
@@ -873,7 +872,7 @@ pub fn helper() -> i64 {
 }
 "#;
         let imported = HashSet::from(["root".to_string()]);
-        let filtered = filter_rust_code_to_needed(code, &imported);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
         assert!(filtered.contains("pub fn root()"));
         assert!(!filtered.contains("pub fn helper()"));
     }
@@ -894,7 +893,7 @@ pub fn root() -> Builder {
 }
 "#;
         let imported = HashSet::from(["root".to_string()]);
-        let filtered = filter_rust_code_to_needed(code, &imported);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
 
         assert!(filtered.contains("pub fn root() -> Builder"));
         assert!(filtered.contains("pub struct Builder {}"));

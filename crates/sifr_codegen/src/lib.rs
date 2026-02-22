@@ -44,7 +44,7 @@ use sifr_type_system::{Type, ParamConvention};
 use stdlib_filter::{
     collect_and_strip_shared_prelude,
     dedup_rust_items,
-    filter_rust_code_to_needed,
+    filter_stdlib_ir_to_needed,
 };
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
@@ -350,7 +350,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                                 }
                             }
                         }
-                        filter_rust_code_to_needed(rust_code, &expanded_imports)
+                        filter_stdlib_ir_to_needed(rust_code, &expanded_imports)
                     }
                 } else {
                     rust_code.clone()
