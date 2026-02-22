@@ -327,16 +327,7 @@ pub fn build_file_handle_struct_items() -> Vec<RustItem> {
                 file_handle_read_method(),
                 file_handle_write_method(),
                 file_handle_readline_method(),
-                // Documented RawCode exception: this method still uses raw control-flow/IO glue.
-                raw_file_handle_method(
-                    "readlines",
-                    vec![RustParam::SelfParam { mutable: false }],
-                    Some(RustType::Result(
-                        Box::new(RustType::Vec(Box::new(RustType::String_))),
-                        Box::new(RustType::Named("IOError".to_string())),
-                    )),
-                    "(|| -> Result<Vec<String>, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::BufRead; let mut __lines: Vec<String> = Vec::new(); let mut __line = String::new(); loop { __line.clear(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { break; } let mut __l = __line.clone(); if __l.ends_with('\\n') { __l.pop(); if __l.ends_with('\\r') { __l.pop(); } } __lines.push(__l); } Ok(__lines) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })()",
-                ),
+                file_handle_readlines_method(),
                 RustItem::Fn {
                     name: "close".to_string(),
                     visibility: Visibility::Private,
@@ -1130,19 +1121,214 @@ fn file_handle_write_bytes_method() -> RustItem {
     }
 }
 
-fn raw_file_handle_method(
-    name: &str,
-    params: Vec<RustParam>,
-    ret: Option<RustType>,
-    body_expr: &str,
-) -> RustItem {
+fn file_handle_readlines_method() -> RustItem {
     RustItem::Fn {
-        name: name.to_string(),
+        name: "readlines".to_string(),
         visibility: Visibility::Private,
         type_params: vec![],
-        params,
-        ret,
-        body: vec![RustStmt::Return(Some(RustExpr::RawCode(body_expr.to_string())))],
+        params: vec![RustParam::SelfParam { mutable: false }],
+        ret: Some(RustType::Result(
+            Box::new(RustType::Vec(Box::new(RustType::String_))),
+            Box::new(RustType::Named("IOError".to_string())),
+        )),
+        body: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__hid".to_string(),
+                ty: None,
+                value: RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                    field: "_handle".to_string(),
+                },
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__handles".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "__SIFR_FILE_HANDLES".to_string(),
+                            "lock".to_string(),
+                        ])),
+                        args: vec![],
+                    }),
+                    method: "unwrap".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::Match {
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__handles".to_string())),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__hid".to_string())),
+                    }],
+                },
+                arms: vec![
+                    RustMatchArm {
+                        pattern: "Some(SifrFileHandle::TextRead(ref mut __r))".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![
+                            RustStmt::Let {
+                                mutable: true,
+                                name: "__lines".to_string(),
+                                ty: Some(RustType::Vec(Box::new(RustType::String_))),
+                                value: RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "Vec::<String>".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![],
+                                },
+                            },
+                            RustStmt::Let {
+                                mutable: true,
+                                name: "__line".to_string(),
+                                ty: None,
+                                value: RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "String".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![],
+                                },
+                            },
+                            RustStmt::Loop {
+                                body: vec![
+                                    RustStmt::Expr(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("__line".to_string())),
+                                        method: "clear".to_string(),
+                                        args: vec![],
+                                    }),
+                                    RustStmt::Let {
+                                        mutable: false,
+                                        name: "__n".to_string(),
+                                        ty: None,
+                                        value: RustExpr::Try(Box::new(RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::FnCall {
+                                                func: Box::new(RustExpr::Path(vec![
+                                                    "std".to_string(),
+                                                    "io".to_string(),
+                                                    "BufRead".to_string(),
+                                                    "read_line".to_string(),
+                                                ])),
+                                                args: vec![
+                                                    RustExpr::Ident("__r".to_string()),
+                                                    RustExpr::Ref {
+                                                        mutable: true,
+                                                        expr: Box::new(RustExpr::Ident(
+                                                            "__line".to_string(),
+                                                        )),
+                                                    },
+                                                ],
+                                            }),
+                                            method: "map_err".to_string(),
+                                            args: vec![RustExpr::Ident("__io_err".to_string())],
+                                        })),
+                                    },
+                                    RustStmt::If {
+                                        cond: RustExpr::BinOp {
+                                            left: Box::new(RustExpr::Ident("__n".to_string())),
+                                            op: "==".to_string(),
+                                            right: Box::new(RustExpr::Literal(
+                                                crate::RustLiteral::Int(0),
+                                            )),
+                                        },
+                                        then_body: vec![RustStmt::Break],
+                                        else_body: None,
+                                    },
+                                    RustStmt::Let {
+                                        mutable: true,
+                                        name: "__l".to_string(),
+                                        ty: None,
+                                        value: RustExpr::Clone(Box::new(RustExpr::Ident(
+                                            "__line".to_string(),
+                                        ))),
+                                    },
+                                    RustStmt::If {
+                                        cond: RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident("__l".to_string())),
+                                            method: "ends_with".to_string(),
+                                            args: vec![RustExpr::Literal(
+                                                crate::RustLiteral::Char('\n'),
+                                            )],
+                                        },
+                                        then_body: vec![
+                                            RustStmt::Expr(RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "__l".to_string(),
+                                                )),
+                                                method: "pop".to_string(),
+                                                args: vec![],
+                                            }),
+                                            RustStmt::If {
+                                                cond: RustExpr::MethodCall {
+                                                    receiver: Box::new(RustExpr::Ident(
+                                                        "__l".to_string(),
+                                                    )),
+                                                    method: "ends_with".to_string(),
+                                                    args: vec![RustExpr::Literal(
+                                                        crate::RustLiteral::Char('\r'),
+                                                    )],
+                                                },
+                                                then_body: vec![RustStmt::Expr(
+                                                    RustExpr::MethodCall {
+                                                        receiver: Box::new(RustExpr::Ident(
+                                                            "__l".to_string(),
+                                                        )),
+                                                        method: "pop".to_string(),
+                                                        args: vec![],
+                                                    },
+                                                )],
+                                                else_body: None,
+                                            },
+                                        ],
+                                        else_body: None,
+                                    },
+                                    RustStmt::Expr(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("__lines".to_string())),
+                                        method: "push".to_string(),
+                                        args: vec![RustExpr::Ident("__l".to_string())],
+                                    }),
+                                ],
+                            },
+                            RustStmt::Return(Some(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                                args: vec![RustExpr::Ident("__lines".to_string())],
+                            })),
+                        ],
+                    },
+                    RustMatchArm {
+                        pattern: "_".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                            args: vec![RustExpr::StructInit {
+                                name: "IOError".to_string(),
+                                fields: vec![
+                                    (
+                                        "message".to_string(),
+                                        RustExpr::Literal(crate::RustLiteral::Str(
+                                            "file not open for reading".to_string(),
+                                        )),
+                                    ),
+                                    (
+                                        "kind".to_string(),
+                                        RustExpr::Literal(crate::RustLiteral::Str(
+                                            "Other".to_string(),
+                                        )),
+                                    ),
+                                ],
+                            }],
+                        }))],
+                    },
+                ],
+            },
+        ],
         is_async: false,
     }
 }
@@ -1375,10 +1561,7 @@ mod tests {
                 }
             }
         }
-        let expected: BTreeSet<String> = ["readlines"]
-            .into_iter()
-            .map(ToString::to_string)
-            .collect();
+        let expected: BTreeSet<String> = BTreeSet::new();
         assert_eq!(raw_method_names, expected);
     }
 }
