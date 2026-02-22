@@ -338,14 +338,15 @@ fn try_lower_simple_option_truthiness_condition_expr(condition: &HirExpr) -> Opt
     })
 }
 
+fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(expr) {
+        return Some(lowered);
+    }
+    try_lower_simple_option_truthiness_condition_expr(expr)
+}
+
 fn try_lower_simple_while_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(condition) {
-        return Some(lowered);
-    }
-    if let Some(lowered) = try_lower_simple_option_truthiness_condition_expr(condition) {
-        return Some(lowered);
-    }
-    None
+    try_lower_simple_condition_test_expr(condition)
 }
 
 fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
@@ -576,19 +577,9 @@ fn try_lower_simple_assert_stmt(test: &HirExpr, msg: Option<&HirExpr>) -> Option
         None
     };
     Some(RustStmt::Assert {
-        cond: try_lower_assert_test_expr(test)?,
+        cond: try_lower_simple_condition_test_expr(test)?,
         msg: lowered_msg,
     })
-}
-
-fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(test) {
-        return Some(lowered);
-    }
-    if let Some(lowered) = try_lower_simple_option_truthiness_condition_expr(test) {
-        return Some(lowered);
-    }
-    None
 }
 
 fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
