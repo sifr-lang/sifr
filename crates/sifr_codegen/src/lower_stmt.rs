@@ -333,6 +333,9 @@ fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr>
     if let Some(lowered) = try_lower_leaf_expr(condition) {
         return Some(lowered);
     }
+    if let Some(lowered) = try_lower_simple_option_none_compare_expr(condition) {
+        return Some(lowered);
+    }
     if matches!(condition.ty(), Type::Bool | Type::LiteralBool(_)) {
         if let HirExpr::Name { name, .. } = condition {
             return Some(RustExpr::Ident(name.clone()));
@@ -597,7 +600,7 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(test) {
         return Some(lowered);
     }
-    if let Some(lowered) = try_lower_simple_assert_option_none_compare_expr(test) {
+    if let Some(lowered) = try_lower_simple_option_none_compare_expr(test) {
         return Some(lowered);
     }
     if let Some(lowered) = try_lower_simple_option_truthiness_condition_expr(test) {
@@ -611,7 +614,7 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
     None
 }
 
-fn try_lower_simple_assert_option_none_compare_expr(test: &HirExpr) -> Option<RustExpr> {
+fn try_lower_simple_option_none_compare_expr(test: &HirExpr) -> Option<RustExpr> {
     let HirExpr::Compare {
         left,
         ops,
@@ -2434,6 +2437,115 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_if_with_option_is_none_compare_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::Compare {
+                left: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ops: vec!["is".to_string()],
+                comparators: vec![HirExpr::NoneLiteral],
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if with option is-none compare condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::If {
+                cond: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_none"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_if_with_option_is_not_none_compare_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::Compare {
+                left: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ops: vec!["is not".to_string()],
+                comparators: vec![HirExpr::NoneLiteral],
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if with option is-not-none compare condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::If {
+                cond: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_some"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_if_with_non_leaf_option_is_none_compare_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::Compare {
+                left: Box::new(HirExpr::Call {
+                    func: "maybe_x".to_string(),
+                    args: vec![],
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ops: vec!["is".to_string()],
+                comparators: vec![HirExpr::NoneLiteral],
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: None,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &if_stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
     fn does_not_lower_if_with_non_leaf_not_option_truthiness_condition() {
         let if_stmt = HirStmt::If {
             condition: HirExpr::UnaryOp {
@@ -2761,6 +2873,84 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_while_with_option_is_none_compare_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::Compare {
+                left: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ops: vec!["is".to_string()],
+                comparators: vec![HirExpr::NoneLiteral],
+                ty: Type::Bool,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &while_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("while with option is-none compare condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::While {
+                cond: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_none"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_while_with_option_is_not_none_compare_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::Compare {
+                left: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ops: vec!["is not".to_string()],
+                comparators: vec![HirExpr::NoneLiteral],
+                ty: Type::Bool,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &while_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("while with option is-not-none compare condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::While {
+                cond: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_some"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
     fn lowers_simple_while_with_option_truthiness_name_condition() {
         let while_stmt = HirStmt::While {
             condition: HirExpr::Name {
@@ -2826,6 +3016,34 @@ mod tests {
                 func: "maybe_x".to_string(),
                 args: vec![],
                 ty: Type::Union(vec![Type::Int, Type::None]),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &while_stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn does_not_lower_while_with_non_leaf_option_is_none_compare_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::Compare {
+                left: Box::new(HirExpr::Call {
+                    func: "maybe_x".to_string(),
+                    args: vec![],
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ops: vec!["is".to_string()],
+                comparators: vec![HirExpr::NoneLiteral],
+                ty: Type::Bool,
             },
             body: vec![HirStmt::Pass],
             else_body: None,
