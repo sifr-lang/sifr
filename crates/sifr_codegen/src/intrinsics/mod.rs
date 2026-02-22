@@ -663,7 +663,8 @@ mod tests {
         let uuid = lower_intrinsic("uuid4", &[]).expect("uuid4");
         assert_eq!(uuid.required_crate, Some("rand"));
         assert!(render_expr(&uuid.expr).contains("rand::thread_rng"));
-        assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-4{:03x}-{:04x}-{:012x}\""));
+        assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}\""));
+        assert!(render_expr(&uuid.expr).contains("seg3 = (rng.gen::<u16>() & 4095) | 16384"));
     }
 
     #[test]
