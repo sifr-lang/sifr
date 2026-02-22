@@ -63,6 +63,20 @@ pub fn try_lower_simple_stmt(
                 None
             },
         }]),
+        HirStmt::While {
+            condition,
+            body,
+            else_body: None,
+        } => Some(vec![RustStmt::While {
+            cond: try_lower_leaf_expr(condition)?,
+            // Entering a nested while without else resets loop-else break marker context.
+            body: try_lower_simple_stmt_block(
+                body,
+                false,
+                mutated_vars,
+                borrowed_params,
+            )?,
+        }]),
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -229,6 +243,48 @@ mod tests {
 
         let lowered = try_lower_simple_stmt(
             &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        );
+        assert!(lowered.is_none());
+    }
+
+    #[test]
+    fn lowers_simple_while_without_else() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::BoolLiteral(true),
+            body: vec![HirStmt::Break],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &while_stmt,
+            true, // outer context has else, inner while should not inherit it
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("while lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::While { body, .. } => {
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], RustStmt::Break));
+            }
+            _ => panic!("expected RustStmt::While"),
+        }
+    }
+
+    #[test]
+    fn does_not_lower_while_with_else() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::BoolLiteral(true),
+            body: vec![HirStmt::Pass],
+            else_body: Some(vec![HirStmt::Pass]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &while_stmt,
             false,
             &HashSet::new(),
             &HashSet::new(),
