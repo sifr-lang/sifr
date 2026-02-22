@@ -173,6 +173,7 @@ status: in_progress
 - [x] PR313 slice: move the large `emit_class_method` implementation out of `lib.rs` into dedicated `class_method_emitter` helpers to reduce file size while preserving class-method emission behavior
 - [x] PR314 slice: move the large `emit_function` implementation out of `lib.rs` into dedicated `function_emitter` helpers to reduce file size while preserving function/generator emission behavior
 - [x] PR315 slice: move match-emission cluster (`emit_match`, `emit_match_arm`, and match-pattern/guard helpers) out of `lib.rs` into dedicated `match_emitter` helpers to reduce file size while preserving match semantics
+- [x] PR316 slice: move walrus/slice emission helpers (`emit_walrus_hoists`, `emit_list_slice`, `emit_string_slice`) out of `lib.rs` into dedicated `slice_emitter` helpers to reduce file size while preserving expression emission behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
