@@ -373,7 +373,9 @@ fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -
 }
 
 fn can_lower_simple_aug_assign(op: &str, value: &HirExpr) -> bool {
-    matches!(op, "-=" | "*=" | "/=" | "//=" | "%=") && try_lower_leaf_expr(value).is_some()
+    let is_safe_plus_eq = op == "+=" && matches!(value.ty(), Type::Int | Type::Float | Type::LiteralInt(_));
+    (matches!(op, "-=" | "*=" | "/=" | "//=" | "%=") || is_safe_plus_eq)
+        && try_lower_leaf_expr(value).is_some()
 }
 
 fn normalize_aug_assign_op(op: &str) -> &str {
@@ -538,7 +540,7 @@ mod tests {
         let stmt = HirStmt::AugAssign {
             name: "x".to_string(),
             op: "+=".to_string(),
-            value: HirExpr::IntLiteral(1),
+            value: HirExpr::StringLiteral("a".to_string()),
         };
 
         assert!(
@@ -550,6 +552,32 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn lowers_simple_augassign_plus_equal_numeric() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "+=".to_string(),
+            value: HirExpr::IntLiteral(1),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("numeric += lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::AugAssign {
+                target: RustExpr::Ident(ref name),
+                op: ref lowered_op,
+                ..
+            } if name == "x" && lowered_op == "+"
+        ));
     }
 
     #[test]
