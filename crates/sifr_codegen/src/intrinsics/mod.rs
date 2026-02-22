@@ -732,17 +732,21 @@ mod tests {
     #[test]
     fn lowers_html_intrinsics_via_registry() {
         let esc = lower_intrinsic("html_escape", &["s".to_string()]).expect("html_escape");
-        assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\")"));
+        // Structured IR adds .to_string() to string literals
+        assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\".to_string())"));
 
         let unesc = lower_intrinsic("html_unescape", &["s".to_string()]).expect("html_unescape");
-        assert!(render_expr(&unesc.expr).contains("replace(\"&amp;\", \"&\")"));
+        // Structured IR adds .to_string() to string literals
+        assert!(render_expr(&unesc.expr).contains("replace(\"&amp;\".to_string(), \"&\".to_string())"));
     }
 
     #[test]
     fn lowers_calendar_intrinsics_via_registry() {
         let leap = lower_intrinsic("calendar_isleap", &["year".to_string()])
             .expect("calendar_isleap");
-        assert!(render_expr(&leap.expr).contains("__y % 4 == 0"));
+        let rendered = render_expr(&leap.expr);
+        // Structured IR adds parentheses around binop comparisons
+        assert!(rendered.contains("((__y % 4) == 0)"));
 
         let weekday = lower_intrinsic(
             "calendar_weekday",
