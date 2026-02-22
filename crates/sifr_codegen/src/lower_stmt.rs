@@ -426,6 +426,9 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
 }
 
 fn try_lower_simple_let_plain_value(value: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(value) {
+        return Some(lowered);
+    }
     if let HirExpr::Name { name, .. } = value {
         return Some(RustExpr::Ident(name.clone()));
     }
@@ -748,6 +751,36 @@ mod tests {
             } if let_name == "x"
                 && matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Some".to_string()])
                 && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "y")
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_option_let_leaf_rhs_to_some() {
+        let option_ty = Type::Union(vec![Type::Int, Type::None]);
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: option_ty,
+            value: HirExpr::IntLiteral(7),
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("option let leaf rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                ty: Some(RustType::Option(_)),
+                value: RustExpr::FnCall { ref func, ref args },
+            } if let_name == "x"
+                && matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Some".to_string()])
+                && matches!(args.first(), Some(RustExpr::Cast { ty: RustType::I64, .. }))
         ));
     }
 

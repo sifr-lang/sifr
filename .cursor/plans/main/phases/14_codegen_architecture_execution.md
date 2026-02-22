@@ -115,6 +115,7 @@ status: in_progress
 - [x] PR255 slice: extend simple `let` dual-path to lower `None` declarations (`let x: None = None`) to structured unit form while preserving fallback for other non-lowerable `let` forms
 - [x] PR256 slice: extend simple `let` dual-path to lower option declarations initialized with `None` (`let x: T|None = None`) while preserving fallback for other option-typed `let` shapes
 - [x] PR257 slice: extend simple `let` dual-path to lower option declarations with non-option simple RHS (e.g. `let x: T|None = y`) as `Some(y)` while preserving fallback for non-leaf option-`let` RHS expressions
+- [x] PR258 slice: extend option-typed simple `let` dual-path `Some(...)` wrapping to leaf RHS values (e.g. `let x: T|None = 7`) while preserving fallback for non-leaf option-`let` RHS expressions
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
