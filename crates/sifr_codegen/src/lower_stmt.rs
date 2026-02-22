@@ -88,7 +88,18 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 value: try_lower_simple_aug_assign_value(op, value)?,
             }])
         }
-        HirStmt::Return { value: None } => try_lower_simple_bare_return_stmt(ctx),
+        HirStmt::Return { value: None } => {
+            if ctx.in_display_impl {
+                return None;
+            }
+            if ctx.return_type.is_some_and(crate::helpers::is_option_type) {
+                Some(vec![RustStmt::Return(Some(RustExpr::Literal(
+                    RustLiteral::None,
+                )))])
+            } else {
+                Some(vec![RustStmt::Return(None)])
+            }
+        }
         HirStmt::Return { value: Some(value) } => try_lower_simple_return_stmt(value, ctx),
         HirStmt::Assert { test, msg } => {
             let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
@@ -392,19 +403,6 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
         return Some(lowered);
     }
     try_lower_name_ident_expr(expr)
-}
-
-fn try_lower_simple_bare_return_stmt(ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
-    if ctx.in_display_impl {
-        return None;
-    }
-    if ctx.return_type.is_some_and(crate::helpers::is_option_type) {
-        Some(vec![RustStmt::Return(Some(RustExpr::Literal(
-            RustLiteral::None,
-        )))])
-    } else {
-        Some(vec![RustStmt::Return(None)])
-    }
 }
 
 fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
