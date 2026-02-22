@@ -100,6 +100,7 @@ status: in_progress
 - [x] PR240 slice: extend `return <leaf>` dual-path to lower `return None` in option-return context while preserving fallback for non-option unions and other guarded return-shaping contexts
 - [x] PR241 slice: extend option-return dual-path to lower `return <leaf-non-option>` as `return Some(<leaf>)` with conservative fallback preserved for non-leaf and class/display-sensitive contexts
 - [x] PR242 slice: extend non-option union return dual-path to lower `return <leaf>` as `return <UnionEnum>::<Variant>(<leaf>)` while preserving fallback for non-leaf return values
+- [x] PR243 slice: extend simple `AugAssign` dual-path to lower numeric `+=` with structured IR while preserving fallback for string/list-style `+=` emitter-specific semantics
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
