@@ -333,9 +333,6 @@ fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr>
     if let Some(lowered) = try_lower_leaf_expr(condition) {
         return Some(lowered);
     }
-    if let Some(lowered) = try_lower_simple_option_none_compare_expr(condition) {
-        return Some(lowered);
-    }
     if matches!(condition.ty(), Type::Bool | Type::LiteralBool(_)) {
         if let HirExpr::Name { name, .. } = condition {
             return Some(RustExpr::Ident(name.clone()));
@@ -600,9 +597,6 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(test) {
         return Some(lowered);
     }
-    if let Some(lowered) = try_lower_simple_option_none_compare_expr(test) {
-        return Some(lowered);
-    }
     if let Some(lowered) = try_lower_simple_option_truthiness_condition_expr(test) {
         return Some(lowered);
     }
@@ -612,37 +606,6 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
         }
     }
     None
-}
-
-fn try_lower_simple_option_none_compare_expr(test: &HirExpr) -> Option<RustExpr> {
-    let HirExpr::Compare {
-        left,
-        ops,
-        comparators,
-        ..
-    } = test
-    else {
-        return None;
-    };
-    if ops.len() != 1 || comparators.len() != 1 || !matches!(comparators[0], HirExpr::NoneLiteral) {
-        return None;
-    }
-    let HirExpr::Name { name, ty } = left.as_ref() else {
-        return None;
-    };
-    if !crate::helpers::is_option_type(ty) {
-        return None;
-    }
-    let method = match ops[0].as_str() {
-        "is" => "is_none",
-        "is not" => "is_some",
-        _ => return None,
-    };
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(name.clone())),
-        method: method.to_string(),
-        args: vec![],
-    })
 }
 
 fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {

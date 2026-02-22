@@ -83,6 +83,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             ..
         } if ops.len() == 1 && comparators.len() == 1 => {
             let right = comparators.first()?;
+            if let Some(lowered) = try_lower_option_none_compare_expr(left, &ops[0], right) {
+                return Some(lowered);
+            }
             if !is_safe_simple_compare(&ops[0], left.ty(), right.ty()) {
                 return None;
             }
@@ -156,6 +159,28 @@ fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
         return false;
     }
     left_ty == right_ty && is_comparable_simple(left_ty)
+}
+
+fn try_lower_option_none_compare_expr(left: &HirExpr, op: &str, right: &HirExpr) -> Option<RustExpr> {
+    if !matches!(right, HirExpr::NoneLiteral) {
+        return None;
+    }
+    let HirExpr::Name { name, ty } = left else {
+        return None;
+    };
+    if !crate::helpers::is_option_type(ty) {
+        return None;
+    }
+    let method = match op {
+        "is" => "is_none",
+        "is not" => "is_some",
+        _ => return None,
+    };
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(name.clone())),
+        method: method.to_string(),
+        args: vec![],
+    })
 }
 
 #[cfg(test)]
@@ -267,5 +292,71 @@ mod tests {
                 && method == "is_none"
                 && args.is_empty()
         ));
+    }
+
+    #[test]
+    fn lowers_option_is_none_compare_with_name_operand() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            }),
+            ops: vec!["is".to_string()],
+            comparators: vec![HirExpr::NoneLiteral],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("option is-none compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver: ref recv,
+                ref method,
+                ref args,
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_none"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn lowers_option_is_not_none_compare_with_name_operand() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            }),
+            ops: vec!["is not".to_string()],
+            comparators: vec![HirExpr::NoneLiteral],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("option is-not-none compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver: ref recv,
+                ref method,
+                ref args,
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_some"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_option_is_none_compare_with_non_leaf_left() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Call {
+                func: "maybe_x".to_string(),
+                args: vec![],
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            }),
+            ops: vec!["is".to_string()],
+            comparators: vec![HirExpr::NoneLiteral],
+            ty: Type::Bool,
+        };
+
+        assert!(try_lower_leaf_expr(&cmp).is_none());
     }
 }
