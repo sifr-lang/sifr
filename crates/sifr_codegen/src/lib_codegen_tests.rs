@@ -436,3 +436,67 @@ fn test_expr_to_string_fast_path_for_lowered_leafs() {
     let bool_code = emitter.expr_to_string(&bool_op);
     assert_eq!(bool_code, "true && false");
 }
+
+#[test]
+fn test_match_int_literal_pattern_avoids_cast_expression() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Let {
+                    name: "x".to_string(),
+                    ty: Type::Int,
+                    value: HirExpr::IntLiteral(1),
+                    is_mutable: false,
+                },
+                HirStmt::Match {
+                    subject: HirExpr::Name {
+                        name: "x".to_string(),
+                        ty: Type::Int,
+                    },
+                    subject_ty: Type::Int,
+                    arms: vec![
+                        HirMatchArm {
+                            pattern: HirPattern::Literal {
+                                value: HirExpr::IntLiteral(1),
+                            },
+                            guard: None,
+                            body: vec![HirStmt::Expr {
+                                expr: HirExpr::Call {
+                                    func: "print".to_string(),
+                                    args: vec![HirExpr::StringLiteral("one".to_string())],
+                                    ty: Type::None,
+                                },
+                            }],
+                        },
+                        HirMatchArm {
+                            pattern: HirPattern::Wildcard,
+                            guard: None,
+                            body: vec![HirStmt::Expr {
+                                expr: HirExpr::Call {
+                                    func: "print".to_string(),
+                                    args: vec![HirExpr::StringLiteral("other".to_string())],
+                                    ty: Type::None,
+                                },
+                            }],
+                        },
+                    ],
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+    assert!(rust_code.contains("1 => {"));
+    assert!(!rust_code.contains("1 as i64 => {"));
+}
