@@ -4184,10 +4184,7 @@ impl RustEmitter {
         if let Some(code) = Self::match_pattern_literal_code(value) {
             return code;
         }
-        if let Some(lowered) = try_lower_leaf_expr(value) {
-            return crate::render_expr(&lowered);
-        }
-        self.expr_to_string(value)
+        self.render_expr_with_lowered_fallback(value)
     }
 
     fn render_match_guard_expr(
@@ -4196,11 +4193,7 @@ impl RustEmitter {
         pattern: &HirPattern,
         is_non_option_union: bool,
     ) -> String {
-        let guard_code = if let Some(lowered) = try_lower_leaf_expr(guard_expr) {
-            crate::render_expr(&lowered)
-        } else {
-            self.expr_to_string(guard_expr)
-        };
+        let guard_code = self.render_expr_with_lowered_fallback(guard_expr);
         Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union)
     }
 
@@ -4449,6 +4442,14 @@ impl RustEmitter {
 
         self.indent -= 1;
         self.writeln("}");
+    }
+
+    fn render_expr_with_lowered_fallback(&mut self, expr: &HirExpr) -> String {
+        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
+            crate::render_expr(&lowered_expr)
+        } else {
+            self.expr_to_string(expr)
+        }
     }
 
     fn expr_to_string(&mut self, expr: &HirExpr) -> String {
@@ -7566,7 +7567,10 @@ impl RustEmitter {
     }
 
     fn try_emit_intrinsic_via_registry(&mut self, func: &str, args: &[HirExpr]) -> bool {
-        let rendered_args = args.iter().map(|arg| self.expr_to_string(arg)).collect::<Vec<_>>();
+        let rendered_args = args
+            .iter()
+            .map(|arg| self.render_expr_with_lowered_fallback(arg))
+            .collect::<Vec<_>>();
         let Some(lowered) = intrinsics::lower_intrinsic(func, &rendered_args) else {
             return false;
         };
@@ -7591,10 +7595,10 @@ impl RustEmitter {
         args: &[HirExpr],
     ) -> bool {
         let is_deque_data_field = self.is_deque_data_field(object);
-        let rendered_object = self.expr_to_string(object);
+        let rendered_object = self.render_expr_with_lowered_fallback(object);
         let mut rendered_args = args
             .iter()
-            .map(|arg| self.expr_to_string(arg))
+            .map(|arg| self.render_expr_with_lowered_fallback(arg))
             .collect::<Vec<_>>();
 
         if matches!(object_ty, Type::List(_))
