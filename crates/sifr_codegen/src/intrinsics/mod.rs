@@ -453,14 +453,19 @@ mod tests {
         let from_list =
             lower_intrinsic("counter_from_list", &["vals".to_string()]).expect("counter_from_list");
         assert!(render_expr(&from_list.expr).contains("HashMap::<String, i64>"));
+        assert!(render_expr(&from_list.expr).contains("let __items = vals;"));
 
         let get = lower_intrinsic("counter_get", &["data".to_string(), "k".to_string()])
             .expect("counter_get");
         assert!(render_expr(&get.expr).contains("serde_json::from_str"));
+        assert!(render_expr(&get.expr).contains("let __counter_json = data;"));
+        assert!(!render_expr(&get.expr).contains("from_str(&(data))"));
 
         let incr = lower_intrinsic("counter_increment", &["data".to_string(), "k".to_string()])
             .expect("counter_increment");
         assert!(render_expr(&incr.expr).contains("or_insert(0) += 1"));
+        assert!(render_expr(&incr.expr).contains("let __key = k;"));
+        assert!(render_expr(&incr.expr).contains("__key.to_string()"));
 
         let dd_set = lower_intrinsic(
             "defaultdict_set",

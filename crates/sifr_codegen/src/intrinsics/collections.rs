@@ -300,6 +300,12 @@ pub(super) fn lower_counter_from_list(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
+                mutable: false,
+                name: "__items".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
                 mutable: true,
                 name: "counts".to_string(),
                 ty: None,
@@ -316,7 +322,7 @@ pub(super) fn lower_counter_from_list(args: &[String]) -> Option<RustExpr> {
             RustStmt::For {
                 var: "item".to_string(),
                 iter: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                    receiver: Box::new(RustExpr::Ident("__items".to_string())),
                     method: "iter".to_string(),
                     args: vec![],
                 },
@@ -362,6 +368,12 @@ pub(super) fn lower_counter_get(args: &[String]) -> Option<RustExpr> {
         stmts: vec![
             RustStmt::Let {
                 mutable: false,
+                name: "__counter_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
                 name: "data".to_string(),
                 ty: Some(RustType::Named(
                     "std::collections::HashMap<String, i64>".to_string(),
@@ -374,7 +386,7 @@ pub(super) fn lower_counter_get(args: &[String]) -> Option<RustExpr> {
                         ])),
                         args: vec![RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                            expr: Box::new(RustExpr::Ident("__counter_json".to_string())),
                         }],
                     }),
                     method: "unwrap_or_default".to_string(),
@@ -415,6 +427,18 @@ pub(super) fn lower_counter_most_common(args: &[String]) -> Option<RustExpr> {
         stmts: vec![
             RustStmt::Let {
                 mutable: false,
+                name: "__counter_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__limit".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[1].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
                 name: "data".to_string(),
                 ty: Some(RustType::Named(
                     "std::collections::HashMap<String, i64>".to_string(),
@@ -427,7 +451,7 @@ pub(super) fn lower_counter_most_common(args: &[String]) -> Option<RustExpr> {
                         ])),
                         args: vec![RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                            expr: Box::new(RustExpr::Ident("__counter_json".to_string())),
                         }],
                     }),
                     method: "unwrap_or_default".to_string(),
@@ -483,7 +507,7 @@ pub(super) fn lower_counter_most_common(args: &[String]) -> Option<RustExpr> {
                 receiver: Box::new(RustExpr::Ident("pairs".to_string())),
                 method: "truncate".to_string(),
                 args: vec![RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                    expr: Box::new(RustExpr::Ident("__limit".to_string())),
                     ty: RustType::Named("usize".to_string()),
                 }],
             }),
@@ -543,27 +567,35 @@ pub(super) fn lower_counter_total(args: &[String]) -> Option<RustExpr> {
         return None;
     }
     Some(RustExpr::Block {
-        stmts: vec![RustStmt::Let {
-            mutable: false,
-            name: "data".to_string(),
-            ty: Some(RustType::Named(
-                "std::collections::HashMap<String, i64>".to_string(),
-            )),
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "serde_json".to_string(),
-                        "from_str".to_string(),
-                    ])),
-                    args: vec![RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
-                    }],
-                }),
-                method: "unwrap_or_default".to_string(),
-                args: vec![],
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__counter_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
             },
-        }],
+            RustStmt::Let {
+                mutable: false,
+                name: "data".to_string(),
+                ty: Some(RustType::Named(
+                    "std::collections::HashMap<String, i64>".to_string(),
+                )),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "serde_json".to_string(),
+                            "from_str".to_string(),
+                        ])),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident("__counter_json".to_string())),
+                        }],
+                    }),
+                    method: "unwrap_or_default".to_string(),
+                    args: vec![],
+                },
+            },
+        ],
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("data".to_string())),
@@ -581,27 +613,35 @@ pub(super) fn lower_counter_values(args: &[String]) -> Option<RustExpr> {
         return None;
     }
     Some(RustExpr::Block {
-        stmts: vec![RustStmt::Let {
-            mutable: false,
-            name: "data".to_string(),
-            ty: Some(RustType::Named(
-                "std::collections::HashMap<String, i64>".to_string(),
-            )),
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "serde_json".to_string(),
-                        "from_str".to_string(),
-                    ])),
-                    args: vec![RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
-                    }],
-                }),
-                method: "unwrap_or_default".to_string(),
-                args: vec![],
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__counter_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
             },
-        }],
+            RustStmt::Let {
+                mutable: false,
+                name: "data".to_string(),
+                ty: Some(RustType::Named(
+                    "std::collections::HashMap<String, i64>".to_string(),
+                )),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "serde_json".to_string(),
+                            "from_str".to_string(),
+                        ])),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident("__counter_json".to_string())),
+                        }],
+                    }),
+                    method: "unwrap_or_default".to_string(),
+                    args: vec![],
+                },
+            },
+        ],
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
@@ -623,27 +663,35 @@ pub(super) fn lower_counter_keys(args: &[String]) -> Option<RustExpr> {
         return None;
     }
     Some(RustExpr::Block {
-        stmts: vec![RustStmt::Let {
-            mutable: false,
-            name: "data".to_string(),
-            ty: Some(RustType::Named(
-                "std::collections::HashMap<String, i64>".to_string(),
-            )),
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "serde_json".to_string(),
-                        "from_str".to_string(),
-                    ])),
-                    args: vec![RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
-                    }],
-                }),
-                method: "unwrap_or_default".to_string(),
-                args: vec![],
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__counter_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
             },
-        }],
+            RustStmt::Let {
+                mutable: false,
+                name: "data".to_string(),
+                ty: Some(RustType::Named(
+                    "std::collections::HashMap<String, i64>".to_string(),
+                )),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "serde_json".to_string(),
+                            "from_str".to_string(),
+                        ])),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident("__counter_json".to_string())),
+                        }],
+                    }),
+                    method: "unwrap_or_default".to_string(),
+                    args: vec![],
+                },
+            },
+        ],
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
@@ -668,6 +716,12 @@ pub(super) fn lower_counter_items(args: &[String]) -> Option<RustExpr> {
         stmts: vec![
             RustStmt::Let {
                 mutable: false,
+                name: "__counter_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
                 name: "data".to_string(),
                 ty: Some(RustType::Named(
                     "std::collections::HashMap<String, i64>".to_string(),
@@ -680,7 +734,7 @@ pub(super) fn lower_counter_items(args: &[String]) -> Option<RustExpr> {
                         ])),
                         args: vec![RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                            expr: Box::new(RustExpr::Ident("__counter_json".to_string())),
                         }],
                     }),
                     method: "unwrap_or_default".to_string(),
@@ -790,6 +844,18 @@ pub(super) fn lower_counter_increment(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
+                mutable: false,
+                name: "__counter_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__key".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[1].clone()),
+            },
+            RustStmt::Let {
                 mutable: true,
                 name: "data".to_string(),
                 ty: Some(RustType::Named(
@@ -803,7 +869,7 @@ pub(super) fn lower_counter_increment(args: &[String]) -> Option<RustExpr> {
                         ])),
                         args: vec![RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                            expr: Box::new(RustExpr::Ident("__counter_json".to_string())),
                         }],
                     }),
                     method: "unwrap_or_default".to_string(),
@@ -816,7 +882,7 @@ pub(super) fn lower_counter_increment(args: &[String]) -> Option<RustExpr> {
                         receiver: Box::new(RustExpr::Ident("data".to_string())),
                         method: "entry".to_string(),
                         args: vec![RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                            receiver: Box::new(RustExpr::Ident("__key".to_string())),
                             method: "to_string".to_string(),
                             args: vec![],
                         }],
