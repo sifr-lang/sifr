@@ -148,15 +148,7 @@ pub(crate) fn filter_rust_code_to_needed(
     .copied()
     .collect();
     for item in &items {
-        let mut called = HashSet::new();
-        for other_name in &item_names {
-            if other_name == &item.name || global_types.contains(other_name.as_str()) {
-                continue;
-            }
-            if item_references_name(&item.code, other_name) {
-                called.insert(other_name.clone());
-            }
-        }
+        let called = referenced_item_names(&item.code, &item_names, &item.name, &global_types);
         // Multiple blocks with the same name (e.g., impl X + impl Display for X)
         // should contribute dependencies together.
         deps.entry(item.name.clone()).or_default().extend(called);
@@ -310,23 +302,120 @@ fn parse_top_level_chunks(rust_code: &str) -> Vec<TopLevelChunk> {
     chunks
 }
 
-fn item_references_name(code: &str, other_name: &str) -> bool {
-    let patterns = [
-        format!("{other_name}("),
-        format!("-> {other_name}"),
-        format!("{other_name} {{"),
-        format!("{other_name}::"),
-    ];
+fn referenced_item_names(
+    code: &str,
+    item_names: &HashSet<String>,
+    current_name: &str,
+    global_types: &HashSet<&str>,
+) -> HashSet<String> {
+    let mut refs = HashSet::new();
+    for ident in extract_identifiers(code) {
+        if ident == current_name || global_types.contains(ident.as_str()) {
+            continue;
+        }
+        if item_names.contains(&ident) {
+            refs.insert(ident);
+        }
+    }
+    refs
+}
 
-    patterns.iter().any(|pattern| {
-        code.match_indices(pattern.as_str()).any(|(idx, _)| {
-            if idx == 0 {
-                return true;
+fn extract_identifiers(code: &str) -> HashSet<String> {
+    let chars: Vec<char> = code.chars().collect();
+    let mut out = HashSet::new();
+    let mut i = 0usize;
+    let mut in_line_comment = false;
+    let mut in_block_comment = false;
+    let mut in_string = false;
+    let mut escape = false;
+
+    while i < chars.len() {
+        let ch = chars[i];
+
+        if in_line_comment {
+            if ch == '\n' {
+                in_line_comment = false;
             }
-            let prev_char = code.as_bytes()[idx - 1] as char;
-            !prev_char.is_alphanumeric() && prev_char != '_'
-        })
-    })
+            i += 1;
+            continue;
+        }
+        if in_block_comment {
+            if ch == '*' && i + 1 < chars.len() && chars[i + 1] == '/' {
+                in_block_comment = false;
+                i += 2;
+            } else {
+                i += 1;
+            }
+            continue;
+        }
+        if in_string {
+            if escape {
+                escape = false;
+                i += 1;
+                continue;
+            }
+            if ch == '\\' {
+                escape = true;
+                i += 1;
+                continue;
+            }
+            if ch == '"' {
+                in_string = false;
+            }
+            i += 1;
+            continue;
+        }
+
+        if ch == '/' && i + 1 < chars.len() && chars[i + 1] == '/' {
+            in_line_comment = true;
+            i += 2;
+            continue;
+        }
+        if ch == '/' && i + 1 < chars.len() && chars[i + 1] == '*' {
+            in_block_comment = true;
+            i += 2;
+            continue;
+        }
+        if ch == '"' {
+            in_string = true;
+            i += 1;
+            continue;
+        }
+        if is_char_literal_start(&chars, i) {
+            i += char_literal_len(&chars, i);
+            continue;
+        }
+        if ch == '_' || ch.is_ascii_alphabetic() {
+            let start = i;
+            i += 1;
+            while i < chars.len() && (chars[i] == '_' || chars[i].is_ascii_alphanumeric()) {
+                i += 1;
+            }
+            out.insert(chars[start..i].iter().collect());
+            continue;
+        }
+        i += 1;
+    }
+
+    out
+}
+
+fn is_char_literal_start(chars: &[char], idx: usize) -> bool {
+    if chars[idx] != '\'' {
+        return false;
+    }
+    if idx + 2 >= chars.len() {
+        return false;
+    }
+    if chars[idx + 1] == '\\' {
+        idx + 3 < chars.len() && chars[idx + 3] == '\''
+    } else {
+        chars[idx + 2] == '\''
+    }
+}
+
+fn char_literal_len(chars: &[char], idx: usize) -> usize {
+    if chars[idx + 1] == '\\' { 4 } else { 3 }
 }
 
 fn parse_top_level_item_name(line: &str) -> Option<String> {
@@ -437,6 +526,40 @@ fn unused() {}
         assert!(filtered.contains("fn helper()"));
         assert!(filtered.contains("fn leaf()"));
         assert!(!filtered.contains("fn unused()"));
+    }
+
+    #[test]
+    fn filter_ignores_name_mentions_in_strings_and_comments() {
+        let code = r#"
+fn root() {
+    let _ = "helper()";
+    // helper()
+    /* helper() */
+}
+
+fn helper() {}
+"#;
+        let imported = HashSet::from(["root".to_string()]);
+        let filtered = filter_rust_code_to_needed(code, &imported);
+
+        assert!(filtered.contains("fn root()"));
+        assert!(!filtered.contains("fn helper()"));
+    }
+
+    #[test]
+    fn filter_tracks_type_level_dependencies_via_identifiers() {
+        let code = r#"
+struct Node {}
+
+fn root() -> Node {
+    Node {}
+}
+"#;
+        let imported = HashSet::from(["root".to_string()]);
+        let filtered = filter_rust_code_to_needed(code, &imported);
+
+        assert!(filtered.contains("fn root()"));
+        assert!(filtered.contains("struct Node {}"));
     }
 
     #[test]
