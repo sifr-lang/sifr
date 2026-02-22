@@ -395,11 +395,14 @@ fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
 }
 
 fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
-    if ty != value.ty() {
-        return None;
+    if crate::helpers::is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
+        return Some(RustExpr::Literal(RustLiteral::None));
     }
     if matches!(ty, Type::None) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::Unit));
+    }
+    if ty != value.ty() {
+        return None;
     }
     if !matches!(
         ty,
@@ -670,6 +673,34 @@ mod tests {
                 name: ref let_name,
                 ty: Some(RustType::Unit),
                 value: RustExpr::Literal(RustLiteral::Unit),
+            } if let_name == "x"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_option_let_none_literal_to_none() {
+        let option_ty = Type::Union(vec![Type::Int, Type::None]);
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: option_ty.clone(),
+            value: HirExpr::NoneLiteral,
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("option let none lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                ty: Some(RustType::Option(_)),
+                value: RustExpr::Literal(RustLiteral::None),
             } if let_name == "x"
         ));
     }
