@@ -130,6 +130,7 @@ status: in_progress
 - [x] PR270 slice: extend simple `assert` dual-path test lowering to accept negated option-truthiness name operands (e.g. `assert not maybe_x`) via structured `.is_none()` checks, preserving fallback for non-leaf negated option assert tests
 - [x] PR271 slice: extend simple `assert` dual-path test lowering to accept option-truthiness name operands (e.g. `assert maybe_x`) via structured `.is_some()` checks, preserving fallback for non-leaf option assert tests
 - [x] PR272 slice: extend leaf-expression lowering for unary `not` bool-name operands (e.g. `not ok`) so simple `let`/`assign` dual-path statements lower to structured unary `!` IR, preserving fallback for non-leaf unary operands
+- [x] PR273 slice: remove redundant stmt-level `not <bool-name>` special-case helper and rely on centralized leaf-expression lowering for unary `not` bool-name paths, preserving existing fallback behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

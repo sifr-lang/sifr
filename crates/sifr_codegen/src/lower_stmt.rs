@@ -336,9 +336,6 @@ fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr>
     if let Some(lowered) = try_lower_simple_not_option_truthiness_condition_expr(condition) {
         return Some(lowered);
     }
-    if let Some(lowered) = try_lower_simple_not_bool_name_condition_expr(condition) {
-        return Some(lowered);
-    }
     if matches!(condition.ty(), Type::Bool | Type::LiteralBool(_)) {
         if let HirExpr::Name { name, .. } = condition {
             return Some(RustExpr::Ident(name.clone()));
@@ -359,25 +356,6 @@ fn try_lower_simple_not_option_truthiness_condition_expr(condition: &HirExpr) ->
         receiver: Box::new(RustExpr::Ident(option_var)),
         method: "is_none".to_string(),
         args: vec![],
-    })
-}
-
-fn try_lower_simple_not_bool_name_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
-    let HirExpr::UnaryOp { op, operand, .. } = condition else {
-        return None;
-    };
-    if op != "not" {
-        return None;
-    }
-    let HirExpr::Name { name, ty } = operand.as_ref() else {
-        return None;
-    };
-    if !matches!(ty, Type::Bool | Type::LiteralBool(_)) {
-        return None;
-    }
-    Some(RustExpr::UnaryOp {
-        op: "!".to_string(),
-        operand: Box::new(RustExpr::Ident(name.clone())),
     })
 }
 
@@ -641,9 +619,6 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
         return Some(lowered);
     }
     if let Some(lowered) = try_lower_simple_not_option_truthiness_condition_expr(test) {
-        return Some(lowered);
-    }
-    if let Some(lowered) = try_lower_simple_not_bool_name_condition_expr(test) {
         return Some(lowered);
     }
     if matches!(test.ty(), Type::Bool | Type::LiteralBool(_)) {
