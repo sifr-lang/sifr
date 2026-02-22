@@ -345,14 +345,18 @@ fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_simple_option_truthiness_condition_expr(expr)
 }
 
-fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(iter) {
+fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }
-    if let HirExpr::Name { name, .. } = iter {
+    if let HirExpr::Name { name, .. } = expr {
         return Some(RustExpr::Ident(name.clone()));
     }
     None
+}
+
+fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
+    try_lower_leaf_or_name_expr(iter)
 }
 
 fn try_lower_simple_bare_return_stmt(ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
@@ -415,13 +419,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
 }
 
 fn try_lower_simple_plain_return_value(value: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(value) {
-        return Some(lowered);
-    }
-    if let HirExpr::Name { name, .. } = value {
-        return Some(RustExpr::Ident(name.clone()));
-    }
-    None
+    try_lower_leaf_or_name_expr(value)
 }
 
 fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<RustExpr> {
@@ -477,20 +475,11 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     ) {
         return None;
     }
-    if let Some(lowered) = try_lower_leaf_expr(value) {
-        return Some(lowered);
-    }
     try_lower_simple_let_plain_value(value)
 }
 
 fn try_lower_simple_let_plain_value(value: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(value) {
-        return Some(lowered);
-    }
-    if let HirExpr::Name { name, .. } = value {
-        return Some(RustExpr::Ident(name.clone()));
-    }
-    None
+    try_lower_leaf_or_name_expr(value)
 }
 
 fn try_lower_simple_option_let_passthrough_value(value: &HirExpr) -> Option<RustExpr> {
@@ -511,13 +500,7 @@ fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<Stri
     {
         return None;
     }
-    if let Some(lowered) = try_lower_leaf_expr(value) {
-        return Some(lowered);
-    }
-    if let HirExpr::Name { name, .. } = value {
-        return Some(RustExpr::Ident(name.clone()));
-    }
-    None
+    try_lower_leaf_or_name_expr(value)
 }
 
 fn can_lower_simple_aug_assign(op: &str, value: &HirExpr) -> bool {
@@ -528,13 +511,7 @@ fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustEx
     if !can_lower_simple_aug_assign_name(op, value.ty()) {
         return None;
     }
-    if let Some(lowered) = try_lower_leaf_expr(value) {
-        return Some(lowered);
-    }
-    if let HirExpr::Name { name, .. } = value {
-        return Some(RustExpr::Ident(name.clone()));
-    }
-    None
+    try_lower_leaf_or_name_expr(value)
 }
 
 fn can_lower_simple_aug_assign_name(op: &str, ty: &Type) -> bool {
@@ -557,13 +534,7 @@ fn try_lower_simple_raise_stmt(value: &HirExpr) -> Option<RustStmt> {
 }
 
 fn try_lower_simple_raise_value(value: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(value) {
-        return Some(lowered);
-    }
-    if let HirExpr::Name { name, .. } = value {
-        return Some(RustExpr::Ident(name.clone()));
-    }
-    None
+    try_lower_leaf_or_name_expr(value)
 }
 
 fn try_lower_simple_assert_stmt(test: &HirExpr, msg: Option<&HirExpr>) -> Option<RustStmt> {
@@ -582,13 +553,7 @@ fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
     if crate::helpers::is_option_type(msg.ty()) {
         return try_lower_option_display_expr(msg);
     }
-    if let Some(lowered) = try_lower_leaf_expr(msg) {
-        return Some(lowered);
-    }
-    if let HirExpr::Name { name, .. } = msg {
-        return Some(RustExpr::Ident(name.clone()));
-    }
-    None
+    try_lower_leaf_or_name_expr(msg)
 }
 
 fn try_lower_option_display_expr(msg: &HirExpr) -> Option<RustExpr> {
