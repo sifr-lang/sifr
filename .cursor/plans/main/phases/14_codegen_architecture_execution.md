@@ -275,7 +275,7 @@ status: in_progress
 - [x] PR165 slice: continue RawCode-zero gate by replacing `exists` `RawCode` with structured path/fn-call/method-call IR
 - [x] PR166 slice: continue RawCode-zero gate by replacing `datetime_now_struct` and `datetime_from_timestamp` `RawCode` with structured block/closure/cast IR
 - [x] PR167 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in `io`/`re`/`random` registry lowerers with non-raw IR expression nodes
-- [ ] PR168 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in `base64`/`hashlib`/`pathlib` registry lowerers
+- [x] PR168 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in `base64`/`hashlib`/`pathlib` registry lowerers
 - [ ] PR169 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in remaining registry modules (`base32`, `bytes`, `calendar`, `gzip`, `os`, `platform`, `subprocess`, `time`, `toml`, `uuid`, `zipfile`)
 - [ ] PR170 slice: reduce remaining preamble-level `RawCode` usage to preamble-only documented exceptions (target <= 5) and wire docs/tests for gate accounting
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
