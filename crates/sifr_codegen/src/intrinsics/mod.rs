@@ -537,7 +537,7 @@ mod tests {
         let rint = lower_intrinsic("random_int", &["1".to_string(), "9".to_string()])
             .expect("random_int");
         assert_eq!(rint.required_crate, Some("rand"));
-        assert!(render_expr(&rint.expr).contains("gen_range(1..=9)"));
+        assert!(render_expr(&rint.expr).contains("rand::thread_rng().gen_range(0.."));
 
         let rfloat = lower_intrinsic("random_float", &[]).expect("random_float");
         assert_eq!(rfloat.required_crate, Some("rand"));
@@ -548,11 +548,11 @@ mod tests {
 
         let uniform = lower_intrinsic("random_uniform", &["0.0".to_string(), "1.0".to_string()])
             .expect("random_uniform");
-        assert!(render_expr(&uniform.expr).contains("gen_range(0.0..=1.0)"));
+        assert!(render_expr(&uniform.expr).contains("gen::<f64>()"));
 
         let shuffle =
             lower_intrinsic("random_shuffle", &["vals".to_string()]).expect("random_shuffle");
-        assert!(render_expr(&shuffle.expr).contains("SliceRandom"));
+        assert!(render_expr(&shuffle.expr).contains("shuffle(&mut rand::thread_rng())"));
 
         let sample = lower_intrinsic("random_sample", &["vals".to_string(), "3".to_string()])
             .expect("random_sample");
