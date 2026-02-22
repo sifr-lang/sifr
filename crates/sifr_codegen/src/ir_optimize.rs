@@ -50,6 +50,9 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             optimize_expr(target) + optimize_expr(value)
         }
         RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => optimize_expr(expr),
+        RustStmt::Assert { cond, msg } => {
+            optimize_expr(cond) + msg.as_mut().map(optimize_expr).unwrap_or(0)
+        }
         RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue | RustStmt::RawCode(_) => 0,
         RustStmt::If {
             cond,

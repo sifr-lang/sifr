@@ -1445,6 +1445,9 @@ mod tests {
                 count_raw_in_expr(target) + count_raw_in_expr(value)
             }
             RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => count_raw_in_expr(expr),
+            RustStmt::Assert { cond, msg } => {
+                count_raw_in_expr(cond) + msg.as_ref().map(count_raw_in_expr).unwrap_or(0)
+            }
             RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => 0,
             RustStmt::If {
                 cond,

@@ -289,6 +289,19 @@ impl Renderer {
                 ));
             }
             RustStmt::Expr(expr) => self.writeln(&format!("{};", Self::render_expr_string(expr))),
+            RustStmt::Assert { cond, msg: None } => {
+                self.writeln(&format!("assert!({});", Self::render_expr_string(cond)));
+            }
+            RustStmt::Assert {
+                cond,
+                msg: Some(msg),
+            } => {
+                self.writeln(&format!(
+                    "assert!({}, \"{{}}\", {});",
+                    Self::render_expr_string(cond),
+                    Self::render_expr_string(msg)
+                ));
+            }
             RustStmt::Return(Some(expr)) => {
                 self.writeln(&format!("return {};", Self::render_expr_string(expr)));
             }
@@ -1123,6 +1136,25 @@ mod tests {
         assert_snapshot!(rendered, @r###"
         let x: i64 = 1;
         may_fail()?;
+        "###);
+    }
+
+    #[test]
+    fn render_stmts_renders_assert_variants() {
+        let stmts = vec![
+            RustStmt::Assert {
+                cond: RustExpr::Literal(RustLiteral::Bool(true)),
+                msg: None,
+            },
+            RustStmt::Assert {
+                cond: RustExpr::Literal(RustLiteral::Bool(false)),
+                msg: Some(RustExpr::Literal(RustLiteral::Str("boom".to_string()))),
+            },
+        ];
+        let rendered = render_stmts(&stmts);
+        assert_snapshot!(rendered, @r###"
+        assert!(true);
+        assert!(false, "{}", "boom".to_string());
         "###);
     }
 }
