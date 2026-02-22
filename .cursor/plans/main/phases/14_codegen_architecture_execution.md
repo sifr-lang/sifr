@@ -154,6 +154,7 @@ status: in_progress
 - [x] PR294 slice: inline single-use option-display helper into `HirStmt::Assert` while preserving option message formatting behavior
 - [x] PR295 slice: inline single-use option-truthiness condition helper into `try_lower_simple_condition_test_expr` while preserving `is_some()` lowering
 - [x] PR296 slice: inline single-use bare-return helper into `HirStmt::Return { value: None }` while preserving display-impl and option-return behavior
+- [x] PR297 slice: inline single-use compare-safety helper into leaf-compare lowering and remove now-redundant comparable-type helper
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
