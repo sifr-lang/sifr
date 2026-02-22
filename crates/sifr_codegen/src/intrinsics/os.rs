@@ -32,7 +32,7 @@ pub(super) fn lower_run_command(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
+    Some(RustExpr::Ident(format!(
         "(|| -> Result<String, IOError> {{ let __cmd = {}; let output = std::process::Command::new(\"sh\").args([\"-c\", &__cmd]).output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) }})()",
         args[0]
     )))
@@ -274,7 +274,7 @@ pub(super) fn lower_disk_usage(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
+    Some(RustExpr::Ident(format!(
         "{{ let __path = {}; let __stat = std::fs::metadata(__path); match __stat {{ Ok(_) => {{ let __out = std::process::Command::new(\"df\").args([\"-k\", __path]).output(); match __out {{ Ok(__o) => {{ let __s = String::from_utf8_lossy(&__o.stdout); let __lines: Vec<&str> = __s.lines().collect(); if __lines.len() >= 2 {{ let __parts: Vec<&str> = __lines[1].split_whitespace().collect(); if __parts.len() >= 4 {{ let __total = __parts[1].parse::<i64>().unwrap_or(0) * 1024; let __used = __parts[2].parse::<i64>().unwrap_or(0) * 1024; let __free = __parts[3].parse::<i64>().unwrap_or(0) * 1024; vec![__total, __used, __free] }} else {{ vec![0i64, 0, 0] }} }} else {{ vec![0i64, 0, 0] }} }}, Err(_) => vec![0i64, 0, 0] }} }}, Err(_) => vec![0i64, 0, 0] }} }}",
         borrow_expr(&args[0])
     )))
