@@ -276,6 +276,23 @@ fn try_lower_simple_if_stmt(
         None
     };
 
+    if elif_clauses.is_empty() {
+        if let Some(option_var) = crate::helpers::detect_option_truthiness(condition) {
+            return Some(RustStmt::IfLet {
+                pattern: format!("Some({option_var})"),
+                expr: RustExpr::Ident(option_var),
+                then_body: try_lower_simple_stmt_block(
+                    then_body,
+                    in_loop_with_else,
+                    bindings.mutated_vars,
+                    bindings.borrowed_params,
+                    ctx,
+                )?,
+                else_body: nested_else,
+            });
+        }
+    }
+
     for (elif_cond, elif_body) in elif_clauses.iter().rev() {
         nested_else = Some(vec![RustStmt::If {
             cond: try_lower_simple_bool_condition_expr(elif_cond)?,
@@ -1800,6 +1817,60 @@ mod tests {
                 ..
             } if name == "ok"
         ));
+    }
+
+    #[test]
+    fn lowers_simple_if_with_option_truthiness_name_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: Some(vec![HirStmt::Pass]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if option truthiness lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::IfLet {
+                pattern: ref p,
+                expr: RustExpr::Ident(ref n),
+                else_body: Some(_),
+                ..
+            } if p == "Some(maybe_x)" && n == "maybe_x"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_if_option_truthiness_with_elif() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![(HirExpr::BoolLiteral(true), vec![HirStmt::Pass])],
+            else_body: None,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &if_stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
     }
 
     #[test]
