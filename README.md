@@ -1,6 +1,6 @@
 # sifr
 
-<img src="logo.webp" alt="Sifr Logo" width="200">
+<img src="logo.webp" alt="Sifr Logo" height="200">
 
 **Python syntax. Rust performance. If it compiles, it works.**
 
