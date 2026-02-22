@@ -1,102 +1,402 @@
 //! Regex intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn borrowed_str(expr: &str) -> String {
-    format!("&({expr})")
+fn arg_expr(args: &[String], idx: usize) -> RustExpr {
+    RustExpr::Ident(args[idx].clone())
 }
 
-fn replacer_str(expr: &str) -> String {
-    format!("&*({expr})")
+fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+    RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(arg_expr(args, idx)),
+    }
 }
 
-fn regex_error_map() -> &'static str {
-    "map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })"
+fn ref_ident(name: &str) -> RustExpr {
+    RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(RustExpr::Ident(name.to_string())),
+    }
+}
+
+fn replacer_arg(args: &[String], idx: usize) -> RustExpr {
+    RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(RustExpr::Deref(Box::new(arg_expr(args, idx)))),
+    }
+}
+
+fn to_string_expr(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "to_string".to_string(),
+        args: vec![],
+    }
+}
+
+fn regex_error_expr(name: &str) -> RustExpr {
+    RustExpr::StructInit {
+        name: "RegexError".to_string(),
+        fields: vec![
+            (
+                "message".to_string(),
+                to_string_expr(RustExpr::Ident(name.to_string())),
+            ),
+            (
+                "detail".to_string(),
+                to_string_expr(RustExpr::Ident(name.to_string())),
+            ),
+        ],
+    }
+}
+
+fn regex_error_mapper() -> RustExpr {
+    RustExpr::Closure {
+        params: vec![RustParam::Named {
+            name: "e".to_string(),
+            ty: RustType::Named("_".to_string()),
+        }],
+        body: Box::new(regex_error_expr("e")),
+        is_move: false,
+    }
+}
+
+fn map_regex_error(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "map_err".to_string(),
+        args: vec![regex_error_mapper()],
+    }
+}
+
+fn regex_new(pattern: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "regex".to_string(),
+            "Regex".to_string(),
+            "new".to_string(),
+        ])),
+        args: vec![pattern],
+    }
+}
+
+fn wrap_ok(expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+        args: vec![expr],
+    }
+}
+
+fn map_match_to_string(expr: RustExpr, method: &str) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "m".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(to_string_expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("m".to_string())),
+                method: method.to_string(),
+                args: vec![],
+            })),
+            is_move: false,
+        }],
+    }
+}
+
+fn map_str_to_string(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "s".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(to_string_expr(RustExpr::Ident("s".to_string()))),
+            is_move: false,
+        }],
+    }
 }
 
 pub(super) fn lower_re_match(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "regex::Regex::new({}).map(|re| re.is_match({})).{}",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1]),
-        regex_error_map()
-    )))
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(regex_new(ref_arg(args, 0))),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "re".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("re".to_string())),
+                method: "is_match".to_string(),
+                args: vec![ref_arg(args, 1)],
+            }),
+            is_move: false,
+        }],
+    };
+    Some(map_regex_error(mapped))
 }
 
 pub(super) fn lower_re_find(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "regex::Regex::new({}).map(|re| re.find({}).map(|m| m.as_str().to_string())).{}",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1]),
-        regex_error_map()
-    )))
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(regex_new(ref_arg(args, 0))),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "re".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(map_match_to_string(
+                RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("re".to_string())),
+                    method: "find".to_string(),
+                    args: vec![ref_arg(args, 1)],
+                },
+                "as_str",
+            )),
+            is_move: false,
+        }],
+    };
+    Some(map_regex_error(mapped))
 }
 
 pub(super) fn lower_re_replace(args: &[String]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "regex::Regex::new({}).map(|re| re.replace_all({}, {}).to_string()).{}",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[2]),
-        replacer_str(&args[1]),
-        regex_error_map()
-    )))
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(regex_new(ref_arg(args, 0))),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "re".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(to_string_expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("re".to_string())),
+                method: "replace_all".to_string(),
+                args: vec![ref_arg(args, 2), replacer_arg(args, 1)],
+            })),
+            is_move: false,
+        }],
+    };
+    Some(map_regex_error(mapped))
 }
 
 pub(super) fn lower_re_findall(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "regex::Regex::new({}).map(|re| re.find_iter({}).map(|m| m.as_str().to_string()).collect::<Vec<String>>()).{}",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1]),
-        regex_error_map()
-    )))
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(regex_new(ref_arg(args, 0))),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "re".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(map_match_to_string(
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("re".to_string())),
+                        method: "find_iter".to_string(),
+                        args: vec![ref_arg(args, 1)],
+                    },
+                    "as_str",
+                )),
+                method: "collect::<Vec<String>>".to_string(),
+                args: vec![],
+            }),
+            is_move: false,
+        }],
+    };
+    Some(map_regex_error(mapped))
 }
 
 pub(super) fn lower_re_split(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "regex::Regex::new({}).map(|re| re.split({}).map(|s| s.to_string()).collect::<Vec<String>>()).{}",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1]),
-        regex_error_map()
-    )))
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(regex_new(ref_arg(args, 0))),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "re".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(map_str_to_string(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("re".to_string())),
+                    method: "split".to_string(),
+                    args: vec![ref_arg(args, 1)],
+                })),
+                method: "collect::<Vec<String>>".to_string(),
+                args: vec![],
+            }),
+            is_move: false,
+        }],
+    };
+    Some(map_regex_error(mapped))
 }
 
 pub(super) fn lower_re_find_start(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "regex::Regex::new({}).map(|re| re.find({}).map_or(-1_i64, |m| m.start() as i64)).{}",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1]),
-        regex_error_map()
-    )))
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(regex_new(ref_arg(args, 0))),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "re".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("re".to_string())),
+                    method: "find".to_string(),
+                    args: vec![ref_arg(args, 1)],
+                }),
+                method: "map_or".to_string(),
+                args: vec![
+                    RustExpr::Literal(RustLiteral::Int(-1)),
+                    RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "m".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Cast {
+                            expr: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("m".to_string())),
+                                method: "start".to_string(),
+                                args: vec![],
+                            }),
+                            ty: RustType::I64,
+                        }),
+                        is_move: false,
+                    },
+                ],
+            }),
+            is_move: false,
+        }],
+    };
+    Some(map_regex_error(mapped))
 }
 
 pub(super) fn lower_re_find_end(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "regex::Regex::new({}).map(|re| re.find({}).map_or(-1_i64, |m| m.end() as i64)).{}",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1]),
-        regex_error_map()
-    )))
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(regex_new(ref_arg(args, 0))),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "re".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("re".to_string())),
+                    method: "find".to_string(),
+                    args: vec![ref_arg(args, 1)],
+                }),
+                method: "map_or".to_string(),
+                args: vec![
+                    RustExpr::Literal(RustLiteral::Int(-1)),
+                    RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "m".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::Cast {
+                            expr: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("m".to_string())),
+                                method: "end".to_string(),
+                                args: vec![],
+                            }),
+                            ty: RustType::I64,
+                        }),
+                        is_move: false,
+                    },
+                ],
+            }),
+            is_move: false,
+        }],
+    };
+    Some(map_regex_error(mapped))
+}
+
+fn push_flag_stmt(bit: i64, marker: &str) -> RustStmt {
+    RustStmt::If {
+        cond: RustExpr::BinOp {
+            left: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__flags_val".to_string())),
+                op: "&".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(bit))),
+            }),
+            op: "!=".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        },
+        then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__flag_str".to_string())),
+            method: "push_str".to_string(),
+            args: vec![RustExpr::Literal(RustLiteral::Str(marker.to_string()))],
+        })],
+        else_body: None,
+    }
+}
+
+fn build_flags_prefix_stmts(args: &[String], flag_idx: usize) -> Vec<RustStmt> {
+    vec![
+        RustStmt::Let {
+            mutable: false,
+            name: "__flags_val".to_string(),
+            ty: None,
+            value: arg_expr(args, flag_idx),
+        },
+        RustStmt::Let {
+            mutable: true,
+            name: "__flag_str".to_string(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["String".to_string(), "new".to_string()])),
+                args: vec![],
+            },
+        },
+        push_flag_stmt(2, "(?i)"),
+        push_flag_stmt(8, "(?m)"),
+        push_flag_stmt(16, "(?s)"),
+        push_flag_stmt(64, "(?x)"),
+        RustStmt::Let {
+            mutable: false,
+            name: "__pat".to_string(),
+            ty: None,
+            value: RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__flag_str".to_string())),
+                op: "+".to_string(),
+                right: Box::new(ref_arg(args, 0)),
+            },
+        },
+        RustStmt::Let {
+            mutable: false,
+            name: "__re".to_string(),
+            ty: None,
+            value: RustExpr::Try(Box::new(map_regex_error(regex_new(ref_ident("__pat"))))),
+        },
+    ]
 }
 
 fn lower_flags_common(args: &[String], mode: &str) -> Option<RustExpr> {
@@ -104,40 +404,48 @@ fn lower_flags_common(args: &[String], mode: &str) -> Option<RustExpr> {
         return None;
     }
 
-    let (result_ty, body) = match mode {
-        "match" => (
-            "bool",
-            format!("Ok(__re.is_match({}))", borrowed_str(&args[1])),
-        ),
-        "find" => (
-            "Option<String>",
-            format!(
-                "Ok(__re.find({}).map(|m| m.as_str().to_string()))",
-                borrowed_str(&args[1])
-            ),
-        ),
-        "findall" => (
-            "Vec<String>",
-            format!(
-                "Ok(__re.find_iter({}).map(|m| m.as_str().to_string()).collect())",
-                borrowed_str(&args[1])
-            ),
-        ),
-        "split" => (
-            "Vec<String>",
-            format!(
-                "Ok(__re.split({}).map(|s| s.to_string()).collect())",
-                borrowed_str(&args[1])
-            ),
-        ),
+    let result_expr = match mode {
+        "match" => wrap_ok(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__re".to_string())),
+            method: "is_match".to_string(),
+            args: vec![ref_arg(args, 1)],
+        }),
+        "find" => wrap_ok(map_match_to_string(
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__re".to_string())),
+                method: "find".to_string(),
+                args: vec![ref_arg(args, 1)],
+            },
+            "as_str",
+        )),
+        "findall" => wrap_ok(RustExpr::MethodCall {
+            receiver: Box::new(map_match_to_string(
+                RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__re".to_string())),
+                    method: "find_iter".to_string(),
+                    args: vec![ref_arg(args, 1)],
+                },
+                "as_str",
+            )),
+            method: "collect::<Vec<String>>".to_string(),
+            args: vec![],
+        }),
+        "split" => wrap_ok(RustExpr::MethodCall {
+            receiver: Box::new(map_str_to_string(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__re".to_string())),
+                method: "split".to_string(),
+                args: vec![ref_arg(args, 1)],
+            })),
+            method: "collect::<Vec<String>>".to_string(),
+            args: vec![],
+        }),
         _ => return None,
     };
 
-    Some(RustExpr::Ident(format!(
-        "(|| -> Result<{result_ty}, RegexError> {{ let __flags_val = {}; let mut __flag_str = String::new(); if __flags_val & 2 != 0 {{ __flag_str.push_str(\"(?i)\"); }} if __flags_val & 8 != 0 {{ __flag_str.push_str(\"(?m)\"); }} if __flags_val & 16 != 0 {{ __flag_str.push_str(\"(?s)\"); }} if __flags_val & 64 != 0 {{ __flag_str.push_str(\"(?x)\"); }} let __pat = __flag_str + {}; let __re = regex::Regex::new(&__pat).map_err(|e| RegexError {{ message: e.to_string(), detail: e.to_string() }})?; {body} }})()",
-        args[2],
-        borrowed_str(&args[0])
-    )))
+    Some(RustExpr::Block {
+        stmts: build_flags_prefix_stmts(args, 2),
+        expr: Some(Box::new(result_expr)),
+    })
 }
 
 pub(super) fn lower_re_match_flags(args: &[String]) -> Option<RustExpr> {
@@ -160,11 +468,12 @@ pub(super) fn lower_re_replace_flags(args: &[String]) -> Option<RustExpr> {
     if args.len() != 4 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "(|| -> Result<String, RegexError> {{ let __flags_val = {}; let mut __flag_str = String::new(); if __flags_val & 2 != 0 {{ __flag_str.push_str(\"(?i)\"); }} if __flags_val & 8 != 0 {{ __flag_str.push_str(\"(?m)\"); }} if __flags_val & 16 != 0 {{ __flag_str.push_str(\"(?s)\"); }} if __flags_val & 64 != 0 {{ __flag_str.push_str(\"(?x)\"); }} let __pat = __flag_str + {}; let __re = regex::Regex::new(&__pat).map_err(|e| RegexError {{ message: e.to_string(), detail: e.to_string() }})?; Ok(__re.replace_all({}, {}).to_string()) }})()",
-        args[3],
-        borrowed_str(&args[0]),
-        borrowed_str(&args[2]),
-        replacer_str(&args[1])
-    )))
+    Some(RustExpr::Block {
+        stmts: build_flags_prefix_stmts(args, 3),
+        expr: Some(Box::new(wrap_ok(to_string_expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__re".to_string())),
+            method: "replace_all".to_string(),
+            args: vec![ref_arg(args, 2), replacer_arg(args, 1)],
+        })))),
+    })
 }
