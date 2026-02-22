@@ -71,7 +71,8 @@ const GLOBAL_INFRA_TYPES: &[&str] = &[
 
 /// Strip per-module shared imports/infrastructure and return dependency flags.
 pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlibModule {
-    let mut shared_needs = SharedPreludeNeeds::default();
+    let chunks = parse_top_level_chunks(filtered);
+    let shared_needs = derive_shared_needs(filtered, &chunks);
     let mut in_file_handle_block = false;
     let mut skip_next_blank = false;
     let mut skip_file_handle_continuation = false;
@@ -79,23 +80,13 @@ pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlib
 
     for line in filtered.lines() {
         let t = line.trim();
-
-        if line.contains("__SIFR_FILE_HANDLES") {
-            shared_needs.needs_file_handles = true;
-        }
-        if t.starts_with("struct FileHandle {") {
-            shared_needs.provides_file_handle_struct = true;
-        }
         if t == "use std::collections::HashMap;" {
-            shared_needs.needs_hashmap = true;
             continue;
         }
         if t == "use std::collections::HashSet;" {
-            shared_needs.needs_hashset = true;
             continue;
         }
         if t == "use std::collections::VecDeque;" {
-            shared_needs.needs_vecdeque = true;
             continue;
         }
         if t == "use std::sync::Mutex;" {
@@ -286,6 +277,32 @@ fn render_needed_ir_items(ir: &StdlibIrFile, needed: &HashSet<String>) -> String
         }
     }
     result
+}
+
+fn derive_shared_needs(filtered: &str, chunks: &[TopLevelChunk]) -> SharedPreludeNeeds {
+    let mut shared_needs = SharedPreludeNeeds::default();
+    let tokens = tokenize_rust_like(filtered);
+    for (idx, token) in tokens.iter().enumerate() {
+        let ident = match token {
+            RustToken::Ident(ident) => ident,
+            RustToken::Sym(_) => continue,
+        };
+        match ident.as_str() {
+            "__SIFR_FILE_HANDLES" => shared_needs.needs_file_handles = true,
+            "HashMap" if is_reference_ident(&tokens, idx) => shared_needs.needs_hashmap = true,
+            "HashSet" if is_reference_ident(&tokens, idx) => shared_needs.needs_hashset = true,
+            "VecDeque" if is_reference_ident(&tokens, idx) => shared_needs.needs_vecdeque = true,
+            _ => {}
+        }
+    }
+    for chunk in chunks {
+        if let TopLevelChunk::Item(item) = chunk {
+            if item.name == "FileHandle" && item.header_line.trim().starts_with("struct FileHandle") {
+                shared_needs.provides_file_handle_struct = true;
+            }
+        }
+    }
+    shared_needs
 }
 
 fn parse_top_level_chunks(rust_code: &str) -> Vec<TopLevelChunk> {
@@ -504,6 +521,7 @@ fn is_reference_ident(tokens: &[RustToken], idx: usize) -> bool {
     }
     if prev_is_sym(prev, "->")
         || prev_is_sym(prev, ":")
+        || prev_is_sym(prev, "::")
         || prev_is_ident(prev, "dyn")
         || prev_is_ident(prev, "impl")
         || prev_is_ident(prev, "for")
@@ -944,6 +962,20 @@ fn keep_me() {
         assert!(!prepared.stripped_code.contains("use std::collections::HashMap;"));
         assert!(!prepared.stripped_code.contains("enum SifrFileHandle {"));
         assert!(!prepared.stripped_code.contains("static __SIFR_FILE_HANDLES:"));
+        assert!(prepared.stripped_code.contains("fn keep_me()"));
+    }
+
+    #[test]
+    fn shared_prelude_needs_ignore_comment_mentions() {
+        let input = r#"
+// HashMap HashSet VecDeque __SIFR_FILE_HANDLES
+fn keep_me() {}
+"#;
+        let prepared = collect_and_strip_shared_prelude(input);
+        assert!(!prepared.shared_needs.needs_hashmap);
+        assert!(!prepared.shared_needs.needs_hashset);
+        assert!(!prepared.shared_needs.needs_vecdeque);
+        assert!(!prepared.shared_needs.needs_file_handles);
         assert!(prepared.stripped_code.contains("fn keep_me()"));
     }
 }
