@@ -22,77 +22,54 @@ mod lower_stmt;
 pub use lower_stmt::*;
 mod lower_item;
 pub use lower_item::*;
+mod class_emitter;
+mod class_method_emitter;
+mod entrypoints;
+mod expr_ref_emitter;
+mod expr_render_helpers;
+mod function_emitter;
+mod generic_bounds_helpers;
+mod helpers;
+mod intrinsic_method_emitters;
 mod intrinsics;
-mod methods;
 mod ir_imports;
 mod ir_optimize;
 mod ir_validate;
-mod stdlib_filter;
-mod helpers;
-mod entrypoints;
+mod match_emitter;
+mod methods;
+mod module_body;
 mod module_constants;
 mod module_prescan;
-mod module_body;
-mod class_emitter;
-mod type_emitters;
 mod operator_protocol_emitters;
-mod class_method_emitter;
-mod function_emitter;
-mod match_emitter;
-mod slice_emitter;
-mod expr_ref_emitter;
-mod expr_render_helpers;
-mod stmt_support_emitter;
-mod generic_bounds_helpers;
-mod union_type_helpers;
 mod output_helpers;
+mod slice_emitter;
+mod stdlib_filter;
+mod stmt_support_emitter;
+mod type_emitters;
+mod union_type_helpers;
 
 #[cfg(test)]
 mod lib_codegen_tests;
 
-use sifr_hir::{
-    HirExpr,
-    HirModule,
-    HirPattern,
-    HirStmt,
-};
-use sifr_type_system::{Type, ParamConvention};
-use stdlib_filter::{
-    collect_and_strip_shared_prelude,
-    dedup_rust_items,
-    filter_stdlib_ir_to_needed,
-};
 use helpers::{
-    MUTATING_METHODS,
-    body_calls_function,
-    codegen_body_always_exits,
-    collect_locally_defined_vars,
-    collect_mutated_vars,
-    collect_mutated_vars_with_sigs,
-    collect_referenced_vars_with_types,
-    collect_string_concat_parts,
-    detect_and_not_none_vars,
-    detect_is_none_union_var,
-    detect_is_none_var,
-    detect_is_not_none_var,
-    detect_isinstance_union,
-    detect_option_truthiness,
-    find_union_variant,
-    is_builtin_error_referenced,
-    is_hashable_type_codegen,
-    is_option_type,
-    module_uses_bigint,
-    needs_clone_for_type,
-    stmts_reference_var,
-    try_body_has_value_return,
-    type_contains_typevar,
-    type_references_class,
+    body_calls_function, codegen_body_always_exits, collect_locally_defined_vars,
+    collect_mutated_vars, collect_mutated_vars_with_sigs, collect_referenced_vars_with_types,
+    collect_string_concat_parts, detect_and_not_none_vars, detect_is_none_union_var,
+    detect_is_none_var, detect_is_not_none_var, detect_isinstance_union, detect_option_truthiness,
+    find_union_variant, is_builtin_error_referenced, is_hashable_type_codegen, is_option_type,
+    module_uses_bigint, needs_clone_for_type, stmts_reference_var, try_body_has_value_return,
+    type_contains_typevar, type_references_class, MUTATING_METHODS,
 };
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
+use sifr_hir::{HirExpr, HirModule, HirPattern, HirStmt};
+use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
+use stdlib_filter::{
+    collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
+};
 
 type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
 type ModuleFuncSignatures = HashMap<String, FuncSignature>;
@@ -105,17 +82,37 @@ pub use entrypoints::{generate_rust, generate_rust_test, generate_rust_with_meta
 
 /// Built-in error class names that the compiler provides.
 const BUILTIN_ERROR_CLASSES: &[&str] = &[
-    "Error", "IOError", "ParseError", "ValueError", "DivisionError",
-    "KeyError", "JSONDecodeError", "TOMLDecodeError", "RegexError",
-    "FileNotFoundError", "PermissionError", "FileExistsError",
-    "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
-    "OverflowError", "IndexError", "AttributeError", "TypeError",
-    "ZeroDivisionError", "RuntimeError", "NotImplementedError",
+    "Error",
+    "IOError",
+    "ParseError",
+    "ValueError",
+    "DivisionError",
+    "KeyError",
+    "JSONDecodeError",
+    "TOMLDecodeError",
+    "RegexError",
+    "FileNotFoundError",
+    "PermissionError",
+    "FileExistsError",
+    "IsADirectoryError",
+    "NotADirectoryError",
+    "DirectoryNotEmptyError",
+    "OverflowError",
+    "IndexError",
+    "AttributeError",
+    "TypeError",
+    "ZeroDivisionError",
+    "RuntimeError",
+    "NotImplementedError",
 ];
 
 const IO_ERROR_SUBCLASSES: &[&str] = &[
-    "FileNotFoundError", "PermissionError", "FileExistsError",
-    "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
+    "FileNotFoundError",
+    "PermissionError",
+    "FileExistsError",
+    "IsADirectoryError",
+    "NotADirectoryError",
+    "DirectoryNotEmptyError",
 ];
 
 /// Result of code generation, including the Rust source and metadata.
@@ -154,7 +151,6 @@ pub struct StdlibCode {
     pub generic_classes: HashSet<String>,
 }
 
-
 /// Generate Rust source code from a HIR module with compiled stdlib code.
 pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
     let mut emitter = RustEmitter::new();
@@ -162,14 +158,18 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         .stdlib_intrinsic_names
         .clone_from(&stdlib_code.intrinsic_names);
     // Register stdlib generic classes so user code skips explicit type annotations
-    emitter.generic_classes.extend(stdlib_code.generic_classes.iter().cloned());
+    emitter
+        .generic_classes
+        .extend(stdlib_code.generic_classes.iter().cloned());
 
     // Pre-register stdlib constants and function signatures so user code can reference them correctly
     for import in &module.imports {
         if let Some(const_map) = stdlib_code.module_constants.get(&import.module) {
             for name in &import.names {
                 if let Some((ty, rust_name)) = const_map.get(name) {
-                    emitter.module_constants.insert(name.clone(), (ty.clone(), rust_name.clone()));
+                    emitter
+                        .module_constants
+                        .insert(name.clone(), (ty.clone(), rust_name.clone()));
                 }
             }
         }
@@ -255,28 +255,30 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         }
         if let Some(rust_code) = stdlib_code.module_rust_code.get(module_name) {
             if !rust_code.is_empty() {
-                let filtered = if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
-                    let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
-                    let pure_sifr_imports: HashSet<String> = imported_names.iter()
-                        .filter(|name| !intrinsic_set.is_some_and(|iset| iset.contains(*name)))
-                        .cloned()
-                        .collect();
-                    if pure_sifr_imports.is_empty() {
-                        String::new()
-                    } else {
-                        let mut expanded_imports = pure_sifr_imports.clone();
-                        if let Some(const_map) = stdlib_code.module_constants.get(module_name) {
-                            for name in &pure_sifr_imports {
-                                if const_map.contains_key(name) {
-                                    expanded_imports.insert(format!("__const_{name}"));
+                let filtered =
+                    if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
+                        let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
+                        let pure_sifr_imports: HashSet<String> = imported_names
+                            .iter()
+                            .filter(|name| !intrinsic_set.is_some_and(|iset| iset.contains(*name)))
+                            .cloned()
+                            .collect();
+                        if pure_sifr_imports.is_empty() {
+                            String::new()
+                        } else {
+                            let mut expanded_imports = pure_sifr_imports.clone();
+                            if let Some(const_map) = stdlib_code.module_constants.get(module_name) {
+                                for name in &pure_sifr_imports {
+                                    if const_map.contains_key(name) {
+                                        expanded_imports.insert(format!("__const_{name}"));
+                                    }
                                 }
                             }
+                            filter_stdlib_ir_to_needed(rust_code, &expanded_imports)
                         }
-                        filter_stdlib_ir_to_needed(rust_code, &expanded_imports)
-                    }
-                } else {
-                    rust_code.clone()
-                };
+                    } else {
+                        rust_code.clone()
+                    };
                 if !filtered.trim().is_empty() {
                     let prepared = collect_and_strip_shared_prelude(&filtered);
                     stdlib_needs_hashmap |= prepared.shared_needs.needs_hashmap;
@@ -287,7 +289,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         prepared.shared_needs.provides_file_handle_struct;
                     let stripped = prepared.stripped_code;
                     if !stripped.trim().is_empty() {
-                        let deduped = dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
+                        let deduped =
+                            dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
                         if !deduped.trim().is_empty() {
                             let _ = writeln!(stdlib_preamble, "// --- stdlib: {module_name} ---");
                             stdlib_preamble.push_str(&deduped);
@@ -340,34 +343,35 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         }
         let is_referenced = is_builtin_error_referenced(&combined_code, error_name);
         if is_referenced && !user_defined_error_classes.contains(error_name) {
-            let (extra_fields, defaults) = if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
-                (
-                    vec![
-                        ("line".to_string(), sifr_type_to_rust_type(&Type::Int)),
-                        ("column".to_string(), sifr_type_to_rust_type(&Type::Int)),
-                    ],
-                    vec![
-                        ("line".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
-                        ("column".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
-                    ],
-                )
-            } else if error_name == "RegexError" {
-                (
-                    vec![("detail".to_string(), sifr_type_to_rust_type(&Type::Str))],
-                    vec![(
-                        "detail".to_string(),
-                        RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                "String".to_string(),
-                                "new".to_string(),
-                            ])),
-                            args: vec![],
-                        },
-                    )],
-                )
-            } else {
-                (vec![], vec![])
-            };
+            let (extra_fields, defaults) =
+                if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
+                    (
+                        vec![
+                            ("line".to_string(), sifr_type_to_rust_type(&Type::Int)),
+                            ("column".to_string(), sifr_type_to_rust_type(&Type::Int)),
+                        ],
+                        vec![
+                            ("line".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
+                            ("column".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
+                        ],
+                    )
+                } else if error_name == "RegexError" {
+                    (
+                        vec![("detail".to_string(), sifr_type_to_rust_type(&Type::Str))],
+                        vec![(
+                            "detail".to_string(),
+                            RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "String".to_string(),
+                                    "new".to_string(),
+                                ])),
+                                args: vec![],
+                            },
+                        )],
+                    )
+                } else {
+                    (vec![], vec![])
+                };
             preamble_items.extend(build_error_type_items(error_name, &extra_fields, &defaults));
         }
     }
@@ -375,9 +379,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Emit file handle global state if open() built-in or any file handle intrinsic is used.
     if needs_file_handles {
         preamble_items.extend(build_file_handle_infra_items());
-        if !stdlib_provides_file_handle_struct
-            && !user_defined_file_handle_struct
-        {
+        if !stdlib_provides_file_handle_struct && !user_defined_file_handle_struct {
             preamble_items.extend(build_file_handle_struct_items());
         }
     }
@@ -516,7 +518,11 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
             for name in &import.names {
                 // Check if this name has an alias
                 if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
-                    let _ = writeln!(result, "use crate::{}::{} as {};", import.module, name, alias);
+                    let _ = writeln!(
+                        result,
+                        "use crate::{}::{} as {};",
+                        import.module, name, alias
+                    );
                 } else {
                     let _ = writeln!(result, "use crate::{}::{};", import.module, name);
                 }
@@ -557,7 +563,11 @@ pub fn generate_project(module: &HirModule, project_name: &str) -> (String, Stri
 }
 
 /// Generate a complete Rust project with stdlib dependencies.
-pub fn generate_project_with_deps(module: &HirModule, project_name: &str, stdlib_modules: &HashSet<String>) -> (String, String) {
+pub fn generate_project_with_deps(
+    module: &HirModule,
+    project_name: &str,
+    stdlib_modules: &HashSet<String>,
+) -> (String, String) {
     generate_project_with_deps_and_crates(module, project_name, stdlib_modules, &HashSet::new())
 }
 
@@ -658,7 +668,9 @@ edition = "2021"
                 if !deps.contains(&"serde_json = \"1\"".to_string()) {
                     deps.push("serde_json = \"1\"".to_string());
                 }
-                if !deps.contains(&"serde = { version = \"1\", features = [\"derive\"] }".to_string()) {
+                if !deps
+                    .contains(&"serde = { version = \"1\", features = [\"derive\"] }".to_string())
+                {
                     deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
                 }
             }
@@ -881,7 +893,12 @@ impl RustEmitter {
         if self.current_class_name.as_deref() != Some("deque") {
             return false;
         }
-        if let HirExpr::FieldAccess { object: inner, field, .. } = object {
+        if let HirExpr::FieldAccess {
+            object: inner,
+            field,
+            ..
+        } = object
+        {
             if field == "_data" {
                 if let HirExpr::Name { name, .. } = inner.as_ref() {
                     return name == "self";
@@ -896,15 +913,18 @@ impl RustEmitter {
     fn detect_recursive_fields(&mut self, module: &HirModule) {
         for class in &module.classes {
             let field_names: Vec<String> = class.fields.iter().map(|(n, _)| n.clone()).collect();
-            self.class_field_order.insert(class.name.clone(), field_names);
+            self.class_field_order
+                .insert(class.name.clone(), field_names);
             for (field_name, field_ty) in &class.fields {
                 if type_references_class(field_ty, &class.name) {
-                    self.recursive_fields.insert((class.name.clone(), field_name.clone()));
+                    self.recursive_fields
+                        .insert((class.name.clone(), field_name.clone()));
                 }
             }
             if !class.type_params.is_empty() {
                 self.generic_classes.insert(class.name.clone());
-                self.generic_class_params.insert(class.name.clone(), class.type_params.clone());
+                self.generic_class_params
+                    .insert(class.name.clone(), class.type_params.clone());
             }
         }
     }
@@ -920,9 +940,6 @@ impl RustEmitter {
         self.emit_module_constants(module);
         self.emit_module_body(module, module_public, test_mode);
     }
-
-
-
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
@@ -941,7 +958,12 @@ impl RustEmitter {
         }
 
         match stmt {
-            HirStmt::Let { name, ty, value, is_mutable: _ } => {
+            HirStmt::Let {
+                name,
+                ty,
+                value,
+                is_mutable: _,
+            } => {
                 self.write_indent();
                 // Only emit `mut` if the variable is actually mutated later
                 if self.mutated_vars.contains(name) {
@@ -968,7 +990,10 @@ impl RustEmitter {
                 } else if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
                     // `x: str | None = None` -> `let x: Option<String> = None`
                     self.write("None");
-                } else if is_option_type(ty) && !is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
+                } else if is_option_type(ty)
+                    && !is_option_type(value.ty())
+                    && !matches!(value.ty(), Type::None)
+                {
                     // RHS is a plain value (not already Option) -> wrap in Some()
                     // But if RHS is a function call returning Option, don't double-wrap
                     self.write("Some(");
@@ -976,14 +1001,18 @@ impl RustEmitter {
                     self.write(")");
                 } else {
                     // Check if RHS is a call to a generator function and target is list[T]
-                    let needs_collect = matches!(ty, Type::List(_)) && self.is_generator_call(value);
+                    let needs_collect =
+                        matches!(ty, Type::List(_)) && self.is_generator_call(value);
                     self.emit_expr(value);
                     if needs_collect {
                         self.write(".collect()");
                     }
                     // Clone borrowed TypeVar params assigned to owned TypeVar locals
                     let needs_clone_for_typevar = matches!(ty, Type::TypeVar(_))
-                        && if let HirExpr::Name { name: ref vname, .. } = value {
+                        && if let HirExpr::Name {
+                            name: ref vname, ..
+                        } = value
+                        {
                             self.borrowed_params.contains(vname.as_str())
                         } else {
                             false
@@ -1001,7 +1030,10 @@ impl RustEmitter {
                 self.emit_expr(value);
                 // Clone borrowed TypeVar params reassigned to owned TypeVar locals
                 if matches!(value.ty(), Type::TypeVar(_)) {
-                    if let HirExpr::Name { name: ref vname, .. } = value {
+                    if let HirExpr::Name {
+                        name: ref vname, ..
+                    } = value
+                    {
                         if self.borrowed_params.contains(vname.as_str()) {
                             self.write(".clone()");
                         }
@@ -1100,10 +1132,14 @@ impl RustEmitter {
                     }
                     return;
                 }
-                let ret_is_option = self.current_return_type.as_ref().is_some_and(is_option_type);
-                let ret_is_non_option_union = self.current_return_type.as_ref().is_some_and(|t| {
-                    matches!(t, Type::Union(_)) && !is_option_type(t)
-                });
+                let ret_is_option = self
+                    .current_return_type
+                    .as_ref()
+                    .is_some_and(is_option_type);
+                let ret_is_non_option_union = self
+                    .current_return_type
+                    .as_ref()
+                    .is_some_and(|t| matches!(t, Type::Union(_)) && !is_option_type(t));
                 self.write_indent();
                 if let Some(val) = value {
                     self.write("return ");
@@ -1134,7 +1170,10 @@ impl RustEmitter {
                         } else {
                             self.emit_expr(val);
                         }
-                    } else if !ret_is_option && is_option_type(val.ty()) && !matches!(val.ty(), Type::None) {
+                    } else if !ret_is_option
+                        && is_option_type(val.ty())
+                        && !matches!(val.ty(), Type::None)
+                    {
                         // Returning an Option value from a non-Option function -> unwrap
                         // This happens with generic functions where T is inferred as a concrete type
                         // but the body has safe-indexing that returns Option<T>
@@ -1182,16 +1221,24 @@ impl RustEmitter {
             } => {
                 // Detect isinstance narrowing for union enums:
                 // `if isinstance(x, int):` -> `match x { IntOrStr::Int(x) => { ... }, IntOrStr::Str(x) => { ... } }`
-                if let Some((var_name, variant_name, enum_name, other_variants)) = detect_isinstance_union(condition) {
+                if let Some((var_name, variant_name, enum_name, other_variants)) =
+                    detect_isinstance_union(condition)
+                {
                     self.write_indent();
                     self.write(&format!("match {var_name} {{\n"));
                     self.indent += 1;
 
                     // Then branch: the matched variant
                     let then_mutated = collect_mutated_vars(then_body);
-                    let var_mut = if then_mutated.contains(&var_name) { "mut " } else { "" };
+                    let var_mut = if then_mutated.contains(&var_name) {
+                        "mut "
+                    } else {
+                        ""
+                    };
                     self.write_indent();
-                    self.write(&format!("{enum_name}::{variant_name}({var_mut}{var_name}) => {{\n"));
+                    self.write(&format!(
+                        "{enum_name}::{variant_name}({var_mut}{var_name}) => {{\n"
+                    ));
                     self.indent += 1;
                     for s in then_body {
                         self.emit_stmt(s);
@@ -1204,9 +1251,15 @@ impl RustEmitter {
                     for (elif_cond, elif_body) in elif_clauses {
                         if let Some((_, elif_variant, _, _)) = detect_isinstance_union(elif_cond) {
                             let elif_mutated = collect_mutated_vars(elif_body);
-                            let elif_var_mut = if elif_mutated.contains(&var_name) { "mut " } else { "" };
+                            let elif_var_mut = if elif_mutated.contains(&var_name) {
+                                "mut "
+                            } else {
+                                ""
+                            };
                             self.write_indent();
-                            self.write(&format!("{enum_name}::{elif_variant}({elif_var_mut}{var_name}) => {{\n"));
+                            self.write(&format!(
+                                "{enum_name}::{elif_variant}({elif_var_mut}{var_name}) => {{\n"
+                            ));
                             self.indent += 1;
                             for s in elif_body {
                                 self.emit_stmt(s);
@@ -1221,11 +1274,17 @@ impl RustEmitter {
                     // Else branch: remaining variant(s)
                     if let Some(else_stmts) = else_body {
                         let else_mutated = collect_mutated_vars(else_stmts);
-                        let else_var_mut = if else_mutated.contains(&var_name) { "mut " } else { "" };
+                        let else_var_mut = if else_mutated.contains(&var_name) {
+                            "mut "
+                        } else {
+                            ""
+                        };
                         if remaining_variants.len() == 1 {
                             let (other_variant, _) = &remaining_variants[0];
                             self.write_indent();
-                            self.write(&format!("{enum_name}::{other_variant}({else_var_mut}{var_name}) => {{\n"));
+                            self.write(&format!(
+                                "{enum_name}::{other_variant}({else_var_mut}{var_name}) => {{\n"
+                            ));
                         } else {
                             self.write_indent();
                             self.write("_ => {\n");
@@ -1326,7 +1385,9 @@ impl RustEmitter {
                         self.indent -= 1;
                     }
                     self.writeln("}");
-                } else if let Some((var_name, enum_name, _non_none_variants)) = detect_is_none_union_var(condition) {
+                } else if let Some((var_name, enum_name, _non_none_variants)) =
+                    detect_is_none_union_var(condition)
+                {
                     // 3+ member union `is None` check: use match with None variant
                     self.write_indent();
                     self.write(&format!("match {var_name} {{\n"));
@@ -1373,7 +1434,9 @@ impl RustEmitter {
                     if let Some(else_stmts) = else_body {
                         // In the else branch of `if x is None`, x is not None
                         self.write_indent();
-                        self.write(&format!("}} else if let Some({var_name}) = {var_name} {{\n"));
+                        self.write(&format!(
+                            "}} else if let Some({var_name}) = {var_name} {{\n"
+                        ));
                         self.indent += 1;
                         self.option_unwrapped_vars.insert(var_name.clone());
                         for s in else_stmts {
@@ -1430,7 +1493,11 @@ impl RustEmitter {
                     self.writeln("}");
                 }
             }
-            HirStmt::While { condition, body, else_body } => {
+            HirStmt::While {
+                condition,
+                body,
+                else_body,
+            } => {
                 let has_else = else_body.is_some();
                 if has_else {
                     self.writeln("let mut _broke = false;");
@@ -1460,7 +1527,13 @@ impl RustEmitter {
                     self.writeln("}");
                 }
             }
-            HirStmt::For { target, iter, body, else_body, .. } => {
+            HirStmt::For {
+                target,
+                iter,
+                body,
+                else_body,
+                ..
+            } => {
                 let has_else = else_body.is_some();
                 if has_else {
                     self.writeln("let mut _broke = false;");
@@ -1473,7 +1546,9 @@ impl RustEmitter {
                     let names: Vec<&str> = target.split(',').collect();
                     self.write("(");
                     for (i, name) in names.iter().enumerate() {
-                        if i > 0 { self.write(", "); }
+                        if i > 0 {
+                            self.write(", ");
+                        }
                         self.write(name);
                     }
                     self.write(")");
@@ -1542,7 +1617,12 @@ impl RustEmitter {
                 self.emit_expr(value);
                 self.write(";\n");
             }
-            HirStmt::StarUnpack { before, star, after, value } => {
+            HirStmt::StarUnpack {
+                before,
+                star,
+                after,
+                value,
+            } => {
                 // Emit: let _tmp = value.clone() to avoid moving;
                 self.write_indent();
                 self.write("let _star_tmp = ");
@@ -1557,18 +1637,35 @@ impl RustEmitter {
                 let (star_name, _star_ty) = star;
                 if after.is_empty() {
                     self.write_indent();
-                    self.write(&format!("let {} = _star_tmp[{}..].to_vec();\n", star_name, before.len()));
+                    self.write(&format!(
+                        "let {} = _star_tmp[{}..].to_vec();\n",
+                        star_name,
+                        before.len()
+                    ));
                 } else {
                     self.write_indent();
-                    self.write(&format!("let {} = _star_tmp[{}.._star_tmp.len() - {}].to_vec();\n", star_name, before.len(), after.len()));
+                    self.write(&format!(
+                        "let {} = _star_tmp[{}.._star_tmp.len() - {}].to_vec();\n",
+                        star_name,
+                        before.len(),
+                        after.len()
+                    ));
                 }
                 // Emit after vars
                 for (i, (name, _ty)) in after.iter().enumerate() {
                     self.write_indent();
-                    self.write(&format!("let {} = _star_tmp[_star_tmp.len() - {}].clone();\n", name, after.len() - i));
+                    self.write(&format!(
+                        "let {} = _star_tmp[_star_tmp.len() - {}].clone();\n",
+                        name,
+                        after.len() - i
+                    ));
                 }
             }
-            HirStmt::TryExcept { body, handlers, body_error_types } => {
+            HirStmt::TryExcept {
+                body,
+                handlers,
+                body_error_types,
+            } => {
                 // Helper: map IOError subclass names to their Rust kind string
                 fn io_subclass_kind(name: &str) -> Option<&'static str> {
                     match name {
@@ -1654,7 +1751,9 @@ impl RustEmitter {
                         self.write(&format!("impl From<{et}> for {enum_name} {{\n"));
                         self.indent += 1;
                         self.write_indent();
-                        self.write(&format!("fn from(e: {et}) -> Self {{ {enum_name}::{et}(e) }}\n"));
+                        self.write(&format!(
+                            "fn from(e: {et}) -> Self {{ {enum_name}::{et}(e) }}\n"
+                        ));
                         self.indent -= 1;
                         self.write_indent();
                         self.write("}\n");
@@ -1664,16 +1763,29 @@ impl RustEmitter {
                     // Check if the try body contains a return statement with a value.
                     let body_has_return_multi = try_body_has_value_return(body);
                     let (closure_ok_type_multi, ok_arm_multi) = if body_has_return_multi {
-                        let inner_ty = self.current_return_type.as_ref()
-                            .and_then(|t| if let Type::Result(ok, _) = t { Some(ok.rust_type()) } else { None })
+                        let inner_ty = self
+                            .current_return_type
+                            .as_ref()
+                            .and_then(|t| {
+                                if let Type::Result(ok, _) = t {
+                                    Some(ok.rust_type())
+                                } else {
+                                    None
+                                }
+                            })
                             .unwrap_or_else(|| "_".to_string());
-                        (inner_ty, "Ok(__try_ret) => { return Ok(__try_ret); }".to_string())
+                        (
+                            inner_ty,
+                            "Ok(__try_ret) => { return Ok(__try_ret); }".to_string(),
+                        )
                     } else {
                         ("()".to_string(), "Ok(()) => {}".to_string())
                     };
 
                     self.write_indent();
-                    self.write(&format!("match (|| -> Result<{closure_ok_type_multi}, {enum_name}> {{\n"));
+                    self.write(&format!(
+                        "match (|| -> Result<{closure_ok_type_multi}, {enum_name}> {{\n"
+                    ));
                     self.indent += 1;
                     for stmt in body {
                         self.emit_stmt(stmt);
@@ -1722,7 +1834,9 @@ impl RustEmitter {
                                 // IOError parent catch-all (when subclass handlers exist)
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({enum_name}::IOError({var_name})) => {{\n"));
+                                self.write(&format!(
+                                    "Err({enum_name}::IOError({var_name})) => {{\n"
+                                ));
                             } else {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
@@ -1751,7 +1865,8 @@ impl RustEmitter {
                     let error_rust_type = if let Some(first_body_err) = error_type_names.first() {
                         first_body_err.clone()
                     } else {
-                        handlers.first()
+                        handlers
+                            .first()
                             .and_then(|h| h.error_resolved_type.as_ref())
                             .map(|t| {
                                 let rt = t.rust_type();
@@ -1770,16 +1885,29 @@ impl RustEmitter {
                     let body_has_return = try_body_has_value_return(body);
                     let (closure_ok_type, ok_arm) = if body_has_return {
                         // Use the function's return type's inner type for the closure
-                        let inner_ty = self.current_return_type.as_ref()
-                            .and_then(|t| if let Type::Result(ok, _) = t { Some(ok.rust_type()) } else { None })
+                        let inner_ty = self
+                            .current_return_type
+                            .as_ref()
+                            .and_then(|t| {
+                                if let Type::Result(ok, _) = t {
+                                    Some(ok.rust_type())
+                                } else {
+                                    None
+                                }
+                            })
                             .unwrap_or_else(|| "_".to_string());
-                        (inner_ty.clone(), "Ok(__try_ret) => { return Ok(__try_ret); }".to_string())
+                        (
+                            inner_ty.clone(),
+                            "Ok(__try_ret) => { return Ok(__try_ret); }".to_string(),
+                        )
                     } else {
                         ("()".to_string(), "Ok(()) => {}".to_string())
                     };
 
                     self.write_indent();
-                    self.write(&format!("match (|| -> Result<{closure_ok_type}, {error_rust_type}> {{\n"));
+                    self.write(&format!(
+                        "match (|| -> Result<{closure_ok_type}, {error_rust_type}> {{\n"
+                    ));
                     self.indent += 1;
                     for stmt in body {
                         self.emit_stmt(stmt);
@@ -1817,7 +1945,9 @@ impl RustEmitter {
                                     if handler.name.is_some() {
                                         self.indent += 1;
                                         self.write_indent();
-                                        self.write(&format!("let {var_name} = {var_name}.clone();\n"));
+                                        self.write(&format!(
+                                            "let {var_name} = {var_name}.clone();\n"
+                                        ));
                                         self.indent -= 1;
                                     }
                                 } else {
@@ -1882,11 +2012,17 @@ impl RustEmitter {
                     self.write(");\n");
                 }
             }
-            HirStmt::FieldAssign { object, field, value } => {
+            HirStmt::FieldAssign {
+                object,
+                field,
+                value,
+            } => {
                 self.write_indent();
                 // Check if this is assigning to a parent field via inheritance
                 if let Some(ref class_name) = self.current_class_name.clone() {
-                    if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name).cloned() {
+                    if let Some((parent_name, parent_field_names)) =
+                        self.parent_fields.get(class_name).cloned()
+                    {
                         if parent_field_names.contains(field.as_str()) {
                             self.write(object);
                             self.write(".");
@@ -1917,7 +2053,12 @@ impl RustEmitter {
                 self.emit_expr(value);
                 self.write(";\n");
             }
-            HirStmt::SubscriptAssign { object, index, value, object_ty } => {
+            HirStmt::SubscriptAssign {
+                object,
+                index,
+                value,
+                object_ty,
+            } => {
                 self.write_indent();
                 match object_ty {
                     Type::List(_) => {
@@ -1950,7 +2091,13 @@ impl RustEmitter {
                     }
                 }
             }
-            HirStmt::NestedSubscriptAssign { object, outer_index, inner_index, value, object_ty: _ } => {
+            HirStmt::NestedSubscriptAssign {
+                object,
+                outer_index,
+                inner_index,
+                value,
+                object_ty: _,
+            } => {
                 self.write_indent();
                 // matrix[i][j] = val -> bounds-checked nested assignment (safe no-op if out of bounds)
                 self.write("{ let __oi = ");
@@ -1959,11 +2106,19 @@ impl RustEmitter {
                 self.emit_expr(inner_index);
                 self.write(" as usize; if let Some(__row) = ");
                 self.write(object);
-                self.write(".get_mut(__oi) { if let Some(__elem) = __row.get_mut(__ii) { *__elem = ");
+                self.write(
+                    ".get_mut(__oi) { if let Some(__elem) = __row.get_mut(__ii) { *__elem = ",
+                );
                 self.emit_expr(value);
                 self.write("; } } }\n");
             }
-            HirStmt::SubscriptAugAssign { object, index, op, value, object_ty: _ } => {
+            HirStmt::SubscriptAugAssign {
+                object,
+                index,
+                op,
+                value,
+                object_ty: _,
+            } => {
                 self.write_indent();
                 // list[i] += val -> bounds-checked augmented assignment (safe no-op if out of bounds)
                 self.write("{ let __idx = ");
@@ -1989,7 +2144,12 @@ impl RustEmitter {
                 }
                 self.write(" } }\n");
             }
-            HirStmt::AttributeAugAssign { object, field, op, value } => {
+            HirStmt::AttributeAugAssign {
+                object,
+                field,
+                op,
+                value,
+            } => {
                 self.write_indent();
                 self.write(object);
                 self.write(".");
@@ -1998,7 +2158,13 @@ impl RustEmitter {
                 self.emit_expr(value);
                 self.write(";\n");
             }
-            HirStmt::AttributeSubscriptAssign { object, field, index, value, field_ty } => {
+            HirStmt::AttributeSubscriptAssign {
+                object,
+                field,
+                index,
+                value,
+                field_ty,
+            } => {
                 self.write_indent();
                 let field_access = format!("{object}.{field}");
                 match field_ty {
@@ -2017,10 +2183,13 @@ impl RustEmitter {
                         // For move-type keys: if key is a borrowed param (&T), clone for owned insert.
                         self.write(&field_access);
                         self.write(".insert(");
-                        let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_));
+                        let key_needs_clone =
+                            matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_));
                         if key_needs_clone {
                             if let HirExpr::Name { name, .. } = index {
-                                if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()) {
+                                if self.borrowed_params.contains(name.as_str())
+                                    || self.mut_borrowed_params.contains(name.as_str())
+                                {
                                     self.emit_expr(index);
                                     self.write(".clone()");
                                 } else {
@@ -2125,10 +2294,14 @@ impl RustEmitter {
                         self.write("}\n");
                         // Create guard instance, moving ctx into it
                         self.write_indent();
-                        self.write(&format!("let mut {guard_var} = {guard_type} {{ ctx: {ctx_name} }};\n"));
+                        self.write(&format!(
+                            "let mut {guard_var} = {guard_type} {{ ctx: {ctx_name} }};\n"
+                        ));
                         // Call __enter__() on guard's ctx and bind result to var
                         self.write_indent();
-                        if stmts_reference_var(body, var) || items.iter().any(|(v, _, _)| v != var && v.contains(var)) {
+                        if stmts_reference_var(body, var)
+                            || items.iter().any(|(v, _, _)| v != var && v.contains(var))
+                        {
                             self.write("let ");
                             self.write(var);
                         } else {
@@ -2170,13 +2343,15 @@ impl RustEmitter {
                 self.mutated_vars = collect_mutated_vars(&func.body);
 
                 // Collect the set of parameter names
-                let param_names: HashSet<String> = func.params.iter().map(|p| p.name.clone()).collect();
+                let param_names: HashSet<String> =
+                    func.params.iter().map(|p| p.name.clone()).collect();
 
                 // Detect captured variables: variables referenced in body that are
                 // not parameters and not defined locally in the body
                 let referenced_with_types = collect_referenced_vars_with_types(&func.body);
                 let locally_defined = collect_locally_defined_vars(&func.body);
-                let captures: Vec<(String, Type)> = referenced_with_types.into_iter()
+                let captures: Vec<(String, Type)> = referenced_with_types
+                    .into_iter()
                     .filter(|(v, _)| !param_names.contains(v) && !locally_defined.contains(v))
                     .collect();
 
@@ -2256,7 +2431,8 @@ impl RustEmitter {
                 } else {
                     // Recursive AND captures: emit as inner fn with captured vars as extra cloned params
                     // Store the capture info so call sites can pass the extra args
-                    self.nested_fn_captures.insert(func.name.clone(), captures.clone());
+                    self.nested_fn_captures
+                        .insert(func.name.clone(), captures.clone());
 
                     self.write_indent();
                     self.write("fn ");
@@ -2304,15 +2480,27 @@ impl RustEmitter {
                 self.current_return_type = saved_return_type;
                 self.mutated_vars = saved_mutated;
             }
-            HirStmt::Match { subject, subject_ty, arms } => {
+            HirStmt::Match {
+                subject,
+                subject_ty,
+                arms,
+            } => {
                 self.emit_match(subject, subject_ty, arms);
             }
         }
     }
 
-    fn substitute_class_captures_in_guard(guard_code: &str, pattern: &HirPattern, is_non_option_union: bool) -> String {
+    fn substitute_class_captures_in_guard(
+        guard_code: &str,
+        pattern: &HirPattern,
+        is_non_option_union: bool,
+    ) -> String {
         if let HirPattern::Class { fields, .. } = pattern {
-            let prefix = if is_non_option_union { "__inner" } else { "__matched" };
+            let prefix = if is_non_option_union {
+                "__inner"
+            } else {
+                "__matched"
+            };
             let mut result = guard_code.to_string();
             for (fname, fpat) in fields {
                 if let HirPattern::Capture { name, .. } = fpat {
@@ -2337,7 +2525,8 @@ impl RustEmitter {
             {
                 let before_ok = i == 0 || !chars[i - 1].is_alphanumeric() && chars[i - 1] != '_';
                 let after_ok = i + ident_chars.len() >= chars.len()
-                    || !chars[i + ident_chars.len()].is_alphanumeric() && chars[i + ident_chars.len()] != '_';
+                    || !chars[i + ident_chars.len()].is_alphanumeric()
+                        && chars[i + ident_chars.len()] != '_';
                 if before_ok && after_ok {
                     result.push_str(replacement);
                     i += ident_chars.len();
@@ -2405,10 +2594,20 @@ impl RustEmitter {
                 self.emit_expr(object);
                 self.write(".len() as i64)");
             }
-            (Type::Class { name: ref class_name, fields, methods, .. }, _) => {
+            (
+                Type::Class {
+                    name: ref class_name,
+                    fields,
+                    methods,
+                    ..
+                },
+                _,
+            ) => {
                 // Check if this is a callable field invocation (not a real method)
                 let is_callable_field = !methods.iter().any(|(n, _)| n == method)
-                    && fields.iter().any(|(n, t)| n == method && matches!(t, Type::Callable(..)));
+                    && fields
+                        .iter()
+                        .any(|(n, t)| n == method && matches!(t, Type::Callable(..)));
 
                 if is_callable_field {
                     // Callable field: emit (obj.field)(args) instead of obj.method(args)
@@ -2477,11 +2676,22 @@ impl RustEmitter {
     /// Emit `&` or `&mut` prefix for a function argument based on parameter convention.
     /// Copy types never get a borrow prefix (they're passed by value),
     /// unless the parameter type is a `TypeVar` (generic), in which case we always borrow.
-    fn emit_borrow_prefix(&mut self, convention: ParamConvention, arg_ty: &Type, param_ty: Option<&Type>) {
+    fn emit_borrow_prefix(
+        &mut self,
+        convention: ParamConvention,
+        arg_ty: &Type,
+        param_ty: Option<&Type>,
+    ) {
         self.emit_borrow_prefix_for_name(convention, arg_ty, param_ty, None);
     }
 
-    fn emit_borrow_prefix_for_name(&mut self, convention: ParamConvention, arg_ty: &Type, param_ty: Option<&Type>, arg_name: Option<&str>) {
+    fn emit_borrow_prefix_for_name(
+        &mut self,
+        convention: ParamConvention,
+        arg_ty: &Type,
+        param_ty: Option<&Type>,
+        arg_name: Option<&str>,
+    ) {
         // Own convention: pass by value (move), no prefix needed
         if convention == ParamConvention::Own {
             return;
@@ -2555,7 +2765,8 @@ impl RustEmitter {
             }
             HirExpr::Name { name, .. } => {
                 // Check for stdlib constants
-                if self.intrinsic_functions.contains(name.as_str()) || self.is_stdlib_constant(name) {
+                if self.intrinsic_functions.contains(name.as_str()) || self.is_stdlib_constant(name)
+                {
                     self.emit_stdlib_constant(name);
                 } else if let Some((_ty, rust_name)) = self.module_constants.get(name).cloned() {
                     // Module-level constant
@@ -2564,7 +2775,12 @@ impl RustEmitter {
                     self.write(name);
                 }
             }
-            HirExpr::BinOp { left, op, right, ty } => {
+            HirExpr::BinOp {
+                left,
+                op,
+                right,
+                ty,
+            } => {
                 // BigInt arithmetic: always clone operands to avoid move issues
                 if left.ty() == &Type::BigInt && right.ty() == &Type::BigInt && op != "**" {
                     if op == "//" {
@@ -2618,13 +2834,21 @@ impl RustEmitter {
                 } else if op == "//" {
                     // Floor division (int // int -> int division in Rust)
                     // Wrap sub-expressions in parens if they are BinOps to preserve precedence
-                    if matches!(left.as_ref(), HirExpr::BinOp { .. }) { self.write("("); }
+                    if matches!(left.as_ref(), HirExpr::BinOp { .. }) {
+                        self.write("(");
+                    }
                     self.emit_expr(left);
-                    if matches!(left.as_ref(), HirExpr::BinOp { .. }) { self.write(")"); }
+                    if matches!(left.as_ref(), HirExpr::BinOp { .. }) {
+                        self.write(")");
+                    }
                     self.write(" / ");
-                    if matches!(right.as_ref(), HirExpr::BinOp { .. }) { self.write("("); }
+                    if matches!(right.as_ref(), HirExpr::BinOp { .. }) {
+                        self.write("(");
+                    }
                     self.emit_expr(right);
-                    if matches!(right.as_ref(), HirExpr::BinOp { .. }) { self.write(")"); }
+                    if matches!(right.as_ref(), HirExpr::BinOp { .. }) {
+                        self.write(")");
+                    }
                 } else if op == "**" {
                     // Power: int ** int -> i64::pow, otherwise float
                     if left.ty() == &Type::BigInt {
@@ -2708,15 +2932,27 @@ impl RustEmitter {
                         || matches!(left.as_ref(), HirExpr::IntLiteral { .. });
                     let needs_right_parens = matches!(right.as_ref(), HirExpr::BinOp { .. })
                         || matches!(right.as_ref(), HirExpr::IntLiteral { .. });
-                    if needs_left_parens || needs_left_cast { self.write("("); }
+                    if needs_left_parens || needs_left_cast {
+                        self.write("(");
+                    }
                     self.emit_expr(left);
-                    if needs_left_parens || needs_left_cast { self.write(")"); }
-                    if needs_left_cast { self.write(" as f64"); }
+                    if needs_left_parens || needs_left_cast {
+                        self.write(")");
+                    }
+                    if needs_left_cast {
+                        self.write(" as f64");
+                    }
                     self.write(&format!(" {op} "));
-                    if needs_right_parens || needs_right_cast { self.write("("); }
+                    if needs_right_parens || needs_right_cast {
+                        self.write("(");
+                    }
                     self.emit_expr(right);
-                    if needs_right_parens || needs_right_cast { self.write(")"); }
-                    if needs_right_cast { self.write(" as f64"); }
+                    if needs_right_parens || needs_right_cast {
+                        self.write(")");
+                    }
+                    if needs_right_cast {
+                        self.write(" as f64");
+                    }
                 }
             }
             HirExpr::UnaryOp { op, operand, .. } => {
@@ -2724,7 +2960,11 @@ impl RustEmitter {
                     // Collection truthiness: `not list_var` -> `list_var.is_empty()`
                     let is_collection = matches!(
                         operand.ty(),
-                        Type::List(_) | Type::Dict(_, _) | Type::Set(_) | Type::Tuple(_) | Type::Str
+                        Type::List(_)
+                            | Type::Dict(_, _)
+                            | Type::Set(_)
+                            | Type::Tuple(_)
+                            | Type::Str
                     );
                     if is_collection {
                         self.emit_expr(operand);
@@ -2749,12 +2989,19 @@ impl RustEmitter {
                     self.emit_expr(operand);
                 }
             }
-            HirExpr::Compare { left, ops, comparators, .. } => {
+            HirExpr::Compare {
+                left,
+                ops,
+                comparators,
+                ..
+            } => {
                 // For single comparison
                 if ops.len() == 1 {
                     let op = &ops[0];
                     // Handle `is None` / `is not None` for Option types
-                    if (op == "is" || op == "is not") && matches!(comparators[0], HirExpr::NoneLiteral) {
+                    if (op == "is" || op == "is not")
+                        && matches!(comparators[0], HirExpr::NoneLiteral)
+                    {
                         // If left is already Type::None (not T|None), it's always None
                         if matches!(left.ty(), Type::None) {
                             if op == "is" {
@@ -2782,12 +3029,18 @@ impl RustEmitter {
                         // Handle Option<T> vs T comparisons: wrap T in Some()
                         let left_is_option = is_option_type(left.ty());
                         let right_is_option = is_option_type(comparators[0].ty());
-                        if left_is_option && !right_is_option && !matches!(comparators[0], HirExpr::NoneLiteral) {
+                        if left_is_option
+                            && !right_is_option
+                            && !matches!(comparators[0], HirExpr::NoneLiteral)
+                        {
                             self.emit_expr(left);
                             self.write(&format!(" {op} Some("));
                             self.emit_expr(&comparators[0]);
                             self.write(")");
-                        } else if !left_is_option && right_is_option && !matches!(left.as_ref(), HirExpr::NoneLiteral) {
+                        } else if !left_is_option
+                            && right_is_option
+                            && !matches!(left.as_ref(), HirExpr::NoneLiteral)
+                        {
                             self.write("Some(");
                             self.emit_expr(left);
                             self.write(")");
@@ -2831,13 +3084,19 @@ impl RustEmitter {
                     // Map print() to println!
                     if args.is_empty() {
                         self.write("println!()");
-                    } else if matches!(args[0], HirExpr::NoneLiteral) || matches!(args[0].ty(), Type::None) {
+                    } else if matches!(args[0], HirExpr::NoneLiteral)
+                        || matches!(args[0].ty(), Type::None)
+                    {
                         // print(None) -> println!("None")
                         self.write("println!(\"None\")");
                     } else if let HirExpr::StringLiteral(val) = &args[0] {
                         // Inline string literal directly: println!("hello") instead of println!("{}", "hello")
                         // Escape backslashes and double quotes for valid Rust string
-                        let escaped = val.replace('\\', "\\\\").replace('"', "\\\"").replace('{', "{{").replace('}', "}}");
+                        let escaped = val
+                            .replace('\\', "\\\\")
+                            .replace('"', "\\\"")
+                            .replace('{', "{{")
+                            .replace('}', "}}");
                         self.write(&format!("println!(\"{escaped}\")"));
                     } else if let HirExpr::FString { parts, .. } = &args[0] {
                         // Inline f-string directly into println! to avoid double-format
@@ -2855,7 +3114,10 @@ impl RustEmitter {
                         }
                         self.emit_expr(&args[0]);
                         self.write(")");
-                    } else if matches!(args[0].ty(), Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_)) {
+                    } else if matches!(
+                        args[0].ty(),
+                        Type::List(_) | Type::Dict(_, _) | Type::Tuple(_) | Type::Set(_)
+                    ) {
                         // Collections use Debug format
                         self.write("println!(\"{:?}\", ");
                         self.emit_expr(&args[0]);
@@ -3044,7 +3306,8 @@ impl RustEmitter {
                             self.emit_expr(&args[1]);
                             self.write(")");
                         }
-                    } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                    } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float))
+                    {
                         // min(list[float]) -> Option[float] (safe: None on empty)
                         self.emit_expr(&args[0]);
                         self.write(".iter().cloned().reduce(f64::min)");
@@ -3068,7 +3331,8 @@ impl RustEmitter {
                             self.emit_expr(&args[1]);
                             self.write(")");
                         }
-                    } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float)) {
+                    } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float))
+                    {
                         // max(list[float]) -> Option[float] (safe: None on empty)
                         self.emit_expr(&args[0]);
                         self.write(".iter().cloned().reduce(f64::max)");
@@ -3090,7 +3354,8 @@ impl RustEmitter {
                 } else if func == "sorted" {
                     // sorted(list) -> { let mut v = list.clone(); v.sort(); v }
                     // For f64 lists, use sort_by since f64 doesn't implement Ord
-                    let is_float_list = matches!(args[0].ty(), Type::List(inner) if **inner == Type::Float);
+                    let is_float_list =
+                        matches!(args[0].ty(), Type::List(inner) if **inner == Type::Float);
                     self.write("{ let mut _sorted = ");
                     self.emit_expr(&args[0]);
                     if is_float_list {
@@ -3132,7 +3397,11 @@ impl RustEmitter {
                     // Inline the lambda body directly instead of closure-within-closure
                     self.emit_expr(&args[1]);
                     if let HirExpr::Lambda { params, body, .. } = &args[0] {
-                        let param_name = if params.is_empty() { "x" } else { &params[0].name };
+                        let param_name = if params.is_empty() {
+                            "x"
+                        } else {
+                            &params[0].name
+                        };
                         // Use .clone().into_iter() for owned values, then filter with |&var| destructuring
                         self.write(&format!(".clone().into_iter().filter(|&{param_name}| "));
                         self.emit_expr(body);
@@ -3142,7 +3411,8 @@ impl RustEmitter {
                         self.emit_lambda_untyped(&args[0]);
                         self.write(")(x)).collect::<Vec<_>>()");
                     }
-                } else if self.intrinsic_functions.contains(func.as_str()) || func == "builtin_open" {
+                } else if self.intrinsic_functions.contains(func.as_str()) || func == "builtin_open"
+                {
                     // Intrinsic function call — emit the correct Rust code
                     self.emit_intrinsic_call(func, args);
                 } else {
@@ -3151,7 +3421,9 @@ impl RustEmitter {
                     // Look up param types and conventions to wrap union enum arguments.
                     // First check func_signatures (regular functions), then callable_var_conventions
                     // (Callable-typed parameters/locals whose conventions are tracked per-function).
-                    let param_info: Option<Vec<(Type, ParamConvention)>> = self.func_signatures.get(func)
+                    let param_info: Option<Vec<(Type, ParamConvention)>> = self
+                        .func_signatures
+                        .get(func)
                         .map(|(pts, _)| pts.clone())
                         .or_else(|| self.callable_var_conventions.get(func).cloned());
                     for (i, arg) in args.iter().enumerate() {
@@ -3163,7 +3435,10 @@ impl RustEmitter {
                             if i < pts.len() {
                                 let (ref param_ty, convention) = pts[i];
                                 // Option param with non-Option arg -> wrap in Some()
-                                if is_option_type(param_ty) && !is_option_type(arg.ty()) && !matches!(arg, HirExpr::NoneLiteral) {
+                                if is_option_type(param_ty)
+                                    && !is_option_type(arg.ty())
+                                    && !matches!(arg, HirExpr::NoneLiteral)
+                                {
                                     // Use param_ty for ownership check: the wrapped Some(...) is Option<T> (Move),
                                     // not the inner arg type which may be Copy
                                     self.emit_borrow_prefix(convention, param_ty, Some(param_ty));
@@ -3202,7 +3477,11 @@ impl RustEmitter {
                                             let enum_name = param_ty.union_enum_name();
                                             // Use param_ty for ownership check: the wrapped enum value is a Union (Move),
                                             // not the inner arg type which may be Copy (e.g., Int inside IntOrStr)
-                                            self.emit_borrow_prefix(convention, param_ty, Some(param_ty));
+                                            self.emit_borrow_prefix(
+                                                convention,
+                                                param_ty,
+                                                Some(param_ty),
+                                            );
                                             self.write(&format!("{enum_name}::{variant}("));
                                             self.emit_expr(arg);
                                             self.write(")");
@@ -3211,7 +3490,9 @@ impl RustEmitter {
                                     }
                                 }
                                 // Protocol param with concrete class arg -> wrap in Box::new()
-                                if matches!(param_ty, Type::Protocol { .. }) && !matches!(arg.ty(), Type::Protocol { .. }) {
+                                if matches!(param_ty, Type::Protocol { .. })
+                                    && !matches!(arg.ty(), Type::Protocol { .. })
+                                {
                                     self.write("Box::new(");
                                     self.emit_expr(arg);
                                     self.write(")");
@@ -3220,18 +3501,39 @@ impl RustEmitter {
                                 // Callable param with TypeVar params: wrap concrete function in
                                 // adapter closure so Copy-type args get dereferenced to match the
                                 // generic `impl Fn(&T) -> R` signature.
-                                if let Type::Callable(callable_params, callable_convs, _callable_ret) = param_ty {
-                                    let has_typevar_param = callable_params.iter().any(|p| matches!(p, Type::TypeVar(_)));
+                                if let Type::Callable(
+                                    callable_params,
+                                    callable_convs,
+                                    _callable_ret,
+                                ) = param_ty
+                                {
+                                    let has_typevar_param = callable_params
+                                        .iter()
+                                        .any(|p| matches!(p, Type::TypeVar(_)));
                                     if has_typevar_param {
-                                        if let HirExpr::Name { name: arg_func_name, .. } = arg {
-                                            if let Some((concrete_params, _)) = self.func_signatures.get(arg_func_name.as_str()).cloned() {
+                                        if let HirExpr::Name {
+                                            name: arg_func_name,
+                                            ..
+                                        } = arg
+                                        {
+                                            if let Some((concrete_params, _)) = self
+                                                .func_signatures
+                                                .get(arg_func_name.as_str())
+                                                .cloned()
+                                            {
                                                 let needs_wrapper = callable_params.iter().zip(concrete_params.iter()).any(|(cp, (ct, _))| {
                                                     matches!(cp, Type::TypeVar(_)) && ct.ownership() == sifr_type_system::OwnershipKind::Copy
                                                 });
                                                 if needs_wrapper {
                                                     self.write("|");
-                                                    for (pi, (cp, cc)) in callable_params.iter().zip(callable_convs.iter()).enumerate() {
-                                                        if pi > 0 { self.write(", "); }
+                                                    for (pi, (cp, cc)) in callable_params
+                                                        .iter()
+                                                        .zip(callable_convs.iter())
+                                                        .enumerate()
+                                                    {
+                                                        if pi > 0 {
+                                                            self.write(", ");
+                                                        }
                                                         let pname = format!("__a{pi}");
                                                         if matches!(cp, Type::TypeVar(_)) || (*cc == ParamConvention::Borrow && cp.ownership() == sifr_type_system::OwnershipKind::Move) {
                                                             self.write(&format!("{pname}: &_"));
@@ -3242,8 +3544,14 @@ impl RustEmitter {
                                                     self.write("| ");
                                                     self.write(arg_func_name);
                                                     self.write("(");
-                                                    for (pi, (cp, (ct, _))) in callable_params.iter().zip(concrete_params.iter()).enumerate() {
-                                                        if pi > 0 { self.write(", "); }
+                                                    for (pi, (cp, (ct, _))) in callable_params
+                                                        .iter()
+                                                        .zip(concrete_params.iter())
+                                                        .enumerate()
+                                                    {
+                                                        if pi > 0 {
+                                                            self.write(", ");
+                                                        }
                                                         let pname = format!("__a{pi}");
                                                         if matches!(cp, Type::TypeVar(_)) && ct.ownership() == sifr_type_system::OwnershipKind::Copy {
                                                             self.write(&format!("*{pname}"));
@@ -3277,7 +3585,12 @@ impl RustEmitter {
                                     self.write(")");
                                     continue;
                                 }
-                                self.emit_borrow_prefix_for_name(convention, arg.ty(), Some(param_ty), arg_name_opt);
+                                self.emit_borrow_prefix_for_name(
+                                    convention,
+                                    arg.ty(),
+                                    Some(param_ty),
+                                    arg_name_opt,
+                                );
                                 self.emit_expr(arg);
                                 continue;
                             }
@@ -3310,7 +3623,9 @@ impl RustEmitter {
                 self.emit_expr(else_expr);
                 self.write(" }");
             }
-            HirExpr::RangeLiteral { start, end, step, .. } => {
+            HirExpr::RangeLiteral {
+                start, end, step, ..
+            } => {
                 if let Some(step) = step {
                     self.write("(");
                     self.emit_expr(start);
@@ -3448,10 +3763,19 @@ impl RustEmitter {
                     }
                 }
             }
-            HirExpr::MethodCall { object, method, args, .. } => {
+            HirExpr::MethodCall {
+                object,
+                method,
+                args,
+                ..
+            } => {
                 self.emit_method_call(object, method, args);
             }
-            HirExpr::ContainsOp { element, collection, .. } => {
+            HirExpr::ContainsOp {
+                element,
+                collection,
+                ..
+            } => {
                 let coll_ty = collection.ty();
                 match coll_ty {
                     Type::Dict(_, _) => {
@@ -3475,7 +3799,13 @@ impl RustEmitter {
                     }
                 }
             }
-            HirExpr::Slice { object, start, stop, step, ty } => {
+            HirExpr::Slice {
+                object,
+                start,
+                stop,
+                step,
+                ty,
+            } => {
                 let obj_ty = object.ty();
                 match obj_ty {
                     Type::Str => {
@@ -3489,7 +3819,16 @@ impl RustEmitter {
                     Type::Tuple(_) => {
                         // Compile-time tuple slicing: direct field access
                         if let Type::Tuple(result_elems) = ty {
-                            let start_idx = start.as_ref().and_then(|e| if let HirExpr::IntLiteral(v) = e.as_ref() { Some(*v as usize) } else { None }).unwrap_or(0);
+                            let start_idx = start
+                                .as_ref()
+                                .and_then(|e| {
+                                    if let HirExpr::IntLiteral(v) = e.as_ref() {
+                                        Some(*v as usize)
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .unwrap_or(0);
                             self.write("(");
                             for (i, _) in result_elems.iter().enumerate() {
                                 if i > 0 {
@@ -3531,22 +3870,30 @@ impl RustEmitter {
                 }
 
                 // Determine if we need .clone() (non-Copy field accessed on &self)
-                let is_self_access = matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
-                let suppress_self_clone = if is_self_access && self.pending_self_field_clone_suppression > 0 {
-                    self.pending_self_field_clone_suppression -= 1;
-                    true
-                } else {
-                    false
-                };
-                let needs_clone = is_self_access && needs_clone_for_type(ty) && !suppress_self_clone;
+                let is_self_access =
+                    matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
+                let suppress_self_clone =
+                    if is_self_access && self.pending_self_field_clone_suppression > 0 {
+                        self.pending_self_field_clone_suppression -= 1;
+                        true
+                    } else {
+                        false
+                    };
+                let needs_clone =
+                    is_self_access && needs_clone_for_type(ty) && !suppress_self_clone;
 
                 // Determine the class name for parent field resolution
                 // Either from current_class_name (inside a method) or from the object's type
                 let class_name_for_parent = if let Some(ref cn) = self.current_class_name {
-                    if is_self_access { Some(cn.clone()) } else { None }
+                    if is_self_access {
+                        Some(cn.clone())
+                    } else {
+                        None
+                    }
                 } else {
                     None
-                }.or_else(|| {
+                }
+                .or_else(|| {
                     // For external access like obj.field, check the object's type
                     if let Type::Class { name, .. } = object.ty() {
                         Some(name.clone())
@@ -3557,7 +3904,9 @@ impl RustEmitter {
 
                 // Check if this is accessing a parent field via inheritance
                 if let Some(ref class_name) = class_name_for_parent {
-                    if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name).cloned() {
+                    if let Some((parent_name, parent_field_names)) =
+                        self.parent_fields.get(class_name).cloned()
+                    {
                         if parent_field_names.contains(field.as_str()) {
                             // Access via embedded parent: obj.parent.field
                             self.emit_expr(object);
@@ -3579,7 +3928,9 @@ impl RustEmitter {
                     self.write(".clone()");
                 }
             }
-            HirExpr::ConstructorCall { class_name, args, .. } => {
+            HirExpr::ConstructorCall {
+                class_name, args, ..
+            } => {
                 // IOError subclasses map to IOError with a specific kind field
                 let io_subclass_kind = match class_name.as_str() {
                     "FileNotFoundError" => Some("FileNotFound"),
@@ -3612,7 +3963,8 @@ impl RustEmitter {
                     // Check if this argument corresponds to a recursive field
                     let is_recursive = field_names.as_ref().is_some_and(|names| {
                         names.get(i).is_some_and(|fname| {
-                            self.recursive_fields.contains(&(class_name.clone(), fname.clone()))
+                            self.recursive_fields
+                                .contains(&(class_name.clone(), fname.clone()))
                         })
                     });
                     if is_recursive {
@@ -3630,7 +3982,8 @@ impl RustEmitter {
                         // If the argument is a borrowed parameter (non-Copy type),
                         // clone it since constructors expect owned values
                         let needs_clone = if let HirExpr::Name { name, ty } = arg {
-                            self.borrowed_params.contains(name) && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                            self.borrowed_params.contains(name)
+                                && ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         } else {
                             false
                         };
@@ -3663,7 +4016,12 @@ impl RustEmitter {
             HirExpr::FString { parts, .. } => {
                 self.emit_fstring_macro("format!", parts);
             }
-            HirExpr::SuperCall { parent_class, method, args, .. } => {
+            HirExpr::SuperCall {
+                parent_class,
+                method,
+                args,
+                ..
+            } => {
                 // super().__init__(args) -> ParentType::new(args)
                 self.write(parent_class);
                 self.write("::");
@@ -3697,7 +4055,11 @@ impl RustEmitter {
                 self.write("| ");
                 self.emit_expr(body);
             }
-            HirExpr::ListComp { expr, generators, ty } => {
+            HirExpr::ListComp {
+                expr,
+                generators,
+                ty,
+            } => {
                 if generators.len() == 1 {
                     // Single generator: use functional style
                     let (ref var, ref iter_e, ref filter) = generators[0];
@@ -3705,7 +4067,9 @@ impl RustEmitter {
                     let var_pattern = if var.contains(',') {
                         let names: Vec<&str> = var.split(',').collect();
                         format!("({})", names.join(", "))
-                    } else { var.clone() };
+                    } else {
+                        var.clone()
+                    };
                     if is_range {
                         self.write("(");
                         self.emit_expr(iter_e);
@@ -3717,7 +4081,9 @@ impl RustEmitter {
                     if let Some(ref cond) = filter {
                         let elem_is_copy = if let Type::List(ref elem) = iter_e.ty() {
                             !needs_clone_for_type(elem)
-                        } else { is_range };
+                        } else {
+                            is_range
+                        };
                         if elem_is_copy && !var.contains(',') {
                             self.write(".filter(|&");
                         } else {
@@ -3745,7 +4111,9 @@ impl RustEmitter {
                         let var_pattern = if var.contains(',') {
                             let names: Vec<&str> = var.split(',').collect();
                             format!("({})", names.join(", "))
-                        } else { var.clone() };
+                        } else {
+                            var.clone()
+                        };
                         let is_range = matches!(iter_e.ty(), Type::Range);
                         self.write("for ");
                         self.write(&var_pattern);
@@ -3770,13 +4138,19 @@ impl RustEmitter {
                     self.write("); ");
                     // Close filter ifs and for loops (in reverse)
                     for (_, _, ref filter) in generators.iter().rev() {
-                        if filter.is_some() { self.write("} "); }
+                        if filter.is_some() {
+                            self.write("} ");
+                        }
                         self.write("} ");
                     }
                     self.write("_result }");
                 }
             }
-            HirExpr::SetComp { expr, generators, ty } => {
+            HirExpr::SetComp {
+                expr,
+                generators,
+                ty,
+            } => {
                 self.needs_hashset = true;
                 if generators.len() == 1 {
                     let (ref var, ref iter_e, ref filter) = generators[0];
@@ -3784,7 +4158,9 @@ impl RustEmitter {
                     let var_pattern = if var.contains(',') {
                         let names: Vec<&str> = var.split(',').collect();
                         format!("({})", names.join(", "))
-                    } else { var.clone() };
+                    } else {
+                        var.clone()
+                    };
                     if is_range {
                         self.write("(");
                         self.emit_expr(iter_e);
@@ -3828,13 +4204,20 @@ impl RustEmitter {
                     self.emit_expr(expr);
                     self.write("); ");
                     for (_, _, ref filter) in generators.iter().rev() {
-                        if filter.is_some() { self.write("} "); }
+                        if filter.is_some() {
+                            self.write("} ");
+                        }
                         self.write("} ");
                     }
                     self.write("_result }");
                 }
             }
-            HirExpr::DictComp { key_expr, val_expr, generators, ty } => {
+            HirExpr::DictComp {
+                key_expr,
+                val_expr,
+                generators,
+                ty,
+            } => {
                 self.needs_hashmap = true;
                 if generators.len() == 1 {
                     let (ref var, ref iter_e, ref filter) = generators[0];
@@ -3842,7 +4225,9 @@ impl RustEmitter {
                     let var_pattern = if var.contains(',') {
                         let names: Vec<&str> = var.split(',').collect();
                         format!("({})", names.join(", "))
-                    } else { var.clone() };
+                    } else {
+                        var.clone()
+                    };
                     if is_range {
                         self.write("(");
                         self.emit_expr(iter_e);
@@ -3866,7 +4251,11 @@ impl RustEmitter {
                     self.emit_expr(val_expr);
                     self.write("))");
                     if let Type::Dict(ref k, ref v) = ty {
-                        self.write(&format!(".collect::<HashMap<{}, {}>>()", k.rust_type(), v.rust_type()));
+                        self.write(&format!(
+                            ".collect::<HashMap<{}, {}>>()",
+                            k.rust_type(),
+                            v.rust_type()
+                        ));
                     } else {
                         self.write(".collect::<HashMap<_, _>>()");
                     }
@@ -3876,7 +4265,9 @@ impl RustEmitter {
                         let var_pattern = if var.contains(',') {
                             let names: Vec<&str> = var.split(',').collect();
                             format!("({})", names.join(", "))
-                        } else { var.clone() };
+                        } else {
+                            var.clone()
+                        };
                         self.write("for ");
                         self.write(&var_pattern);
                         self.write(" in ");
@@ -3894,13 +4285,21 @@ impl RustEmitter {
                     self.emit_expr(val_expr);
                     self.write("); ");
                     for (_, _, ref filter) in generators.iter().rev() {
-                        if filter.is_some() { self.write("} "); }
+                        if filter.is_some() {
+                            self.write("} ");
+                        }
                         self.write("} ");
                     }
                     self.write("_result }");
                 }
             }
-            HirExpr::GeneratorExpr { expr, var, iter, filter, .. } => {
+            HirExpr::GeneratorExpr {
+                expr,
+                var,
+                iter,
+                filter,
+                ..
+            } => {
                 // (expr for var in iter) -> iter.clone().into_iter().map(|var| expr)
                 // Lazy iterator - no .collect()
                 self.emit_expr(iter);
@@ -3936,7 +4335,9 @@ impl RustEmitter {
                 }
                 // No .collect() - lazy iterator
             }
-            HirExpr::EnumVariant { enum_name, variant, .. } => {
+            HirExpr::EnumVariant {
+                enum_name, variant, ..
+            } => {
                 // Color.RED -> Color::RED
                 self.write(enum_name);
                 self.write("::");
@@ -3944,1411 +4345,6 @@ impl RustEmitter {
             }
         }
     }
-
-    /// Emit an f-string as a Rust format macro call (format!, println!, etc.).
-    /// This avoids the double-format pattern `println!("{}", format!(...))`.
-    /// Emit a lambda expression without type annotations on parameters.
-    /// Used when the lambda is passed to .`map()/.filter()` where Rust can infer types.
-    /// Check if a name is a stdlib constant.
-    fn is_stdlib_constant(&self, name: &str) -> bool {
-        matches!(name, "pi" | "e" | "tau" | "inf" | "nan") && self.intrinsic_functions.contains(name)
-    }
-
-    /// Emit a stdlib constant value.
-    fn emit_stdlib_constant(&mut self, name: &str) {
-        match name {
-            "pi" => self.write("std::f64::consts::PI"),
-            "e" => self.write("std::f64::consts::E"),
-            "tau" => self.write("std::f64::consts::TAU"),
-            "inf" => self.write("f64::INFINITY"),
-            "nan" => self.write("f64::NAN"),
-            _ => self.write(name),
-        }
-    }
-
-    /// Emit an intrinsic function call with the correct Rust code.
-    fn emit_intrinsic_call(&mut self, func: &str, args: &[HirExpr]) {
-        if self.try_emit_intrinsic_via_registry(func, args) {
-            return;
-        }
-
-        match func {
-            // sifr.io
-            "read_text" => {
-                self.write("std::fs::read_to_string(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(__io_err)");
-            }
-            "write_text" => {
-                self.write("std::fs::write(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(", ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            "exists" => {
-                self.write("std::path::Path::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").exists()");
-            }
-            "read_lines" => {
-                self.write("std::fs::read_to_string(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|s| s.lines().map(|l| l.to_string()).collect::<Vec<String>>()).map_err(__io_err)");
-            }
-            "append_text" => {
-                self.write("{ use std::io::Write; (|| -> Result<(), IOError> { let mut _f = std::fs::OpenOptions::new().append(true).create(true).open(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(__io_err)?; write!(_f, \"{}\", ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_err(__io_err)?; Ok(()) })() }");
-            }
-            "getcwd" => {
-                self.write("std::env::current_dir().map(|p| p.to_string_lossy().to_string()).map_err(__io_err)");
-            }
-            "listdir" => {
-                self.write("std::fs::read_dir(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect::<Vec<String>>()).map_err(__io_err)");
-            }
-            "mkdir" => {
-                self.write("std::fs::create_dir_all(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            "rmdir" => {
-                self.write("std::fs::remove_dir(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            "remove_file" => {
-                self.write("std::fs::remove_file(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            "rename" => {
-                self.write("std::fs::rename(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(", ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            "is_file" => {
-                self.write("std::path::Path::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").is_file()");
-            }
-            "is_dir" => {
-                self.write("std::path::Path::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").is_dir()");
-            }
-            "copy_file" => {
-                self.write("std::fs::copy(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(", ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            "walk_dir" => {
-                self.write("{ fn __walk(p: &std::path::Path) -> Result<Vec<String>, IOError> { let mut r = Vec::new(); let entries = std::fs::read_dir(p).map_err(__io_err)?; for e in entries { let e = e.map_err(__io_err)?; let path = e.path(); r.push(path.display().to_string()); if path.is_dir() { r.extend(__walk(&path)?); } } Ok(r) } __walk(std::path::Path::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(")) }");
-            }
-            "rmdir_all" => {
-                self.write("std::fs::remove_dir_all(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            "gettempdir" => {
-                self.write("std::env::temp_dir().display().to_string()");
-            }
-            "makedirs" => {
-                self.write("std::fs::create_dir_all(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            // sifr.json
-            "json_loads" => {
-                self.write("serde_json::from_str::<serde_json::Value>(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|v| v.to_string()).map_err(|e| JSONDecodeError { message: e.to_string(), line: e.line() as i64, column: e.column() as i64 })");
-            }
-            "json_dumps" => {
-                self.write("serde_json::to_string(&");
-                self.emit_expr(&args[0]);
-                self.write(").unwrap_or_default()");
-            }
-            // sifr.env
-            "env_get" => {
-                self.write("{ let __k = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; if __k.is_empty() || __k.contains('=') || __k.as_bytes().contains(&0) { None } else { std::env::var(__k).ok() } }");
-            }
-            "env_set" => {
-                self.write("{ let __k = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __v = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; if !__k.is_empty() && !__k.contains('=') && !__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0) { std::env::set_var(__k, __v); } }");
-            }
-            "env_unset" => {
-                self.write("{ let __k = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; if !__k.is_empty() && !__k.contains('=') && !__k.as_bytes().contains(&0) { std::env::remove_var(__k); } }");
-            }
-            "env_keys" => {
-                self.write("std::env::vars_os().map(|(k, _)| k.to_string_lossy().to_string()).collect::<Vec<String>>()");
-            }
-            "env_values" => {
-                self.write("std::env::vars_os().map(|(_, v)| v.to_string_lossy().to_string()).collect::<Vec<String>>()");
-            }
-            "env_items" => {
-                self.write("std::env::vars_os().map(|(k, v)| format!(\"{}={}\", k.to_string_lossy(), v.to_string_lossy())).collect::<Vec<String>>()");
-            }
-            // sifr.os
-            "run_command" => {
-                self.write("(|| -> Result<String, IOError> { let output = std::process::Command::new(\"sh\").args([\"-c\", ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("]).output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
-            }
-            "get_args" => {
-                self.write("std::env::args().collect::<Vec<String>>()");
-            }
-            // sifr.math
-            "sqrt" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").sqrt()");
-            }
-            "floor" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").floor() as i64");
-            }
-            "ceil" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").ceil() as i64");
-            }
-            "abs_val" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").abs()");
-            }
-            "log" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").ln()");
-            }
-            "cbrt" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").cbrt()");
-            }
-            "exp2" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").exp2()");
-            }
-            "sin" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").sin()");
-            }
-            "cos" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").cos()");
-            }
-            "tan" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").tan()");
-            }
-            "pow_val" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").powf(");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "min_val" => {
-                self.write("{ let __a = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __b = ");
-                self.emit_expr(&args[1]);
-                self.write("; if __a < __b { __a } else { __b } }");
-            }
-            "max_val" => {
-                self.write("{ let __a = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __b = ");
-                self.emit_expr(&args[1]);
-                self.write("; if __a > __b { __a } else { __b } }");
-            }
-            "round_val" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").round() as i64");
-            }
-            "asin" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").asin()");
-            }
-            "acos" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").acos()");
-            }
-            "atan" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").atan()");
-            }
-            "atan2" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").atan2(");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "sinh" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").sinh()");
-            }
-            "cosh" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").cosh()");
-            }
-            "tanh" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").tanh()");
-            }
-            "log10" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").log10()");
-            }
-            "log2" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").log2()");
-            }
-            "degrees" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").to_degrees()");
-            }
-            "radians" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").to_radians()");
-            }
-            "isnan" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").is_nan()");
-            }
-            "isinf" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").is_infinite()");
-            }
-            "trunc" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").trunc() as i64");
-            }
-            "copysign" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").copysign(");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "signbit" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").is_sign_negative()");
-            }
-            "fmod" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(") % (");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "remainder" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __y: f64 = ");
-                self.emit_expr(&args[1]);
-                self.write("; if __x.is_nan() || __y.is_nan() { f64::NAN } else if __y == 0.0 || __x.is_infinite() { f64::NAN } else if __y.is_infinite() { __x } else { let __q = __x / __y; let __n0 = __q.trunc(); let __frac = __q - __n0; let __abs_frac = __frac.abs(); let __n = if __abs_frac < 0.5 { __n0 } else if __abs_frac > 0.5 { __n0 + __q.signum() } else if (__n0 as i64) % 2 == 0 { __n0 } else { __n0 + __q.signum() }; let __r = __x - __n * __y; if __r == 0.0 { 0.0f64.copysign(__x) } else { __r } } }");
-            }
-            "hypot" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").hypot(");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "fma" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").mul_add(");
-                self.emit_expr(&args[1]);
-                self.write(", ");
-                self.emit_expr(&args[2]);
-                self.write(")");
-            }
-            "fmax" => {
-                self.write("{ let __a: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __b: f64 = ");
-                self.emit_expr(&args[1]);
-                self.write("; __a.max(__b) }");
-            }
-            "fmin" => {
-                self.write("{ let __a: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __b: f64 = ");
-                self.emit_expr(&args[1]);
-                self.write("; __a.min(__b) }");
-            }
-            "exp" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").exp()");
-            }
-            "expm1" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").exp_m1()");
-            }
-            "log1p" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").ln_1p()");
-            }
-            "fabs" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").abs()");
-            }
-            "isfinite" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").is_finite()");
-            }
-            "isnormal" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").is_normal()");
-            }
-            "issubnormal" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").is_subnormal()");
-            }
-            "acosh" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").acosh()");
-            }
-            "asinh" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").asinh()");
-            }
-            "atanh" => {
-                self.write("(");
-                self.emit_expr(&args[0]);
-                self.write(").atanh()");
-            }
-            "isqrt" => {
-                self.write("{ let __n = ");
-                self.emit_expr(&args[0]);
-                self.write(" as f64; __n.sqrt() as i64 }");
-            }
-            "dist" => {
-                self.write("{ let __p = &");
-                self.emit_expr(&args[0]);
-                self.write("; let __q = &");
-                self.emit_expr(&args[1]);
-                self.write("; if __p.len() != __q.len() { f64::NAN } else if __p.is_empty() { 0.0 } else { let mut __scale = 0.0f64; let mut __ssq = 1.0f64; for __i in 0..__p.len() { let __d = (__p[__i] - __q[__i]).abs(); if __d != 0.0 { if __scale < __d { let __r = __scale / __d; __ssq = 1.0 + __ssq * __r * __r; __scale = __d; } else { let __r = __d / __scale; __ssq += __r * __r; } } } if __scale == 0.0 { 0.0 } else { __scale * __ssq.sqrt() } } }");
-            }
-            "fsum" => {
-                self.write("{ let __data = &");
-                self.emit_expr(&args[0]);
-                self.write("; let mut __sum = 0.0f64; let mut __comp = 0.0f64; let mut __pos_inf = false; let mut __neg_inf = false; let mut __has_nan = false; for __x in __data.iter() { let __v = *__x; if __v.is_nan() { __has_nan = true; continue; } if __v.is_infinite() { if __v.is_sign_positive() { __pos_inf = true; } else { __neg_inf = true; } continue; } let __t = __sum + __v; if __sum.abs() >= __v.abs() { __comp += (__sum - __t) + __v; } else { __comp += (__v - __t) + __sum; } __sum = __t; } if __has_nan || (__pos_inf && __neg_inf) { f64::NAN } else if __pos_inf { f64::INFINITY } else if __neg_inf { f64::NEG_INFINITY } else { __sum + __comp } }");
-            }
-            "sumprod" => {
-                self.write("{ let __p = &");
-                self.emit_expr(&args[0]);
-                self.write("; let __q = &");
-                self.emit_expr(&args[1]);
-                self.write("; let __len = __p.len().min(__q.len()); let mut __sum = 0.0f64; for __i in 0..__len { __sum += __p[__i] * __q[__i]; } __sum }");
-            }
-            // sifr.test
-            "assert_eq" => {
-                self.write("assert_eq!(");
-                self.emit_expr(&args[0]);
-                self.write(", ");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "assert_ne" => {
-                self.write("assert_ne!(");
-                self.emit_expr(&args[0]);
-                self.write(", ");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "assert_true" => {
-                self.write("assert!(");
-                self.emit_expr(&args[0]);
-                self.write(")");
-            }
-            "assert_false" => {
-                self.write("assert!(!(");
-                self.emit_expr(&args[0]);
-                self.write("))");
-            }
-            "assert_almost_eq" => {
-                self.write("assert!((");
-                self.emit_expr(&args[0]);
-                self.write(" - (");
-                self.emit_expr(&args[1]);
-                self.write(")).abs() < ");
-                self.emit_expr(&args[2]);
-                self.write(", \"assert_almost_eq failed: {} != {} (tolerance {})\", ");
-                self.emit_expr(&args[0]);
-                self.write(", ");
-                self.emit_expr(&args[1]);
-                self.write(", ");
-                self.emit_expr(&args[2]);
-                self.write(")");
-            }
-            "assert_gt" => {
-                self.write("assert!(");
-                self.emit_expr(&args[0]);
-                self.write(" > ");
-                self.emit_expr(&args[1]);
-                self.write(", \"assert_gt failed: {} is not > {}\", ");
-                self.emit_expr(&args[0]);
-                self.write(", ");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "assert_lt" => {
-                self.write("assert!(");
-                self.emit_expr(&args[0]);
-                self.write(" < ");
-                self.emit_expr(&args[1]);
-                self.write(", \"assert_lt failed: {} is not < {}\", ");
-                self.emit_expr(&args[0]);
-                self.write(", ");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            // sifr.collections — Set operations
-            "new_set" => {
-                self.write("Vec::<i64>::new()");
-            }
-            "set_from_list" => {
-                self.write("{ let mut s = ");
-                self.emit_collection_expr(&args[0]);
-                self.write("; s.sort(); s.dedup(); s }");
-            }
-            "set_add" => {
-                self.write("{ let mut s = ");
-                self.emit_collection_expr(&args[0]);
-                self.write("; let v = ");
-                self.emit_expr(&args[1]);
-                self.write("; if !s.contains(&v) { s.push(v); } s }");
-            }
-            "set_contains" => {
-                self.emit_expr(&args[0]);
-                self.write(".contains(&");
-                self.emit_expr(&args[1]);
-                self.write(")");
-            }
-            "set_remove" => {
-                self.write("{ let mut s = ");
-                self.emit_collection_expr(&args[0]);
-                self.write("; s.retain(|x| *x != ");
-                self.emit_expr(&args[1]);
-                self.write("); s }");
-            }
-            "set_len" => {
-                self.emit_expr(&args[0]);
-                self.write(".len() as i64");
-            }
-            "set_union" => {
-                self.write("{ let mut s = ");
-                self.emit_collection_expr(&args[0]);
-                self.write("; for v in ");
-                self.emit_expr(&args[1]);
-                self.write(".iter() { if !s.contains(v) { s.push(*v); } } s.sort(); s }");
-            }
-            "set_intersection" => {
-                self.write("{ let __a = ");
-                self.emit_collection_expr(&args[0]);
-                self.write("; let __b = ");
-                self.emit_collection_expr(&args[1]);
-                self.write("; __a.iter().filter(|x| __b.contains(x)).cloned().collect::<Vec<i64>>() }");
-            }
-            // sifr.collections — Counter
-            "counter_from_list" => {
-                self.write("{ let mut counts = std::collections::HashMap::<String, i64>::new(); for item in ");
-                self.emit_expr(&args[0]);
-                self.write(".iter() { *counts.entry(item.clone()).or_insert(0) += 1; } ");
-                self.write("let pairs: Vec<String> = counts.iter().map(|(k, v)| format!(\"\\\"{}\\\":{}\", k, v)).collect(); ");
-                self.write("format!(\"{{{}}}\", pairs.join(\",\")) }");
-            }
-            "counter_get" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); let __key = ");
-                self.emit_expr(&args[1]);
-                self.write("; *data.get(__key.as_str()).unwrap_or(&0) }");
-            }
-            "counter_most_common" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); let mut pairs: Vec<(String, i64)> = data.into_iter().collect(); ");
-                self.write("pairs.sort_by(|a, b| b.1.cmp(&a.1)); pairs.truncate(");
-                self.emit_expr(&args[1]);
-                self.write(" as usize); ");
-                self.write("let items: Vec<String> = pairs.iter().map(|(k, v)| format!(\"[\\\"{}\\\",{}]\", k, v)).collect(); ");
-                self.write("format!(\"[{}]\", items.join(\",\")) }");
-            }
-            "counter_total" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); data.values().sum::<i64>() }");
-            }
-            "counter_values" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); data.values().cloned().collect::<Vec<i64>>() }");
-            }
-            "counter_keys" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); data.keys().cloned().collect::<Vec<String>>() }");
-            }
-            "counter_items" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); let mut pairs: Vec<(String, i64)> = data.into_iter().collect(); ");
-                self.write("pairs.sort_by(|a, b| a.0.cmp(&b.0)); ");
-                self.write("let items: Vec<String> = pairs.iter().map(|(k, v)| format!(\"[\\\"{}\\\",{}]\", k, v)).collect(); ");
-                self.write("format!(\"[{}]\", items.join(\",\")) }");
-            }
-            "counter_increment" => {
-                self.write("{ let mut data: std::collections::HashMap<String, i64> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); *data.entry(");
-                self.emit_expr(&args[1]);
-                self.write(".to_string()).or_insert(0) += 1; ");
-                self.write("let pairs: Vec<String> = data.iter().map(|(k, v)| format!(\"\\\"{}\\\":{}\", k, v)).collect(); ");
-                self.write("format!(\"{{{}}}\", pairs.join(\",\")) }");
-            }
-            // sifr.collections — DefaultDict
-            "defaultdict_new" => {
-                self.write("format!(\"{{\\\"__default__\\\":{}}}\", ");
-                self.emit_expr(&args[0]);
-                self.write(")");
-            }
-            "defaultdict_get" => {
-                self.write("{ let data: std::collections::HashMap<String, i64> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); let def = data.get(\"__default__\").cloned().unwrap_or(0); ");
-                self.write("*data.get(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").unwrap_or(&def) }");
-            }
-            "defaultdict_set" => {
-                self.write("{ let mut data: std::collections::HashMap<String, serde_json::Value> = serde_json::from_str(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").unwrap_or_default(); data.insert(");
-                self.emit_expr(&args[1]);
-                self.write(".to_string(), serde_json::json!(");
-                self.emit_expr(&args[2]);
-                self.write(")); serde_json::to_string(&data).unwrap_or_default() }");
-            }
-            // sifr.bytes
-            "encode_utf8" => {
-                self.emit_expr_as_bytes(&args[0]);
-                self.write(".iter().map(|b| *b as i64).collect::<Vec<i64>>()");
-            }
-            "decode_utf8" => {
-                self.write("(|| -> Result<String, ParseError> { let __vals = ");
-                self.emit_expr(&args[0]);
-                self.write("; let mut __bytes: Vec<u8> = Vec::with_capacity(__vals.len()); for (__idx, __b) in __vals.iter().enumerate() { if *__b < 0 || *__b > 255 { return Err(ParseError { message: format!(\"byte out of range at index {}: {}\", __idx, *__b) }); } __bytes.push(*__b as u8); } String::from_utf8(__bytes).map_err(|e| ParseError { message: e.to_string() }) })()");
-            }
-            "bytes_to_hex" => {
-                self.write("(|| -> Result<String, ParseError> { let __vals = ");
-                self.emit_expr(&args[0]);
-                self.write("; let mut __out = String::new(); for (__idx, __b) in __vals.iter().enumerate() { if *__b < 0 || *__b > 255 { return Err(ParseError { message: format!(\"byte out of range at index {}: {}\", __idx, *__b) }); } __out.push_str(&format!(\"{:02x}\", *__b as u8)); } Ok(__out) })()");
-            }
-            "bytes_from_hex" => {
-                self.write("(|| -> Result<Vec<i64>, ParseError> { let s = ");
-                self.emit_expr(&args[0]);
-                self.write("; let mut cleaned = String::new(); for ch in s.chars() { if ch.is_ascii_whitespace() { continue; } if !ch.is_ascii_hexdigit() { return Err(ParseError { message: format!(\"invalid hex character: {}\", ch) }); } cleaned.push(ch); } if cleaned.len() % 2 != 0 { return Err(ParseError { message: \"fromhex() arg must contain an even number of hexadecimal digits\".to_string() }); } let mut result = Vec::new(); for pair in cleaned.as_bytes().chunks(2) { let pair_str = std::str::from_utf8(pair).map_err(|e| ParseError { message: e.to_string() })?; result.push(i64::from_str_radix(pair_str, 16).map_err(|e| ParseError { message: e.to_string() })?); } Ok(result) })()");
-            }
-            // sifr.time
-            "time_now" => {
-                self.write("std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs_f64()");
-            }
-            "sleep" => {
-                self.write("std::thread::sleep(std::time::Duration::from_secs_f64(");
-                self.emit_expr(&args[0]);
-                self.write("))");
-            }
-            "time_format" => {
-                self.write("{ let secs = ");
-                self.emit_expr(&args[0]);
-                self.write(" as i64; let dt = chrono::DateTime::from_timestamp(secs, 0).unwrap_or_default(); dt.format(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").to_string() }");
-            }
-            "perf_counter" | "monotonic" => {
-                self.write("{ fn __monotonic() -> f64 { static __START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new(); let s = __START.get_or_init(std::time::Instant::now); s.elapsed().as_secs_f64() } __monotonic() }");
-            }
-            // sifr.random
-            "random_int" => {
-                self.write("{ use rand::Rng; rand::thread_rng().gen_range(");
-                self.emit_expr(&args[0]);
-                self.write("..=");
-                self.emit_expr(&args[1]);
-                self.write(") }");
-            }
-            "random_float" => {
-                self.write("{ use rand::Rng; rand::thread_rng().gen::<f64>() }");
-            }
-            "random_choice" => {
-                self.write("{ use rand::Rng; let items = ");
-                self.emit_expr(&args[0]);
-                self.write("; items[rand::thread_rng().gen_range(0..items.len())].clone() }");
-            }
-            "random_uniform" => {
-                self.write("{ use rand::Rng; rand::thread_rng().gen_range(");
-                self.emit_expr(&args[0]);
-                self.write("..=");
-                self.emit_expr(&args[1]);
-                self.write(") }");
-            }
-            "random_shuffle" => {
-                self.write("{ use rand::seq::SliceRandom; let mut __v = ");
-                self.emit_expr(&args[0]);
-                self.write(".clone(); __v.shuffle(&mut rand::thread_rng()); __v }");
-            }
-            "random_sample" => {
-                self.write("{ use rand::seq::SliceRandom; let __items = &");
-                self.emit_expr(&args[0]);
-                self.write("; let __k = ");
-                self.emit_expr(&args[1]);
-                self.write(" as usize; if __k > __items.len() { Err(ValueError { message: format!(\"sample larger than population: {} > {}\", __k, __items.len()) }) } else { Ok(__items.choose_multiple(&mut rand::thread_rng(), __k).cloned().collect::<Vec<_>>()) } }");
-            }
-            "random_randrange" => {
-                self.write("{ let __start = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __stop = ");
-                self.emit_expr(&args[1]);
-                self.write("; let __step = ");
-                self.emit_expr(&args[2]);
-                self.write("; if __step == 0 { Err(ValueError { message: \"randrange: step must not be zero\".to_string() }) } else if __start >= __stop && __step > 0 { Err(ValueError { message: \"randrange: empty range\".to_string() }) } else { use rand::Rng; let __n = ((__stop - __start + __step - 1) / __step).abs(); Ok(__start + rand::thread_rng().gen_range(0..__n) * __step) } }");
-            }
-            "random_gauss" => {
-                self.write("{ use rand_distr::{Normal, Distribution}; let __mu = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __sigma = ");
-                self.emit_expr(&args[1]);
-                self.write("; Normal::new(__mu, __sigma).map(|d| d.sample(&mut rand::thread_rng())).unwrap_or(__mu) }");
-            }
-            // sifr.re
-            "re_match" => {
-                self.write("regex::Regex::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|re| re.is_match(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(")).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
-            }
-            "re_find" => {
-                self.write("regex::Regex::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|re| re.find(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|m| m.as_str().to_string())).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
-            }
-            "re_replace" => {
-                self.write("regex::Regex::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|re| re.replace_all(");
-                self.emit_expr_as_str_ref(&args[2]);
-                self.write(", ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").to_string()).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
-            }
-            "re_findall" => {
-                self.write("regex::Regex::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|re| re.find_iter(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|m| m.as_str().to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
-            }
-            "re_split" => {
-                self.write("regex::Regex::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|re| re.split(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map(|s| s.to_string()).collect::<Vec<String>>()).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
-            }
-            "re_find_start" => {
-                self.write("regex::Regex::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|re| re.find(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_or(-1_i64, |m| m.start() as i64)).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
-            }
-            "re_find_end" => {
-                self.write("regex::Regex::new(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|re| re.find(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_or(-1_i64, |m| m.end() as i64)).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })");
-            }
-            // re flags variants
-            // Signatures:
-            //   re_match_flags(pattern, text, flags)
-            //   re_find_flags(pattern, text, flags)
-            //   re_replace_flags(pattern, replacement, text, flags)
-            //   re_findall_flags(pattern, text, flags)
-            //   re_split_flags(pattern, text, flags)
-            "re_match_flags" | "re_find_flags" | "re_findall_flags" | "re_split_flags" => {
-                let flags_idx = 2usize;
-                let text_idx = 1usize;
-                self.write("(|| -> Result<");
-                match func {
-                    "re_match_flags" => self.write("bool"),
-                    "re_find_flags" => self.write("Option<String>"),
-                    _ => self.write("Vec<String>"),
-                }
-                self.write(", RegexError> { let __flags_val = ");
-                self.emit_expr(&args[flags_idx]);
-                self.write("; let mut __flag_str = String::new(); if __flags_val & 2 != 0 { __flag_str.push_str(\"(?i)\"); } if __flags_val & 8 != 0 { __flag_str.push_str(\"(?m)\"); } if __flags_val & 16 != 0 { __flag_str.push_str(\"(?s)\"); } if __flags_val & 64 != 0 { __flag_str.push_str(\"(?x)\"); } let __pat = __flag_str + ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __re = regex::Regex::new(&__pat).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })?; ");
-                match func {
-                    "re_match_flags" => {
-                        self.write("Ok(__re.is_match(");
-                        self.emit_expr_as_str_ref(&args[text_idx]);
-                        self.write("))");
-                    }
-                    "re_find_flags" => {
-                        self.write("Ok(__re.find(");
-                        self.emit_expr_as_str_ref(&args[text_idx]);
-                        self.write(").map(|m| m.as_str().to_string()))");
-                    }
-                    "re_findall_flags" => {
-                        self.write("Ok(__re.find_iter(");
-                        self.emit_expr_as_str_ref(&args[text_idx]);
-                        self.write(").map(|m| m.as_str().to_string()).collect())");
-                    }
-                    "re_split_flags" => {
-                        self.write("Ok(__re.split(");
-                        self.emit_expr_as_str_ref(&args[text_idx]);
-                        self.write(").map(|s| s.to_string()).collect())");
-                    }
-                    _ => {}
-                }
-                self.write(" })()");
-            }
-            "re_replace_flags" => {
-                // re_replace_flags(pattern, replacement, text, flags)
-                self.write("(|| -> Result<String, RegexError> { let __flags_val = ");
-                self.emit_expr(&args[3]);
-                self.write("; let mut __flag_str = String::new(); if __flags_val & 2 != 0 { __flag_str.push_str(\"(?i)\"); } if __flags_val & 8 != 0 { __flag_str.push_str(\"(?m)\"); } if __flags_val & 16 != 0 { __flag_str.push_str(\"(?s)\"); } if __flags_val & 64 != 0 { __flag_str.push_str(\"(?x)\"); } let __pat = __flag_str + ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __re = regex::Regex::new(&__pat).map_err(|e| RegexError { message: e.to_string(), detail: e.to_string() })?; Ok(__re.replace_all(");
-                self.emit_expr_as_str_ref(&args[2]);
-                self.write(", ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").to_string()) })()");
-            }
-            // sifr.hash
-            "sha256" => {
-                self.write("{ use sha2::Digest; format!(\"{:x}\", sha2::Sha256::digest(");
-                self.emit_expr_as_bytes(&args[0]);
-                self.write(")) }");
-            }
-            "md5" => {
-                self.write("format!(\"{:x}\", md5::compute(");
-                self.emit_expr_as_bytes(&args[0]);
-                self.write("))");
-            }
-            // sifr.encoding
-            "base64_encode" => {
-                self.write("{ use base64::Engine; base64::engine::general_purpose::STANDARD.encode(");
-                self.emit_expr_as_bytes(&args[0]);
-                self.write(") }");
-            }
-            "base64_decode" => {
-                self.write("(|| -> Result<String, ParseError> { use base64::Engine; let bytes = base64::engine::general_purpose::STANDARD.decode(");
-                self.emit_expr_as_bytes(&args[0]);
-                self.write(").map_err(|e| ParseError { message: e.to_string() })?; String::from_utf8(bytes).map_err(|e| ParseError { message: e.to_string() }) })()");
-            }
-            "base64_encode_opts" => {
-                self.write("(|| -> Result<String, ParseError> { use base64::Engine; let __s = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __alt = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; let __wrap = ");
-                self.emit_expr(&args[2]);
-                self.write("; if __wrap < 0 { return Err(ParseError { message: \"wrapcol must be >= 0\".to_string() }); } let mut __encoded = base64::engine::general_purpose::STANDARD.encode(__s.as_bytes()); if !__alt.is_empty() { if __alt.chars().count() != 2 { return Err(ParseError { message: format!(\"invalid altchars: {}\", __alt) }); } let mut __it = __alt.chars(); let __a = __it.next().unwrap_or('+'); let __b = __it.next().unwrap_or('/'); __encoded = __encoded.chars().map(|c| if c == '+' { __a } else if c == '/' { __b } else { c }).collect::<String>(); } if __wrap == 0 { return Ok(__encoded); } let __w = __wrap as usize; let mut __wrapped = String::new(); for (i, ch) in __encoded.chars().enumerate() { if i > 0 && i % __w == 0 { __wrapped.push('\\n'); } __wrapped.push(ch); } Ok(__wrapped) })()");
-            }
-            "base64_decode_opts" => {
-                self.write("(|| -> Result<String, ParseError> { use base64::Engine; let __s = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __alt = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; let __validate = ");
-                self.emit_expr(&args[2]);
-                self.write("; let __ignore = ");
-                self.emit_expr_as_str_ref(&args[3]);
-                self.write("; let mut __has_alt = false; let mut __alt_a = '+'; let mut __alt_b = '/'; if !__alt.is_empty() { if __alt.chars().count() != 2 { return Err(ParseError { message: format!(\"invalid altchars: {}\", __alt) }); } let mut __it = __alt.chars(); __alt_a = __it.next().unwrap_or('+'); __alt_b = __it.next().unwrap_or('/'); __has_alt = true; } let mut __ignore_set = std::collections::HashSet::<char>::new(); for ch in __ignore.chars() { __ignore_set.insert(ch); } let mut __normalized = String::new(); for ch in __s.chars() { if __ignore_set.contains(&ch) { continue; } let mut mapped = ch; if __has_alt { if ch == __alt_a { mapped = '+'; } else if ch == __alt_b { mapped = '/'; } } let is_base64 = (mapped >= 'A' && mapped <= 'Z') || (mapped >= 'a' && mapped <= 'z') || (mapped >= '0' && mapped <= '9') || mapped == '+' || mapped == '/' || mapped == '='; if is_base64 { __normalized.push(mapped); } else if __validate { return Err(ParseError { message: format!(\"invalid base64 character: {}\", ch) }); } } let __bytes = base64::engine::general_purpose::STANDARD.decode(__normalized.as_bytes()).map_err(|e| ParseError { message: e.to_string() })?; String::from_utf8(__bytes).map_err(|e| ParseError { message: e.to_string() }) })()");
-            }
-            "sha1" => {
-                self.write("{ use sha1::Digest; format!(\"{:x}\", sha1::Sha1::digest(");
-                self.emit_expr_as_bytes(&args[0]);
-                self.write(")) }");
-            }
-            "sha512" => {
-                self.write("{ use sha2::Digest; format!(\"{:x}\", sha2::Sha512::digest(");
-                self.emit_expr_as_bytes(&args[0]);
-                self.write(")) }");
-            }
-            "urlsafe_b64encode" => {
-                self.write("{ use base64::Engine; base64::engine::general_purpose::URL_SAFE.encode(");
-                self.emit_expr_as_bytes(&args[0]);
-                self.write(") }");
-            }
-            "urlsafe_b64decode" => {
-                self.write("(|| -> Result<String, ParseError> { use base64::Engine; let bytes = base64::engine::general_purpose::URL_SAFE.decode(");
-                self.emit_expr_as_bytes(&args[0]);
-                self.write(").map_err(|e| ParseError { message: e.to_string() })?; String::from_utf8(bytes).map_err(|e| ParseError { message: e.to_string() }) })()");
-            }
-            // sifr.uuid
-            "uuid4" => {
-                self.write("{ use rand::Rng; let mut rng = rand::thread_rng(); let bytes: [u8; 16] = rng.gen(); format!(\"{:08x}-{:04x}-4{:03x}-{:04x}-{:012x}\", u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]), u16::from_be_bytes([bytes[4], bytes[5]]), u16::from_be_bytes([bytes[6], bytes[7]]) & 0x0fff, (u16::from_be_bytes([bytes[8], bytes[9]]) & 0x3fff) | 0x8000, u64::from_be_bytes([0, 0, bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]])) }");
-            }
-            // sifr.platform
-            "platform_system" => {
-                self.write("std::env::consts::OS.to_string()");
-            }
-            "platform_arch" => {
-                self.write("std::env::consts::ARCH.to_string()");
-            }
-            "platform_node" => {
-                self.write("std::process::Command::new(\"hostname\").output().map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default()");
-            }
-            // sifr.toml
-            "toml_parse" => {
-                self.write("{ let __toml_str = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; __toml_str.parse::<toml::Value>().map(|v| format!(\"{}\", v)).map_err(|e| TOMLDecodeError { message: e.to_string(), line: 0, column: 0 }) }");
-            }
-            // sifr.datetime
-            "datetime_now" => {
-                self.write("chrono::Local::now().format(\"%Y-%m-%dT%H:%M:%S\").to_string()");
-            }
-            "datetime_now_struct" => {
-                self.write("{ use chrono::{Datelike, Timelike}; let __dt = chrono::Local::now(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64] }");
-            }
-            "time_strptime" => {
-                self.write("(|| -> Result<Vec<i64>, ValueError> { let __s = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __fmt = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; chrono::NaiveDateTime::parse_from_str(__s, __fmt).map(|dt| { use chrono::Datelike; use chrono::Timelike; vec![dt.year() as i64, dt.month() as i64, dt.day() as i64, dt.hour() as i64, dt.minute() as i64, dt.second() as i64, dt.weekday().num_days_from_monday() as i64, dt.ordinal() as i64] }).map_err(|e| ValueError { message: e.to_string() }) })()");
-            }
-            "time_gmtime" => {
-                self.write("{ use chrono::{Datelike, Timelike, Utc}; let __dt = Utc::now().naive_utc(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64, __dt.weekday().num_days_from_monday() as i64, __dt.ordinal() as i64] }");
-            }
-            "time_localtime" => {
-                self.write("{ use chrono::{Datelike, Timelike, Local}; let __dt = Local::now().naive_local(); vec![__dt.year() as i64, __dt.month() as i64, __dt.day() as i64, __dt.hour() as i64, __dt.minute() as i64, __dt.second() as i64, __dt.weekday().num_days_from_monday() as i64, __dt.ordinal() as i64] }");
-            }
-            "datetime_format" => {
-                self.write("{ let __dt_str = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __fmt = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; __dt_str.to_string() }");
-            }
-            "datetime_from_timestamp" => {
-                self.write("{ let __ts = ");
-                self.emit_expr(&args[0]);
-                self.write(" as i64; chrono::DateTime::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).ok_or_else(|| ValueError { message: \"invalid timestamp\".to_string() }) }");
-            }
-            // sifr.math new intrinsics
-            "erf" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __t = 1.0 / (1.0 + 0.3275911 * __x.abs()); let __poly = __t * (0.254829592 + __t * (-0.284496736 + __t * (1.421413741 + __t * (-1.453152027 + __t * 1.061405429)))); let __r = 1.0 - __poly * (-__x * __x).exp(); if __x >= 0.0 { __r } else { -__r } }");
-            }
-            "erfc" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __t = 1.0 / (1.0 + 0.3275911 * __x.abs()); let __poly = __t * (0.254829592 + __t * (-0.284496736 + __t * (1.421413741 + __t * (-1.453152027 + __t * 1.061405429)))); let __r = __poly * (-__x * __x).exp(); if __x >= 0.0 { __r } else { 2.0 - __r } }");
-            }
-            "gamma" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; if __x <= 0.0 && __x == __x.floor() { f64::INFINITY } else { let __g = 7usize; let __c = [0.99999999999980993f64, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7]; let __z = if __x < 0.5 { let __y = std::f64::consts::PI / ((__x * std::f64::consts::PI).sin() * { let __xn = 1.0 - __x; let mut __s = __c[0]; for __i in 1..=__g+1 { __s += __c[__i] / (__xn + __i as f64 - 1.0); } let __t2 = __xn + __g as f64 - 0.5; (2.0 * std::f64::consts::PI).sqrt() * __t2.powf(__xn - 0.5) * (-__t2).exp() * __s }); __y } else { let __xm = __x - 1.0; let mut __s = __c[0]; for __i in 1..=__g+1 { __s += __c[__i] / (__xm + __i as f64); } let __t2 = __xm + __g as f64 + 0.5; (2.0 * std::f64::consts::PI).sqrt() * __t2.powf(__xm + 0.5) * (-__t2).exp() * __s }; __z } }");
-            }
-            "lgamma" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; if __x <= 0.0 && __x == __x.floor() { f64::INFINITY } else { let __g = 7usize; let __c = [0.99999999999980993f64, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7]; let __xm = if __x < 0.5 { 1.0 - __x } else { __x - 1.0 }; let mut __s = __c[0]; for __i in 1..=__g+1 { __s += __c[__i] / (__xm + __i as f64); } let __t2 = __xm + __g as f64 + 0.5; let __r = (2.0 * std::f64::consts::PI).sqrt().ln() + (__xm + 0.5) * __t2.ln() - __t2 + __s.ln(); if __x < 0.5 { (std::f64::consts::PI / ((__x * std::f64::consts::PI).sin() * __r.exp())).abs().ln() } else { __r } } }");
-            }
-            "frexp" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; if __x == 0.0 { vec![__x, 0.0] } else if !__x.is_finite() { vec![__x, 0.0] } else { let __bits = __x.to_bits(); let __sign = __bits & 0x8000000000000000; let __exp = ((__bits >> 52) & 0x7ff) as i32; let __frac = __bits & 0x000fffffffffffff; if __exp == 0 { let __scaled = __x * (2.0f64).powi(54); let __sbits = __scaled.to_bits(); let __sexp = ((__sbits >> 52) & 0x7ff) as i32; let __sfrac = __sbits & 0x000fffffffffffff; let __mant = f64::from_bits(__sign | (0x3feu64 << 52) | __sfrac); let __e = __sexp - 1022 - 54; vec![__mant, __e as f64] } else { let __mant = f64::from_bits(__sign | (0x3feu64 << 52) | __frac); let __e = __exp - 1022; vec![__mant, __e as f64] } } }");
-            }
-            "ldexp" => {
-                self.write("{ let __m: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __e: i64 = ");
-                self.emit_expr(&args[1]);
-                self.write("; __m * (2.0f64).powi(__e as i32) }");
-            }
-            "modf" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; if __x.is_nan() { vec![f64::NAN, f64::NAN] } else if __x.is_infinite() { vec![0.0f64.copysign(__x), __x] } else { let __int = __x.trunc(); let mut __frac = __x - __int; if __frac == 0.0 { __frac = 0.0f64.copysign(__x); } vec![__frac, __int] } }");
-            }
-            "nextafter" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __y: f64 = ");
-                self.emit_expr(&args[1]);
-                self.write("; if __x.is_nan() || __y.is_nan() { f64::NAN } else if __x == __y { __y } else if __x == 0.0 { let __sign = if __y.is_sign_negative() { 1u64 << 63 } else { 0u64 }; f64::from_bits(__sign | 1u64) } else { let mut __bits = __x.to_bits(); if (__x < __y) == (__x > 0.0) { __bits += 1; } else { __bits -= 1; } f64::from_bits(__bits) } }");
-            }
-            "ulp" => {
-                self.write("{ let __x: f64 = ");
-                self.emit_expr(&args[0]);
-                self.write("; if __x.is_nan() { f64::NAN } else if __x.is_infinite() { f64::INFINITY } else { let __a = __x.abs(); if __a == 0.0 { f64::from_bits(1u64) } else if __a == f64::MAX { __a - f64::from_bits(__a.to_bits() - 1) } else { f64::from_bits(__a.to_bits() + 1) - __a } } }");
-            }
-            // sifr.pathlib new intrinsics
-            "touch" => {
-                self.write("std::fs::OpenOptions::new().create(true).write(true).open(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|_| ()).map_err(__io_err)");
-            }
-            "resolve_path" => {
-                self.write("std::fs::canonicalize(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|p| p.to_string_lossy().to_string()).map_err(__io_err)");
-            }
-            "iterdir" => {
-                self.write("(|| -> Result<Vec<String>, IOError> { let __entries = std::fs::read_dir(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(__io_err)?; Ok(__entries.filter_map(|e| e.ok().map(|e| e.path().to_string_lossy().to_string())).collect()) })()");
-            }
-            // sifr.os new intrinsics
-            "chdir" => {
-                self.write("std::env::set_current_dir(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(__io_err)");
-            }
-            "getpid" => {
-                self.write("std::process::id() as i64");
-            }
-            "cpu_count" => {
-                self.write("{ let __n = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1); __n as i64 }");
-            }
-            "stat_size" => {
-                self.write("std::fs::metadata(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map(|m| m.len() as i64).map_err(__io_err)");
-            }
-            "which" => {
-                self.write("{ let __name = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; std::env::var(\"PATH\").ok().and_then(|__path| __path.split(':').map(|d| std::path::Path::new(d).join(__name)).find(|p| p.is_file()).map(|p| p.to_string_lossy().to_string())) }");
-            }
-            "disk_usage" => {
-                self.write("{ let __path = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __stat = std::fs::metadata(__path); match __stat { Ok(_) => { let __out = std::process::Command::new(\"df\").args([\"-k\", __path]).output(); match __out { Ok(__o) => { let __s = String::from_utf8_lossy(&__o.stdout); let __lines: Vec<&str> = __s.lines().collect(); if __lines.len() >= 2 { let __parts: Vec<&str> = __lines[1].split_whitespace().collect(); if __parts.len() >= 4 { let __total = __parts[1].parse::<i64>().unwrap_or(0) * 1024; let __used = __parts[2].parse::<i64>().unwrap_or(0) * 1024; let __free = __parts[3].parse::<i64>().unwrap_or(0) * 1024; vec![__total, __used, __free] } else { vec![0i64, 0, 0] } } else { vec![0i64, 0, 0] } }, Err(_) => vec![0i64, 0, 0] } }, Err(_) => vec![0i64, 0, 0] } }");
-            }
-            // open() built-in — wraps open_file and constructs FileHandle (raises IOError on failure)
-            "builtin_open" => {
-                self.needs_file_handles = true;
-                self.used_stdlib_modules.insert("io".to_string());
-                self.write("{ use std::io::{BufReader, BufWriter}; let __path = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __mode = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; let __handle_id: i64 = { use std::sync::atomic::{AtomicI64, Ordering}; static __NEXT_FH_ID: AtomicI64 = AtomicI64::new(1); __NEXT_FH_ID.fetch_add(1, Ordering::SeqCst) }; match __mode { \"r\" | \"rt\" => { let __f = std::fs::File::open(__path).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextRead(__reader)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"w\" | \"wt\" => { let __f = std::fs::File::create(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"a\" | \"at\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"rb\" => { let __f = std::fs::File::open(__path).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryRead(__reader)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"wb\" => { let __f = std::fs::File::create(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"ab\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, _ => return Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() }) } }");
-            }
-            // open() built-in file handle intrinsics
-            "open_file" => {
-                self.needs_file_handles = true;
-                self.write("(|| -> Result<i64, IOError> { use std::io::{BufReader, BufWriter}; let __path = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __mode = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; let __handle_id: i64 = { use std::sync::atomic::{AtomicI64, Ordering}; static __NEXT_ID: AtomicI64 = AtomicI64::new(1); __NEXT_ID.fetch_add(1, Ordering::SeqCst) }; let __mode_s: &str = &__mode; let __path_s: &str = &__path; match __mode_s { \"r\" | \"rt\" => { let __f = std::fs::File::open(__path_s).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextRead(__reader)); Ok(__handle_id) }, \"w\" | \"wt\" => { let __f = std::fs::File::create(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"a\" | \"at\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"rb\" => { let __f = std::fs::File::open(__path_s).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryRead(__reader)); Ok(__handle_id) }, \"wb\" => { let __f = std::fs::File::create(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, \"ab\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, _ => Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() }) } })()");
-            }
-            "file_read" => {
-                self.write("(|| -> Result<String, IOError> { use std::io::Read; let __hid = ");
-                self.emit_expr(&args[0]);
-                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { let mut __s = String::new(); __r.read_to_string(&mut __s).map_err(__io_err)?; Ok(__s) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })()");
-            }
-            "file_write" => {
-                self.write("(|| -> Result<(), IOError> { use std::io::Write; let __hid = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __data = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextWrite(ref mut __w)) => { __w.write_all(__data.as_bytes()).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for writing\".to_string(), kind: \"Other\".to_string() }) } })()");
-            }
-            "file_readline" => {
-                self.write("(|| -> Result<Option<String>, IOError> { use std::io::BufRead; let __hid = ");
-                self.emit_expr(&args[0]);
-                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { let mut __line = String::new(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { Ok(None) } else { if __line.ends_with('\\n') { __line.pop(); if __line.ends_with('\\r') { __line.pop(); } } Ok(Some(__line)) } }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })()");
-            }
-            "file_readlines" => {
-                self.write("(|| -> Result<Vec<String>, IOError> { use std::io::BufRead; let __hid = ");
-                self.emit_expr(&args[0]);
-                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { let mut __lines: Vec<String> = Vec::new(); let mut __line = String::new(); loop { __line.clear(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { break; } let mut __l = __line.clone(); if __l.ends_with('\\n') { __l.pop(); if __l.ends_with('\\r') { __l.pop(); } } __lines.push(__l); } Ok(__lines) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })()");
-            }
-            "file_close" => {
-                self.write("{ let __hid = ");
-                self.emit_expr(&args[0]);
-                self.write("; __SIFR_FILE_HANDLES.lock().unwrap().remove(&__hid); }");
-            }
-            "file_read_bytes" => {
-                self.write("(|| -> Result<Vec<i64>, IOError> { use std::io::Read; let __hid = ");
-                self.emit_expr(&args[0]);
-                self.write("; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryRead(ref mut __r)) => { let mut __buf = Vec::new(); __r.read_to_end(&mut __buf).map_err(__io_err)?; Ok(__buf.iter().map(|&b| b as i64).collect()) }, _ => Err(IOError { message: \"file not open for binary reading\".to_string(), kind: \"Other\".to_string() }) } })()");
-            }
-            "file_write_bytes" => {
-                self.write("(|| -> Result<(), IOError> { use std::io::Write; let __hid = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __data: Vec<u8> = ");
-                self.emit_expr(&args[1]);
-                self.write(".iter().map(|&b| b as u8).collect(); let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryWrite(ref mut __w)) => { __w.write_all(&__data).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for binary writing\".to_string(), kind: \"Other\".to_string() }) } })()");
-            }
-            // Path.glob / Path.rglob
-            "glob_pattern" => {
-                self.write("(|| -> Result<Vec<String>, IOError> { let __dir = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __pat = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; let __full_pat = if __dir.is_empty() { __pat.to_string() } else { format!(\"{}/{}\", __dir, __pat) }; let __entries = std::fs::read_dir(__dir).map_err(__io_err)?; let mut __results: Vec<String> = Vec::new(); fn __matches_glob(name: &str, pattern: &str) -> bool { let __parts: Vec<&str> = pattern.split('*').collect(); if __parts.len() == 1 { return name == pattern; } if !name.starts_with(__parts[0]) { return false; } let mut __pos = __parts[0].len(); for __i in 1..__parts.len() { if __parts[__i].is_empty() { __pos = name.len(); continue; } match name[__pos..].find(__parts[__i]) { Some(__idx) => __pos += __idx + __parts[__i].len(), None => return false, } } true } for __entry in __entries { let __e = __entry.map_err(__io_err)?; let __name = __e.file_name().to_string_lossy().to_string(); if __matches_glob(&__name, __pat) { __results.push(__e.path().to_string_lossy().to_string()); } } __results.sort(); Ok(__results) })()");
-            }
-            "rglob_pattern" => {
-                self.write("(|| -> Result<Vec<String>, IOError> { let __dir = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __pat = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; fn __rglob_walk(dir: &str, pattern: &str, results: &mut Vec<String>) -> Result<(), IOError> { fn __io_err_inner(e: std::io::Error) -> IOError { IOError { message: e.to_string(), kind: \"Other\".to_string() } } fn __matches_glob(name: &str, pat: &str) -> bool { let parts: Vec<&str> = pat.split('*').collect(); if parts.len() == 1 { return name == pat; } if !name.starts_with(parts[0]) { return false; } let mut pos = parts[0].len(); for i in 1..parts.len() { if parts[i].is_empty() { pos = name.len(); continue; } match name[pos..].find(parts[i]) { Some(idx) => pos += idx + parts[i].len(), None => return false, } } true } let entries = std::fs::read_dir(dir).map_err(__io_err_inner)?; for entry in entries { let e = entry.map_err(__io_err_inner)?; let path = e.path(); let name = e.file_name().to_string_lossy().to_string(); if path.is_dir() { __rglob_walk(&path.to_string_lossy(), pattern, results)?; } if __matches_glob(&name, pattern) { results.push(path.to_string_lossy().to_string()); } } Ok(()) } let mut __results: Vec<String> = Vec::new(); __rglob_walk(__dir, __pat, &mut __results).map_err(|e| e)?; __results.sort(); Ok(__results) })()");
-            }
-            // os constants
-            "os_sep" => {
-                self.write("std::path::MAIN_SEPARATOR.to_string()");
-            }
-            "os_linesep" => {
-                #[cfg(target_os = "windows")]
-                self.write("\"\\r\\n\".to_string()");
-                #[cfg(not(target_os = "windows"))]
-                self.write("\"\\n\".to_string()");
-            }
-            "os_name" => {
-                self.write("{ if cfg!(target_os = \"windows\") { \"nt\".to_string() } else { \"posix\".to_string() } }");
-            }
-            // sifr.hashlib new intrinsics
-            "sha224" => {
-                self.write("{ use sha2::Digest; let mut __h = sha2::Sha224::new(); __h.update(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(".as_bytes()); format!(\"{:x}\", __h.finalize()) }");
-            }
-            "sha384" => {
-                self.write("{ use sha2::Digest; let mut __h = sha2::Sha384::new(); __h.update(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(".as_bytes()); format!(\"{:x}\", __h.finalize()) }");
-            }
-            "blake2b" => {
-                self.write("{ use blake2::{Blake2b512, Digest}; let mut __h = Blake2b512::new(); __h.update(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(".as_bytes()); format!(\"{:x}\", __h.finalize()) }");
-            }
-            "blake2s" => {
-                self.write("{ use blake2::{Blake2s256, Digest}; let mut __h = Blake2s256::new(); __h.update(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(".as_bytes()); format!(\"{:x}\", __h.finalize()) }");
-            }
-            // sifr.base64 new intrinsics
-            "b32encode" => {
-                self.write("{ let __b32_alpha = b\"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\"; let __data = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(".as_bytes(); let mut __out = String::new(); let mut __i = 0usize; while __i < __data.len() { let __b0 = __data[__i] as u64; let __b1 = if __i+1 < __data.len() { __data[__i+1] as u64 } else { 0 }; let __b2 = if __i+2 < __data.len() { __data[__i+2] as u64 } else { 0 }; let __b3 = if __i+3 < __data.len() { __data[__i+3] as u64 } else { 0 }; let __b4 = if __i+4 < __data.len() { __data[__i+4] as u64 } else { 0 }; let __buf = (__b0<<32)|(__b1<<24)|(__b2<<16)|(__b3<<8)|__b4; let __n = ((__data.len() - __i).min(5)) as u64; for __j in 0..8u64 { if __j < (__n*8+4)/5 { __out.push(__b32_alpha[((__buf >> (35 - __j*5)) & 0x1f) as usize] as char); } else { __out.push('='); } } __i += 5; } __out }");
-            }
-            "b32decode" => {
-                self.write("(|| -> Result<String, ParseError> { let __b32_alpha = b\"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567\"; let __s = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __s = __s.trim_end_matches('='); let mut __bits = 0u64; let mut __bit_count = 0u32; let mut __out: Vec<u8> = Vec::new(); for __c in __s.chars() { let __val = __b32_alpha.iter().position(|&b| b as char == __c.to_ascii_uppercase()).ok_or_else(|| ParseError { message: format!(\"invalid base32 char: {}\", __c) })? as u64; __bits = (__bits << 5) | __val; __bit_count += 5; if __bit_count >= 8 { __bit_count -= 8; __out.push(((__bits >> __bit_count) & 0xff) as u8); } } String::from_utf8(__out).map_err(|e| ParseError { message: e.to_string() }) })()");
-            }
-            "b32hexencode" => {
-                self.write("{ let __b32_alpha = b\"0123456789ABCDEFGHIJKLMNOPQRSTUV\"; let __data = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(".as_bytes(); let mut __out = String::new(); let mut __i = 0usize; while __i < __data.len() { let __b0 = __data[__i] as u64; let __b1 = if __i+1 < __data.len() { __data[__i+1] as u64 } else { 0 }; let __b2 = if __i+2 < __data.len() { __data[__i+2] as u64 } else { 0 }; let __b3 = if __i+3 < __data.len() { __data[__i+3] as u64 } else { 0 }; let __b4 = if __i+4 < __data.len() { __data[__i+4] as u64 } else { 0 }; let __buf = (__b0<<32)|(__b1<<24)|(__b2<<16)|(__b3<<8)|__b4; let __n = ((__data.len() - __i).min(5)) as u64; for __j in 0..8u64 { if __j < (__n*8+4)/5 { __out.push(__b32_alpha[((__buf >> (35 - __j*5)) & 0x1f) as usize] as char); } else { __out.push('='); } } __i += 5; } __out }");
-            }
-            "b32hexdecode" => {
-                self.write("(|| -> Result<String, ParseError> { let __b32_alpha = b\"0123456789ABCDEFGHIJKLMNOPQRSTUV\"; let __s = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __s = __s.trim_end_matches('='); let mut __bits = 0u64; let mut __bit_count = 0u32; let mut __out: Vec<u8> = Vec::new(); for __c in __s.chars() { let __val = __b32_alpha.iter().position(|&b| b as char == __c.to_ascii_uppercase()).ok_or_else(|| ParseError { message: format!(\"invalid base32hex char: {}\", __c) })? as u64; __bits = (__bits << 5) | __val; __bit_count += 5; if __bit_count >= 8 { __bit_count -= 8; __out.push(((__bits >> __bit_count) & 0xff) as u8); } } String::from_utf8(__out).map_err(|e| ParseError { message: e.to_string() }) })()");
-            }
-            // sifr.platform new intrinsics
-            "platform_release" => {
-                self.write("{ std::process::Command::new(\"uname\").arg(\"-r\").output().map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default() }");
-            }
-            "platform_version" => {
-                self.write("{ std::process::Command::new(\"uname\").arg(\"-v\").output().map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string()).unwrap_or_default() }");
-            }
-            "platform_processor" => {
-                self.write("std::env::consts::ARCH.to_string()");
-            }
-            // sifr.time new intrinsics
-            "strptime" => {
-                self.write("(|| -> Result<String, ValueError> { use chrono::NaiveDateTime; let __s = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __fmt = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; NaiveDateTime::parse_from_str(__s, __fmt).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).map_err(|e| ValueError { message: e.to_string() }) })()");
-            }
-            "gmtime" => {
-                self.write("{ use chrono::{DateTime, Utc}; let __ts = ");
-                self.emit_expr(&args[0]);
-                self.write(" as i64; DateTime::<Utc>::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).unwrap_or_default() }");
-            }
-            "localtime" => {
-                self.write("{ use chrono::{DateTime, Utc, Local}; let __ts = ");
-                self.emit_expr(&args[0]);
-                self.write(" as i64; DateTime::<Utc>::from_timestamp(__ts, 0).map(|dt| dt.with_timezone(&Local).format(\"%Y-%m-%dT%H:%M:%S\").to_string()).unwrap_or_default() }");
-            }
-            // sifr.sys extras
-            "sys_exit" => {
-                self.write("{ std::process::exit(");
-                self.emit_expr(&args[0]);
-                self.write(" as i32) }");
-            }
-            "sys_version" => {
-                self.write("\"sifr 0.1.0\".to_string()");
-            }
-            "sys_platform" => {
-                self.write("std::env::consts::OS.to_string()");
-            }
-            "sys_maxsize" => {
-                self.write("i64::MAX");
-            }
-            "subprocess_run" => {
-                self.write("(|| -> Result<String, IOError> { let output = std::process::Command::new(\"sh\").args([\"-c\", ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("]).output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
-            }
-            "subprocess_run_with_input" => {
-                self.write("(|| -> Result<String, IOError> { use std::io::Write; let mut child = std::process::Command::new(\"sh\").args([\"-c\", ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().map_err(__io_err)?; if let Some(mut stdin) = child.stdin.take() { stdin.write_all(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(".as_bytes()).map_err(__io_err)?; } let output = child.wait_with_output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) })()");
-            }
-            "subprocess_run_structured" => {
-                self.write("(|| -> Result<Vec<String>, IOError> { let output = std::process::Command::new(\"sh\").args([\"-c\", ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("]).output().map_err(__io_err)?; let stdout = String::from_utf8_lossy(&output.stdout).to_string(); let stderr = String::from_utf8_lossy(&output.stderr).to_string(); let returncode = output.status.code().unwrap_or(-1).to_string(); Ok(vec![stdout, stderr, returncode]) })()");
-            }
-            // sifr.html
-            "html_escape" => {
-                self.write("{ let __s = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; __s.replace('&', \"&amp;\").replace('<', \"&lt;\").replace('>', \"&gt;\").replace('\"', \"&quot;\").replace('\\'', \"&#x27;\") }");
-            }
-            "html_unescape" => {
-                self.write("{ let __s = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; __s.replace(\"&amp;\", \"&\").replace(\"&lt;\", \"<\").replace(\"&gt;\", \">\").replace(\"&quot;\", \"\\\"\").replace(\"&#x27;\", \"'\").replace(\"&#39;\", \"'\") }");
-            }
-            // sifr.calendar
-            "calendar_isleap" => {
-                self.write("{ let __y = ");
-                self.emit_expr(&args[0]);
-                self.write("; (__y % 4 == 0 && __y % 100 != 0) || (__y % 400 == 0) }");
-            }
-            "calendar_weekday" => {
-                // Tomohiko Sakamoto's algorithm for day of week (0=Monday)
-                self.write("{ let __y0 = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __m0 = ");
-                self.emit_expr(&args[1]);
-                self.write("; let __d0 = ");
-                self.emit_expr(&args[2]);
-                self.write("; let __t = [0i64, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]; let __y = if __m0 < 3 { __y0 - 1 } else { __y0 }; ((__y + __y/4 - __y/100 + __y/400 + __t[(__m0-1) as usize] + __d0) % 7 + 6) % 7 }");
-            }
-            "calendar_monthrange" => {
-                self.write("{ let __y = ");
-                self.emit_expr(&args[0]);
-                self.write("; let __m = ");
-                self.emit_expr(&args[1]);
-                self.write("; let __days = match __m { 1|3|5|7|8|10|12 => 31i64, 4|6|9|11 => 30, 2 => if (__y%4==0 && __y%100!=0)||(__y%400==0) { 29 } else { 28 }, _ => 30 }; let __t = [0i64,3,2,5,0,3,5,1,4,6,2,4]; let __y2 = if __m < 3 { __y-1 } else { __y }; let __wd = ((__y2+__y2/4-__y2/100+__y2/400+__t[(__m-1) as usize]+1)%7+6)%7; vec![__wd, __days] }");
-            }
-            // sifr.gzip
-            "gzip_compress" => {
-                self.write("{ use std::io::Write; let __data = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(".as_bytes(); let mut __enc = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default()); __enc.write_all(__data).unwrap_or(()); __enc.finish().unwrap_or_default().iter().map(|b| *b as i64).collect::<Vec<i64>>() }");
-            }
-            "gzip_decompress" => {
-                self.write("(|| -> Result<String, IOError> { use std::io::Read; let __bytes: Vec<u8> = ");
-                self.emit_expr(&args[0]);
-                self.write(".iter().map(|b| *b as u8).collect(); let mut __dec = flate2::read::GzDecoder::new(__bytes.as_slice()); let mut __out = String::new(); __dec.read_to_string(&mut __out).map_err(__io_err)?; Ok(__out) })()");
-            }
-            // sifr.zipfile
-            "zip_create" => {
-                self.write("(|| -> Result<(), IOError> { let __f = std::fs::File::create(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(__io_err)?; drop(zip::ZipWriter::new(__f)); Ok(()) })()");
-            }
-            "zip_add_file" => {
-                self.write("(|| -> Result<(), IOError> { let __path = ");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write("; let __name = ");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write("; let __content = ");
-                self.emit_expr_as_str_ref(&args[2]);
-                self.write("; let __f = std::fs::OpenOptions::new().read(true).write(true).open(__path).map_err(__io_err)?; let mut __zip = zip::ZipWriter::new_append(__f).map_err(|e| IOError::new(e.to_string()))?; let __opts = zip::write::FileOptions::default(); __zip.start_file(__name, __opts).map_err(|e| IOError::new(e.to_string()))?; use std::io::Write; __zip.write_all(__content.as_bytes()).map_err(__io_err)?; __zip.finish().map_err(|e| IOError::new(e.to_string()))?; Ok(()) })()");
-            }
-            "zip_read_file" => {
-                self.write("(|| -> Result<String, IOError> { let __f = std::fs::File::open(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(__io_err)?; let mut __zip = zip::ZipArchive::new(__f).map_err(|e| IOError::new(e.to_string()))?; let mut __file = __zip.by_name(");
-                self.emit_expr_as_str_ref(&args[1]);
-                self.write(").map_err(|e| IOError::new(e.to_string()))?; let mut __content = String::new(); use std::io::Read; __file.read_to_string(&mut __content).map_err(__io_err)?; Ok(__content) })()");
-            }
-            "zip_namelist" => {
-                self.write("(|| -> Result<Vec<String>, IOError> { let __f = std::fs::File::open(");
-                self.emit_expr_as_str_ref(&args[0]);
-                self.write(").map_err(__io_err)?; let mut __zip = zip::ZipArchive::new(__f).map_err(|e| IOError::new(e.to_string()))?; Ok((0..__zip.len()).map(|i| __zip.by_index(i).map(|f| f.name().to_string()).unwrap_or_default()).collect()) })()");
-            }
-            // sifr.logging
-            "set_global_level" => {
-                self.needs_logging_state = true;
-                self.write("{ *__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap() = ");
-                self.emit_expr(&args[0]);
-                self.write("; }");
-            }
-            "get_global_level" => {
-                self.needs_logging_state = true;
-                self.write("*__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap()");
-            }
-            _ => {
-                // Unknown stdlib function — emit as regular call
-                self.write(func);
-                self.write("(");
-                for (i, arg) in args.iter().enumerate() {
-                    if i > 0 {
-                        self.write(", ");
-                    }
-                    self.emit_expr(arg);
-                }
-                self.write(")");
-            }
-        }
-    }
-
-    fn try_emit_intrinsic_via_registry(&mut self, func: &str, args: &[HirExpr]) -> bool {
-        let rendered_args = args
-            .iter()
-            .map(|arg| self.render_expr_with_lowered_fallback(arg))
-            .collect::<Vec<_>>();
-        let Some(lowered) = intrinsics::lower_intrinsic(func, &rendered_args) else {
-            return false;
-        };
-
-        if let Some(required_crate) = lowered.required_crate {
-            self.intrinsic_registry_crates.insert(required_crate.to_string());
-        }
-        for required_crate in lowered.additional_required_crates {
-            self.intrinsic_registry_crates
-                .insert((*required_crate).to_string());
-        }
-
-        self.write(&crate::render_expr(&lowered.expr));
-        true
-    }
-
-    fn try_emit_method_via_registry(
-        &mut self,
-        object_ty: &Type,
-        object: &HirExpr,
-        method: &str,
-        args: &[HirExpr],
-    ) -> bool {
-        let is_deque_data_field = self.is_deque_data_field(object);
-        let rendered_object = self.render_expr_with_lowered_fallback(object);
-        let mut rendered_args = args
-            .iter()
-            .map(|arg| self.render_expr_with_lowered_fallback(arg))
-            .collect::<Vec<_>>();
-
-        if matches!(object_ty, Type::List(_))
-            && matches!(method, "append" | "appendleft")
-            && !args.is_empty()
-        {
-            // Preserve legacy behavior: clone TypeVar list args to avoid move issues.
-            if matches!(args[0].ty(), Type::TypeVar(_)) {
-                rendered_args[0] = format!("{}.clone()", rendered_args[0]);
-            }
-        }
-
-        if matches!(object_ty, Type::List(_)) && method == "insert" && args.len() >= 2 {
-            // Preserve legacy behavior: clone borrowed/mut-borrowed move-owned values.
-            let needs_clone = if let HirExpr::Name { name, ty } = &args[1] {
-                (self.borrowed_params.contains(name.as_str())
-                    || self.mut_borrowed_params.contains(name.as_str()))
-                    && ty.ownership() != sifr_type_system::OwnershipKind::Copy
-            } else {
-                false
-            };
-            if needs_clone {
-                rendered_args[1] = format!("{}.clone()", rendered_args[1]);
-            }
-        }
-
-        let Some(lowered) = methods::lower_method_with_context(
-            object_ty,
-            method,
-            &rendered_object,
-            &rendered_args,
-            is_deque_data_field,
-        )
-        else {
-            return false;
-        };
-        self.write(&crate::render_expr(&lowered.expr));
-        true
-    }
-
 }
 
 pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
