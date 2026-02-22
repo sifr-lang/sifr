@@ -342,7 +342,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
             return None;
         }
-        let lowered = try_lower_leaf_expr(value)?;
+        let lowered = try_lower_simple_plain_return_value(value)?;
         let variant = crate::helpers::find_union_variant(members, value.ty())?;
         let enum_name = ctx.return_type?.union_enum_name();
         return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -1111,10 +1111,41 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_non_leaf_return_with_non_option_union_return_context() {
+    fn lowers_return_name_with_non_option_union_return_context() {
         let stmt = HirStmt::Return {
             value: Some(HirExpr::Name {
                 name: "x".to_string(),
+                ty: Type::Int,
+            }),
+        };
+        let union_ret = Type::Union(vec![Type::Int, Type::Str]);
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&union_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("non-option union name return lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::FnCall { ref func, ref args }))
+                if matches!(func.as_ref(), RustExpr::Path(parts) if parts.len() == 2)
+                    && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "x")
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_non_leaf_return_with_non_option_union_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Call {
+                func: "value".to_string(),
+                args: vec![],
                 ty: Type::Int,
             }),
         };
