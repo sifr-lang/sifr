@@ -1,7 +1,9 @@
 use crate::{
-    body_contains_field_assign_codegen,
-    collect_mutated_vars_with_sigs,
-    recursive_field_rust_type,
+    helpers::{
+        body_contains_field_assign_codegen,
+        collect_mutated_vars_with_sigs,
+        recursive_field_rust_type,
+    },
     RustEmitter,
 };
 use sifr_hir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};

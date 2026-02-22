@@ -1,6 +1,5 @@
 use crate::{
-    helpers::{collect_mutated_vars_with_sigs, is_auto_display_type},
-    recursive_field_rust_type,
+    helpers::{collect_mutated_vars_with_sigs, is_auto_display_type, recursive_field_rust_type},
     RustEmitter,
 };
 use sifr_hir::{HirClass, HirModule, HirStmt};
