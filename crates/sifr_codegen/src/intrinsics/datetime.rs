@@ -1,6 +1,6 @@
 //! Datetime intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustLiteral, RustParam, RustType};
 
 pub(super) fn lower_datetime_now(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
@@ -18,7 +18,7 @@ pub(super) fn lower_datetime_now(args: &[String]) -> Option<RustExpr> {
                 args: vec![],
             }),
             method: "format".to_string(),
-            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
+            args: vec![RustExpr::Literal(RustLiteral::Str(
                 "%Y-%m-%dT%H:%M:%S".to_string(),
             ))],
         }),
@@ -40,11 +40,70 @@ pub(super) fn lower_datetime_format(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __dt_str = {}; let __fmt = {}; chrono::NaiveDateTime::parse_from_str(&__dt_str, &__fmt).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).map_err(|e| ValueError {{ message: e.to_string() }}) }}",
-        args[0],
-        args[1]
-    )))
+    // chrono::NaiveDateTime::parse_from_str(&dt_str, &fmt).map(|dt| dt.format("%Y-%m-%dT%H:%M:%S").to_string()).map_err(|e| ValueError { message: e.to_string() })
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "chrono".to_string(),
+                        "NaiveDateTime".to_string(),
+                        "parse_from_str".to_string(),
+                    ])),
+                    args: vec![
+                        RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident(args[0].clone())),
+                        },
+                        RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident(args[1].clone())),
+                        },
+                    ],
+                }),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "dt".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("dt".to_string())),
+                            method: "format".to_string(),
+                            args: vec![RustExpr::Literal(RustLiteral::Str(
+                                "%Y-%m-%dT%H:%M:%S".to_string(),
+                            ))],
+                        }),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "map_err".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "e".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::StructInit {
+                    name: "ValueError".to_string(),
+                    fields: vec![(
+                        "message".to_string(),
+                        RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("e".to_string())),
+                            method: "to_string".to_string(),
+                            args: vec![],
+                        },
+                    )],
+                }),
+                is_move: false,
+            }],
+        }),
+        method: "ok".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_datetime_from_timestamp(args: &[String]) -> Option<RustExpr> {
