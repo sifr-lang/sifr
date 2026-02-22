@@ -321,14 +321,14 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         return None;
     }
     let option_return = ctx.return_type.is_some_and(crate::helpers::is_option_type);
-    if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
-        return None;
-    }
     if matches!(value.ty(), Type::TypeVar(_)) {
         return None;
     }
 
     if option_return {
+        if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
+            return None;
+        }
         let lowered = try_lower_leaf_expr(value)?;
         if matches!(value, HirExpr::NoneLiteral) {
             return Some(vec![RustStmt::Return(Some(lowered))]);
@@ -339,6 +339,9 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         }))]);
     }
     if let Some(Type::Union(members)) = ctx.return_type {
+        if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
+            return None;
+        }
         let lowered = try_lower_leaf_expr(value)?;
         let variant = crate::helpers::find_union_variant(members, value.ty())?;
         let enum_name = ctx.return_type?.union_enum_name();
@@ -346,6 +349,11 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
             func: Box::new(RustExpr::Path(vec![enum_name, variant])),
             args: vec![lowered],
         }))]);
+    }
+    if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
+        return Some(vec![RustStmt::Return(Some(
+            try_lower_simple_plain_return_option_unwrap_value(value)?,
+        ))]);
     }
     Some(vec![RustStmt::Return(Some(
         try_lower_simple_plain_return_value(value)?,
@@ -358,6 +366,17 @@ fn try_lower_simple_plain_return_value(value: &HirExpr) -> Option<RustExpr> {
     }
     if let HirExpr::Name { name, .. } = value {
         return Some(RustExpr::Ident(name.clone()));
+    }
+    None
+}
+
+fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<RustExpr> {
+    if let HirExpr::Name { name, .. } = value {
+        return Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(name.clone())),
+            method: "unwrap".to_string(),
+            args: vec![],
+        });
     }
     None
 }
@@ -891,6 +910,64 @@ mod tests {
             }
             _ => panic!("expected return Some(...)"),
         }
+    }
+
+    #[test]
+    fn lowers_return_option_name_with_unwrap_in_plain_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            }),
+        };
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&Type::Int),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("plain return option name lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            &lowered[0],
+            RustStmt::Return(Some(RustExpr::MethodCall {
+                receiver,
+                ref method,
+                ref args,
+            })) if method == "unwrap"
+                && args.is_empty()
+                && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_option_name_return_with_option_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            }),
+        };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        assert!(
+            try_lower_simple_stmt_with_ctx(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+                SimpleStmtLoweringCtx {
+                    return_type: Some(&option_ret),
+                    in_display_impl: false,
+                    in_class_scope: false,
+                },
+            )
+            .is_none()
+        );
     }
 
     #[test]
