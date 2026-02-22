@@ -766,6 +766,81 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_let_with_not_bool_name_rhs() {
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: Type::Bool,
+            value: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "ok".to_string(),
+                    ty: Type::Bool,
+                }),
+                ty: Type::Bool,
+            },
+            is_mutable: false,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let not-bool name rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                name: ref let_name,
+                value: RustExpr::UnaryOp {
+                    ref op,
+                    ref operand,
+                },
+                ..
+            } if let_name == "x"
+                && op == "!"
+                && matches!(operand.as_ref(), RustExpr::Ident(name) if name == "ok")
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_assign_with_not_bool_name_rhs() {
+        let assign_stmt = HirStmt::Assign {
+            name: "x".to_string(),
+            value: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "ok".to_string(),
+                    ty: Type::Bool,
+                }),
+                ty: Type::Bool,
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &assign_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assign not-bool name rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assign {
+                target: RustExpr::Ident(ref target_name),
+                value: RustExpr::UnaryOp {
+                    ref op,
+                    ref operand,
+                },
+            } if target_name == "x"
+                && op == "!"
+                && matches!(operand.as_ref(), RustExpr::Ident(name) if name == "ok")
+        ));
+    }
+
+    #[test]
     fn lowers_simple_let_name_rhs() {
         let let_stmt = HirStmt::Let {
             name: "x".to_string(),
