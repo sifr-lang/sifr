@@ -57,7 +57,7 @@ fn compile_source(source: &str) -> Result<String, Vec<String>> {
 /// Compile source and return the generated Rust code with stdlib metadata.
 fn compile_source_with_metadata(source: &str) -> Result<(String, HashSet<String>), Vec<String>> {
     match sifr_driver::compile_with_metadata(source) {
-        sifr_driver::CompileResultFull::Success { rust_source, used_stdlib_modules } => {
+        sifr_driver::CompileResultFull::Success { rust_source, used_stdlib_modules, required_crates: _ } => {
             Ok((rust_source, used_stdlib_modules))
         }
         sifr_driver::CompileResultFull::Errors { errors } => {
