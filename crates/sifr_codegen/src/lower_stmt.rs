@@ -2080,6 +2080,61 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_for_with_else_and_name_iter() {
+        let for_with_else = HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: Some(vec![HirStmt::Pass]),
+        };
+        let lowered = try_lower_simple_stmt(
+            &for_with_else,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("for with else and name iter lowered");
+        assert_eq!(lowered.len(), 3);
+        assert!(matches!(lowered[0], RustStmt::Let { .. }));
+        assert!(matches!(
+            lowered[1],
+            RustStmt::For {
+                iter: RustExpr::Ident(ref iter_name),
+                ..
+            } if iter_name == "items"
+        ));
+        assert!(matches!(lowered[2], RustStmt::If { .. }));
+    }
+
+    #[test]
+    fn does_not_lower_for_with_else_and_non_leaf_iter() {
+        let for_with_else = HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::Call {
+                func: "items".to_string(),
+                args: vec![],
+                ty: Type::List(Box::new(Type::Int)),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: Some(vec![HirStmt::Pass]),
+        };
+        assert!(
+            try_lower_simple_stmt(
+                &for_with_else,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
     fn does_not_lower_for_with_tuple_target() {
         let for_tuple_target = HirStmt::For {
             target: "i,v".to_string(),
