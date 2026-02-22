@@ -17,7 +17,7 @@
 | 11 | Stdlib Deepening | 4 (pure_expansion → class_deepening) | completed | ~38% → deep CPython parity, 8 new modules, `datetime`/`deque`/`Pattern` classes, API naming divergences documented |
 | 12 | Stdlib Remediation | 1 (stdlib_remediation) | pending | `open()` built-in (text + binary modes), `datetime.time`/`timezone`, `CompletedProcess`, `Path.glob`, `re` flags, minor gaps |
 | 13 | Type System Completion | 6 (auto_init → stdlib_generic_rewrite) | pending | Auto-init, user-facing generics, pattern matching, enums, bigint, generic stdlib |
-| 14 | Codegen Architecture | 6 (rust_ir_types → codegen_structural_passes) | pending | Structured Rust IR, pretty-printer, preamble/stmt/expr/intrinsic migration, dead-code elimination, clone optimization |
+| 14 | Codegen Architecture | 6 (rust_ir_types → codegen_structural_passes) | in_progress | Structured Rust IR, pretty-printer, preamble/stmt/expr/intrinsic migration, dead-code elimination, clone optimization |
 | 15 | Async and Ecosystem Foundation | 5 (async_core → async_advanced) | pending | Async runtime, typed serde, networking stdlib, sync primitives, async generators |
 | 16 | Web Stack | 6 (web_framework → web_services) | pending | Web framework, database, typed extractors, auth, production features, external services |
 | 17 | Interoperability | 1 (ffi) | pending | Rust FFI, C FFI, unsafe boundary |
