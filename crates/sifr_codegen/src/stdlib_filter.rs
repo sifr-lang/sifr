@@ -13,6 +13,24 @@ enum TopLevelChunk {
     OtherLine(String),
 }
 
+#[derive(Debug, Clone)]
+struct StdlibIrItem {
+    name: String,
+    code: String,
+    refs: HashSet<String>,
+}
+
+#[derive(Debug, Clone)]
+enum StdlibIrChunk {
+    Item(StdlibIrItem),
+    OtherLine(String),
+}
+
+#[derive(Debug, Clone)]
+struct StdlibIrFile {
+    chunks: Vec<StdlibIrChunk>,
+}
+
 #[derive(Debug, Default, Clone, Copy)]
 pub(crate) struct SharedPreludeNeeds {
     pub(crate) needs_hashmap: bool,
@@ -26,6 +44,30 @@ pub(crate) struct PreparedStdlibModule {
     pub(crate) stripped_code: String,
     pub(crate) shared_needs: SharedPreludeNeeds,
 }
+
+const GLOBAL_INFRA_TYPES: &[&str] = &[
+    "IOError",
+    "ParseError",
+    "ValueError",
+    "TypeError",
+    "RegexError",
+    "KeyError",
+    "IndexError",
+    "AttributeError",
+    "OverflowError",
+    "ZeroDivisionError",
+    "RuntimeError",
+    "NotImplementedError",
+    "Error",
+    "JSONDecodeError",
+    "TOMLDecodeError",
+    "FileNotFoundError",
+    "PermissionError",
+    "FileExistsError",
+    "IsADirectoryError",
+    "NotADirectoryError",
+    "DirectoryNotEmptyError",
+];
 
 /// Strip per-module shared imports/infrastructure and return dependency flags.
 pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlibModule {
@@ -108,83 +150,10 @@ pub(crate) fn filter_rust_code_to_needed(
     rust_code: &str,
     imported_names: &HashSet<String>,
 ) -> String {
-    let chunks = parse_top_level_chunks(rust_code);
-    let items: Vec<&TopLevelItem> = chunks
-        .iter()
-        .filter_map(|chunk| match chunk {
-            TopLevelChunk::Item(item) => Some(item),
-            TopLevelChunk::OtherLine(_) => None,
-        })
-        .collect();
-
-    // Step 1: Build a dependency graph (which top-level items refer to which others).
-    let mut deps: HashMap<String, HashSet<String>> = HashMap::new();
-    let item_names: HashSet<String> = items.iter().map(|item| item.name.clone()).collect();
-    // Error types that are defined globally (not in stdlib preamble) - don't include them as deps.
-    let global_types: HashSet<&str> = [
-        "IOError",
-        "ParseError",
-        "ValueError",
-        "TypeError",
-        "RegexError",
-        "KeyError",
-        "IndexError",
-        "AttributeError",
-        "OverflowError",
-        "ZeroDivisionError",
-        "RuntimeError",
-        "NotImplementedError",
-        "Error",
-        "JSONDecodeError",
-        "TOMLDecodeError",
-        "FileNotFoundError",
-        "PermissionError",
-        "FileExistsError",
-        "IsADirectoryError",
-        "NotADirectoryError",
-        "DirectoryNotEmptyError",
-    ]
-    .iter()
-    .copied()
-    .collect();
-    for item in &items {
-        let called = referenced_item_names(&item.code, &item_names, &item.name, &global_types);
-        // Multiple blocks with the same name (e.g., impl X + impl Display for X)
-        // should contribute dependencies together.
-        deps.entry(item.name.clone()).or_default().extend(called);
-    }
-
-    // Step 2: Compute transitive closure of required item names.
-    let mut needed: HashSet<String> = imported_names.clone();
-    let mut worklist: Vec<String> = imported_names.iter().cloned().collect();
-    while let Some(name) = worklist.pop() {
-        if let Some(called) = deps.get(&name) {
-            for dep in called {
-                if needed.insert(dep.clone()) {
-                    worklist.push(dep.clone());
-                }
-            }
-        }
-    }
-
-    // Step 3: Emit required items in original order, keeping non-item top-level lines.
-    let mut result = String::new();
-    for chunk in chunks {
-        match chunk {
-            TopLevelChunk::Item(item) => {
-                if needed.contains(&item.name) {
-                    result.push_str(&item.code);
-                    result.push('\n');
-                }
-            }
-            TopLevelChunk::OtherLine(line) => {
-                result.push_str(&line);
-                result.push('\n');
-            }
-        }
-    }
-
-    result
+    let ir = parse_stdlib_ir_file(rust_code);
+    let deps = deps_by_item_name(&ir);
+    let needed = transitive_needed_items(imported_names, &deps);
+    render_needed_ir_items(&ir, &needed)
 }
 
 /// Strip top-level items from Rust source whose names are already in `emitted_items`.
@@ -236,6 +205,86 @@ pub(crate) fn dedup_rust_items(
         }
     }
 
+    result
+}
+
+fn parse_stdlib_ir_file(rust_code: &str) -> StdlibIrFile {
+    let chunks = parse_top_level_chunks(rust_code);
+    let item_names: HashSet<String> = chunks
+        .iter()
+        .filter_map(|chunk| match chunk {
+            TopLevelChunk::Item(item) => Some(item.name.clone()),
+            TopLevelChunk::OtherLine(_) => None,
+        })
+        .collect();
+    let global_types: HashSet<&str> = GLOBAL_INFRA_TYPES.iter().copied().collect();
+
+    let chunks = chunks
+        .into_iter()
+        .map(|chunk| match chunk {
+            TopLevelChunk::Item(item) => {
+                let refs = referenced_item_names(&item.code, &item_names, &item.name, &global_types);
+                StdlibIrChunk::Item(StdlibIrItem {
+                    name: item.name,
+                    code: item.code,
+                    refs,
+                })
+            }
+            TopLevelChunk::OtherLine(line) => StdlibIrChunk::OtherLine(line),
+        })
+        .collect();
+    StdlibIrFile { chunks }
+}
+
+fn deps_by_item_name(ir: &StdlibIrFile) -> HashMap<String, HashSet<String>> {
+    let mut deps = HashMap::new();
+    for chunk in &ir.chunks {
+        if let StdlibIrChunk::Item(item) = chunk {
+            // Multiple blocks with the same name (e.g., impl X + impl Display for X)
+            // should contribute dependencies together.
+            deps.entry(item.name.clone())
+                .or_insert_with(HashSet::new)
+                .extend(item.refs.iter().cloned());
+        }
+    }
+    deps
+}
+
+fn transitive_needed_items(
+    imported_names: &HashSet<String>,
+    deps: &HashMap<String, HashSet<String>>,
+) -> HashSet<String> {
+    let mut needed: HashSet<String> = imported_names.clone();
+    let mut worklist: Vec<String> = imported_names.iter().cloned().collect();
+
+    while let Some(name) = worklist.pop() {
+        if let Some(called) = deps.get(&name) {
+            for dep in called {
+                if needed.insert(dep.clone()) {
+                    worklist.push(dep.clone());
+                }
+            }
+        }
+    }
+    needed
+}
+
+fn render_needed_ir_items(ir: &StdlibIrFile, needed: &HashSet<String>) -> String {
+    let mut result = String::new();
+    for chunk in &ir.chunks {
+        match chunk {
+            StdlibIrChunk::Item(item) => {
+                if needed.contains(&item.name) {
+                    result.push_str(&item.code);
+                    result.push('\n');
+                }
+            }
+            StdlibIrChunk::OtherLine(line) => {
+                result.push_str(line);
+                result.push('\n');
+            }
+        }
+    }
     result
 }
 
@@ -809,6 +858,29 @@ pub fn helper() -> i64 {
         let filtered = filter_rust_code_to_needed(code, &imported);
         assert!(filtered.contains("pub fn root()"));
         assert!(!filtered.contains("pub fn helper()"));
+    }
+
+    #[test]
+    fn filter_keeps_all_items_for_needed_type_name() {
+        let code = r#"
+pub struct Builder {}
+
+impl Builder {
+    pub fn new() -> Builder {
+        Builder {}
+    }
+}
+
+pub fn root() -> Builder {
+    Builder::new()
+}
+"#;
+        let imported = HashSet::from(["root".to_string()]);
+        let filtered = filter_rust_code_to_needed(code, &imported);
+
+        assert!(filtered.contains("pub fn root() -> Builder"));
+        assert!(filtered.contains("pub struct Builder {}"));
+        assert!(filtered.contains("impl Builder {"));
     }
 
     #[test]
