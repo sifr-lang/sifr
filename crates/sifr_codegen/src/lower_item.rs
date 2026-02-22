@@ -11,6 +11,18 @@ pub fn lower_item_raw(raw: &str) -> Result<Vec<RustItem>, CodegenError> {
     Ok(vec![RustItem::RawCode(raw.to_string())])
 }
 
+/// Conservative dispatcher for simple module-constant item lowering.
+pub fn try_lower_simple_module_constant_item(
+    name: &str,
+    ty: &Type,
+    value: &HirExpr,
+) -> Option<(RustItem, String)> {
+    try_lower_simple_module_const_item(name, ty, value)
+        .or_else(|| try_lower_simple_module_string_const_item(name, ty, value))
+        .or_else(|| try_lower_simple_module_none_const_item(name, ty, value))
+        .or_else(|| try_lower_simple_module_helper_const_item(name, ty, value))
+}
+
 /// Conservatively lowers module-level primitive constants via IR.
 /// Falls back for non-primitive or non-leaf values.
 pub fn try_lower_simple_module_const_item(
@@ -132,6 +144,15 @@ mod tests {
         let items = lower_item_raw("fn helper() {}").expect("placeholder lower should succeed");
         assert_eq!(items.len(), 1);
         assert!(matches!(items[0], RustItem::RawCode(_)));
+    }
+
+    #[test]
+    fn dispatcher_lowers_simple_module_constant_item() {
+        let (item, rust_name) =
+            try_lower_simple_module_constant_item("answer", &Type::Int, &HirExpr::IntLiteral(42))
+                .expect("dispatcher should lower simple constant");
+        assert_eq!(rust_name, "ANSWER");
+        assert!(matches!(item, RustItem::Const { .. }));
     }
 
     #[test]

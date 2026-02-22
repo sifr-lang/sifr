@@ -1189,28 +1189,8 @@ impl RustEmitter {
 
         // Emit module-level constants and register them for name resolution
         for (name, ty, value) in &module.constants {
-            // First dual-path slice for item lowering: lower simple primitive constants through IR.
-            if let Some((item, rust_name)) = try_lower_simple_module_const_item(name, ty, value) {
-                self.output.push_str(&render_items(&[item]));
-                self.module_constants.insert(name.clone(), (ty.clone(), rust_name));
-                continue;
-            }
             if let Some((item, rust_name_call)) =
-                try_lower_simple_module_string_const_item(name, ty, value)
-            {
-                self.output.push_str(&render_items(&[item]));
-                self.module_constants.insert(name.clone(), (ty.clone(), rust_name_call));
-                continue;
-            }
-            if let Some((item, rust_name_call)) =
-                try_lower_simple_module_none_const_item(name, ty, value)
-            {
-                self.output.push_str(&render_items(&[item]));
-                self.module_constants.insert(name.clone(), (ty.clone(), rust_name_call));
-                continue;
-            }
-            if let Some((item, rust_name_call)) =
-                try_lower_simple_module_helper_const_item(name, ty, value)
+                try_lower_simple_module_constant_item(name, ty, value)
             {
                 self.output.push_str(&render_items(&[item]));
                 self.module_constants.insert(name.clone(), (ty.clone(), rust_name_call));
