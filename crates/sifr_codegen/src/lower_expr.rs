@@ -87,26 +87,43 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             ops,
             comparators,
             ..
-        } if ops.len() == 1 && comparators.len() == 1 => {
-            let right = comparators.first()?;
-            if let Some(lowered) = try_lower_option_none_compare_expr(left, &ops[0], right) {
-                return Some(lowered);
+        } if !ops.is_empty() && ops.len() == comparators.len() => {
+            if ops.len() == 1 {
+                let right = comparators.first()?;
+                if let Some(lowered) = try_lower_option_none_compare_expr(left, &ops[0], right) {
+                    return Some(lowered);
+                }
             }
-            let op = &ops[0];
-            let types_match = left.ty() == right.ty();
-            let comparable = matches!(left.ty(), Type::Int | Type::Float | Type::LiteralInt(_))
-                || matches!(left.ty(), Type::Bool | Type::LiteralBool(_));
-            if !matches!(op.as_str(), "==" | "!=" | "<" | "<=" | ">" | ">=")
-                || !types_match
-                || !comparable
-            {
-                return None;
+
+            let mut lhs_expr = left.as_ref();
+            let mut lowered_chain: Option<RustExpr> = None;
+
+            for (idx, op) in ops.iter().enumerate() {
+                let rhs_expr = comparators.get(idx)?;
+                if !is_safe_simple_compare(op, lhs_expr.ty(), rhs_expr.ty()) {
+                    return None;
+                }
+
+                let cmp = RustExpr::BinOp {
+                    left: Box::new(try_lower_leaf_expr(lhs_expr)?),
+                    op: op.clone(),
+                    right: Box::new(try_lower_leaf_expr(rhs_expr)?),
+                };
+
+                lowered_chain = Some(if let Some(existing) = lowered_chain {
+                    RustExpr::BinOp {
+                        left: Box::new(existing),
+                        op: "&&".to_string(),
+                        right: Box::new(cmp),
+                    }
+                } else {
+                    cmp
+                });
+
+                lhs_expr = rhs_expr;
             }
-            Some(RustExpr::BinOp {
-                left: Box::new(try_lower_leaf_expr(left)?),
-                op: ops[0].clone(),
-                right: Box::new(try_lower_leaf_expr(right)?),
-            })
+
+            lowered_chain
         }
         HirExpr::BoolOp { op, values, .. } if values.len() >= 2 => {
             let lowered_op = match op.as_str() {
@@ -160,6 +177,15 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
 
 fn is_numeric_simple(ty: &Type) -> bool {
     matches!(ty, Type::Int | Type::Float | Type::LiteralInt(_))
+}
+
+fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
+    if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
+        return false;
+    }
+    let comparable = matches!(left_ty, Type::Int | Type::Float | Type::LiteralInt(_))
+        || matches!(left_ty, Type::Bool | Type::LiteralBool(_));
+    left_ty == right_ty && comparable
 }
 
 fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
@@ -386,6 +412,28 @@ mod tests {
             } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
                 && method == "is_some"
                 && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_chained_compare_variants() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::IntLiteral(1)),
+            ops: vec!["<".to_string(), "<".to_string()],
+            comparators: vec![HirExpr::IntLiteral(2), HirExpr::IntLiteral(3)],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("chained compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp {
+                op: ref top_op,
+                left: ref top_left,
+                right: ref top_right,
+            } if top_op == "&&"
+                && matches!(top_left.as_ref(), RustExpr::BinOp { op, .. } if op == "<")
+                && matches!(top_right.as_ref(), RustExpr::BinOp { op, .. } if op == "<")
         ));
     }
 
