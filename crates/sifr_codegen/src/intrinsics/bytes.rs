@@ -1,39 +1,92 @@
 //! Bytes intrinsic lowerers for registry migration.
 
-use crate::{RustExpr, RustLiteral, RustParam, RustType};
+use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+
+fn arg_expr(args: &[String], idx: usize) -> RustExpr {
+    RustExpr::Ident(args[idx].clone())
+}
+
+fn int(v: i64) -> RustExpr {
+    RustExpr::Literal(RustLiteral::Int(v))
+}
+
+fn string_lit(v: &str) -> RustExpr {
+    RustExpr::Literal(RustLiteral::Str(v.to_string()))
+}
+
+fn parse_error_expr(message: RustExpr) -> RustExpr {
+    RustExpr::StructInit {
+        name: "ParseError".to_string(),
+        fields: vec![("message".to_string(), message)],
+    }
+}
+
+fn err_parse_expr(message: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+        args: vec![parse_error_expr(message)],
+    }
+}
+
+fn parse_map_err(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "e".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(parse_error_expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("e".to_string())),
+                method: "to_string".to_string(),
+                args: vec![],
+            })),
+            is_move: false,
+        }],
+    }
+}
 
 pub(super) fn lower_encode_utf8(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__s".to_string(),
+            ty: None,
+            value: arg_expr(args, 0),
+        }],
+        expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(format!("({})", args[0]))),
-                    method: "as_bytes".to_string(),
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__s".to_string())),
+                        method: "as_bytes".to_string(),
+                        args: vec![],
+                    }),
+                    method: "iter".to_string(),
                     args: vec![],
                 }),
-                method: "iter".to_string(),
-                args: vec![],
-            }),
-            method: "map".to_string(),
-            args: vec![RustExpr::Closure {
-                params: vec![RustParam::Named {
-                    name: "b".to_string(),
-                    ty: RustType::Named("_".to_string()),
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "b".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "b".to_string(),
+                        )))),
+                        ty: RustType::I64,
+                    }),
+                    is_move: false,
                 }],
-                body: Box::new(RustExpr::Cast {
-                    expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                        "b".to_string(),
-                    )))),
-                    ty: RustType::I64,
-                }),
-                is_move: false,
-            }],
-        }),
-        method: "collect::<Vec<i64>>".to_string(),
-        args: vec![],
+            }),
+            method: "collect::<Vec<i64>>".to_string(),
+            args: vec![],
+        })),
     })
 }
 
@@ -272,8 +325,137 @@ pub(super) fn lower_bytes_from_hex(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "(|| -> Result<Vec<i64>, ParseError> {{ let s = {}; let mut cleaned = String::new(); for ch in s.chars() {{ if ch.is_ascii_whitespace() {{ continue; }} if !ch.is_ascii_hexdigit() {{ return Err(ParseError {{ message: format!(\"invalid hex character: {{}}\", ch) }}); }} cleaned.push(ch); }} if cleaned.len() % 2 != 0 {{ return Err(ParseError {{ message: \"fromhex() arg must contain an even number of hexadecimal digits\".to_string() }}); }} let mut result = Vec::new(); for pair in cleaned.as_bytes().chunks(2) {{ let pair_str = std::str::from_utf8(pair).map_err(|e| ParseError {{ message: e.to_string() }})?; result.push(i64::from_str_radix(pair_str, 16).map_err(|e| ParseError {{ message: e.to_string() }})?); }} Ok(result) }})()",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "s".to_string(),
+                ty: None,
+                value: arg_expr(args, 0),
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "cleaned".to_string(),
+                ty: None,
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["String".to_string(), "new".to_string()])),
+                    args: vec![],
+                },
+            },
+            RustStmt::For {
+                var: "ch".to_string(),
+                iter: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("s".to_string())),
+                    method: "chars".to_string(),
+                    args: vec![],
+                },
+                body: vec![
+                    RustStmt::If {
+                        cond: RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("ch".to_string())),
+                            method: "is_ascii_whitespace".to_string(),
+                            args: vec![],
+                        },
+                        then_body: vec![RustStmt::Continue],
+                        else_body: None,
+                    },
+                    RustStmt::If {
+                        cond: RustExpr::UnaryOp {
+                            op: "!".to_string(),
+                            operand: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("ch".to_string())),
+                                method: "is_ascii_hexdigit".to_string(),
+                                args: vec![],
+                            }),
+                        },
+                        then_body: vec![RustStmt::Return(Some(err_parse_expr(RustExpr::FormatMacro {
+                            name: "format".to_string(),
+                            format_str: "invalid hex character: {}".to_string(),
+                            args: vec![RustExpr::Ident("ch".to_string())],
+                        })))],
+                        else_body: None,
+                    },
+                    RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("cleaned".to_string())),
+                        method: "push".to_string(),
+                        args: vec![RustExpr::Ident("ch".to_string())],
+                    }),
+                ],
+            },
+            RustStmt::If {
+                cond: RustExpr::BinOp {
+                    left: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("cleaned".to_string())),
+                            method: "len".to_string(),
+                            args: vec![],
+                        }),
+                        op: "%".to_string(),
+                        right: Box::new(int(2)),
+                    }),
+                    op: "!=".to_string(),
+                    right: Box::new(int(0)),
+                },
+                then_body: vec![RustStmt::Return(Some(err_parse_expr(RustExpr::MethodCall {
+                    receiver: Box::new(string_lit(
+                        "fromhex() arg must contain an even number of hexadecimal digits",
+                    )),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                })))],
+                else_body: None,
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "result".to_string(),
+                ty: None,
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+                    args: vec![],
+                },
+            },
+            RustStmt::For {
+                var: "pair".to_string(),
+                iter: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("cleaned".to_string())),
+                        method: "as_bytes".to_string(),
+                        args: vec![],
+                    }),
+                    method: "chunks".to_string(),
+                    args: vec![int(2)],
+                },
+                body: vec![
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "pair_str".to_string(),
+                        ty: None,
+                        value: RustExpr::Try(Box::new(parse_map_err(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "std".to_string(),
+                                "str".to_string(),
+                                "from_utf8".to_string(),
+                            ])),
+                            args: vec![RustExpr::Ident("pair".to_string())],
+                        }))),
+                    },
+                    RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("result".to_string())),
+                        method: "push".to_string(),
+                        args: vec![RustExpr::Try(Box::new(parse_map_err(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "i64".to_string(),
+                                "from_str_radix".to_string(),
+                            ])),
+                            args: vec![RustExpr::Ident("pair_str".to_string()), int(16)],
+                        })))],
+                    }),
+                ],
+            },
+        ],
+        expr: Some(Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+            args: vec![RustExpr::Ident("result".to_string())],
+        })),
+    })
 }
