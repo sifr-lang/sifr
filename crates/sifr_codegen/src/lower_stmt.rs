@@ -39,6 +39,30 @@ pub fn try_lower_simple_stmt(
                 value: try_lower_leaf_expr(value)?,
             }])
         }
+        HirStmt::If {
+            condition,
+            then_body,
+            elif_clauses,
+            else_body: maybe_else_body,
+        } if elif_clauses.is_empty() => Some(vec![RustStmt::If {
+            cond: try_lower_leaf_expr(condition)?,
+            then_body: try_lower_simple_stmt_block(
+                then_body,
+                in_loop_with_else,
+                mutated_vars,
+                borrowed_params,
+            )?,
+            else_body: if let Some(body) = maybe_else_body {
+                Some(try_lower_simple_stmt_block(
+                    body,
+                    in_loop_with_else,
+                    mutated_vars,
+                    borrowed_params,
+                )?)
+            } else {
+                None
+            },
+        }]),
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -56,6 +80,24 @@ pub fn try_lower_simple_stmt(
         }
         _ => None,
     }
+}
+
+fn try_lower_simple_stmt_block(
+    stmts: &[HirStmt],
+    in_loop_with_else: bool,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+) -> Option<Vec<RustStmt>> {
+    let mut lowered = Vec::new();
+    for stmt in stmts {
+        lowered.extend(try_lower_simple_stmt(
+            stmt,
+            in_loop_with_else,
+            mutated_vars,
+            borrowed_params,
+        )?);
+    }
+    Some(lowered)
 }
 
 fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
@@ -150,5 +192,47 @@ mod tests {
         )
         .expect("assign lowered");
         assert!(matches!(lowered[0], RustStmt::Assign { .. }));
+    }
+
+    #[test]
+    fn lowers_simple_if_without_elif() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::Expr {
+                expr: HirExpr::IntLiteral(1),
+            }],
+            elif_clauses: vec![],
+            else_body: Some(vec![HirStmt::Expr {
+                expr: HirExpr::IntLiteral(0),
+            }]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(lowered[0], RustStmt::If { .. }));
+    }
+
+    #[test]
+    fn does_not_lower_if_with_elif() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![(HirExpr::BoolLiteral(false), vec![HirStmt::Pass])],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        );
+        assert!(lowered.is_none());
     }
 }
