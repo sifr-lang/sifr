@@ -1,9 +1,111 @@
 //! OS intrinsic lowerers for registry migration.
 
-use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 
-fn borrow_expr(expr: &str) -> String {
-    format!("&({expr})")
+fn arg_expr(args: &[String], idx: usize) -> RustExpr {
+    RustExpr::Ident(args[idx].clone())
+}
+
+fn ref_expr(expr: RustExpr) -> RustExpr {
+    RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(expr),
+    }
+}
+
+fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+    ref_expr(arg_expr(args, idx))
+}
+
+fn ref_ident(name: &str) -> RustExpr {
+    ref_expr(RustExpr::Ident(name.to_string()))
+}
+
+fn int(v: i64) -> RustExpr {
+    RustExpr::Literal(RustLiteral::Int(v))
+}
+
+fn string(v: &str) -> RustExpr {
+    RustExpr::Literal(RustLiteral::Str(v.to_string()))
+}
+
+fn io_map_err(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Ident("__io_err".to_string())],
+    }
+}
+
+fn command_new(name: &str) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "std".to_string(),
+            "process".to_string(),
+            "Command".to_string(),
+            "new".to_string(),
+        ])),
+        args: vec![string(name)],
+    }
+}
+
+fn sh_command_for(cmd_expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(command_new("sh")),
+            method: "arg".to_string(),
+            args: vec![string("-c")],
+        }),
+        method: "arg".to_string(),
+        args: vec![cmd_expr],
+    }
+}
+
+fn df_command_for(path_expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(command_new("df")),
+            method: "arg".to_string(),
+            args: vec![string("-k")],
+        }),
+        method: "arg".to_string(),
+        args: vec![path_expr],
+    }
+}
+
+fn from_utf8_lossy(bytes_expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["String".to_string(), "from_utf8_lossy".to_string()])),
+        args: vec![ref_expr(bytes_expr)],
+    }
+}
+
+fn trim_to_string(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(expr),
+            method: "trim".to_string(),
+            args: vec![],
+        }),
+        method: "to_string".to_string(),
+        args: vec![],
+    }
+}
+
+fn parse_i64_or_zero(expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(expr),
+            method: "parse::<i64>".to_string(),
+            args: vec![],
+        }),
+        method: "unwrap_or".to_string(),
+        args: vec![int(0)],
+    }
+}
+
+fn zero_usage_vec() -> RustExpr {
+    RustExpr::Vec(vec![int(0), int(0), int(0)])
 }
 
 fn lower_cfg_windows_string(args: &[String], windows: &str, other: &str) -> Option<RustExpr> {
@@ -32,10 +134,34 @@ pub(super) fn lower_run_command(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "(|| -> Result<String, IOError> {{ let __cmd = {}; let output = std::process::Command::new(\"sh\").args([\"-c\", &__cmd]).output().map_err(__io_err)?; Ok(String::from_utf8_lossy(&output.stdout).trim().to_string()) }})()",
-        args[0]
-    )))
+
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__cmd".to_string(),
+                ty: None,
+                value: arg_expr(args, 0),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__output".to_string(),
+                ty: None,
+                value: RustExpr::Try(Box::new(io_map_err(RustExpr::MethodCall {
+                    receiver: Box::new(sh_command_for(ref_ident("__cmd"))),
+                    method: "output".to_string(),
+                    args: vec![],
+                }))),
+            },
+        ],
+        expr: Some(Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+            args: vec![trim_to_string(from_utf8_lossy(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("__output".to_string())),
+                field: "stdout".to_string(),
+            }))],
+        })),
+    })
 }
 
 pub(super) fn lower_get_args(args: &[String]) -> Option<RustExpr> {
@@ -67,10 +193,7 @@ pub(super) fn lower_chdir(args: &[String]) -> Option<RustExpr> {
                 "env".to_string(),
                 "set_current_dir".to_string(),
             ])),
-            args: vec![RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
-            }],
+            args: vec![ref_arg(args, 0)],
         }),
         method: "map_err".to_string(),
         args: vec![RustExpr::Ident("__io_err".to_string())],
@@ -90,7 +213,7 @@ pub(super) fn lower_getpid(args: &[String]) -> Option<RustExpr> {
             ])),
             args: vec![],
         }),
-        ty: crate::RustType::I64,
+        ty: RustType::I64,
     })
 }
 
@@ -150,10 +273,7 @@ pub(super) fn lower_stat_size(args: &[String]) -> Option<RustExpr> {
                     "fs".to_string(),
                     "metadata".to_string(),
                 ])),
-                args: vec![RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
-                }],
+                args: vec![ref_arg(args, 0)],
             }),
             method: "map".to_string(),
             args: vec![RustExpr::Closure {
@@ -189,7 +309,7 @@ pub(super) fn lower_which(args: &[String]) -> Option<RustExpr> {
                     "env".to_string(),
                     "var".to_string(),
                 ])),
-                args: vec![RustExpr::Ident("\"PATH\"".to_string())],
+                args: vec![string("PATH")],
             }),
             method: "ok".to_string(),
             args: vec![],
@@ -225,10 +345,7 @@ pub(super) fn lower_which(args: &[String]) -> Option<RustExpr> {
                                     args: vec![RustExpr::Ident("d".to_string())],
                                 }),
                                 method: "join".to_string(),
-                                args: vec![RustExpr::Ref {
-                                    mutable: false,
-                                    expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
-                                }],
+                                args: vec![ref_arg(args, 0)],
                             }),
                             is_move: false,
                         }],
@@ -274,10 +391,173 @@ pub(super) fn lower_disk_usage(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::Ident(format!(
-        "{{ let __path = {}; let __stat = std::fs::metadata(__path); match __stat {{ Ok(_) => {{ let __out = std::process::Command::new(\"df\").args([\"-k\", __path]).output(); match __out {{ Ok(__o) => {{ let __s = String::from_utf8_lossy(&__o.stdout); let __lines: Vec<&str> = __s.lines().collect(); if __lines.len() >= 2 {{ let __parts: Vec<&str> = __lines[1].split_whitespace().collect(); if __parts.len() >= 4 {{ let __total = __parts[1].parse::<i64>().unwrap_or(0) * 1024; let __used = __parts[2].parse::<i64>().unwrap_or(0) * 1024; let __free = __parts[3].parse::<i64>().unwrap_or(0) * 1024; vec![__total, __used, __free] }} else {{ vec![0i64, 0, 0] }} }} else {{ vec![0i64, 0, 0] }} }}, Err(_) => vec![0i64, 0, 0] }} }}, Err(_) => vec![0i64, 0, 0] }} }}",
-        borrow_expr(&args[0])
-    )))
+
+    let lines_expr = RustExpr::MethodCall {
+        receiver: Box::new(from_utf8_lossy(RustExpr::Field {
+            expr: Box::new(RustExpr::Ident("__o".to_string())),
+            field: "stdout".to_string(),
+        })),
+        method: "lines".to_string(),
+        args: vec![],
+    };
+
+    let parts_from_lines_expr = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Index {
+                expr: Box::new(RustExpr::Ident("__lines".to_string())),
+                index: Box::new(int(1)),
+            }),
+            method: "split_whitespace".to_string(),
+            args: vec![],
+        }),
+        method: "collect::<Vec<&str>>".to_string(),
+        args: vec![],
+    };
+
+    let parse_part_mul_1024 = |idx: i64| RustExpr::BinOp {
+        left: Box::new(parse_i64_or_zero(RustExpr::Index {
+            expr: Box::new(RustExpr::Ident("__parts".to_string())),
+            index: Box::new(int(idx)),
+        })),
+        op: "*".to_string(),
+        right: Box::new(int(1024)),
+    };
+
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__path".to_string(),
+                ty: None,
+                value: arg_expr(args, 0),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__stat".to_string(),
+                ty: None,
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "fs".to_string(),
+                        "metadata".to_string(),
+                    ])),
+                    args: vec![ref_ident("__path")],
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::Match {
+            expr: Box::new(RustExpr::Ident("__stat".to_string())),
+            arms: vec![
+                RustMatchArm {
+                    pattern: "Ok(_)".to_string(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![RustStmt::Let {
+                        mutable: false,
+                        name: "__out".to_string(),
+                        ty: None,
+                        value: RustExpr::MethodCall {
+                            receiver: Box::new(df_command_for(ref_ident("__path"))),
+                            method: "output".to_string(),
+                            args: vec![],
+                        },
+                    }, RustStmt::Expr(RustExpr::Match {
+                        expr: Box::new(RustExpr::Ident("__out".to_string())),
+                        arms: vec![
+                            RustMatchArm {
+                                pattern: "Ok(__o)".to_string(),
+                                bindings: vec![],
+                                guard: None,
+                                body: vec![
+                                    RustStmt::Let {
+                                        mutable: false,
+                                        name: "__lines".to_string(),
+                                        ty: None,
+                                        value: RustExpr::MethodCall {
+                                            receiver: Box::new(lines_expr),
+                                            method: "collect::<Vec<&str>>".to_string(),
+                                            args: vec![],
+                                        },
+                                    },
+                                    RustStmt::Expr(RustExpr::If {
+                                        cond: Box::new(RustExpr::BinOp {
+                                            left: Box::new(RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident("__lines".to_string())),
+                                                method: "len".to_string(),
+                                                args: vec![],
+                                            }),
+                                            op: ">=".to_string(),
+                                            right: Box::new(int(2)),
+                                        }),
+                                        then_expr: Box::new(RustExpr::Block {
+                                            stmts: vec![RustStmt::Let {
+                                                mutable: false,
+                                                name: "__parts".to_string(),
+                                                ty: None,
+                                                value: parts_from_lines_expr,
+                                            }],
+                                            expr: Some(Box::new(RustExpr::If {
+                                                cond: Box::new(RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::MethodCall {
+                                                        receiver: Box::new(RustExpr::Ident("__parts".to_string())),
+                                                        method: "len".to_string(),
+                                                        args: vec![],
+                                                    }),
+                                                    op: ">=".to_string(),
+                                                    right: Box::new(int(4)),
+                                                }),
+                                                then_expr: Box::new(RustExpr::Block {
+                                                    stmts: vec![
+                                                        RustStmt::Let {
+                                                            mutable: false,
+                                                            name: "__total".to_string(),
+                                                            ty: None,
+                                                            value: parse_part_mul_1024(1),
+                                                        },
+                                                        RustStmt::Let {
+                                                            mutable: false,
+                                                            name: "__used".to_string(),
+                                                            ty: None,
+                                                            value: parse_part_mul_1024(2),
+                                                        },
+                                                        RustStmt::Let {
+                                                            mutable: false,
+                                                            name: "__free".to_string(),
+                                                            ty: None,
+                                                            value: parse_part_mul_1024(3),
+                                                        },
+                                                    ],
+                                                    expr: Some(Box::new(RustExpr::Vec(vec![
+                                                        RustExpr::Ident("__total".to_string()),
+                                                        RustExpr::Ident("__used".to_string()),
+                                                        RustExpr::Ident("__free".to_string()),
+                                                    ]))),
+                                                }),
+                                                else_expr: Some(Box::new(zero_usage_vec())),
+                                            })),
+                                        }),
+                                        else_expr: Some(Box::new(zero_usage_vec())),
+                                    }),
+                                ],
+                            },
+                            RustMatchArm {
+                                pattern: "Err(_)".to_string(),
+                                bindings: vec![],
+                                guard: None,
+                                body: vec![RustStmt::Expr(zero_usage_vec())],
+                            },
+                        ],
+                    })],
+                },
+                RustMatchArm {
+                    pattern: "Err(_)".to_string(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![RustStmt::Expr(zero_usage_vec())],
+                },
+            ],
+        })),
+    })
 }
 
 pub(super) fn lower_os_sep(args: &[String]) -> Option<RustExpr> {

@@ -333,7 +333,8 @@ mod tests {
     fn lowers_os_intrinsics_via_registry() {
         let run = lower_intrinsic("run_command", &["cmd".to_string()])
             .expect("run_command should lower");
-        assert!(render_expr(&run.expr).contains("std::process::Command::new(\"sh\")"));
+        assert!(render_expr(&run.expr).contains("std::process::Command::new(\"sh\".to_string())"));
+        assert!(render_expr(&run.expr).contains(".arg(\"-c\".to_string())"));
 
         let args = lower_intrinsic("get_args", &[]).expect("get_args should lower");
         assert_eq!(render_expr(&args.expr), "std::env::args().collect::<Vec<String>>()");
@@ -345,10 +346,11 @@ mod tests {
         assert!(render_expr(&cpus.expr).contains("available_parallelism"));
 
         let which = lower_intrinsic("which", &["tool".to_string()]).expect("which should lower");
-        assert!(render_expr(&which.expr).contains("std::env::var(\"PATH\")"));
+        assert!(render_expr(&which.expr).contains("std::env::var(\"PATH\".to_string())"));
 
         let disk = lower_intrinsic("disk_usage", &["path".to_string()]).expect("disk_usage lowers");
-        assert!(render_expr(&disk.expr).contains("std::process::Command::new(\"df\")"));
+        assert!(render_expr(&disk.expr).contains("std::process::Command::new(\"df\".to_string())"));
+        assert!(render_expr(&disk.expr).contains("collect::<Vec<&str>>()"));
 
         let sep = lower_intrinsic("os_sep", &[]).expect("os_sep lowers");
         assert_eq!(render_expr(&sep.expr), "std::path::MAIN_SEPARATOR.to_string()");
