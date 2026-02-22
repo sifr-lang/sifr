@@ -124,6 +124,7 @@ status: in_progress
 - [x] PR264 slice: extend simple `if` dual-path to lower option-truthiness name conditions (`if maybe_x:`) as structured `if let Some(maybe_x) = maybe_x` for no-`elif` cases, preserving fallback for `elif`-bearing option-truthiness flows
 - [x] PR265 slice: extend simple `if/elif` dual-path to lower option-truthiness name conditions in `elif` chains (and top-level `if` with `elif`) as structured `if let Some(x) = x`, preserving fallback for non-leaf conditions
 - [x] PR266 slice: extend simple `while` dual-path condition lowering to accept option-truthiness name operands (e.g. `while maybe_x:`) via structured `.is_some()` condition checks, preserving fallback for non-leaf option conditions
+- [x] PR267 slice: extend simple `if`/`while` dual-path condition lowering to accept negated option-truthiness name operands (e.g. `if not maybe_x:` / `while not maybe_x:`) via structured `.is_none()` checks, preserving fallback for non-leaf negated option conditions
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

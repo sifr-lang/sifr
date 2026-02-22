@@ -333,12 +333,30 @@ fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr>
     if let Some(lowered) = try_lower_leaf_expr(condition) {
         return Some(lowered);
     }
+    if let Some(lowered) = try_lower_simple_not_option_truthiness_condition_expr(condition) {
+        return Some(lowered);
+    }
     if matches!(condition.ty(), Type::Bool | Type::LiteralBool(_)) {
         if let HirExpr::Name { name, .. } = condition {
             return Some(RustExpr::Ident(name.clone()));
         }
     }
     None
+}
+
+fn try_lower_simple_not_option_truthiness_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
+    let HirExpr::UnaryOp { op, operand, .. } = condition else {
+        return None;
+    };
+    if op != "not" {
+        return None;
+    }
+    let option_var = crate::helpers::detect_option_truthiness(operand)?;
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(option_var)),
+        method: "is_none".to_string(),
+        args: vec![],
+    })
 }
 
 fn try_lower_simple_while_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
@@ -1843,6 +1861,75 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_if_with_not_option_truthiness_name_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if with not-option truthiness condition lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::If {
+                cond: RustExpr::MethodCall {
+                    receiver,
+                    method,
+                    args,
+                },
+                ..
+            } => {
+                assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
+                assert_eq!(method, "is_none");
+                assert!(args.is_empty());
+            }
+            _ => panic!("expected if with method-call condition"),
+        }
+    }
+
+    #[test]
+    fn does_not_lower_if_with_non_leaf_not_option_truthiness_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Call {
+                    func: "maybe_x".to_string(),
+                    args: vec![],
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: None,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &if_stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
     fn lowers_simple_if_with_option_truthiness_name_condition() {
         let if_stmt = HirStmt::If {
             condition: HirExpr::Name {
@@ -2064,6 +2151,46 @@ mod tests {
                 ..
             } if name == "ready"
         ));
+    }
+
+    #[test]
+    fn lowers_simple_while_with_not_option_truthiness_name_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ty: Type::Bool,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &while_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("while with not-option truthiness name condition lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::While {
+                cond: RustExpr::MethodCall {
+                    receiver,
+                    method,
+                    args,
+                },
+                ..
+            } => {
+                assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
+                assert_eq!(method, "is_none");
+                assert!(args.is_empty());
+            }
+            _ => panic!("expected while with method-call condition"),
+        }
     }
 
     #[test]
