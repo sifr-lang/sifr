@@ -451,6 +451,15 @@ fn parse_top_level_item_name(line: &str) -> Option<String> {
         let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
         return Some(name.to_string());
     }
+    // type Alias =
+    if let Some(rest) = trimmed.strip_prefix("type ") {
+        if let Some(eq) = rest.find('=') {
+            let name = rest[..eq].trim();
+            if !name.is_empty() {
+                return Some(name.to_string());
+            }
+        }
+    }
     // enum Name
     if let Some(rest) = trimmed.strip_prefix("enum ") {
         let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
@@ -668,6 +677,27 @@ pub async fn root() -> i64 {
         assert!(filtered.contains("pub unsafe fn tick()"));
         assert!(filtered.contains("pub const fn seed()"));
         assert!(filtered.contains("pub static mut COUNTER: i64 = 0;"));
+    }
+
+    #[test]
+    fn filter_tracks_type_alias_dependencies_and_drops_unused_aliases() {
+        let code = r#"
+pub struct Node {}
+
+pub type UsedAlias = Node;
+pub type UnusedAlias = i64;
+
+pub fn root() -> UsedAlias {
+    Node {}
+}
+"#;
+        let imported = HashSet::from(["root".to_string()]);
+        let filtered = filter_rust_code_to_needed(code, &imported);
+
+        assert!(filtered.contains("pub fn root() -> UsedAlias"));
+        assert!(filtered.contains("pub type UsedAlias = Node;"));
+        assert!(filtered.contains("pub struct Node {}"));
+        assert!(!filtered.contains("pub type UnusedAlias = i64;"));
     }
 
     #[test]
