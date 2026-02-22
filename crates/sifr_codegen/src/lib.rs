@@ -24,6 +24,7 @@ mod lower_item;
 pub use lower_item::*;
 mod intrinsics;
 mod methods;
+mod ir_imports;
 mod stdlib_filter;
 
 use sifr_hir::{
@@ -43,6 +44,7 @@ use stdlib_filter::{
     dedup_rust_items,
     filter_rust_code_to_needed,
 };
+use ir_imports::collect_import_needs_from_items;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 
@@ -372,63 +374,17 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         }
     }
 
-    // Now assemble result: imports, enums, IR-backed preamble items, stdlib preamble, main output.
+    // Compute broad feature needs first, then refine imports structurally from preamble IR.
     let needs_file_handles = emitter.needs_file_handles || stdlib_needs_file_handles;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
         || emitter.needs_logging_state;
 
     // File handle infrastructure always relies on HashMap + Mutex.
-    let needs_hashmap = emitter.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
-    let needs_hashset = emitter.needs_hashset || stdlib_needs_hashset;
-    let needs_vecdeque = emitter.needs_vecdeque || stdlib_needs_vecdeque;
-    let needs_bigint = emitter.needs_bigint;
-
-    let mut import_items: Vec<RustItem> = Vec::new();
-    if needs_hashmap {
-        import_items.push(RustItem::Use(vec![
-            "std".to_string(),
-            "collections".to_string(),
-            "HashMap".to_string(),
-        ]));
-    }
-    if needs_hashset {
-        import_items.push(RustItem::Use(vec![
-            "std".to_string(),
-            "collections".to_string(),
-            "HashSet".to_string(),
-        ]));
-    }
-    if needs_vecdeque {
-        import_items.push(RustItem::Use(vec![
-            "std".to_string(),
-            "collections".to_string(),
-            "VecDeque".to_string(),
-        ]));
-    }
-    if needs_bigint {
-        import_items.push(RustItem::Use(vec![
-            "num_bigint".to_string(),
-            "BigInt".to_string(),
-        ]));
-    }
-    if needs_file_handles || needs_logging {
-        import_items.push(RustItem::Use(vec![
-            "std".to_string(),
-            "sync".to_string(),
-            "Mutex".to_string(),
-        ]));
-    }
-
-    let mut result = String::new();
-    if !import_items.is_empty() {
-        result.push_str(&render_items(&import_items));
-        result.push('\n');
-    }
-    if !emitter.enum_defs.is_empty() {
-        result.push_str(&emitter.enum_defs);
-        result.push('\n');
-    }
+    let needs_hashmap_base = emitter.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
+    let needs_hashset_base = emitter.needs_hashset || stdlib_needs_hashset;
+    let needs_vecdeque_base = emitter.needs_vecdeque || stdlib_needs_vecdeque;
+    let needs_bigint_base = emitter.needs_bigint;
 
     // Emit built-in error class struct definitions for any that are referenced.
     // For now this remains a compatibility shim that scans generated code.
@@ -497,6 +453,59 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Emit global log level state if logging module is used.
     if needs_logging {
         preamble_items.extend(build_logging_items());
+    }
+
+    let ir_import_needs = collect_import_needs_from_items(&preamble_items);
+    let needs_hashmap = needs_hashmap_base || ir_import_needs.needs_hashmap;
+    let needs_hashset = needs_hashset_base || ir_import_needs.needs_hashset;
+    let needs_vecdeque = needs_vecdeque_base || ir_import_needs.needs_vecdeque;
+    let needs_bigint = needs_bigint_base || ir_import_needs.needs_bigint;
+    let needs_mutex = needs_file_handles || needs_logging || ir_import_needs.needs_mutex;
+
+    let mut import_items: Vec<RustItem> = Vec::new();
+    if needs_hashmap {
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "HashMap".to_string(),
+        ]));
+    }
+    if needs_hashset {
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "HashSet".to_string(),
+        ]));
+    }
+    if needs_vecdeque {
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "VecDeque".to_string(),
+        ]));
+    }
+    if needs_bigint {
+        import_items.push(RustItem::Use(vec![
+            "num_bigint".to_string(),
+            "BigInt".to_string(),
+        ]));
+    }
+    if needs_mutex {
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "sync".to_string(),
+            "Mutex".to_string(),
+        ]));
+    }
+
+    let mut result = String::new();
+    if !import_items.is_empty() {
+        result.push_str(&render_items(&import_items));
+        result.push('\n');
+    }
+    if !emitter.enum_defs.is_empty() {
+        result.push_str(&emitter.enum_defs);
+        result.push('\n');
     }
 
     if !preamble_items.is_empty() {
