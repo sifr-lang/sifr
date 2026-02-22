@@ -2744,11 +2744,15 @@ impl RustEmitter {
     }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
-        if let Some(lowered_stmts) = try_lower_simple_stmt(
+        if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
             stmt,
             self.current_loop_has_else(),
             &self.mutated_vars,
             &self.borrowed_params,
+            SimpleStmtLoweringCtx {
+                return_type: self.current_return_type.as_ref(),
+                in_display_impl: self.in_display_impl,
+            },
         ) {
             self.emit_lowered_stmts(&lowered_stmts);
             return;

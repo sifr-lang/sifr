@@ -15,6 +15,18 @@ pub fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {
     try_lower_leaf_expr(expr).map(|lowered_expr| vec![RustStmt::Expr(lowered_expr)])
 }
 
+#[derive(Clone, Copy, Default)]
+pub struct SimpleStmtLoweringCtx<'a> {
+    pub return_type: Option<&'a Type>,
+    pub in_display_impl: bool,
+}
+
+#[derive(Clone, Copy)]
+struct SimpleStmtBindings<'a> {
+    mutated_vars: &'a HashSet<String>,
+    borrowed_params: &'a HashSet<String>,
+}
+
 /// Lowers statement variants that are context-light and safe to convert
 /// without touching complex emitter state.
 pub fn try_lower_simple_stmt(
@@ -23,17 +35,39 @@ pub fn try_lower_simple_stmt(
     mutated_vars: &HashSet<String>,
     borrowed_params: &HashSet<String>,
 ) -> Option<Vec<RustStmt>> {
+    try_lower_simple_stmt_with_ctx(
+        stmt,
+        in_loop_with_else,
+        mutated_vars,
+        borrowed_params,
+        SimpleStmtLoweringCtx::default(),
+    )
+}
+
+pub(crate) fn try_lower_simple_stmt_with_ctx(
+    stmt: &HirStmt,
+    in_loop_with_else: bool,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    let bindings = SimpleStmtBindings {
+        mutated_vars,
+        borrowed_params,
+    };
     match stmt {
         HirStmt::Expr { expr } => try_lower_expr_stmt(expr),
         HirStmt::Let { name, ty, value, .. } if can_lower_simple_let(ty, value) => {
             Some(vec![RustStmt::Let {
-                mutable: mutated_vars.contains(name),
+                mutable: bindings.mutated_vars.contains(name),
                 name: name.clone(),
                 ty: Some(crate::sifr_type_to_rust_type(ty)),
                 value: try_lower_leaf_expr(value)?,
             }])
         }
-        HirStmt::Assign { name, value } if can_lower_simple_assign(value, borrowed_params) => {
+        HirStmt::Assign { name, value }
+            if can_lower_simple_assign(value, bindings.borrowed_params) =>
+        {
             Some(vec![RustStmt::Assign {
                 target: crate::RustExpr::Ident(name.clone()),
                 value: try_lower_leaf_expr(value)?,
@@ -46,6 +80,7 @@ pub fn try_lower_simple_stmt(
                 value: try_lower_leaf_expr(value)?,
             }])
         }
+        HirStmt::Return { value: None } => try_lower_simple_bare_return_stmt(ctx),
         HirStmt::Assert { test, msg } => Some(vec![try_lower_simple_assert_stmt(
             test,
             msg.as_ref(),
@@ -62,8 +97,8 @@ pub fn try_lower_simple_stmt(
             elif_clauses,
             maybe_else_body.as_deref(),
             in_loop_with_else,
-            mutated_vars,
-            borrowed_params,
+            bindings,
+            ctx,
         )?]),
         HirStmt::While {
             condition,
@@ -75,8 +110,9 @@ pub fn try_lower_simple_stmt(
             body: try_lower_simple_stmt_block(
                 body,
                 false,
-                mutated_vars,
-                borrowed_params,
+                bindings.mutated_vars,
+                bindings.borrowed_params,
+                ctx,
             )?,
         }]),
         HirStmt::While {
@@ -96,8 +132,9 @@ pub fn try_lower_simple_stmt(
                 body: try_lower_simple_stmt_block(
                     body,
                     true,
-                    mutated_vars,
-                    borrowed_params,
+                    bindings.mutated_vars,
+                    bindings.borrowed_params,
+                    ctx,
                 )?,
             },
             RustStmt::If {
@@ -110,8 +147,9 @@ pub fn try_lower_simple_stmt(
                 then_body: try_lower_simple_stmt_block(
                     else_body,
                     in_loop_with_else,
-                    mutated_vars,
-                    borrowed_params,
+                    bindings.mutated_vars,
+                    bindings.borrowed_params,
+                    ctx,
                 )?,
                 else_body: None,
             },
@@ -129,8 +167,9 @@ pub fn try_lower_simple_stmt(
             body: try_lower_simple_stmt_block(
                 body,
                 false,
-                mutated_vars,
-                borrowed_params,
+                bindings.mutated_vars,
+                bindings.borrowed_params,
+                ctx,
             )?,
         }]),
         HirStmt::For {
@@ -153,8 +192,9 @@ pub fn try_lower_simple_stmt(
                 body: try_lower_simple_stmt_block(
                     body,
                     true,
-                    mutated_vars,
-                    borrowed_params,
+                    bindings.mutated_vars,
+                    bindings.borrowed_params,
+                    ctx,
                 )?,
             },
             RustStmt::If {
@@ -167,8 +207,9 @@ pub fn try_lower_simple_stmt(
                 then_body: try_lower_simple_stmt_block(
                     else_body,
                     in_loop_with_else,
-                    mutated_vars,
-                    borrowed_params,
+                    bindings.mutated_vars,
+                    bindings.borrowed_params,
+                    ctx,
                 )?,
                 else_body: None,
             },
@@ -197,14 +238,16 @@ fn try_lower_simple_stmt_block(
     in_loop_with_else: bool,
     mutated_vars: &HashSet<String>,
     borrowed_params: &HashSet<String>,
+    ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
     let mut lowered = Vec::new();
     for stmt in stmts {
-        lowered.extend(try_lower_simple_stmt(
+        lowered.extend(try_lower_simple_stmt_with_ctx(
             stmt,
             in_loop_with_else,
             mutated_vars,
             borrowed_params,
+            ctx,
         )?);
     }
     Some(lowered)
@@ -216,15 +259,16 @@ fn try_lower_simple_if_stmt(
     elif_clauses: &[(HirExpr, Vec<HirStmt>)],
     maybe_else_body: Option<&[HirStmt]>,
     in_loop_with_else: bool,
-    mutated_vars: &HashSet<String>,
-    borrowed_params: &HashSet<String>,
+    bindings: SimpleStmtBindings<'_>,
+    ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<RustStmt> {
     let mut nested_else = if let Some(else_body) = maybe_else_body {
         Some(try_lower_simple_stmt_block(
             else_body,
             in_loop_with_else,
-            mutated_vars,
-            borrowed_params,
+            bindings.mutated_vars,
+            bindings.borrowed_params,
+            ctx,
         )?)
     } else {
         None
@@ -236,8 +280,9 @@ fn try_lower_simple_if_stmt(
             then_body: try_lower_simple_stmt_block(
                 elif_body,
                 in_loop_with_else,
-                mutated_vars,
-                borrowed_params,
+                bindings.mutated_vars,
+                bindings.borrowed_params,
+                ctx,
             )?,
             else_body: nested_else,
         }]);
@@ -248,11 +293,25 @@ fn try_lower_simple_if_stmt(
         then_body: try_lower_simple_stmt_block(
             then_body,
             in_loop_with_else,
-            mutated_vars,
-            borrowed_params,
+            bindings.mutated_vars,
+            bindings.borrowed_params,
+            ctx,
         )?,
         else_body: nested_else,
     })
+}
+
+fn try_lower_simple_bare_return_stmt(ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
+    if ctx.in_display_impl {
+        return None;
+    }
+    if ctx.return_type.is_some_and(crate::helpers::is_option_type) {
+        Some(vec![RustStmt::Return(Some(RustExpr::Literal(
+            RustLiteral::None,
+        )))])
+    } else {
+        Some(vec![RustStmt::Return(None)])
+    }
 }
 
 fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
@@ -498,6 +557,60 @@ mod tests {
                 false,
                 &HashSet::new(),
                 &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn lowers_simple_bare_return_without_option_context() {
+        let stmt = HirStmt::Return { value: None };
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("bare return lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(lowered[0], RustStmt::Return(None)));
+    }
+
+    #[test]
+    fn lowers_simple_bare_return_to_none_in_option_context() {
+        let stmt = HirStmt::Return { value: None };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+            },
+        )
+        .expect("bare return lowered for option context");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None)))
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_bare_return_in_display_impl_context() {
+        let stmt = HirStmt::Return { value: None };
+        assert!(
+            try_lower_simple_stmt_with_ctx(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+                SimpleStmtLoweringCtx {
+                    return_type: None,
+                    in_display_impl: true,
+                },
             )
             .is_none()
         );
