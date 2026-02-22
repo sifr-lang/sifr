@@ -30,6 +30,7 @@ mod ir_validate;
 mod stdlib_filter;
 mod helpers;
 mod entrypoints;
+mod module_constants;
 
 #[cfg(test)]
 mod lib_codegen_tests;
@@ -1187,35 +1188,7 @@ impl RustEmitter {
             }
         }
 
-        // Emit module-level constants and register them for name resolution
-        for (name, ty, value) in &module.constants {
-            if let Some((item, rust_name_call)) =
-                try_lower_simple_module_constant_item(name, ty, value)
-            {
-                self.output.push_str(&render_items(&[item]));
-                self.module_constants.insert(name.clone(), (ty.clone(), rust_name_call));
-                continue;
-            }
-
-            if ty == &Type::Str {
-                let rust_name = format!("__const_{name}");
-                self.write_indent();
-                self.write(&format!("fn {rust_name}() -> String {{ "));
-                self.emit_expr(value);
-                self.write(".to_string() }\n");
-                self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
-            } else {
-                let rust_name = format!("__const_{name}");
-                self.write_indent();
-                self.write(&format!("fn {}() -> {} {{ ", rust_name, ty.rust_type()));
-                self.emit_expr(value);
-                self.write(" }\n");
-                self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
-            }
-        }
-        if !module.constants.is_empty() {
-            self.output.push('\n');
-        }
+        self.emit_module_constants(module);
 
         // Emit class definitions first (structs + impls)
         for class in &module.classes {
