@@ -368,20 +368,16 @@ fn try_lower_simple_if_clause(
     })
 }
 
-fn try_lower_simple_option_truthiness_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
-    let option_var = crate::helpers::detect_option_truthiness(condition)?;
+fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(expr) {
+        return Some(lowered);
+    }
+    let option_var = crate::helpers::detect_option_truthiness(expr)?;
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(option_var)),
         method: "is_some".to_string(),
         args: vec![],
     })
-}
-
-fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(expr) {
-        return Some(lowered);
-    }
-    try_lower_simple_option_truthiness_condition_expr(expr)
 }
 
 fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {

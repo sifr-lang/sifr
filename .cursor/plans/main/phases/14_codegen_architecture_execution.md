@@ -152,6 +152,7 @@ status: in_progress
 - [x] PR292 slice: inline single-use option-unwrapping return helper into `try_lower_simple_return_stmt` while preserving shared `try_lower_name_ident_expr` extraction
 - [x] PR293 slice: inline single-use assert-message wrapper into `HirStmt::Assert` while preserving option-display and leaf/name message lowering behavior
 - [x] PR294 slice: inline single-use option-display helper into `HirStmt::Assert` while preserving option message formatting behavior
+- [x] PR295 slice: inline single-use option-truthiness condition helper into `try_lower_simple_condition_test_expr` while preserving `is_some()` lowering
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
