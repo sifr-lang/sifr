@@ -108,17 +108,23 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 right: Box::new(try_lower_leaf_expr(right)?),
             })
         }
-        HirExpr::BoolOp { op, values, .. } if values.len() == 2 => {
+        HirExpr::BoolOp { op, values, .. } if values.len() >= 2 => {
             let lowered_op = match op.as_str() {
                 "and" => "&&",
                 "or" => "||",
                 _ => return None,
             };
-            Some(RustExpr::BinOp {
-                left: Box::new(try_lower_leaf_expr(values.first()?)?),
-                op: lowered_op.to_string(),
-                right: Box::new(try_lower_leaf_expr(values.get(1)?)?),
-            })
+
+            let mut iter = values.iter();
+            let mut lowered = try_lower_leaf_expr(iter.next()?)?;
+            for value in iter {
+                lowered = RustExpr::BinOp {
+                    left: Box::new(lowered),
+                    op: lowered_op.to_string(),
+                    right: Box::new(try_lower_leaf_expr(value)?),
+                };
+            }
+            Some(lowered)
         }
         HirExpr::IfExpr {
             condition,
@@ -255,6 +261,37 @@ mod tests {
         assert!(matches!(try_lower_leaf_expr(&bin), Some(RustExpr::BinOp { .. })));
         assert!(matches!(try_lower_leaf_expr(&cmp), Some(RustExpr::BinOp { .. })));
         assert!(matches!(try_lower_leaf_expr(&cond), Some(RustExpr::If { .. })));
+    }
+
+    #[test]
+    fn lowers_multi_operand_boolop_variants() {
+        let and_expr = HirExpr::BoolOp {
+            op: "and".to_string(),
+            values: vec![
+                HirExpr::BoolLiteral(true),
+                HirExpr::BoolLiteral(false),
+                HirExpr::BoolLiteral(true),
+            ],
+            ty: Type::Bool,
+        };
+        let or_expr = HirExpr::BoolOp {
+            op: "or".to_string(),
+            values: vec![
+                HirExpr::BoolLiteral(true),
+                HirExpr::BoolLiteral(false),
+                HirExpr::BoolLiteral(true),
+            ],
+            ty: Type::Bool,
+        };
+
+        assert!(matches!(
+            try_lower_leaf_expr(&and_expr),
+            Some(RustExpr::BinOp { op, .. }) if op == "&&"
+        ));
+        assert!(matches!(
+            try_lower_leaf_expr(&or_expr),
+            Some(RustExpr::BinOp { op, .. }) if op == "||"
+        ));
     }
 
     #[test]

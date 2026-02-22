@@ -184,6 +184,7 @@ status: in_progress
 - [x] PR324 slice: move method-call emission helper cluster (`is_generator_call`, `emit_method_call`, `emit_borrow_prefix`, `emit_borrow_prefix_for_name`) out of `lib.rs` into dedicated `method_call_emitter` module while preserving method-call and borrow-prefix behavior
 - [x] PR325 slice: move match-guard capture substitution helpers (`substitute_class_captures_in_guard`, `replace_identifier`) out of `lib.rs` into dedicated `match_guard_helpers` module while preserving match-guard capture rewriting behavior
 - [x] PR326 slice: move field-analysis helper cluster (`is_deque_data_field`, `detect_recursive_fields`) out of `lib.rs` into dedicated `field_analysis_helpers` module while preserving deque detection and recursive-field/generic-class pre-scan behavior
+- [x] PR327 slice: extend structured expression lowering by converting multi-operand boolean chains (`and`/`or` with 3+ operands) into nested IR `RustExpr::BinOp` nodes in `try_lower_leaf_expr`, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
