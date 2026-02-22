@@ -46,6 +46,10 @@ pub fn try_lower_simple_stmt(
                 value: try_lower_leaf_expr(value)?,
             }])
         }
+        HirStmt::Assert {
+            test,
+            msg: None,
+        } => Some(vec![try_lower_simple_assert_stmt(test)?]),
         HirStmt::Raise { value } => Some(vec![try_lower_simple_raise_stmt(value)?]),
         HirStmt::If {
             condition,
@@ -289,6 +293,13 @@ fn try_lower_simple_raise_stmt(value: &HirExpr) -> Option<RustStmt> {
     })))
 }
 
+fn try_lower_simple_assert_stmt(test: &HirExpr) -> Option<RustStmt> {
+    Some(RustStmt::Expr(RustExpr::MacroCall {
+        name: "assert".to_string(),
+        args: vec![try_lower_leaf_expr(test)?],
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -435,6 +446,67 @@ mod tests {
                 name: "e".to_string(),
                 ty: Type::Int,
             },
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn lowers_simple_assert_without_msg() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::BoolLiteral(true),
+            msg: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assert lowered");
+
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Expr(RustExpr::MacroCall { ref name, .. }) if name == "assert"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_assert_with_msg() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::BoolLiteral(true),
+            msg: Some(HirExpr::StringLiteral("boom".to_string())),
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn does_not_lower_assert_with_non_leaf_test() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::Name {
+                name: "ok".to_string(),
+                ty: Type::Bool,
+            },
+            msg: None,
         };
 
         assert!(
