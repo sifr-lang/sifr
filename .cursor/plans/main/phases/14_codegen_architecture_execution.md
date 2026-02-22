@@ -155,6 +155,7 @@ status: in_progress
 - [x] PR295 slice: inline single-use option-truthiness condition helper into `try_lower_simple_condition_test_expr` while preserving `is_some()` lowering
 - [x] PR296 slice: inline single-use bare-return helper into `HirStmt::Return { value: None }` while preserving display-impl and option-return behavior
 - [x] PR297 slice: inline single-use compare-safety helper into leaf-compare lowering and remove now-redundant comparable-type helper
+- [x] PR298 slice: start `lower_item` dual-path by lowering simple module primitive constants (`int`/`float`/`bool` leaf values) via `RustItem::Const` + renderer, preserving legacy fallback for other constant forms
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

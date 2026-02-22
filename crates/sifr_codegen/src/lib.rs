@@ -1189,30 +1189,27 @@ impl RustEmitter {
 
         // Emit module-level constants and register them for name resolution
         for (name, ty, value) in &module.constants {
-            self.write_indent();
-            // Use const for primitives, static for strings
-            match ty {
-                Type::Int | Type::Float | Type::Bool => {
-                    let rust_name = name.to_uppercase();
-                    self.write(&format!("const {}: {} = ", rust_name, ty.rust_type()));
-                    self.emit_expr(value);
-                    self.write(";\n");
-                    self.module_constants.insert(name.clone(), (ty.clone(), rust_name));
-                }
-                Type::Str => {
-                    let rust_name = format!("__const_{name}");
-                    self.write(&format!("fn {rust_name}() -> String {{ "));
-                    self.emit_expr(value);
-                    self.write(".to_string() }\n");
-                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
-                }
-                _ => {
-                    let rust_name = format!("__const_{name}");
-                    self.write(&format!("fn {}() -> {} {{ ", rust_name, ty.rust_type()));
-                    self.emit_expr(value);
-                    self.write(" }\n");
-                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
-                }
+            // First dual-path slice for item lowering: lower simple primitive constants through IR.
+            if let Some((item, rust_name)) = try_lower_simple_module_const_item(name, ty, value) {
+                self.output.push_str(&render_items(&[item]));
+                self.module_constants.insert(name.clone(), (ty.clone(), rust_name));
+                continue;
+            }
+
+            if ty == &Type::Str {
+                let rust_name = format!("__const_{name}");
+                self.write_indent();
+                self.write(&format!("fn {rust_name}() -> String {{ "));
+                self.emit_expr(value);
+                self.write(".to_string() }\n");
+                self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
+            } else {
+                let rust_name = format!("__const_{name}");
+                self.write_indent();
+                self.write(&format!("fn {}() -> {} {{ ", rust_name, ty.rust_type()));
+                self.emit_expr(value);
+                self.write(" }\n");
+                self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
             }
         }
         if !module.constants.is_empty() {
