@@ -46,10 +46,10 @@ pub fn try_lower_simple_stmt(
                 value: try_lower_leaf_expr(value)?,
             }])
         }
-        HirStmt::Assert {
+        HirStmt::Assert { test, msg } => Some(vec![try_lower_simple_assert_stmt(
             test,
-            msg: None,
-        } => Some(vec![try_lower_simple_assert_stmt(test)?]),
+            msg.as_ref(),
+        )?]),
         HirStmt::Raise { value } => Some(vec![try_lower_simple_raise_stmt(value)?]),
         HirStmt::If {
             condition,
@@ -293,11 +293,24 @@ fn try_lower_simple_raise_stmt(value: &HirExpr) -> Option<RustStmt> {
     })))
 }
 
-fn try_lower_simple_assert_stmt(test: &HirExpr) -> Option<RustStmt> {
-    Some(RustStmt::Expr(RustExpr::MacroCall {
-        name: "assert".to_string(),
-        args: vec![try_lower_leaf_expr(test)?],
-    }))
+fn try_lower_simple_assert_stmt(test: &HirExpr, msg: Option<&HirExpr>) -> Option<RustStmt> {
+    let lowered_msg = if let Some(msg_expr) = msg {
+        Some(try_lower_assert_msg_expr(msg_expr)?)
+    } else {
+        None
+    };
+    Some(RustStmt::Assert {
+        cond: try_lower_leaf_expr(test)?,
+        msg: lowered_msg,
+    })
+}
+
+fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
+    // Preserve legacy emit_display_expr behavior for Option values.
+    if crate::helpers::is_option_type(msg.ty()) {
+        return None;
+    }
+    try_lower_leaf_expr(msg)
 }
 
 #[cfg(test)]
@@ -477,15 +490,42 @@ mod tests {
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
-            RustStmt::Expr(RustExpr::MacroCall { ref name, .. }) if name == "assert"
+            RustStmt::Assert { msg: None, .. }
         ));
     }
 
     #[test]
-    fn does_not_lower_assert_with_msg() {
+    fn lowers_simple_assert_with_leaf_msg() {
         let stmt = HirStmt::Assert {
             test: HirExpr::BoolLiteral(true),
             msg: Some(HirExpr::StringLiteral("boom".to_string())),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assert with msg lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assert {
+                msg: Some(RustExpr::Literal(RustLiteral::Str(_))),
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_assert_with_non_leaf_test() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::Name {
+                name: "ok".to_string(),
+                ty: Type::Bool,
+            },
+            msg: None,
         };
 
         assert!(
@@ -500,13 +540,13 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_assert_with_non_leaf_test() {
+    fn does_not_lower_assert_with_non_leaf_msg() {
         let stmt = HirStmt::Assert {
-            test: HirExpr::Name {
-                name: "ok".to_string(),
-                ty: Type::Bool,
-            },
-            msg: None,
+            test: HirExpr::BoolLiteral(true),
+            msg: Some(HirExpr::Name {
+                name: "msg".to_string(),
+                ty: Type::Union(vec![Type::Str, Type::None]),
+            }),
         };
 
         assert!(

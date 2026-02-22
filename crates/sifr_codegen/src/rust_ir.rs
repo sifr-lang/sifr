@@ -82,6 +82,10 @@ pub enum RustStmt {
         value: RustExpr,
     },
     Expr(RustExpr),
+    Assert {
+        cond: RustExpr,
+        msg: Option<RustExpr>,
+    },
     Return(Option<RustExpr>),
     If {
         cond: RustExpr,
