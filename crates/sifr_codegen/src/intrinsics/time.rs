@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn borrowed_str(expr: &str) -> String {
-    format!("&({expr})")
+fn arg_expr(args: &[String], idx: usize) -> RustExpr {
+    RustExpr::Ident(args[idx].clone())
 }
 
 pub(super) fn lower_time_now(args: &[String]) -> Option<RustExpr> {
@@ -101,7 +101,7 @@ pub(super) fn lower_time_format(args: &[String]) -> Option<RustExpr> {
                 method: "format".to_string(),
                 args: vec![RustExpr::Ref {
                     mutable: false,
-                    expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                    expr: Box::new(arg_expr(args, 1)),
                 }],
             }),
             method: "to_string".to_string(),
@@ -138,11 +138,11 @@ pub(super) fn lower_strptime(args: &[String]) -> Option<RustExpr> {
                 args: vec![
                     RustExpr::Ref {
                         mutable: false,
-                        expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                        expr: Box::new(arg_expr(args, 0)),
                     },
                     RustExpr::Ref {
                         mutable: false,
-                        expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                        expr: Box::new(arg_expr(args, 1)),
                     },
                 ],
             }),
@@ -324,11 +324,11 @@ pub(super) fn lower_time_strptime_compat(args: &[String]) -> Option<RustExpr> {
                         args: vec![
                             RustExpr::Ref {
                                 mutable: false,
-                                expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                                expr: Box::new(arg_expr(args, 0)),
                             },
                             RustExpr::Ref {
                                 mutable: false,
-                                expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                                expr: Box::new(arg_expr(args, 1)),
                             },
                         ],
                     }),
