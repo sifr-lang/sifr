@@ -98,6 +98,7 @@ status: in_progress
 - [x] PR238 slice: extend `lower_stmt` dual-path with structured lowering for bare `return` (`value: None`) by threading explicit return context so option-return functions emit `return None;` while display-impl contexts preserve fallback
 - [x] PR239 slice: extend `lower_stmt` dual-path with conservative structured lowering for `return <leaf>` by threading class/return context guards so option/union/class-sensitive return semantics still fall back safely
 - [x] PR240 slice: extend `return <leaf>` dual-path to lower `return None` in option-return context while preserving fallback for non-option unions and other guarded return-shaping contexts
+- [x] PR241 slice: extend option-return dual-path to lower `return <leaf-non-option>` as `return Some(<leaf>)` with conservative fallback preserved for non-leaf and class/display-sensitive contexts
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
