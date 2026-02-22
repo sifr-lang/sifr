@@ -424,19 +424,13 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         }))]);
     }
     if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
-        return Some(vec![RustStmt::Return(Some(
-            try_lower_simple_plain_return_option_unwrap_value(value)?,
-        ))]);
+        return Some(vec![RustStmt::Return(Some(RustExpr::MethodCall {
+            receiver: Box::new(try_lower_name_ident_expr(value)?),
+            method: "unwrap".to_string(),
+            args: vec![],
+        }))]);
     }
     Some(vec![RustStmt::Return(Some(try_lower_leaf_or_name_expr(value)?))])
-}
-
-fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<RustExpr> {
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(try_lower_name_ident_expr(value)?),
-        method: "unwrap".to_string(),
-        args: vec![],
-    })
 }
 
 fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
