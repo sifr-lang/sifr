@@ -419,7 +419,7 @@ fn char_literal_len(chars: &[char], idx: usize) -> usize {
 }
 
 fn parse_top_level_item_name(line: &str) -> Option<String> {
-    let trimmed = line.trim();
+    let trimmed = strip_visibility_prefix(line.trim());
     // fn name( or fn name<T>(
     if let Some(rest) = trimmed.strip_prefix("fn ") {
         if let Some(lt) = rest.find('<') {
@@ -438,8 +438,24 @@ fn parse_top_level_item_name(line: &str) -> Option<String> {
             return Some(rest[..colon].trim().to_string());
         }
     }
+    // static NAME:
+    if let Some(rest) = trimmed.strip_prefix("static ") {
+        if let Some(colon) = rest.find(':') {
+            return Some(rest[..colon].trim().to_string());
+        }
+    }
     // struct Name
     if let Some(rest) = trimmed.strip_prefix("struct ") {
+        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+        return Some(name.to_string());
+    }
+    // enum Name
+    if let Some(rest) = trimmed.strip_prefix("enum ") {
+        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+        return Some(name.to_string());
+    }
+    // trait Name
+    if let Some(rest) = trimmed.strip_prefix("trait ") {
         let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
         return Some(name.to_string());
     }
@@ -482,6 +498,16 @@ fn parse_top_level_item_name(line: &str) -> Option<String> {
         }
     }
     None
+}
+
+fn strip_visibility_prefix(s: &str) -> &str {
+    if let Some(rest) = s.strip_prefix("pub(crate) ") {
+        return rest;
+    }
+    if let Some(rest) = s.strip_prefix("pub ") {
+        return rest;
+    }
+    s
 }
 
 fn brace_delta(line: &str) -> i32 {
@@ -560,6 +586,41 @@ fn root() -> Node {
 
         assert!(filtered.contains("fn root()"));
         assert!(filtered.contains("struct Node {}"));
+    }
+
+    #[test]
+    fn filter_supports_enum_trait_static_and_pub_items() {
+        let code = r#"
+pub enum Mode {
+    Fast,
+}
+
+pub trait Worker {
+    fn run(&self) -> i64;
+}
+
+pub struct Job {}
+
+impl Worker for Job {
+    fn run(&self) -> i64 { JOB_COUNT }
+}
+
+pub static JOB_COUNT: i64 = 7;
+
+pub fn root() -> Box<dyn Worker> {
+    let _m = Mode::Fast;
+    Box::new(Job {})
+}
+"#;
+        let imported = HashSet::from(["root".to_string()]);
+        let filtered = filter_rust_code_to_needed(code, &imported);
+
+        assert!(filtered.contains("pub fn root()"));
+        assert!(filtered.contains("pub enum Mode"));
+        assert!(filtered.contains("pub trait Worker"));
+        assert!(filtered.contains("pub struct Job"));
+        assert!(filtered.contains("impl Worker for Job"));
+        assert!(filtered.contains("pub static JOB_COUNT: i64 = 7;"));
     }
 
     #[test]
