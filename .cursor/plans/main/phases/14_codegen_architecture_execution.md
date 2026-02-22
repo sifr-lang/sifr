@@ -94,6 +94,7 @@ status: in_progress
 - [x] PR234 slice: extend `lower_stmt` dual-path coverage with structured lowering for simple `assert` without message (`assert!(cond)`) when condition is leaf-lowerable, preserving fallback for message asserts and non-leaf conditions
 - [x] PR235 slice: extend assert dual-path with structured IR `RustStmt::Assert` so simple message asserts (`assert!(cond, "{}", msg)`) lower without raw code, while preserving fallback for option-typed or non-leaf message paths
 - [x] PR236 slice: extend assert dual-path message lowering for option-typed variable messages by structuring `map_or("None", |_v| format!("{}", _v))`, while preserving fallback for non-leaf option expressions
+- [x] PR237 slice: extend simple `AugAssign` dual-path coverage to include `//=`, normalizing to legacy-compatible Rust `/=` emission while preserving fallback for `**=` and `+=`
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
