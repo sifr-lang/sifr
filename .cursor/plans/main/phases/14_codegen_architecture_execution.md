@@ -127,6 +127,7 @@ status: in_progress
 - [x] PR267 slice: extend simple `if`/`while` dual-path condition lowering to accept negated option-truthiness name operands (e.g. `if not maybe_x:` / `while not maybe_x:`) via structured `.is_none()` checks, preserving fallback for non-leaf negated option conditions
 - [x] PR268 slice: extend simple `if`/`while` dual-path condition lowering to accept negated bool-name operands (e.g. `if not ok:` / `while not ready:`) via structured unary `!` checks, preserving fallback for non-leaf negated bool conditions
 - [x] PR269 slice: extend simple `assert` dual-path test lowering to accept negated bool-name operands (e.g. `assert not ok`) via structured unary `!` checks, preserving fallback for non-leaf negated bool assert tests
+- [x] PR270 slice: extend simple `assert` dual-path test lowering to accept negated option-truthiness name operands (e.g. `assert not maybe_x`) via structured `.is_none()` checks, preserving fallback for non-leaf negated option assert tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

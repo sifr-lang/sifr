@@ -632,6 +632,9 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(test) {
         return Some(lowered);
     }
+    if let Some(lowered) = try_lower_simple_not_option_truthiness_condition_expr(test) {
+        return Some(lowered);
+    }
     if let Some(lowered) = try_lower_simple_not_bool_name_condition_expr(test) {
         return Some(lowered);
     }
@@ -1819,6 +1822,46 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_assert_with_not_option_truthiness_name_test() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ty: Type::Bool,
+            },
+            msg: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assert not-option truthiness name test lowered");
+
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::Assert {
+                cond: RustExpr::MethodCall {
+                    receiver,
+                    method,
+                    args,
+                },
+                msg: None,
+            } => {
+                assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
+                assert_eq!(method, "is_none");
+                assert!(args.is_empty());
+            }
+            _ => panic!("expected assert with method-call condition"),
+        }
+    }
+
+    #[test]
     fn does_not_lower_assert_with_non_leaf_not_bool_test() {
         let stmt = HirStmt::Assert {
             test: HirExpr::UnaryOp {
@@ -1827,6 +1870,32 @@ mod tests {
                     func: "is_ok".to_string(),
                     args: vec![],
                     ty: Type::Bool,
+                }),
+                ty: Type::Bool,
+            },
+            msg: None,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn does_not_lower_assert_with_non_leaf_not_option_truthiness_test() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Call {
+                    func: "maybe_x".to_string(),
+                    args: vec![],
+                    ty: Type::Union(vec![Type::Int, Type::None]),
                 }),
                 ty: Type::Bool,
             },
