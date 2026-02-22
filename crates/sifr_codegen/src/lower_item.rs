@@ -113,7 +113,7 @@ pub fn try_lower_simple_module_none_const_item(
 }
 
 /// Conservatively lowers module-level non-primitive helper constants via IR function items.
-/// Falls back for primitive/string/none types or non-leaf values.
+/// Falls back for primitive/string/none types or non-leaf/non-name values.
 pub fn try_lower_simple_module_helper_const_item(
     name: &str,
     ty: &Type,
@@ -133,6 +133,13 @@ pub fn try_lower_simple_module_helper_const_item(
         return None;
     }
     let rust_name = format!("__const_{name}");
+    let lowered_value = if let Some(lowered) = try_lower_leaf_expr(value) {
+        lowered
+    } else if let HirExpr::Name { name, .. } = value {
+        RustExpr::Ident(name.clone())
+    } else {
+        return None;
+    };
     Some((
         RustItem::Fn {
             name: rust_name.clone(),
@@ -140,7 +147,7 @@ pub fn try_lower_simple_module_helper_const_item(
             type_params: vec![],
             params: vec![],
             ret: Some(crate::sifr_type_to_rust_type(ty)),
-            body: vec![RustStmt::Return(Some(try_lower_leaf_expr(value)?))],
+            body: vec![RustStmt::Return(Some(lowered_value))],
             is_async: false,
         },
         format!("{rust_name}()"),
@@ -412,6 +419,30 @@ mod tests {
                 ret: Some(RustType::Vec(_)),
                 ..
             } if name == "__const_nums"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_module_helper_name_const_item() {
+        let ty = Type::List(Box::new(Type::Int));
+        let value = HirExpr::Name {
+            name: "nums".to_string(),
+            ty: ty.clone(),
+        };
+        let (item, rust_name_call) =
+            try_lower_simple_module_helper_const_item("data", &ty, &value)
+                .expect("simple helper name const should lower");
+        assert_eq!(rust_name_call, "__const_data()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::Vec(_)),
+                body,
+                ..
+            } if name == "__const_data"
+                && matches!(body.first(), Some(RustStmt::Return(Some(RustExpr::Ident(n)))) if n == "nums")
         ));
     }
 
