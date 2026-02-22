@@ -308,21 +308,32 @@ fn referenced_item_names(
     current_name: &str,
     global_types: &HashSet<&str>,
 ) -> HashSet<String> {
+    let tokens = tokenize_rust_like(code);
     let mut refs = HashSet::new();
-    for ident in extract_identifiers(code) {
+    for (idx, token) in tokens.iter().enumerate() {
+        let ident = match token {
+            RustToken::Ident(ident) => ident,
+            RustToken::Sym(_) => continue,
+        };
         if ident == current_name || global_types.contains(ident.as_str()) {
             continue;
         }
-        if item_names.contains(&ident) {
-            refs.insert(ident);
+        if item_names.contains(ident) && is_reference_ident(&tokens, idx) {
+            refs.insert(ident.clone());
         }
     }
     refs
 }
 
-fn extract_identifiers(code: &str) -> HashSet<String> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum RustToken {
+    Ident(String),
+    Sym(String),
+}
+
+fn tokenize_rust_like(code: &str) -> Vec<RustToken> {
     let chars: Vec<char> = code.chars().collect();
-    let mut out = HashSet::new();
+    let mut out = Vec::new();
     let mut i = 0usize;
     let mut in_line_comment = false;
     let mut in_block_comment = false;
@@ -385,14 +396,27 @@ fn extract_identifiers(code: &str) -> HashSet<String> {
             i += char_literal_len(&chars, i);
             continue;
         }
+        if ch == ':' && i + 1 < chars.len() && chars[i + 1] == ':' {
+            out.push(RustToken::Sym("::".to_string()));
+            i += 2;
+            continue;
+        }
+        if ch == '-' && i + 1 < chars.len() && chars[i + 1] == '>' {
+            out.push(RustToken::Sym("->".to_string()));
+            i += 2;
+            continue;
+        }
         if ch == '_' || ch.is_ascii_alphabetic() {
             let start = i;
             i += 1;
             while i < chars.len() && (chars[i] == '_' || chars[i].is_ascii_alphanumeric()) {
                 i += 1;
             }
-            out.insert(chars[start..i].iter().collect());
+            out.push(RustToken::Ident(chars[start..i].iter().collect()));
             continue;
+        }
+        if !ch.is_whitespace() {
+            out.push(RustToken::Sym(ch.to_string()));
         }
         i += 1;
     }
@@ -416,6 +440,75 @@ fn is_char_literal_start(chars: &[char], idx: usize) -> bool {
 
 fn char_literal_len(chars: &[char], idx: usize) -> usize {
     if chars[idx + 1] == '\\' { 4 } else { 3 }
+}
+
+fn is_reference_ident(tokens: &[RustToken], idx: usize) -> bool {
+    let ident = match &tokens[idx] {
+        RustToken::Ident(s) => s.as_str(),
+        RustToken::Sym(_) => return false,
+    };
+    let prev = previous_token(tokens, idx);
+    let next = next_token(tokens, idx);
+
+    if next_is_sym(next, "(") || next_is_sym(next, "{") || next_is_sym(next, "::") {
+        return true;
+    }
+    if prev_is_sym(prev, "->")
+        || prev_is_sym(prev, ":")
+        || prev_is_ident(prev, "dyn")
+        || prev_is_ident(prev, "impl")
+        || prev_is_ident(prev, "for")
+    {
+        return true;
+    }
+    if prev_is_sym(prev, "=") && starts_with_uppercase(ident) {
+        return true;
+    }
+    if is_all_caps(ident) {
+        return true;
+    }
+    false
+}
+
+fn previous_token(tokens: &[RustToken], idx: usize) -> Option<&RustToken> {
+    if idx == 0 {
+        None
+    } else {
+        Some(&tokens[idx - 1])
+    }
+}
+
+fn next_token(tokens: &[RustToken], idx: usize) -> Option<&RustToken> {
+    tokens.get(idx + 1)
+}
+
+fn prev_is_ident(token: Option<&RustToken>, expected: &str) -> bool {
+    matches!(token, Some(RustToken::Ident(v)) if v == expected)
+}
+
+fn prev_is_sym(token: Option<&RustToken>, expected: &str) -> bool {
+    matches!(token, Some(RustToken::Sym(v)) if v == expected)
+}
+
+fn next_is_sym(token: Option<&RustToken>, expected: &str) -> bool {
+    matches!(token, Some(RustToken::Sym(v)) if v == expected)
+}
+
+fn starts_with_uppercase(s: &str) -> bool {
+    s.chars().next().is_some_and(|c| c.is_ascii_uppercase())
+}
+
+fn is_all_caps(s: &str) -> bool {
+    let mut saw_alpha = false;
+    for c in s.chars() {
+        if c.is_ascii_alphabetic() {
+            saw_alpha = true;
+            if !c.is_ascii_uppercase() {
+                return false;
+            }
+        }
+    }
+    saw_alpha
 }
 
 fn parse_top_level_item_name(line: &str) -> Option<String> {
@@ -698,6 +791,24 @@ pub fn root() -> UsedAlias {
         assert!(filtered.contains("pub type UsedAlias = Node;"));
         assert!(filtered.contains("pub struct Node {}"));
         assert!(!filtered.contains("pub type UnusedAlias = i64;"));
+    }
+
+    #[test]
+    fn filter_avoids_false_positive_from_local_variable_name() {
+        let code = r#"
+pub fn root() -> i64 {
+    let helper = 1;
+    helper + 1
+}
+
+pub fn helper() -> i64 {
+    2
+}
+"#;
+        let imported = HashSet::from(["root".to_string()]);
+        let filtered = filter_rust_code_to_needed(code, &imported);
+        assert!(filtered.contains("pub fn root()"));
+        assert!(!filtered.contains("pub fn helper()"));
     }
 
     #[test]
