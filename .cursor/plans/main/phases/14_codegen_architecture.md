@@ -819,7 +819,7 @@ Similarly, method calls are organized by type in a `methods/` directory:
 
 ## milestone_codegen_structural_passes: Structural IR Passes
 
-status: pending
+status: done
 
 **Goal:** Now that the entire codegen produces structured IR, add optimization and validation passes that operate on the IR before rendering. These passes are impossible with string-based codegen — they require the ability to inspect and transform the output structurally. This milestone delivers the payoff of the IR migration.
 
