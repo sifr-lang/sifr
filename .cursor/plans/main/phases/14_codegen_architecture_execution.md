@@ -107,6 +107,7 @@ status: in_progress
 - [x] PR247 slice: extend simple `raise` dual-path to lower simple name operands (e.g. `raise e`) to structured `Err(e)` while preserving fallback for non-leaf raise values
 - [x] PR248 slice: extend plain non-option `return <expr>` dual-path to lower option-typed simple name operands via structured `.unwrap()` while preserving fallback for option-return and union-return shaping paths
 - [x] PR249 slice: extend simple `let` dual-path to lower RHS simple name operands (e.g. `let x = y`) in existing primitive-safe type cases while preserving fallback for non-lowerable `let` forms
+- [x] PR250 slice: extend simple `assert` dual-path to lower bool name test operands (e.g. `assert ok`) while preserving fallback for non-leaf assert test expressions
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

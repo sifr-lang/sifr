@@ -1,5 +1,7 @@
 # sifr
 
+![Sifr Logo](logo.webp)
+
 **Python syntax. Rust performance. If it compiles, it works.**
 
 Sifr is a compiled language that looks like Python but compiles to Rust, producing native binaries. It enforces static typing, safe error handling, and ownership **all at compile time** so your programs never crash at runtime.

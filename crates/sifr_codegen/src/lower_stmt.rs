@@ -477,9 +477,21 @@ fn try_lower_simple_assert_stmt(test: &HirExpr, msg: Option<&HirExpr>) -> Option
         None
     };
     Some(RustStmt::Assert {
-        cond: try_lower_leaf_expr(test)?,
+        cond: try_lower_assert_test_expr(test)?,
         msg: lowered_msg,
     })
+}
+
+fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(test) {
+        return Some(lowered);
+    }
+    if matches!(test.ty(), Type::Bool | Type::LiteralBool(_)) {
+        if let HirExpr::Name { name, .. } = test {
+            return Some(RustExpr::Ident(name.clone()));
+        }
+    }
+    None
 }
 
 fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
@@ -1252,8 +1264,9 @@ mod tests {
     #[test]
     fn does_not_lower_assert_with_non_leaf_test() {
         let stmt = HirStmt::Assert {
-            test: HirExpr::Name {
-                name: "ok".to_string(),
+            test: HirExpr::Call {
+                func: "is_ok".to_string(),
+                args: vec![],
                 ty: Type::Bool,
             },
             msg: None,
@@ -1268,6 +1281,34 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn lowers_simple_assert_with_bool_name_test() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::Name {
+                name: "ok".to_string(),
+                ty: Type::Bool,
+            },
+            msg: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assert bool name test lowered");
+
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assert {
+                cond: RustExpr::Ident(ref name),
+                msg: None,
+            } if name == "ok"
+        ));
     }
 
     #[test]
