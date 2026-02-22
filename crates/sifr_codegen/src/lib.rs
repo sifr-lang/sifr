@@ -759,8 +759,9 @@ struct RustEmitter {
     option_unwrapped_vars: HashSet<String>,
     /// Function signatures: name -> (`param_types_with_conventions`, `return_type`)
     func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
-    /// Whether we're inside a loop that has an else clause
-    in_loop_with_else: bool,
+    /// Stack tracking whether each active loop has an else clause.
+    /// The last entry is the innermost active loop context.
+    loop_else_stack: Vec<bool>,
     /// Set of variable names that are mutated in the current function body
     mutated_vars: HashSet<String>,
     /// Set of class names that have Display impl (via __str__ or error type)
@@ -840,7 +841,7 @@ impl RustEmitter {
             current_return_type: None,
             option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
-            in_loop_with_else: false,
+            loop_else_stack: Vec::new(),
             mutated_vars: HashSet::new(),
             display_classes: HashSet::new(),
             parent_fields: HashMap::new(),
@@ -2740,10 +2741,14 @@ impl RustEmitter {
         }
     }
 
+    fn current_loop_has_else(&self) -> bool {
+        self.loop_else_stack.last().copied().unwrap_or(false)
+    }
+
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         if let Some(lowered_stmts) = try_lower_simple_stmt(
             stmt,
-            self.in_loop_with_else,
+            self.current_loop_has_else(),
             &self.mutated_vars,
             &self.borrowed_params,
         ) {
@@ -3246,8 +3251,7 @@ impl RustEmitter {
                 if has_else {
                     self.writeln("let mut _broke = false;");
                 }
-                let prev_loop_else = self.in_loop_with_else;
-                self.in_loop_with_else = has_else;
+                self.loop_else_stack.push(has_else);
                 // Hoist any walrus expressions
                 self.emit_walrus_hoists(condition);
                 self.write_indent();
@@ -3260,7 +3264,8 @@ impl RustEmitter {
                 }
                 self.indent -= 1;
                 self.writeln("}");
-                self.in_loop_with_else = prev_loop_else;
+                let popped = self.loop_else_stack.pop();
+                debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
                 if let Some(else_stmts) = else_body {
                     self.writeln("if !_broke {");
                     self.indent += 1;
@@ -3276,8 +3281,7 @@ impl RustEmitter {
                 if has_else {
                     self.writeln("let mut _broke = false;");
                 }
-                let prev_loop_else = self.in_loop_with_else;
-                self.in_loop_with_else = has_else;
+                self.loop_else_stack.push(has_else);
                 self.write_indent();
                 self.write("for ");
                 // Handle tuple unpacking: "i,v" -> "(i, v)"
@@ -3317,7 +3321,8 @@ impl RustEmitter {
                 }
                 self.indent -= 1;
                 self.writeln("}");
-                self.in_loop_with_else = prev_loop_else;
+                let popped = self.loop_else_stack.pop();
+                debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
                 if let Some(else_stmts) = else_body {
                     self.writeln("if !_broke {");
                     self.indent += 1;
@@ -3329,7 +3334,7 @@ impl RustEmitter {
                 }
             }
             HirStmt::Break => {
-                if self.in_loop_with_else {
+                if self.current_loop_has_else() {
                     self.writeln("_broke = true;");
                 }
                 self.writeln("break;");
