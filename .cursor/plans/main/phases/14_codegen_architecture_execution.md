@@ -294,6 +294,7 @@ status: in_progress
 - [x] PR187 corrective slice: convert `time` intrinsic borrowed-arg wrappers (`time_format`, `strptime`, `time_strptime`) from parenthesized expression strings to structured IR refs (no `Ident(format!(...))`)
 - [x] PR188 corrective slice: convert `datetime_from_timestamp` argument/literal wrappers from expression strings to structured IR nodes (no `Ident(format!(...))`/string-literal `Ident`)
 - [x] PR189 corrective slice: convert `json_loads` input wrapper from parenthesized expression string to structured IR binding/ref (no `Ident(format!(...))`)
+- [x] PR190 corrective slice: convert `test` intrinsic wrappers (`assert_false`, `assert_almost_eq`) from parenthesized expression strings to structured IR block bindings
 - [ ] PR170 slice: reduce remaining preamble-level `RawCode` usage to preamble-only documented exceptions (target <= 5) and wire docs/tests for gate accounting
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
