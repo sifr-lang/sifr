@@ -182,6 +182,7 @@ status: in_progress
 - [x] PR322 slice: move output writer helper cluster (`write`, `writeln`, `write_indent`) out of `lib.rs` into dedicated `output_helpers` module while preserving emission output behavior
 - [x] PR323 slice: move intrinsic/method dispatch helper cluster (`is_stdlib_constant`, `emit_stdlib_constant`, `emit_intrinsic_call`, `try_emit_intrinsic_via_registry`, `try_emit_method_via_registry`) out of `lib.rs` into dedicated `intrinsic_method_emitters` module while preserving intrinsic/method emission behavior
 - [x] PR324 slice: move method-call emission helper cluster (`is_generator_call`, `emit_method_call`, `emit_borrow_prefix`, `emit_borrow_prefix_for_name`) out of `lib.rs` into dedicated `method_call_emitter` module while preserving method-call and borrow-prefix behavior
+- [x] PR325 slice: move match-guard capture substitution helpers (`substitute_class_captures_in_guard`, `replace_identifier`) out of `lib.rs` into dedicated `match_guard_helpers` module while preserving match-guard capture rewriting behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
