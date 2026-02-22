@@ -149,6 +149,7 @@ status: in_progress
 - [x] PR289 slice: inline single-use `assert` statement helper into `HirStmt::Assert` match arm while preserving shared condition-test and assert-message lowering helpers
 - [x] PR290 slice: inline single-use `normalize_aug_assign_op` helper into the `AugAssign` match arm while preserving `//=` normalization to `/`
 - [x] PR291 slice: inline single-use numeric-op guard helper for simple `AugAssign` into `try_lower_simple_aug_assign_value`
+- [x] PR292 slice: inline single-use option-unwrapping return helper into `try_lower_simple_return_stmt` while preserving shared `try_lower_name_ident_expr` extraction
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
