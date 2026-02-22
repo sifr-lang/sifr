@@ -145,6 +145,7 @@ status: in_progress
 - [x] PR285 slice: inline single-purpose simple value wrappers (`plain return`, `let plain`, `raise value`) by routing their callsites directly to shared `try_lower_leaf_or_name_expr`
 - [x] PR286 slice: inline redundant simple `for`-iter wrapper by routing `for`/`for-else` iterable lowering directly to shared `try_lower_leaf_or_name_expr`
 - [x] PR287 slice: inline redundant simple-statement guard wrappers (`can_lower_simple_let`/`assign`/`aug_assign`) by using direct `try_lower_simple_*_value(...).is_some()` guards
+- [x] PR288 slice: inline single-use `raise` statement helper into `HirStmt::Raise` match arm while preserving shared `try_lower_leaf_or_name_expr` value lowering
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

@@ -89,7 +89,10 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             test,
             msg.as_ref(),
         )?]),
-        HirStmt::Raise { value } => Some(vec![try_lower_simple_raise_stmt(value)?]),
+        HirStmt::Raise { value } => Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+            args: vec![try_lower_leaf_or_name_expr(value)?],
+        }))]),
         HirStmt::If {
             condition,
             then_body,
@@ -485,13 +488,6 @@ fn normalize_aug_assign_op(op: &str) -> &str {
         return "/";
     }
     op.strip_suffix('=').unwrap_or(op)
-}
-
-fn try_lower_simple_raise_stmt(value: &HirExpr) -> Option<RustStmt> {
-    Some(RustStmt::Return(Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-        args: vec![try_lower_leaf_or_name_expr(value)?],
-    })))
 }
 
 fn try_lower_simple_assert_stmt(test: &HirExpr, msg: Option<&HirExpr>) -> Option<RustStmt> {
