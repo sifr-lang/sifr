@@ -137,6 +137,7 @@ status: in_progress
 - [x] PR277 slice: centralize option-none compare leaf lowering (`x is None` / `x is not None`) in `try_lower_leaf_expr` and remove redundant stmt-level helper usage so assert/if/while paths share one structured implementation
 - [x] PR278 slice: centralize bool-name leaf lowering (`ok` where type is bool) in `try_lower_leaf_expr` and remove redundant stmt-level bool-name branches from simple `if`/`while` condition and `assert` test lowering
 - [x] PR279 slice: remove redundant stmt-level simple-bool-condition helper and route simple `if`/`while` condition leaf paths directly through `try_lower_leaf_expr`, preserving option-truthiness fallback behavior
+- [x] PR280 slice: consolidate duplicated simple condition/test lowering (`leaf` then option-truthiness) into shared helper used by `while` conditions and `assert` tests, removing redundant assert-specific helper
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
