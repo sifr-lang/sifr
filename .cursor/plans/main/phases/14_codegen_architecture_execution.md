@@ -315,13 +315,14 @@ status: in_progress
 - [x] PR207 slice: add conservative `ir_optimize` clone-removal pass (trivial literal/ref/copy-cast `.clone()` sites) and run it over preamble/import IR before validation and render
 - [x] PR208 slice: refactor stdlib DCE into explicit stdlib-IR traversal (parse -> dependency graph -> transitive closure -> render) while preserving existing filtering semantics and adding impl/struct retention regression coverage
 - [x] PR209 slice: derive shared prelude import/file-handle needs from tokenized/parsed stdlib IR content (not comment/string probes), and keep stripping behavior unchanged with regression coverage
-- [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
+- [x] PR210 slice: complete PR171 closeout by switching codegen callsites/tests to explicit `filter_stdlib_ir_to_needed` API name and marking structural IR DCE/import-pass checklist items complete
+- [x] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
-- [ ] Add structural import collection pass from IR tree
-- [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
-- [ ] Add conservative clone optimization pass
-- [ ] Add IR validation pass for structural correctness
+- [x] Add structural import collection pass from IR tree
+- [x] Replace `filter_rust_code_to_needed` with IR DCE pass
+- [x] Add conservative clone optimization pass
+- [x] Add IR validation pass for structural correctness
 - [x] Delete legacy string-parser helpers (`parse_rust_blocks`, `extract_top_level_item_name`, `count_braces`)
 - [x] Remove at least 20 clippy suppressions from file header
 - [ ] Confirm generated binary size does not increase
