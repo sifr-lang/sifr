@@ -389,7 +389,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
             return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(value)?))]);
         }
-        let lowered = try_lower_simple_plain_return_value(value)?;
+        let lowered = try_lower_leaf_or_name_expr(value)?;
         if matches!(value, HirExpr::NoneLiteral) {
             return Some(vec![RustStmt::Return(Some(lowered))]);
         }
@@ -402,7 +402,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
             return None;
         }
-        let lowered = try_lower_simple_plain_return_value(value)?;
+        let lowered = try_lower_leaf_or_name_expr(value)?;
         let variant = crate::helpers::find_union_variant(members, value.ty())?;
         let enum_name = ctx.return_type?.union_enum_name();
         return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -415,13 +415,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
             try_lower_simple_plain_return_option_unwrap_value(value)?,
         ))]);
     }
-    Some(vec![RustStmt::Return(Some(
-        try_lower_simple_plain_return_value(value)?,
-    ))])
-}
-
-fn try_lower_simple_plain_return_value(value: &HirExpr) -> Option<RustExpr> {
-    try_lower_leaf_or_name_expr(value)
+    Some(vec![RustStmt::Return(Some(try_lower_leaf_or_name_expr(value)?))])
 }
 
 fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<RustExpr> {
@@ -452,7 +446,7 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     {
         return Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![try_lower_simple_let_plain_value(value)?],
+            args: vec![try_lower_leaf_or_name_expr(value)?],
         });
     }
     if matches!(ty, Type::None) && matches!(value, HirExpr::NoneLiteral) {
@@ -467,10 +461,6 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     ) {
         return None;
     }
-    try_lower_simple_let_plain_value(value)
-}
-
-fn try_lower_simple_let_plain_value(value: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_or_name_expr(value)
 }
 
@@ -514,12 +504,8 @@ fn normalize_aug_assign_op(op: &str) -> &str {
 fn try_lower_simple_raise_stmt(value: &HirExpr) -> Option<RustStmt> {
     Some(RustStmt::Return(Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-        args: vec![try_lower_simple_raise_value(value)?],
+        args: vec![try_lower_leaf_or_name_expr(value)?],
     })))
-}
-
-fn try_lower_simple_raise_value(value: &HirExpr) -> Option<RustExpr> {
-    try_lower_leaf_or_name_expr(value)
 }
 
 fn try_lower_simple_assert_stmt(test: &HirExpr, msg: Option<&HirExpr>) -> Option<RustStmt> {

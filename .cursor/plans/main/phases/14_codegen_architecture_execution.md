@@ -142,6 +142,7 @@ status: in_progress
 - [x] PR282 slice: add shared `try_lower_leaf_or_name_expr` helper and route duplicated simple value paths (`for` iter, plain return/let/assign/aug-assign/raise, assert msg) through it to remove repeated leaf+name lowering blocks
 - [x] PR283 slice: add shared `try_lower_name_ident_expr` helper and reuse it across name-only lowering paths (`leaf-or-name`, option passthrough, option unwrap receiver, option display receiver) to remove repeated `HirExpr::Name` extraction blocks
 - [x] PR284 slice: inline redundant option-passthrough wrappers in simple return/let paths by routing directly to shared `try_lower_name_ident_expr`
+- [x] PR285 slice: inline single-purpose simple value wrappers (`plain return`, `let plain`, `raise value`) by routing their callsites directly to shared `try_lower_leaf_or_name_expr`
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
