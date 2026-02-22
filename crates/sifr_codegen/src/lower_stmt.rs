@@ -279,10 +279,13 @@ fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -
 }
 
 fn can_lower_simple_aug_assign(op: &str, value: &HirExpr) -> bool {
-    matches!(op, "-=" | "*=" | "/=" | "%=") && try_lower_leaf_expr(value).is_some()
+    matches!(op, "-=" | "*=" | "/=" | "//=" | "%=") && try_lower_leaf_expr(value).is_some()
 }
 
 fn normalize_aug_assign_op(op: &str) -> &str {
+    if op == "//=" {
+        return "/";
+    }
     op.strip_suffix('=').unwrap_or(op)
 }
 
@@ -442,6 +445,51 @@ mod tests {
             name: "x".to_string(),
             op: "+=".to_string(),
             value: HirExpr::IntLiteral(1),
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn lowers_simple_augassign_floor_div_equal() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "//=".to_string(),
+            value: HirExpr::IntLiteral(2),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("floor-div augassign lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::AugAssign {
+                target: RustExpr::Ident(ref name),
+                op: ref lowered_op,
+                ..
+            } if name == "x" && lowered_op == "/"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_augassign_power_equal() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "**=".to_string(),
+            value: HirExpr::IntLiteral(3),
         };
 
         assert!(
