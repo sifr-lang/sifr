@@ -140,6 +140,7 @@ status: in_progress
 - [x] PR280 slice: consolidate duplicated simple condition/test lowering (`leaf` then option-truthiness) into shared helper used by `while` conditions and `assert` tests, removing redundant assert-specific helper
 - [x] PR281 slice: inline redundant `try_lower_simple_while_condition_expr` wrapper by routing simple `while` condition sites directly to shared `try_lower_simple_condition_test_expr`
 - [x] PR282 slice: add shared `try_lower_leaf_or_name_expr` helper and route duplicated simple value paths (`for` iter, plain return/let/assign/aug-assign/raise, assert msg) through it to remove repeated leaf+name lowering blocks
+- [x] PR283 slice: add shared `try_lower_name_ident_expr` helper and reuse it across name-only lowering paths (`leaf-or-name`, option passthrough, option unwrap receiver, option display receiver) to remove repeated `HirExpr::Name` extraction blocks
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

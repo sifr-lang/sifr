@@ -345,14 +345,18 @@ fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_simple_option_truthiness_condition_expr(expr)
 }
 
-fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
-    if let Some(lowered) = try_lower_leaf_expr(expr) {
-        return Some(lowered);
-    }
+fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, .. } = expr {
         return Some(RustExpr::Ident(name.clone()));
     }
     None
+}
+
+fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(expr) {
+        return Some(lowered);
+    }
+    try_lower_name_ident_expr(expr)
 }
 
 fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
@@ -423,21 +427,15 @@ fn try_lower_simple_plain_return_value(value: &HirExpr) -> Option<RustExpr> {
 }
 
 fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<RustExpr> {
-    if let HirExpr::Name { name, .. } = value {
-        return Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(name.clone())),
-            method: "unwrap".to_string(),
-            args: vec![],
-        });
-    }
-    None
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(try_lower_name_ident_expr(value)?),
+        method: "unwrap".to_string(),
+        args: vec![],
+    })
 }
 
 fn try_lower_simple_option_passthrough_return_value(value: &HirExpr) -> Option<RustExpr> {
-    if let HirExpr::Name { name, .. } = value {
-        return Some(RustExpr::Ident(name.clone()));
-    }
-    None
+    try_lower_name_ident_expr(value)
 }
 
 fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
@@ -483,10 +481,7 @@ fn try_lower_simple_let_plain_value(value: &HirExpr) -> Option<RustExpr> {
 }
 
 fn try_lower_simple_option_let_passthrough_value(value: &HirExpr) -> Option<RustExpr> {
-    if let HirExpr::Name { name, .. } = value {
-        return Some(RustExpr::Ident(name.clone()));
-    }
-    None
+    try_lower_name_ident_expr(value)
 }
 
 fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -> bool {
@@ -557,10 +552,7 @@ fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
 }
 
 fn try_lower_option_display_expr(msg: &HirExpr) -> Option<RustExpr> {
-    let receiver = match msg {
-        HirExpr::Name { name, .. } => RustExpr::Ident(name.clone()),
-        _ => return None,
-    };
+    let receiver = try_lower_name_ident_expr(msg)?;
 
     Some(RustExpr::MethodCall {
         receiver: Box::new(receiver),
