@@ -46,6 +46,7 @@ pub fn try_lower_simple_stmt(
                 value: try_lower_leaf_expr(value)?,
             }])
         }
+        HirStmt::Raise { value } => Some(vec![try_lower_simple_raise_stmt(value)?]),
         HirStmt::If {
             condition,
             then_body,
@@ -281,6 +282,13 @@ fn normalize_aug_assign_op(op: &str) -> &str {
     op.strip_suffix('=').unwrap_or(op)
 }
 
+fn try_lower_simple_raise_stmt(value: &HirExpr) -> Option<RustStmt> {
+    Some(RustStmt::Return(Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+        args: vec![try_lower_leaf_expr(value)?],
+    })))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -384,6 +392,49 @@ mod tests {
             name: "x".to_string(),
             op: "+=".to_string(),
             value: HirExpr::IntLiteral(1),
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn lowers_simple_raise_with_leaf_expr() {
+        let stmt = HirStmt::Raise {
+            value: HirExpr::IntLiteral(7),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("raise lowered");
+
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::Return(Some(RustExpr::FnCall { func, .. })) => {
+                assert!(matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Err".to_string()]));
+            }
+            _ => panic!("expected return Err(...)"),
+        }
+    }
+
+    #[test]
+    fn does_not_lower_raise_with_non_leaf_expr() {
+        let stmt = HirStmt::Raise {
+            value: HirExpr::Name {
+                name: "e".to_string(),
+                ty: Type::Int,
+            },
         };
 
         assert!(
