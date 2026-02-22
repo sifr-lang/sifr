@@ -164,7 +164,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             ..
         } if !target.contains(',') => Some(vec![RustStmt::For {
             var: target.clone(),
-            iter: try_lower_leaf_expr(iter)?,
+            iter: try_lower_simple_for_iter_expr(iter)?,
             // Entering a nested for without else resets loop-else break marker context.
             body: try_lower_simple_stmt_block(
                 body,
@@ -189,7 +189,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             },
             RustStmt::For {
                 var: target.clone(),
-                iter: try_lower_leaf_expr(iter)?,
+                iter: try_lower_simple_for_iter_expr(iter)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
                 body: try_lower_simple_stmt_block(
                     body,
@@ -311,6 +311,16 @@ fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr>
         if let HirExpr::Name { name, .. } = condition {
             return Some(RustExpr::Ident(name.clone()));
         }
+    }
+    None
+}
+
+fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(iter) {
+        return Some(lowered);
+    }
+    if let HirExpr::Name { name, .. } = iter {
+        return Some(RustExpr::Ident(name.clone()));
     }
     None
 }
@@ -1984,6 +1994,62 @@ mod tests {
             }
             _ => panic!("expected RustStmt::For"),
         }
+    }
+
+    #[test]
+    fn lowers_simple_for_with_name_iter() {
+        let for_stmt = HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &for_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("for with name iter lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::For {
+                var: ref var_name,
+                iter: RustExpr::Ident(ref iter_name),
+                ..
+            } if var_name == "i" && iter_name == "items"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_for_with_non_leaf_iter() {
+        let for_stmt = HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::Call {
+                func: "items".to_string(),
+                args: vec![],
+                ty: Type::List(Box::new(Type::Int)),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &for_stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
     }
 
     #[test]
