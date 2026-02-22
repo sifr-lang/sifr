@@ -207,7 +207,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     emitter.generate_enum_definitions();
 
     // Second pass: emit the actual code
-    emitter.emit_module(module, false);
+    emitter.emit_module(module, false, false);
 
     // Build stdlib preamble first so we can check for error type references
     let mut stdlib_preamble = String::new();
@@ -499,7 +499,7 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         let module_public = *module_name != "main";
         emitter.collect_union_types(module);
         emitter.generate_enum_definitions();
-        emitter.emit_module(module, module_public);
+        emitter.emit_module(module, module_public, false);
 
         let mut result = String::new();
 
@@ -776,8 +776,6 @@ struct RustEmitter {
     intrinsic_functions: HashSet<String>,
     /// Crates requested by intrinsic registry lowering.
     intrinsic_registry_crates: HashSet<String>,
-    /// Whether to emit in test mode (#[test] on test_* functions, no main)
-    test_mode: bool,
     /// Set of (`class_name`, `field_name`) pairs that are self-referential and need Box<T>
     recursive_fields: HashSet<(String, String)>,
     /// Map from class name -> ordered list of field names (for constructor arg mapping)
@@ -849,7 +847,6 @@ impl RustEmitter {
             used_stdlib_modules: HashSet::new(),
             intrinsic_functions: HashSet::new(),
             intrinsic_registry_crates: HashSet::new(),
-            test_mode: false,
             recursive_fields: HashSet::new(),
             class_field_order: HashMap::new(),
             nested_fn_captures: HashMap::new(),
@@ -1100,7 +1097,7 @@ impl RustEmitter {
         }
     }
 
-    fn emit_module(&mut self, module: &HirModule, module_public: bool) {
+    fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
         // Pre-scan: detect bigint usage
         if module_uses_bigint(module) {
             self.needs_bigint = true;
@@ -1231,7 +1228,7 @@ impl RustEmitter {
             if i > 0 {
                 self.output.push('\n');
             }
-            self.emit_function(func, module_public);
+            self.emit_function(func, module_public, test_mode);
         }
     }
 
@@ -2358,9 +2355,9 @@ impl RustEmitter {
         }
     }
 
-    fn emit_function(&mut self, func: &HirFunction, module_public: bool) {
+    fn emit_function(&mut self, func: &HirFunction, module_public: bool, test_mode: bool) {
         // In test mode, skip the main function
-        if self.test_mode && func.name == "main" {
+        if test_mode && func.name == "main" {
             return;
         }
 
@@ -2404,7 +2401,7 @@ impl RustEmitter {
         }
 
         // In test mode, add #[test] attribute for test_* functions
-        if self.test_mode && func.name.starts_with("test_") {
+        if test_mode && func.name.starts_with("test_") {
             self.write_indent();
             self.write("#[test]\n");
         }
