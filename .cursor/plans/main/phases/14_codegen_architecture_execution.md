@@ -291,6 +291,7 @@ status: in_progress
 - [x] PR184 corrective slice: convert `base32` intrinsic lowerers from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
 - [x] PR185 corrective slice: convert `os` intrinsic lowerers (`run_command`, `disk_usage`) from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
 - [x] PR186 corrective slice: convert `bytes` intrinsic lowerers (`encode_utf8`, `bytes_from_hex`) from templated/parenthesized expression strings to structured IR node trees (no `Ident(format!(...))`)
+- [x] PR187 corrective slice: convert `time` intrinsic borrowed-arg wrappers (`time_format`, `strptime`, `time_strptime`) from parenthesized expression strings to structured IR refs (no `Ident(format!(...))`)
 - [ ] PR170 slice: reduce remaining preamble-level `RawCode` usage to preamble-only documented exceptions (target <= 5) and wire docs/tests for gate accounting
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
