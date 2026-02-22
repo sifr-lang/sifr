@@ -92,7 +92,14 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             if let Some(lowered) = try_lower_option_none_compare_expr(left, &ops[0], right) {
                 return Some(lowered);
             }
-            if !is_safe_simple_compare(&ops[0], left.ty(), right.ty()) {
+            let op = &ops[0];
+            let types_match = left.ty() == right.ty();
+            let comparable = matches!(left.ty(), Type::Int | Type::Float | Type::LiteralInt(_))
+                || matches!(left.ty(), Type::Bool | Type::LiteralBool(_));
+            if !matches!(op.as_str(), "==" | "!=" | "<" | "<=" | ">" | ">=")
+                || !types_match
+                || !comparable
+            {
                 return None;
             }
             Some(RustExpr::BinOp {
@@ -149,22 +156,11 @@ fn is_numeric_simple(ty: &Type) -> bool {
     matches!(ty, Type::Int | Type::Float | Type::LiteralInt(_))
 }
 
-fn is_comparable_simple(ty: &Type) -> bool {
-    is_numeric_simple(ty) || matches!(ty, Type::Bool | Type::LiteralBool(_))
-}
-
 fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
     if !matches!(op, "+" | "-" | "*" | "%") {
         return false;
     }
     left_ty == right_ty && left_ty == result_ty && is_numeric_simple(left_ty)
-}
-
-fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
-    if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
-        return false;
-    }
-    left_ty == right_ty && is_comparable_simple(left_ty)
 }
 
 fn try_lower_option_none_compare_expr(left: &HirExpr, op: &str, right: &HirExpr) -> Option<RustExpr> {
