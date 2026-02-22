@@ -264,6 +264,7 @@ pub struct RustMatchArm {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RustEnumVariant {
     pub name: String,
+    pub tuple_fields: Vec<RustType>,
     pub fields: Vec<(String, RustType)>,
     pub value: Option<RustExpr>,
 }

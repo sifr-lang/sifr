@@ -89,7 +89,15 @@ impl Renderer {
                 ));
                 self.indent();
                 for variant in variants {
-                    let rendered = if !variant.fields.is_empty() {
+                    let rendered = if !variant.tuple_fields.is_empty() {
+                        let fields = variant
+                            .tuple_fields
+                            .iter()
+                            .map(Self::render_type_string)
+                            .collect::<Vec<_>>()
+                            .join(", ");
+                        format!("{}({})", variant.name, fields)
+                    } else if !variant.fields.is_empty() {
                         let fields = variant
                             .fields
                             .iter()
@@ -838,11 +846,19 @@ mod tests {
                 variants: vec![
                     RustEnumVariant {
                         name: "Int".to_string(),
+                        tuple_fields: vec![],
                         fields: vec![("value".to_string(), RustType::I64)],
                         value: None,
                     },
                     RustEnumVariant {
                         name: "Eof".to_string(),
+                        tuple_fields: vec![],
+                        fields: vec![],
+                        value: None,
+                    },
+                    RustEnumVariant {
+                        name: "Bytes".to_string(),
+                        tuple_fields: vec![RustType::Vec(Box::new(RustType::I64))],
                         fields: vec![],
                         value: None,
                     },
@@ -897,6 +913,7 @@ mod tests {
         enum Token {
             Int { value: i64 },
             Eof,
+            Bytes(Vec<i64>),
         }
 
         pub trait Renderable {

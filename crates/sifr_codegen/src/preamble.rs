@@ -234,16 +234,46 @@ pub fn build_io_error_items() -> Vec<RustItem> {
 
 pub fn build_file_handle_infra_items() -> Vec<RustItem> {
     vec![
-        // Documented RawCode exception: tuple enum variants are still emitted via RawCode.
-        RustItem::RawCode(
-            "enum SifrFileHandle {
-    TextRead(std::io::BufReader<std::fs::File>),
-    TextWrite(std::io::BufWriter<std::fs::File>),
-    BinaryRead(std::io::BufReader<std::fs::File>),
-    BinaryWrite(std::io::BufWriter<std::fs::File>),
-}"
-            .to_string(),
-        ),
+        RustItem::Enum {
+            name: "SifrFileHandle".to_string(),
+            visibility: Visibility::Private,
+            derives: vec![],
+            repr: None,
+            variants: vec![
+                crate::RustEnumVariant {
+                    name: "TextRead".to_string(),
+                    tuple_fields: vec![RustType::Named(
+                        "std::io::BufReader<std::fs::File>".to_string(),
+                    )],
+                    fields: vec![],
+                    value: None,
+                },
+                crate::RustEnumVariant {
+                    name: "TextWrite".to_string(),
+                    tuple_fields: vec![RustType::Named(
+                        "std::io::BufWriter<std::fs::File>".to_string(),
+                    )],
+                    fields: vec![],
+                    value: None,
+                },
+                crate::RustEnumVariant {
+                    name: "BinaryRead".to_string(),
+                    tuple_fields: vec![RustType::Named(
+                        "std::io::BufReader<std::fs::File>".to_string(),
+                    )],
+                    fields: vec![],
+                    value: None,
+                },
+                crate::RustEnumVariant {
+                    name: "BinaryWrite".to_string(),
+                    tuple_fields: vec![RustType::Named(
+                        "std::io::BufWriter<std::fs::File>".to_string(),
+                    )],
+                    fields: vec![],
+                    value: None,
+                },
+            ],
+        },
         RustItem::Static {
             name: "__SIFR_FILE_HANDLES".to_string(),
             visibility: Visibility::Private,
@@ -1463,7 +1493,8 @@ mod tests {
             RustItem::Enum { variants, .. } => variants
                 .iter()
                 .map(|v| {
-                    v.fields.iter().map(|(_, t)| count_raw_in_type(t)).sum::<usize>()
+                    v.tuple_fields.iter().map(count_raw_in_type).sum::<usize>()
+                        + v.fields.iter().map(|(_, t)| count_raw_in_type(t)).sum::<usize>()
                         + v.value.as_ref().map(count_raw_in_expr).unwrap_or(0)
                 })
                 .sum(),
@@ -1538,15 +1569,15 @@ mod tests {
     }
 
     #[test]
-    fn preamble_rawcode_exceptions_are_bounded_and_documented() {
+    fn preamble_rawcode_is_zero() {
         let mut all = build_io_error_items();
         all.extend(build_file_handle_infra_items());
         all.extend(build_file_handle_struct_items());
         all.extend(build_logging_items());
         let total_raw: usize = all.iter().map(count_raw_in_item).sum();
         assert_eq!(
-            total_raw, 1,
-            "expected exactly 1 documented preamble RawCode node (tuple enum), got {total_raw}"
+            total_raw, 0,
+            "expected preamble RawCode count to be zero, got {total_raw}"
         );
 
         let mut raw_method_names = BTreeSet::new();
