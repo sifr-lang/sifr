@@ -383,24 +383,7 @@ pub fn build_file_handle_struct_items() -> Vec<RustItem> {
                     is_async: false,
                 },
                 file_handle_read_bytes_method(),
-                raw_file_handle_method(
-                    "write_bytes",
-                    vec![
-                        RustParam::SelfParam { mutable: false },
-                        RustParam::Named {
-                            name: "data".to_string(),
-                            ty: RustType::Ref {
-                                mutable: false,
-                                inner: Box::new(RustType::Vec(Box::new(RustType::I64))),
-                            },
-                        },
-                    ],
-                    Some(RustType::Result(
-                        Box::new(RustType::Unit),
-                        Box::new(RustType::Named("IOError".to_string())),
-                    )),
-                    "(|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::BinaryWrite(ref mut __w)) => { use std::io::Write; let __bytes: Vec<u8> = __data.iter().map(|&b| b as u8).collect(); __w.write_all(&__bytes).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for binary writing\".to_string(), kind: \"Other\".to_string() }) } })()",
-                ),
+                file_handle_write_bytes_method(),
                 RustItem::Fn {
                     name: "__enter__".to_string(),
                     visibility: Visibility::Private,
@@ -842,6 +825,149 @@ fn file_handle_read_bytes_method() -> RustItem {
     }
 }
 
+fn file_handle_write_bytes_method() -> RustItem {
+    RustItem::Fn {
+        name: "write_bytes".to_string(),
+        visibility: Visibility::Private,
+        type_params: vec![],
+        params: vec![
+            RustParam::SelfParam { mutable: false },
+            RustParam::Named {
+                name: "data".to_string(),
+                ty: RustType::Ref {
+                    mutable: false,
+                    inner: Box::new(RustType::Vec(Box::new(RustType::I64))),
+                },
+            },
+        ],
+        ret: Some(RustType::Result(
+            Box::new(RustType::Unit),
+            Box::new(RustType::Named("IOError".to_string())),
+        )),
+        body: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__hid".to_string(),
+                ty: None,
+                value: RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                    field: "_handle".to_string(),
+                },
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__handles".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "__SIFR_FILE_HANDLES".to_string(),
+                            "lock".to_string(),
+                        ])),
+                        args: vec![],
+                    }),
+                    method: "unwrap".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::Match {
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__handles".to_string())),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__hid".to_string())),
+                    }],
+                },
+                arms: vec![
+                    RustMatchArm {
+                        pattern: "Some(SifrFileHandle::BinaryWrite(ref mut __w))".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![
+                            RustStmt::Let {
+                                mutable: false,
+                                name: "__bytes".to_string(),
+                                ty: Some(RustType::Vec(Box::new(RustType::Named("u8".to_string())))),
+                                value: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("data".to_string())),
+                                        method: "iter".to_string(),
+                                        args: vec![],
+                                    }),
+                                    method: "map".to_string(),
+                                    args: vec![RustExpr::Closure {
+                                        params: vec![RustParam::Named {
+                                            name: "b".to_string(),
+                                            ty: RustType::Named("_".to_string()),
+                                        }],
+                                        body: Box::new(RustExpr::Cast {
+                                            expr: Box::new(RustExpr::Deref(Box::new(
+                                                RustExpr::Ident("b".to_string()),
+                                            ))),
+                                            ty: RustType::Named("u8".to_string()),
+                                        }),
+                                        is_move: false,
+                                    }],
+                                },
+                            },
+                            RustStmt::Expr(RustExpr::Try(Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "std".to_string(),
+                                        "io".to_string(),
+                                        "Write".to_string(),
+                                        "write_all".to_string(),
+                                    ])),
+                                    args: vec![
+                                        RustExpr::Ident("__w".to_string()),
+                                        RustExpr::Ref {
+                                            mutable: false,
+                                            expr: Box::new(RustExpr::Ident("__bytes".to_string())),
+                                        },
+                                    ],
+                                }),
+                                method: "map_err".to_string(),
+                                args: vec![RustExpr::Ident("__io_err".to_string())],
+                            }))),
+                            RustStmt::Return(Some(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                                args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
+                            })),
+                        ],
+                    },
+                    RustMatchArm {
+                        pattern: "_".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                            args: vec![RustExpr::StructInit {
+                                name: "IOError".to_string(),
+                                fields: vec![
+                                    (
+                                        "message".to_string(),
+                                        RustExpr::Literal(crate::RustLiteral::Str(
+                                            "file not open for binary writing".to_string(),
+                                        )),
+                                    ),
+                                    (
+                                        "kind".to_string(),
+                                        RustExpr::Literal(crate::RustLiteral::Str(
+                                            "Other".to_string(),
+                                        )),
+                                    ),
+                                ],
+                            }],
+                        }))],
+                    },
+                ],
+            },
+        ],
+        is_async: false,
+    }
+}
+
 fn raw_file_handle_method(
     name: &str,
     params: Vec<RustParam>,
@@ -1087,7 +1213,7 @@ mod tests {
                 }
             }
         }
-        let expected: BTreeSet<String> = ["readline", "readlines", "write_bytes"]
+        let expected: BTreeSet<String> = ["readline", "readlines"]
             .into_iter()
             .map(ToString::to_string)
             .collect();
