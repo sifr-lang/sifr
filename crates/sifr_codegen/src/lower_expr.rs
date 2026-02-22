@@ -26,6 +26,12 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::StringLiteral(s) => Some(RustExpr::Literal(RustLiteral::Str(s.clone()))),
         HirExpr::BoolLiteral(v) => Some(RustExpr::Literal(RustLiteral::Bool(*v))),
         HirExpr::NoneLiteral => Some(RustExpr::Literal(RustLiteral::None)),
+        HirExpr::Name {
+            name,
+            ty: Type::Bool | Type::LiteralBool(_),
+        } => {
+            Some(RustExpr::Ident(name.clone()))
+        }
         HirExpr::EnumVariant { enum_name, variant, .. } => {
             Some(RustExpr::Path(vec![enum_name.clone(), variant.clone()]))
         }
@@ -199,6 +205,11 @@ mod tests {
         let str_expr =
             try_lower_leaf_expr(&HirExpr::StringLiteral("ok".to_string())).expect("str lowered");
         let bool_expr = try_lower_leaf_expr(&HirExpr::BoolLiteral(true)).expect("bool lowered");
+        let bool_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "ok".to_string(),
+            ty: Type::Bool,
+        })
+        .expect("bool name lowered");
         let none_expr = try_lower_leaf_expr(&HirExpr::NoneLiteral).expect("none lowered");
         let enum_expr = try_lower_leaf_expr(&HirExpr::EnumVariant {
             enum_name: "Color".to_string(),
@@ -219,6 +230,7 @@ mod tests {
         ));
         assert!(matches!(str_expr, RustExpr::Literal(RustLiteral::Str(_))));
         assert!(matches!(bool_expr, RustExpr::Literal(RustLiteral::Bool(true))));
+        assert!(matches!(bool_name_expr, RustExpr::Ident(ref name) if name == "ok"));
         assert!(matches!(none_expr, RustExpr::Literal(RustLiteral::None)));
         assert!(matches!(enum_expr, RustExpr::Path(_)));
     }

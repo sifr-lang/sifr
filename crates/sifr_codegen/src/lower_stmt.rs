@@ -333,11 +333,6 @@ fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr>
     if let Some(lowered) = try_lower_leaf_expr(condition) {
         return Some(lowered);
     }
-    if matches!(condition.ty(), Type::Bool | Type::LiteralBool(_)) {
-        if let HirExpr::Name { name, .. } = condition {
-            return Some(RustExpr::Ident(name.clone()));
-        }
-    }
     None
 }
 
@@ -599,11 +594,6 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
     }
     if let Some(lowered) = try_lower_simple_option_truthiness_condition_expr(test) {
         return Some(lowered);
-    }
-    if matches!(test.ty(), Type::Bool | Type::LiteralBool(_)) {
-        if let HirExpr::Name { name, .. } = test {
-            return Some(RustExpr::Ident(name.clone()));
-        }
     }
     None
 }
