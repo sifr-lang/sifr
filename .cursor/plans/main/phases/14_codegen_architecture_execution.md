@@ -104,6 +104,7 @@ status: in_progress
 - [x] PR244 slice: extend numeric `AugAssign` dual-path to lower RHS simple name operands (e.g. `x += delta`) while preserving fallback for non-numeric/string-style `+=` cases
 - [x] PR245 slice: extend simple `Assign` dual-path to lower RHS simple name operands (e.g. `x = y`) while preserving borrowed-TypeVar clone fallback by refusing structured lowering in borrowed-param cases
 - [x] PR246 slice: extend plain `return <expr>` dual-path to lower simple name operands (e.g. `return x`) in non-option/non-union contexts while preserving guarded fallback paths for option/union/class/display-sensitive return shaping
+- [x] PR247 slice: extend simple `raise` dual-path to lower simple name operands (e.g. `raise e`) to structured `Err(e)` while preserving fallback for non-leaf raise values
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

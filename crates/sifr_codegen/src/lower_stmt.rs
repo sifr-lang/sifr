@@ -427,8 +427,18 @@ fn normalize_aug_assign_op(op: &str) -> &str {
 fn try_lower_simple_raise_stmt(value: &HirExpr) -> Option<RustStmt> {
     Some(RustStmt::Return(Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-        args: vec![try_lower_leaf_expr(value)?],
+        args: vec![try_lower_simple_raise_value(value)?],
     })))
+}
+
+fn try_lower_simple_raise_value(value: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(value) {
+        return Some(lowered);
+    }
+    if let HirExpr::Name { name, .. } = value {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
 }
 
 fn try_lower_simple_assert_stmt(test: &HirExpr, msg: Option<&HirExpr>) -> Option<RustStmt> {
@@ -1032,8 +1042,9 @@ mod tests {
     #[test]
     fn does_not_lower_raise_with_non_leaf_expr() {
         let stmt = HirStmt::Raise {
-            value: HirExpr::Name {
-                name: "e".to_string(),
+            value: HirExpr::Call {
+                func: "err".to_string(),
+                args: vec![],
                 ty: Type::Int,
             },
         };
@@ -1047,6 +1058,32 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn lowers_simple_raise_with_name_expr() {
+        let stmt = HirStmt::Raise {
+            value: HirExpr::Name {
+                name: "e".to_string(),
+                ty: Type::Int,
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("raise name lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::Return(Some(RustExpr::FnCall { func, args })) => {
+                assert!(matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Err".to_string()]));
+                assert!(matches!(args.first(), Some(RustExpr::Ident(name)) if name == "e"));
+            }
+            _ => panic!("expected return Err(e)"),
+        }
     }
 
     #[test]
