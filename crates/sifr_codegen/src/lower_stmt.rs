@@ -321,11 +321,6 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         return None;
     }
     let option_return = ctx.return_type.is_some_and(crate::helpers::is_option_type);
-    if matches!(ctx.return_type, Some(Type::Union(_)))
-        && !option_return
-    {
-        return None;
-    }
     if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
         return None;
     }
@@ -340,6 +335,14 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         }
         return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered],
+        }))]);
+    }
+    if let Some(Type::Union(members)) = ctx.return_type {
+        let variant = crate::helpers::find_union_variant(members, value.ty())?;
+        let enum_name = ctx.return_type?.union_enum_name();
+        return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![enum_name, variant])),
             args: vec![lowered],
         }))]);
     }
@@ -719,11 +722,41 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_return_none_literal_with_non_option_union_return_context() {
+    fn lowers_return_leaf_with_non_option_union_return_context() {
         let stmt = HirStmt::Return {
-            value: Some(HirExpr::NoneLiteral),
+            value: Some(HirExpr::IntLiteral(5)),
         };
-        let union_ret = Type::Union(vec![Type::Int, Type::Str, Type::None]);
+        let union_ret = Type::Union(vec![Type::Int, Type::Str]);
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&union_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("non-option union leaf return lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::Return(Some(RustExpr::FnCall { func, .. })) => {
+                assert!(matches!(func.as_ref(), RustExpr::Path(parts) if parts.len() == 2));
+            }
+            _ => panic!("expected union-variant wrapped return"),
+        }
+    }
+
+    #[test]
+    fn does_not_lower_non_leaf_return_with_non_option_union_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+        };
+        let union_ret = Type::Union(vec![Type::Int, Type::Str]);
         assert!(
             try_lower_simple_stmt_with_ctx(
                 &stmt,
