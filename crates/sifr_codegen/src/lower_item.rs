@@ -24,7 +24,7 @@ pub fn try_lower_simple_module_constant_item(
 }
 
 /// Conservatively lowers module-level primitive constants via IR.
-/// Falls back for non-primitive or non-leaf values.
+/// Falls back for non-primitive or non-leaf/non-name values.
 pub fn try_lower_simple_module_const_item(
     name: &str,
     ty: &Type,
@@ -34,12 +34,19 @@ pub fn try_lower_simple_module_const_item(
         return None;
     }
     let rust_name = name.to_uppercase();
+    let lowered_value = if let Some(lowered) = try_lower_leaf_expr(value) {
+        lowered
+    } else if let HirExpr::Name { name, .. } = value {
+        RustExpr::Ident(name.clone())
+    } else {
+        return None;
+    };
     Some((
         RustItem::Const {
             name: rust_name.clone(),
             visibility: Visibility::Private,
             ty: crate::sifr_type_to_rust_type(ty),
-            value: try_lower_leaf_expr(value)?,
+            value: lowered_value,
         },
         rust_name,
     ))
@@ -179,11 +186,48 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_module_name_const_item() {
+        let (item, rust_name) = try_lower_simple_module_const_item(
+            "answer",
+            &Type::Int,
+            &HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            },
+        )
+        .expect("simple name const should lower");
+        assert_eq!(rust_name, "ANSWER");
+        assert!(matches!(
+            item,
+            RustItem::Const {
+                name,
+                visibility: Visibility::Private,
+                ty: crate::RustType::I64,
+                value: RustExpr::Ident(ident),
+            } if name == "ANSWER" && ident == "x"
+        ));
+    }
+
+    #[test]
     fn does_not_lower_non_primitive_module_const_item() {
         assert!(try_lower_simple_module_const_item(
             "name",
             &Type::Str,
             &HirExpr::StringLiteral("x".to_string()),
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn does_not_lower_non_leaf_module_const_item() {
+        assert!(try_lower_simple_module_const_item(
+            "answer",
+            &Type::Int,
+            &HirExpr::Call {
+                func: "compute_answer".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            },
         )
         .is_none());
     }
