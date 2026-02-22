@@ -102,6 +102,7 @@ status: in_progress
 - [x] PR242 slice: extend non-option union return dual-path to lower `return <leaf>` as `return <UnionEnum>::<Variant>(<leaf>)` while preserving fallback for non-leaf return values
 - [x] PR243 slice: extend simple `AugAssign` dual-path to lower numeric `+=` with structured IR while preserving fallback for string/list-style `+=` emitter-specific semantics
 - [x] PR244 slice: extend numeric `AugAssign` dual-path to lower RHS simple name operands (e.g. `x += delta`) while preserving fallback for non-numeric/string-style `+=` cases
+- [x] PR245 slice: extend simple `Assign` dual-path to lower RHS simple name operands (e.g. `x = y`) while preserving borrowed-TypeVar clone fallback by refusing structured lowering in borrowed-param cases
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
