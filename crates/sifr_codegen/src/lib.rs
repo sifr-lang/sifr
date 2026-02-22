@@ -25,6 +25,7 @@ pub use lower_item::*;
 mod intrinsics;
 mod methods;
 mod ir_imports;
+mod ir_validate;
 mod stdlib_filter;
 
 use sifr_hir::{
@@ -45,6 +46,7 @@ use stdlib_filter::{
     filter_rust_code_to_needed,
 };
 use ir_imports::collect_import_needs_from_items;
+use ir_validate::validate_items;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 
@@ -499,6 +501,26 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     let mut result = String::new();
+    let import_issues = validate_items(&import_items);
+    assert!(
+        import_issues.is_empty(),
+        "codegen IR validation failed (imports): {}",
+        import_issues
+            .iter()
+            .map(|issue| issue.message.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ")
+    );
+    let preamble_issues = validate_items(&preamble_items);
+    assert!(
+        preamble_issues.is_empty(),
+        "codegen IR validation failed (preamble): {}",
+        preamble_issues
+            .iter()
+            .map(|issue| issue.message.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ")
+    );
     if !import_items.is_empty() {
         result.push_str(&render_items(&import_items));
         result.push('\n');

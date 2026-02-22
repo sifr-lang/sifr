@@ -311,6 +311,7 @@ status: in_progress
 - [x] PR203 slice: harden stdlib DCE parser for `async`/`const`/`unsafe fn` headers and `static mut` declarations, with focused regression test
 - [x] PR204 slice: add `type` alias support to stdlib DCE top-level parsing so aliases join dependency closure (and unused aliases are dropped), with regression test
 - [x] PR205 slice: tighten stdlib DCE dependency scanning with context-aware token references so local variable names do not create false-positive item retention, with regression test
+- [x] PR206 slice: add `ir_validate` structural pass (duplicate struct fields, empty function body, return-outside-function, RawCode brace balance) and enforce it before rendering preamble/import IR
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
