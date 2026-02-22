@@ -1,15 +1,53 @@
 //! Calendar intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustLiteral, RustStmt};
 
 pub(super) fn lower_calendar_isleap(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __y = {}; (__y % 4 == 0 && __y % 100 != 0) || (__y % 400 == 0) }}",
-        args[0]
-    )))
+    // (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__y".to_string(),
+            ty: None,
+            value: RustExpr::Ident(args[0].clone()),
+        }],
+        expr: Some(Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__y".to_string())),
+                        op: "%".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(4))),
+                    }),
+                    op: "==".to_string(),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                }),
+                op: "&&".to_string(),
+                right: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__y".to_string())),
+                        op: "%".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(100))),
+                    }),
+                    op: "!=".to_string(),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                }),
+            }),
+            op: "||".to_string(),
+            right: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__y".to_string())),
+                    op: "%".to_string(),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Int(400))),
+                }),
+                op: "==".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+            }),
+        })),
+    })
 }
 
 pub(super) fn lower_calendar_weekday(args: &[String]) -> Option<RustExpr> {
