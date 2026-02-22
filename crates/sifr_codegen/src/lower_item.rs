@@ -46,17 +46,23 @@ pub fn try_lower_simple_module_const_item(
 }
 
 /// Conservatively lowers module-level string-literal constants via IR helper function.
-/// Falls back for non-literal string values.
+/// Falls back for non-literal/non-name string values.
 pub fn try_lower_simple_module_string_const_item(
     name: &str,
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if !matches!(ty, Type::Str | Type::LiteralStr(_)) || !matches!(value, HirExpr::StringLiteral(_)) {
+    if !matches!(ty, Type::Str | Type::LiteralStr(_)) {
         return None;
     }
     let rust_name = format!("__const_{name}");
-    let lowered_value = try_lower_leaf_expr(value)?;
+    let lowered_value = if let Some(lowered) = try_lower_leaf_expr(value) {
+        lowered
+    } else if let HirExpr::Name { name, .. } = value {
+        RustExpr::Ident(name.clone())
+    } else {
+        return None;
+    };
     Some((
         RustItem::Fn {
             name: rust_name.clone(),
@@ -243,8 +249,18 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_non_literal_module_string_const_item() {
+    fn does_not_lower_non_string_module_string_const_item() {
         assert!(try_lower_simple_module_string_const_item(
+            "greeting",
+            &Type::Int,
+            &HirExpr::StringLiteral("hi".to_string()),
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn lowers_simple_module_string_name_const_item() {
+        let (item, rust_name_call) = try_lower_simple_module_string_const_item(
             "greeting",
             &Type::Str,
             &HirExpr::Name {
@@ -252,7 +268,23 @@ mod tests {
                 ty: Type::Str,
             },
         )
-        .is_none());
+        .expect("string name const should lower");
+        assert_eq!(rust_name_call, "__const_greeting()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::String_),
+                body,
+                ..
+            } if name == "__const_greeting"
+                && matches!(
+                    body.first(),
+                    Some(RustStmt::Return(Some(RustExpr::MethodCall { receiver, method, .. })))
+                        if matches!(receiver.as_ref(), RustExpr::Ident(n) if n == "msg") && method == "to_string"
+                )
+        ));
     }
 
     #[test]
@@ -273,6 +305,21 @@ mod tests {
                 ..
             } if name == "__const_greeting"
         ));
+    }
+
+    #[test]
+    fn does_not_lower_non_leaf_module_string_const_item() {
+        assert!(try_lower_simple_module_string_const_item(
+            "greeting",
+            &Type::Str,
+            &HirExpr::BinOp {
+                left: Box::new(HirExpr::StringLiteral("a".to_string())),
+                op: "+".to_string(),
+                right: Box::new(HirExpr::StringLiteral("b".to_string())),
+                ty: Type::Str,
+            },
+        )
+        .is_none());
     }
 
     #[test]
