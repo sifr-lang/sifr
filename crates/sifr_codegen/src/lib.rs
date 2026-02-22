@@ -29,6 +29,7 @@ mod expr_ref_emitter;
 mod expr_render_helpers;
 mod function_emitter;
 mod generic_bounds_helpers;
+mod field_analysis_helpers;
 mod helpers;
 mod intrinsic_method_emitters;
 mod method_call_emitter;
@@ -60,7 +61,7 @@ use helpers::{
     detect_is_none_var, detect_is_not_none_var, detect_isinstance_union, detect_option_truthiness,
     find_union_variant, is_builtin_error_referenced, is_hashable_type_codegen, is_option_type,
     module_uses_bigint, needs_clone_for_type, stmts_reference_var, try_body_has_value_return,
-    type_contains_typevar, type_references_class,
+    type_contains_typevar,
 };
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
@@ -887,47 +888,6 @@ impl RustEmitter {
             try_enum_counter: 0,
             try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
-        }
-    }
-
-    /// Check if the object expression is `self._data` inside the `deque` class.
-    fn is_deque_data_field(&self, object: &HirExpr) -> bool {
-        if self.current_class_name.as_deref() != Some("deque") {
-            return false;
-        }
-        if let HirExpr::FieldAccess {
-            object: inner,
-            field,
-            ..
-        } = object
-        {
-            if field == "_data" {
-                if let HirExpr::Name { name, .. } = inner.as_ref() {
-                    return name == "self";
-                }
-            }
-        }
-        false
-    }
-
-    /// Detect self-referential class fields that need Box<T> wrapping.
-    /// A field is recursive if its type directly or indirectly references the class being defined.
-    fn detect_recursive_fields(&mut self, module: &HirModule) {
-        for class in &module.classes {
-            let field_names: Vec<String> = class.fields.iter().map(|(n, _)| n.clone()).collect();
-            self.class_field_order
-                .insert(class.name.clone(), field_names);
-            for (field_name, field_ty) in &class.fields {
-                if type_references_class(field_ty, &class.name) {
-                    self.recursive_fields
-                        .insert((class.name.clone(), field_name.clone()));
-                }
-            }
-            if !class.type_params.is_empty() {
-                self.generic_classes.insert(class.name.clone());
-                self.generic_class_params
-                    .insert(class.name.clone(), class.type_params.clone());
-            }
         }
     }
 
