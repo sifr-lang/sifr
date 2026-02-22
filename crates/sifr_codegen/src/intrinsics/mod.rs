@@ -682,7 +682,8 @@ mod tests {
 
         let now_struct = lower_intrinsic("datetime_now_struct", &[]).expect("datetime_now_struct");
         assert_eq!(now_struct.required_crate, Some("chrono"));
-        assert!(render_expr(&now_struct.expr).contains("vec![__dt.year() as i64"));
+        assert!(render_expr(&now_struct.expr).contains("chrono::Datelike::year(&__dt) as i64"));
+        assert!(render_expr(&now_struct.expr).contains("chrono::Timelike::second(&__dt) as i64"));
 
         let fmt = lower_intrinsic("datetime_format", &["dt".to_string(), "mask".to_string()])
             .expect("datetime_format");
@@ -691,7 +692,9 @@ mod tests {
         let from_ts =
             lower_intrinsic("datetime_from_timestamp", &["ts".to_string()]).expect("from_timestamp");
         assert_eq!(from_ts.required_crate, Some("chrono"));
-        assert!(render_expr(&from_ts.expr).contains("DateTime::<Utc>::from_timestamp"));
+        assert!(render_expr(&from_ts.expr).contains("DateTime::from_timestamp"));
+        assert!(render_expr(&from_ts.expr).contains("ok_or_else"));
+        assert!(render_expr(&from_ts.expr).contains("\"invalid timestamp\".to_string()"));
     }
 
     #[test]
