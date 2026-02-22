@@ -25,6 +25,7 @@ pub use lower_item::*;
 mod intrinsics;
 mod methods;
 mod ir_imports;
+mod ir_optimize;
 mod ir_validate;
 mod stdlib_filter;
 
@@ -46,6 +47,7 @@ use stdlib_filter::{
     filter_rust_code_to_needed,
 };
 use ir_imports::collect_import_needs_from_items;
+use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
@@ -457,6 +459,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         preamble_items.extend(build_logging_items());
     }
 
+    remove_trivial_clones_in_items(&mut preamble_items);
     let ir_import_needs = collect_import_needs_from_items(&preamble_items);
     let needs_hashmap = needs_hashmap_base || ir_import_needs.needs_hashmap;
     let needs_hashset = needs_hashset_base || ir_import_needs.needs_hashset;
@@ -500,6 +503,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         ]));
     }
 
+    remove_trivial_clones_in_items(&mut import_items);
     let mut result = String::new();
     let import_issues = validate_items(&import_items);
     assert!(
