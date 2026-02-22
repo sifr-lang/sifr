@@ -31,6 +31,7 @@ mod stdlib_filter;
 mod helpers;
 mod entrypoints;
 mod module_constants;
+mod module_prescan;
 
 #[cfg(test)]
 mod lib_codegen_tests;
@@ -1105,88 +1106,7 @@ impl RustEmitter {
             self.needs_bigint = true;
         }
 
-        // Pre-scan: collect stdlib/intrinsic imports and register function names
-        for import in &module.imports {
-            if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
-                self.used_stdlib_modules.insert(import.module.clone());
-                // Track which specific names are imported from each stdlib module
-                let names_set = self.imported_stdlib_names.entry(import.module.clone()).or_default();
-                for name in &import.names {
-                    names_set.insert(name.clone());
-                }
-                for (_, alias) in &import.aliases {
-                    names_set.insert(alias.clone());
-                }
-                // Only register names as intrinsic if they are known intrinsic re-exports.
-                // Pure Sifr functions/constants should go through the normal codegen path.
-                let intrinsic_set = self.stdlib_intrinsic_names.get(&import.module);
-                if import.module.starts_with("_sifr.") {
-                    // Direct _sifr.* imports are always intrinsic. Register both imported names
-                    // and local aliases so call sites resolve correctly.
-                    for name in &import.names {
-                        self.intrinsic_functions.insert(name.clone());
-                    }
-                    for (_, alias) in &import.aliases {
-                        self.intrinsic_functions.insert(alias.clone());
-                    }
-                } else if let Some(iset) = intrinsic_set {
-                    // For sifr.* imports, only register names that are intrinsic re-exports.
-                    for name in &import.names {
-                        if iset.contains(name) {
-                            self.intrinsic_functions.insert(name.clone());
-                        }
-                    }
-                    for (name, alias) in &import.aliases {
-                        if iset.contains(name) {
-                            self.intrinsic_functions.insert(alias.clone());
-                        }
-                    }
-                } else {
-                    // No intrinsic info available (legacy path) — treat all as intrinsic.
-                    for name in &import.names {
-                        self.intrinsic_functions.insert(name.clone());
-                    }
-                    for (_, alias) in &import.aliases {
-                        self.intrinsic_functions.insert(alias.clone());
-                    }
-                }
-            }
-        }
-
-        // Pre-scan: collect classes that have Display impls
-        for class in &module.classes {
-            let has_auto_display = !class.fields.is_empty()
-                && !class.is_protocol
-                && !class.operator_impls.iter().any(|(n, _)| n == "__str__" || n == "__repr__")
-                && class.fields.iter().all(|(_, t)| is_auto_display_type(t));
-            if class.is_error_type
-                || class.newtype_inner.is_some()
-                || class.operator_impls.iter().any(|(n, _)| n == "__str__" || n == "__repr__")
-                || has_auto_display
-            {
-                self.display_classes.insert(class.name.clone());
-            }
-        }
-        // Built-in error types all have Display impls (formatting self.message)
-        for &error_name in BUILTIN_ERROR_CLASSES {
-            self.display_classes.insert(error_name.to_string());
-        }
-
-        // Pre-scan: collect parent field info for inheritance
-        for class in &module.classes {
-            if let Some(ref parent_name) = class.parent_class {
-                // Find the parent class and collect its field names
-                if let Some(parent_class) = module.classes.iter().find(|c| c.name == *parent_name) {
-                    let parent_field_names: HashSet<String> = parent_class.fields.iter()
-                        .map(|(name, _)| name.clone())
-                        .collect();
-                    self.parent_fields.insert(
-                        class.name.clone(),
-                        (parent_name.clone(), parent_field_names),
-                    );
-                }
-            }
-        }
+        self.prescan_module_metadata(module);
 
         self.emit_module_constants(module);
 
