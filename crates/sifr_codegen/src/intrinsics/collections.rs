@@ -30,10 +30,16 @@ pub(super) fn lower_set_from_list(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
+                mutable: false,
+                name: "__items".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
                 mutable: true,
                 name: "s".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident("__items".to_string()))),
             },
             RustStmt::Expr(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("s".to_string())),
@@ -57,10 +63,16 @@ pub(super) fn lower_set_add(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
+                mutable: false,
+                name: "__items".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
                 mutable: true,
                 name: "s".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident("__items".to_string()))),
             },
             RustStmt::Let {
                 mutable: false,
@@ -113,10 +125,16 @@ pub(super) fn lower_set_remove(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
+                mutable: false,
+                name: "__items".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
                 mutable: true,
                 name: "s".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident("__items".to_string()))),
             },
             RustStmt::Expr(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("s".to_string())),
@@ -162,15 +180,27 @@ pub(super) fn lower_set_union(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
+                mutable: false,
+                name: "__left".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__right".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[1].clone()),
+            },
+            RustStmt::Let {
                 mutable: true,
                 name: "s".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident("__left".to_string()))),
             },
             RustStmt::For {
                 var: "v".to_string(),
                 iter: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                    receiver: Box::new(RustExpr::Ident("__right".to_string())),
                     method: "iter".to_string(),
                     args: vec![],
                 },
@@ -209,15 +239,27 @@ pub(super) fn lower_set_intersection(args: &[String]) -> Option<RustExpr> {
         stmts: vec![
             RustStmt::Let {
                 mutable: false,
+                name: "__left".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__right".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[1].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
                 name: "__a".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[0])))),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident("__left".to_string()))),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__b".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(format!("({})", args[1])))),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident("__right".to_string()))),
             },
         ],
         expr: Some(Box::new(RustExpr::MethodCall {
