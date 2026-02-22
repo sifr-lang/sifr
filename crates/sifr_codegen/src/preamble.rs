@@ -1544,7 +1544,10 @@ mod tests {
         all.extend(build_file_handle_struct_items());
         all.extend(build_logging_items());
         let total_raw: usize = all.iter().map(count_raw_in_item).sum();
-        assert!(total_raw <= 5, "expected <= 5 documented preamble RawCode nodes, got {total_raw}");
+        assert_eq!(
+            total_raw, 1,
+            "expected exactly 1 documented preamble RawCode node (tuple enum), got {total_raw}"
+        );
 
         let mut raw_method_names = BTreeSet::new();
         for item in build_file_handle_struct_items() {

@@ -303,7 +303,8 @@ status: in_progress
 - [x] PR196 corrective slice: reduce `preamble` `RawCode` usage by structuring `FileHandle.write_bytes` and tightening documented exception method set (`readline`/`readlines`)
 - [x] PR197 corrective slice: reduce `preamble` `RawCode` usage by structuring `FileHandle.readline` and tightening documented exception method set (`readlines`)
 - [x] PR198 corrective slice: reduce `preamble` `RawCode` usage by structuring `FileHandle.readlines` and removing raw-method exception usage (only tuple enum `RawCode` remains documented)
-- [ ] PR170 slice: reduce remaining preamble-level `RawCode` usage to preamble-only documented exceptions (target <= 5) and wire docs/tests for gate accounting
+- [x] PR170 slice: reduce remaining preamble-level `RawCode` usage to preamble-only documented exceptions (target <= 5) and wire docs/tests for gate accounting (completed with exact-count assertion: 1 documented tuple-enum `RawCode` node)
+- [x] PR199 corrective slice: tighten preamble RawCode gate-accounting from <=5 to exact documented count (1 tuple-enum node) and confirm no raw file-handle method bodies remain
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
