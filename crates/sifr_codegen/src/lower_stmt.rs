@@ -387,9 +387,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
 
     if option_return {
         if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
-            return Some(vec![RustStmt::Return(Some(
-                try_lower_simple_option_passthrough_return_value(value)?,
-            ))]);
+            return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(value)?))]);
         }
         let lowered = try_lower_simple_plain_return_value(value)?;
         if matches!(value, HirExpr::NoneLiteral) {
@@ -434,10 +432,6 @@ fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<
     })
 }
 
-fn try_lower_simple_option_passthrough_return_value(value: &HirExpr) -> Option<RustExpr> {
-    try_lower_name_ident_expr(value)
-}
-
 fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
     try_lower_simple_let_value(ty, value).is_some()
 }
@@ -450,7 +444,7 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
         && crate::helpers::is_option_type(value.ty())
         && !matches!(value.ty(), Type::None)
     {
-        return try_lower_simple_option_let_passthrough_value(value);
+        return try_lower_name_ident_expr(value);
     }
     if crate::helpers::is_option_type(ty)
         && !crate::helpers::is_option_type(value.ty())
@@ -478,10 +472,6 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
 
 fn try_lower_simple_let_plain_value(value: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_or_name_expr(value)
-}
-
-fn try_lower_simple_option_let_passthrough_value(value: &HirExpr) -> Option<RustExpr> {
-    try_lower_name_ident_expr(value)
 }
 
 fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -> bool {
