@@ -172,6 +172,7 @@ status: in_progress
 - [x] PR312 slice: move operator/protocol impl emission cluster (`emit_operator_impls`, `emit_binop_trait_impl`, `emit_unaryop_trait_impl`, `emit_eq_trait_impl`, `emit_ord_trait_impl`, `emit_protocol_impls`) out of `lib.rs` into dedicated `operator_protocol_emitters` helpers to reduce file size while preserving behavior
 - [x] PR313 slice: move the large `emit_class_method` implementation out of `lib.rs` into dedicated `class_method_emitter` helpers to reduce file size while preserving class-method emission behavior
 - [x] PR314 slice: move the large `emit_function` implementation out of `lib.rs` into dedicated `function_emitter` helpers to reduce file size while preserving function/generator emission behavior
+- [x] PR315 slice: move match-emission cluster (`emit_match`, `emit_match_arm`, and match-pattern/guard helpers) out of `lib.rs` into dedicated `match_emitter` helpers to reduce file size while preserving match semantics
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
