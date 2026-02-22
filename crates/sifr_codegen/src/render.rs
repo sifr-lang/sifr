@@ -4,6 +4,7 @@ use crate::{
     RustExpr, RustFile, RustItem, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType,
     Visibility,
 };
+use std::fmt::Write as _;
 
 pub struct Renderer {
     output: String,
@@ -79,7 +80,7 @@ impl Renderer {
             } => {
                 self.render_derives(derives);
                 if let Some(repr_name) = repr {
-                    self.writeln(&format!("#[repr({})]", repr_name));
+                    self.writeln(&format!("#[repr({repr_name})]"));
                 }
                 self.writeln(&format!(
                     "{}enum {} {{",
@@ -590,7 +591,7 @@ impl Renderer {
                     Self::render_expr_string(then_expr)
                 );
                 if let Some(else_expr) = else_expr {
-                    out.push_str(&format!(" else {{ {} }}", Self::render_expr_string(else_expr)));
+                    let _ = write!(out, " else {{ {} }}", Self::render_expr_string(else_expr));
                 }
                 out
             }
@@ -703,15 +704,27 @@ impl Renderer {
     }
 
     fn expr_requires_parens(expr: &RustExpr) -> bool {
-        matches!(
+        // Check if expr is one of the types that always needs parens
+        if matches!(
             expr,
             RustExpr::BinOp { .. }
+                | RustExpr::Cast { .. }
                 | RustExpr::If { .. }
                 | RustExpr::Match { .. }
                 | RustExpr::Closure { .. }
                 | RustExpr::ClosureBlock { .. }
                 | RustExpr::Block { .. }
-        )
+        ) {
+            return true;
+        }
+        // Also check if an Ident contains a cast expression (contains " as ")
+        // This handles cases like "(2 as i64)" passed as an Ident string
+        if let RustExpr::Ident(name) = expr {
+            if name.contains(" as ") {
+                return true;
+            }
+        }
+        false
     }
 
     fn render_closure_param_string(param: &RustParam) -> String {

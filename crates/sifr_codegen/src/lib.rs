@@ -2,40 +2,11 @@
 //!
 //! Translates the typed HIR into Rust source code.
 
-#![allow(clippy::uninlined_format_args)]
-#![allow(clippy::doc_markdown)]
-#![allow(clippy::format_push_string)]
-#![allow(clippy::type_complexity)]
-#![allow(clippy::option_map_or_none)]
-#![allow(clippy::nonminimal_bool)]
-#![allow(clippy::while_let_loop)]
-#![allow(clippy::needless_borrow)]
-#![allow(clippy::redundant_closure)]
-#![allow(clippy::ref_option)]
-#![allow(clippy::collapsible_match)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::iter_next_loop)]
-#![allow(clippy::map_clone)]
-#![allow(clippy::useless_format)]
-#![allow(clippy::cloned_instead_of_copied)]
-#![allow(clippy::wildcard_imports)]
-#![allow(clippy::unused_self)]
-#![allow(clippy::unnecessary_semicolon)]
 #![allow(dead_code)]
-#![allow(clippy::derivable_impls)]
-#![allow(clippy::while_let_on_iterator)]
-#![allow(clippy::assigning_clones)]
-#![allow(clippy::explicit_iter_loop)]
-#![allow(clippy::unnecessary_map_or)]
-#![allow(clippy::inefficient_to_string)]
 #![allow(clippy::struct_excessive_bools)]
-#![allow(clippy::doc_link_with_quotes)]
-#![allow(clippy::redundant_closure_for_method_calls)]
-#![allow(clippy::if_same_then_else)]
-#![allow(clippy::if_not_else)]
-#![allow(clippy::unnecessary_unwrap)]
 
 mod rust_ir;
 pub use rust_ir::*;
@@ -53,10 +24,34 @@ mod lower_item;
 pub use lower_item::*;
 mod intrinsics;
 mod methods;
+mod stdlib_filter;
 
-use sifr_hir::*;
+use sifr_hir::{
+    HirClass,
+    HirExpr,
+    HirFStringPart,
+    HirFunction,
+    HirMatchArm,
+    HirModule,
+    HirPattern,
+    HirStmt,
+    MethodKind,
+};
 use sifr_type_system::{Type, ParamConvention};
+use stdlib_filter::{
+    collect_and_strip_shared_prelude,
+    dedup_rust_items,
+    filter_rust_code_to_needed,
+};
 use std::collections::{HashMap, HashSet};
+use std::fmt::Write as _;
+
+type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
+type ModuleFuncSignatures = HashMap<String, FuncSignature>;
+type StdlibFuncSignatures = HashMap<String, ModuleFuncSignatures>;
+type UnionVariantTypes = Vec<(String, Type)>;
+type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
+type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
 /// Built-in error class names that the compiler provides.
 const BUILTIN_ERROR_CLASSES: &[&str] = &[
@@ -74,7 +69,7 @@ const IO_ERROR_SUBCLASSES: &[&str] = &[
 ];
 
 /// Check if a built-in error class name is referenced in the generated Rust code.
-/// Uses word-boundary-aware matching to avoid false positives like "EmailError" matching "Error".
+/// Uses word-boundary-aware matching to avoid false positives like "`EmailError`" matching "Error".
 /// Check if a type can be auto-formatted with `{}` (implements Display).
 /// Used to determine if auto-generated Display impl is safe for a class field.
 fn is_auto_display_type(ty: &Type) -> bool {
@@ -125,7 +120,9 @@ pub struct CodegenResult {
     pub rust_source: String,
     pub used_stdlib_modules: HashSet<String>,
     pub used_intrinsic_modules: HashSet<String>,
-    /// Map of constant_name -> (type, rust_name) for module-level constants
+    /// Required external crates discovered during structured lowering/codegen.
+    pub required_crates: HashSet<String>,
+    /// Map of `constant_name` -> (type, `rust_name`) for module-level constants
     pub constant_mappings: HashMap<String, (Type, String)>,
 }
 
@@ -177,46 +174,41 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         rust_source: result,
         used_stdlib_modules: emitter.used_stdlib_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
+        required_crates: {
+            let mut crates = emitter.intrinsic_registry_crates;
+            if emitter.needs_bigint {
+                crates.insert("num-bigint".to_string());
+                crates.insert("num-traits".to_string());
+            }
+            crates
+        },
         constant_mappings: emitter.module_constants,
     }
 }
 
 /// Compiled stdlib information for codegen.
 /// Contains per-module Rust code and intrinsic name sets.
+#[derive(Default)]
 pub struct StdlibCode {
-    /// Map of module_name -> compiled Rust source code for pure Sifr functions/constants
+    /// Map of `module_name` -> compiled Rust source code for pure Sifr functions/constants
     pub module_rust_code: HashMap<String, String>,
-    /// Map of module_name -> set of names that are intrinsic re-exports (from _sifr.*)
+    /// Map of `module_name` -> set of names that are intrinsic re-exports (from _sifr.*)
     pub intrinsic_names: HashMap<String, HashSet<String>>,
-    /// Map of module_name -> (constant_name -> (type, rust_name)) for stdlib constants
+    /// Map of `module_name` -> (`constant_name` -> (type, `rust_name`)) for stdlib constants
     /// This allows user code to reference stdlib constants with the correct Rust names.
     pub module_constants: HashMap<String, HashMap<String, (Type, String)>>,
-    /// Map of module_name -> (func_name -> (param_types_with_conventions, return_type))
+    /// Map of `module_name` -> (`func_name` -> (`param_types_with_conventions`, `return_type`))
     /// for pure Sifr stdlib functions. Used to emit correct borrow prefixes at call sites.
-    pub func_signatures: HashMap<String, HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>,
-    /// Map of module_name -> set of transitive intrinsic module dependencies.
+    pub func_signatures: StdlibFuncSignatures,
+    /// Map of `module_name` -> set of transitive intrinsic module dependencies.
     /// E.g., sifr.secrets depends on _sifr.crypto, so when user imports sifr.secrets,
     /// the Cargo dependencies for _sifr.crypto (rand) must be included.
     pub transitive_deps: HashMap<String, HashSet<String>>,
-    /// Map of module_name -> set of function names that are generators (contain yield).
-    /// Used to emit .collect() when assigning generator results to list[T] in user code.
+    /// Map of `module_name` -> set of function names that are generators (contain yield).
+    /// Used to emit .`collect()` when assigning generator results to list[T] in user code.
     pub generator_functions: HashMap<String, HashSet<String>>,
     /// Set of class names that have generic type parameters across all stdlib modules.
     pub generic_classes: HashSet<String>,
-}
-
-impl Default for StdlibCode {
-    fn default() -> Self {
-        Self {
-            module_rust_code: HashMap::new(),
-            intrinsic_names: HashMap::new(),
-            module_constants: HashMap::new(),
-            func_signatures: HashMap::new(),
-            transitive_deps: HashMap::new(),
-            generator_functions: HashMap::new(),
-            generic_classes: HashSet::new(),
-        }
-    }
 }
 
 /// Returns the default parameter convention for a type.
@@ -230,331 +222,6 @@ fn default_param_convention(ty: &Type) -> ParamConvention {
     }
 }
 
-/// Filter compiled Rust source code to only include top-level items whose names
-/// are in the given set (or are transitively called by them).
-fn filter_rust_code_to_needed(rust_code: &str, imported_names: &HashSet<String>) -> String {
-    // Step 1: Parse the Rust code into named blocks
-    let blocks = parse_rust_blocks(rust_code);
-
-    // Step 2: Build a dependency graph (which functions call/use which)
-    let mut deps: HashMap<String, HashSet<String>> = HashMap::new();
-    let block_names: HashSet<String> = blocks.iter().map(|(name, _)| name.clone()).collect();
-    // Error types that are defined globally (not in stdlib preamble) - don't include them as deps
-    let global_types: HashSet<&str> = ["IOError", "ParseError", "ValueError", "TypeError",
-        "RegexError", "KeyError", "IndexError", "AttributeError", "OverflowError",
-        "ZeroDivisionError", "RuntimeError", "NotImplementedError", "Error",
-        "JSONDecodeError", "TOMLDecodeError",
-        "FileNotFoundError", "PermissionError", "FileExistsError",
-        "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
-    ].iter().cloned().collect();
-    for (name, code) in &blocks {
-        let mut called = HashSet::new();
-        for other_name in &block_names {
-            if other_name != name && !global_types.contains(other_name.as_str()) {
-                // Check if this block's code contains a call to or type reference of other_name
-                // Use word-boundary check to avoid substring false positives
-                // Check for function calls: other_name(
-                // Check for type references: -> TypeName, TypeName {, TypeName::
-                let patterns = [
-                    format!("{}(", other_name),
-                    format!("-> {}", other_name),
-                    format!("{} {{", other_name),
-                    format!("{}::", other_name),
-                ];
-                for pattern in &patterns {
-                    for (idx, _) in code.match_indices(pattern.as_str()) {
-                        // Check that the character before the match is not alphanumeric or underscore
-                        let is_word_boundary = if idx == 0 {
-                            true
-                        } else {
-                            let prev_char = code.as_bytes()[idx - 1] as char;
-                            !prev_char.is_alphanumeric() && prev_char != '_'
-                        };
-                        if is_word_boundary {
-                            called.insert(other_name.clone());
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        // Accumulate dependencies: multiple blocks with the same name (e.g., impl X and impl Display for X)
-        // should contribute their dependencies together
-        deps.entry(name.clone()).or_default().extend(called);
-    }
-
-    // Step 3: Compute transitive closure of needed functions
-    let mut needed: HashSet<String> = imported_names.clone();
-    let mut worklist: Vec<String> = imported_names.iter().cloned().collect();
-    while let Some(name) = worklist.pop() {
-        if let Some(called) = deps.get(&name) {
-            for dep in called {
-                if needed.insert(dep.clone()) {
-                    worklist.push(dep.clone());
-                }
-            }
-        }
-    }
-
-    // Step 4: Emit only needed blocks (preserving order) + non-block lines
-    let mut result = String::new();
-    let mut lines = rust_code.lines().peekable();
-    // Buffer for attribute lines (#[...]) that precede an item
-    let mut pending_attrs: Vec<String> = Vec::new();
-
-    while let Some(line) = lines.next() {
-        // Collect attribute lines to attach to the next item
-        if line.trim().starts_with("#[") {
-            pending_attrs.push(line.to_string());
-            continue;
-        }
-
-        let item_name = extract_top_level_item_name(line);
-
-        if let Some(ref name) = item_name {
-            if needed.contains(name) {
-                // Emit pending attributes
-                for attr in &pending_attrs {
-                    result.push_str(attr);
-                    result.push('\n');
-                }
-                // Emit this entire item
-                result.push_str(line);
-                result.push('\n');
-                let mut depth: i32 = count_braces(line);
-                if depth > 0 {
-                    while let Some(next_line) = lines.next() {
-                        result.push_str(next_line);
-                        result.push('\n');
-                        depth += count_braces(next_line);
-                        if depth <= 0 {
-                            break;
-                        }
-                    }
-                }
-                result.push('\n');
-            } else {
-                // Skip this entire item (and its pending attributes)
-                let mut depth: i32 = count_braces(line);
-                if depth > 0 {
-                    while let Some(next_line) = lines.next() {
-                        depth += count_braces(next_line);
-                        if depth <= 0 {
-                            break;
-                        }
-                    }
-                }
-            }
-            pending_attrs.clear();
-        } else if line.trim().is_empty() {
-            // Skip blank lines
-            pending_attrs.clear();
-        } else {
-            // Non-item lines (use statements, comments) — always include
-            // Also flush any pending attributes
-            for attr in &pending_attrs {
-                result.push_str(attr);
-                result.push('\n');
-            }
-            pending_attrs.clear();
-            result.push_str(line);
-            result.push('\n');
-        }
-    }
-
-    result
-}
-
-/// Parse Rust source into a list of (name, full_code) blocks for top-level items.
-fn parse_rust_blocks(rust_code: &str) -> Vec<(String, String)> {
-    let mut blocks = Vec::new();
-    let mut lines = rust_code.lines().peekable();
-    let mut pending_attrs = String::new();
-
-    while let Some(line) = lines.next() {
-        // Collect attribute lines
-        if line.trim().starts_with("#[") {
-            pending_attrs.push_str(line);
-            pending_attrs.push('\n');
-            continue;
-        }
-        if let Some(name) = extract_top_level_item_name(line) {
-            let mut block_code = pending_attrs.clone();
-            pending_attrs.clear();
-            block_code.push_str(line);
-            block_code.push('\n');
-            let mut depth: i32 = count_braces(line);
-            if depth > 0 {
-                while let Some(next_line) = lines.next() {
-                    block_code.push_str(next_line);
-                    block_code.push('\n');
-                    let delta = count_braces(next_line);
-                    depth += delta;
-                    if depth <= 0 {
-                        break;
-                    }
-                }
-            }
-            blocks.push((name, block_code));
-        } else {
-            pending_attrs.clear();
-        }
-    }
-
-    blocks
-}
-
-/// Extract the name of a top-level Rust item from a line, if it starts one.
-fn extract_top_level_item_name(line: &str) -> Option<String> {
-    let trimmed = line.trim();
-    // fn name( or fn name<T>(
-    if let Some(rest) = trimmed.strip_prefix("fn ") {
-        // Check for generic params first: fn name<T: ...>(...)
-        if let Some(lt) = rest.find('<') {
-            let paren = rest.find('(');
-            if paren.is_none() || lt < paren.unwrap() {
-                return Some(rest[..lt].trim().to_string());
-            }
-        }
-        if let Some(paren) = rest.find('(') {
-            return Some(rest[..paren].trim().to_string());
-        }
-    }
-    // const NAME:
-    if let Some(rest) = trimmed.strip_prefix("const ") {
-        if let Some(colon) = rest.find(':') {
-            return Some(rest[..colon].trim().to_string());
-        }
-    }
-    // struct Name
-    if let Some(rest) = trimmed.strip_prefix("struct ") {
-        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
-        return Some(name.to_string());
-    }
-    // impl Name or impl Display for Name
-    if let Some(rest) = trimmed.strip_prefix("impl") {
-        // Skip generic params: impl<T: Bound> ... → skip past the closing '>'
-        let rest = if rest.starts_with('<') {
-            let mut depth = 0i32;
-            let mut end = 0;
-            for (i, ch) in rest.char_indices() {
-                if ch == '<' { depth += 1; }
-                if ch == '>' { depth -= 1; }
-                if depth == 0 { end = i + 1; break; }
-            }
-            rest[end..].trim_start()
-        } else {
-            rest.trim_start()
-        };
-        // "impl Display for Name {" or "impl std::ops::Add<&Name> for &Name {"
-        if let Some(for_idx) = rest.find(" for ") {
-            let after_for = &rest[for_idx + 5..];
-            let after_for = after_for.trim_start_matches('&');
-            let name = after_for.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
-            if !name.is_empty() {
-                return Some(name.to_string());
-            }
-        }
-        // "impl Name {" or "Name<T> {"
-        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
-        if !name.is_empty() {
-            return Some(name.to_string());
-        }
-    }
-    None
-}
-
-/// Count net brace depth change in a line (opening braces minus closing braces).
-fn count_braces(line: &str) -> i32 {
-    let mut depth = 0i32;
-    for ch in line.chars() {
-        if ch == '{' { depth += 1; }
-        if ch == '}' { depth -= 1; }
-    }
-    depth
-}
-
-/// Strip top-level items from Rust source whose names are already in `emitted_items`.
-/// Items that survive are added to `emitted_items` so subsequent calls can deduplicate further.
-///
-/// Uses composite keys to distinguish struct/fn definitions from impl blocks:
-/// - `struct X` / `fn X` → key = "X"
-/// - `impl X {` → key = "impl X"
-/// - `impl Trait for X {` → key = "impl Trait for X"
-///
-/// The `skip_types` set contains type names (e.g., "IOError") for which ALL items
-/// (struct, impl, trait impls) should be unconditionally stripped.
-fn dedup_rust_items(rust_code: &str, emitted_items: &mut HashSet<String>, skip_types: &HashSet<String>) -> String {
-    let mut result = String::new();
-    let mut lines = rust_code.lines().peekable();
-    let mut pending_attrs: Vec<String> = Vec::new();
-
-    while let Some(line) = lines.next() {
-        if line.trim().starts_with("#[") {
-            pending_attrs.push(line.to_string());
-            continue;
-        }
-
-        let item_name = extract_top_level_item_name(line);
-
-        if let Some(ref name) = item_name {
-            let mut item_lines = Vec::new();
-            for attr in &pending_attrs {
-                item_lines.push(attr.clone());
-            }
-            item_lines.push(line.to_string());
-            let mut depth: i32 = count_braces(line);
-            if depth > 0 {
-                while let Some(next_line) = lines.next() {
-                    item_lines.push(next_line.to_string());
-                    depth += count_braces(next_line);
-                    if depth <= 0 {
-                        break;
-                    }
-                }
-            }
-            pending_attrs.clear();
-
-            // If the type name is in skip_types, unconditionally strip everything related to it
-            if skip_types.contains(name) {
-                continue;
-            }
-
-            // Build a dedup key that distinguishes struct/fn from impl blocks
-            let trimmed = line.trim();
-            let dedup_key = if trimmed.starts_with("impl") {
-                // Use a normalized impl signature as the key
-                // Strip generic params for matching: "impl<T> X<T> {" → "impl X {"
-                let normalized = trimmed.split('{').next().unwrap_or(trimmed).trim().to_string();
-                normalized
-            } else {
-                name.clone()
-            };
-
-            if !emitted_items.contains(&dedup_key) {
-                emitted_items.insert(dedup_key);
-                for il in &item_lines {
-                    result.push_str(il);
-                    result.push('\n');
-                }
-                result.push('\n');
-            }
-        } else if line.trim().is_empty() {
-            pending_attrs.clear();
-        } else {
-            for attr in &pending_attrs {
-                result.push_str(attr);
-                result.push('\n');
-            }
-            pending_attrs.clear();
-            result.push_str(line);
-            result.push('\n');
-        }
-    }
-
-    result
-}
-
 /// Generate Rust source code from a HIR module, returning metadata about stdlib usage.
 pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
     generate_rust_with_stdlib(module, &StdlibCode::default())
@@ -563,7 +230,9 @@ pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
 /// Generate Rust source code from a HIR module with compiled stdlib code.
 pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
     let mut emitter = RustEmitter::new();
-    emitter.stdlib_intrinsic_names = stdlib_code.intrinsic_names.clone();
+    emitter
+        .stdlib_intrinsic_names
+        .clone_from(&stdlib_code.intrinsic_names);
     // Register stdlib generic classes so user code skips explicit type annotations
     emitter.generic_classes.extend(stdlib_code.generic_classes.iter().cloned());
 
@@ -582,8 +251,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     emitter.func_signatures.insert(name.clone(), sig.clone());
                 }
                 // Also load class method signatures (ClassName::method entries)
-                let prefix = format!("{}::", name);
-                for (key, sig) in sig_map.iter() {
+                let prefix = format!("{name}::");
+                for (key, sig) in sig_map {
                     if key.starts_with(&prefix) {
                         emitter.func_signatures.insert(key.clone(), sig.clone());
                     }
@@ -592,7 +261,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             // Load class method signatures for classes returned by imported functions.
             // This handles cases like `compile_flags` returning `Pattern` - we need
             // `Pattern::search` etc. to be available for correct borrow prefix emission.
-            for (key, sig) in sig_map.iter() {
+            for (key, sig) in sig_map {
                 if key.contains("::") && !emitter.func_signatures.contains_key(key) {
                     emitter.func_signatures.insert(key.clone(), sig.clone());
                 }
@@ -639,6 +308,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let mut stdlib_needs_hashset = false;
     let mut stdlib_needs_vecdeque = false;
     let mut stdlib_needs_file_handles = false;
+    let mut stdlib_provides_file_handle_struct = false;
     for module_name in &emitter.used_stdlib_modules {
         if let Some(deps) = stdlib_code.transitive_deps.get(module_name) {
             for dep in deps {
@@ -660,7 +330,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                 let filtered = if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
                     let intrinsic_set = stdlib_code.intrinsic_names.get(module_name);
                     let pure_sifr_imports: HashSet<String> = imported_names.iter()
-                        .filter(|name| !intrinsic_set.map_or(false, |iset| iset.contains(*name)))
+                        .filter(|name| !intrinsic_set.is_some_and(|iset| iset.contains(*name)))
                         .cloned()
                         .collect();
                     if pure_sifr_imports.is_empty() {
@@ -670,7 +340,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                         if let Some(const_map) = stdlib_code.module_constants.get(module_name) {
                             for name in &pure_sifr_imports {
                                 if const_map.contains_key(name) {
-                                    expanded_imports.insert(format!("__const_{}", name));
+                                    expanded_imports.insert(format!("__const_{name}"));
                                 }
                             }
                         }
@@ -680,77 +350,18 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     rust_code.clone()
                 };
                 if !filtered.trim().is_empty() {
-                    // Track and strip per-module use imports; they'll be emitted once at the top
-                    if filtered.contains("use std::collections::HashMap;") {
-                        stdlib_needs_hashmap = true;
-                    }
-                    if filtered.contains("use std::collections::HashSet;") {
-                        stdlib_needs_hashset = true;
-                    }
-                    if filtered.contains("use std::collections::VecDeque;") {
-                        stdlib_needs_vecdeque = true;
-                    }
-                    // Track if any stdlib module needs file handle infrastructure
-                    if filtered.contains("__SIFR_FILE_HANDLES") {
-                        stdlib_needs_file_handles = true;
-                    }
-                    // Strip per-module imports and file handle infrastructure (emitted once at top)
-                    let stripped: String = {
-                        let mut in_file_handle_block = false;
-                        let mut skip_next_blank = false;
-                        let mut skip_file_handle_continuation = false;
-                        let mut lines_out: Vec<&str> = Vec::new();
-                        for line in filtered.lines() {
-                            let t = line.trim();
-                            // Skip use imports
-                            if t == "use std::collections::HashMap;"
-                                || t == "use std::collections::HashSet;"
-                                || t == "use std::collections::VecDeque;"
-                                || t == "use std::sync::Mutex;"
-                            {
-                                continue;
-                            }
-                            // Skip file handle infrastructure block (SifrFileHandle enum)
-                            if t.starts_with("enum SifrFileHandle {") {
-                                in_file_handle_block = true;
-                                continue;
-                            }
-                            if in_file_handle_block {
-                                if t == "}" {
-                                    in_file_handle_block = false;
-                                    skip_next_blank = true;
-                                }
-                                continue;
-                            }
-                            // Skip __SIFR_FILE_HANDLES static declaration (multi-line)
-                            if t.starts_with("static __SIFR_FILE_HANDLES:") {
-                                skip_file_handle_continuation = true;
-                                skip_next_blank = true;
-                                continue;
-                            }
-                            // Skip __SIFR_GLOBAL_LOG_LEVEL static declaration (multi-line)
-                            if t.starts_with("static __SIFR_GLOBAL_LOG_LEVEL:") {
-                                skip_file_handle_continuation = true;
-                                skip_next_blank = true;
-                                continue;
-                            }
-                            if skip_file_handle_continuation {
-                                skip_file_handle_continuation = false;
-                                continue;
-                            }
-                            if skip_next_blank && t.is_empty() {
-                                skip_next_blank = false;
-                                continue;
-                            }
-                            skip_next_blank = false;
-                            lines_out.push(line);
-                        }
-                        lines_out.join("\n")
-                    };
+                    let prepared = collect_and_strip_shared_prelude(&filtered);
+                    stdlib_needs_hashmap |= prepared.shared_needs.needs_hashmap;
+                    stdlib_needs_hashset |= prepared.shared_needs.needs_hashset;
+                    stdlib_needs_vecdeque |= prepared.shared_needs.needs_vecdeque;
+                    stdlib_needs_file_handles |= prepared.shared_needs.needs_file_handles;
+                    stdlib_provides_file_handle_struct |=
+                        prepared.shared_needs.provides_file_handle_struct;
+                    let stripped = prepared.stripped_code;
                     if !stripped.trim().is_empty() {
                         let deduped = dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
                         if !deduped.trim().is_empty() {
-                            stdlib_preamble.push_str(&format!("// --- stdlib: {} ---\n", module_name));
+                            let _ = writeln!(stdlib_preamble, "// --- stdlib: {module_name} ---");
                             stdlib_preamble.push_str(&deduped);
                             stdlib_preamble.push('\n');
                         }
@@ -762,12 +373,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     // Now assemble result: imports, enums, IR-backed preamble items, stdlib preamble, main output.
-    let needs_file_handles = emitter.needs_file_handles
-        || stdlib_needs_file_handles
-        || emitter.output.contains("__SIFR_FILE_HANDLES");
+    let needs_file_handles = emitter.needs_file_handles || stdlib_needs_file_handles;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
-        || emitter.output.contains("__SIFR_GLOBAL_LOG_LEVEL");
+        || emitter.needs_logging_state;
 
     // File handle infrastructure always relies on HashMap + Mutex.
     let needs_hashmap = emitter.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
@@ -830,6 +439,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         .filter(|c| c.is_error_type)
         .map(|c| c.name.clone())
         .collect();
+    let user_defined_file_handle_struct = module.classes.iter().any(|c| c.name == "FileHandle");
     let io_error_referenced = is_builtin_error_referenced(&combined_code, "IOError")
         || IO_ERROR_SUBCLASSES
             .iter()
@@ -877,8 +487,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     // Emit file handle global state if open() built-in or any file handle intrinsic is used.
     if needs_file_handles {
         preamble_items.extend(build_file_handle_infra_items());
-        if !stdlib_preamble.contains("struct FileHandle {")
-            && !emitter.output.contains("struct FileHandle {")
+        if !stdlib_provides_file_handle_struct
+            && !user_defined_file_handle_struct
         {
             preamble_items.extend(build_file_handle_struct_items());
         }
@@ -912,6 +522,14 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         rust_source: result,
         used_stdlib_modules: all_used_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
+        required_crates: {
+            let mut crates = emitter.intrinsic_registry_crates;
+            if needs_bigint {
+                crates.insert("num-bigint".to_string());
+                crates.insert("num-traits".to_string());
+            }
+            crates
+        },
         constant_mappings: emitter.module_constants,
     }
 }
@@ -938,9 +556,9 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
             for name in &import.names {
                 // Check if this name has an alias
                 if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
-                    result.push_str(&format!("use crate::{}::{} as {};\n", import.module, name, alias));
+                    let _ = writeln!(result, "use crate::{}::{} as {};", import.module, name, alias);
                 } else {
-                    result.push_str(&format!("use crate::{}::{};\n", import.module, name));
+                    let _ = writeln!(result, "use crate::{}::{};", import.module, name);
                 }
             }
         }
@@ -967,7 +585,7 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
 
         result.push_str(&emitter.output);
 
-        files.insert(module_name.to_string(), result);
+        files.insert((*module_name).to_string(), result);
     }
 
     files
@@ -980,6 +598,16 @@ pub fn generate_project(module: &HirModule, project_name: &str) -> (String, Stri
 
 /// Generate a complete Rust project with stdlib dependencies.
 pub fn generate_project_with_deps(module: &HirModule, project_name: &str, stdlib_modules: &HashSet<String>) -> (String, String) {
+    generate_project_with_deps_and_crates(module, project_name, stdlib_modules, &HashSet::new())
+}
+
+/// Generate a complete Rust project with stdlib and explicit crate dependencies.
+pub fn generate_project_with_deps_and_crates(
+    module: &HirModule,
+    project_name: &str,
+    stdlib_modules: &HashSet<String>,
+    required_crates: &HashSet<String>,
+) -> (String, String) {
     let mut cargo_toml = format!(
         r#"[package]
 name = "{project_name}"
@@ -1064,6 +692,90 @@ edition = "2021"
         }
     }
 
+    for crate_name in required_crates {
+        match crate_name.as_str() {
+            "serde_json" => {
+                if !deps.contains(&"serde_json = \"1\"".to_string()) {
+                    deps.push("serde_json = \"1\"".to_string());
+                }
+                if !deps.contains(&"serde = { version = \"1\", features = [\"derive\"] }".to_string()) {
+                    deps.push("serde = { version = \"1\", features = [\"derive\"] }".to_string());
+                }
+            }
+            "chrono" => {
+                if !deps.contains(&"chrono = \"0.4\"".to_string()) {
+                    deps.push("chrono = \"0.4\"".to_string());
+                }
+            }
+            "rand" => {
+                if !deps.contains(&"rand = \"0.8\"".to_string()) {
+                    deps.push("rand = \"0.8\"".to_string());
+                }
+            }
+            "rand_distr" => {
+                if !deps.contains(&"rand_distr = \"0.4\"".to_string()) {
+                    deps.push("rand_distr = \"0.4\"".to_string());
+                }
+            }
+            "regex" => {
+                if !deps.contains(&"regex = \"1\"".to_string()) {
+                    deps.push("regex = \"1\"".to_string());
+                }
+            }
+            "sha2" => {
+                if !deps.contains(&"sha2 = \"0.10\"".to_string()) {
+                    deps.push("sha2 = \"0.10\"".to_string());
+                }
+            }
+            "md5" => {
+                if !deps.contains(&"md5 = \"0.7\"".to_string()) {
+                    deps.push("md5 = \"0.7\"".to_string());
+                }
+            }
+            "sha1" => {
+                if !deps.contains(&"sha1 = \"0.10\"".to_string()) {
+                    deps.push("sha1 = \"0.10\"".to_string());
+                }
+            }
+            "blake2" => {
+                if !deps.contains(&"blake2 = \"0.10\"".to_string()) {
+                    deps.push("blake2 = \"0.10\"".to_string());
+                }
+            }
+            "base64" => {
+                if !deps.contains(&"base64 = \"0.22\"".to_string()) {
+                    deps.push("base64 = \"0.22\"".to_string());
+                }
+            }
+            "toml" => {
+                if !deps.contains(&"toml = \"0.8\"".to_string()) {
+                    deps.push("toml = \"0.8\"".to_string());
+                }
+            }
+            "flate2" => {
+                if !deps.contains(&"flate2 = \"1\"".to_string()) {
+                    deps.push("flate2 = \"1\"".to_string());
+                }
+            }
+            "zip" => {
+                if !deps.contains(&"zip = \"0.6\"".to_string()) {
+                    deps.push("zip = \"0.6\"".to_string());
+                }
+            }
+            "num-bigint" => {
+                if !deps.contains(&"num-bigint = \"0.4\"".to_string()) {
+                    deps.push("num-bigint = \"0.4\"".to_string());
+                }
+            }
+            "num-traits" => {
+                if !deps.contains(&"num-traits = \"0.2\"".to_string()) {
+                    deps.push("num-traits = \"0.2\"".to_string());
+                }
+            }
+            _ => {}
+        }
+    }
+
     if !deps.is_empty() {
         cargo_toml.push_str("\n[dependencies]\n");
         for dep in &deps {
@@ -1082,6 +794,7 @@ struct RustEmitter {
     needs_hashmap: bool,
     needs_hashset: bool,
     needs_file_handles: bool,
+    needs_logging_state: bool,
     needs_bigint: bool,
     needs_vecdeque: bool,
     /// Track union enum types that need to be defined (name -> member types)
@@ -1092,7 +805,7 @@ struct RustEmitter {
     current_return_type: Option<Type>,
     /// Set of variable names currently narrowed via `if let Some(...)` unwrap
     option_unwrapped_vars: HashSet<String>,
-    /// Function signatures: name -> (param_types_with_conventions, return_type)
+    /// Function signatures: name -> (`param_types_with_conventions`, `return_type`)
     func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
     /// Whether we're inside a loop that has an else clause
     in_loop_with_else: bool,
@@ -1114,20 +827,20 @@ struct RustEmitter {
     intrinsic_registry_crates: HashSet<String>,
     /// Whether to emit in test mode (#[test] on test_* functions, no main)
     test_mode: bool,
-    /// Set of (class_name, field_name) pairs that are self-referential and need Box<T>
+    /// Set of (`class_name`, `field_name`) pairs that are self-referential and need Box<T>
     recursive_fields: HashSet<(String, String)>,
     /// Map from class name -> ordered list of field names (for constructor arg mapping)
     class_field_order: HashMap<String, Vec<String>>,
     /// Map from nested function name -> list of captured variable (name, type) pairs
     /// Used to pass extra args at call sites for recursive+capturing nested functions
     nested_fn_captures: HashMap<String, Vec<(String, Type)>>,
-    /// Map from module-level constant name -> (type, rust_name)
-    /// For primitives: rust_name is the UPPERCASE const name
-    /// For strings/complex: rust_name is __const_name() function call
+    /// Map from module-level constant name -> (type, `rust_name`)
+    /// For primitives: `rust_name` is the UPPERCASE const name
+    /// For strings/complex: `rust_name` is __`const_name()` function call
     module_constants: HashMap<String, (Type, String)>,
     /// Set of class names that have generic type parameters
     generic_classes: HashSet<String>,
-    /// Map of generic class name -> list of type parameter names (e.g., "Counter" -> ["T"])
+    /// Map of generic class name -> list of type parameter names (e.g., `Counter` -> `T`)
     generic_class_params: HashMap<String, Vec<String>>,
     /// Set of parameter names that are borrowed (&T) in the current function.
     /// Used to emit dereference (*name) in comparisons where &String != String.
@@ -1136,19 +849,19 @@ struct RustEmitter {
     /// Used to avoid double-borrowing: when a &mut param is passed to another &mut param,
     /// we must NOT emit `&mut name` (it's already &mut T); just pass `name` directly.
     mut_borrowed_params: HashSet<String>,
-    /// Map of module_name -> set of names that are intrinsic re-exports (from _sifr.*)
+    /// Map of `module_name` -> set of names that are intrinsic re-exports (from _sifr.*)
     /// Used to distinguish intrinsic function calls from pure Sifr function calls
     stdlib_intrinsic_names: HashMap<String, HashSet<String>>,
     /// Set of function names that are generators (contain yield statements)
-    /// Used to emit .collect() when assigning generator results to list[T]
+    /// Used to emit .`collect()` when assigning generator results to list[T]
     generator_functions: HashSet<String>,
-    /// Map of module_name -> set of imported names (for filtering preamble to only used functions)
+    /// Map of `module_name` -> set of imported names (for filtering preamble to only used functions)
     imported_stdlib_names: HashMap<String, HashSet<String>>,
-    /// Temporarily suppress .clone() on field access (for mutating method calls on self.field)
+    /// Temporarily suppress .`clone()` on field access (for mutating method calls on self.field)
     suppress_field_clone: bool,
     /// Whether we're inside a generator closure (yield -> return Some(val))
     in_generator_closure: bool,
-    /// Whether we're inside a Display::fmt implementation (for __str__ methods)
+    /// Whether we're inside a `Display::fmt` implementation (for __str__ methods)
     /// Return statements in this context become write!(f, "{}", val) + return Ok(())
     in_display_impl: bool,
     /// Counter for generating unique try-block error enum names
@@ -1169,6 +882,7 @@ impl RustEmitter {
             needs_hashmap: false,
             needs_hashset: false,
             needs_file_handles: false,
+            needs_logging_state: false,
             needs_bigint: false,
             needs_vecdeque: false,
             union_enums: HashMap::new(),
@@ -1222,7 +936,7 @@ impl RustEmitter {
     }
 
     /// Check if a generic class needs Hash + Eq bounds on its type parameters.
-    /// This is true when a type parameter is used as a HashMap key (dict field with TypeVar key).
+    /// This is true when a type parameter is used as a `HashMap` key (dict field with `TypeVar` key).
     fn class_needs_hash_eq(class: &HirClass) -> bool {
         fn type_has_typevar_dict_key(ty: &Type) -> bool {
             match ty {
@@ -1235,7 +949,7 @@ impl RustEmitter {
         class.fields.iter().any(|(_, ty)| type_has_typevar_dict_key(ty))
     }
 
-    /// Check if a generic function needs Hash + Eq bounds (uses TypeVar as dict key
+    /// Check if a generic function needs Hash + Eq bounds (uses `TypeVar` as dict key
     /// or returns a generic class that needs Hash + Eq).
     fn func_needs_hash_eq(func: &HirFunction) -> bool {
         fn type_has_typevar_dict_key(ty: &Type) -> bool {
@@ -1392,27 +1106,27 @@ impl RustEmitter {
 
         for (enum_name, members) in &enums {
             // Generate the enum definition
-            self.enum_defs.push_str(&format!("#[derive(Debug, Clone)]\n"));
-            self.enum_defs.push_str(&format!("enum {} {{\n", enum_name));
+            self.enum_defs.push_str("#[derive(Debug, Clone)]\n");
+            let _ = writeln!(self.enum_defs, "enum {enum_name} {{");
             for member in members {
                 let variant = member.union_variant_name();
                 let rust_ty = member.rust_type();
-                self.enum_defs.push_str(&format!("    {}({}),\n", variant, rust_ty));
+                let _ = writeln!(self.enum_defs, "    {variant}({rust_ty}),");
             }
             self.enum_defs.push_str("}\n\n");
 
             // Generate Display impl so println!("{}", x) works
-            self.enum_defs.push_str(&format!("impl std::fmt::Display for {} {{\n", enum_name));
+            let _ = writeln!(self.enum_defs, "impl std::fmt::Display for {enum_name} {{");
             self.enum_defs.push_str("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
             self.enum_defs.push_str("        match self {\n");
             for member in members {
                 let variant = member.union_variant_name();
                 // Use {:?} for class types (they derive Debug, not Display)
                 let fmt_spec = if matches!(member, Type::Class { .. }) { "{:?}" } else { "{}" };
-                self.enum_defs.push_str(&format!(
-                    "            {}::{}(v) => write!(f, \"{}\", v),\n",
-                    enum_name, variant, fmt_spec
-                ));
+                let _ = writeln!(
+                    self.enum_defs,
+                    "            {enum_name}::{variant}(v) => write!(f, \"{fmt_spec}\", v),"
+                );
             }
             self.enum_defs.push_str("        }\n");
             self.enum_defs.push_str("    }\n");
@@ -1538,18 +1252,18 @@ impl RustEmitter {
                     self.module_constants.insert(name.clone(), (ty.clone(), rust_name));
                 }
                 Type::Str => {
-                    let rust_name = format!("__const_{}", name);
-                    self.write(&format!("fn {}() -> String {{ ", rust_name));
+                    let rust_name = format!("__const_{name}");
+                    self.write(&format!("fn {rust_name}() -> String {{ "));
                     self.emit_expr(value);
                     self.write(".to_string() }\n");
-                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{}()", rust_name)));
+                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
                 }
                 _ => {
-                    let rust_name = format!("__const_{}", name);
+                    let rust_name = format!("__const_{name}");
                     self.write(&format!("fn {}() -> {} {{ ", rust_name, ty.rust_type()));
                     self.emit_expr(value);
                     self.write(" }\n");
-                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{}()", rust_name)));
+                    self.module_constants.insert(name.clone(), (ty.clone(), format!("{rust_name}()")));
                 }
             }
         }
@@ -1624,7 +1338,7 @@ impl RustEmitter {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
                 if i > 0 { self.write(", "); }
-                self.write(&format!("{}: {}", tp, class_bounds));
+                self.write(&format!("{tp}: {class_bounds}"));
             }
             self.write(">");
         }
@@ -1683,7 +1397,7 @@ impl RustEmitter {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
                 if i > 0 { self.write(", "); }
-                self.write(&format!("{}: {}", tp, class_bounds));
+                self.write(&format!("{tp}: {class_bounds}"));
             }
             self.write(">");
         }
@@ -1949,7 +1663,7 @@ impl RustEmitter {
             self.write_indent();
             self.write(variant_name);
             let v = value.unwrap_or(auto_value);
-            self.write(&format!(" = {}", v));
+            self.write(&format!(" = {v}"));
             self.write(",\n");
             auto_value = v + 1;
         }
@@ -2100,7 +1814,7 @@ impl RustEmitter {
         let is_generic = !class.type_params.is_empty();
         let bounds = Self::generic_bounds_for_class(class);
         let generic_suffix = if is_generic {
-            let params: Vec<String> = class.type_params.iter().map(|p| p.clone()).collect();
+            let params: Vec<String> = class.type_params.clone();
             format!("<{}>", params.join(", "))
         } else {
             String::new()
@@ -2109,12 +1823,12 @@ impl RustEmitter {
 
         let rhs_ty = if let Some(param) = func.params.first() {
             if param.ty.rust_type() == class.name {
-                format!("&{}", class_with_generics)
+                format!("&{class_with_generics}")
             } else {
                 param.ty.rust_type()
             }
         } else {
-            format!("&{}", class_with_generics)
+            format!("&{class_with_generics}")
         };
         let output_ty = if func.return_type.rust_type() == class.name {
             class_with_generics.clone()
@@ -2126,7 +1840,7 @@ impl RustEmitter {
         self.write_indent();
         if is_generic {
             let bounded_params: Vec<String> = class.type_params.iter()
-                .map(|p| format!("{}: {}", p, bounds))
+                .map(|p| format!("{p}: {bounds}"))
                 .collect();
             self.write(&format!("impl<{}> std::ops::{}<{}> for &{} {{\n",
                 bounded_params.join(", "), trait_name, rhs_ty, class_with_generics));
@@ -2135,9 +1849,9 @@ impl RustEmitter {
         }
         self.indent += 1;
         self.write_indent();
-        self.write(&format!("type Output = {};\n\n", output_ty));
+        self.write(&format!("type Output = {output_ty};\n\n"));
         self.write_indent();
-        self.write(&format!("fn {}(self, ", method_name));
+        self.write(&format!("fn {method_name}(self, "));
         if let Some(param) = func.params.first() {
             self.write(&param.name);
         } else {
@@ -2172,9 +1886,9 @@ impl RustEmitter {
         self.write(&format!("impl std::ops::{} for {} {{\n", trait_name, class.name));
         self.indent += 1;
         self.write_indent();
-        self.write(&format!("type Output = {};\n\n", output_ty));
+        self.write(&format!("type Output = {output_ty};\n\n"));
         self.write_indent();
-        self.write(&format!("fn {}(self) -> Self::Output {{\n", method_name));
+        self.write(&format!("fn {method_name}(self) -> Self::Output {{\n"));
         self.indent += 1;
 
         for stmt in &func.body {
@@ -2297,11 +2011,7 @@ impl RustEmitter {
                 self.indent += 1;
                 // Delegate to the inherent impl method
                 self.write_indent();
-                if method.return_type != Type::None {
-                    self.write(&format!("{}::{}(self", class.name, method.name));
-                } else {
-                    self.write(&format!("{}::{}(self", class.name, method.name));
-                }
+                self.write(&format!("{}::{}(self", class.name, method.name));
                 for param in &method.params {
                     self.write(", ");
                     self.write(&param.name);
@@ -2381,7 +2091,7 @@ impl RustEmitter {
             MethodKind::Regular => {
                 if method.name == "new" {
                     // Constructor: fn new(params) -> Self
-                    self.write(&format!("{}fn new(", pub_prefix));
+                    self.write(&format!("{pub_prefix}fn new("));
                     for (i, param) in method.params.iter().enumerate() {
                         if i > 0 {
                             self.write(", ");
@@ -2411,9 +2121,9 @@ impl RustEmitter {
                         }
                     });
 
-                    if has_super && class.parent_class.is_some() {
+                    let inheritance_parent = if has_super { class.parent_class.as_ref() } else { None };
+                    if let Some(parent_name) = inheritance_parent {
                         // Inheritance constructor: emit super call, then Self { parent: ..., own fields }
-                        let parent_name = class.parent_class.as_ref().unwrap();
                         let mut super_args: Option<&Vec<HirExpr>> = None;
                         let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
                         let mut other_stmts: Vec<&HirStmt> = Vec::new();
@@ -2504,7 +2214,7 @@ impl RustEmitter {
                             }
                             // Wrap Callable values in Box::new() for struct fields
                             let field_ty = class.fields.iter().find(|(n, _)| n == field_name).map(|(_, t)| t);
-                            let needs_box = field_ty.map_or(false, |t| matches!(t, Type::Callable(..)));
+                            let needs_box = field_ty.is_some_and(|t| matches!(t, Type::Callable(..)));
                             if needs_box {
                                 self.write("Box::new(");
                                 self.emit_expr(value);
@@ -2521,7 +2231,7 @@ impl RustEmitter {
                                     self.write_indent();
                                     // Wrap Callable params in Box::new() for struct fields
                                     if matches!(field_ty, Type::Callable(..)) {
-                                        self.write(&format!("{}: Box::new({})", field_name, field_name));
+                                        self.write(&format!("{field_name}: Box::new({field_name})"));
                                     } else {
                                         self.write(field_name);
                                     }
@@ -2541,11 +2251,11 @@ impl RustEmitter {
                     // Regular method: determine &self vs &mut self
                     let is_mutating = body_contains_field_assign_codegen(&method.body);
                     if is_mutating {
-                        self.write(&format!("{}fn ", pub_prefix));
+                        self.write(&format!("{pub_prefix}fn "));
                         self.write(&method.name);
                         self.write("(&mut self");
                     } else {
-                        self.write(&format!("{}fn ", pub_prefix));
+                        self.write(&format!("{pub_prefix}fn "));
                         self.write(&method.name);
                         self.write("(&self");
                     }
@@ -2559,11 +2269,11 @@ impl RustEmitter {
                                 if param.ty.ownership() == sifr_type_system::OwnershipKind::Copy {
                                     self.write(&rust_ty);
                                 } else {
-                                    self.write(&format!("&{}", rust_ty));
+                                    self.write(&format!("&{rust_ty}"));
                                 }
                             }
                             ParamConvention::MutBorrow => {
-                                self.write(&format!("&mut {}", rust_ty));
+                                self.write(&format!("&mut {rust_ty}"));
                             }
                             ParamConvention::Own => {
                                 self.write(&rust_ty);
@@ -2630,10 +2340,10 @@ impl RustEmitter {
         Self::scan_body_for_typevar_ops(tp, body, &mut needs_add, &mut needs_sub);
         let mut extra = String::new();
         if needs_add {
-            extra.push_str(&format!(" + std::ops::Add<Output = {}>", tp));
+            let _ = write!(extra, " + std::ops::Add<Output = {tp}>");
         }
         if needs_sub {
-            extra.push_str(&format!(" + std::ops::Sub<Output = {}>", tp));
+            let _ = write!(extra, " + std::ops::Sub<Output = {tp}>");
         }
         extra
     }
@@ -2740,7 +2450,7 @@ impl RustEmitter {
         // Emit decorator comments before the function
         for decorator in &func.decorators {
             self.write_indent();
-            self.write(&format!("// @{}\n", decorator));
+            self.write(&format!("// @{decorator}\n"));
         }
 
         // In test mode, add #[test] attribute for test_* functions
@@ -2773,7 +2483,7 @@ impl RustEmitter {
                 } else {
                     "Clone + std::fmt::Display + PartialOrd"
                 };
-                self.write(&format!("{}: {}{}", tp, base, extra));
+                self.write(&format!("{tp}: {base}{extra}"));
             }
             self.write(">");
         }
@@ -2798,11 +2508,11 @@ impl RustEmitter {
                         // Copy types are always passed by value
                         self.write(&rust_ty);
                     } else {
-                        self.write(&format!("&{}", rust_ty));
+                        self.write(&format!("&{rust_ty}"));
                     }
                 }
                 ParamConvention::MutBorrow => {
-                    self.write(&format!("&mut {}", rust_ty));
+                    self.write(&format!("&mut {rust_ty}"));
                 }
                 ParamConvention::Own => {
                     self.write(&rust_ty);
@@ -2826,7 +2536,7 @@ impl RustEmitter {
                     } else {
                         "i64".to_string()
                     };
-                    self.write(&format!("impl Iterator<Item = {}>", yield_ty));
+                    self.write(&format!("impl Iterator<Item = {yield_ty}>"));
                 } else {
                     // If return type is a generic class and this function has type params,
                     // include the type params in the return type
@@ -2835,10 +2545,10 @@ impl RustEmitter {
                             let type_params_in_ret: Vec<&String> = func.type_params.iter()
                                 .filter(|tp| type_contains_typevar(&func.return_type, tp))
                                 .collect();
-                            if !type_params_in_ret.is_empty() {
-                                format!("{}<{}>", ret_name, type_params_in_ret.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", "))
-                            } else {
+                            if type_params_in_ret.is_empty() {
                                 func.return_type.rust_type()
+                            } else {
+                                format!("{}<{}>", ret_name, type_params_in_ret.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", "))
                             }
                         } else {
                             func.return_type.rust_type()
@@ -2884,7 +2594,7 @@ impl RustEmitter {
 
             // Emit the lazy iterator
             self.write_indent();
-            self.write(&format!("std::iter::from_fn(move || -> Option<{}> {{\n", yield_ty));
+            self.write(&format!("std::iter::from_fn(move || -> Option<{yield_ty}> {{\n"));
             self.indent += 1;
 
             if let Some(HirStmt::While { condition, body, .. }) = while_stmt {
@@ -2909,7 +2619,7 @@ impl RustEmitter {
 
                     // Emit __yielded variable
                     self.write_indent();
-                    self.write(&format!("let mut __yielded: Option<{}> = None;\n", yield_ty));
+                    self.write(&format!("let mut __yielded: Option<{yield_ty}> = None;\n"));
 
                     // Emit body with yield replaced by __yielded = Some(val)
                     for s in body {
@@ -2966,15 +2676,13 @@ impl RustEmitter {
                     let mut post_yield = Vec::new();
                     let mut found_yield = false;
                     for s in body {
-                        if !found_yield {
-                            if let HirStmt::Yield { value } = s {
-                                yield_expr = Some(value);
-                                found_yield = true;
-                            } else {
-                                pre_yield.push(s);
-                            }
-                        } else {
+                        if found_yield {
                             post_yield.push(s);
+                        } else if let HirStmt::Yield { value } = s {
+                            yield_expr = Some(value);
+                            found_yield = true;
+                        } else {
+                            pre_yield.push(s);
                         }
                     }
 
@@ -3117,7 +2825,7 @@ impl RustEmitter {
                 } else if matches!(ty, Type::BigInt) && matches!(value, HirExpr::IntLiteral(_)) {
                     // `x: bigint = 42` -> `BigInt::from(42_i64)`
                     if let HirExpr::IntLiteral(v) = value {
-                        self.write(&format!("BigInt::from({}_i64)", v));
+                        self.write(&format!("BigInt::from({v}_i64)"));
                     }
                 } else if is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
                     // `x: str | None = None` -> `let x: Option<String> = None`
@@ -3196,7 +2904,7 @@ impl RustEmitter {
                     }
                     "-=" | "*=" | "%=" => {
                         self.write(name);
-                        self.write(&format!(" {} ", op));
+                        self.write(&format!(" {op} "));
                         self.emit_expr(value);
                         self.write(";\n");
                     }
@@ -3218,20 +2926,20 @@ impl RustEmitter {
                         if matches!(var_ty, Type::Int) {
                             self.write(name);
                             self.write(" = ");
-                            self.write(&format!("{}.pow(", name));
+                            self.write(&format!("{name}.pow("));
                             self.emit_expr(value);
                             self.write(" as u32);\n");
                         } else {
                             self.write(name);
                             self.write(" = ");
-                            self.write(&format!("({} as f64).powf(", name));
+                            self.write(&format!("({name} as f64).powf("));
                             self.emit_expr(value);
                             self.write(" as f64);\n");
                         }
                     }
                     _ => {
                         self.write(name);
-                        self.write(&format!(" {} ", op));
+                        self.write(&format!(" {op} "));
                         self.emit_expr(value);
                         self.write(";\n");
                     }
@@ -3254,8 +2962,8 @@ impl RustEmitter {
                     }
                     return;
                 }
-                let ret_is_option = self.current_return_type.as_ref().map_or(false, |t| is_option_type(t));
-                let ret_is_non_option_union = self.current_return_type.as_ref().map_or(false, |t| {
+                let ret_is_option = self.current_return_type.as_ref().is_some_and(is_option_type);
+                let ret_is_non_option_union = self.current_return_type.as_ref().is_some_and(|t| {
                     matches!(t, Type::Union(_)) && !is_option_type(t)
                 });
                 self.write_indent();
@@ -3276,7 +2984,7 @@ impl RustEmitter {
                                 let arg_ty = val.ty();
                                 if let Some(variant) = find_union_variant(members, arg_ty) {
                                     let enum_name = ret_ty.union_enum_name();
-                                    self.write(&format!("{}::{}(", enum_name, variant));
+                                    self.write(&format!("{enum_name}::{variant}("));
                                     self.emit_expr(val);
                                     self.write(")");
                                 } else {
@@ -3338,14 +3046,14 @@ impl RustEmitter {
                 // `if isinstance(x, int):` -> `match x { IntOrStr::Int(x) => { ... }, IntOrStr::Str(x) => { ... } }`
                 if let Some((var_name, variant_name, enum_name, other_variants)) = detect_isinstance_union(condition) {
                     self.write_indent();
-                    self.write(&format!("match {} {{\n", var_name));
+                    self.write(&format!("match {var_name} {{\n"));
                     self.indent += 1;
 
                     // Then branch: the matched variant
                     let then_mutated = collect_mutated_vars(then_body);
                     let var_mut = if then_mutated.contains(&var_name) { "mut " } else { "" };
                     self.write_indent();
-                    self.write(&format!("{}::{}({}{}) => {{\n", enum_name, variant_name, var_mut, var_name));
+                    self.write(&format!("{enum_name}::{variant_name}({var_mut}{var_name}) => {{\n"));
                     self.indent += 1;
                     for s in then_body {
                         self.emit_stmt(s);
@@ -3360,7 +3068,7 @@ impl RustEmitter {
                             let elif_mutated = collect_mutated_vars(elif_body);
                             let elif_var_mut = if elif_mutated.contains(&var_name) { "mut " } else { "" };
                             self.write_indent();
-                            self.write(&format!("{}::{}({}{}) => {{\n", enum_name, elif_variant, elif_var_mut, var_name));
+                            self.write(&format!("{enum_name}::{elif_variant}({elif_var_mut}{var_name}) => {{\n"));
                             self.indent += 1;
                             for s in elif_body {
                                 self.emit_stmt(s);
@@ -3379,7 +3087,7 @@ impl RustEmitter {
                         if remaining_variants.len() == 1 {
                             let (other_variant, _) = &remaining_variants[0];
                             self.write_indent();
-                            self.write(&format!("{}::{}({}{}) => {{\n", enum_name, other_variant, else_var_mut, var_name));
+                            self.write(&format!("{enum_name}::{other_variant}({else_var_mut}{var_name}) => {{\n"));
                         } else {
                             self.write_indent();
                             self.write("_ => {\n");
@@ -3402,7 +3110,7 @@ impl RustEmitter {
                 // Detect truthiness on Option: `if x:` where x is Option -> `if let Some(x) = x {`
                 else if let Some(var_name) = detect_option_truthiness(condition) {
                     self.write_indent();
-                    self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                    self.write(&format!("if let Some({var_name}) = {var_name} {{\n"));
                     self.indent += 1;
                     self.option_unwrapped_vars.insert(var_name.clone());
                     for s in then_body {
@@ -3427,7 +3135,7 @@ impl RustEmitter {
                     // Emit nested if-let-Some for each variable
                     for (i, var_name) in vars.iter().enumerate() {
                         self.write_indent();
-                        self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                        self.write(&format!("if let Some({var_name}) = {var_name} {{\n"));
                         self.indent += 1;
                         self.option_unwrapped_vars.insert(var_name.clone());
                         if i < vars.len() - 1 {
@@ -3461,7 +3169,7 @@ impl RustEmitter {
                 else if let Some(var_name) = detect_is_not_none_var(condition) {
                     self.write_indent();
                     // Use `if let Some(var) = var` to unwrap and shadow the variable
-                    self.write(&format!("if let Some({}) = {} {{\n", var_name, var_name));
+                    self.write(&format!("if let Some({var_name}) = {var_name} {{\n"));
                     self.indent += 1;
                     self.option_unwrapped_vars.insert(var_name.clone());
                     for s in then_body {
@@ -3483,12 +3191,12 @@ impl RustEmitter {
                 } else if let Some((var_name, enum_name, _non_none_variants)) = detect_is_none_union_var(condition) {
                     // 3+ member union `is None` check: use match with None variant
                     self.write_indent();
-                    self.write(&format!("match {} {{\n", var_name));
+                    self.write(&format!("match {var_name} {{\n"));
                     self.indent += 1;
 
                     // None arm -> then_body
                     self.write_indent();
-                    self.write(&format!("{}::None(()) => {{\n", enum_name));
+                    self.write(&format!("{enum_name}::None(()) => {{\n"));
                     self.indent += 1;
                     for s in then_body {
                         self.emit_stmt(s);
@@ -3516,7 +3224,7 @@ impl RustEmitter {
                     self.writeln("}");
                 } else if let Some(var_name) = detect_is_none_var(condition) {
                     self.write_indent();
-                    self.write(&format!("if {}.is_none() {{\n", var_name));
+                    self.write(&format!("if {var_name}.is_none() {{\n"));
                     self.indent += 1;
                     let then_exits = codegen_body_always_exits(then_body);
                     for s in then_body {
@@ -3527,7 +3235,7 @@ impl RustEmitter {
                     if let Some(else_stmts) = else_body {
                         // In the else branch of `if x is None`, x is not None
                         self.write_indent();
-                        self.write(&format!("}} else if let Some({}) = {} {{\n", var_name, var_name));
+                        self.write(&format!("}} else if let Some({var_name}) = {var_name} {{\n"));
                         self.indent += 1;
                         self.option_unwrapped_vars.insert(var_name.clone());
                         for s in else_stmts {
@@ -3542,7 +3250,7 @@ impl RustEmitter {
                     // unwrap the variable after the if block so subsequent code can use it directly
                     if then_exits && else_body.is_none() {
                         self.write_indent();
-                        self.write(&format!("let {} = {}.unwrap();\n", var_name, var_name));
+                        self.write(&format!("let {var_name} = {var_name}.unwrap();\n"));
                         self.option_unwrapped_vars.insert(var_name.clone());
                     }
                 } else {
@@ -3705,7 +3413,7 @@ impl RustEmitter {
                 // Emit before vars
                 for (i, (name, _ty)) in before.iter().enumerate() {
                     self.write_indent();
-                    self.write(&format!("let {} = _star_tmp[{}].clone();\n", name, i));
+                    self.write(&format!("let {name} = _star_tmp[{i}].clone();\n"));
                 }
                 // Emit star var
                 let (star_name, _star_ty) = star;
@@ -3776,7 +3484,9 @@ impl RustEmitter {
 
                 // Check if any handler catches an IOError subclass specifically
                 let has_io_subclass_handler = handlers.iter().any(|h| {
-                    h.error_type.as_ref().map_or(false, |et| io_subclass_kind(et).is_some())
+                    h.error_type
+                        .as_ref()
+                        .is_some_and(|et| io_subclass_kind(et).is_some())
                 });
 
                 let needs_enum = error_type_names.len() > 1;
@@ -3790,11 +3500,11 @@ impl RustEmitter {
                     self.write_indent();
                     self.write("#[allow(non_camel_case_types)]\n");
                     self.write_indent();
-                    self.write(&format!("enum {} {{\n", enum_name));
+                    self.write(&format!("enum {enum_name} {{\n"));
                     self.indent += 1;
                     for et in &error_type_names {
                         self.write_indent();
-                        self.write(&format!("{}({}),\n", et, et));
+                        self.write(&format!("{et}({et}),\n"));
                     }
                     self.indent -= 1;
                     self.write_indent();
@@ -3803,10 +3513,10 @@ impl RustEmitter {
                     // Emit From impls for each error type
                     for et in &error_type_names {
                         self.write_indent();
-                        self.write(&format!("impl From<{}> for {} {{\n", et, enum_name));
+                        self.write(&format!("impl From<{et}> for {enum_name} {{\n"));
                         self.indent += 1;
                         self.write_indent();
-                        self.write(&format!("fn from(e: {}) -> Self {{ {}::{}(e) }}\n", et, enum_name, et));
+                        self.write(&format!("fn from(e: {et}) -> Self {{ {enum_name}::{et}(e) }}\n"));
                         self.indent -= 1;
                         self.write_indent();
                         self.write("}\n");
@@ -3825,7 +3535,7 @@ impl RustEmitter {
                     };
 
                     self.write_indent();
-                    self.write(&format!("match (|| -> Result<{}, {}> {{\n", closure_ok_type_multi, enum_name));
+                    self.write(&format!("match (|| -> Result<{closure_ok_type_multi}, {enum_name}> {{\n"));
                     self.indent += 1;
                     for stmt in body {
                         self.emit_stmt(stmt);
@@ -3841,7 +3551,7 @@ impl RustEmitter {
                     self.write("})() {\n");
                     self.indent += 1;
                     self.write_indent();
-                    self.write(&format!("{}\n", ok_arm_multi));
+                    self.write(&format!("{ok_arm_multi}\n"));
 
                     // Emit match arms
                     for handler in handlers {
@@ -3850,7 +3560,7 @@ impl RustEmitter {
                                 // Catch-all: match on any remaining variant
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({}) => {{\n", var_name));
+                                self.write(&format!("Err({var_name}) => {{\n"));
                                 if handler.name.is_some() {
                                     self.indent += 1;
                                     self.write_indent();
@@ -3861,31 +3571,30 @@ impl RustEmitter {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
                                 self.write(&format!(
-                                    "Err({}::IOError(ref {})) if {}.kind == \"{}\" => {{\n",
-                                    enum_name, var_name, var_name, kind
+                                    "Err({enum_name}::IOError(ref {var_name})) if {var_name}.kind == \"{kind}\" => {{\n"
                                 ));
                                 // Clone the variable so handler body can use it as owned
                                 if handler.name.is_some() {
                                     self.indent += 1;
                                     self.write_indent();
-                                    self.write(&format!("let {} = {}.clone();\n", var_name, var_name));
+                                    self.write(&format!("let {var_name} = {var_name}.clone();\n"));
                                     self.indent -= 1;
                                 }
                             } else if et == "IOError" && has_io_subclass_handler {
                                 // IOError parent catch-all (when subclass handlers exist)
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({}::IOError({})) => {{\n", enum_name, var_name));
+                                self.write(&format!("Err({enum_name}::IOError({var_name})) => {{\n"));
                             } else {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({}::{}({})) => {{\n", enum_name, et, var_name));
+                                self.write(&format!("Err({enum_name}::{et}({var_name})) => {{\n"));
                             }
                         } else {
                             // Bare except — catch-all
                             let var_name = handler.name.as_deref().unwrap_or("_e");
                             self.write_indent();
-                            self.write(&format!("Err({}) => {{\n", var_name));
+                            self.write(&format!("Err({var_name}) => {{\n"));
                         }
                         self.indent += 1;
                         for stmt in &handler.body {
@@ -3932,7 +3641,7 @@ impl RustEmitter {
                     };
 
                     self.write_indent();
-                    self.write(&format!("match (|| -> Result<{}, {}> {{\n", closure_ok_type, error_rust_type));
+                    self.write(&format!("match (|| -> Result<{closure_ok_type}, {error_rust_type}> {{\n"));
                     self.indent += 1;
                     for stmt in body {
                         self.emit_stmt(stmt);
@@ -3948,7 +3657,7 @@ impl RustEmitter {
                     self.write("})() {\n");
                     self.indent += 1;
                     self.write_indent();
-                    self.write(&format!("{}\n", ok_arm));
+                    self.write(&format!("{ok_arm}\n"));
 
                     if has_io_subclass_handler && error_rust_type == "IOError" {
                         // IOError with subclass dispatch: use guard-based matching
@@ -3958,31 +3667,30 @@ impl RustEmitter {
                                     // Parent catch-all
                                     let var_name = handler.name.as_deref().unwrap_or("_e");
                                     self.write_indent();
-                                    self.write(&format!("Err({}) => {{\n", var_name));
+                                    self.write(&format!("Err({var_name}) => {{\n"));
                                 } else if let Some(kind) = io_subclass_kind(et) {
                                     // Subclass match with guard
                                     let var_name = handler.name.as_deref().unwrap_or("_e");
                                     self.write_indent();
                                     self.write(&format!(
-                                        "Err(ref {}) if {}.kind == \"{}\" => {{\n",
-                                        var_name, var_name, kind
+                                        "Err(ref {var_name}) if {var_name}.kind == \"{kind}\" => {{\n"
                                     ));
                                     // Clone the variable so handler body can use it as owned
                                     if handler.name.is_some() {
                                         self.indent += 1;
                                         self.write_indent();
-                                        self.write(&format!("let {} = {}.clone();\n", var_name, var_name));
+                                        self.write(&format!("let {var_name} = {var_name}.clone();\n"));
                                         self.indent -= 1;
                                     }
                                 } else {
                                     let var_name = handler.name.as_deref().unwrap_or("_e");
                                     self.write_indent();
-                                    self.write(&format!("Err({}) => {{\n", var_name));
+                                    self.write(&format!("Err({var_name}) => {{\n"));
                                 }
                             } else {
                                 let var_name = handler.name.as_deref().unwrap_or("_e");
                                 self.write_indent();
-                                self.write(&format!("Err({}) => {{\n", var_name));
+                                self.write(&format!("Err({var_name}) => {{\n"));
                             }
                             self.indent += 1;
                             for stmt in &handler.body {
@@ -3997,7 +3705,7 @@ impl RustEmitter {
                         for handler in handlers {
                             self.write_indent();
                             if let Some(ref name) = handler.name {
-                                self.write(&format!("Err({}) => {{\n", name));
+                                self.write(&format!("Err({name}) => {{\n"));
                             } else {
                                 self.write("Err(_e) => {\n");
                             }
@@ -4148,13 +3856,13 @@ impl RustEmitter {
                 self.write(object);
                 self.write(".");
                 self.write(field);
-                self.write(&format!(" {} ", op));
+                self.write(&format!(" {op} "));
                 self.emit_expr(value);
                 self.write(";\n");
             }
             HirStmt::AttributeSubscriptAssign { object, field, index, value, field_ty } => {
                 self.write_indent();
-                let field_access = format!("{}.{}", object, field);
+                let field_access = format!("{object}.{field}");
                 match field_ty {
                     Type::List(_) => {
                         // self.field[i] = val -> bounds-checked assignment
@@ -4249,9 +3957,9 @@ impl RustEmitter {
                 // This ensures __exit__() is called on ALL exit paths:
                 // normal completion, early return, break, continue
                 for (i, (var, value, has_cm)) in items.iter().enumerate() {
-                    let ctx_name = format!("__ctx_{}", i);
-                    let guard_type = format!("__WithGuard{}", i);
-                    let guard_var = format!("__guard_{}", i);
+                    let ctx_name = format!("__ctx_{i}");
+                    let guard_type = format!("__WithGuard{i}");
+                    let guard_var = format!("__guard_{i}");
                     if *has_cm {
                         // Extract the class type name for the guard struct
                         let class_name = if let Type::Class { name, .. } = value.ty() {
@@ -4268,9 +3976,9 @@ impl RustEmitter {
                         self.write(";\n");
                         // Emit Drop guard struct that calls __exit__() on scope exit
                         self.write_indent();
-                        self.write(&format!("struct {} {{ ctx: {} }}\n", guard_type, class_name));
+                        self.write(&format!("struct {guard_type} {{ ctx: {class_name} }}\n"));
                         self.write_indent();
-                        self.write(&format!("impl Drop for {} {{\n", guard_type));
+                        self.write(&format!("impl Drop for {guard_type} {{\n"));
                         self.indent += 1;
                         self.write_indent();
                         self.write("fn drop(&mut self) { self.ctx.__exit__(); }\n");
@@ -4279,7 +3987,7 @@ impl RustEmitter {
                         self.write("}\n");
                         // Create guard instance, moving ctx into it
                         self.write_indent();
-                        self.write(&format!("let mut {} = {} {{ ctx: {} }};\n", guard_var, guard_type, ctx_name));
+                        self.write(&format!("let mut {guard_var} = {guard_type} {{ ctx: {ctx_name} }};\n"));
                         // Call __enter__() on guard's ctx and bind result to var
                         self.write_indent();
                         if stmts_reference_var(body, var) || items.iter().any(|(v, _, _)| v != var && v.contains(var)) {
@@ -4464,13 +4172,13 @@ impl RustEmitter {
         }
     }
 
-    fn substitute_class_captures_in_guard(&self, guard_code: &str, pattern: &HirPattern, is_non_option_union: bool) -> String {
+    fn substitute_class_captures_in_guard(guard_code: &str, pattern: &HirPattern, is_non_option_union: bool) -> String {
         if let HirPattern::Class { fields, .. } = pattern {
             let prefix = if is_non_option_union { "__inner" } else { "__matched" };
             let mut result = guard_code.to_string();
             for (fname, fpat) in fields {
                 if let HirPattern::Capture { name, .. } = fpat {
-                    let replacement = format!("{}.{}", prefix, fname);
+                    let replacement = format!("{prefix}.{fname}");
                     result = Self::replace_identifier(&result, name, &replacement);
                 }
             }
@@ -4514,11 +4222,11 @@ impl RustEmitter {
         if is_option || is_non_option_union {
             // For union types, emit as a Rust match on the enum/Option
             let subject_code = self.expr_to_string(subject);
-            self.write(&format!("match {} {{\n", subject_code));
+            self.write(&format!("match {subject_code} {{\n"));
         } else {
             // For simple types (literals, etc.), emit as a Rust match
             let subject_code = self.expr_to_string(subject);
-            self.write(&format!("match {} {{\n", subject_code));
+            self.write(&format!("match {subject_code} {{\n"));
         }
 
         self.indent += 1;
@@ -4528,7 +4236,14 @@ impl RustEmitter {
             if matches!(arm.pattern, HirPattern::Wildcard) {
                 has_wildcard = true;
             }
-            self.emit_match_arm(&arm.pattern, subject_ty, &arm.guard, &arm.body, is_option, is_non_option_union);
+            self.emit_match_arm(
+                &arm.pattern,
+                subject_ty,
+                arm.guard.as_ref(),
+                &arm.body,
+                is_option,
+                is_non_option_union,
+            );
         }
 
         // If no wildcard and not a union type, add a wildcard arm to make it exhaustive
@@ -4544,7 +4259,7 @@ impl RustEmitter {
         &mut self,
         pattern: &HirPattern,
         subject_ty: &Type,
-        guard: &Option<HirExpr>,
+        guard: Option<&HirExpr>,
         body: &[HirStmt],
         is_option: bool,
         is_non_option_union: bool,
@@ -4569,7 +4284,7 @@ impl RustEmitter {
             HirPattern::Capture { name, ty } => {
                 if is_option {
                     let _ = ty;
-                    self.write(&format!("Some({})", name));
+                    self.write(&format!("Some({name})"));
                 } else {
                     self.write(name);
                 }
@@ -4631,9 +4346,9 @@ impl RustEmitter {
                         class_name.clone()
                     };
                     if fields.is_empty() {
-                        self.write(&format!("{}::{}(_)", enum_name, variant_name));
+                        self.write(&format!("{enum_name}::{variant_name}(_)"));
                     } else {
-                        self.write(&format!("{}::{}(__inner)", enum_name, variant_name));
+                        self.write(&format!("{enum_name}::{variant_name}(__inner)"));
                     }
                 } else {
                     // For direct struct patterns, use __matched with field guards
@@ -4664,21 +4379,21 @@ impl RustEmitter {
 
         // Build field guards for class patterns with literal field values
         let class_field_guards: Vec<String> = if let HirPattern::Class { fields, .. } = pattern {
-            if !is_non_option_union {
+            if is_non_option_union {
+                Vec::new()
+            } else {
                 fields.iter().filter_map(|(fname, fpat)| {
                     match fpat {
                         HirPattern::Literal { value } => {
                             let lit_code = self.expr_to_string(value);
-                            Some(format!("__matched.{} == {}", fname, lit_code))
+                            Some(format!("__matched.{fname} == {lit_code}"))
                         }
                         HirPattern::None => {
-                            Some(format!("__matched.{}.is_none()", fname))
+                            Some(format!("__matched.{fname}.is_none()"))
                         }
                         _ => None,
                     }
                 }).collect()
-            } else {
-                Vec::new()
             }
         } else {
             Vec::new()
@@ -4689,13 +4404,13 @@ impl RustEmitter {
             // Build string guard condition
             let str_guard = match pattern {
                 HirPattern::Literal { value: HirExpr::StringLiteral(s) } => {
-                    format!("__s == {:?}", s)
+                    format!("__s == {s:?}")
                 }
                 HirPattern::Or { patterns } => {
                     let conditions: Vec<String> = patterns.iter().map(|p| {
                         match p {
                             HirPattern::Literal { value: HirExpr::StringLiteral(s) } => {
-                                format!("__s == {:?}", s)
+                                format!("__s == {s:?}")
                             }
                             _ => "__s == _".to_string(),
                         }
@@ -4706,22 +4421,22 @@ impl RustEmitter {
             };
             if let Some(guard_expr) = guard {
                 let guard_code = self.expr_to_string(guard_expr);
-                self.write(&format!(" if ({}) && ({})", str_guard, guard_code));
+                self.write(&format!(" if ({str_guard}) && ({guard_code})"));
             } else {
-                self.write(&format!(" if {}", str_guard));
+                self.write(&format!(" if {str_guard}"));
             }
         } else if !class_field_guards.is_empty() {
             let mut all_guards = class_field_guards;
             if let Some(guard_expr) = guard {
                 let mut guard_code = self.expr_to_string(guard_expr);
-                guard_code = self.substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
+                guard_code = Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
                 all_guards.push(guard_code);
             }
             self.write(&format!(" if {}", all_guards.join(" && ")));
         } else if let Some(guard_expr) = guard {
             let mut guard_code = self.expr_to_string(guard_expr);
-            guard_code = self.substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
-            self.write(&format!(" if {}", guard_code));
+            guard_code = Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
+            self.write(&format!(" if {guard_code}"));
         }
 
         self.write(" => {\n");
@@ -4733,14 +4448,14 @@ impl RustEmitter {
                 for (fname, fpat) in fields {
                     if let HirPattern::Capture { name, .. } = fpat {
                         self.write_indent();
-                        self.write(&format!("let {} = __inner.{};\n", name, fname));
+                        self.write(&format!("let {name} = __inner.{fname};\n"));
                     }
                 }
             } else if !is_non_option_union {
                 for (fname, fpat) in fields {
                     if let HirPattern::Capture { name, .. } = fpat {
                         self.write_indent();
-                        self.write(&format!("let {} = __matched.{};\n", name, fname));
+                        self.write(&format!("let {name} = __matched.{fname};\n"));
                     }
                 }
             }
@@ -4804,7 +4519,13 @@ impl RustEmitter {
         }
     }
 
-    fn emit_list_slice(&mut self, object: &HirExpr, start: &Option<Box<HirExpr>>, stop: &Option<Box<HirExpr>>, step: &Option<Box<HirExpr>>) {
+    fn emit_list_slice(
+        &mut self,
+        object: &HirExpr,
+        start: Option<&HirExpr>,
+        stop: Option<&HirExpr>,
+        step: Option<&HirExpr>,
+    ) {
         if let Some(step_expr) = step {
             // Step slicing
             self.write("{ let _v = &");
@@ -4870,7 +4591,13 @@ impl RustEmitter {
         }
     }
 
-    fn emit_string_slice(&mut self, object: &HirExpr, start: &Option<Box<HirExpr>>, stop: &Option<Box<HirExpr>>, step: &Option<Box<HirExpr>>) {
+    fn emit_string_slice(
+        &mut self,
+        object: &HirExpr,
+        start: Option<&HirExpr>,
+        stop: Option<&HirExpr>,
+        step: Option<&HirExpr>,
+    ) {
         if let Some(step_expr) = step {
             self.write("{ let _s: Vec<char> = ");
             self.emit_expr(object);
@@ -4953,477 +4680,6 @@ impl RustEmitter {
             return;
         }
         match (obj_ty, method) {
-            // String methods
-            (Type::Str, "upper") => {
-                self.emit_expr(object);
-                self.write(".to_uppercase()");
-            }
-            (Type::Str, "lower") => {
-                self.emit_expr(object);
-                self.write(".to_lowercase()");
-            }
-            (Type::Str, "strip") => {
-                self.emit_expr(object);
-                self.write(".trim().to_string()");
-            }
-            (Type::Str, "lstrip") => {
-                self.emit_expr(object);
-                self.write(".trim_start().to_string()");
-            }
-            (Type::Str, "rstrip") => {
-                self.emit_expr(object);
-                self.write(".trim_end().to_string()");
-            }
-            (Type::Str, "startswith") => {
-                self.emit_expr(object);
-                self.write(".starts_with(");
-                if !args.is_empty() {
-                    self.emit_str_ref_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Str, "endswith") => {
-                self.emit_expr(object);
-                self.write(".ends_with(");
-                if !args.is_empty() {
-                    self.emit_str_ref_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Str, "split") => {
-                self.emit_expr(object);
-                if args.is_empty() {
-                    self.write(".split_whitespace().map(|s| s.to_string()).collect::<Vec<String>>()");
-                } else {
-                    self.write(".split(");
-                    self.emit_str_ref_expr(&args[0]);
-                    self.write(").map(|s| s.to_string()).collect::<Vec<String>>()");
-                }
-            }
-            (Type::Str, "replace") => {
-                self.emit_expr(object);
-                self.write(".replace(");
-                if args.len() >= 2 {
-                    self.emit_str_ref_expr(&args[0]);
-                    self.write(", ");
-                    self.emit_str_ref_expr(&args[1]);
-                }
-                self.write(")");
-            }
-            (Type::Str, "find") => {
-                // Returns Option<i64> = int | None
-                self.emit_expr(object);
-                self.write(".find(");
-                if !args.is_empty() {
-                    self.emit_str_ref_expr(&args[0]);
-                }
-                self.write(").map(|i| i as i64)");
-            }
-            // String methods - extended
-            (Type::Str, "title") => {
-                // Title case: capitalize first letter of each word
-                self.emit_expr(object);
-                self.write(".split_whitespace().map(|w| { let mut c = w.chars(); match c.next() { None => String::new(), Some(f) => f.to_uppercase().to_string() + &c.as_str().to_lowercase() } }).collect::<Vec<_>>().join(\" \")");
-            }
-            (Type::Str, "capitalize") => {
-                self.write("{ let _s = ");
-                self.emit_expr(object);
-                self.write("; let mut _c = _s.chars(); match _c.next() { None => String::new(), Some(f) => f.to_uppercase().to_string() + &_c.as_str().to_lowercase() } }");
-            }
-            (Type::Str, "swapcase") => {
-                self.emit_expr(object);
-                self.write(".chars().map(|c| if c.is_uppercase() { c.to_lowercase().to_string() } else { c.to_uppercase().to_string() }).collect::<String>()");
-            }
-            (Type::Str, "isdigit") => {
-                self.write("!");
-                self.emit_expr(object);
-                self.write(".is_empty() && ");
-                self.emit_expr(object);
-                self.write(".chars().all(|c| c.is_ascii_digit())");
-            }
-            (Type::Str, "isalpha") => {
-                self.write("!");
-                self.emit_expr(object);
-                self.write(".is_empty() && ");
-                self.emit_expr(object);
-                self.write(".chars().all(|c| c.is_alphabetic())");
-            }
-            (Type::Str, "isalnum") => {
-                self.write("!");
-                self.emit_expr(object);
-                self.write(".is_empty() && ");
-                self.emit_expr(object);
-                self.write(".chars().all(|c| c.is_alphanumeric())");
-            }
-            (Type::Str, "isspace") => {
-                self.write("!");
-                self.emit_expr(object);
-                self.write(".is_empty() && ");
-                self.emit_expr(object);
-                self.write(".chars().all(|c| c.is_whitespace())");
-            }
-            (Type::Str, "isupper") => {
-                self.emit_expr(object);
-                self.write(".chars().any(|c| c.is_alphabetic()) && ");
-                self.emit_expr(object);
-                self.write(".chars().filter(|c| c.is_alphabetic()).all(|c| c.is_uppercase())");
-            }
-            (Type::Str, "islower") => {
-                self.emit_expr(object);
-                self.write(".chars().any(|c| c.is_alphabetic()) && ");
-                self.emit_expr(object);
-                self.write(".chars().filter(|c| c.is_alphabetic()).all(|c| c.is_lowercase())");
-            }
-            (Type::Str, "join") => {
-                // Python: "sep".join(items) -> Rust: items.join("sep")
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    self.write(".join(");
-                    self.emit_str_ref_expr(object);
-                    self.write(")");
-                }
-            }
-            (Type::Str, "count") => {
-                self.emit_expr(object);
-                self.write(".matches(");
-                if !args.is_empty() {
-                    self.emit_str_ref_expr(&args[0]);
-                }
-                self.write(").count() as i64");
-            }
-            (Type::Str, "center") => {
-                self.write("{ let _s = ");
-                self.emit_expr(object);
-                self.write("; let _w = ");
-                if !args.is_empty() { self.emit_expr(&args[0]); }
-                self.write(" as usize; let _len = _s.chars().count(); if _len >= _w { _s } else { let _pad = _w - _len; let _left = _pad / 2; let _right = _pad - _left; format!(\"{}{}{}\", \" \".repeat(_left), _s, \" \".repeat(_right)) } }");
-            }
-            (Type::Str, "ljust") => {
-                self.write("format!(\"{:<width$}\", ");
-                self.emit_expr(object);
-                self.write(", width = ");
-                if !args.is_empty() { self.emit_expr(&args[0]); }
-                self.write(" as usize)");
-            }
-            (Type::Str, "rjust") => {
-                self.write("format!(\"{:>width$}\", ");
-                self.emit_expr(object);
-                self.write(", width = ");
-                if !args.is_empty() { self.emit_expr(&args[0]); }
-                self.write(" as usize)");
-            }
-            (Type::Str, "zfill") => {
-                self.write("format!(\"{:0>width$}\", ");
-                self.emit_expr(object);
-                self.write(", width = ");
-                if !args.is_empty() { self.emit_expr(&args[0]); }
-                self.write(" as usize)");
-            }
-            // VecDeque methods (deque class _data field)
-            (Type::List(_), "append") if self.is_deque_data_field(object) => {
-                self.emit_expr(object);
-                self.write(".push_back(");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    if matches!(args[0].ty(), Type::TypeVar(_)) {
-                        self.write(".clone()");
-                    }
-                }
-                self.write(")");
-            }
-            (Type::List(_), "appendleft") if self.is_deque_data_field(object) => {
-                self.emit_expr(object);
-                self.write(".push_front(");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    if matches!(args[0].ty(), Type::TypeVar(_)) {
-                        self.write(".clone()");
-                    }
-                }
-                self.write(")");
-            }
-            (Type::List(_), "pop") if self.is_deque_data_field(object) => {
-                self.emit_expr(object);
-                self.write(".pop_back()");
-            }
-            (Type::List(_), "popleft") if self.is_deque_data_field(object) => {
-                self.emit_expr(object);
-                self.write(".pop_front()");
-            }
-            // List methods
-            (Type::List(_), "append") => {
-                self.emit_expr(object);
-                self.write(".push(");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                    // Clone TypeVar arguments to avoid move issues in loops
-                    if matches!(args[0].ty(), Type::TypeVar(_)) {
-                        self.write(".clone()");
-                    }
-                }
-                self.write(")");
-            }
-            (Type::List(_), "extend") => {
-                self.emit_expr(object);
-                self.write(".extend(");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::List(_), "insert") => {
-                self.emit_expr(object);
-                self.write(".insert(");
-                if args.len() >= 2 {
-                    self.emit_expr(&args[0]);
-                    self.write(" as usize, ");
-                    // If the value arg is a borrowed/mut-borrowed param with Move ownership,
-                    // we need to clone it since Vec::insert requires an owned value.
-                    let needs_clone = if let HirExpr::Name { name, ty } = &args[1] {
-                        (self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()))
-                            && ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                    } else {
-                        false
-                    };
-                    self.emit_expr(&args[1]);
-                    if needs_clone {
-                        self.write(".clone()");
-                    }
-                }
-                self.write(")");
-            }
-            (Type::List(_), "clear") => {
-                self.emit_expr(object);
-                self.write(".clear()");
-            }
-            (Type::List(_), "copy") => {
-                self.emit_expr(object);
-                self.write(".clone()");
-            }
-            (Type::List(_), "reverse") => {
-                self.emit_expr(object);
-                self.write(".reverse()");
-            }
-            (Type::List(_), "sort") => {
-                self.emit_expr(object);
-                self.write(".sort()");
-            }
-            (Type::List(_), "count") => {
-                self.emit_expr(object);
-                self.write(".iter().filter(|x| **x == ");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(").count() as i64");
-            }
-            (Type::List(_), "contains") => {
-                self.emit_expr(object);
-                self.write(".contains(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::List(_), "pop") => {
-                // Returns Option<T> = T | None
-                self.emit_expr(object);
-                self.write(".pop()");
-            }
-            (Type::List(_), "remove") => {
-                // list.remove(val) -> no-op if not found (safe: no panic)
-                self.write("{ if let Some(__pos) = ");
-                self.emit_expr(object);
-                self.write(".iter().position(|__x| *__x == ");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(") { ");
-                self.emit_expr(object);
-                self.write(".remove(__pos); } }");
-            }
-            (Type::List(_), "index") => {
-                // list.index(val) -> Option[int]: Some(pos) or None
-                self.emit_expr(object);
-                self.write(".iter().position(|__x| *__x == ");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(").map(|__p| __p as i64)");
-            }
-            // Dict methods
-            (Type::Dict(_, _), "keys") => {
-                self.emit_expr(object);
-                self.write(".keys().cloned().collect::<Vec<_>>()");
-            }
-            (Type::Dict(_, _), "values") => {
-                self.emit_expr(object);
-                self.write(".values().cloned().collect::<Vec<_>>()");
-            }
-            (Type::Dict(_, _), "items") => {
-                self.emit_expr(object);
-                self.write(".iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()");
-            }
-            (Type::Dict(_, _), "update") => {
-                self.emit_expr(object);
-                self.write(".extend(");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Dict(_, _), "clear") => {
-                self.emit_expr(object);
-                self.write(".clear()");
-            }
-            (Type::Dict(_, _), "copy") => {
-                self.emit_expr(object);
-                self.write(".clone()");
-            }
-            (Type::Dict(_, _), "contains") => {
-                self.emit_expr(object);
-                self.write(".contains_key(");
-                if !args.is_empty() {
-                    self.emit_key_ref_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Dict(_, _), "get") => {
-                if args.len() == 2 {
-                    // dict.get(key, default) -> d.get(&key).cloned().unwrap_or(default)
-                    self.emit_expr(object);
-                    self.write(".get(");
-                    self.emit_key_ref_expr(&args[0]);
-                    self.write(").cloned().unwrap_or(");
-                    self.emit_expr(&args[1]);
-                    self.write(")");
-                } else {
-                    // dict.get(key) -> d.get(&key).cloned() (returns Option<V>)
-                    self.emit_expr(object);
-                    self.write(".get(");
-                    if !args.is_empty() {
-                        self.emit_key_ref_expr(&args[0]);
-                    }
-                    self.write(").cloned()");
-                }
-            }
-            (Type::Dict(_, _), "pop") => {
-                // Returns Option<V> = V | None
-                self.emit_expr(object);
-                self.write(".remove(");
-                if !args.is_empty() {
-                    self.emit_key_ref_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            // Set methods
-            (Type::Set(_), "add") => {
-                self.emit_expr(object);
-                self.write(".insert(");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Set(_), "remove") => {
-                self.emit_expr(object);
-                self.write(".remove(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Set(_), "discard") => {
-                self.emit_expr(object);
-                self.write(".remove(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Set(_), "contains") => {
-                self.emit_expr(object);
-                self.write(".contains(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Set(_), "clear") => {
-                self.emit_expr(object);
-                self.write(".clear()");
-            }
-            (Type::Set(_), "copy") => {
-                self.emit_expr(object);
-                self.write(".clone()");
-            }
-            (Type::Set(_), "union") => {
-                self.emit_expr(object);
-                self.write(".union(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(").cloned().collect::<HashSet<_>>()");
-                self.needs_hashset = true;
-            }
-            (Type::Set(_), "intersection") => {
-                self.emit_expr(object);
-                self.write(".intersection(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(").cloned().collect::<HashSet<_>>()");
-                self.needs_hashset = true;
-            }
-            (Type::Set(_), "difference") => {
-                self.emit_expr(object);
-                self.write(".difference(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(").cloned().collect::<HashSet<_>>()");
-                self.needs_hashset = true;
-            }
-            (Type::Set(_), "symmetric_difference") => {
-                self.emit_expr(object);
-                self.write(".symmetric_difference(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(").cloned().collect::<HashSet<_>>()");
-                self.needs_hashset = true;
-            }
-            (Type::Set(_), "issubset") => {
-                self.emit_expr(object);
-                self.write(".is_subset(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Set(_), "issuperset") => {
-                self.emit_expr(object);
-                self.write(".is_superset(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Set(_), "isdisjoint") => {
-                self.emit_expr(object);
-                self.write(".is_disjoint(&");
-                if !args.is_empty() {
-                    self.emit_expr(&args[0]);
-                }
-                self.write(")");
-            }
-            (Type::Set(_), "pop") => {
-                // set.pop() -> Option[T]: returns None on empty set (safe: no panic)
-                self.write("{ let __v = ");
-                self.emit_expr(object);
-                self.write(".iter().next().cloned(); if let Some(ref __val) = __v { ");
-                self.emit_expr(object);
-                self.write(".remove(__val); } __v }");
-            }
             (Type::Set(_), "len") => {
                 self.write("(");
                 self.emit_expr(object);
@@ -5466,7 +4722,7 @@ impl RustEmitter {
                     // Callable field: emit (obj.field)(args) instead of obj.method(args)
                     self.write("(");
                     self.emit_expr(object);
-                    self.write(&format!(".{})(", method));
+                    self.write(&format!(".{method})("));
                     for (i, arg) in args.iter().enumerate() {
                         if i > 0 {
                             self.write(", ");
@@ -5477,9 +4733,9 @@ impl RustEmitter {
                 } else {
                     // Regular class instance method call -- use convention-aware argument emission
                     self.emit_expr(object);
-                    self.write(&format!(".{}(", method));
+                    self.write(&format!(".{method}("));
                     // Look up method conventions from func_signatures
-                    let method_key = format!("{}::{}", class_name, method);
+                    let method_key = format!("{class_name}::{method}");
                     let method_info = self.func_signatures.get(&method_key).cloned();
                     for (i, arg) in args.iter().enumerate() {
                         if i > 0 {
@@ -5489,6 +4745,17 @@ impl RustEmitter {
                             // Method params skip self, so param index i corresponds to params[i]
                             // (self is not in func_signatures params)
                             if let Some((param_ty, convention)) = params.get(i) {
+                                // For borrowed generic params (&T), wrapping expressions
+                                // avoids Rust precedence pitfalls like `&(x) as i64`.
+                                // This includes literals which otherwise produce invalid code like `&3_i64`.
+                                if *convention == ParamConvention::Borrow
+                                    && matches!(param_ty, Type::TypeVar(_))
+                                {
+                                    self.write("&(");
+                                    self.emit_expr(arg);
+                                    self.write(")");
+                                    continue;
+                                }
                                 self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
                                 self.emit_expr(arg);
                                 continue;
@@ -5503,7 +4770,7 @@ impl RustEmitter {
             _ => {
                 // Fallback: emit as-is
                 self.emit_expr(object);
-                self.write(&format!(".{}(", method));
+                self.write(&format!(".{method}("));
                 for (i, arg) in args.iter().enumerate() {
                     if i > 0 {
                         self.write(", ");
@@ -5517,7 +4784,7 @@ impl RustEmitter {
 
     /// Emit `&` or `&mut` prefix for a function argument based on parameter convention.
     /// Copy types never get a borrow prefix (they're passed by value),
-    /// unless the parameter type is a TypeVar (generic), in which case we always borrow.
+    /// unless the parameter type is a `TypeVar` (generic), in which case we always borrow.
     fn emit_borrow_prefix(&mut self, convention: ParamConvention, arg_ty: &Type, param_ty: Option<&Type>) {
         self.emit_borrow_prefix_for_name(convention, arg_ty, param_ty, None);
     }
@@ -5529,7 +4796,7 @@ impl RustEmitter {
         }
         // If the parameter type is a TypeVar, always emit the borrow prefix
         // because the generated Rust signature uses &T for borrowed TypeVar params
-        let is_generic_param = param_ty.map_or(false, |t| matches!(t, Type::TypeVar(_)));
+        let is_generic_param = param_ty.is_some_and(|t| matches!(t, Type::TypeVar(_)));
         // Copy types are always passed by value regardless of convention,
         // unless the parameter is generic (TypeVar)
         if !is_generic_param && arg_ty.ownership() == sifr_type_system::OwnershipKind::Copy {
@@ -5584,7 +4851,7 @@ impl RustEmitter {
                 self.write("_f64");
             }
             HirExpr::StringLiteral(val) => {
-                self.write(&format!("{:?}.to_string()", val));
+                self.write(&format!("{val:?}.to_string()"));
             }
             HirExpr::BoolLiteral(val) => {
                 self.write(if *val { "true" } else { "false" });
@@ -5615,7 +4882,7 @@ impl RustEmitter {
                         self.emit_expr_with_bigint_clone(right);
                     } else {
                         self.emit_expr_with_bigint_clone(left);
-                        self.write(&format!(" {} ", op));
+                        self.write(&format!(" {op} "));
                         self.emit_expr_with_bigint_clone(right);
                     }
                     return;
@@ -5640,9 +4907,9 @@ impl RustEmitter {
                     }
                     if format_args.is_empty() {
                         // All parts are literals, just emit a string literal
-                        self.write(&format!("\"{}\".to_string()", format_str));
+                        self.write(&format!("\"{format_str}\".to_string()"));
                     } else {
-                        self.write(&format!("format!(\"{}\"", format_str));
+                        self.write(&format!("format!(\"{format_str}\""));
                         for arg in &format_args {
                             self.write(", ");
                             self.emit_expr(arg);
@@ -5716,7 +4983,7 @@ impl RustEmitter {
                     // Class type with operator overloading: use reference-based ops
                     self.write("&");
                     self.emit_expr(left);
-                    self.write(&format!(" {} ", op));
+                    self.write(&format!(" {op} "));
                     self.write("&");
                     self.emit_expr(right);
                 } else if is_option_type(left.ty()) || is_option_type(right.ty()) {
@@ -5727,7 +4994,7 @@ impl RustEmitter {
                     } else {
                         self.emit_expr(left);
                     }
-                    self.write(&format!(" {} ", op));
+                    self.write(&format!(" {op} "));
                     if is_option_type(right.ty()) {
                         self.emit_expr(right);
                         self.write(".unwrap()");
@@ -5744,13 +5011,16 @@ impl RustEmitter {
                     let needs_right_cast = right_is_int && left_is_float;
 
                     // Wrap sub-expressions in parens if they are BinOps to preserve precedence
-                    let needs_left_parens = matches!(left.as_ref(), HirExpr::BinOp { .. });
-                    let needs_right_parens = matches!(right.as_ref(), HirExpr::BinOp { .. });
+                    // Also wrap if the expression is an IntLiteral (might be used with operators that need parens)
+                    let needs_left_parens = matches!(left.as_ref(), HirExpr::BinOp { .. })
+                        || matches!(left.as_ref(), HirExpr::IntLiteral { .. });
+                    let needs_right_parens = matches!(right.as_ref(), HirExpr::BinOp { .. })
+                        || matches!(right.as_ref(), HirExpr::IntLiteral { .. });
                     if needs_left_parens || needs_left_cast { self.write("("); }
                     self.emit_expr(left);
                     if needs_left_parens || needs_left_cast { self.write(")"); }
                     if needs_left_cast { self.write(" as f64"); }
-                    self.write(&format!(" {} ", op));
+                    self.write(&format!(" {op} "));
                     if needs_right_parens || needs_right_cast { self.write("("); }
                     self.emit_expr(right);
                     if needs_right_parens || needs_right_cast { self.write(")"); }
@@ -5822,26 +5092,28 @@ impl RustEmitter {
                         let right_is_option = is_option_type(comparators[0].ty());
                         if left_is_option && !right_is_option && !matches!(comparators[0], HirExpr::NoneLiteral) {
                             self.emit_expr(left);
-                            self.write(&format!(" {} Some(", op));
+                            self.write(&format!(" {op} Some("));
                             self.emit_expr(&comparators[0]);
                             self.write(")");
                         } else if !left_is_option && right_is_option && !matches!(left.as_ref(), HirExpr::NoneLiteral) {
                             self.write("Some(");
                             self.emit_expr(left);
                             self.write(")");
-                            self.write(&format!(" {} ", op));
+                            self.write(&format!(" {op} "));
                             self.emit_expr(&comparators[0]);
                         } else {
                             // Dereference borrowed params in comparisons to avoid &String == String
                             self.emit_expr_for_compare(left);
-                            self.write(&format!(" {} ", op));
+                            self.write(&format!(" {op} "));
                             self.emit_expr_for_compare(&comparators[0]);
                         }
                     }
                 } else {
                     // Chained comparisons: a < b < c -> a < b && b < c
+                    // Cast expressions need parentheses when followed by comparison operators
+                    // to avoid Rust parsing `1 as i64 < x` as a generic argument
                     self.write("(");
-                    self.emit_expr(left);
+                    self.emit_expr_with_parens_for_compare(left);
                     self.write(&format!(" {} ", ops[0]));
                     self.emit_expr(&comparators[0]);
                     for i in 1..ops.len() {
@@ -5857,7 +5129,7 @@ impl RustEmitter {
                 let rust_op = if op == "and" { "&&" } else { "||" };
                 for (i, val) in values.iter().enumerate() {
                     if i > 0 {
-                        self.write(&format!(" {} ", rust_op));
+                        self.write(&format!(" {rust_op} "));
                     }
                     self.emit_expr(val);
                 }
@@ -5874,7 +5146,7 @@ impl RustEmitter {
                         // Inline string literal directly: println!("hello") instead of println!("{}", "hello")
                         // Escape backslashes and double quotes for valid Rust string
                         let escaped = val.replace('\\', "\\\\").replace('"', "\\\"").replace('{', "{{").replace('}', "}}");
-                        self.write(&format!("println!(\"{}\")", escaped));
+                        self.write(&format!("println!(\"{escaped}\")"));
                     } else if let HirExpr::FString { parts, .. } = &args[0] {
                         // Inline f-string directly into println! to avoid double-format
                         self.emit_fstring_macro("println!", parts);
@@ -5904,7 +5176,7 @@ impl RustEmitter {
                         self.write("println!(\"{}\", ");
                         self.emit_display_expr(&args[0]);
                         self.write(")");
-                    };
+                    }
                 } else if func == "isinstance" {
                     // isinstance() is handled by narrowing at the HIR level.
                     // At codegen time, we emit `true` since the narrowing has
@@ -5914,7 +5186,9 @@ impl RustEmitter {
                     self.write("true");
                 } else if func == "str" {
                     // str() conversion -> format!("{}", arg) or format!("{:?}", arg) for lists
-                    if !args.is_empty() {
+                    if args.is_empty() {
+                        self.write("String::new()");
+                    } else {
                         if matches!(args[0].ty(), Type::List(_)) {
                             self.write("format!(\"{:?}\", ");
                         } else {
@@ -5922,15 +5196,15 @@ impl RustEmitter {
                         }
                         self.emit_display_expr(&args[0]);
                         self.write(")");
-                    } else {
-                        self.write("String::new()");
                     }
                 } else if func == "pow" {
                     // pow(base, exp)
                     if args.len() == 2 {
                         if args[0].ty() == &Type::Int && args[1].ty() == &Type::Int {
+                            // Wrap base in parens to handle cases like "(2 as i64).pow(...)"
+                            self.write("(");
                             self.emit_expr(&args[0]);
-                            self.write(".pow(");
+                            self.write(").pow(");
                             self.emit_expr(&args[1]);
                             self.write(" as u32)");
                         } else {
@@ -6166,9 +5440,9 @@ impl RustEmitter {
                     // Inline the lambda body directly instead of closure-within-closure
                     self.emit_expr(&args[1]);
                     if let HirExpr::Lambda { params, body, .. } = &args[0] {
-                        let param_name = if !params.is_empty() { &params[0].name } else { "x" };
+                        let param_name = if params.is_empty() { "x" } else { &params[0].name };
                         // Use .clone().into_iter() for owned values, then filter with |&var| destructuring
-                        self.write(&format!(".clone().into_iter().filter(|&{}| ", param_name));
+                        self.write(&format!(".clone().into_iter().filter(|&{param_name}| "));
                         self.emit_expr(body);
                         self.write(").collect::<Vec<_>>()");
                     } else {
@@ -6237,7 +5511,7 @@ impl RustEmitter {
                                             // Use param_ty for ownership check: the wrapped enum value is a Union (Move),
                                             // not the inner arg type which may be Copy (e.g., Int inside IntOrStr)
                                             self.emit_borrow_prefix(convention, param_ty, Some(param_ty));
-                                            self.write(&format!("{}::{}(", enum_name, variant));
+                                            self.write(&format!("{enum_name}::{variant}("));
                                             self.emit_expr(arg);
                                             self.write(")");
                                             continue;
@@ -6266,11 +5540,11 @@ impl RustEmitter {
                                                     self.write("|");
                                                     for (pi, (cp, cc)) in callable_params.iter().zip(callable_convs.iter()).enumerate() {
                                                         if pi > 0 { self.write(", "); }
-                                                        let pname = format!("__a{}", pi);
+                                                        let pname = format!("__a{pi}");
                                                         if matches!(cp, Type::TypeVar(_)) || (*cc == ParamConvention::Borrow && cp.ownership() == sifr_type_system::OwnershipKind::Move) {
-                                                            self.write(&format!("{}: &_", pname));
+                                                            self.write(&format!("{pname}: &_"));
                                                         } else {
-                                                            self.write(&format!("{}: _", pname));
+                                                            self.write(&format!("{pname}: _"));
                                                         }
                                                     }
                                                     self.write("| ");
@@ -6278,9 +5552,9 @@ impl RustEmitter {
                                                     self.write("(");
                                                     for (pi, (cp, (ct, _))) in callable_params.iter().zip(concrete_params.iter()).enumerate() {
                                                         if pi > 0 { self.write(", "); }
-                                                        let pname = format!("__a{}", pi);
+                                                        let pname = format!("__a{pi}");
                                                         if matches!(cp, Type::TypeVar(_)) && ct.ownership() == sifr_type_system::OwnershipKind::Copy {
-                                                            self.write(&format!("*{}", pname));
+                                                            self.write(&format!("*{pname}"));
                                                         } else {
                                                             self.write(&pname);
                                                         }
@@ -6300,19 +5574,11 @@ impl RustEmitter {
                                 } else {
                                     None
                                 };
-                                // For borrowed generic params (&T), wrapping non-trivial expressions
+                                // For borrowed generic params (&T), wrapping expressions
                                 // avoids Rust precedence pitfalls like `&(x) as i64`.
+                                // This includes literals which otherwise produce invalid code like `&3_i64`.
                                 if convention == ParamConvention::Borrow
                                     && matches!(param_ty, Type::TypeVar(_))
-                                    && !matches!(
-                                        arg,
-                                        HirExpr::Name { .. }
-                                            | HirExpr::IntLiteral(_)
-                                            | HirExpr::FloatLiteral(_)
-                                            | HirExpr::StringLiteral(_)
-                                            | HirExpr::BoolLiteral(_)
-                                            | HirExpr::NoneLiteral
-                                    )
                                 {
                                     self.write("&(");
                                     self.emit_expr(arg);
@@ -6444,12 +5710,12 @@ impl RustEmitter {
                                 if let Type::Tuple(elems) = obj_ty {
                                     let resolved = (elems.len() as i64 + val) as usize;
                                     self.emit_expr(object);
-                                    self.write(&format!(".{}", resolved));
+                                    self.write(&format!(".{resolved}"));
                                 }
                             } else {
                                 // Emit raw integer for tuple field access (e.g., .0 not .0_i64)
                                 self.emit_expr(object);
-                                self.write(&format!(".{}", val));
+                                self.write(&format!(".{val}"));
                             }
                         } else {
                             // Non-literal index: emit as raw integer (tuples require compile-time indices)
@@ -6517,7 +5783,12 @@ impl RustEmitter {
                 let obj_ty = object.ty();
                 match obj_ty {
                     Type::Str => {
-                        self.emit_string_slice(object, start, stop, step);
+                        self.emit_string_slice(
+                            object,
+                            start.as_deref(),
+                            stop.as_deref(),
+                            step.as_deref(),
+                        );
                     }
                     Type::Tuple(_) => {
                         // Compile-time tuple slicing: direct field access
@@ -6539,7 +5810,12 @@ impl RustEmitter {
                     }
                     _ => {
                         // List slicing
-                        self.emit_list_slice(object, start, stop, step);
+                        self.emit_list_slice(
+                            object,
+                            start.as_deref(),
+                            stop.as_deref(),
+                            step.as_deref(),
+                        );
                     }
                 }
             }
@@ -6616,13 +5892,13 @@ impl RustEmitter {
                 if let Some(kind) = io_subclass_kind {
                     // Emit: IOError { message: <arg>.to_string(), kind: "<kind>".to_string() }
                     self.write("IOError { message: ");
-                    if !args.is_empty() {
+                    if args.is_empty() {
+                        self.write("String::new()");
+                    } else {
                         self.emit_expr(&args[0]);
                         self.write(".to_string()");
-                    } else {
-                        self.write("String::new()");
                     }
-                    self.write(&format!(", kind: \"{}\".to_string() }}", kind));
+                    self.write(&format!(", kind: \"{kind}\".to_string() }}"));
                     return;
                 }
                 self.write(class_name);
@@ -6633,8 +5909,8 @@ impl RustEmitter {
                         self.write(", ");
                     }
                     // Check if this argument corresponds to a recursive field
-                    let is_recursive = field_names.as_ref().map_or(false, |names| {
-                        names.get(i).map_or(false, |fname| {
+                    let is_recursive = field_names.as_ref().is_some_and(|names| {
+                        names.get(i).is_some_and(|fname| {
                             self.recursive_fields.contains(&(class_name.clone(), fname.clone()))
                         })
                     });
@@ -6775,10 +6051,10 @@ impl RustEmitter {
                         self.write(" in ");
                         if is_range {
                             self.write("(");
-                            self.emit_expr(&iter_e);
+                            self.emit_expr(iter_e);
                             self.write(")");
                         } else {
-                            self.emit_expr(&iter_e);
+                            self.emit_expr(iter_e);
                             self.write(".clone().into_iter()");
                         }
                         self.write(" { ");
@@ -6839,7 +6115,7 @@ impl RustEmitter {
                         self.write("for ");
                         self.write(var);
                         self.write(" in ");
-                        self.emit_expr(&iter_e);
+                        self.emit_expr(iter_e);
                         self.write(".clone().into_iter() { ");
                         if let Some(ref cond) = filter {
                             self.write("if ");
@@ -6903,7 +6179,7 @@ impl RustEmitter {
                         self.write("for ");
                         self.write(&var_pattern);
                         self.write(" in ");
-                        self.emit_expr(&iter_e);
+                        self.emit_expr(iter_e);
                         self.write(".clone().into_iter() { ");
                         if let Some(ref cond) = filter {
                             self.write("if ");
@@ -6971,7 +6247,7 @@ impl RustEmitter {
     /// Emit an f-string as a Rust format macro call (format!, println!, etc.).
     /// This avoids the double-format pattern `println!("{}", format!(...))`.
     /// Emit a lambda expression without type annotations on parameters.
-    /// Used when the lambda is passed to .map()/.filter() where Rust can infer types.
+    /// Used when the lambda is passed to .`map()/.filter()` where Rust can infer types.
     /// Check if a name is a stdlib constant.
     fn is_stdlib_constant(&self, name: &str) -> bool {
         matches!(name, "pi" | "e" | "tau" | "inf" | "nan") && self.intrinsic_functions.contains(name)
@@ -8275,11 +7551,13 @@ impl RustEmitter {
             }
             // sifr.logging
             "set_global_level" => {
+                self.needs_logging_state = true;
                 self.write("{ *__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap() = ");
                 self.emit_expr(&args[0]);
                 self.write("; }");
             }
             "get_global_level" => {
+                self.needs_logging_state = true;
                 self.write("*__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap()");
             }
             _ => {
@@ -8306,6 +7584,10 @@ impl RustEmitter {
         if let Some(required_crate) = lowered.required_crate {
             self.intrinsic_registry_crates.insert(required_crate.to_string());
         }
+        for required_crate in lowered.additional_required_crates {
+            self.intrinsic_registry_crates
+                .insert((*required_crate).to_string());
+        }
 
         self.write(&crate::render_expr(&lowered.expr));
         true
@@ -8318,10 +7600,44 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
     ) -> bool {
+        let is_deque_data_field = self.is_deque_data_field(object);
         let rendered_object = self.expr_to_string(object);
-        let rendered_args = args.iter().map(|arg| self.expr_to_string(arg)).collect::<Vec<_>>();
-        let Some(lowered) =
-            methods::lower_method(object_ty, method, &rendered_object, &rendered_args)
+        let mut rendered_args = args
+            .iter()
+            .map(|arg| self.expr_to_string(arg))
+            .collect::<Vec<_>>();
+
+        if matches!(object_ty, Type::List(_))
+            && matches!(method, "append" | "appendleft")
+            && !args.is_empty()
+        {
+            // Preserve legacy behavior: clone TypeVar list args to avoid move issues.
+            if matches!(args[0].ty(), Type::TypeVar(_)) {
+                rendered_args[0] = format!("{}.clone()", rendered_args[0]);
+            }
+        }
+
+        if matches!(object_ty, Type::List(_)) && method == "insert" && args.len() >= 2 {
+            // Preserve legacy behavior: clone borrowed/mut-borrowed move-owned values.
+            let needs_clone = if let HirExpr::Name { name, ty } = &args[1] {
+                (self.borrowed_params.contains(name.as_str())
+                    || self.mut_borrowed_params.contains(name.as_str()))
+                    && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            } else {
+                false
+            };
+            if needs_clone {
+                rendered_args[1] = format!("{}.clone()", rendered_args[1]);
+            }
+        }
+
+        let Some(lowered) = methods::lower_method_with_context(
+            object_ty,
+            method,
+            &rendered_object,
+            &rendered_args,
+            is_deque_data_field,
+        )
         else {
             return false;
         };
@@ -8378,12 +7694,12 @@ impl RustEmitter {
         self.write(")");
     }
 
-    /// Emit an expression as a HashMap key reference.
-    /// String literals are emitted directly (e.g., `"key"`) since HashMap::get accepts &str via Borrow.
+    /// Emit an expression as a `HashMap` key reference.
+    /// String literals are emitted directly (e.g., `"key"`) since `HashMap::get` accepts &str via Borrow.
     /// Other expressions are emitted with `&` prefix (e.g., `&var`).
     fn emit_key_ref_expr(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{:?}", val));
+            self.write(&format!("{val:?}"));
         } else if let HirExpr::Name { name, ty } = expr {
             // If the name is already a borrowed parameter (&String or &mut String),
             // emitting `&name` would produce `&&String` which fails Borrow<str> bounds.
@@ -8415,7 +7731,7 @@ impl RustEmitter {
     /// Other string expressions are emitted with `.as_str()` (e.g., `s.as_str()`).
     fn emit_str_ref_expr(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{:?}", val));
+            self.write(&format!("{val:?}"));
         } else {
             self.emit_expr(expr);
             self.write(".as_str()");
@@ -8429,7 +7745,7 @@ impl RustEmitter {
     /// Use this for Rust APIs that accept `&str`, `AsRef<str>`, `AsRef<Path>`, `AsRef<OsStr>`, etc.
     fn emit_expr_as_str_ref(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{:?}", val));
+            self.write(&format!("{val:?}"));
         } else if let HirExpr::Name { name, .. } = expr {
             if self.borrowed_params.contains(name) {
                 // Already &String, no extra & needed
@@ -8459,19 +7775,34 @@ impl RustEmitter {
         self.emit_expr(expr);
     }
 
+    /// Emit an expression for use on the left side of a comparison operator.
+    /// `IntLiteral` and other expressions that result in type casts need parentheses
+    /// to avoid Rust parsing `1 as i64 < x` as a generic argument.
+    fn emit_expr_with_parens_for_compare(&mut self, expr: &HirExpr) {
+        // Check if emitting this expression will result in a type cast that needs parens
+        // This includes IntLiteral (which becomes "N_i64") and FloatLiteral (which becomes "N_f64")
+        if matches!(expr, HirExpr::IntLiteral(_) | HirExpr::FloatLiteral(_)) {
+            self.write("(");
+            self.emit_expr(expr);
+            self.write(")");
+        } else {
+            self.emit_expr(expr);
+        }
+    }
+
     /// Emit an expression as bytes for stdlib call sites (hash, encoding).
     /// String literals are emitted as `"literal".as_bytes()` (no `.to_string()`).
     /// Other expressions are emitted as `expr.as_bytes()` (String has `.as_bytes()`).
     fn emit_expr_as_bytes(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{:?}.as_bytes()", val));
+            self.write(&format!("{val:?}.as_bytes()"));
         } else {
             self.emit_expr(expr);
             self.write(".as_bytes()");
         }
     }
 
-    /// Check if an expression is a list literal (HirExpr::ListLiteral).
+    /// Check if an expression is a list literal (`HirExpr::ListLiteral`).
     fn is_list_literal(expr: &HirExpr) -> bool {
         matches!(expr, HirExpr::ListLiteral { .. })
     }
@@ -8497,7 +7828,7 @@ impl RustEmitter {
             self.write(").map_or(\"None\".to_string(), |_v| format!(\"{}\", _v))");
         } else if let HirExpr::StringLiteral(val) = expr {
             // In display contexts, string literals don't need .to_string()
-            self.write(&format!("{:?}", val));
+            self.write(&format!("{val:?}"));
         } else {
             self.emit_expr(expr);
         }
@@ -8560,8 +7891,8 @@ fn detect_and_not_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
 }
 
 /// Detect `isinstance(x, type)` where x is a non-Option union type.
-/// Returns (var_name, variant_name, enum_name, other_variants: Vec<(variant_name, type)>).
-fn detect_isinstance_union(expr: &HirExpr) -> Option<(String, String, String, Vec<(String, Type)>)> {
+/// Returns (`var_name`, `variant_name`, `enum_name`, `other_variants`: Vec<(`variant_name`, type)>).
+fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionMatch> {
     if let HirExpr::Call { func, args, .. } = expr {
         if func == "isinstance" && args.len() == 2 {
             if let HirExpr::Name { name, ty } = &args[0] {
@@ -8643,8 +7974,8 @@ fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
 }
 
 /// Detect `x is None` pattern for 3+ member unions containing None.
-/// Returns (var_name, enum_name, non_none_variants).
-fn detect_is_none_union_var(expr: &HirExpr) -> Option<(String, String, Vec<(String, Type)>)> {
+/// Returns (`var_name`, `enum_name`, `non_none_variants`).
+fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatch> {
     if let HirExpr::Compare { left, ops, comparators, .. } = expr {
         if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
             if let HirExpr::Name { name, ty } = left.as_ref() {
@@ -8667,7 +7998,7 @@ fn detect_is_none_union_var(expr: &HirExpr) -> Option<(String, String, Vec<(Stri
 }
 
 /// Check if a type is hashable (for codegen derive decisions).
-/// Emit a BigInt expression, cloning if it's a variable name (to avoid move).
+/// Emit a `BigInt` expression, cloning if it's a variable name (to avoid move).
 impl RustEmitter {
     fn emit_expr_with_bigint_clone(&mut self, expr: &HirExpr) {
         match expr {
@@ -8710,12 +8041,12 @@ fn module_uses_bigint(module: &HirModule) -> bool {
         type_has_bigint(expr.ty())
     }
     fn stmts_have_bigint(stmts: &[HirStmt]) -> bool {
-        stmts.iter().any(|s| stmt_has_bigint(s))
+        stmts.iter().any(stmt_has_bigint)
     }
     fn stmt_has_bigint(stmt: &HirStmt) -> bool {
         match stmt {
             HirStmt::Let { ty, value, .. } => type_has_bigint(ty) || expr_has_bigint(value),
-            HirStmt::Return { value } => value.as_ref().map(|e| expr_has_bigint(e)).unwrap_or(false),
+            HirStmt::Return { value } => value.as_ref().map(expr_has_bigint).unwrap_or(false),
             HirStmt::Expr { expr } => expr_has_bigint(expr),
             HirStmt::If { condition, then_body, else_body, elif_clauses, .. } => {
                 expr_has_bigint(condition) || stmts_have_bigint(then_body)
@@ -8744,7 +8075,7 @@ fn module_uses_bigint(module: &HirModule) -> bool {
 }
 
 /// Collect all parts of a chained string concatenation (`a + b + c`).
-/// Recursively flattens nested BinOp::Add on strings into a flat list of expressions.
+/// Recursively flattens nested `BinOp::Add` on strings into a flat list of expressions.
 fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
     if let HirExpr::BinOp { left, op, right, ty } = expr {
         if op == "+" && *ty == Type::Str {
@@ -8769,7 +8100,9 @@ fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
             HirStmt::If { then_body, elif_clauses, else_body, .. } => {
                 body_contains_field_assign_codegen(then_body)
                     || elif_clauses.iter().any(|(_, body)| body_contains_field_assign_codegen(body))
-                    || else_body.as_ref().map_or(false, |b| body_contains_field_assign_codegen(b))
+                    || else_body
+                        .as_ref()
+                        .is_some_and(|b| body_contains_field_assign_codegen(b))
             }
             HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
                 body_contains_field_assign_codegen(body)
@@ -8851,7 +8184,7 @@ fn recursive_field_rust_type(ty: &Type, class_name: &str) -> String {
             }
         }
         Type::Class { name, .. } if name == class_name => {
-            format!("Box<{}>", name)
+            format!("Box<{name}>")
         }
         _ => format!("Box<{}>", ty.rust_type()),
     }
@@ -8864,11 +8197,10 @@ fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
             HirStmt::Expr { expr } => {
                 if expr_references_var(expr, var_name) { return true; }
             }
-            HirStmt::Return { value } => {
-                if let Some(expr) = value {
-                    if expr_references_var(expr, var_name) { return true; }
-                }
+            HirStmt::Return { value: Some(expr) } => {
+                if expr_references_var(expr, var_name) { return true; }
             }
+            HirStmt::Return { value: None } => {}
             HirStmt::Yield { value } => {
                 if expr_references_var(value, var_name) { return true; }
             }
@@ -8962,7 +8294,10 @@ fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
         HirExpr::Lambda { body, .. } => expr_references_var(body, var_name),
         HirExpr::ListComp { expr: e, generators, .. } => {
             expr_references_var(e, var_name) || generators.iter().any(|(_, iter, filter)| {
-                expr_references_var(iter, var_name) || filter.as_ref().map_or(false, |f| expr_references_var(f, var_name))
+                expr_references_var(iter, var_name)
+                    || filter
+                        .as_ref()
+                        .is_some_and(|f| expr_references_var(f, var_name))
             })
         }
         HirExpr::QuestionMark { expr, .. } => expr_references_var(expr, var_name),
@@ -9043,7 +8378,7 @@ pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
     false
 }
 
-/// Check if a type needs .clone() when accessed from &self (non-Copy types).
+/// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
 fn needs_clone_for_type(ty: &Type) -> bool {
     match ty {
         Type::Int | Type::Float | Type::Bool | Type::None => false,
@@ -9078,13 +8413,13 @@ fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
     mutated
 }
 
-fn collect_mutated_vars_with_sigs(stmts: &[HirStmt], func_signatures: &HashMap<String, (Vec<(Type, ParamConvention)>, Type)>) -> HashSet<String> {
+fn collect_mutated_vars_with_sigs(stmts: &[HirStmt], func_signatures: &ModuleFuncSignatures) -> HashSet<String> {
     let mut mutated = HashSet::new();
     collect_mutated_vars_inner(stmts, &mut mutated, Some(func_signatures));
     mutated
 }
 
-fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, func_signatures: Option<&HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>) {
+fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, func_signatures: Option<&ModuleFuncSignatures>) {
     for stmt in stmts {
         match stmt {
             HirStmt::Assign { name, .. } => {
@@ -9145,10 +8480,8 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, 
             HirStmt::AttributeAugAssign { object, .. } => {
                 mutated.insert(object.clone());
             }
-            HirStmt::Delete { object, .. } => {
-                if let HirExpr::Name { name, .. } = object {
-                    mutated.insert(name.clone());
-                }
+            HirStmt::Delete { object: HirExpr::Name { name, .. }, .. } => {
+                mutated.insert(name.clone());
             }
             HirStmt::Yield { value } => {
                 collect_mutated_vars_in_expr(value, mutated, func_signatures);
@@ -9164,7 +8497,7 @@ fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, 
     }
 }
 
-fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>, func_signatures: Option<&HashMap<String, (Vec<(Type, ParamConvention)>, Type)>>) {
+fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>, func_signatures: Option<&ModuleFuncSignatures>) {
     match expr {
         HirExpr::MethodCall { object, method, args, .. } => {
             if MUTATING_METHODS.contains(&method.as_str()) {
@@ -9905,7 +9238,7 @@ mod tests {
     fn test_expr_to_string_fast_path_for_lowered_leafs() {
         let mut emitter = RustEmitter::new();
         let int_code = emitter.expr_to_string(&HirExpr::IntLiteral(7));
-        assert_eq!(int_code, "7_i64");
+        assert_eq!(int_code, "7 as i64");
 
         let bool_op = HirExpr::BoolOp {
             op: "and".to_string(),

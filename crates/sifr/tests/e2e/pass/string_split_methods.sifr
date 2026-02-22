@@ -1,0 +1,9 @@
+# expect-stdout: parts_len = 2
+# expect-stdout: words_len = 3
+
+def main():
+    parts: list[str] = "a,b".split(",")
+    print("parts_len = " + str(len(parts)))
+
+    words: list[str] = "one two three".split()
+    print("words_len = " + str(len(words)))

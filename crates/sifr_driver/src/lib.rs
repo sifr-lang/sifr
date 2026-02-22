@@ -18,7 +18,10 @@
 
 use sifr_python_parser::parse_module;
 use sifr_hir::{lower_module, lower_module_with_externals, lower_module_stdlib_with_externals, ExternalDefs, HirModule};
-use sifr_codegen::{generate_rust_with_stdlib, generate_rust_test, generate_rust_multi, generate_project, generate_project_with_deps, StdlibCode};
+use sifr_codegen::{
+    generate_project, generate_project_with_deps_and_crates, generate_rust_multi,
+    generate_rust_test, generate_rust_with_stdlib, StdlibCode,
+};
 use sifr_type_system::{Type, FunctionType, ParamConvention};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -372,6 +375,7 @@ pub enum CompileResultFull {
     Success {
         rust_source: String,
         used_stdlib_modules: HashSet<String>,
+        required_crates: HashSet<String>,
     },
     Errors {
         errors: Vec<CompileError>,
@@ -445,6 +449,7 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     CompileResultFull::Success {
         rust_source: codegen_result.rust_source,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
+        required_crates: codegen_result.required_crates,
     }
 }
 
@@ -715,8 +720,12 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
 
 /// Compile and build a native binary.
 pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileError>> {
-    let (rust_source, used_stdlib_modules) = match compile_with_metadata(source) {
-        CompileResultFull::Success { rust_source, used_stdlib_modules } => (rust_source, used_stdlib_modules),
+    let (rust_source, used_stdlib_modules, required_crates) = match compile_with_metadata(source) {
+        CompileResultFull::Success {
+            rust_source,
+            used_stdlib_modules,
+            required_crates,
+        } => (rust_source, used_stdlib_modules, required_crates),
         CompileResultFull::Errors { errors } => return Err(errors),
     };
 
@@ -730,15 +739,12 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
         }]
     })?;
 
-    // Write Cargo.toml with stdlib dependencies (detect bigint usage)
-    let mut effective_stdlib_modules = used_stdlib_modules.clone();
-    if rust_source.contains("num_bigint::BigInt") || rust_source.contains("use num_bigint") {
-        effective_stdlib_modules.insert("_bigint".to_string());
-    }
-    let (cargo_toml, _) = generate_project_with_deps(
+    // Write Cargo.toml with stdlib + explicit required crates from codegen metadata.
+    let (cargo_toml, _) = generate_project_with_deps_and_crates(
         &sifr_hir::HirModule { functions: vec![], classes: vec![], imports: vec![], constants: vec![], generic_functions: HashMap::new(), type_param_bounds: HashMap::new() },
         "sifr_output",
-        &effective_stdlib_modules,
+        &used_stdlib_modules,
+        &required_crates,
     );
     std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
         vec![CompileError {
