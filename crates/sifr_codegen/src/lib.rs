@@ -4448,19 +4448,15 @@ impl RustEmitter {
         if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
             crate::render_expr(&lowered_expr)
         } else {
-            self.expr_to_string(expr)
+            let saved_output = std::mem::take(&mut self.output);
+            let saved_indent = self.indent;
+            self.indent = 0;
+            self.emit_expr(expr);
+            let result = std::mem::take(&mut self.output);
+            self.output = saved_output;
+            self.indent = saved_indent;
+            result.trim().to_string()
         }
-    }
-
-    fn expr_to_string(&mut self, expr: &HirExpr) -> String {
-        let saved_output = std::mem::take(&mut self.output);
-        let saved_indent = self.indent;
-        self.indent = 0;
-        self.emit_expr(expr);
-        let result = std::mem::take(&mut self.output);
-        self.output = saved_output;
-        self.indent = saved_indent;
-        result.trim().to_string()
     }
 
     /// Emit any walrus (named expression) assignments that need to be hoisted before a condition.

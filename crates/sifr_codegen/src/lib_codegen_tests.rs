@@ -425,7 +425,7 @@ fn test_empty_print() {
 #[test]
 fn test_expr_to_string_leaf_rendering() {
     let mut emitter = RustEmitter::new();
-    let int_code = emitter.expr_to_string(&HirExpr::IntLiteral(7));
+    let int_code = emitter.render_expr_with_lowered_fallback(&HirExpr::IntLiteral(7));
     assert_eq!(int_code, "7 as i64");
 
     let bool_op = HirExpr::BoolOp {
@@ -433,7 +433,7 @@ fn test_expr_to_string_leaf_rendering() {
         values: vec![HirExpr::BoolLiteral(true), HirExpr::BoolLiteral(false)],
         ty: Type::Bool,
     };
-    let bool_code = emitter.expr_to_string(&bool_op);
+    let bool_code = emitter.render_expr_with_lowered_fallback(&bool_op);
     assert_eq!(bool_code, "true && false");
 }
 

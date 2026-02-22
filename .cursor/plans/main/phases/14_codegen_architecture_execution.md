@@ -82,11 +82,12 @@ status: in_progress
 - [x] PR222 slice: replace sticky `suppress_field_clone` temporal flag with scoped pending suppression (`pending_self_field_clone_suppression`) and add non-sticky clone-suppression regression coverage
 - [x] PR223 slice: route match and registry rendering through `render_expr_with_lowered_fallback` helper to remove direct `expr_to_string` callsite cluster (remaining direct usage isolated to helper fallback)
 - [x] PR224 slice: make `expr_to_string` a pure emitter fallback (remove duplicate leaf-lowering fast path) so lowered-first behavior is centralized in `render_expr_with_lowered_fallback`
+- [x] PR225 slice: remove `expr_to_string` entirely and fold fallback rendering into `render_expr_with_lowered_fallback` so direct `expr_to_string` callsites are zero
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
-- [ ] Replace all `expr_to_string` call sites with structured lowering
+- [x] Replace all `expr_to_string` call sites with structured lowering
 - [ ] Convert >= 80% of stmt/expr arms to structured IR (`RawCode` only for remainder)
-- [ ] Remove/replace at least 4 temporal coupling flags
+- [x] Remove/replace at least 4 temporal coupling flags
 - [ ] Add differential corpus parity tests
 - [x] Demo: `demos/milestone_codegen_stmt_expr_migration_demo.sifr`
 - [ ] Open PR(s), review, merge
