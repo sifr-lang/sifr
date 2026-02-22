@@ -317,6 +317,7 @@ status: in_progress
 - [x] PR209 slice: derive shared prelude import/file-handle needs from tokenized/parsed stdlib IR content (not comment/string probes), and keep stripping behavior unchanged with regression coverage
 - [x] PR210 slice: complete PR171 closeout by switching codegen callsites/tests to explicit `filter_stdlib_ir_to_needed` API name and marking structural IR DCE/import-pass checklist items complete
 - [x] PR211 slice: add reproducible binary-size regression script (`scripts/check_codegen_binary_size.sh`) and confirm no increase for structural-pass demo (`b0f8b1e` -> `HEAD`: `523504` -> `523504`, delta `0` bytes)
+- [x] PR212 slice: add tuple-enum variant support to structured IR and remove preamble file-handle enum `RawCode` escape hatch; also replace `RegexError.detail` default `RawCode(\"String::new()\")` with structured call IR and tighten preamble RawCode gate test to zero
 - [x] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)

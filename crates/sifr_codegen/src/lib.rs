@@ -434,7 +434,13 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     vec![("detail".to_string(), sifr_type_to_rust_type(&Type::Str))],
                     vec![(
                         "detail".to_string(),
-                        RustExpr::RawCode("String::new()".to_string()),
+                        RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "String".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![],
+                        },
                     )],
                 )
             } else {
