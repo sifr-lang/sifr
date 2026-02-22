@@ -71,7 +71,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         {
             Some(vec![RustStmt::Assign {
                 target: crate::RustExpr::Ident(name.clone()),
-                value: try_lower_leaf_expr(value)?,
+                value: try_lower_simple_assign_value(value, bindings.borrowed_params)?,
             }])
         }
         HirStmt::AugAssign { name, op, value } if can_lower_simple_aug_assign(op, value) => {
@@ -363,13 +363,23 @@ fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
 }
 
 fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -> bool {
+    try_lower_simple_assign_value(value, borrowed_params).is_some()
+}
+
+fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<String>) -> Option<RustExpr> {
     // Preserve legacy behavior where TypeVar assignment from borrowed params appends `.clone()`.
     if matches!(value.ty(), Type::TypeVar(_))
         && matches!(value, HirExpr::Name { name, .. } if borrowed_params.contains(name))
     {
-        return false;
+        return None;
     }
-    try_lower_leaf_expr(value).is_some()
+    if let Some(lowered) = try_lower_leaf_expr(value) {
+        return Some(lowered);
+    }
+    if let HirExpr::Name { name, .. } = value {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
 }
 
 fn can_lower_simple_aug_assign(op: &str, value: &HirExpr) -> bool {
@@ -523,6 +533,53 @@ mod tests {
         )
         .expect("assign lowered");
         assert!(matches!(lowered[0], RustStmt::Assign { .. }));
+    }
+
+    #[test]
+    fn lowers_simple_assign_name_rhs() {
+        let assign_stmt = HirStmt::Assign {
+            name: "x".to_string(),
+            value: HirExpr::Name {
+                name: "y".to_string(),
+                ty: Type::Int,
+            },
+        };
+        let lowered = try_lower_simple_stmt(
+            &assign_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("name assign lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assign {
+                target: RustExpr::Ident(ref lhs),
+                value: RustExpr::Ident(ref rhs),
+            } if lhs == "x" && rhs == "y"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_assign_borrowed_typevar_name() {
+        let assign_stmt = HirStmt::Assign {
+            name: "dst".to_string(),
+            value: HirExpr::Name {
+                name: "param".to_string(),
+                ty: Type::TypeVar("T".to_string()),
+            },
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &assign_stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::from(["param".to_string()]),
+            )
+            .is_none()
+        );
     }
 
     #[test]
