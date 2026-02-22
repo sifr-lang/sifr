@@ -164,6 +164,7 @@ status: in_progress
 - [x] PR304 slice: extend `lower_item` string-constant dual-path to lower simple name RHS values via structured helper function items while preserving fallback for non-leaf/non-name string expressions
 - [x] PR305 slice: extend `lower_item` primitive-constant dual-path to lower simple name RHS values (`int`/`float`/`bool` and literal scalar variants) while preserving fallback for non-leaf/non-name primitive expressions
 - [x] PR306 slice: extend `lower_item` non-primitive helper-constant dual-path to lower simple name RHS values while preserving fallback for non-leaf/non-name helper expressions
+- [x] PR307 slice: extract module-constant emission (`lowered` + fallback paths) from `emit_module` into dedicated `module_constants` helper methods to reduce `lib.rs` complexity while preserving behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
