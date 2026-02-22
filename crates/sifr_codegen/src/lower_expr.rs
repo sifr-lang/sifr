@@ -30,14 +30,19 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             Some(RustExpr::Path(vec![enum_name.clone(), variant.clone()]))
         }
         HirExpr::UnaryOp { op, operand, .. } => {
-            let lowered_operand = try_lower_leaf_expr(operand)?;
             match op.as_str() {
                 "-" => Some(RustExpr::UnaryOp {
                     op: "-".to_string(),
-                    operand: Box::new(lowered_operand),
+                    operand: Box::new(try_lower_leaf_expr(operand)?),
                 }),
-                "+" => Some(lowered_operand),
+                "+" => Some(try_lower_leaf_expr(operand)?),
                 "not" if matches!(operand.ty(), Type::Bool | Type::LiteralBool(_)) => {
+                    let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
+                        if let HirExpr::Name { name, .. } = operand.as_ref() {
+                            return Some(RustExpr::Ident(name.clone()));
+                        }
+                        None
+                    })?;
                     Some(RustExpr::UnaryOp {
                         op: "!".to_string(),
                         operand: Box::new(lowered_operand),
@@ -207,5 +212,26 @@ mod tests {
         assert!(matches!(try_lower_leaf_expr(&bin), Some(RustExpr::BinOp { .. })));
         assert!(matches!(try_lower_leaf_expr(&cmp), Some(RustExpr::BinOp { .. })));
         assert!(matches!(try_lower_leaf_expr(&cond), Some(RustExpr::If { .. })));
+    }
+
+    #[test]
+    fn lowers_unary_not_with_bool_name_operand() {
+        let unary = HirExpr::UnaryOp {
+            op: "not".to_string(),
+            operand: Box::new(HirExpr::Name {
+                name: "ok".to_string(),
+                ty: Type::Bool,
+            }),
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&unary).expect("unary not bool-name lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::UnaryOp {
+                op: ref operator,
+                operand: ref inner,
+            } if operator == "!" && matches!(inner.as_ref(), RustExpr::Ident(name) if name == "ok")
+        ));
     }
 }
