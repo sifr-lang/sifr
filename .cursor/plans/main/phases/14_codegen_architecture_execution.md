@@ -161,7 +161,7 @@ status: in_progress
 
 ## milestone_codegen_structural_passes
 
-status: in_progress
+status: done
 
 - [x] PR56 slice: replace legacy stdlib text filtering with structural top-level item DCE in `stdlib_filter.rs` and remove legacy helper trio by name
 - [x] PR57 slice: add structured shared-import/infrastructure preamble collection pass in `stdlib_filter.rs` and remove `lib.rs` string-contains scanning for stdlib import flags
@@ -274,9 +274,9 @@ status: in_progress
 - [x] PR164 slice: continue RawCode-zero gate by replacing `gettempdir` `RawCode` with structured path/fn-call/method-call IR
 - [x] PR165 slice: continue RawCode-zero gate by replacing `exists` `RawCode` with structured path/fn-call/method-call IR
 - [x] PR166 slice: continue RawCode-zero gate by replacing `datetime_now_struct` and `datetime_from_timestamp` `RawCode` with structured block/closure/cast IR
-- [ ] PR167 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in `io`/`re`/`random` registry lowerers with non-raw IR expression nodes
-- [ ] PR168 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in `base64`/`hashlib`/`pathlib` registry lowerers
-- [ ] PR169 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in remaining registry modules (`base32`, `bytes`, `calendar`, `gzip`, `os`, `platform`, `subprocess`, `time`, `toml`, `uuid`, `zipfile`)
+- [x] PR167 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in `io`/`re`/`random` registry lowerers with non-raw IR expression nodes (completed via PR173/PR174/PR175 corrective slices)
+- [x] PR168 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in `base64`/`hashlib`/`pathlib` registry lowerers (completed via PR176/PR182/PR183 corrective slices)
+- [x] PR169 slice: continue RawCode-zero gate by replacing intrinsic `RustExpr::RawCode` returns in remaining registry modules (`base32`, `bytes`, `calendar`, `gzip`, `os`, `platform`, `subprocess`, `time`, `toml`, `uuid`, `zipfile`) (completed via PR177/PR178/PR179/PR180/PR181/PR184/PR185/PR186/PR187 corrective slices)
 - [x] PR173 corrective slice: convert `random` intrinsic lowerers from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
 - [x] PR174 corrective slice: convert `re` intrinsic lowerers from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
 - [x] PR175 corrective slice: convert `io` intrinsic lowerers from templated expression strings to structured IR node trees (no full-expression `Ident(format!(...))`)
@@ -319,8 +319,9 @@ status: in_progress
 - [x] PR211 slice: add reproducible binary-size regression script (`scripts/check_codegen_binary_size.sh`) and confirm no increase for structural-pass demo (`b0f8b1e` -> `HEAD`: `523504` -> `523504`, delta `0` bytes)
 - [x] PR212 slice: add tuple-enum variant support to structured IR and remove preamble file-handle enum `RawCode` escape hatch; also replace `RegexError.detail` default `RawCode(\"String::new()\")` with structured call IR and tighten preamble RawCode gate test to zero
 - [x] PR213 slice: add reproducible RawCode gate script (`scripts/check_codegen_rawcode_gate.sh`) to enforce zero RawCode constructors in intrinsics/methods and run `preamble_rawcode_is_zero` guard test
+- [x] PR214 slice: close out structural-pass checklist drift by marking PR167/PR168/PR169 as completed via corrective slices and setting milestone status to done
 - [x] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
-- [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
+- [x] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist (completed via PR206/PR207/PR211/PR213)
 - [x] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [x] Add structural import collection pass from IR tree
 - [x] Replace `filter_rust_code_to_needed` with IR DCE pass
@@ -330,5 +331,5 @@ status: in_progress
 - [x] Remove at least 20 clippy suppressions from file header
 - [x] Confirm generated binary size does not increase
 - [x] Demo: `demos/milestone_codegen_structural_passes_demo.sifr`
-- [ ] Open PR(s), review, merge
+- [x] Open PR(s), review, merge
 - [ ] Mark phase 14 done in roadmap
