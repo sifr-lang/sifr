@@ -169,9 +169,12 @@ pub(super) fn lower_datetime_format(args: &[String]) -> Option<RustExpr> {
                         receiver: Box::new(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident("dt".to_string())),
                             method: "format".to_string(),
-                            args: vec![RustExpr::Literal(RustLiteral::Str(
-                                "%Y-%m-%dT%H:%M:%S".to_string(),
-                            ))],
+                            args: vec![RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(RustExpr::Literal(RustLiteral::Str(
+                                    "%Y-%m-%dT%H:%M:%S".to_string(),
+                                ))),
+                            }],
                         }),
                         method: "to_string".to_string(),
                         args: vec![],
@@ -214,7 +217,7 @@ pub(super) fn lower_datetime_from_timestamp(args: &[String]) -> Option<RustExpr>
             name: "__ts".to_string(),
             ty: None,
             value: RustExpr::Cast {
-                expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                expr: Box::new(RustExpr::Ident(args[0].clone())),
                 ty: RustType::I64,
             },
         }],
@@ -241,7 +244,12 @@ pub(super) fn lower_datetime_from_timestamp(args: &[String]) -> Option<RustExpr>
                         receiver: Box::new(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident("dt".to_string())),
                             method: "format".to_string(),
-                            args: vec![RustExpr::Ident("\"%Y-%m-%dT%H:%M:%S\"".to_string())],
+                            args: vec![RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(RustExpr::Literal(RustLiteral::Str(
+                                    "%Y-%m-%dT%H:%M:%S".to_string(),
+                                ))),
+                            }],
                         }),
                         method: "to_string".to_string(),
                         args: vec![],
