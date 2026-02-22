@@ -2752,6 +2752,7 @@ impl RustEmitter {
             SimpleStmtLoweringCtx {
                 return_type: self.current_return_type.as_ref(),
                 in_display_impl: self.in_display_impl,
+                in_class_scope: self.current_class_name.is_some(),
             },
         ) {
             self.emit_lowered_stmts(&lowered_stmts);
