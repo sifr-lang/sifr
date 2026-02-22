@@ -84,6 +84,7 @@ status: in_progress
 - [x] PR224 slice: make `expr_to_string` a pure emitter fallback (remove duplicate leaf-lowering fast path) so lowered-first behavior is centralized in `render_expr_with_lowered_fallback`
 - [x] PR225 slice: remove `expr_to_string` entirely and fold fallback rendering into `render_expr_with_lowered_fallback` so direct `expr_to_string` callsites are zero
 - [x] PR226 slice: extend `lower_stmt` dual-path coverage with structured lowering for simple `if` statements (no `elif`) when condition/body substatements are lowerable
+- [x] PR227 slice: extend `lower_stmt` dual-path coverage with structured lowering for simple `while` statements (no `else`) and preserve loop-else break-marker isolation in nested loop contexts
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
