@@ -399,6 +399,12 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
         return Some(RustExpr::Literal(RustLiteral::None));
     }
     if crate::helpers::is_option_type(ty)
+        && crate::helpers::is_option_type(value.ty())
+        && !matches!(value.ty(), Type::None)
+    {
+        return try_lower_simple_option_let_passthrough_value(value);
+    }
+    if crate::helpers::is_option_type(ty)
         && !crate::helpers::is_option_type(value.ty())
         && !matches!(value.ty(), Type::None)
     {
@@ -429,6 +435,13 @@ fn try_lower_simple_let_plain_value(value: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(value) {
         return Some(lowered);
     }
+    if let HirExpr::Name { name, .. } = value {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
+}
+
+fn try_lower_simple_option_let_passthrough_value(value: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, .. } = value {
         return Some(RustExpr::Ident(name.clone()));
     }
@@ -782,6 +795,62 @@ mod tests {
                 && matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Some".to_string()])
                 && matches!(args.first(), Some(RustExpr::Cast { ty: RustType::I64, .. }))
         ));
+    }
+
+    #[test]
+    fn lowers_simple_option_let_option_name_rhs_passthrough() {
+        let option_ty = Type::Union(vec![Type::Int, Type::None]);
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: option_ty.clone(),
+            value: HirExpr::Name {
+                name: "maybe_y".to_string(),
+                ty: option_ty,
+            },
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("option let option name rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                ty: Some(RustType::Option(_)),
+                value: RustExpr::Ident(ref rhs),
+            } if let_name == "x" && rhs == "maybe_y"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_option_let_option_non_leaf_rhs_passthrough() {
+        let option_ty = Type::Union(vec![Type::Int, Type::None]);
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: option_ty.clone(),
+            value: HirExpr::Call {
+                func: "maybe_value".to_string(),
+                args: vec![],
+                ty: option_ty,
+            },
+            is_mutable: false,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &let_stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
     }
 
     #[test]
