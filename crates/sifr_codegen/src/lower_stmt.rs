@@ -328,8 +328,8 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         return None;
     }
 
-    let lowered = try_lower_leaf_expr(value)?;
     if option_return {
+        let lowered = try_lower_leaf_expr(value)?;
         if matches!(value, HirExpr::NoneLiteral) {
             return Some(vec![RustStmt::Return(Some(lowered))]);
         }
@@ -339,6 +339,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         }))]);
     }
     if let Some(Type::Union(members)) = ctx.return_type {
+        let lowered = try_lower_leaf_expr(value)?;
         let variant = crate::helpers::find_union_variant(members, value.ty())?;
         let enum_name = ctx.return_type?.union_enum_name();
         return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -346,7 +347,19 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
             args: vec![lowered],
         }))]);
     }
-    Some(vec![RustStmt::Return(Some(lowered))])
+    Some(vec![RustStmt::Return(Some(
+        try_lower_simple_plain_return_value(value)?,
+    ))])
+}
+
+fn try_lower_simple_plain_return_value(value: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(value) {
+        return Some(lowered);
+    }
+    if let HirExpr::Name { name, .. } = value {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
 }
 
 fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
@@ -819,6 +832,28 @@ mod tests {
         .expect("return with value lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(lowered[0], RustStmt::Return(Some(_))));
+    }
+
+    #[test]
+    fn lowers_simple_return_name_in_plain_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+        };
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("plain return name lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::Ident(ref name))) if name == "x"
+        ));
     }
 
     #[test]
