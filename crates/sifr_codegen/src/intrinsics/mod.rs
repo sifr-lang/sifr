@@ -292,6 +292,14 @@ mod tests {
             .expect("round_val should lower");
         assert_eq!(render_expr(&lowered.expr), "(n).round() as i64");
 
+        let lowered = lower_intrinsic("floor", &["n".to_string()])
+            .expect("floor should lower");
+        assert_eq!(render_expr(&lowered.expr), "(n).floor() as i64");
+
+        let lowered = lower_intrinsic("ceil", &["n".to_string()])
+            .expect("ceil should lower");
+        assert_eq!(render_expr(&lowered.expr), "(n).ceil() as i64");
+
         let lowered = lower_intrinsic("isfinite", &["f".to_string()])
             .expect("isfinite should lower");
         assert_eq!(render_expr(&lowered.expr), "(f).is_finite()");
