@@ -320,10 +320,14 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
     if ctx.in_display_impl || ctx.in_class_scope {
         return None;
     }
-    if ctx.return_type.is_some_and(crate::helpers::is_option_type) {
+    if ctx.return_type.is_some_and(crate::helpers::is_option_type)
+        && !matches!(value, HirExpr::NoneLiteral)
+    {
         return None;
     }
-    if matches!(ctx.return_type, Some(Type::Union(_))) {
+    if matches!(ctx.return_type, Some(Type::Union(_)))
+        && !ctx.return_type.is_some_and(crate::helpers::is_option_type)
+    {
         return None;
     }
     if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
@@ -670,6 +674,53 @@ mod tests {
                 &HashSet::new(),
                 SimpleStmtLoweringCtx {
                     return_type: Some(&option_ret),
+                    in_display_impl: false,
+                    in_class_scope: false,
+                },
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn lowers_return_none_literal_with_option_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::NoneLiteral),
+        };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("return None lowered for option context");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None)))
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_return_none_literal_with_non_option_union_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::NoneLiteral),
+        };
+        let union_ret = Type::Union(vec![Type::Int, Type::Str, Type::None]);
+        assert!(
+            try_lower_simple_stmt_with_ctx(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+                SimpleStmtLoweringCtx {
+                    return_type: Some(&union_ret),
                     in_display_impl: false,
                     in_class_scope: false,
                 },
