@@ -161,6 +161,7 @@ status: in_progress
 - [x] PR301 slice: extend `lower_item` simple constant dual-path coverage to literal scalar types (`LiteralInt`, `LiteralBool`, `LiteralStr`) while preserving existing fallback behavior
 - [x] PR302 slice: extend `lower_item` dual-path to lower simple module `None` constants via structured helper function items returning unit `()`, preserving legacy fallback for non-`None` `Type::None` values
 - [x] PR303 slice: add `lower_item` constant-lowering dispatcher and route `emit_module` constants through it to centralize dual-path module-constant lowering entrypoint
+- [x] PR304 slice: extend `lower_item` string-constant dual-path to lower simple name RHS values via structured helper function items while preserving fallback for non-leaf/non-name string expressions
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
