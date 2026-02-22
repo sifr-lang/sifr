@@ -42,6 +42,7 @@ mod match_emitter;
 mod slice_emitter;
 mod expr_ref_emitter;
 mod expr_render_helpers;
+mod stmt_support_emitter;
 
 #[cfg(test)]
 mod lib_codegen_tests;
@@ -1192,58 +1193,6 @@ impl RustEmitter {
         }
     }
 
-
-    /// Emit a generator initialization statement (always mutable for closure capture)
-    fn emit_generator_init_stmt(&mut self, stmt: &HirStmt) {
-        match stmt {
-            HirStmt::Let { name, ty, value, .. } => {
-                self.write_indent();
-                self.write("let mut ");
-                self.write(name);
-                self.write(": ");
-                self.write(&ty.rust_type());
-                self.write(" = ");
-                self.emit_expr(value);
-                self.write(";\n");
-            }
-            _ => {
-                self.emit_stmt(stmt);
-            }
-        }
-    }
-
-    fn emit_lowered_stmts(&mut self, lowered_stmts: &[RustStmt]) {
-        for lowered_stmt in lowered_stmts {
-            match lowered_stmt {
-                RustStmt::Expr(lowered_expr) => {
-                    self.write_indent();
-                    self.write(&crate::render_expr(lowered_expr));
-                    self.write(";\n");
-                }
-                RustStmt::RawCode(code) => {
-                    self.write_indent();
-                    self.write(code);
-                    self.write("\n");
-                }
-                RustStmt::Break => {
-                    self.writeln("break;");
-                }
-                RustStmt::Continue => {
-                    self.writeln("continue;");
-                }
-                _ => {
-                    self.write_indent();
-                    let rendered = crate::render_stmts(std::slice::from_ref(lowered_stmt));
-                    self.write(rendered.trim_end());
-                    self.write("\n");
-                }
-            }
-        }
-    }
-
-    fn current_loop_has_else(&self) -> bool {
-        self.loop_else_stack.last().copied().unwrap_or(false)
-    }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
