@@ -473,6 +473,15 @@ mod tests {
         )
         .expect("defaultdict_set");
         assert!(render_expr(&dd_set.expr).contains("serde_json::json!"));
+        assert!(render_expr(&dd_set.expr).contains("let __defaultdict_json = dd;"));
+        assert!(render_expr(&dd_set.expr).contains("let __key = key;"));
+        assert!(render_expr(&dd_set.expr).contains("__key.to_string()"));
+
+        let dd_get = lower_intrinsic("defaultdict_get", &["dd".to_string(), "key".to_string()])
+            .expect("defaultdict_get");
+        assert!(render_expr(&dd_get.expr).contains("let __defaultdict_json = dd;"));
+        assert!(render_expr(&dd_get.expr).contains("let __key = key;"));
+        assert!(!render_expr(&dd_get.expr).contains("from_str(&(dd))"));
     }
 
     #[test]

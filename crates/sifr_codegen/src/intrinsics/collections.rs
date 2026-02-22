@@ -930,6 +930,18 @@ pub(super) fn lower_defaultdict_get(args: &[String]) -> Option<RustExpr> {
         stmts: vec![
             RustStmt::Let {
                 mutable: false,
+                name: "__defaultdict_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__key".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[1].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
                 name: "data".to_string(),
                 ty: Some(RustType::Named(
                     "std::collections::HashMap<String, i64>".to_string(),
@@ -942,7 +954,7 @@ pub(super) fn lower_defaultdict_get(args: &[String]) -> Option<RustExpr> {
                         ])),
                         args: vec![RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                            expr: Box::new(RustExpr::Ident("__defaultdict_json".to_string())),
                         }],
                     }),
                     method: "unwrap_or_default".to_string(),
@@ -969,15 +981,15 @@ pub(super) fn lower_defaultdict_get(args: &[String]) -> Option<RustExpr> {
             },
         ],
         expr: Some(Box::new(RustExpr::Deref(Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("data".to_string())),
-                method: "get".to_string(),
-                args: vec![RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(RustExpr::Ident(format!("({})", args[1]))),
-                }],
-            }),
-            method: "unwrap_or".to_string(),
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("data".to_string())),
+                    method: "get".to_string(),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__key".to_string())),
+                    }],
+                }),
+                method: "unwrap_or".to_string(),
             args: vec![RustExpr::Ref {
                 mutable: false,
                 expr: Box::new(RustExpr::Ident("def".to_string())),
@@ -993,6 +1005,18 @@ pub(super) fn lower_defaultdict_set(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
+                mutable: false,
+                name: "__defaultdict_json".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[0].clone()),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__key".to_string(),
+                ty: None,
+                value: RustExpr::Ident(args[1].clone()),
+            },
+            RustStmt::Let {
                 mutable: true,
                 name: "data".to_string(),
                 ty: Some(RustType::Named(
@@ -1006,7 +1030,7 @@ pub(super) fn lower_defaultdict_set(args: &[String]) -> Option<RustExpr> {
                         ])),
                         args: vec![RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(RustExpr::Ident(format!("({})", args[0]))),
+                            expr: Box::new(RustExpr::Ident("__defaultdict_json".to_string())),
                         }],
                     }),
                     method: "unwrap_or_default".to_string(),
@@ -1018,7 +1042,7 @@ pub(super) fn lower_defaultdict_set(args: &[String]) -> Option<RustExpr> {
                 method: "insert".to_string(),
                 args: vec![
                     RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(format!("({})", args[1]))),
+                        receiver: Box::new(RustExpr::Ident("__key".to_string())),
                         method: "to_string".to_string(),
                         args: vec![],
                     },
