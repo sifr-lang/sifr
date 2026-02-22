@@ -484,15 +484,11 @@ fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<Stri
 }
 
 fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
-    if !can_lower_simple_aug_assign_name(op, value.ty()) {
+    let is_numeric = matches!(value.ty(), Type::Int | Type::Float | Type::LiteralInt(_));
+    if !(is_numeric && matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=")) {
         return None;
     }
     try_lower_leaf_or_name_expr(value)
-}
-
-fn can_lower_simple_aug_assign_name(op: &str, ty: &Type) -> bool {
-    let is_numeric = matches!(ty, Type::Int | Type::Float | Type::LiteralInt(_));
-    is_numeric && matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=")
 }
 
 fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
