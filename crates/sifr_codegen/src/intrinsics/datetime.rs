@@ -2,17 +2,29 @@
 
 use crate::RustExpr;
 
-fn borrowed_str(expr: &str) -> String {
-    format!("&({expr})")
-}
-
 pub(super) fn lower_datetime_now(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(
-        "chrono::Local::now().format(\"%Y-%m-%dT%H:%M:%S\").to_string()".to_string(),
-    ))
+    // chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string()
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "chrono".to_string(),
+                    "Local".to_string(),
+                    "now".to_string(),
+                ])),
+                args: vec![],
+            }),
+            method: "format".to_string(),
+            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
+                "%Y-%m-%dT%H:%M:%S".to_string(),
+            ))],
+        }),
+        method: "to_string".to_string(),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_datetime_now_struct(args: &[String]) -> Option<RustExpr> {
