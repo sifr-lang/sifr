@@ -333,30 +333,12 @@ fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr>
     if let Some(lowered) = try_lower_leaf_expr(condition) {
         return Some(lowered);
     }
-    if let Some(lowered) = try_lower_simple_not_option_truthiness_condition_expr(condition) {
-        return Some(lowered);
-    }
     if matches!(condition.ty(), Type::Bool | Type::LiteralBool(_)) {
         if let HirExpr::Name { name, .. } = condition {
             return Some(RustExpr::Ident(name.clone()));
         }
     }
     None
-}
-
-fn try_lower_simple_not_option_truthiness_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
-    let HirExpr::UnaryOp { op, operand, .. } = condition else {
-        return None;
-    };
-    if op != "not" {
-        return None;
-    }
-    let option_var = crate::helpers::detect_option_truthiness(operand)?;
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(option_var)),
-        method: "is_none".to_string(),
-        args: vec![],
-    })
 }
 
 fn try_lower_simple_option_truthiness_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
@@ -618,9 +600,6 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_simple_option_truthiness_condition_expr(test) {
         return Some(lowered);
     }
-    if let Some(lowered) = try_lower_simple_not_option_truthiness_condition_expr(test) {
-        return Some(lowered);
-    }
     if matches!(test.ty(), Type::Bool | Type::LiteralBool(_)) {
         if let HirExpr::Name { name, .. } = test {
             return Some(RustExpr::Ident(name.clone()));
@@ -812,6 +791,85 @@ mod tests {
             } if target_name == "x"
                 && op == "!"
                 && matches!(operand.as_ref(), RustExpr::Ident(name) if name == "ok")
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_let_with_not_option_name_rhs() {
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: Type::Bool,
+            value: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ty: Type::Bool,
+            },
+            is_mutable: false,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let not-option name rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                name: ref let_name,
+                value: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if let_name == "x"
+                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_none"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_assign_with_not_option_name_rhs() {
+        let assign_stmt = HirStmt::Assign {
+            name: "x".to_string(),
+            value: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ty: Type::Bool,
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &assign_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assign not-option name rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assign {
+                target: RustExpr::Ident(ref target_name),
+                value: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+            } if target_name == "x"
+                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_none"
+                && args.is_empty()
         ));
     }
 
