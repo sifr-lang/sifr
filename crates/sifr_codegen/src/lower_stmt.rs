@@ -93,7 +93,25 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::Assert { test, msg } => {
             let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
                 Some(if crate::helpers::is_option_type(msg_expr.ty()) {
-                    try_lower_option_display_expr(msg_expr)?
+                    RustExpr::MethodCall {
+                        receiver: Box::new(try_lower_name_ident_expr(msg_expr)?),
+                        method: "map_or".to_string(),
+                        args: vec![
+                            RustExpr::Literal(RustLiteral::Str("None".to_string())),
+                            RustExpr::Closure {
+                                params: vec![RustParam::Named {
+                                    name: "_v".to_string(),
+                                    ty: RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(RustExpr::FormatMacro {
+                                    name: "format".to_string(),
+                                    format_str: "{}".to_string(),
+                                    args: vec![RustExpr::Ident("_v".to_string())],
+                                }),
+                                is_move: false,
+                            },
+                        ],
+                    }
                 } else {
                     try_lower_leaf_or_name_expr(msg_expr)?
                 })
@@ -487,30 +505,6 @@ fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustEx
         return None;
     }
     try_lower_leaf_or_name_expr(value)
-}
-
-fn try_lower_option_display_expr(msg: &HirExpr) -> Option<RustExpr> {
-    let receiver = try_lower_name_ident_expr(msg)?;
-
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(receiver),
-        method: "map_or".to_string(),
-        args: vec![
-            RustExpr::Literal(RustLiteral::Str("None".to_string())),
-            RustExpr::Closure {
-                params: vec![RustParam::Named {
-                    name: "_v".to_string(),
-                    ty: RustType::Named("_".to_string()),
-                }],
-                body: Box::new(RustExpr::FormatMacro {
-                    name: "format".to_string(),
-                    format_str: "{}".to_string(),
-                    args: vec![RustExpr::Ident("_v".to_string())],
-                }),
-                is_move: false,
-            },
-        ],
-    })
 }
 
 #[cfg(test)]
