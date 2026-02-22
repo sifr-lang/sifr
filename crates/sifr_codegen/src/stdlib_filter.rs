@@ -420,8 +420,9 @@ fn char_literal_len(chars: &[char], idx: usize) -> usize {
 
 fn parse_top_level_item_name(line: &str) -> Option<String> {
     let trimmed = strip_visibility_prefix(line.trim());
-    // fn name( or fn name<T>(
-    if let Some(rest) = trimmed.strip_prefix("fn ") {
+    // [async|const|unsafe]* fn name( or fn name<T>(
+    let fn_candidate = strip_fn_modifiers(trimmed);
+    if let Some(rest) = fn_candidate.strip_prefix("fn ") {
         if let Some(lt) = rest.find('<') {
             let paren = rest.find('(');
             if paren.is_none() || lt < paren.unwrap() {
@@ -440,6 +441,7 @@ fn parse_top_level_item_name(line: &str) -> Option<String> {
     }
     // static NAME:
     if let Some(rest) = trimmed.strip_prefix("static ") {
+        let rest = rest.strip_prefix("mut ").unwrap_or(rest);
         if let Some(colon) = rest.find(':') {
             return Some(rest[..colon].trim().to_string());
         }
@@ -506,6 +508,25 @@ fn strip_visibility_prefix(s: &str) -> &str {
     }
     if let Some(rest) = s.strip_prefix("pub ") {
         return rest;
+    }
+    s
+}
+
+fn strip_fn_modifiers(mut s: &str) -> &str {
+    loop {
+        if let Some(rest) = s.strip_prefix("async ") {
+            s = rest;
+            continue;
+        }
+        if let Some(rest) = s.strip_prefix("const ") {
+            s = rest;
+            continue;
+        }
+        if let Some(rest) = s.strip_prefix("unsafe ") {
+            s = rest;
+            continue;
+        }
+        break;
     }
     s
 }
@@ -621,6 +642,32 @@ pub fn root() -> Box<dyn Worker> {
         assert!(filtered.contains("pub struct Job"));
         assert!(filtered.contains("impl Worker for Job"));
         assert!(filtered.contains("pub static JOB_COUNT: i64 = 7;"));
+    }
+
+    #[test]
+    fn filter_supports_async_const_unsafe_fn_and_static_mut() {
+        let code = r#"
+pub static mut COUNTER: i64 = 0;
+
+pub const fn seed() -> i64 {
+    COUNTER
+}
+
+pub unsafe fn tick() -> i64 {
+    COUNTER + seed()
+}
+
+pub async fn root() -> i64 {
+    tick()
+}
+"#;
+        let imported = HashSet::from(["root".to_string()]);
+        let filtered = filter_rust_code_to_needed(code, &imported);
+
+        assert!(filtered.contains("pub async fn root()"));
+        assert!(filtered.contains("pub unsafe fn tick()"));
+        assert!(filtered.contains("pub const fn seed()"));
+        assert!(filtered.contains("pub static mut COUNTER: i64 = 0;"));
     }
 
     #[test]
