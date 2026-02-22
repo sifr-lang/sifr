@@ -316,6 +316,7 @@ status: in_progress
 - [x] PR208 slice: refactor stdlib DCE into explicit stdlib-IR traversal (parse -> dependency graph -> transitive closure -> render) while preserving existing filtering semantics and adding impl/struct retention regression coverage
 - [x] PR209 slice: derive shared prelude import/file-handle needs from tokenized/parsed stdlib IR content (not comment/string probes), and keep stripping behavior unchanged with regression coverage
 - [x] PR210 slice: complete PR171 closeout by switching codegen callsites/tests to explicit `filter_stdlib_ir_to_needed` API name and marking structural IR DCE/import-pass checklist items complete
+- [x] PR211 slice: add reproducible binary-size regression script (`scripts/check_codegen_binary_size.sh`) and confirm no increase for structural-pass demo (`b0f8b1e` -> `HEAD`: `523504` -> `523504`, delta `0` bytes)
 - [x] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
@@ -325,7 +326,7 @@ status: in_progress
 - [x] Add IR validation pass for structural correctness
 - [x] Delete legacy string-parser helpers (`parse_rust_blocks`, `extract_top_level_item_name`, `count_braces`)
 - [x] Remove at least 20 clippy suppressions from file header
-- [ ] Confirm generated binary size does not increase
+- [x] Confirm generated binary size does not increase
 - [x] Demo: `demos/milestone_codegen_structural_passes_demo.sifr`
 - [ ] Open PR(s), review, merge
 - [ ] Mark phase 14 done in roadmap
