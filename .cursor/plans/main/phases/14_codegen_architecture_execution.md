@@ -88,7 +88,7 @@ status: in_progress
 
 ## milestone_codegen_intrinsic_migration
 
-status: in_progress
+status: done
 
 - [x] PR1 scaffold: add `intrinsics/mod.rs` registry and `intrinsics/math.rs` domain lowerers (initial subset)
 - [x] Route `emit_intrinsic_call` through registry-first dispatch with legacy match fallback
@@ -147,15 +147,16 @@ status: in_progress
 - [x] PR53 slice: prune legacy list/dict/set fallback branches from `emit_method_call` where registry-backed lowering now applies (deque-specific branches retained)
 - [x] PR54 slice: extract stdlib Rust filtering/dedup helpers from `lib.rs` into `stdlib_filter.rs` to continue codegen decomposition
 - [x] PR55 slice: route deque `_data` methods through method registry (`methods/deque.rs`) and remove deque-specific fallback branches from `emit_method_call`
-- [ ] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
-- [ ] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
+- [x] PR215 slice: decompose `lib.rs` further by extracting helper/test/entrypoint modules and fix `floor`/`ceil` intrinsic lowering to cast to `i64` so the intrinsic milestone demo compiles and runs
+- [x] Add intrinsic registry (`intrinsics/mod.rs`) with metadata + dependency crates
+- [x] Split intrinsic lowerers into domain modules (`io`, `math`, `json`, etc.)
 - [x] Add method registry and type-specific method modules
 - [x] Remove driver string-scanning dependency detection; return `HashSet<String>` dependencies
-- [ ] Convert all intrinsic/method lowering to structured IR (no `RawCode`)
-- [ ] Reduce `lib.rs` by >= 2000 lines via decomposition
-- [ ] Demo: `demos/milestone_codegen_intrinsic_migration_demo.sifr` (final milestone gate)
-- [ ] Open PR(s), review, merge
-- [ ] Mark done in phase docs
+- [x] Convert all intrinsic/method lowering to structured IR (no `RawCode`) (`scripts/check_codegen_rawcode_gate.sh` passes)
+- [x] Reduce `lib.rs` by >= 2000 lines via decomposition (`9805 -> 7795`, delta `-2010` lines)
+- [x] Demo: `demos/milestone_codegen_intrinsic_migration_demo.sifr` (final milestone gate)
+- [x] Open PR(s), review, merge
+- [x] Mark done in phase docs
 
 ---
 

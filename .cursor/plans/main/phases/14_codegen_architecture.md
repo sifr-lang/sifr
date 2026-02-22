@@ -718,7 +718,7 @@ The decomposition happens as each `lower_*` function is written — new code goe
 
 ## milestone_codegen_intrinsic_migration: Intrinsic Call Migration
 
-status: pending
+status: done
 
 **Goal:** Migrate `emit_intrinsic_call` (line 6930, ~1,300 lines matching on intrinsic function name strings) and `emit_method_call` (line 4888, ~570 lines matching on type+method pairs) from string-template emission to IR construction. These are the most self-contained codegen functions — each match arm is independent and can be converted one-by-one.
 

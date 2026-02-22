@@ -113,11 +113,11 @@ pub(super) fn lower_atanh(args: &[String]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_floor(args: &[String]) -> Option<RustExpr> {
-    unary_method(args, "floor")
+    unary_method_as_i64(args, "floor")
 }
 
 pub(super) fn lower_ceil(args: &[String]) -> Option<RustExpr> {
-    unary_method(args, "ceil")
+    unary_method_as_i64(args, "ceil")
 }
 
 pub(super) fn lower_round(args: &[String]) -> Option<RustExpr> {
