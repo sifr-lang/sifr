@@ -176,6 +176,7 @@ status: in_progress
 - [x] PR316 slice: move walrus/slice emission helpers (`emit_walrus_hoists`, `emit_list_slice`, `emit_string_slice`) out of `lib.rs` into dedicated `slice_emitter` helpers to reduce file size while preserving expression emission behavior
 - [x] PR317 slice: move expression ref/display helper cluster (`emit_key_ref_expr`, `emit_str_ref_expr`, `emit_expr_as_str_ref`, compare/bytes/collection/display helpers) out of `lib.rs` into dedicated `expr_ref_emitter` helpers to reduce file size while preserving expression semantics
 - [x] PR318 slice: move expression rendering helper cluster (`render_expr_with_lowered_fallback`, `emit_lambda_untyped`, `emit_fstring_macro`) out of `lib.rs` into dedicated `expr_render_helpers` helpers to reduce file size while preserving rendering behavior
+- [x] PR319 slice: move statement-emission support helpers (`emit_generator_init_stmt`, `emit_lowered_stmts`, `current_loop_has_else`) out of `lib.rs` into dedicated `stmt_support_emitter` helpers to reduce file size while preserving statement/generator behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
