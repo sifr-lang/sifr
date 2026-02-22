@@ -110,6 +110,7 @@ status: in_progress
 - [x] PR250 slice: extend simple `assert` dual-path to lower bool name test operands (e.g. `assert ok`) while preserving fallback for non-leaf assert test expressions
 - [x] PR251 slice: extend simple `assert` dual-path to lower non-option name message operands (e.g. `assert ok, msg`) while preserving fallback for non-leaf message expressions
 - [x] PR252 slice: extend option-return dual-path to lower simple name operands (e.g. `return x`) as `return Some(x)` while preserving fallback for non-leaf option-return expressions
+- [x] PR253 slice: extend non-option union return dual-path to lower simple name operands (e.g. `return x`) as `return <UnionEnum>::<Variant>(x)` while preserving fallback for non-leaf union-return expressions
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
