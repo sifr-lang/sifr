@@ -29,9 +29,9 @@ pub(super) fn lower_datetime_format(args: &[String]) -> Option<RustExpr> {
         return None;
     }
     Some(RustExpr::RawCode(format!(
-        "{{ let __dt_str = {}; let __fmt = {}; __dt_str.to_string() }}",
-        borrowed_str(&args[0]),
-        borrowed_str(&args[1])
+        "{{ let __dt_str = {}; let __fmt = {}; chrono::NaiveDateTime::parse_from_str(&__dt_str, &__fmt).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).map_err(|e| ValueError {{ message: e.to_string() }}) }}",
+        args[0],
+        args[1]
     )))
 }
 
@@ -40,7 +40,7 @@ pub(super) fn lower_datetime_from_timestamp(args: &[String]) -> Option<RustExpr>
         return None;
     }
     Some(RustExpr::RawCode(format!(
-        "{{ let __ts = {} as i64; chrono::DateTime::from_timestamp(__ts, 0).map(|dt| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).ok_or_else(|| ValueError {{ message: \"invalid timestamp\".to_string() }}) }}",
+        "{{ use chrono::Utc; let __ts = {} as i64; chrono::DateTime::<Utc>::from_timestamp(__ts, 0).map(|dt: chrono::DateTime<Utc>| dt.format(\"%Y-%m-%dT%H:%M:%S\").to_string()).ok_or_else(|| ValueError {{ message: \"invalid timestamp\".to_string() }}) }}",
         args[0]
     )))
 }

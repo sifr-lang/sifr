@@ -297,7 +297,7 @@ mod tests {
         assert_eq!(render_expr(&lowered.expr), "(f).is_finite()");
 
         let lowered = lower_intrinsic("isqrt", &["v".to_string()]).expect("isqrt should lower");
-        assert_eq!(render_expr(&lowered.expr), "{ let __n = v as f64; __n.sqrt() as i64 }");
+        assert_eq!(render_expr(&lowered.expr), "((v) as f64).sqrt() as i64");
     }
 
     #[test]
@@ -686,12 +686,12 @@ mod tests {
 
         let fmt = lower_intrinsic("datetime_format", &["dt".to_string(), "mask".to_string()])
             .expect("datetime_format");
-        assert!(render_expr(&fmt.expr).contains("__dt_str.to_string()"));
+        assert!(render_expr(&fmt.expr).contains("NaiveDateTime::parse_from_str"));
 
         let from_ts =
             lower_intrinsic("datetime_from_timestamp", &["ts".to_string()]).expect("from_timestamp");
         assert_eq!(from_ts.required_crate, Some("chrono"));
-        assert!(render_expr(&from_ts.expr).contains("DateTime::from_timestamp"));
+        assert!(render_expr(&from_ts.expr).contains("DateTime::<Utc>::from_timestamp"));
     }
 
     #[test]

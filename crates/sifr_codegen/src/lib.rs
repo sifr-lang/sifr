@@ -4745,6 +4745,17 @@ impl RustEmitter {
                             // Method params skip self, so param index i corresponds to params[i]
                             // (self is not in func_signatures params)
                             if let Some((param_ty, convention)) = params.get(i) {
+                                // For borrowed generic params (&T), wrapping expressions
+                                // avoids Rust precedence pitfalls like `&(x) as i64`.
+                                // This includes literals which otherwise produce invalid code like `&3_i64`.
+                                if *convention == ParamConvention::Borrow
+                                    && matches!(param_ty, Type::TypeVar(_))
+                                {
+                                    self.write("&(");
+                                    self.emit_expr(arg);
+                                    self.write(")");
+                                    continue;
+                                }
                                 self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
                                 self.emit_expr(arg);
                                 continue;
@@ -5000,8 +5011,11 @@ impl RustEmitter {
                     let needs_right_cast = right_is_int && left_is_float;
 
                     // Wrap sub-expressions in parens if they are BinOps to preserve precedence
-                    let needs_left_parens = matches!(left.as_ref(), HirExpr::BinOp { .. });
-                    let needs_right_parens = matches!(right.as_ref(), HirExpr::BinOp { .. });
+                    // Also wrap if the expression is an IntLiteral (might be used with operators that need parens)
+                    let needs_left_parens = matches!(left.as_ref(), HirExpr::BinOp { .. })
+                        || matches!(left.as_ref(), HirExpr::IntLiteral { .. });
+                    let needs_right_parens = matches!(right.as_ref(), HirExpr::BinOp { .. })
+                        || matches!(right.as_ref(), HirExpr::IntLiteral { .. });
                     if needs_left_parens || needs_left_cast { self.write("("); }
                     self.emit_expr(left);
                     if needs_left_parens || needs_left_cast { self.write(")"); }
@@ -5096,8 +5110,10 @@ impl RustEmitter {
                     }
                 } else {
                     // Chained comparisons: a < b < c -> a < b && b < c
+                    // Cast expressions need parentheses when followed by comparison operators
+                    // to avoid Rust parsing `1 as i64 < x` as a generic argument
                     self.write("(");
-                    self.emit_expr(left);
+                    self.emit_expr_with_parens_for_compare(left);
                     self.write(&format!(" {} ", ops[0]));
                     self.emit_expr(&comparators[0]);
                     for i in 1..ops.len() {
@@ -5185,8 +5201,10 @@ impl RustEmitter {
                     // pow(base, exp)
                     if args.len() == 2 {
                         if args[0].ty() == &Type::Int && args[1].ty() == &Type::Int {
+                            // Wrap base in parens to handle cases like "(2 as i64).pow(...)"
+                            self.write("(");
                             self.emit_expr(&args[0]);
-                            self.write(".pow(");
+                            self.write(").pow(");
                             self.emit_expr(&args[1]);
                             self.write(" as u32)");
                         } else {
@@ -5556,19 +5574,11 @@ impl RustEmitter {
                                 } else {
                                     None
                                 };
-                                // For borrowed generic params (&T), wrapping non-trivial expressions
+                                // For borrowed generic params (&T), wrapping expressions
                                 // avoids Rust precedence pitfalls like `&(x) as i64`.
+                                // This includes literals which otherwise produce invalid code like `&3_i64`.
                                 if convention == ParamConvention::Borrow
                                     && matches!(param_ty, Type::TypeVar(_))
-                                    && !matches!(
-                                        arg,
-                                        HirExpr::Name { .. }
-                                            | HirExpr::IntLiteral(_)
-                                            | HirExpr::FloatLiteral(_)
-                                            | HirExpr::StringLiteral(_)
-                                            | HirExpr::BoolLiteral(_)
-                                            | HirExpr::NoneLiteral
-                                    )
                                 {
                                     self.write("&(");
                                     self.emit_expr(arg);
@@ -7763,6 +7773,21 @@ impl RustEmitter {
             }
         }
         self.emit_expr(expr);
+    }
+
+    /// Emit an expression for use on the left side of a comparison operator.
+    /// `IntLiteral` and other expressions that result in type casts need parentheses
+    /// to avoid Rust parsing `1 as i64 < x` as a generic argument.
+    fn emit_expr_with_parens_for_compare(&mut self, expr: &HirExpr) {
+        // Check if emitting this expression will result in a type cast that needs parens
+        // This includes IntLiteral (which becomes "N_i64") and FloatLiteral (which becomes "N_f64")
+        if matches!(expr, HirExpr::IntLiteral(_) | HirExpr::FloatLiteral(_)) {
+            self.write("(");
+            self.emit_expr(expr);
+            self.write(")");
+        } else {
+            self.emit_expr(expr);
+        }
     }
 
     /// Emit an expression as bytes for stdlib call sites (hash, encoding).

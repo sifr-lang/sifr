@@ -704,7 +704,8 @@ impl Renderer {
     }
 
     fn expr_requires_parens(expr: &RustExpr) -> bool {
-        matches!(
+        // Check if expr is one of the types that always needs parens
+        if matches!(
             expr,
             RustExpr::BinOp { .. }
                 | RustExpr::Cast { .. }
@@ -713,7 +714,17 @@ impl Renderer {
                 | RustExpr::Closure { .. }
                 | RustExpr::ClosureBlock { .. }
                 | RustExpr::Block { .. }
-        )
+        ) {
+            return true;
+        }
+        // Also check if an Ident contains a cast expression (contains " as ")
+        // This handles cases like "(2 as i64)" passed as an Ident string
+        if let RustExpr::Ident(name) = expr {
+            if name.contains(" as ") {
+                return true;
+            }
+        }
+        false
     }
 
     fn render_closure_param_string(param: &RustParam) -> String {
