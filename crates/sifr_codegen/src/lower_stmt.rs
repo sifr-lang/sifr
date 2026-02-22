@@ -131,6 +131,46 @@ pub fn try_lower_simple_stmt(
                 borrowed_params,
             )?,
         }]),
+        HirStmt::For {
+            target,
+            iter,
+            body,
+            else_body: Some(else_body),
+            ..
+        } if !target.contains(',') => Some(vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "_broke".to_string(),
+                ty: None,
+                value: RustExpr::Literal(RustLiteral::Bool(false)),
+            },
+            RustStmt::For {
+                var: target.clone(),
+                iter: try_lower_leaf_expr(iter)?,
+                // Breaks in the loop body should mark this loop's `_broke`.
+                body: try_lower_simple_stmt_block(
+                    body,
+                    true,
+                    mutated_vars,
+                    borrowed_params,
+                )?,
+            },
+            RustStmt::If {
+                cond: RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::Ident("_broke".to_string())),
+                },
+                // Else body executes outside this loop scope. Preserve enclosing
+                // loop-else context for any break/continue lowering there.
+                then_body: try_lower_simple_stmt_block(
+                    else_body,
+                    in_loop_with_else,
+                    mutated_vars,
+                    borrowed_params,
+                )?,
+                else_body: None,
+            },
+        ]),
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -383,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_for_with_else_or_tuple_target() {
+    fn lowers_simple_for_with_else() {
         let for_with_else = HirStmt::For {
             target: "i".to_string(),
             target_ty: Type::Int,
@@ -396,16 +436,21 @@ mod tests {
             body: vec![HirStmt::Pass],
             else_body: Some(vec![HirStmt::Pass]),
         };
-        assert!(
-            try_lower_simple_stmt(
-                &for_with_else,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        let lowered = try_lower_simple_stmt(
+            &for_with_else,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("for with else lowered");
+        assert_eq!(lowered.len(), 3);
+        assert!(matches!(lowered[0], RustStmt::Let { .. }));
+        assert!(matches!(lowered[1], RustStmt::For { .. }));
+        assert!(matches!(lowered[2], RustStmt::If { .. }));
+    }
 
+    #[test]
+    fn does_not_lower_for_with_tuple_target() {
         let for_tuple_target = HirStmt::For {
             target: "i,v".to_string(),
             target_ty: Type::Tuple(vec![Type::Int, Type::Int]),
@@ -427,6 +472,74 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn lowers_for_else_with_broke_marker_in_loop_body() {
+        let for_stmt = HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::RangeLiteral {
+                start: Box::new(HirExpr::IntLiteral(0)),
+                end: Box::new(HirExpr::IntLiteral(3)),
+                step: None,
+                ty: Type::Range,
+            },
+            body: vec![HirStmt::Break],
+            else_body: Some(vec![HirStmt::Expr {
+                expr: HirExpr::IntLiteral(1),
+            }]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &for_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("for else lowered");
+
+        match &lowered[1] {
+            RustStmt::For { body, .. } => {
+                assert_eq!(body.len(), 2);
+                assert!(matches!(body[0], RustStmt::Assign { .. }));
+                assert!(matches!(body[1], RustStmt::Break));
+            }
+            _ => panic!("expected for stmt"),
+        }
+    }
+
+    #[test]
+    fn for_else_body_break_uses_outer_loop_else_context() {
+        let for_stmt = HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::RangeLiteral {
+                start: Box::new(HirExpr::IntLiteral(0)),
+                end: Box::new(HirExpr::IntLiteral(3)),
+                step: None,
+                ty: Type::Range,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: Some(vec![HirStmt::Break]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &for_stmt,
+            true,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("for else lowered");
+
+        match &lowered[2] {
+            RustStmt::If { then_body, .. } => {
+                assert_eq!(then_body.len(), 2);
+                assert!(matches!(then_body[0], RustStmt::Assign { .. }));
+                assert!(matches!(then_body[1], RustStmt::Break));
+            }
+            _ => panic!("expected if stmt"),
+        }
     }
 
     #[test]
