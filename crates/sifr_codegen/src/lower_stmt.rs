@@ -498,7 +498,13 @@ fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
     if crate::helpers::is_option_type(msg.ty()) {
         return try_lower_option_display_expr(msg);
     }
-    try_lower_leaf_expr(msg)
+    if let Some(lowered) = try_lower_leaf_expr(msg) {
+        return Some(lowered);
+    }
+    if let HirExpr::Name { name, .. } = msg {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
 }
 
 fn try_lower_option_display_expr(msg: &HirExpr) -> Option<RustExpr> {
@@ -1258,6 +1264,33 @@ mod tests {
                 msg: Some(RustExpr::Literal(RustLiteral::Str(_))),
                 ..
             }
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_assert_with_name_msg() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::BoolLiteral(true),
+            msg: Some(HirExpr::Name {
+                name: "msg".to_string(),
+                ty: Type::Str,
+            }),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assert with name msg lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assert {
+                msg: Some(RustExpr::Ident(ref name)),
+                ..
+            } if name == "msg"
         ));
     }
 
