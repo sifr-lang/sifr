@@ -869,11 +869,11 @@ mod tests {
 
         let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
         assert_eq!(sha224.required_crate, Some("sha2"));
-        assert!(render_expr(&sha224.expr).contains("sha2::Sha224::new"));
+        assert!(render_expr(&sha224.expr).contains("sha2::Sha224::digest"));
 
         let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
         assert_eq!(sha384.required_crate, Some("sha2"));
-        assert!(render_expr(&sha384.expr).contains("sha2::Sha384::new"));
+        assert!(render_expr(&sha384.expr).contains("sha2::Sha384::digest"));
 
         let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
         assert_eq!(blake2b.required_crate, Some("blake2"));
