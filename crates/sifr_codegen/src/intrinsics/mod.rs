@@ -757,8 +757,8 @@ mod tests {
             &["y".to_string(), "m".to_string(), "d".to_string()],
         )
         .expect("calendar_weekday");
-        assert!(render_expr(&weekday.expr).contains("__t = [0i64, 3, 2, 5"));
-        assert!(render_expr(&weekday.expr).contains("__t[(__m0-1) as usize]"));
+        assert!(render_expr(&weekday.expr).contains("__t = vec![0, 3, 2, 5"));
+        assert!(render_expr(&weekday.expr).contains("__t[(__m0 - 1) as usize]"));
 
         let monthrange = lower_intrinsic("calendar_monthrange", &["y".to_string(), "m".to_string()])
             .expect("calendar_monthrange");
