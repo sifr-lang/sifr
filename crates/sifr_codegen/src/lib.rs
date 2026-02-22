@@ -4453,12 +4453,6 @@ impl RustEmitter {
     }
 
     fn expr_to_string(&mut self, expr: &HirExpr) -> String {
-        // Fast path for expressions already supported by IR lowering.
-        // This gradually removes reliance on the output-buffer swapping hack.
-        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
-            return crate::render_expr(&lowered_expr);
-        }
-
         let saved_output = std::mem::take(&mut self.output);
         let saved_indent = self.indent;
         self.indent = 0;

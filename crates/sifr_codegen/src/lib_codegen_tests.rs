@@ -423,7 +423,7 @@ fn test_empty_print() {
 }
 
 #[test]
-fn test_expr_to_string_fast_path_for_lowered_leafs() {
+fn test_expr_to_string_leaf_rendering() {
     let mut emitter = RustEmitter::new();
     let int_code = emitter.expr_to_string(&HirExpr::IntLiteral(7));
     assert_eq!(int_code, "7 as i64");
