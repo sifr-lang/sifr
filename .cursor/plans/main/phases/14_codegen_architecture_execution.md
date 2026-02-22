@@ -118,6 +118,7 @@ status: in_progress
 - [x] PR258 slice: extend option-typed simple `let` dual-path `Some(...)` wrapping to leaf RHS values (e.g. `let x: T|None = 7`) while preserving fallback for non-leaf option-`let` RHS expressions
 - [x] PR259 slice: extend option-typed simple `let` dual-path to passthrough option-typed simple name RHS (e.g. `let x: T|None = maybe_y`) while preserving fallback for non-leaf option-typed `let` RHS passthrough expressions
 - [x] PR260 slice: extend simple `if/elif` dual-path condition lowering to accept bool-name operands (e.g. `if ok:` / `elif ready:`) while preserving fallback for non-leaf condition expressions
+- [x] PR261 slice: extend simple `while` dual-path condition lowering to accept bool-name operands (e.g. `while ready:`) while preserving fallback for non-leaf while-condition expressions
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
