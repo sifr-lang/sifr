@@ -77,6 +77,7 @@ status: in_progress
 - [x] PR217 slice: fix match-literal pattern rendering to avoid expression casts in Rust pattern position (`1 as i64 =>`), add regression test, and validate stmt/expr demo + targeted e2e match run
 - [x] PR218 slice: reduce `emit_match`/`emit_match_arm` `expr_to_string` callsite cluster by rendering match subjects directly and routing literal/guard string building through structured helper paths (`try_lower_leaf_expr` + `render_expr` fallback)
 - [x] PR219 slice: remove `RustEmitter::pub_mode` temporal-coupling flag by threading explicit module visibility through `emit_module`/`emit_class`/`emit_function` paths and add `generate_rust_multi` visibility regression coverage
+- [x] PR220 slice: replace `in_loop_with_else` temporal flag with explicit loop-else context stack (`loop_else_stack`) and add nested-loop regression coverage for `_broke` propagation
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [ ] Replace all `expr_to_string` call sites with structured lowering
