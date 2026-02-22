@@ -276,46 +276,55 @@ fn try_lower_simple_if_stmt(
         None
     };
 
-    if elif_clauses.is_empty() {
-        if let Some(option_var) = crate::helpers::detect_option_truthiness(condition) {
-            return Some(RustStmt::IfLet {
-                pattern: format!("Some({option_var})"),
-                expr: RustExpr::Ident(option_var),
-                then_body: try_lower_simple_stmt_block(
-                    then_body,
-                    in_loop_with_else,
-                    bindings.mutated_vars,
-                    bindings.borrowed_params,
-                    ctx,
-                )?,
-                else_body: nested_else,
-            });
-        }
+    for (elif_cond, elif_body) in elif_clauses.iter().rev() {
+        nested_else = Some(vec![try_lower_simple_if_clause(
+            elif_cond,
+            elif_body,
+            nested_else,
+            in_loop_with_else,
+            bindings,
+            ctx,
+        )?]);
     }
 
-    for (elif_cond, elif_body) in elif_clauses.iter().rev() {
-        nested_else = Some(vec![RustStmt::If {
-            cond: try_lower_simple_bool_condition_expr(elif_cond)?,
-            then_body: try_lower_simple_stmt_block(
-                elif_body,
-                in_loop_with_else,
-                bindings.mutated_vars,
-                bindings.borrowed_params,
-                ctx,
-            )?,
+    try_lower_simple_if_clause(
+        condition,
+        then_body,
+        nested_else,
+        in_loop_with_else,
+        bindings,
+        ctx,
+    )
+}
+
+fn try_lower_simple_if_clause(
+    condition: &HirExpr,
+    then_body: &[HirStmt],
+    nested_else: Option<Vec<RustStmt>>,
+    in_loop_with_else: bool,
+    bindings: SimpleStmtBindings<'_>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<RustStmt> {
+    let lowered_then_body = try_lower_simple_stmt_block(
+        then_body,
+        in_loop_with_else,
+        bindings.mutated_vars,
+        bindings.borrowed_params,
+        ctx,
+    )?;
+
+    if let Some(option_var) = crate::helpers::detect_option_truthiness(condition) {
+        return Some(RustStmt::IfLet {
+            pattern: format!("Some({option_var})"),
+            expr: RustExpr::Ident(option_var),
+            then_body: lowered_then_body,
             else_body: nested_else,
-        }]);
+        });
     }
 
     Some(RustStmt::If {
         cond: try_lower_simple_bool_condition_expr(condition)?,
-        then_body: try_lower_simple_stmt_block(
-            then_body,
-            in_loop_with_else,
-            bindings.mutated_vars,
-            bindings.borrowed_params,
-            ctx,
-        )?,
+        then_body: lowered_then_body,
         else_body: nested_else,
     })
 }
@@ -1851,7 +1860,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_if_option_truthiness_with_elif() {
+    fn lowers_if_option_truthiness_with_elif() {
         let if_stmt = HirStmt::If {
             condition: HirExpr::Name {
                 name: "maybe_x".to_string(),
@@ -1862,15 +1871,67 @@ mod tests {
             else_body: None,
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &if_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if option truthiness with elif lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::IfLet { else_body, .. } => {
+                assert!(else_body.is_some());
+                if let Some(else_body) = else_body {
+                    assert_eq!(else_body.len(), 1);
+                    assert!(matches!(else_body[0], RustStmt::If { .. }));
+                }
+            }
+            _ => panic!("expected if let stmt"),
+        }
+    }
+
+    #[test]
+    fn lowers_if_with_option_truthiness_elif_clause() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::BoolLiteral(false),
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![(
+                HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                },
+                vec![HirStmt::Pass],
+            )],
+            else_body: Some(vec![HirStmt::Pass]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if with option truthiness elif lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::If { else_body, .. } => {
+                assert!(else_body.is_some());
+                if let Some(else_body) = else_body {
+                    assert_eq!(else_body.len(), 1);
+                    assert!(matches!(
+                        else_body[0],
+                        RustStmt::IfLet {
+                            pattern: ref p,
+                            expr: RustExpr::Ident(ref n),
+                            else_body: Some(_),
+                            ..
+                        } if p == "Some(maybe_x)" && n == "maybe_x"
+                    ));
+                }
+            }
+            _ => panic!("expected if stmt"),
+        }
     }
 
     #[test]
