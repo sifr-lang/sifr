@@ -106,6 +106,7 @@ status: in_progress
 - [x] PR246 slice: extend plain `return <expr>` dual-path to lower simple name operands (e.g. `return x`) in non-option/non-union contexts while preserving guarded fallback paths for option/union/class/display-sensitive return shaping
 - [x] PR247 slice: extend simple `raise` dual-path to lower simple name operands (e.g. `raise e`) to structured `Err(e)` while preserving fallback for non-leaf raise values
 - [x] PR248 slice: extend plain non-option `return <expr>` dual-path to lower option-typed simple name operands via structured `.unwrap()` while preserving fallback for option-return and union-return shaping paths
+- [x] PR249 slice: extend simple `let` dual-path to lower RHS simple name operands (e.g. `let x = y`) in existing primitive-safe type cases while preserving fallback for non-lowerable `let` forms
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

@@ -63,7 +63,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 mutable: bindings.mutated_vars.contains(name),
                 name: name.clone(),
                 ty: Some(crate::sifr_type_to_rust_type(ty)),
-                value: try_lower_leaf_expr(value)?,
+                value: try_lower_simple_let_value(ty, value)?,
             }])
         }
         HirStmt::Assign { name, value }
@@ -382,16 +382,26 @@ fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<
 }
 
 fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
+    try_lower_simple_let_value(ty, value).is_some()
+}
+
+fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     if ty != value.ty() {
-        return false;
+        return None;
     }
     if !matches!(
         ty,
         Type::Int | Type::Float | Type::Bool | Type::Str | Type::Enum { .. }
     ) {
-        return false;
+        return None;
     }
-    try_lower_leaf_expr(value).is_some()
+    if let Some(lowered) = try_lower_leaf_expr(value) {
+        return Some(lowered);
+    }
+    if let HirExpr::Name { name, .. } = value {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
 }
 
 fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -> bool {
@@ -575,6 +585,36 @@ mod tests {
         )
         .expect("assign lowered");
         assert!(matches!(lowered[0], RustStmt::Assign { .. }));
+    }
+
+    #[test]
+    fn lowers_simple_let_name_rhs() {
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: Type::Int,
+            value: HirExpr::Name {
+                name: "y".to_string(),
+                ty: Type::Int,
+            },
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let name rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                value: RustExpr::Ident(ref rhs),
+                ..
+            } if let_name == "x" && rhs == "y"
+        ));
     }
 
     #[test]
