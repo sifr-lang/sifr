@@ -1,8 +1,6 @@
 //! IR-backed helpers for generating codegen preamble items.
 
-use crate::{
-    RustExpr, RustItem, RustParam, RustStmt, RustType, Type, Visibility,
-};
+use crate::{RustExpr, RustItem, RustMatchArm, RustParam, RustStmt, RustType, Type, Visibility};
 
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty {
@@ -34,7 +32,7 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 RustType::Named(ty.rust_type())
             }
         }
-        _ => RustType::RawCode(ty.rust_type()),
+        _ => RustType::Named(ty.rust_type()),
     }
 }
 
@@ -88,11 +86,31 @@ pub fn build_error_type_items(
                     RustParam::SelfParam { mutable: false },
                     RustParam::Named {
                         name: "f".to_string(),
-                        ty: RustType::RawCode("&mut std::fmt::Formatter<'_>".to_string()),
+                        ty: RustType::Ref {
+                            mutable: true,
+                            inner: Box::new(RustType::Named("std::fmt::Formatter<'_>".to_string())),
+                        },
                     },
                 ],
-                ret: Some(RustType::RawCode("std::fmt::Result".to_string())),
-                body: vec![RustStmt::RawCode("write!(f, \"{}\", self.message)".to_string())],
+                ret: Some(RustType::Named("std::fmt::Result".to_string())),
+                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "fmt".to_string(),
+                        "Display".to_string(),
+                        "fmt".to_string(),
+                    ])),
+                    args: vec![
+                        RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("self".to_string())),
+                                field: "message".to_string(),
+                            }),
+                        },
+                        RustExpr::Ident("f".to_string()),
+                    ],
+                }))],
                 is_async: false,
             }],
         },
@@ -121,7 +139,7 @@ pub fn build_io_error_items() -> Vec<RustItem> {
         type_params: vec![],
         params: vec![RustParam::Named {
             name: "e".to_string(),
-            ty: RustType::RawCode("std::io::Error".to_string()),
+            ty: RustType::Named("std::io::Error".to_string()),
         }],
         ret: Some(RustType::Named("IOError".to_string())),
         body: vec![
@@ -139,28 +157,72 @@ pub fn build_io_error_items() -> Vec<RustItem> {
                 mutable: false,
                 name: "kind".to_string(),
                 ty: None,
-                value: RustExpr::RawCode(
-                    "match e.kind() {
-        std::io::ErrorKind::NotFound => \"FileNotFound\",
-        std::io::ErrorKind::PermissionDenied => \"PermissionDenied\",
-        std::io::ErrorKind::AlreadyExists => \"FileExists\",
-        _ => \"Other\",
-    }"
-                    .to_string(),
-                ),
+                value: RustExpr::If {
+                    cond: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("e".to_string())),
+                            method: "kind".to_string(),
+                            args: vec![],
+                        }),
+                        op: "==".to_string(),
+                        right: Box::new(RustExpr::Path(vec![
+                            "std".to_string(),
+                            "io".to_string(),
+                            "ErrorKind".to_string(),
+                            "NotFound".to_string(),
+                        ])),
+                    }),
+                    then_expr: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
+                        "FileNotFound".to_string(),
+                    ))),
+                    else_expr: Some(Box::new(RustExpr::If {
+                        cond: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("e".to_string())),
+                                method: "kind".to_string(),
+                                args: vec![],
+                            }),
+                            op: "==".to_string(),
+                            right: Box::new(RustExpr::Path(vec![
+                                "std".to_string(),
+                                "io".to_string(),
+                                "ErrorKind".to_string(),
+                                "PermissionDenied".to_string(),
+                            ])),
+                        }),
+                        then_expr: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
+                            "PermissionDenied".to_string(),
+                        ))),
+                        else_expr: Some(Box::new(RustExpr::If {
+                            cond: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("e".to_string())),
+                                    method: "kind".to_string(),
+                                    args: vec![],
+                                }),
+                                op: "==".to_string(),
+                                right: Box::new(RustExpr::Path(vec![
+                                    "std".to_string(),
+                                    "io".to_string(),
+                                    "ErrorKind".to_string(),
+                                    "AlreadyExists".to_string(),
+                                ])),
+                            }),
+                            then_expr: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
+                                "FileExists".to_string(),
+                            ))),
+                            else_expr: Some(Box::new(RustExpr::Literal(crate::RustLiteral::Str(
+                                "Other".to_string(),
+                            )))),
+                        })),
+                    })),
+                },
             },
             RustStmt::Return(Some(RustExpr::StructInit {
                 name: "IOError".to_string(),
                 fields: vec![
                     ("message".to_string(), RustExpr::Ident("msg".to_string())),
-                    (
-                        "kind".to_string(),
-                        RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("kind".to_string())),
-                            method: "to_string".to_string(),
-                            args: vec![],
-                        },
-                    ),
+                    ("kind".to_string(), RustExpr::Ident("kind".to_string())),
                 ],
             })),
         ],
@@ -172,6 +234,7 @@ pub fn build_io_error_items() -> Vec<RustItem> {
 
 pub fn build_file_handle_infra_items() -> Vec<RustItem> {
     vec![
+        // Documented RawCode exception: tuple enum variants are still emitted via RawCode.
         RustItem::RawCode(
             "enum SifrFileHandle {
     TextRead(std::io::BufReader<std::fs::File>),
@@ -184,10 +247,39 @@ pub fn build_file_handle_infra_items() -> Vec<RustItem> {
         RustItem::Static {
             name: "__SIFR_FILE_HANDLES".to_string(),
             visibility: Visibility::Private,
-            ty: RustType::RawCode(
-                "std::sync::LazyLock<Mutex<HashMap<i64, SifrFileHandle>>>".to_string(),
+            ty: RustType::Named(
+                "std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<i64, SifrFileHandle>>>"
+                    .to_string(),
             ),
-            value: RustExpr::RawCode("std::sync::LazyLock::new(|| Mutex::new(HashMap::new()))".to_string()),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "sync".to_string(),
+                    "LazyLock".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "std".to_string(),
+                            "sync".to_string(),
+                            "Mutex".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "std".to_string(),
+                                "collections".to_string(),
+                                "HashMap".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![],
+                        }],
+                    }),
+                    is_move: false,
+                }],
+            },
         },
     ]
 }
@@ -232,33 +324,9 @@ pub fn build_file_handle_struct_items() -> Vec<RustItem> {
                     }))],
                     is_async: false,
                 },
-                raw_file_handle_method(
-                    "read",
-                    vec![RustParam::SelfParam { mutable: false }],
-                    Some(RustType::Result(
-                        Box::new(RustType::String_),
-                        Box::new(RustType::Named("IOError".to_string())),
-                    )),
-                    "(|| -> Result<String, IOError> { let __hid = self._handle; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextRead(ref mut __r)) => { use std::io::Read; let mut __s = String::new(); __r.read_to_string(&mut __s).map_err(__io_err)?; Ok(__s) }, _ => Err(IOError { message: \"file not open for reading\".to_string(), kind: \"Other\".to_string() }) } })()",
-                ),
-                raw_file_handle_method(
-                    "write",
-                    vec![
-                        RustParam::SelfParam { mutable: false },
-                        RustParam::Named {
-                            name: "data".to_string(),
-                            ty: RustType::Ref {
-                                mutable: false,
-                                inner: Box::new(RustType::String_),
-                            },
-                        },
-                    ],
-                    Some(RustType::Result(
-                        Box::new(RustType::Unit),
-                        Box::new(RustType::Named("IOError".to_string())),
-                    )),
-                    "(|| -> Result<(), IOError> { let __hid = self._handle; let __data = data; let mut __handles = __SIFR_FILE_HANDLES.lock().unwrap(); match __handles.get_mut(&__hid) { Some(SifrFileHandle::TextWrite(ref mut __w)) => { use std::io::Write; __w.write_all(__data.as_bytes()).map_err(__io_err)?; Ok(()) }, _ => Err(IOError { message: \"file not open for writing\".to_string(), kind: \"Other\".to_string() }) } })()",
-                ),
+                file_handle_read_method(),
+                file_handle_write_method(),
+                // Documented RawCode exceptions: these methods still use raw control-flow/IO glue.
                 raw_file_handle_method(
                     "readline",
                     vec![RustParam::SelfParam { mutable: false }],
@@ -283,10 +351,35 @@ pub fn build_file_handle_struct_items() -> Vec<RustItem> {
                     type_params: vec![],
                     params: vec![RustParam::SelfParam { mutable: false }],
                     ret: None,
-                    body: vec![RustStmt::RawCode(
-                        "let __hid = self._handle; __SIFR_FILE_HANDLES.lock().unwrap().remove(&__hid);"
-                            .to_string(),
-                    )],
+                    body: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__hid".to_string(),
+                            ty: None,
+                            value: RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("self".to_string())),
+                                field: "_handle".to_string(),
+                            },
+                        },
+                        RustStmt::Expr(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "__SIFR_FILE_HANDLES".to_string(),
+                                        "lock".to_string(),
+                                    ])),
+                                    args: vec![],
+                                }),
+                                method: "unwrap".to_string(),
+                                args: vec![],
+                            }),
+                            method: "remove".to_string(),
+                            args: vec![RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(RustExpr::Ident("__hid".to_string())),
+                            }],
+                        }),
+                    ],
                     is_async: false,
                 },
                 raw_file_handle_method(
@@ -350,9 +443,267 @@ pub fn build_logging_items() -> Vec<RustItem> {
     vec![RustItem::Static {
         name: "__SIFR_GLOBAL_LOG_LEVEL".to_string(),
         visibility: Visibility::Private,
-        ty: RustType::RawCode("std::sync::LazyLock<Mutex<i64>>".to_string()),
-        value: RustExpr::RawCode("std::sync::LazyLock::new(|| Mutex::new(20))".to_string()),
+        ty: RustType::Named("std::sync::LazyLock<std::sync::Mutex<i64>>".to_string()),
+        value: RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "sync".to_string(),
+                "LazyLock".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![RustExpr::Closure {
+                params: vec![],
+                body: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "sync".to_string(),
+                        "Mutex".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![RustExpr::Literal(crate::RustLiteral::Int(20))],
+                }),
+                is_move: false,
+            }],
+        },
     }]
+}
+
+fn file_handle_read_method() -> RustItem {
+    RustItem::Fn {
+        name: "read".to_string(),
+        visibility: Visibility::Private,
+        type_params: vec![],
+        params: vec![RustParam::SelfParam { mutable: false }],
+        ret: Some(RustType::Result(
+            Box::new(RustType::String_),
+            Box::new(RustType::Named("IOError".to_string())),
+        )),
+        body: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__hid".to_string(),
+                ty: None,
+                value: RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                    field: "_handle".to_string(),
+                },
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__handles".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "__SIFR_FILE_HANDLES".to_string(),
+                            "lock".to_string(),
+                        ])),
+                        args: vec![],
+                    }),
+                    method: "unwrap".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::Match {
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__handles".to_string())),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__hid".to_string())),
+                    }],
+                },
+                arms: vec![
+                    RustMatchArm {
+                        pattern: "Some(SifrFileHandle::TextRead(ref mut __r))".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![
+                            RustStmt::Let {
+                                mutable: true,
+                                name: "__s".to_string(),
+                                ty: None,
+                                value: RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "String".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![],
+                                },
+                            },
+                            RustStmt::Expr(RustExpr::Try(Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "std".to_string(),
+                                        "io".to_string(),
+                                        "Read".to_string(),
+                                        "read_to_string".to_string(),
+                                    ])),
+                                    args: vec![
+                                        RustExpr::Ident("__r".to_string()),
+                                        RustExpr::Ref {
+                                            mutable: true,
+                                            expr: Box::new(RustExpr::Ident("__s".to_string())),
+                                        },
+                                    ],
+                                }),
+                                method: "map_err".to_string(),
+                                args: vec![RustExpr::Ident("__io_err".to_string())],
+                            }))),
+                            RustStmt::Return(Some(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                                args: vec![RustExpr::Ident("__s".to_string())],
+                            })),
+                        ],
+                    },
+                    RustMatchArm {
+                        pattern: "_".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                            args: vec![RustExpr::StructInit {
+                                name: "IOError".to_string(),
+                                fields: vec![
+                                    (
+                                        "message".to_string(),
+                                        RustExpr::Literal(crate::RustLiteral::Str(
+                                            "file not open for reading".to_string(),
+                                        )),
+                                    ),
+                                    (
+                                        "kind".to_string(),
+                                        RustExpr::Literal(crate::RustLiteral::Str(
+                                            "Other".to_string(),
+                                        )),
+                                    ),
+                                ],
+                            }],
+                        }))],
+                    },
+                ],
+            },
+        ],
+        is_async: false,
+    }
+}
+
+fn file_handle_write_method() -> RustItem {
+    RustItem::Fn {
+        name: "write".to_string(),
+        visibility: Visibility::Private,
+        type_params: vec![],
+        params: vec![
+            RustParam::SelfParam { mutable: false },
+            RustParam::Named {
+                name: "data".to_string(),
+                ty: RustType::Ref {
+                    mutable: false,
+                    inner: Box::new(RustType::String_),
+                },
+            },
+        ],
+        ret: Some(RustType::Result(
+            Box::new(RustType::Unit),
+            Box::new(RustType::Named("IOError".to_string())),
+        )),
+        body: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__hid".to_string(),
+                ty: None,
+                value: RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                    field: "_handle".to_string(),
+                },
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__handles".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "__SIFR_FILE_HANDLES".to_string(),
+                            "lock".to_string(),
+                        ])),
+                        args: vec![],
+                    }),
+                    method: "unwrap".to_string(),
+                    args: vec![],
+                },
+            },
+            RustStmt::Match {
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__handles".to_string())),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Ident("__hid".to_string())),
+                    }],
+                },
+                arms: vec![
+                    RustMatchArm {
+                        pattern: "Some(SifrFileHandle::TextWrite(ref mut __w))".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![
+                            RustStmt::Expr(RustExpr::Try(Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "std".to_string(),
+                                        "io".to_string(),
+                                        "Write".to_string(),
+                                        "write_all".to_string(),
+                                    ])),
+                                    args: vec![
+                                        RustExpr::Ident("__w".to_string()),
+                                        RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Ident("data".to_string())),
+                                            method: "as_bytes".to_string(),
+                                            args: vec![],
+                                        },
+                                    ],
+                                }),
+                                method: "map_err".to_string(),
+                                args: vec![RustExpr::Ident("__io_err".to_string())],
+                            }))),
+                            RustStmt::Return(Some(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                                args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
+                            })),
+                        ],
+                    },
+                    RustMatchArm {
+                        pattern: "_".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                            args: vec![RustExpr::StructInit {
+                                name: "IOError".to_string(),
+                                fields: vec![
+                                    (
+                                        "message".to_string(),
+                                        RustExpr::Literal(crate::RustLiteral::Str(
+                                            "file not open for writing".to_string(),
+                                        )),
+                                    ),
+                                    (
+                                        "kind".to_string(),
+                                        RustExpr::Literal(crate::RustLiteral::Str(
+                                            "Other".to_string(),
+                                        )),
+                                    ),
+                                ],
+                            }],
+                        }))],
+                    },
+                ],
+            },
+        ],
+        is_async: false,
+    }
 }
 
 fn raw_file_handle_method(
@@ -376,6 +727,159 @@ fn raw_file_handle_method(
 mod tests {
     use super::*;
     use crate::render_items;
+    use std::collections::BTreeSet;
+
+    fn count_raw_in_type(ty: &RustType) -> usize {
+        match ty {
+            RustType::Vec(inner)
+            | RustType::HashSet(inner)
+            | RustType::VecDeque(inner)
+            | RustType::Option(inner) => count_raw_in_type(inner),
+            RustType::HashMap(k, v) | RustType::Result(k, v) => {
+                count_raw_in_type(k) + count_raw_in_type(v)
+            }
+            RustType::Tuple(items) => items.iter().map(count_raw_in_type).sum(),
+            RustType::Ref { inner, .. } => count_raw_in_type(inner),
+            RustType::Generic { params, .. } | RustType::Fn { params, .. } => {
+                params.iter().map(count_raw_in_type).sum()
+            }
+            RustType::RawCode(_) => 1,
+            _ => 0,
+        }
+    }
+
+    fn count_raw_in_expr(expr: &RustExpr) -> usize {
+        match expr {
+            RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
+            RustExpr::MethodCall { receiver, args, .. } | RustExpr::FnCall { func: receiver, args } => {
+                count_raw_in_expr(receiver) + args.iter().map(count_raw_in_expr).sum::<usize>()
+            }
+            RustExpr::MacroCall { args, .. } | RustExpr::Vec(args) | RustExpr::Tuple(args) => {
+                args.iter().map(count_raw_in_expr).sum()
+            }
+            RustExpr::FormatMacro { args, .. } => args.iter().map(count_raw_in_expr).sum(),
+            RustExpr::BinOp { left, right, .. } => count_raw_in_expr(left) + count_raw_in_expr(right),
+            RustExpr::UnaryOp { operand, .. }
+            | RustExpr::Deref(operand)
+            | RustExpr::Clone(operand)
+            | RustExpr::Try(operand)
+            | RustExpr::Await(operand) => count_raw_in_expr(operand),
+            RustExpr::Field { expr, .. } => count_raw_in_expr(expr),
+            RustExpr::Index { expr, index } => count_raw_in_expr(expr) + count_raw_in_expr(index),
+            RustExpr::Ref { expr, .. } => count_raw_in_expr(expr),
+            RustExpr::Cast { expr, ty } => count_raw_in_expr(expr) + count_raw_in_type(ty),
+            RustExpr::Block { stmts, expr } => {
+                stmts.iter().map(count_raw_in_stmt).sum::<usize>()
+                    + expr.as_ref().map(|e| count_raw_in_expr(e)).unwrap_or(0)
+            }
+            RustExpr::If {
+                cond,
+                then_expr,
+                else_expr,
+            } => {
+                count_raw_in_expr(cond)
+                    + count_raw_in_expr(then_expr)
+                    + else_expr.as_ref().map(|e| count_raw_in_expr(e)).unwrap_or(0)
+            }
+            RustExpr::Match { expr, arms } => {
+                count_raw_in_expr(expr)
+                    + arms
+                        .iter()
+                        .map(|a| a.body.iter().map(count_raw_in_stmt).sum::<usize>())
+                        .sum::<usize>()
+            }
+            RustExpr::Closure { body, .. } => count_raw_in_expr(body),
+            RustExpr::ClosureBlock { body, .. } => body.iter().map(count_raw_in_stmt).sum(),
+            RustExpr::StructInit { fields, .. } => fields.iter().map(|(_, v)| count_raw_in_expr(v)).sum(),
+            RustExpr::Range { start, end } => count_raw_in_expr(start) + count_raw_in_expr(end),
+            RustExpr::RawCode(_) => 1,
+        }
+    }
+
+    fn count_raw_in_stmt(stmt: &RustStmt) -> usize {
+        match stmt {
+            RustStmt::Let { ty, value, .. } => {
+                ty.as_ref().map(count_raw_in_type).unwrap_or(0) + count_raw_in_expr(value)
+            }
+            RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
+                count_raw_in_expr(target) + count_raw_in_expr(value)
+            }
+            RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => count_raw_in_expr(expr),
+            RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => 0,
+            RustStmt::If {
+                cond,
+                then_body,
+                else_body,
+            } => {
+                count_raw_in_expr(cond)
+                    + then_body.iter().map(count_raw_in_stmt).sum::<usize>()
+                    + else_body
+                        .as_ref()
+                        .map(|b| b.iter().map(count_raw_in_stmt).sum::<usize>())
+                        .unwrap_or(0)
+            }
+            RustStmt::IfLet {
+                expr,
+                then_body,
+                else_body,
+                ..
+            } => {
+                count_raw_in_expr(expr)
+                    + then_body.iter().map(count_raw_in_stmt).sum::<usize>()
+                    + else_body
+                        .as_ref()
+                        .map(|b| b.iter().map(count_raw_in_stmt).sum::<usize>())
+                        .unwrap_or(0)
+            }
+            RustStmt::Match { expr, arms } => {
+                count_raw_in_expr(expr)
+                    + arms
+                        .iter()
+                        .map(|a| a.body.iter().map(count_raw_in_stmt).sum::<usize>())
+                        .sum::<usize>()
+            }
+            RustStmt::For { iter, body, .. } | RustStmt::While { cond: iter, body } => {
+                count_raw_in_expr(iter) + body.iter().map(count_raw_in_stmt).sum::<usize>()
+            }
+            RustStmt::Loop { body } | RustStmt::Block(body) => body.iter().map(count_raw_in_stmt).sum(),
+            RustStmt::RawCode(_) => 1,
+        }
+    }
+
+    fn count_raw_in_item(item: &RustItem) -> usize {
+        match item {
+            RustItem::Struct { fields, .. } => fields.iter().map(|(_, t)| count_raw_in_type(t)).sum(),
+            RustItem::TupleStruct { inner, .. } => count_raw_in_type(inner),
+            RustItem::Enum { variants, .. } => variants
+                .iter()
+                .map(|v| {
+                    v.fields.iter().map(|(_, t)| count_raw_in_type(t)).sum::<usize>()
+                        + v.value.as_ref().map(count_raw_in_expr).unwrap_or(0)
+                })
+                .sum(),
+            RustItem::Trait { methods, .. } | RustItem::Impl { items: methods, .. } => {
+                methods.iter().map(count_raw_in_item).sum()
+            }
+            RustItem::Fn {
+                params, ret, body, ..
+            } => {
+                params
+                    .iter()
+                    .map(|p| match p {
+                        RustParam::SelfParam { .. } => 0,
+                        RustParam::Named { ty, .. } => count_raw_in_type(ty),
+                    })
+                    .sum::<usize>()
+                    + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
+                    + body.iter().map(count_raw_in_stmt).sum::<usize>()
+            }
+            RustItem::Const { ty, value, .. } | RustItem::Static { ty, value, .. } => {
+                count_raw_in_type(ty) + count_raw_in_expr(value)
+            }
+            RustItem::Use(_) | RustItem::Attr(_) => 0,
+            RustItem::RawCode(_) => 1,
+        }
+    }
 
     #[test]
     fn maps_types_to_structured_rust_types() {
@@ -397,7 +901,13 @@ mod tests {
             &[("detail".to_string(), RustType::String_)],
             &[(
                 "detail".to_string(),
-                RustExpr::RawCode("String::new()".to_string()),
+                RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "String".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![],
+                },
             )],
         );
         let rendered = render_items(&items);
@@ -415,5 +925,36 @@ mod tests {
         assert!(rendered.contains("static __SIFR_FILE_HANDLES"));
         assert!(rendered.contains("impl FileHandle"));
         assert!(rendered.contains("fn read(&self) -> Result<String, IOError>"));
+    }
+
+    #[test]
+    fn preamble_rawcode_exceptions_are_bounded_and_documented() {
+        let mut all = build_io_error_items();
+        all.extend(build_file_handle_infra_items());
+        all.extend(build_file_handle_struct_items());
+        all.extend(build_logging_items());
+        let total_raw: usize = all.iter().map(count_raw_in_item).sum();
+        assert!(total_raw <= 5, "expected <= 5 documented preamble RawCode nodes, got {total_raw}");
+
+        let mut raw_method_names = BTreeSet::new();
+        for item in build_file_handle_struct_items() {
+            if let RustItem::Impl { items, .. } = item {
+                for method in items {
+                    if let RustItem::Fn { name, body, .. } = method {
+                        if body.iter().any(|stmt| match stmt {
+                            RustStmt::Return(Some(RustExpr::RawCode(_))) => true,
+                            _ => false,
+                        }) {
+                            raw_method_names.insert(name);
+                        }
+                    }
+                }
+            }
+        }
+        let expected: BTreeSet<String> = ["readline", "readlines", "read_bytes", "write_bytes"]
+            .into_iter()
+            .map(ToString::to_string)
+            .collect();
+        assert_eq!(raw_method_names, expected);
     }
 }
