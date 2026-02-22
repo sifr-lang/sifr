@@ -92,7 +92,11 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::Return { value: Some(value) } => try_lower_simple_return_stmt(value, ctx),
         HirStmt::Assert { test, msg } => {
             let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
-                Some(try_lower_assert_msg_expr(msg_expr)?)
+                Some(if crate::helpers::is_option_type(msg_expr.ty()) {
+                    try_lower_option_display_expr(msg_expr)?
+                } else {
+                    try_lower_leaf_or_name_expr(msg_expr)?
+                })
             } else {
                 None
             };
@@ -483,13 +487,6 @@ fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustEx
         return None;
     }
     try_lower_leaf_or_name_expr(value)
-}
-
-fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
-    if crate::helpers::is_option_type(msg.ty()) {
-        return try_lower_option_display_expr(msg);
-    }
-    try_lower_leaf_or_name_expr(msg)
 }
 
 fn try_lower_option_display_expr(msg: &HirExpr) -> Option<RustExpr> {
