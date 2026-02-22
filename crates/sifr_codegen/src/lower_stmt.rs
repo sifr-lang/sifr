@@ -632,6 +632,9 @@ fn try_lower_assert_test_expr(test: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(test) {
         return Some(lowered);
     }
+    if let Some(lowered) = try_lower_simple_not_bool_name_condition_expr(test) {
+        return Some(lowered);
+    }
     if matches!(test.ty(), Type::Bool | Type::LiteralBool(_)) {
         if let HirExpr::Name { name, .. } = test {
             return Some(RustExpr::Ident(name.clone()));
@@ -1778,6 +1781,67 @@ mod tests {
                 msg: None,
             } if name == "ok"
         ));
+    }
+
+    #[test]
+    fn lowers_simple_assert_with_not_bool_name_test() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Name {
+                    name: "ok".to_string(),
+                    ty: Type::Bool,
+                }),
+                ty: Type::Bool,
+            },
+            msg: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assert not-bool name test lowered");
+
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assert {
+                cond: RustExpr::UnaryOp {
+                    ref op,
+                    ref operand,
+                },
+                msg: None,
+            } if op == "!" && matches!(operand.as_ref(), RustExpr::Ident(name) if name == "ok")
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_assert_with_non_leaf_not_bool_test() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::UnaryOp {
+                op: "not".to_string(),
+                operand: Box::new(HirExpr::Call {
+                    func: "is_ok".to_string(),
+                    args: vec![],
+                    ty: Type::Bool,
+                }),
+                ty: Type::Bool,
+            },
+            msg: None,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
     }
 
     #[test]
