@@ -314,6 +314,7 @@ status: in_progress
 - [x] PR206 slice: add `ir_validate` structural pass (duplicate struct fields, empty function body, return-outside-function, RawCode brace balance) and enforce it before rendering preamble/import IR
 - [x] PR207 slice: add conservative `ir_optimize` clone-removal pass (trivial literal/ref/copy-cast `.clone()` sites) and run it over preamble/import IR before validation and render
 - [x] PR208 slice: refactor stdlib DCE into explicit stdlib-IR traversal (parse -> dependency graph -> transitive closure -> render) while preserving existing filtering semantics and adding impl/struct retention regression coverage
+- [x] PR209 slice: derive shared prelude import/file-handle needs from tokenized/parsed stdlib IR content (not comment/string probes), and keep stripping behavior unchanged with regression coverage
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
