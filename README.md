@@ -126,4 +126,4 @@ The interactive pipeline visualizer walks through every compiler step with a liv
 
 ## Sponsors
 
-* [CDON](https://www.cdon.se/)/[Fyndiq](https://www.fyndiq.se/): One of the leading marketplaces in the Nordics (Sweden, Norway, Denmark, Finland).
+* [CDON](https://www.cdon.se/)/[Fyndiq](https://www.fyndiq.se/): Leading marketplaces in the Nordics (Sweden, Norway, Denmark, Finland).
