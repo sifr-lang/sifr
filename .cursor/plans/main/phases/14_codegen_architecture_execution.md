@@ -74,6 +74,7 @@ status: in_progress
 
 - [x] Introduce `context.rs` (`CodegenContext`, `ScopeContext`, `CodegenError`)
 - [x] Add `lower_expr.rs`, `lower_stmt.rs`, `lower_item.rs`, `preamble.rs`
+- [x] PR217 slice: fix match-literal pattern rendering to avoid expression casts in Rust pattern position (`1 as i64 =>`), add regression test, and validate stmt/expr demo + targeted e2e match run
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [ ] Replace all `expr_to_string` call sites with structured lowering

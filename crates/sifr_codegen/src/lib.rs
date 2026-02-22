@@ -4167,6 +4167,22 @@ impl RustEmitter {
         result
     }
 
+    fn match_pattern_literal_code(value: &HirExpr) -> Option<String> {
+        match value {
+            HirExpr::IntLiteral(v) => Some(v.to_string()),
+            HirExpr::FloatLiteral(v) => Some(format!("{v:?}")),
+            HirExpr::BoolLiteral(v) => Some(v.to_string()),
+            HirExpr::StringLiteral(s) => Some(format!("{s:?}")),
+            HirExpr::EnumVariant {
+                enum_name,
+                variant,
+                ..
+            } => Some(format!("{enum_name}::{variant}")),
+            HirExpr::NoneLiteral => Some("None".to_string()),
+            _ => None,
+        }
+    }
+
     fn emit_match(&mut self, subject: &HirExpr, subject_ty: &Type, arms: &[HirMatchArm]) {
         // Determine how to emit the match based on subject type
         let is_option = is_option_type(subject_ty);
@@ -4245,15 +4261,13 @@ impl RustEmitter {
                 }
             }
             HirPattern::Literal { value } => {
-                let lit_code = self.expr_to_string(value);
-                match value {
-                    HirExpr::StringLiteral(_) => {
-                        // String matching needs a guard since Rust can't match String directly
-                        self.write("__s");
-                    }
-                    _ => {
-                        self.write(&lit_code);
-                    }
+                if let HirExpr::StringLiteral(_) = value {
+                    // String matching needs a guard since Rust can't match String directly
+                    self.write("__s");
+                } else {
+                    let lit_code = Self::match_pattern_literal_code(value)
+                        .unwrap_or_else(|| self.expr_to_string(value));
+                    self.write(&lit_code);
                 }
             }
             HirPattern::Or { patterns } => {
@@ -4265,7 +4279,8 @@ impl RustEmitter {
                     for p in patterns {
                         match p {
                             HirPattern::Literal { value } => {
-                                let lit_code = self.expr_to_string(value);
+                                let lit_code = Self::match_pattern_literal_code(value)
+                                    .unwrap_or_else(|| self.expr_to_string(value));
                                 parts.push(lit_code);
                             }
                             HirPattern::None => parts.push("None".to_string()),
@@ -4322,7 +4337,8 @@ impl RustEmitter {
                         HirPattern::Capture { name, .. } => self.write(name),
                         HirPattern::Wildcard => self.write("_"),
                         HirPattern::Literal { value } => {
-                            let lit_code = self.expr_to_string(value);
+                            let lit_code = Self::match_pattern_literal_code(value)
+                                .unwrap_or_else(|| self.expr_to_string(value));
                             self.write(&lit_code);
                         }
                         _ => self.write("_"),
