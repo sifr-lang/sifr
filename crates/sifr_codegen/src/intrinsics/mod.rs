@@ -806,11 +806,13 @@ mod tests {
     fn lowers_base64_intrinsics_with_dependency_metadata() {
         let enc = lower_intrinsic("base64_encode", &["text".to_string()]).expect("base64_encode");
         assert_eq!(enc.required_crate, Some("base64"));
-        assert!(render_expr(&enc.expr).contains("general_purpose::STANDARD.encode"));
+        assert!(render_expr(&enc.expr).contains("base64::Engine::encode"));
+        assert!(render_expr(&enc.expr).contains("general_purpose::STANDARD"));
 
         let dec = lower_intrinsic("base64_decode", &["s".to_string()]).expect("base64_decode");
         assert_eq!(dec.required_crate, Some("base64"));
-        assert!(render_expr(&dec.expr).contains("general_purpose::STANDARD.decode"));
+        assert!(render_expr(&dec.expr).contains("base64::Engine::decode"));
+        assert!(render_expr(&dec.expr).contains("general_purpose::STANDARD"));
 
         let enc_opts = lower_intrinsic(
             "base64_encode_opts",
@@ -836,12 +838,14 @@ mod tests {
         let url_enc =
             lower_intrinsic("urlsafe_b64encode", &["s".to_string()]).expect("urlsafe_b64encode");
         assert_eq!(url_enc.required_crate, Some("base64"));
-        assert!(render_expr(&url_enc.expr).contains("general_purpose::URL_SAFE.encode"));
+        assert!(render_expr(&url_enc.expr).contains("base64::Engine::encode"));
+        assert!(render_expr(&url_enc.expr).contains("general_purpose::URL_SAFE"));
 
         let url_dec =
             lower_intrinsic("urlsafe_b64decode", &["s".to_string()]).expect("urlsafe_b64decode");
         assert_eq!(url_dec.required_crate, Some("base64"));
-        assert!(render_expr(&url_dec.expr).contains("general_purpose::URL_SAFE.decode"));
+        assert!(render_expr(&url_dec.expr).contains("base64::Engine::decode"));
+        assert!(render_expr(&url_dec.expr).contains("general_purpose::URL_SAFE"));
     }
 
     #[test]
