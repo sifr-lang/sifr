@@ -398,6 +398,9 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     if ty != value.ty() {
         return None;
     }
+    if matches!(ty, Type::None) && matches!(value, HirExpr::NoneLiteral) {
+        return Some(RustExpr::Literal(RustLiteral::Unit));
+    }
     if !matches!(
         ty,
         Type::Int | Type::Float | Type::Bool | Type::Str | Type::Enum { .. }
@@ -641,6 +644,33 @@ mod tests {
                 value: RustExpr::Ident(ref rhs),
                 ..
             } if let_name == "x" && rhs == "y"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_let_none_literal_to_unit() {
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: Type::None,
+            value: HirExpr::NoneLiteral,
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let none lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                ty: Some(RustType::Unit),
+                value: RustExpr::Literal(RustLiteral::Unit),
+            } if let_name == "x"
         ));
     }
 

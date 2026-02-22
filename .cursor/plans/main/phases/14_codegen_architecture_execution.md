@@ -112,6 +112,7 @@ status: in_progress
 - [x] PR252 slice: extend option-return dual-path to lower simple name operands (e.g. `return x`) as `return Some(x)` while preserving fallback for non-leaf option-return expressions
 - [x] PR253 slice: extend non-option union return dual-path to lower simple name operands (e.g. `return x`) as `return <UnionEnum>::<Variant>(x)` while preserving fallback for non-leaf union-return expressions
 - [x] PR254 slice: extend option-return dual-path to passthrough option-typed simple name operands (e.g. `return maybe_x`) while preserving fallback for non-leaf option-return passthrough expressions
+- [x] PR255 slice: extend simple `let` dual-path to lower `None` declarations (`let x: None = None`) to structured unit form while preserving fallback for other non-lowerable `let` forms
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
