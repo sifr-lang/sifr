@@ -168,6 +168,7 @@ status: in_progress
 - [x] PR308 slice: extract `emit_module` pre-scan metadata collection (imports/intrinsics, display-class registration, parent-field indexing) into dedicated `module_prescan` helper methods to reduce `lib.rs` complexity while preserving behavior
 - [x] PR309 slice: extract `emit_module` class/function body emission loops into dedicated `module_body` helper methods to reduce `lib.rs` complexity while preserving behavior
 - [x] PR310 slice: move the large `emit_class` implementation out of `lib.rs` into dedicated `class_emitter` helpers to reduce file size while preserving class/trait/operator emission behavior
+- [x] PR311 slice: move protocol/enum/newtype type-emitter methods (`emit_protocol_trait`, `emit_enum_class`, `emit_newtype`) out of `lib.rs` into dedicated `type_emitters` helpers to reduce file size while preserving behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
