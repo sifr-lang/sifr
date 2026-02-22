@@ -48,6 +48,16 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                         operand: Box::new(lowered_operand),
                     })
                 }
+                "not" if crate::helpers::is_option_type(operand.ty()) => {
+                    if let HirExpr::Name { name, .. } = operand.as_ref() {
+                        return Some(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident(name.clone())),
+                            method: "is_none".to_string(),
+                            args: vec![],
+                        });
+                    }
+                    None
+                }
                 _ => None,
             }
         }
@@ -232,6 +242,30 @@ mod tests {
                 op: ref operator,
                 operand: ref inner,
             } if operator == "!" && matches!(inner.as_ref(), RustExpr::Ident(name) if name == "ok")
+        ));
+    }
+
+    #[test]
+    fn lowers_unary_not_with_option_name_operand() {
+        let unary = HirExpr::UnaryOp {
+            op: "not".to_string(),
+            operand: Box::new(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            }),
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&unary).expect("unary not option-name lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver: ref recv,
+                ref method,
+                ref args,
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_none"
+                && args.is_empty()
         ));
     }
 }
