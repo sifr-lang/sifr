@@ -179,6 +179,7 @@ status: in_progress
 - [x] PR319 slice: move statement-emission support helpers (`emit_generator_init_stmt`, `emit_lowered_stmts`, `current_loop_has_else`) out of `lib.rs` into dedicated `stmt_support_emitter` helpers to reduce file size while preserving statement/generator behavior
 - [x] PR320 slice: move generic/typevar bounds helper cluster (`class_needs_hash_eq`, `func_needs_hash_eq`, `generic_bounds_for_class`, `rust_type_with_generics`, `extra_bounds_for_type_param` and scan helpers) out of `lib.rs` into dedicated `generic_bounds_helpers` module while preserving generic bound behavior
 - [x] PR321 slice: move union-type collection/definition helper cluster (`collect_union_types`, `collect_union_types_in_stmts`, `register_union_type`, `generate_enum_definitions`) out of `lib.rs` into dedicated `union_type_helpers` module while preserving union enum generation behavior
+- [x] PR322 slice: move output writer helper cluster (`write`, `writeln`, `write_indent`) out of `lib.rs` into dedicated `output_helpers` module while preserving emission output behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

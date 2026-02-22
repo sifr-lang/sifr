@@ -45,6 +45,7 @@ mod expr_render_helpers;
 mod stmt_support_emitter;
 mod generic_bounds_helpers;
 mod union_type_helpers;
+mod output_helpers;
 
 #[cfg(test)]
 mod lib_codegen_tests;
@@ -905,22 +906,6 @@ impl RustEmitter {
                 self.generic_classes.insert(class.name.clone());
                 self.generic_class_params.insert(class.name.clone(), class.type_params.clone());
             }
-        }
-    }
-
-    fn write(&mut self, s: &str) {
-        self.output.push_str(s);
-    }
-
-    fn writeln(&mut self, s: &str) {
-        self.write_indent();
-        self.output.push_str(s);
-        self.output.push('\n');
-    }
-
-    fn write_indent(&mut self) {
-        for _ in 0..self.indent {
-            self.output.push_str("    ");
         }
     }
 
