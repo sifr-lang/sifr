@@ -383,7 +383,7 @@ mod tests {
         assert!(render_expr(&append.expr).contains("OpenOptions::new().append(true)"));
 
         let walk = lower_intrinsic("walk_dir", &["root".to_string()]).expect("walk_dir lowers");
-        assert!(render_expr(&walk.expr).contains("fn __walk"));
+        assert!(render_expr(&walk.expr).contains("__stack.pop()"));
     }
 
     #[test]
