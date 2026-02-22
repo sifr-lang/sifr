@@ -273,6 +273,7 @@ status: in_progress
 - [x] PR163 slice: continue RawCode-zero gate by replacing `bytes_to_hex` `RawCode` with structured iterator/map/collect/map IR
 - [x] PR164 slice: continue RawCode-zero gate by replacing `gettempdir` `RawCode` with structured path/fn-call/method-call IR
 - [x] PR165 slice: continue RawCode-zero gate by replacing `exists` `RawCode` with structured path/fn-call/method-call IR
+- [x] PR166 slice: continue RawCode-zero gate by replacing `datetime_now_struct` and `datetime_from_timestamp` `RawCode` with structured block/closure/cast IR
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
 - [ ] Add structural import collection pass from IR tree
 - [ ] Replace `filter_rust_code_to_needed` with IR DCE pass
@@ -281,6 +282,6 @@ status: in_progress
 - [x] Delete legacy string-parser helpers (`parse_rust_blocks`, `extract_top_level_item_name`, `count_braces`)
 - [x] Remove at least 20 clippy suppressions from file header
 - [ ] Confirm generated binary size does not increase
-- [ ] Demo: `demos/milestone_codegen_structural_passes_demo.sifr`
+- [x] Demo: `demos/milestone_codegen_structural_passes_demo.sifr`
 - [ ] Open PR(s), review, merge
 - [ ] Mark phase 14 done in roadmap
