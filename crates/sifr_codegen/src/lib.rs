@@ -1195,6 +1195,13 @@ impl RustEmitter {
                 self.module_constants.insert(name.clone(), (ty.clone(), rust_name));
                 continue;
             }
+            if let Some((item, rust_name_call)) =
+                try_lower_simple_module_string_const_item(name, ty, value)
+            {
+                self.output.push_str(&render_items(&[item]));
+                self.module_constants.insert(name.clone(), (ty.clone(), rust_name_call));
+                continue;
+            }
 
             if ty == &Type::Str {
                 let rust_name = format!("__const_{name}");
