@@ -333,4 +333,5 @@ status: done
 - [x] Confirm generated binary size does not increase
 - [x] Demo: `demos/milestone_codegen_structural_passes_demo.sifr`
 - [x] Open PR(s), review, merge
+- [x] PR216 slice: sync phase-14 architecture/roadmap status markers to reflect actual progress (`rust_ir_types`/`renderer`/`preamble`/`intrinsic`/`structural` done; `stmt_expr` still in progress), leaving phase-complete checkbox open
 - [ ] Mark phase 14 done in roadmap

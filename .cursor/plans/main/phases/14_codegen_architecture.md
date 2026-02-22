@@ -8,7 +8,7 @@
 
 ## milestone_rust_ir_types: Rust IR Type Definitions
 
-status: pending
+status: done
 
 **Goal:** Define a purpose-built intermediate representation for the subset of Rust that Sifr actually generates. This is NOT a general-purpose Rust AST (no `syn`, no `quote`, no `proc-macro2`). It is a ~300-line set of enum/struct types covering the ~50 distinct Rust constructs the codegen emits: struct, enum, impl, fn, let, if, match, for, while, loop, return, break, continue, closures, method calls, field access, indexing, binary/unary ops, macros, attributes, and type references. The IR includes a `RawCode(String)` escape hatch on every node type to enable incremental migration — unconverted codegen paths can emit raw strings through the IR without blocking the migration.
 
@@ -331,7 +331,7 @@ The new module is added to `crates/sifr_codegen/src/lib.rs` as `mod rust_ir;` an
 
 ## milestone_rust_ir_renderer: Rust IR Pretty-Printer
 
-status: pending
+status: done
 
 **Goal:** Write a renderer that takes `RustFile` (or any IR node) and produces correctly formatted, indented Rust source code as a `String`. This is the single point where indentation logic lives — the codegen never thinks about whitespace again. The renderer must produce output that is **semantically identical** to what the current string-based codegen produces — the generated Rust must compile and produce the same runtime behavior. Whitespace and formatting differences are acceptable (the IR renderer may produce cleaner formatting than the manual `push_str` chains). The verification contract is: **same compilation success, same runtime output** — not byte-for-byte textual identity.
 
@@ -437,7 +437,7 @@ Example test cases:
 
 ## milestone_codegen_preamble_migration: Preamble Migration to IR
 
-status: pending
+status: done
 
 **Goal:** Migrate the preamble generation (error types, file handle infrastructure, logging globals, import collection) from string templates to structured IR. This is the safest first migration target because the preamble is static Rust code — it does not depend on user input or HIR traversal. It proves the IR+renderer pipeline end-to-end on real output and eliminates the worst string templates in the codebase (the `FileHandle` methods at 500-650 characters per `push_str` call).
 
@@ -538,7 +538,7 @@ Starting with this milestone and continuing through milestones 4-5, use a differ
 
 ## milestone_codegen_stmt_expr_migration: Statement and Expression Migration
 
-status: pending
+status: in_progress
 
 **Goal:** Migrate the core codegen functions — `emit_stmt` (line 3047, ~1,400 lines), `emit_expr` (line 5509, ~1,400 lines), `emit_method_call` (line 4888, ~570 lines), and `emit_function`/`emit_class` — from writing directly to `self.output` to building IR nodes that are rendered at the end. This is the bulk of the migration and converts the codegen from an imperative string-writing model to a functional IR-building model.
 
