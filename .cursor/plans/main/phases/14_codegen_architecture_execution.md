@@ -308,6 +308,7 @@ status: in_progress
 - [x] PR200 slice: add structural import collection over IR preamble items (`ir_imports` pass) and wire import emission to combine IR-derived needs with existing booleans
 - [x] PR201 slice: replace pattern-based stdlib DCE dependency detection with structured identifier traversal (comment/string-safe token scan) in `stdlib_filter` and add regression tests
 - [x] PR202 slice: extend stdlib DCE top-level item parsing to include `enum`/`trait`/`static` and `pub`/`pub(crate)` prefixes, with regression test coverage
+- [x] PR203 slice: harden stdlib DCE parser for `async`/`const`/`unsafe fn` headers and `static mut` declarations, with focused regression test
 - [ ] PR171 slice: add structural import collection pass from IR tree and replace `filter_rust_code_to_needed` with IR DCE traversal
 - [ ] PR172 slice: add conservative clone optimization pass and IR validation pass; run binary-size regression check and milestone close-out checklist
 - [ ] Meet `RawCode`-zero gate (target zero; hard max 5 preamble-only documented)
