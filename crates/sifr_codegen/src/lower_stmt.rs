@@ -77,6 +77,23 @@ pub fn try_lower_simple_stmt(
                 borrowed_params,
             )?,
         }]),
+        HirStmt::For {
+            target,
+            iter,
+            body,
+            else_body: None,
+            ..
+        } if !target.contains(',') => Some(vec![RustStmt::For {
+            var: target.clone(),
+            iter: try_lower_leaf_expr(iter)?,
+            // Entering a nested for without else resets loop-else break marker context.
+            body: try_lower_simple_stmt_block(
+                body,
+                false,
+                mutated_vars,
+                borrowed_params,
+            )?,
+        }]),
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -290,5 +307,84 @@ mod tests {
             &HashSet::new(),
         );
         assert!(lowered.is_none());
+    }
+
+    #[test]
+    fn lowers_simple_for_without_else() {
+        let for_stmt = HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::RangeLiteral {
+                start: Box::new(HirExpr::IntLiteral(0)),
+                end: Box::new(HirExpr::IntLiteral(3)),
+                step: None,
+                ty: Type::Range,
+            },
+            body: vec![HirStmt::Break],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &for_stmt,
+            true, // outer loop-else context should not leak into inner loop body
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("for lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::For { body, .. } => {
+                assert_eq!(body.len(), 1);
+                assert!(matches!(body[0], RustStmt::Break));
+            }
+            _ => panic!("expected RustStmt::For"),
+        }
+    }
+
+    #[test]
+    fn does_not_lower_for_with_else_or_tuple_target() {
+        let for_with_else = HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::RangeLiteral {
+                start: Box::new(HirExpr::IntLiteral(0)),
+                end: Box::new(HirExpr::IntLiteral(3)),
+                step: None,
+                ty: Type::Range,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: Some(vec![HirStmt::Pass]),
+        };
+        assert!(
+            try_lower_simple_stmt(
+                &for_with_else,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+
+        let for_tuple_target = HirStmt::For {
+            target: "i,v".to_string(),
+            target_ty: Type::Tuple(vec![Type::Int, Type::Int]),
+            iter: HirExpr::RangeLiteral {
+                start: Box::new(HirExpr::IntLiteral(0)),
+                end: Box::new(HirExpr::IntLiteral(3)),
+                step: None,
+                ty: Type::Range,
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+        assert!(
+            try_lower_simple_stmt(
+                &for_tuple_target,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
     }
 }
