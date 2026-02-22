@@ -4183,22 +4183,40 @@ impl RustEmitter {
         }
     }
 
+    fn render_match_pattern_value(&mut self, value: &HirExpr) -> String {
+        if let Some(code) = Self::match_pattern_literal_code(value) {
+            return code;
+        }
+        if let Some(lowered) = try_lower_leaf_expr(value) {
+            return crate::render_expr(&lowered);
+        }
+        self.expr_to_string(value)
+    }
+
+    fn render_match_guard_expr(
+        &mut self,
+        guard_expr: &HirExpr,
+        pattern: &HirPattern,
+        is_non_option_union: bool,
+    ) -> String {
+        let guard_code = if let Some(lowered) = try_lower_leaf_expr(guard_expr) {
+            crate::render_expr(&lowered)
+        } else {
+            self.expr_to_string(guard_expr)
+        };
+        Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union)
+    }
+
     fn emit_match(&mut self, subject: &HirExpr, subject_ty: &Type, arms: &[HirMatchArm]) {
         // Determine how to emit the match based on subject type
         let is_option = is_option_type(subject_ty);
         let is_non_option_union = matches!(subject_ty, Type::Union(_)) && !is_option;
 
         self.write_indent();
-
-        if is_option || is_non_option_union {
-            // For union types, emit as a Rust match on the enum/Option
-            let subject_code = self.expr_to_string(subject);
-            self.write(&format!("match {subject_code} {{\n"));
-        } else {
-            // For simple types (literals, etc.), emit as a Rust match
-            let subject_code = self.expr_to_string(subject);
-            self.write(&format!("match {subject_code} {{\n"));
-        }
+        // For both union and non-union subjects, emit a direct Rust match.
+        self.write("match ");
+        self.emit_expr(subject);
+        self.write(" {\n");
 
         self.indent += 1;
 
@@ -4265,8 +4283,7 @@ impl RustEmitter {
                     // String matching needs a guard since Rust can't match String directly
                     self.write("__s");
                 } else {
-                    let lit_code = Self::match_pattern_literal_code(value)
-                        .unwrap_or_else(|| self.expr_to_string(value));
+                    let lit_code = self.render_match_pattern_value(value);
                     self.write(&lit_code);
                 }
             }
@@ -4279,8 +4296,7 @@ impl RustEmitter {
                     for p in patterns {
                         match p {
                             HirPattern::Literal { value } => {
-                                let lit_code = Self::match_pattern_literal_code(value)
-                                    .unwrap_or_else(|| self.expr_to_string(value));
+                                let lit_code = self.render_match_pattern_value(value);
                                 parts.push(lit_code);
                             }
                             HirPattern::None => parts.push("None".to_string()),
@@ -4337,8 +4353,7 @@ impl RustEmitter {
                         HirPattern::Capture { name, .. } => self.write(name),
                         HirPattern::Wildcard => self.write("_"),
                         HirPattern::Literal { value } => {
-                            let lit_code = Self::match_pattern_literal_code(value)
-                                .unwrap_or_else(|| self.expr_to_string(value));
+                            let lit_code = self.render_match_pattern_value(value);
                             self.write(&lit_code);
                         }
                         _ => self.write("_"),
@@ -4356,7 +4371,7 @@ impl RustEmitter {
                 fields.iter().filter_map(|(fname, fpat)| {
                     match fpat {
                         HirPattern::Literal { value } => {
-                            let lit_code = self.expr_to_string(value);
+                            let lit_code = self.render_match_pattern_value(value);
                             Some(format!("__matched.{fname} == {lit_code}"))
                         }
                         HirPattern::None => {
@@ -4391,7 +4406,7 @@ impl RustEmitter {
                 _ => String::new(),
             };
             if let Some(guard_expr) = guard {
-                let guard_code = self.expr_to_string(guard_expr);
+                let guard_code = self.render_match_guard_expr(guard_expr, pattern, is_non_option_union);
                 self.write(&format!(" if ({str_guard}) && ({guard_code})"));
             } else {
                 self.write(&format!(" if {str_guard}"));
@@ -4399,14 +4414,12 @@ impl RustEmitter {
         } else if !class_field_guards.is_empty() {
             let mut all_guards = class_field_guards;
             if let Some(guard_expr) = guard {
-                let mut guard_code = self.expr_to_string(guard_expr);
-                guard_code = Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
+                let guard_code = self.render_match_guard_expr(guard_expr, pattern, is_non_option_union);
                 all_guards.push(guard_code);
             }
             self.write(&format!(" if {}", all_guards.join(" && ")));
         } else if let Some(guard_expr) = guard {
-            let mut guard_code = self.expr_to_string(guard_expr);
-            guard_code = Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union);
+            let guard_code = self.render_match_guard_expr(guard_expr, pattern, is_non_option_union);
             self.write(&format!(" if {guard_code}"));
         }
 
