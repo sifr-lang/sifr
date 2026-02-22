@@ -77,9 +77,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::AugAssign { name, op, value }
             if try_lower_simple_aug_assign_value(op, value).is_some() =>
         {
+            let normalized_op = if op == "//=" {
+                "/".to_string()
+            } else {
+                op.strip_suffix('=').unwrap_or(op).to_string()
+            };
             Some(vec![RustStmt::AugAssign {
                 target: crate::RustExpr::Ident(name.clone()),
-                op: normalize_aug_assign_op(op).to_string(),
+                op: normalized_op,
                 value: try_lower_simple_aug_assign_value(op, value)?,
             }])
         }
@@ -488,13 +493,6 @@ fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustEx
 fn can_lower_simple_aug_assign_name(op: &str, ty: &Type) -> bool {
     let is_numeric = matches!(ty, Type::Int | Type::Float | Type::LiteralInt(_));
     is_numeric && matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=")
-}
-
-fn normalize_aug_assign_op(op: &str) -> &str {
-    if op == "//=" {
-        return "/";
-    }
-    op.strip_suffix('=').unwrap_or(op)
 }
 
 fn try_lower_assert_msg_expr(msg: &HirExpr) -> Option<RustExpr> {
