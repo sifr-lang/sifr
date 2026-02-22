@@ -500,3 +500,67 @@ fn test_match_int_literal_pattern_avoids_cast_expression() {
     assert!(rust_code.contains("1 => {"));
     assert!(!rust_code.contains("1 as i64 => {"));
 }
+
+#[test]
+fn test_generate_rust_multi_exports_non_main_items() {
+    let main_module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Pass],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let utils_module = HirModule {
+        functions: vec![HirFunction {
+            name: "helper".to_string(),
+            params: vec![],
+            return_type: Type::Int,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(7)),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![HirClass {
+            name: "Thing".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: vec![],
+            is_hashable: false,
+            is_error_type: false,
+            is_protocol: false,
+            operator_impls: vec![],
+            newtype_inner: None,
+            implements_protocols: vec![],
+            parent_class: None,
+            type_params: vec![],
+            is_enum: false,
+            enum_variants: vec![],
+        }],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
+    let main_rs = files.get("main").expect("main module should be generated");
+    let utils_rs = files.get("utils").expect("utils module should be generated");
+
+    assert!(main_rs.contains("fn main()"));
+    assert!(!main_rs.contains("pub fn main("));
+    assert!(utils_rs.contains("pub fn helper() -> i64"));
+    assert!(utils_rs.contains("pub struct Thing"));
+    assert!(utils_rs.contains("pub value: i64"));
+    assert!(utils_rs.contains("pub fn new(value: i64) -> Self"));
+}

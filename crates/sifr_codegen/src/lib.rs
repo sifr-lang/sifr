@@ -207,7 +207,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     emitter.generate_enum_definitions();
 
     // Second pass: emit the actual code
-    emitter.emit_module(module);
+    emitter.emit_module(module, false);
 
     // Build stdlib preamble first so we can check for error type references
     let mut stdlib_preamble = String::new();
@@ -496,13 +496,10 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
 
     for (module_name, module) in modules {
         let mut emitter = RustEmitter::new();
-        // For non-main modules, enable pub mode
-        if *module_name != "main" {
-            emitter.pub_mode = true;
-        }
+        let module_public = *module_name != "main";
         emitter.collect_union_types(module);
         emitter.generate_enum_definitions();
-        emitter.emit_module(module);
+        emitter.emit_module(module, module_public);
 
         let mut result = String::new();
 
@@ -764,8 +761,6 @@ struct RustEmitter {
     func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
     /// Whether we're inside a loop that has an else clause
     in_loop_with_else: bool,
-    /// Whether to emit `pub` on all top-level items (for module exports)
-    pub_mode: bool,
     /// Set of variable names that are mutated in the current function body
     mutated_vars: HashSet<String>,
     /// Set of class names that have Display impl (via __str__ or error type)
@@ -846,7 +841,6 @@ impl RustEmitter {
             option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
             in_loop_with_else: false,
-            pub_mode: false,
             mutated_vars: HashSet::new(),
             display_classes: HashSet::new(),
             parent_fields: HashMap::new(),
@@ -1105,7 +1099,7 @@ impl RustEmitter {
         }
     }
 
-    fn emit_module(&mut self, module: &HirModule) {
+    fn emit_module(&mut self, module: &HirModule, module_public: bool) {
         // Pre-scan: detect bigint usage
         if module_uses_bigint(module) {
             self.needs_bigint = true;
@@ -1228,7 +1222,7 @@ impl RustEmitter {
 
         // Emit class definitions first (structs + impls)
         for class in &module.classes {
-            self.emit_class(class, module);
+            self.emit_class(class, module, module_public);
             self.output.push('\n');
         }
 
@@ -1236,26 +1230,26 @@ impl RustEmitter {
             if i > 0 {
                 self.output.push('\n');
             }
-            self.emit_function(func);
+            self.emit_function(func, module_public);
         }
     }
 
-    fn emit_class(&mut self, class: &HirClass, module: &HirModule) {
+    fn emit_class(&mut self, class: &HirClass, module: &HirModule, module_public: bool) {
         // --- Protocol: emit trait definition ---
         if class.is_protocol {
-            self.emit_protocol_trait(class);
+            self.emit_protocol_trait(class, module_public);
             return;
         }
 
         // --- Enum: emit Rust enum with repr(i64) ---
         if class.is_enum {
-            self.emit_enum_class(class);
+            self.emit_enum_class(class, module_public);
             return;
         }
 
         // --- Newtype: emit tuple struct ---
         if let Some(ref inner) = class.newtype_inner {
-            self.emit_newtype(class, inner);
+            self.emit_newtype(class, inner, module_public);
             return;
         }
 
@@ -1282,7 +1276,7 @@ impl RustEmitter {
 
         // Struct definition
         self.write_indent();
-        if self.pub_mode {
+        if module_public {
             self.write("pub struct ");
         } else {
             self.write("struct ");
@@ -1303,7 +1297,7 @@ impl RustEmitter {
         // If this class has a parent, embed the parent struct as a field
         if let Some(ref parent) = class.parent_class {
             self.write_indent();
-            if self.pub_mode {
+            if module_public {
                 self.write("pub ");
             }
             let parent_field = parent.to_lowercase();
@@ -1321,7 +1315,7 @@ impl RustEmitter {
                 // should only put the child's own fields here
             }
             self.write_indent();
-            if self.pub_mode {
+            if module_public {
                 self.write("pub ");
             }
             self.write(field_name);
@@ -1373,7 +1367,7 @@ impl RustEmitter {
         let has_constructor = class.methods.iter().any(|m| m.name == "new");
         if !has_constructor && !class.fields.is_empty() {
             self.write_indent();
-            if self.pub_mode {
+            if module_public {
                 self.write("pub fn new(");
             } else {
                 self.write("fn new(");
@@ -1411,7 +1405,7 @@ impl RustEmitter {
 
         self.current_class_name = Some(class.name.clone());
         for method in &class.methods {
-            self.emit_class_method(method, class);
+            self.emit_class_method(method, class, module_public);
             self.output.push('\n');
         }
         self.current_class_name = None;
@@ -1560,9 +1554,9 @@ impl RustEmitter {
     }
 
     /// Emit a Rust `trait` definition for a Protocol class.
-    fn emit_protocol_trait(&mut self, class: &HirClass) {
+    fn emit_protocol_trait(&mut self, class: &HirClass, module_public: bool) {
         self.write_indent();
-        if self.pub_mode {
+        if module_public {
             self.write("pub trait ");
         } else {
             self.write("trait ");
@@ -1596,7 +1590,7 @@ impl RustEmitter {
     }
 
     /// Emit a newtype tuple struct.
-    fn emit_enum_class(&mut self, class: &HirClass) {
+    fn emit_enum_class(&mut self, class: &HirClass, module_public: bool) {
         // #[repr(i64)]
         // #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         // enum Color { RED = 1, GREEN = 2, BLUE = 3 }
@@ -1605,7 +1599,7 @@ impl RustEmitter {
         self.write_indent();
         self.write("#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\n");
         self.write_indent();
-        if self.pub_mode {
+        if module_public {
             self.write("pub enum ");
         } else {
             self.write("enum ");
@@ -1659,7 +1653,7 @@ impl RustEmitter {
         let methods = class.methods.clone();
         for method in &methods {
             self.current_class_name = Some(class_name.clone());
-            self.emit_class_method(method, class);
+            self.emit_class_method(method, class, module_public);
         }
         self.current_class_name = None;
         self.indent -= 1;
@@ -1667,7 +1661,7 @@ impl RustEmitter {
         self.write("}\n\n");
     }
 
-    fn emit_newtype(&mut self, class: &HirClass, inner: &Type) {
+    fn emit_newtype(&mut self, class: &HirClass, inner: &Type, module_public: bool) {
         // Derive attributes
         self.write_indent();
         if is_hashable_type_codegen(inner) {
@@ -1677,7 +1671,7 @@ impl RustEmitter {
         }
 
         self.write_indent();
-        if self.pub_mode {
+        if module_public {
             self.write(&format!("pub struct {}({});\n\n", class.name, inner.rust_type()));
         } else {
             self.write(&format!("struct {}({});\n\n", class.name, inner.rust_type()));
@@ -1692,7 +1686,7 @@ impl RustEmitter {
 
         // Constructor: fn new(value: InnerType) -> Self
         self.write_indent();
-        let pub_prefix = if self.pub_mode { "pub " } else { "" };
+        let pub_prefix = if module_public { "pub " } else { "" };
         self.write(&format!("{}fn new(value: {}) -> Self {{\n", pub_prefix, inner.rust_type()));
         self.indent += 1;
         self.write_indent();
@@ -1718,7 +1712,7 @@ impl RustEmitter {
         // Emit any custom methods
         for method in &class.methods {
             self.output.push('\n');
-            self.emit_class_method(method, class);
+            self.emit_class_method(method, class, module_public);
         }
 
         self.indent -= 1;
@@ -1983,14 +1977,14 @@ impl RustEmitter {
         }
     }
 
-    fn emit_class_method(&mut self, method: &HirFunction, class: &HirClass) {
+    fn emit_class_method(&mut self, method: &HirFunction, class: &HirClass, module_public: bool) {
         self.current_return_type = Some(method.return_type.clone());
 
         // Pre-scan: collect mutated variables so we know which need `mut`
         self.mutated_vars = collect_mutated_vars_with_sigs(&method.body, &self.func_signatures);
 
         self.write_indent();
-        let pub_prefix = if self.pub_mode { "pub " } else { "" };
+        let pub_prefix = if module_public { "pub " } else { "" };
 
         match method.method_kind {
             MethodKind::ClassMethod => {
@@ -2363,7 +2357,7 @@ impl RustEmitter {
         }
     }
 
-    fn emit_function(&mut self, func: &HirFunction) {
+    fn emit_function(&mut self, func: &HirFunction, module_public: bool) {
         // In test mode, skip the main function
         if self.test_mode && func.name == "main" {
             return;
@@ -2418,7 +2412,7 @@ impl RustEmitter {
         // Since Rust doesn't have default params, we emit all params and handle
         // defaults at call site
         self.write_indent();
-        if self.pub_mode && func.name != "main" {
+        if module_public && func.name != "main" {
             self.write("pub fn ");
         } else {
             self.write("fn ");
