@@ -120,6 +120,7 @@ status: in_progress
 - [x] PR260 slice: extend simple `if/elif` dual-path condition lowering to accept bool-name operands (e.g. `if ok:` / `elif ready:`) while preserving fallback for non-leaf condition expressions
 - [x] PR261 slice: extend simple `while` dual-path condition lowering to accept bool-name operands (e.g. `while ready:`) while preserving fallback for non-leaf while-condition expressions
 - [x] PR262 slice: extend simple `for` dual-path iterable lowering to accept simple name iterables (e.g. `for i in items`) while preserving fallback for non-leaf iterable expressions
+- [x] PR263 slice: add explicit `for ... else` dual-path coverage for simple name iterables (e.g. `for i in items: ... else: ...`) and preserve fallback for non-leaf iterable expressions
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
