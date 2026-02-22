@@ -327,7 +327,9 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
 
     if option_return {
         if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
-            return None;
+            return Some(vec![RustStmt::Return(Some(
+                try_lower_simple_option_passthrough_return_value(value)?,
+            ))]);
         }
         let lowered = try_lower_simple_plain_return_value(value)?;
         if matches!(value, HirExpr::NoneLiteral) {
@@ -377,6 +379,13 @@ fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<
             method: "unwrap".to_string(),
             args: vec![],
         });
+    }
+    None
+}
+
+fn try_lower_simple_option_passthrough_return_value(value: &HirExpr) -> Option<RustExpr> {
+    if let HirExpr::Name { name, .. } = value {
+        return Some(RustExpr::Ident(name.clone()));
     }
     None
 }
@@ -1034,10 +1043,39 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_option_name_return_with_option_return_context() {
+    fn lowers_option_name_return_with_option_return_context() {
         let stmt = HirStmt::Return {
             value: Some(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            }),
+        };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("option passthrough name return lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::Ident(ref name))) if name == "maybe_x"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_non_leaf_option_return_passthrough_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Call {
+                func: "maybe_x".to_string(),
+                args: vec![],
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
         };
