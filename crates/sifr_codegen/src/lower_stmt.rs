@@ -320,13 +320,9 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
     if ctx.in_display_impl || ctx.in_class_scope {
         return None;
     }
-    if ctx.return_type.is_some_and(crate::helpers::is_option_type)
-        && !matches!(value, HirExpr::NoneLiteral)
-    {
-        return None;
-    }
+    let option_return = ctx.return_type.is_some_and(crate::helpers::is_option_type);
     if matches!(ctx.return_type, Some(Type::Union(_)))
-        && !ctx.return_type.is_some_and(crate::helpers::is_option_type)
+        && !option_return
     {
         return None;
     }
@@ -337,7 +333,17 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         return None;
     }
 
-    Some(vec![RustStmt::Return(Some(try_lower_leaf_expr(value)?))])
+    let lowered = try_lower_leaf_expr(value)?;
+    if option_return {
+        if matches!(value, HirExpr::NoneLiteral) {
+            return Some(vec![RustStmt::Return(Some(lowered))]);
+        }
+        return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered],
+        }))]);
+    }
+    Some(vec![RustStmt::Return(Some(lowered))])
 }
 
 fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
@@ -661,25 +667,30 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_return_with_option_return_context() {
+    fn lowers_return_leaf_with_option_return_context() {
         let stmt = HirStmt::Return {
             value: Some(HirExpr::IntLiteral(5)),
         };
         let option_ret = Type::Union(vec![Type::Int, Type::None]);
-        assert!(
-            try_lower_simple_stmt_with_ctx(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-                SimpleStmtLoweringCtx {
-                    return_type: Some(&option_ret),
-                    in_display_impl: false,
-                    in_class_scope: false,
-                },
-            )
-            .is_none()
-        );
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("option return leaf lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::Return(Some(RustExpr::FnCall { func, .. })) => {
+                assert!(matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Some".to_string()]));
+            }
+            _ => panic!("expected return Some(...)"),
+        }
     }
 
     #[test]
@@ -744,6 +755,31 @@ mod tests {
                     return_type: Some(&Type::Int),
                     in_display_impl: false,
                     in_class_scope: true,
+                },
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn does_not_lower_non_leaf_return_with_option_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+        };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        assert!(
+            try_lower_simple_stmt_with_ctx(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+                SimpleStmtLoweringCtx {
+                    return_type: Some(&option_ret),
+                    in_display_impl: false,
+                    in_class_scope: false,
                 },
             )
             .is_none()
