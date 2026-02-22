@@ -660,3 +660,149 @@ fn test_generate_rust_test_uses_explicit_test_mode_context() {
     assert!(rust_code.contains("fn helper()"));
     assert!(!rust_code.contains("#[test]\nfn helper()"));
 }
+
+#[test]
+fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
+    let items_ty = Type::List(Box::new(Type::Int));
+    let table_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
+    let label_ty = Type::Str;
+    let class_ty = Type::Class {
+        name: "Bucket".to_string(),
+        fields: vec![
+            ("items".to_string(), items_ty.clone()),
+            ("table".to_string(), table_ty.clone()),
+            ("label".to_string(), label_ty.clone()),
+        ],
+        methods: vec![],
+        parent_class: None,
+    };
+
+    let module = HirModule {
+        functions: vec![],
+        classes: vec![HirClass {
+            name: "Bucket".to_string(),
+            fields: vec![
+                ("items".to_string(), items_ty.clone()),
+                ("table".to_string(), table_ty.clone()),
+                ("label".to_string(), label_ty.clone()),
+            ],
+            methods: vec![
+                HirFunction {
+                    name: "append_item".to_string(),
+                    params: vec![HirParam {
+                        name: "x".to_string(),
+                        ty: Type::Int,
+                        default: None,
+                        keyword_only: false,
+                        convention: ParamConvention::Own,
+                    }],
+                    return_type: Type::None,
+                    body: vec![HirStmt::Expr {
+                        expr: HirExpr::MethodCall {
+                            object: Box::new(HirExpr::FieldAccess {
+                                object: Box::new(HirExpr::Name {
+                                    name: "self".to_string(),
+                                    ty: class_ty.clone(),
+                                }),
+                                field: "items".to_string(),
+                                ty: items_ty.clone(),
+                            }),
+                            method: "append".to_string(),
+                            args: vec![HirExpr::Name {
+                                name: "x".to_string(),
+                                ty: Type::Int,
+                            }],
+                            ty: Type::None,
+                        },
+                    }],
+                    method_kind: MethodKind::Regular,
+                    decorators: vec![],
+                    type_params: vec![],
+                },
+                HirFunction {
+                    name: "read_table".to_string(),
+                    params: vec![],
+                    return_type: Type::Union(vec![Type::Int, Type::None]),
+                    body: vec![HirStmt::Return {
+                        value: Some(HirExpr::Index {
+                            object: Box::new(HirExpr::FieldAccess {
+                                object: Box::new(HirExpr::Name {
+                                    name: "self".to_string(),
+                                    ty: class_ty.clone(),
+                                }),
+                                field: "table".to_string(),
+                                ty: table_ty.clone(),
+                            }),
+                            index: Box::new(HirExpr::StringLiteral("k".to_string())),
+                            ty: Type::Union(vec![Type::Int, Type::None]),
+                        }),
+                    }],
+                    method_kind: MethodKind::Regular,
+                    decorators: vec![],
+                    type_params: vec![],
+                },
+                HirFunction {
+                    name: "leak_guard".to_string(),
+                    params: vec![],
+                    return_type: Type::Str,
+                    body: vec![
+                        HirStmt::Let {
+                            name: "d".to_string(),
+                            ty: table_ty.clone(),
+                            value: HirExpr::DictLiteral {
+                                keys: vec![HirExpr::StringLiteral("k".to_string())],
+                                values: vec![HirExpr::IntLiteral(1)],
+                                ty: table_ty.clone(),
+                            },
+                            is_mutable: false,
+                        },
+                        HirStmt::Expr {
+                            expr: HirExpr::Index {
+                                object: Box::new(HirExpr::Name {
+                                    name: "d".to_string(),
+                                    ty: table_ty.clone(),
+                                }),
+                                index: Box::new(HirExpr::StringLiteral("k".to_string())),
+                                ty: Type::Union(vec![Type::Int, Type::None]),
+                            },
+                        },
+                        HirStmt::Return {
+                            value: Some(HirExpr::FieldAccess {
+                                object: Box::new(HirExpr::Name {
+                                    name: "self".to_string(),
+                                    ty: class_ty,
+                                }),
+                                field: "label".to_string(),
+                                ty: label_ty,
+                            }),
+                        },
+                    ],
+                    method_kind: MethodKind::Regular,
+                    decorators: vec![],
+                    type_params: vec![],
+                },
+            ],
+            is_hashable: false,
+            is_error_type: false,
+            is_protocol: false,
+            operator_impls: vec![],
+            newtype_inner: None,
+            implements_protocols: vec![],
+            parent_class: None,
+            type_params: vec![],
+            is_enum: false,
+            enum_variants: vec![],
+        }],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+    assert!(rust_code.contains("self.items.push(x);"));
+    assert!(!rust_code.contains("self.items.clone().push(x)"));
+    assert!(rust_code.contains("return self.table.get(\"k\").cloned();"));
+    assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
+    assert!(rust_code.contains("return self.label.clone();"));
+}

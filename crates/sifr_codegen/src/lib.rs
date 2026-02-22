@@ -806,8 +806,9 @@ struct RustEmitter {
     generator_functions: HashSet<String>,
     /// Map of `module_name` -> set of imported names (for filtering preamble to only used functions)
     imported_stdlib_names: HashMap<String, HashSet<String>>,
-    /// Temporarily suppress .`clone()` on field access (for mutating method calls on self.field)
-    suppress_field_clone: bool,
+    /// Number of upcoming `self.field` reads that should suppress auto-clone.
+    /// This avoids temporal coupling from a sticky bool flag.
+    pending_self_field_clone_suppression: usize,
     /// Whether we're inside a generator closure (yield -> return Some(val))
     in_generator_closure: bool,
     /// Whether we're inside a `Display::fmt` implementation (for __str__ methods)
@@ -858,7 +859,7 @@ impl RustEmitter {
             stdlib_intrinsic_names: HashMap::new(),
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
-            suppress_field_clone: false,
+            pending_self_field_clone_suppression: 0,
             in_generator_closure: false,
             in_display_impl: false,
             try_enum_counter: 0,
@@ -4653,7 +4654,7 @@ impl RustEmitter {
         let is_self_field = matches!(object, HirExpr::FieldAccess { object: inner, .. }
             if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
         if is_self_field && MUTATING_METHODS.contains(&method) {
-            self.suppress_field_clone = true;
+            self.pending_self_field_clone_suppression += 1;
         }
         let obj_ty = object.ty();
         if self.try_emit_method_via_registry(obj_ty, object, method, args) {
@@ -5676,7 +5677,11 @@ impl RustEmitter {
                     Type::Dict(_, _) => {
                         // Safe dict indexing: d[key] -> d.get(key_ref).cloned()
                         // For self.field dict, we don't need to clone the field -- just borrow it.
-                        self.suppress_field_clone = true;
+                        let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
+                            if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
+                        if is_self_field {
+                            self.pending_self_field_clone_suppression += 1;
+                        }
                         self.emit_expr(object);
                         self.write(".get(");
                         self.emit_key_ref_expr(index);
@@ -5816,8 +5821,13 @@ impl RustEmitter {
 
                 // Determine if we need .clone() (non-Copy field accessed on &self)
                 let is_self_access = matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
-                let needs_clone = is_self_access && needs_clone_for_type(ty) && !self.suppress_field_clone;
-                self.suppress_field_clone = false;
+                let suppress_self_clone = if is_self_access && self.pending_self_field_clone_suppression > 0 {
+                    self.pending_self_field_clone_suppression -= 1;
+                    true
+                } else {
+                    false
+                };
+                let needs_clone = is_self_access && needs_clone_for_type(ty) && !suppress_self_clone;
 
                 // Determine the class name for parent field resolution
                 // Either from current_class_name (inside a method) or from the object's type

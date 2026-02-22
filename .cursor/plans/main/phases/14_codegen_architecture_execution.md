@@ -79,6 +79,7 @@ status: in_progress
 - [x] PR219 slice: remove `RustEmitter::pub_mode` temporal-coupling flag by threading explicit module visibility through `emit_module`/`emit_class`/`emit_function` paths and add `generate_rust_multi` visibility regression coverage
 - [x] PR220 slice: replace `in_loop_with_else` temporal flag with explicit loop-else context stack (`loop_else_stack`) and add nested-loop regression coverage for `_broke` propagation
 - [x] PR221 slice: remove `RustEmitter::test_mode` temporal flag by threading explicit test-context through `emit_module`/`emit_function` and add `generate_rust_test` regression coverage
+- [x] PR222 slice: replace sticky `suppress_field_clone` temporal flag with scoped pending suppression (`pending_self_field_clone_suppression`) and add non-sticky clone-suppression regression coverage
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [ ] Replace all `expr_to_string` call sites with structured lowering
