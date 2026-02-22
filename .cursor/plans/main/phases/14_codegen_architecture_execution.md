@@ -136,6 +136,7 @@ status: in_progress
 - [x] PR276 slice: extend simple `if`/`while` dual-path condition lowering for option-none compare conditions (`... is None` / `... is not None`) via structured `.is_none()`/`.is_some()` checks, preserving fallback for non-leaf compare-left expressions
 - [x] PR277 slice: centralize option-none compare leaf lowering (`x is None` / `x is not None`) in `try_lower_leaf_expr` and remove redundant stmt-level helper usage so assert/if/while paths share one structured implementation
 - [x] PR278 slice: centralize bool-name leaf lowering (`ok` where type is bool) in `try_lower_leaf_expr` and remove redundant stmt-level bool-name branches from simple `if`/`while` condition and `assert` test lowering
+- [x] PR279 slice: remove redundant stmt-level simple-bool-condition helper and route simple `if`/`while` condition leaf paths directly through `try_lower_leaf_expr`, preserving option-truthiness fallback behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
