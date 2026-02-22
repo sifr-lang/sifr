@@ -278,7 +278,7 @@ fn try_lower_simple_if_stmt(
 
     for (elif_cond, elif_body) in elif_clauses.iter().rev() {
         nested_else = Some(vec![RustStmt::If {
-            cond: try_lower_leaf_expr(elif_cond)?,
+            cond: try_lower_simple_bool_condition_expr(elif_cond)?,
             then_body: try_lower_simple_stmt_block(
                 elif_body,
                 in_loop_with_else,
@@ -291,7 +291,7 @@ fn try_lower_simple_if_stmt(
     }
 
     Some(RustStmt::If {
-        cond: try_lower_leaf_expr(condition)?,
+        cond: try_lower_simple_bool_condition_expr(condition)?,
         then_body: try_lower_simple_stmt_block(
             then_body,
             in_loop_with_else,
@@ -301,6 +301,18 @@ fn try_lower_simple_if_stmt(
         )?,
         else_body: nested_else,
     })
+}
+
+fn try_lower_simple_bool_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(condition) {
+        return Some(lowered);
+    }
+    if matches!(condition.ty(), Type::Bool | Type::LiteralBool(_)) {
+        if let HirExpr::Name { name, .. } = condition {
+            return Some(RustExpr::Ident(name.clone()));
+        }
+    }
+    None
 }
 
 fn try_lower_simple_bare_return_stmt(ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
@@ -1752,6 +1764,35 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_if_with_name_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::Name {
+                name: "ok".to_string(),
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if with name condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::If {
+                cond: RustExpr::Ident(ref name),
+                ..
+            } if name == "ok"
+        ));
+    }
+
+    #[test]
     fn lowers_simple_if_with_elif() {
         let if_stmt = HirStmt::If {
             condition: HirExpr::BoolLiteral(true),
@@ -1795,8 +1836,9 @@ mod tests {
             condition: HirExpr::BoolLiteral(true),
             then_body: vec![HirStmt::Pass],
             elif_clauses: vec![(
-                HirExpr::Name {
-                    name: "flag".to_string(),
+                HirExpr::Call {
+                    func: "flag".to_string(),
+                    args: vec![],
                     ty: Type::Bool,
                 },
                 vec![HirStmt::Pass],
