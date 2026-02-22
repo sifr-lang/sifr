@@ -107,7 +107,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             body,
             else_body: None,
         } => Some(vec![RustStmt::While {
-            cond: try_lower_simple_while_condition_expr(condition)?,
+            cond: try_lower_simple_condition_test_expr(condition)?,
             // Entering a nested while without else resets loop-else break marker context.
             body: try_lower_simple_stmt_block(
                 body,
@@ -129,7 +129,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 value: RustExpr::Literal(RustLiteral::Bool(false)),
             },
             RustStmt::While {
-                cond: try_lower_simple_while_condition_expr(condition)?,
+                cond: try_lower_simple_condition_test_expr(condition)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
                 body: try_lower_simple_stmt_block(
                     body,
@@ -343,10 +343,6 @@ fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
         return Some(lowered);
     }
     try_lower_simple_option_truthiness_condition_expr(expr)
-}
-
-fn try_lower_simple_while_condition_expr(condition: &HirExpr) -> Option<RustExpr> {
-    try_lower_simple_condition_test_expr(condition)
 }
 
 fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
