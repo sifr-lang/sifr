@@ -86,6 +86,7 @@ status: in_progress
 - [x] PR226 slice: extend `lower_stmt` dual-path coverage with structured lowering for simple `if` statements (no `elif`) when condition/body substatements are lowerable
 - [x] PR227 slice: extend `lower_stmt` dual-path coverage with structured lowering for simple `while` statements (no `else`) and preserve loop-else break-marker isolation in nested loop contexts
 - [x] PR228 slice: extend `lower_stmt` dual-path coverage with structured lowering for simple `for` statements (no `else`, non-tuple target) and preserve nested loop-else break-marker isolation
+- [x] PR229 slice: extend `lower_stmt` dual-path coverage with structured lowering for simple `while ... else ...` using `_broke` marker IR and preserve outer loop-else context for else-body breaks
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

@@ -1,6 +1,6 @@
 //! Statement lowering scaffolds for the IR migration.
 
-use crate::{try_lower_leaf_expr, CodegenError, RustStmt};
+use crate::{try_lower_leaf_expr, CodegenError, RustExpr, RustLiteral, RustStmt};
 use sifr_hir::{HirExpr, HirStmt};
 use sifr_type_system::Type;
 use std::collections::HashSet;
@@ -77,6 +77,43 @@ pub fn try_lower_simple_stmt(
                 borrowed_params,
             )?,
         }]),
+        HirStmt::While {
+            condition,
+            body,
+            else_body: Some(else_body),
+        } => Some(vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "_broke".to_string(),
+                ty: None,
+                value: RustExpr::Literal(RustLiteral::Bool(false)),
+            },
+            RustStmt::While {
+                cond: try_lower_leaf_expr(condition)?,
+                // Breaks in the loop body should mark this loop's `_broke`.
+                body: try_lower_simple_stmt_block(
+                    body,
+                    true,
+                    mutated_vars,
+                    borrowed_params,
+                )?,
+            },
+            RustStmt::If {
+                cond: RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::Ident("_broke".to_string())),
+                },
+                // Else body executes outside this loop scope. Preserve enclosing
+                // loop-else context for any break/continue lowering there.
+                then_body: try_lower_simple_stmt_block(
+                    else_body,
+                    in_loop_with_else,
+                    mutated_vars,
+                    borrowed_params,
+                )?,
+                else_body: None,
+            },
+        ]),
         HirStmt::For {
             target,
             iter,
@@ -293,7 +330,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_while_with_else() {
+    fn lowers_simple_while_with_else() {
         let while_stmt = HirStmt::While {
             condition: HirExpr::BoolLiteral(true),
             body: vec![HirStmt::Pass],
@@ -305,8 +342,12 @@ mod tests {
             false,
             &HashSet::new(),
             &HashSet::new(),
-        );
-        assert!(lowered.is_none());
+        )
+        .expect("while with else lowered");
+        assert_eq!(lowered.len(), 3);
+        assert!(matches!(lowered[0], RustStmt::Let { .. }));
+        assert!(matches!(lowered[1], RustStmt::While { .. }));
+        assert!(matches!(lowered[2], RustStmt::If { .. }));
     }
 
     #[test]
@@ -386,5 +427,59 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn lowers_while_else_with_broke_marker_in_loop_body() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::BoolLiteral(true),
+            body: vec![HirStmt::Break],
+            else_body: Some(vec![HirStmt::Expr {
+                expr: HirExpr::IntLiteral(1),
+            }]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &while_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("while else lowered");
+
+        match &lowered[1] {
+            RustStmt::While { body, .. } => {
+                assert_eq!(body.len(), 2);
+                assert!(matches!(body[0], RustStmt::Assign { .. }));
+                assert!(matches!(body[1], RustStmt::Break));
+            }
+            _ => panic!("expected while stmt"),
+        }
+    }
+
+    #[test]
+    fn while_else_body_break_uses_outer_loop_else_context() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::BoolLiteral(false),
+            body: vec![HirStmt::Pass],
+            else_body: Some(vec![HirStmt::Break]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &while_stmt,
+            true,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("while else lowered");
+
+        match &lowered[2] {
+            RustStmt::If { then_body, .. } => {
+                assert_eq!(then_body.len(), 2);
+                assert!(matches!(then_body[0], RustStmt::Assign { .. }));
+                assert!(matches!(then_body[1], RustStmt::Break));
+            }
+            _ => panic!("expected if stmt"),
+        }
     }
 }
