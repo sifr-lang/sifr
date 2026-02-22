@@ -32,6 +32,7 @@ mod helpers;
 mod entrypoints;
 mod module_constants;
 mod module_prescan;
+mod module_body;
 
 #[cfg(test)]
 mod lib_codegen_tests;
@@ -1109,19 +1110,7 @@ impl RustEmitter {
         self.prescan_module_metadata(module);
 
         self.emit_module_constants(module);
-
-        // Emit class definitions first (structs + impls)
-        for class in &module.classes {
-            self.emit_class(class, module, module_public);
-            self.output.push('\n');
-        }
-
-        for (i, func) in module.functions.iter().enumerate() {
-            if i > 0 {
-                self.output.push('\n');
-            }
-            self.emit_function(func, module_public, test_mode);
-        }
+        self.emit_module_body(module, module_public, test_mode);
     }
 
     fn emit_class(&mut self, class: &HirClass, module: &HirModule, module_public: bool) {
