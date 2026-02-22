@@ -58,7 +58,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
     };
     match stmt {
         HirStmt::Expr { expr } => try_lower_expr_stmt(expr),
-        HirStmt::Let { name, ty, value, .. } if can_lower_simple_let(ty, value) => {
+        HirStmt::Let { name, ty, value, .. } if try_lower_simple_let_value(ty, value).is_some() => {
             Some(vec![RustStmt::Let {
                 mutable: bindings.mutated_vars.contains(name),
                 name: name.clone(),
@@ -67,14 +67,16 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             }])
         }
         HirStmt::Assign { name, value }
-            if can_lower_simple_assign(value, bindings.borrowed_params) =>
+            if try_lower_simple_assign_value(value, bindings.borrowed_params).is_some() =>
         {
             Some(vec![RustStmt::Assign {
                 target: crate::RustExpr::Ident(name.clone()),
                 value: try_lower_simple_assign_value(value, bindings.borrowed_params)?,
             }])
         }
-        HirStmt::AugAssign { name, op, value } if can_lower_simple_aug_assign(op, value) => {
+        HirStmt::AugAssign { name, op, value }
+            if try_lower_simple_aug_assign_value(op, value).is_some() =>
+        {
             Some(vec![RustStmt::AugAssign {
                 target: crate::RustExpr::Ident(name.clone()),
                 op: normalize_aug_assign_op(op).to_string(),
@@ -422,10 +424,6 @@ fn try_lower_simple_plain_return_option_unwrap_value(value: &HirExpr) -> Option<
     })
 }
 
-fn can_lower_simple_let(ty: &Type, value: &HirExpr) -> bool {
-    try_lower_simple_let_value(ty, value).is_some()
-}
-
 fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     if crate::helpers::is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::None));
@@ -460,10 +458,6 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_or_name_expr(value)
 }
 
-fn can_lower_simple_assign(value: &HirExpr, borrowed_params: &HashSet<String>) -> bool {
-    try_lower_simple_assign_value(value, borrowed_params).is_some()
-}
-
 fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<String>) -> Option<RustExpr> {
     // Preserve legacy behavior where TypeVar assignment from borrowed params appends `.clone()`.
     if matches!(value.ty(), Type::TypeVar(_))
@@ -472,10 +466,6 @@ fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<Stri
         return None;
     }
     try_lower_leaf_or_name_expr(value)
-}
-
-fn can_lower_simple_aug_assign(op: &str, value: &HirExpr) -> bool {
-    try_lower_simple_aug_assign_value(op, value).is_some()
 }
 
 fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
