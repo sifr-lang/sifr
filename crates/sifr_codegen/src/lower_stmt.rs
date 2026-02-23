@@ -288,24 +288,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             index,
             value,
             object_ty,
-        } if try_lower_leaf_or_name_expr(index).is_some() && try_lower_leaf_or_name_expr(value).is_some() =>
-        {
-            let lowered_index = try_lower_leaf_or_name_expr(index)?;
-            let lowered_value = try_lower_leaf_or_name_expr(value)?;
-            match resolve_alias_type(object_ty) {
-                Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
-                    RustExpr::Ident(object.clone()),
-                    lowered_index,
-                    lowered_value,
-                )]),
-                Type::Dict(_, _) => Some(vec![build_dict_subscript_assign_stmt(
-                    RustExpr::Ident(object.clone()),
-                    lowered_index,
-                    lowered_value,
-                )]),
-                _ => None,
-            }
-        }
+        } => try_lower_simple_subscript_assign_stmt(object, index, value, object_ty),
         HirStmt::NestedSubscriptAssign {
             object,
             outer_index,
@@ -618,6 +601,29 @@ fn build_dict_subscript_assign_stmt(
         method: "insert".to_string(),
         args: vec![lowered_index, lowered_value],
     })
+}
+
+fn try_lower_simple_subscript_assign_stmt(
+    object: &str,
+    index: &HirExpr,
+    value: &HirExpr,
+    object_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    let lowered_index = try_lower_leaf_or_name_expr(index)?;
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    match resolve_alias_type(object_ty) {
+        Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
+            RustExpr::Ident(object.to_string()),
+            lowered_index,
+            lowered_value,
+        )]),
+        Type::Dict(_, _) => Some(vec![build_dict_subscript_assign_stmt(
+            RustExpr::Ident(object.to_string()),
+            lowered_index,
+            lowered_value,
+        )]),
+        _ => None,
+    }
 }
 
 fn try_lower_simple_attribute_subscript_assign_stmt(
