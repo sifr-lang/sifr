@@ -522,7 +522,7 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     }
     if !matches!(
         resolve_alias_type(ty),
-        Type::Int | Type::Float | Type::Bool | Type::Str | Type::Enum { .. }
+        Type::Int | Type::Float | Type::Bool | Type::Str | Type::Enum { .. } | Type::None
     ) {
         return None;
     }
@@ -922,6 +922,67 @@ mod tests {
                 value: RustExpr::Literal(RustLiteral::Unit),
                 ..
             } if let_name == "x"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_let_none_name_rhs() {
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: Type::None,
+            value: HirExpr::Name {
+                name: "n".to_string(),
+                ty: Type::None,
+            },
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let none-name lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                value: RustExpr::Ident(ref rhs),
+                ..
+            } if let_name == "x" && rhs == "n"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_let_alias_none_name_rhs() {
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: alias_none.clone(),
+            value: HirExpr::Name {
+                name: "n".to_string(),
+                ty: alias_none,
+            },
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let alias-none-name lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                value: RustExpr::Ident(ref rhs),
+                ..
+            } if let_name == "x" && rhs == "n"
         ));
     }
 
