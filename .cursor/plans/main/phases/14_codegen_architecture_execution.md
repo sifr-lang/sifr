@@ -216,6 +216,7 @@ status: in_progress
 - [x] PR356 slice: extend simple statement return/let option handling to support alias-wrapped option types (bare return, option passthrough return, and option-typed `let None`) in IR paths, with regression tests
 - [x] PR357 slice: extend simple `let` lowering final direct-type path to accept alias-equivalent primitive/enum types (including alias-int literal and alias-enum name RHS), with regression tests
 - [x] PR358 slice: extend simple numeric `AugAssign` RHS lowering to treat alias-wrapped numeric name operands as numeric (including `//= -> /` normalization) via IR path, with regression tests
+- [x] PR359 slice: extend simple module primitive-constant item lowering to treat alias-wrapped primitive types as primitive (and avoid helper-const lowering), with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
