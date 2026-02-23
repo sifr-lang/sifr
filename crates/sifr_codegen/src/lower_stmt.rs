@@ -266,6 +266,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 else_body: None,
             },
         ]),
+        HirStmt::TupleUnpack { targets, value }
+            if !targets.is_empty() && try_lower_leaf_or_name_expr(value).is_some() =>
+        {
+            Some(vec![RustStmt::LetPattern {
+                pattern: tuple_unpack_pattern(targets),
+                value: try_lower_leaf_or_name_expr(value)?,
+            }])
+        }
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -303,6 +311,15 @@ fn try_lower_simple_stmt_block(
         )?);
     }
     Some(lowered)
+}
+
+fn tuple_unpack_pattern(targets: &[(String, Type)]) -> String {
+    let names = targets
+        .iter()
+        .map(|(name, _)| name.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!("({names})")
 }
 
 fn try_lower_simple_if_stmt(
@@ -625,6 +642,60 @@ mod tests {
         )
         .expect("assign lowered");
         assert!(matches!(lowered[0], RustStmt::Assign { .. }));
+    }
+
+    #[test]
+    fn lowers_simple_tuple_unpack_stmt() {
+        let tuple_unpack = HirStmt::TupleUnpack {
+            targets: vec![
+                ("a".to_string(), Type::Int),
+                ("b".to_string(), Type::Bool),
+            ],
+            value: HirExpr::TupleLiteral {
+                elements: vec![HirExpr::IntLiteral(1), HirExpr::BoolLiteral(true)],
+                ty: Type::Tuple(vec![Type::Int, Type::Bool]),
+            },
+        };
+        let lowered = try_lower_simple_stmt(
+            &tuple_unpack,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("tuple unpack lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::LetPattern {
+                ref pattern,
+                value: RustExpr::Tuple(ref elements),
+            } if pattern == "(a, b)" && elements.len() == 2
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_tuple_unpack_with_non_leaf_value() {
+        let tuple_unpack = HirStmt::TupleUnpack {
+            targets: vec![
+                ("a".to_string(), Type::Int),
+                ("b".to_string(), Type::Bool),
+            ],
+            value: HirExpr::Call {
+                func: "pair".to_string(),
+                args: vec![],
+                ty: Type::Tuple(vec![Type::Int, Type::Bool]),
+            },
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &tuple_unpack,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
     }
 
     #[test]

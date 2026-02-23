@@ -71,6 +71,7 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
             }
             collect_expr(value, needs);
         }
+        RustStmt::LetPattern { value, .. } => collect_expr(value, needs),
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
             collect_expr(target, needs);
             collect_expr(value, needs);
