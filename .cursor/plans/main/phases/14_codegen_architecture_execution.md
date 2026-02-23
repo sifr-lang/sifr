@@ -233,6 +233,7 @@ status: in_progress
 - [x] PR373 slice: add `RustStmt::LetPattern` IR support and lower simple `TupleUnpack` statements (`let (a, b) = ...`) through `lower_stmt` for leaf/name tuple sources, while preserving fallback for non-leaf unpack sources
 - [x] PR374 slice: extend `lower_stmt` dual-path with structured `SubscriptAssign` lowering for simple list/dict targets (including alias-wrapped container types) using IR block/method-call forms, while preserving fallback for non-leaf index/value operands
 - [x] PR375 slice: extend `lower_stmt` dual-path with structured `NestedSubscriptAssign` lowering (`matrix[i][j] = v`) using guarded nested `get_mut` IR blocks for leaf/name indices and values, while preserving fallback for non-leaf index/value operands
+- [x] PR376 slice: extend `lower_stmt` dual-path with structured `SubscriptAugAssign` lowering for simple list targets (`+=`, `-=`, `*=`, `/=`, `%=`, `//=`, `**=`) via guarded `get_mut` IR blocks (including alias-wrapped list types), while preserving fallback for non-leaf index/value operands
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

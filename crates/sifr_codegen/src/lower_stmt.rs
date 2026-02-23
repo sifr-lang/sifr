@@ -374,6 +374,71 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 },
             ])])
         }
+        HirStmt::SubscriptAugAssign {
+            object,
+            index,
+            op,
+            value,
+            object_ty,
+        } if try_lower_leaf_or_name_expr(index).is_some()
+            && try_lower_leaf_or_name_expr(value).is_some()
+            && matches!(resolve_alias_type(object_ty), Type::List(_))
+            && matches!(op.as_str(), "+=" | "-=" | "*=" | "/=" | "%=" | "//=" | "**=") =>
+        {
+            let lowered_index = try_lower_leaf_or_name_expr(index)?;
+            let lowered_value = try_lower_leaf_or_name_expr(value)?;
+            let lowered_body_stmt = if op == "**=" {
+                RustStmt::Assign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__elem".to_string())),
+                        method: "pow".to_string(),
+                        args: vec![RustExpr::Cast {
+                            expr: Box::new(lowered_value),
+                            ty: RustType::Named("u32".to_string()),
+                        }],
+                    },
+                }
+            } else if op == "//=" {
+                RustStmt::Assign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    value: RustExpr::BinOp {
+                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "__elem".to_string(),
+                        )))),
+                        op: "/".to_string(),
+                        right: Box::new(lowered_value),
+                    },
+                }
+            } else {
+                RustStmt::AugAssign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    op: op.strip_suffix('=').unwrap_or(op).to_string(),
+                    value: lowered_value,
+                }
+            };
+            Some(vec![RustStmt::Block(vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__idx".to_string(),
+                    ty: None,
+                    value: RustExpr::Cast {
+                        expr: Box::new(lowered_index),
+                        ty: RustType::Named("usize".to_string()),
+                    },
+                },
+                RustStmt::IfLet {
+                    pattern: "Some(__elem)".to_string(),
+                    expr: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(object.clone())),
+                        method: "get_mut".to_string(),
+                        args: vec![RustExpr::Ident("__idx".to_string())],
+                    },
+                    then_body: vec![lowered_body_stmt],
+                    else_body: None,
+                },
+            ])])
+        }
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -1022,6 +1087,157 @@ mod tests {
             },
             value: HirExpr::IntLiteral(1),
             object_ty: Type::List(Box::new(Type::List(Box::new(Type::Int)))),
+        };
+
+        assert!(
+            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
+        );
+    }
+
+    #[test]
+    fn lowers_simple_list_subscript_augassign_plus_equal_stmt() {
+        let stmt = HirStmt::SubscriptAugAssign {
+            object: "items".to_string(),
+            index: HirExpr::Name {
+                name: "i".to_string(),
+                ty: Type::Int,
+            },
+            op: "+=".to_string(),
+            value: HirExpr::Name {
+                name: "delta".to_string(),
+                ty: Type::Int,
+            },
+            object_ty: Type::List(Box::new(Type::Int)),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("list subscript augassign lowered");
+        let RustStmt::Block(stmts) = &lowered[0] else {
+            panic!("expected block-lowered list subscript augassign");
+        };
+        assert_eq!(stmts.len(), 2);
+        assert!(matches!(
+            &stmts[1],
+            RustStmt::IfLet {
+                then_body,
+                ..
+            } if matches!(
+                then_body.first(),
+                Some(RustStmt::AugAssign {
+                    target: RustExpr::Deref(target),
+                    op,
+                    value: RustExpr::Ident(rhs),
+                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                    && op == "+"
+                    && rhs == "delta"
+            )
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_list_subscript_augassign_floor_div_equal_stmt() {
+        let stmt = HirStmt::SubscriptAugAssign {
+            object: "items".to_string(),
+            index: HirExpr::IntLiteral(0),
+            op: "//=".to_string(),
+            value: HirExpr::Name {
+                name: "d".to_string(),
+                ty: Type::Int,
+            },
+            object_ty: Type::List(Box::new(Type::Int)),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("list subscript floor-div augassign lowered");
+        let RustStmt::Block(stmts) = &lowered[0] else {
+            panic!("expected block-lowered list subscript floor-div augassign");
+        };
+        assert!(matches!(
+            &stmts[1],
+            RustStmt::IfLet {
+                then_body,
+                ..
+            } if matches!(
+                then_body.first(),
+                Some(RustStmt::Assign {
+                    target: RustExpr::Deref(target),
+                    value: RustExpr::BinOp { left, op, right },
+                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                    && matches!(left.as_ref(), RustExpr::Deref(inner) if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "__elem"))
+                    && op == "/"
+                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "d")
+            )
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
+        let stmt = HirStmt::SubscriptAugAssign {
+            object: "items".to_string(),
+            index: HirExpr::IntLiteral(0),
+            op: "**=".to_string(),
+            value: HirExpr::Name {
+                name: "p".to_string(),
+                ty: Type::Int,
+            },
+            object_ty: Type::List(Box::new(Type::Int)),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("list subscript power augassign lowered");
+        let RustStmt::Block(stmts) = &lowered[0] else {
+            panic!("expected block-lowered list subscript power augassign");
+        };
+        assert!(matches!(
+            &stmts[1],
+            RustStmt::IfLet {
+                then_body,
+                ..
+            } if matches!(
+                then_body.first(),
+                Some(RustStmt::Assign {
+                    target: RustExpr::Deref(target),
+                    value: RustExpr::MethodCall { receiver, method, args },
+                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                    && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                    && method == "pow"
+                    && matches!(
+                        args.first(),
+                        Some(RustExpr::Cast {
+                            expr,
+                            ty: RustType::Named(name),
+                        }) if matches!(expr.as_ref(), RustExpr::Ident(v) if v == "p") && name == "u32"
+                    )
+            )
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_alias_list_subscript_augassign_stmt() {
+        let stmt = HirStmt::SubscriptAugAssign {
+            object: "items".to_string(),
+            index: HirExpr::IntLiteral(0),
+            op: "+=".to_string(),
+            value: HirExpr::IntLiteral(1),
+            object_ty: Type::Alias(
+                "IntList".to_string(),
+                Box::new(Type::List(Box::new(Type::Int))),
+            ),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("alias-list subscript augassign lowered");
+        assert!(matches!(lowered[0], RustStmt::Block(_)));
+    }
+
+    #[test]
+    fn does_not_lower_subscript_augassign_with_non_leaf_value() {
+        let stmt = HirStmt::SubscriptAugAssign {
+            object: "items".to_string(),
+            index: HirExpr::IntLiteral(0),
+            op: "+=".to_string(),
+            value: HirExpr::Call {
+                func: "next_value".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            },
+            object_ty: Type::List(Box::new(Type::Int)),
         };
 
         assert!(
