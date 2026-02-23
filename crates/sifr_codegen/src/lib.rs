@@ -136,6 +136,20 @@ pub struct CodegenResult {
     pub required_crates: HashSet<String>,
     /// Map of `constant_name` -> (type, `rust_name`) for module-level constants
     pub constant_mappings: HashMap<String, (Type, String)>,
+    /// Counters for structured lowering usage during emission.
+    pub lowering_stats: LoweringStats,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct LoweringStats {
+    pub stmt_total: u64,
+    pub stmt_structured: u64,
+    pub expr_total: u64,
+    pub expr_structured: u64,
+    pub stmt_candidate_total: u64,
+    pub stmt_candidate_structured: u64,
+    pub expr_candidate_total: u64,
+    pub expr_candidate_structured: u64,
 }
 
 /// Compiled stdlib information for codegen.
@@ -516,6 +530,7 @@ pub fn generate_rust_with_stdlib_mode(
             crates
         },
         constant_mappings: emitter.module_constants,
+        lowering_stats: emitter.lowering_stats,
     }
 }
 
@@ -863,6 +878,7 @@ struct RustEmitter {
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
     callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
     lowering_mode: CodegenLoweringMode,
+    lowering_stats: LoweringStats,
 }
 
 impl RustEmitter {
@@ -911,6 +927,7 @@ impl RustEmitter {
             try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
             lowering_mode,
+            lowering_stats: LoweringStats::default(),
         }
     }
 
@@ -934,7 +951,11 @@ impl RustEmitter {
     }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
+        self.lowering_stats.stmt_total += 1;
         if self.structured_lowering_enabled() {
+            if is_simple_stmt_candidate(stmt) {
+                self.lowering_stats.stmt_candidate_total += 1;
+            }
             if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
                 stmt,
                 self.current_loop_has_else(),
@@ -946,6 +967,8 @@ impl RustEmitter {
                     in_class_scope: self.current_class_name.is_some(),
                 },
             ) {
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
                 self.emit_lowered_stmts(&lowered_stmts);
                 return;
             }
@@ -2485,8 +2508,14 @@ impl RustEmitter {
     }
 
     fn emit_expr(&mut self, expr: &HirExpr) {
+        self.lowering_stats.expr_total += 1;
         if self.structured_lowering_enabled() {
+            if is_leaf_expr_candidate(expr) {
+                self.lowering_stats.expr_candidate_total += 1;
+            }
             if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
                 self.write(&crate::render_expr(&lowered_expr));
                 return;
             }

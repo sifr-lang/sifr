@@ -1,0 +1,28 @@
+# Structured-lowering ratio gate corpus for Phase 14 stmt/expr migration.
+# The goal is to exercise migrated simple stmt/expr paths with minimal fallback noise.
+# expect-stdout: acc = 22
+
+def main():
+    acc: int = 0
+    nums: list[int] = [1, 2, 3]
+
+    for n in nums:
+        acc += n
+    else:
+        acc += 1
+
+    i: int = 0
+    while i < 3:
+        acc += i
+        i += 1
+    else:
+        acc += 2
+
+    ready: bool = True
+    if ready:
+        acc += 10
+    else:
+        acc += 100
+
+    assert acc > 0
+    print(f"acc = {acc}")

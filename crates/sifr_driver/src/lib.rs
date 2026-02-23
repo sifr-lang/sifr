@@ -27,7 +27,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-pub use sifr_codegen::CodegenLoweringMode;
+pub use sifr_codegen::{CodegenLoweringMode, LoweringStats};
 
 /// Embedded stdlib `.sifr` files.
 /// Each entry is (module_name, source_code).
@@ -378,6 +378,7 @@ pub enum CompileResultFull {
         rust_source: String,
         used_stdlib_modules: HashSet<String>,
         required_crates: HashSet<String>,
+        lowering_stats: sifr_codegen::LoweringStats,
     },
     Errors {
         errors: Vec<CompileError>,
@@ -465,6 +466,7 @@ pub fn compile_with_metadata_mode(
         rust_source: codegen_result.rust_source,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_crates: codegen_result.required_crates,
+        lowering_stats: codegen_result.lowering_stats,
     }
 }
 
@@ -740,6 +742,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
             rust_source,
             used_stdlib_modules,
             required_crates,
+            lowering_stats: _,
         } => (rust_source, used_stdlib_modules, required_crates),
         CompileResultFull::Errors { errors } => return Err(errors),
     };

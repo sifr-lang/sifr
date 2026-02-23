@@ -64,6 +64,7 @@ pub fn generate_rust_test_with_mode(
             crates
         },
         constant_mappings: emitter.module_constants,
+        lowering_stats: emitter.lowering_stats,
     }
 }
 

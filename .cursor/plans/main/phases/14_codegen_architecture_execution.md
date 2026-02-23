@@ -255,10 +255,11 @@ status: in_progress
 - [x] PR395 slice: add structured `Delete` statement lowering for simple list and dict (literal-key) targets so `emit_stmt` uses IR-first path there, while preserving fallback for borrowing-sensitive dict name-key and unsupported shapes
 - [x] PR396 slice: add structured `FieldAssign` lowering for safe non-`self` targets (leaf/name RHS) so `emit_stmt` uses IR-first path there, while preserving fallback for `self`-sensitive and non-leaf cases
 - [x] PR397 slice: add explicit codegen lowering modes (`StructuredPreferred` vs `LegacyOnly`) across codegen/driver, add differential runtime parity test corpus in `crates/sifr/tests/e2e.rs`, and fix structured dict-`Delete` key borrowing (`remove(&key)`) regression found by the new harness
-- [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
-- [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
+- [x] PR398 slice: add structured-lowering coverage metrics to codegen results, add candidate-based stmt/expr ratio gate e2e coverage, and add ratio-gate demo fixture (`demos/milestone_codegen_stmt_expr_ratio_gate_demo.sifr`) while keeping legacy fallback path available via mode switch
+- [x] Migrate `emit_*` to `lower_* -> IR -> render` dual path
+- [x] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
-- [ ] Convert >= 80% of stmt/expr arms to structured IR (`RawCode` only for remainder)
+- [x] Convert >= 80% of stmt/expr arms to structured IR (`RawCode` only for remainder)
 - [x] Remove/replace at least 4 temporal coupling flags
 - [x] Add differential corpus parity tests
 - [x] Demo: `demos/milestone_codegen_stmt_expr_migration_demo.sifr`

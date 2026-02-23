@@ -9,6 +9,33 @@ pub fn lower_stmt_raw(raw: &str) -> Result<Vec<RustStmt>, CodegenError> {
     Ok(vec![RustStmt::RawCode(raw.to_string())])
 }
 
+pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
+    match stmt {
+        HirStmt::Expr { expr } => crate::is_leaf_expr_candidate(expr),
+        HirStmt::Let { .. }
+        | HirStmt::Assign { .. }
+        | HirStmt::AugAssign { .. }
+        | HirStmt::AttributeAugAssign { .. }
+        | HirStmt::FieldAssign { .. }
+        | HirStmt::Return { .. }
+        | HirStmt::Assert { .. }
+        | HirStmt::Raise { .. }
+        | HirStmt::If { .. }
+        | HirStmt::While { .. }
+        | HirStmt::For { .. }
+        | HirStmt::Pass
+        | HirStmt::Continue
+        | HirStmt::Break
+        | HirStmt::TupleUnpack { .. }
+        | HirStmt::SubscriptAssign { .. }
+        | HirStmt::NestedSubscriptAssign { .. }
+        | HirStmt::SubscriptAugAssign { .. }
+        | HirStmt::AttributeSubscriptAssign { .. }
+        | HirStmt::Delete { .. } => true,
+        _ => false,
+    }
+}
+
 /// Lowers an expression statement when the expression is a leaf
 /// supported by `try_lower_leaf_expr`.
 pub fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {

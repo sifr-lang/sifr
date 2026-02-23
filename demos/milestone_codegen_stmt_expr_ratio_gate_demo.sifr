@@ -1,0 +1,29 @@
+# Demo: stmt/expr structured-lowering ratio gate corpus
+# This mirrors the curated gate fixture used by the e2e ratio test.
+
+def main():
+    acc: int = 0
+    nums: list[int] = [1, 2, 3]
+
+    for n in nums:
+        acc += n
+    else:
+        acc += 1
+
+    i: int = 0
+    while i < 3:
+        acc += i
+        i += 1
+    else:
+        acc += 2
+
+    ready: bool = True
+    if ready:
+        acc += 10
+    else:
+        acc += 100
+
+    assert acc > 0
+    print(f"acc = {acc}")
+
+# expect-stdout: acc = 22
