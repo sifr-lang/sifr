@@ -99,6 +99,9 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
             }
             validate_expr(value, issues, in_function);
         }
+        RustStmt::LetPattern { value, .. } => {
+            validate_expr(value, issues, in_function);
+        }
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
             validate_expr(target, issues, in_function);
             validate_expr(value, issues, in_function);

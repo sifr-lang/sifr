@@ -46,6 +46,7 @@ fn optimize_item(item: &mut RustItem) -> usize {
 fn optimize_stmt(stmt: &mut RustStmt) -> usize {
     match stmt {
         RustStmt::Let { value, .. } => optimize_expr(value),
+        RustStmt::LetPattern { value, .. } => optimize_expr(value),
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
             optimize_expr(target) + optimize_expr(value)
         }

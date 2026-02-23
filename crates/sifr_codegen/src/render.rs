@@ -273,6 +273,12 @@ impl Renderer {
                     Self::render_expr_string(value)
                 ));
             }
+            RustStmt::LetPattern { pattern, value } => {
+                self.writeln(&format!(
+                    "let {pattern} = {};",
+                    Self::render_expr_string(value)
+                ));
+            }
             RustStmt::Assign { target, value } => {
                 self.writeln(&format!(
                     "{} = {};",
@@ -1146,6 +1152,13 @@ mod tests {
                 ty: Some(RustType::I64),
                 value: RustExpr::Literal(RustLiteral::Int(1)),
             },
+            RustStmt::LetPattern {
+                pattern: "(a, b)".to_string(),
+                value: RustExpr::Tuple(vec![
+                    RustExpr::Literal(RustLiteral::Int(2)),
+                    RustExpr::Literal(RustLiteral::Bool(true)),
+                ]),
+            },
             RustStmt::Expr(RustExpr::Try(Box::new(RustExpr::FnCall {
                 func: Box::new(RustExpr::Ident("may_fail".to_string())),
                 args: vec![],
@@ -1154,6 +1167,7 @@ mod tests {
         let rendered = render_stmts(&stmts);
         assert_snapshot!(rendered, @r###"
         let x: i64 = 1;
+        let (a, b) = (2, true);
         may_fail()?;
         "###);
     }

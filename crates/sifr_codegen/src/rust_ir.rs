@@ -72,6 +72,10 @@ pub enum RustStmt {
         ty: Option<RustType>,
         value: RustExpr,
     },
+    LetPattern {
+        pattern: String,
+        value: RustExpr,
+    },
     Assign {
         target: RustExpr,
         value: RustExpr,

@@ -1441,6 +1441,7 @@ mod tests {
             RustStmt::Let { ty, value, .. } => {
                 ty.as_ref().map(count_raw_in_type).unwrap_or(0) + count_raw_in_expr(value)
             }
+            RustStmt::LetPattern { value, .. } => count_raw_in_expr(value),
             RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
                 count_raw_in_expr(target) + count_raw_in_expr(value)
             }
