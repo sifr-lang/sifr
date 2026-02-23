@@ -211,11 +211,15 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
 }
 
 fn is_numeric_simple(ty: &Type) -> bool {
-    matches!(ty, Type::Int | Type::Float | Type::LiteralInt(_))
+    normalize_simple_numeric_scalar_type(ty).is_some()
 }
 
 fn is_int_like_simple(ty: &Type) -> bool {
-    matches!(ty, Type::Int | Type::LiteralInt(_))
+    matches!(normalize_simple_numeric_scalar_type(ty), Some("int"))
+}
+
+fn is_float_like_simple(ty: &Type) -> bool {
+    matches!(normalize_simple_numeric_scalar_type(ty), Some("float"))
 }
 
 fn normalize_compare_op(op: &str) -> &str {
@@ -237,11 +241,11 @@ fn is_mixed_simple_float_binop(op: &str, left_ty: &Type, right_ty: &Type, result
     if !matches!(op, "/" | "+" | "-" | "*" | "%") {
         return false;
     }
-    if !matches!(result_ty, Type::Float) {
+    if !is_float_like_simple(result_ty) {
         return false;
     }
-    (is_int_like_simple(left_ty) && matches!(right_ty, Type::Float))
-        || (matches!(left_ty, Type::Float) && is_int_like_simple(right_ty))
+    (is_int_like_simple(left_ty) && is_float_like_simple(right_ty))
+        || (is_float_like_simple(left_ty) && is_int_like_simple(right_ty))
 }
 
 fn is_mixed_simple_float_floor_division_binop(
@@ -251,14 +255,14 @@ fn is_mixed_simple_float_floor_division_binop(
     result_ty: &Type,
 ) -> bool {
     op == "//"
-        && matches!(result_ty, Type::Float)
-        && ((is_int_like_simple(left_ty) && matches!(right_ty, Type::Float))
-            || (matches!(left_ty, Type::Float) && is_int_like_simple(right_ty)))
+        && is_float_like_simple(result_ty)
+        && ((is_int_like_simple(left_ty) && is_float_like_simple(right_ty))
+            || (is_float_like_simple(left_ty) && is_int_like_simple(right_ty)))
 }
 
 fn is_simple_int_true_division_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
     op == "/"
-        && matches!(result_ty, Type::Float)
+        && is_float_like_simple(result_ty)
         && is_int_like_simple(left_ty)
         && is_int_like_simple(right_ty)
 }
@@ -282,7 +286,7 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
         }
         return left_ty == right_ty
             && left_ty == result_ty
-            && matches!(left_ty, Type::Int | Type::LiteralInt(_) | Type::Float);
+            && (is_int_like_simple(left_ty) || is_float_like_simple(left_ty));
     }
     if op == "/" {
         if is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty)
@@ -292,7 +296,7 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
         }
         return left_ty == right_ty
             && left_ty == result_ty
-            && matches!(left_ty, Type::Float);
+            && is_float_like_simple(left_ty);
     }
     if matches!(op, "+" | "-" | "*" | "%")
         && is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty)
@@ -389,6 +393,15 @@ fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
         Type::Float => Some("float"),
         Type::Bool | Type::LiteralBool(_) => Some("bool"),
         Type::Str | Type::LiteralStr(_) => Some("str"),
+        _ => None,
+    }
+}
+
+fn normalize_simple_numeric_scalar_type(ty: &Type) -> Option<&'static str> {
+    match ty {
+        Type::Alias(_, inner) => normalize_simple_numeric_scalar_type(inner),
+        Type::Int | Type::LiteralInt(_) => Some("int"),
+        Type::Float => Some("float"),
         _ => None,
     }
 }
@@ -520,6 +533,65 @@ mod tests {
         };
 
         let lowered = try_lower_leaf_expr(&bin).expect("mixed int/float-name division lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, left, right }
+                if op == "/"
+                    && matches!(
+                        left.as_ref(),
+                        RustExpr::Cast {
+                            expr,
+                            ty: RustType::F64
+                        } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "lhs")
+                    )
+                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+        ));
+    }
+
+    #[test]
+    fn lowers_alias_wrapped_numeric_binop_with_name_operands() {
+        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::Name {
+                name: "lhs".to_string(),
+                ty: alias_int.clone(),
+            }),
+            op: "+".to_string(),
+            right: Box::new(HirExpr::Name {
+                name: "rhs".to_string(),
+                ty: alias_int.clone(),
+            }),
+            ty: alias_int,
+        };
+
+        let lowered = try_lower_leaf_expr(&bin).expect("alias int-name binop lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, left, right }
+                if op == "+"
+                    && matches!(left.as_ref(), RustExpr::Ident(name) if name == "lhs")
+                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+        ));
+    }
+
+    #[test]
+    fn lowers_alias_wrapped_mixed_int_float_division_with_name_operands() {
+        let alias_int = Type::Alias("Count".to_string(), Box::new(Type::Int));
+        let alias_float = Type::Alias("Ratio".to_string(), Box::new(Type::Float));
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::Name {
+                name: "lhs".to_string(),
+                ty: alias_int,
+            }),
+            op: "/".to_string(),
+            right: Box::new(HirExpr::Name {
+                name: "rhs".to_string(),
+                ty: alias_float.clone(),
+            }),
+            ty: alias_float,
+        };
+
+        let lowered = try_lower_leaf_expr(&bin).expect("alias mixed int/float-name division lowered");
         assert!(matches!(
             lowered,
             RustExpr::BinOp { op, left, right }
