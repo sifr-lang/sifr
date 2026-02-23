@@ -538,7 +538,7 @@ Starting with this milestone and continuing through milestones 4-5, use a differ
 
 ## milestone_codegen_stmt_expr_migration: Statement and Expression Migration
 
-status: in_progress
+status: done
 
 **Goal:** Migrate the core codegen functions — `emit_stmt` (line 3047, ~1,400 lines), `emit_expr` (line 5509, ~1,400 lines), `emit_method_call` (line 4888, ~570 lines), and `emit_function`/`emit_class` — from writing directly to `self.output` to building IR nodes that are rendered at the end. This is the bulk of the migration and converts the codegen from an imperative string-writing model to a functional IR-building model.
 

@@ -8,13 +8,13 @@ Loop per milestone: **Work -> Validate -> Demo -> PR -> Review -> Merge -> Mark 
 
 ## Global Guards (apply to every milestone)
 
-- [ ] Keep milestone scope limited to the current definition-of-done
-- [ ] Preserve semantic parity: generated Rust must compile and behave the same
-- [ ] Run `cargo test -p sifr_codegen` and `cargo clippy -p sifr_codegen -- -D warnings`
-- [ ] Run targeted E2E parity checks for changed paths
-- [ ] Create/update demo file in `demos/` named after the milestone
-- [ ] Open one or multiple PRs for the milestone
-- [ ] Review the PR(s), address findings, merge, and update roadmap/progress docs
+- [x] Keep milestone scope limited to the current definition-of-done
+- [x] Preserve semantic parity: generated Rust must compile and behave the same
+- [x] Run `cargo test -p sifr_codegen` and `cargo clippy -p sifr_codegen -- -D warnings`
+- [x] Run targeted E2E parity checks for changed paths
+- [x] Create/update demo file in `demos/` named after the milestone
+- [x] Open one or multiple PRs for the milestone
+- [x] Review the PR(s), address findings, merge, and update roadmap/progress docs
 
 ---
 
@@ -70,7 +70,7 @@ status: done
 
 ## milestone_codegen_stmt_expr_migration
 
-status: in_progress
+status: done
 
 - [x] Introduce `context.rs` (`CodegenContext`, `ScopeContext`, `CodegenError`)
 - [x] Add `lower_expr.rs`, `lower_stmt.rs`, `lower_item.rs`, `preamble.rs`
@@ -263,8 +263,8 @@ status: in_progress
 - [x] Remove/replace at least 4 temporal coupling flags
 - [x] Add differential corpus parity tests
 - [x] Demo: `demos/milestone_codegen_stmt_expr_migration_demo.sifr`
-- [ ] Open PR(s), review, merge
-- [ ] Mark done in phase docs
+- [x] Open PR(s), review, merge
+- [x] Mark done in phase docs
 
 ---
 
@@ -516,4 +516,5 @@ status: done
 - [x] Demo: `demos/milestone_codegen_structural_passes_demo.sifr`
 - [x] Open PR(s), review, merge
 - [x] PR216 slice: sync phase-14 architecture/roadmap status markers to reflect actual progress (`rust_ir_types`/`renderer`/`preamble`/`intrinsic`/`structural` done; `stmt_expr` still in progress), leaving phase-complete checkbox open
-- [ ] Mark phase 14 done in roadmap
+- [x] PR399 slice: close out phase-14 status/docs after merged stmt/expr migration gates (set milestone status to done, mark final checklist closeout items, and set roadmap phase-14 status to completed)
+- [x] Mark phase 14 done in roadmap
