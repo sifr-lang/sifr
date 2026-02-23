@@ -90,6 +90,11 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             op,
             value,
         ),
+        HirStmt::FieldAssign {
+            object,
+            field,
+            value,
+        } => try_lower_simple_field_assign_stmt(object, field, value),
         HirStmt::Return { value: None } => {
             if ctx.in_display_impl {
                 return None;
@@ -938,6 +943,19 @@ fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<Stri
     try_lower_leaf_or_name_expr(value)
 }
 
+fn try_lower_simple_field_assign_stmt(object: &str, field: &str, value: &HirExpr) -> Option<Vec<RustStmt>> {
+    if object == "self" {
+        return None;
+    }
+    Some(vec![RustStmt::Assign {
+        target: RustExpr::Field {
+            expr: Box::new(RustExpr::Ident(object.to_string())),
+            field: field.to_string(),
+        },
+        value: try_lower_leaf_or_name_expr(value)?,
+    }])
+}
+
 fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
     let is_numeric_op = matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=");
     let is_int_only_op = matches!(op, "&=" | "|=" | "^=" | "<<=" | ">>=");
@@ -1037,6 +1055,56 @@ mod tests {
         )
         .expect("assign lowered");
         assert!(matches!(lowered[0], RustStmt::Assign { .. }));
+    }
+
+    #[test]
+    fn lowers_simple_field_assign_for_non_self_target() {
+        let stmt = HirStmt::FieldAssign {
+            object: "node".to_string(),
+            field: "value".to_string(),
+            value: HirExpr::Name {
+                name: "next_value".to_string(),
+                ty: Type::Int,
+            },
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("field assign lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assign {
+                target: RustExpr::Field { ref expr, ref field },
+                value: RustExpr::Ident(ref rhs),
+            } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "node")
+                && field == "value"
+                && rhs == "next_value"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_field_assign_on_self_target() {
+        let stmt = HirStmt::FieldAssign {
+            object: "self".to_string(),
+            field: "value".to_string(),
+            value: HirExpr::IntLiteral(1),
+        };
+
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_field_assign_with_non_leaf_value() {
+        let stmt = HirStmt::FieldAssign {
+            object: "node".to_string(),
+            field: "value".to_string(),
+            value: HirExpr::Call {
+                func: "compute".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            },
+        };
+
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 
     #[test]
