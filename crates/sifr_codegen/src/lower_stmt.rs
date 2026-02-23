@@ -383,7 +383,11 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         } if try_lower_leaf_or_name_expr(index).is_some()
             && try_lower_leaf_or_name_expr(value).is_some()
             && matches!(resolve_alias_type(object_ty), Type::List(_))
-            && matches!(op.as_str(), "+=" | "-=" | "*=" | "/=" | "%=" | "//=" | "**=") =>
+            && matches!(
+                op.as_str(),
+                "+=" | "-=" | "*=" | "/=" | "%=" | "//=" | "**=" | "&=" | "|=" | "^="
+                    | "<<=" | ">>="
+            ) =>
         {
             let lowered_index = try_lower_leaf_or_name_expr(index)?;
             let lowered_value = try_lower_leaf_or_name_expr(value)?;
@@ -1131,6 +1135,49 @@ mod tests {
                     && rhs == "delta"
             )
         ));
+    }
+
+    #[test]
+    fn lowers_simple_list_subscript_augassign_bitwise_and_shift_ops() {
+        for (op, expected) in [
+            ("&=", "&"),
+            ("|=", "|"),
+            ("^=", "^"),
+            ("<<=", "<<"),
+            (">>=", ">>"),
+        ] {
+            let stmt = HirStmt::SubscriptAugAssign {
+                object: "items".to_string(),
+                index: HirExpr::IntLiteral(0),
+                op: op.to_string(),
+                value: HirExpr::Name {
+                    name: "rhs".to_string(),
+                    ty: Type::Int,
+                },
+                object_ty: Type::List(Box::new(Type::Int)),
+            };
+            let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+                .expect("list subscript bitwise/shift augassign lowered");
+            let RustStmt::Block(stmts) = &lowered[0] else {
+                panic!("expected block-lowered list subscript bitwise/shift augassign");
+            };
+            assert!(matches!(
+                &stmts[1],
+                RustStmt::IfLet {
+                    then_body,
+                    ..
+                } if matches!(
+                    then_body.first(),
+                    Some(RustStmt::AugAssign {
+                        target: RustExpr::Deref(target),
+                        op,
+                        value: RustExpr::Ident(rhs),
+                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                        && op == expected
+                        && rhs == "rhs"
+                )
+            ));
+        }
     }
 
     #[test]
