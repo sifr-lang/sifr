@@ -16,27 +16,27 @@ mod lower_expr;
 pub use lower_expr::*;
 mod lower_stmt;
 pub use lower_stmt::*;
+mod expr_emitter;
 mod lower_item;
-mod legacy_stmt_emitter;
-mod legacy_expr_emitter;
+mod stmt_emitter;
 pub use lower_item::*;
 mod class_emitter;
 mod class_method_emitter;
 mod entrypoints;
 mod expr_ref_emitter;
 mod expr_render_helpers;
+mod field_analysis_helpers;
 mod function_emitter;
 mod generic_bounds_helpers;
-mod field_analysis_helpers;
 mod helpers;
 mod intrinsic_method_emitters;
-mod method_call_emitter;
 mod intrinsics;
 mod ir_imports;
 mod ir_optimize;
 mod ir_validate;
 mod match_emitter;
 mod match_guard_helpers;
+mod method_call_emitter;
 mod methods;
 mod module_body;
 mod module_constants;
@@ -74,16 +74,7 @@ type UnionVariantTypes = Vec<(String, Type)>;
 type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
 type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum CodegenLoweringMode {
-    StructuredPreferred,
-    LegacyOnly,
-}
-
-pub use entrypoints::{
-    generate_rust, generate_rust_test, generate_rust_test_with_mode, generate_rust_with_metadata,
-    generate_rust_with_metadata_mode,
-};
+pub use entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
 
 /// Built-in error class names that the compiler provides.
 const BUILTIN_ERROR_CLASSES: &[&str] = &[
@@ -172,15 +163,7 @@ pub struct StdlibCode {
 
 /// Generate Rust source code from a HIR module with compiled stdlib code.
 pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
-    generate_rust_with_stdlib_mode(module, stdlib_code, CodegenLoweringMode::StructuredPreferred)
-}
-
-pub fn generate_rust_with_stdlib_mode(
-    module: &HirModule,
-    stdlib_code: &StdlibCode,
-    lowering_mode: CodegenLoweringMode,
-) -> CodegenResult {
-    let mut emitter = RustEmitter::new_with_mode(lowering_mode);
+    let mut emitter = RustEmitter::new();
     emitter
         .stdlib_intrinsic_names
         .clone_from(&stdlib_code.intrinsic_names);
@@ -311,9 +294,12 @@ pub fn generate_rust_with_stdlib_mode(
                     stdlib_needs_hashmap |= prepared.shared_needs.collections.needs_hashmap;
                     stdlib_needs_hashset |= prepared.shared_needs.collections.needs_hashset;
                     stdlib_needs_vecdeque |= prepared.shared_needs.collections.needs_vecdeque;
-                    stdlib_needs_file_handles |= prepared.shared_needs.file_handles.needs_file_handles;
-                    stdlib_provides_file_handle_struct |=
-                        prepared.shared_needs.file_handles.provides_file_handle_struct;
+                    stdlib_needs_file_handles |=
+                        prepared.shared_needs.file_handles.needs_file_handles;
+                    stdlib_provides_file_handle_struct |= prepared
+                        .shared_needs
+                        .file_handles
+                        .provides_file_handle_struct;
                     let stripped = prepared.stripped_code;
                     if !stripped.trim().is_empty() {
                         let deduped =
@@ -337,7 +323,8 @@ pub fn generate_rust_with_stdlib_mode(
         || emitter.runtime_needs.needs_logging_state;
 
     // File handle infrastructure always relies on HashMap + Mutex.
-    let needs_hashmap_base = emitter.collection_needs.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
+    let needs_hashmap_base =
+        emitter.collection_needs.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
     let needs_hashset_base = emitter.collection_needs.needs_hashset || stdlib_needs_hashset;
     let needs_vecdeque_base = emitter.collection_needs.needs_vecdeque || stdlib_needs_vecdeque;
     let needs_bigint_base = emitter.runtime_needs.needs_bigint;
@@ -865,7 +852,9 @@ struct RustEmitter {
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
     callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
-    lowering_mode: CodegenLoweringMode,
+    /// Fallback recursion guard for non-structured emitter paths.
+    /// When non-zero, emitters bypass structured lowering and recurse via fallback only.
+    fallback_depth: usize,
     lowering_stats: LoweringStats,
 }
 
@@ -891,10 +880,6 @@ struct EmissionContext {
 
 impl RustEmitter {
     fn new() -> Self {
-        Self::new_with_mode(CodegenLoweringMode::StructuredPreferred)
-    }
-
-    fn new_with_mode(lowering_mode: CodegenLoweringMode) -> Self {
         Self {
             output: String::new(),
             indent: 0,
@@ -929,16 +914,9 @@ impl RustEmitter {
             try_enum_counter: 0,
             try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
-            lowering_mode,
+            fallback_depth: 0,
             lowering_stats: LoweringStats::default(),
         }
-    }
-
-    fn structured_lowering_enabled(&self) -> bool {
-        matches!(
-            self.lowering_mode,
-            CodegenLoweringMode::StructuredPreferred
-        )
     }
 
     fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
@@ -955,58 +933,59 @@ impl RustEmitter {
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         self.lowering_stats.stmt_total += 1;
-        if self.structured_lowering_enabled() {
-            if is_simple_stmt_candidate(stmt) {
-                self.lowering_stats.stmt_candidate_total += 1;
-            }
-            if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
-                stmt,
-                self.current_loop_has_else(),
-                &self.mutated_vars,
-                &self.borrowed_params,
-                SimpleStmtLoweringCtx {
-                    return_type: self.current_return_type.as_ref(),
-                    in_display_impl: self.emission_ctx.in_display_impl,
-                    in_class_scope: self.current_class_name.is_some(),
-                    in_generator_closure: self.emission_ctx.in_generator_closure,
-                },
-            ) {
-                self.lowering_stats.stmt_structured += 1;
-                self.lowering_stats.stmt_candidate_structured += 1;
-                self.emit_lowered_stmts(&lowered_stmts);
-                return;
-            }
-
-            if let Some(raw_bridge_stmts) = self.try_capture_legacy_stmt_as_raw(stmt) {
-                self.lowering_stats.stmt_structured += 1;
-                self.emit_lowered_stmts(&raw_bridge_stmts);
-                return;
-            }
+        if self.fallback_depth > 0 {
+            self.emit_stmt_fallback(stmt);
+            return;
         }
-
-        self.emit_stmt_legacy(stmt);
+        if is_simple_stmt_candidate(stmt) {
+            self.lowering_stats.stmt_candidate_total += 1;
+        }
+        if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
+            stmt,
+            self.current_loop_has_else(),
+            &self.mutated_vars,
+            &self.borrowed_params,
+            SimpleStmtLoweringCtx {
+                return_type: self.current_return_type.as_ref(),
+                in_display_impl: self.emission_ctx.in_display_impl,
+                in_class_scope: self.current_class_name.is_some(),
+                in_generator_closure: self.emission_ctx.in_generator_closure,
+            },
+        ) {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            self.emit_lowered_stmts(&lowered_stmts);
+            return;
+        }
+        if let Some(raw_bridge_stmts) = self.try_capture_fallback_stmt_as_raw(stmt) {
+            self.lowering_stats.stmt_structured += 1;
+            self.emit_lowered_stmts(&raw_bridge_stmts);
+            return;
+        }
+        self.emit_stmt_fallback(stmt);
     }
 
     fn emit_expr(&mut self, expr: &HirExpr) {
         self.lowering_stats.expr_total += 1;
-        if self.structured_lowering_enabled() {
-            if is_leaf_expr_candidate(expr) {
-                self.lowering_stats.expr_candidate_total += 1;
-            }
-            if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
-                self.lowering_stats.expr_structured += 1;
-                self.lowering_stats.expr_candidate_structured += 1;
-                self.write(&crate::render_expr(&lowered_expr));
-                return;
-            }
-            if let Some(raw_bridge_expr) = self.try_capture_legacy_expr_as_raw(expr) {
-                self.lowering_stats.expr_structured += 1;
-                self.write(&crate::render_expr(&raw_bridge_expr));
-                return;
-            }
+        if self.fallback_depth > 0 {
+            self.emit_expr_fallback(expr);
+            return;
         }
-
-        self.emit_expr_legacy(expr);
+        if is_leaf_expr_candidate(expr) {
+            self.lowering_stats.expr_candidate_total += 1;
+        }
+        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
+            self.lowering_stats.expr_structured += 1;
+            self.lowering_stats.expr_candidate_structured += 1;
+            self.write(&crate::render_expr(&lowered_expr));
+            return;
+        }
+        if let Some(raw_bridge_expr) = self.try_capture_fallback_expr_as_raw(expr) {
+            self.lowering_stats.expr_structured += 1;
+            self.write(&crate::render_expr(&raw_bridge_expr));
+            return;
+        }
+        self.emit_expr_fallback(expr);
     }
 }
 

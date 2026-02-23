@@ -11,7 +11,7 @@ use sifr_python_parser::parse_module;
 use sifr_hir::{lower_module, lower_module_with_externals, lower_module_stdlib_with_externals, ExternalDefs, HirModule};
 use sifr_codegen::{
     generate_project, generate_project_with_deps_and_crates, generate_rust_multi,
-    generate_rust_test, generate_rust_with_stdlib_mode, StdlibCode,
+    generate_rust_test, generate_rust_with_stdlib, StdlibCode,
 };
 use sifr_type_system::{Type, FunctionType, ParamConvention};
 use std::collections::{HashMap, HashSet};
@@ -19,7 +19,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-pub use sifr_codegen::{CodegenLoweringMode, LoweringStats};
+pub use sifr_codegen::LoweringStats;
 
 /// Embedded stdlib `.sifr` files.
 /// Each entry is (`module_name`, `source_code`).
@@ -389,15 +389,6 @@ pub enum CompileResultFull {
 
 /// Compile Sifr source code to Rust source code, returning stdlib metadata.
 pub fn compile_with_metadata(source: &str) -> CompileResultFull {
-    compile_with_metadata_mode(source, CodegenLoweringMode::StructuredPreferred)
-}
-
-/// Compile Sifr source code to Rust source code, returning stdlib metadata,
-/// with an explicit codegen lowering mode.
-pub fn compile_with_metadata_mode(
-    source: &str,
-    lowering_mode: CodegenLoweringMode,
-) -> CompileResultFull {
     // Phase 0: Compile embedded stdlib .sifr files
     let stdlib_compiled = match compile_stdlib() {
         Ok(compiled) => compiled,
@@ -458,11 +449,7 @@ pub fn compile_with_metadata_mode(
     }
 
     // Phase 3: Generate Rust code with stdlib code
-    let codegen_result = generate_rust_with_stdlib_mode(
-        &lowering_result.module,
-        &stdlib_compiled.code,
-        lowering_mode,
-    );
+    let codegen_result = generate_rust_with_stdlib(&lowering_result.module, &stdlib_compiled.code);
 
     CompileResultFull::Success {
         rust_source: codegen_result.rust_source,
@@ -923,7 +910,7 @@ edition = "2021"
 
     let mut deps = Vec::new();
     for module_name in &all_stdlib_modules {
-        if module_name.as_str() == "sifr.json" { deps.push("serde_json = \"1\"".to_string()) }
+        if module_name.as_str() == "sifr.json" { deps.push("serde_json = \"1\"".to_string()); }
     }
     if !deps.is_empty() {
         cargo_toml.push_str("\n[dependencies]\n");

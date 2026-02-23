@@ -6,7 +6,7 @@ use sifr_hir::HirExpr;
 use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
-    pub(super) fn emit_expr_legacy(&mut self, expr: &HirExpr) {
+    pub(super) fn emit_expr_fallback(&mut self, expr: &HirExpr) {
         match expr {
             HirExpr::IntLiteral(val) => {
                 self.write(&val.to_string());

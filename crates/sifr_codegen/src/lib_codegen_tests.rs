@@ -1,6 +1,6 @@
 use super::*;
 use sifr_hir::*;
-use sifr_type_system::{Type, ParamConvention};
+use sifr_type_system::{ParamConvention, Type};
 
 #[test]
 fn test_simple_function_codegen() {
@@ -39,15 +39,33 @@ fn test_arithmetic_codegen() {
         functions: vec![HirFunction {
             name: "add".to_string(),
             params: vec![
-                HirParam { name: "a".to_string(), ty: Type::Int, default: None, keyword_only: false, convention: ParamConvention::Own },
-                HirParam { name: "b".to_string(), ty: Type::Int, default: None, keyword_only: false, convention: ParamConvention::Own },
+                HirParam {
+                    name: "a".to_string(),
+                    ty: Type::Int,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::Own,
+                },
+                HirParam {
+                    name: "b".to_string(),
+                    ty: Type::Int,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::Own,
+                },
             ],
             return_type: Type::Int,
             body: vec![HirStmt::Return {
                 value: Some(HirExpr::BinOp {
-                    left: Box::new(HirExpr::Name { name: "a".to_string(), ty: Type::Int }),
+                    left: Box::new(HirExpr::Name {
+                        name: "a".to_string(),
+                        ty: Type::Int,
+                    }),
                     op: "+".to_string(),
-                    right: Box::new(HirExpr::Name { name: "b".to_string(), ty: Type::Int }),
+                    right: Box::new(HirExpr::Name {
+                        name: "b".to_string(),
+                        ty: Type::Int,
+                    }),
                     ty: Type::Int,
                 }),
             }],
@@ -87,7 +105,10 @@ fn test_no_unnecessary_mut() {
                 HirStmt::Expr {
                     expr: HirExpr::Call {
                         func: "print".to_string(),
-                        args: vec![HirExpr::Name { name: "x".to_string(), ty: Type::Int }],
+                        args: vec![HirExpr::Name {
+                            name: "x".to_string(),
+                            ty: Type::Int,
+                        }],
                         ty: Type::None,
                     },
                 },
@@ -104,8 +125,14 @@ fn test_no_unnecessary_mut() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("let x: i64"), "should emit `let x` without mut");
-    assert!(!rust_code.contains("let mut x"), "should NOT emit `let mut x`");
+    assert!(
+        rust_code.contains("let x: i64"),
+        "should emit `let x` without mut"
+    );
+    assert!(
+        !rust_code.contains("let mut x"),
+        "should NOT emit `let mut x`"
+    );
 }
 
 #[test]
@@ -140,7 +167,10 @@ fn test_mut_on_reassigned_variable() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("let mut x: i64"), "should emit `let mut x` for reassigned var");
+    assert!(
+        rust_code.contains("let mut x: i64"),
+        "should emit `let mut x` for reassigned var"
+    );
 }
 
 #[test]
@@ -164,7 +194,10 @@ fn test_println_fstring_inlined() {
                         args: vec![HirExpr::FString {
                             parts: vec![
                                 HirFStringPart::Literal("Hello, ".to_string()),
-                                HirFStringPart::Expr(HirExpr::Name { name: "name".to_string(), ty: Type::Str }),
+                                HirFStringPart::Expr(HirExpr::Name {
+                                    name: "name".to_string(),
+                                    ty: Type::Str,
+                                }),
                                 HirFStringPart::Literal("!".to_string()),
                             ],
                             ty: Type::Str,
@@ -185,8 +218,14 @@ fn test_println_fstring_inlined() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("println!(\"Hello, {}!\", name)"), "should inline f-string into println!");
-    assert!(!rust_code.contains("format!(\"Hello, {}!\""), "should NOT have standalone format! inside println!");
+    assert!(
+        rust_code.contains("println!(\"Hello, {}!\", name)"),
+        "should inline f-string into println!"
+    );
+    assert!(
+        !rust_code.contains("format!(\"Hello, {}!\""),
+        "should NOT have standalone format! inside println!"
+    );
 }
 
 #[test]
@@ -216,8 +255,14 @@ fn test_no_tostring_in_println() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("println!(\"hello\")"), "should inline string literal directly into println!");
-    assert!(!rust_code.contains("\"hello\".to_string()"), "should NOT have .to_string() in println context");
+    assert!(
+        rust_code.contains("println!(\"hello\")"),
+        "should inline string literal directly into println!"
+    );
+    assert!(
+        !rust_code.contains("\"hello\".to_string()"),
+        "should NOT have .to_string() in println context"
+    );
 }
 
 #[test]
@@ -250,10 +295,22 @@ fn test_hashmap_short_name() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("use std::collections::HashMap;"), "should have HashMap import");
-    assert!(rust_code.contains("HashMap::from("), "should use short HashMap::from");
-    assert!(!rust_code.contains("std::collections::HashMap::from("), "should NOT use fully qualified HashMap::from");
-    assert!(rust_code.contains("HashMap<String, i64>"), "type annotation should use short HashMap");
+    assert!(
+        rust_code.contains("use std::collections::HashMap;"),
+        "should have HashMap import"
+    );
+    assert!(
+        rust_code.contains("HashMap::from("),
+        "should use short HashMap::from"
+    );
+    assert!(
+        !rust_code.contains("std::collections::HashMap::from("),
+        "should NOT use fully qualified HashMap::from"
+    );
+    assert!(
+        rust_code.contains("HashMap<String, i64>"),
+        "type annotation should use short HashMap"
+    );
 }
 
 #[test]
@@ -301,8 +358,14 @@ fn test_dict_get_string_literal_key() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains(".get(\"key\")"), "should emit .get(\"key\") for string literal key");
-    assert!(!rust_code.contains("&\"key\".to_string()"), "should NOT have &\"key\".to_string()");
+    assert!(
+        rust_code.contains(".get(\"key\")"),
+        "should emit .get(\"key\") for string literal key"
+    );
+    assert!(
+        !rust_code.contains("&\"key\".to_string()"),
+        "should NOT have &\"key\".to_string()"
+    );
 }
 
 #[test]
@@ -342,8 +405,14 @@ fn test_string_concat_flattened() {
 
     let rust_code = generate_rust(&module);
     // All parts are string literals, so they should be folded into a single string
-    assert!(rust_code.contains("\"abc\".to_string()"), "should fold all string literals into a single string");
-    assert!(!rust_code.contains("format!"), "should NOT use format! when all parts are literals");
+    assert!(
+        rust_code.contains("\"abc\".to_string()"),
+        "should fold all string literals into a single string"
+    );
+    assert!(
+        !rust_code.contains("format!"),
+        "should NOT use format! when all parts are literals"
+    );
 }
 
 #[test]
@@ -388,7 +457,10 @@ fn test_mut_on_mutating_method_call() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("let mut items"), "should emit `let mut items` for variable with .push()");
+    assert!(
+        rust_code.contains("let mut items"),
+        "should emit `let mut items` for variable with .push()"
+    );
 }
 
 #[test]
@@ -418,8 +490,14 @@ fn test_empty_print() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("println!()"), "should emit println!() for empty print");
-    assert!(!rust_code.contains(r#"println!("{}", "")"#), "should NOT emit println with empty string arg");
+    assert!(
+        rust_code.contains("println!()"),
+        "should emit println!() for empty print"
+    );
+    assert!(
+        !rust_code.contains(r#"println!("{}", "")"#),
+        "should NOT emit println with empty string arg"
+    );
 }
 
 #[test]
@@ -555,7 +633,9 @@ fn test_generate_rust_multi_exports_non_main_items() {
 
     let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
     let main_rs = files.get("main").expect("main module should be generated");
-    let utils_rs = files.get("utils").expect("utils module should be generated");
+    let utils_rs = files
+        .get("utils")
+        .expect("utils module should be generated");
 
     assert!(main_rs.contains("fn main()"));
     assert!(!main_rs.contains("pub fn main("));
@@ -808,7 +888,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
 }
 
 #[test]
-fn test_codegen_lowering_mode_switches_structured_stmt_path() {
+fn test_codegen_structured_lowering_applies_to_simple_stmt() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -831,18 +911,14 @@ fn test_codegen_lowering_mode_switches_structured_stmt_path() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let structured =
-        generate_rust_with_metadata_mode(&module, CodegenLoweringMode::StructuredPreferred)
-            .rust_source;
-    let legacy =
-        generate_rust_with_metadata_mode(&module, CodegenLoweringMode::LegacyOnly).rust_source;
+    let generated = generate_rust_with_metadata(&module);
 
-    assert!(structured.contains("1 as i64"));
-    assert!(legacy.contains("1_i64"));
+    assert!(generated.rust_source.contains("1 as i64"));
+    assert!(generated.lowering_stats.stmt_structured > 0);
 }
 
 #[test]
-fn test_structured_mode_bridges_nested_function_stmt_via_raw_lowering() {
+fn test_fallback_stmt_path_handles_nested_function() {
     let nested = HirFunction {
         name: "inner".to_string(),
         params: vec![],
@@ -861,9 +937,7 @@ fn test_structured_mode_bridges_nested_function_stmt_via_raw_lowering() {
             params: vec![],
             return_type: Type::None,
             body: vec![
-                HirStmt::NestedFunction {
-                    func: nested,
-                },
+                HirStmt::NestedFunction { func: nested },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
                         func: "inner".to_string(),
@@ -883,17 +957,14 @@ fn test_structured_mode_bridges_nested_function_stmt_via_raw_lowering() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let structured =
-        generate_rust_with_metadata_mode(&module, CodegenLoweringMode::StructuredPreferred);
-    let legacy = generate_rust_with_metadata_mode(&module, CodegenLoweringMode::LegacyOnly);
+    let generated = generate_rust_with_metadata(&module);
 
-    assert!(structured.rust_source.contains("fn inner() -> i64"));
-    assert!(legacy.rust_source.contains("fn inner() -> i64"));
-    assert!(structured.lowering_stats.stmt_structured > 0);
+    assert!(generated.rust_source.contains("fn inner() -> i64"));
+    assert!(generated.rust_source.contains("inner()"));
 }
 
 #[test]
-fn test_structured_mode_bridges_call_expr_via_raw_lowering() {
+fn test_fallback_expr_path_handles_call_expression() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -917,23 +988,23 @@ fn test_structured_mode_bridges_call_expr_via_raw_lowering() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let structured =
-        generate_rust_with_metadata_mode(&module, CodegenLoweringMode::StructuredPreferred);
-    let legacy = generate_rust_with_metadata_mode(&module, CodegenLoweringMode::LegacyOnly);
+    let generated = generate_rust_with_metadata(&module);
 
-    assert!(structured.rust_source.contains("println!"));
-    assert!(legacy.rust_source.contains("println!"));
-    assert!(structured.lowering_stats.expr_structured > 0);
+    assert!(generated.rust_source.contains("println!"));
+    assert!(generated.rust_source.contains("bridge"));
 }
 
 #[test]
 fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     let lib_src = include_str!("lib.rs");
-    let legacy_stmt_src = include_str!("legacy_stmt_emitter.rs");
-    let legacy_expr_src = include_str!("legacy_expr_emitter.rs");
+    let stmt_src = include_str!("stmt_emitter.rs");
+    let expr_src = include_str!("expr_emitter.rs");
 
-    assert!(lib_src.contains("mod legacy_stmt_emitter;"));
-    assert!(lib_src.contains("mod legacy_expr_emitter;"));
+    assert!(lib_src.contains("mod stmt_emitter;"));
+    assert!(lib_src.contains("mod expr_emitter;"));
+    assert!(!lib_src.contains("CodegenLoweringMode"));
+    assert!(!lib_src.contains("LegacyOnly"));
+    assert!(!lib_src.contains("StructuredPreferred"));
 
     let emit_stmt_start = lib_src
         .find("fn emit_stmt(&mut self, stmt: &HirStmt) {")
@@ -942,7 +1013,7 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         .find("fn emit_expr(&mut self, expr: &HirExpr) {")
         .expect("emit_expr wrapper should exist");
     let emit_stmt_wrapper = &lib_src[emit_stmt_start..emit_expr_start];
-    assert!(emit_stmt_wrapper.contains("self.emit_stmt_legacy(stmt);"));
+    assert!(emit_stmt_wrapper.contains("self.emit_stmt_fallback(stmt);"));
     assert!(
         !emit_stmt_wrapper.contains("match stmt"),
         "emit_stmt should stay orchestration-only"
@@ -952,7 +1023,7 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         .find("pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {")
         .expect("body_contains_yield should exist");
     let emit_expr_wrapper = &lib_src[emit_expr_start..body_contains_yield_start];
-    assert!(emit_expr_wrapper.contains("self.emit_expr_legacy(expr);"));
+    assert!(emit_expr_wrapper.contains("self.emit_expr_fallback(expr);"));
     assert!(
         !emit_expr_wrapper.contains("match expr"),
         "emit_expr should stay orchestration-only"
@@ -971,11 +1042,11 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     );
 
     assert!(
-        legacy_stmt_src.lines().count() > 1000,
-        "statement legacy emitter should hold migrated logic"
+        stmt_src.lines().count() > 1000,
+        "statement fallback emitter should hold migrated logic"
     );
     assert!(
-        legacy_expr_src.lines().count() > 1000,
-        "expression legacy emitter should hold migrated logic"
+        expr_src.lines().count() > 1000,
+        "expression fallback emitter should hold migrated logic"
     );
 }

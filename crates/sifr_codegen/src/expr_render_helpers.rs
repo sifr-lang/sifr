@@ -1,4 +1,4 @@
-use crate::{CodegenLoweringMode, RustEmitter, RustExpr};
+use crate::{RustEmitter, RustExpr};
 use sifr_hir::{HirExpr, HirFStringPart};
 
 impl RustEmitter {
@@ -17,7 +17,7 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn try_capture_legacy_expr_as_raw(&mut self, expr: &HirExpr) -> Option<RustExpr> {
+    pub(super) fn try_capture_fallback_expr_as_raw(&mut self, expr: &HirExpr) -> Option<RustExpr> {
         if !matches!(
             expr,
             HirExpr::Call { .. }
@@ -39,17 +39,17 @@ impl RustEmitter {
 
         let saved_output = std::mem::take(&mut self.output);
         let saved_indent = self.indent;
-        let saved_mode = self.lowering_mode;
+        let saved_fallback_depth = self.fallback_depth;
 
         self.output = String::new();
         self.indent = 0;
-        self.lowering_mode = CodegenLoweringMode::LegacyOnly;
+        self.fallback_depth += 1;
         self.emit_expr(expr);
         let captured = std::mem::take(&mut self.output);
 
         self.output = saved_output;
         self.indent = saved_indent;
-        self.lowering_mode = saved_mode;
+        self.fallback_depth = saved_fallback_depth;
 
         Some(RustExpr::RawCode(captured.trim().to_string()))
     }

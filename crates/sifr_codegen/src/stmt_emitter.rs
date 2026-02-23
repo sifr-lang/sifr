@@ -11,7 +11,7 @@ use sifr_type_system::Type;
 use std::collections::HashSet;
 
 impl RustEmitter {
-    pub(super) fn emit_stmt_legacy(&mut self, stmt: &HirStmt) {
+    pub(super) fn emit_stmt_fallback(&mut self, stmt: &HirStmt) {
         match stmt {
             HirStmt::Let {
                 name,
