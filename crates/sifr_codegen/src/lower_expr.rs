@@ -68,7 +68,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                         operand: Box::new(lowered_operand),
                     })
                 }
-                "not" if crate::helpers::is_option_type(operand.ty()) => {
+                "not" if is_option_like_simple(operand.ty()) => {
                     if let HirExpr::Name { name, .. } = operand.as_ref() {
                         return Some(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident(name.clone())),
@@ -249,6 +249,16 @@ fn is_enum_like_simple(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::Enum { .. })
 }
 
+fn is_option_like_simple(ty: &Type) -> bool {
+    if let Type::Union(members) = resolve_alias_type(ty) {
+        let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
+        let has_none = members.iter().any(|m| matches!(m, Type::None));
+        has_none && non_none == 1
+    } else {
+        false
+    }
+}
+
 fn normalize_compare_op(op: &str) -> &str {
     match op {
         "is" => "==",
@@ -345,7 +355,7 @@ fn try_lower_option_none_compare_expr(left: &HirExpr, op: &str, right: &HirExpr)
     let HirExpr::Name { name, ty } = left else {
         return None;
     };
-    if !crate::helpers::is_option_type(ty) {
+    if !is_option_like_simple(ty) {
         return None;
     }
     let method = match op {
@@ -958,6 +968,33 @@ mod tests {
     }
 
     #[test]
+    fn lowers_unary_not_with_alias_option_name_operand() {
+        let unary = HirExpr::UnaryOp {
+            op: "not".to_string(),
+            operand: Box::new(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Alias(
+                    "MaybeInt".to_string(),
+                    Box::new(Type::Union(vec![Type::Int, Type::None])),
+                ),
+            }),
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&unary).expect("unary not alias-option-name lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver: ref recv,
+                ref method,
+                ref args,
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_none"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
     fn lowers_unary_not_with_alias_bool_name_operand() {
         let alias_bool = Type::Alias("Decision".to_string(), Box::new(Type::Bool));
         let unary = HirExpr::UnaryOp {
@@ -1056,6 +1093,34 @@ mod tests {
     }
 
     #[test]
+    fn lowers_option_is_none_compare_with_alias_option_name_operand() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Alias(
+                    "MaybeInt".to_string(),
+                    Box::new(Type::Union(vec![Type::Int, Type::None])),
+                ),
+            }),
+            ops: vec!["is".to_string()],
+            comparators: vec![HirExpr::NoneLiteral],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("alias option is-none compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver: ref recv,
+                ref method,
+                ref args,
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_none"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
     fn lowers_option_is_not_none_compare_with_name_operand() {
         let cmp = HirExpr::Compare {
             left: Box::new(HirExpr::Name {
@@ -1068,6 +1133,34 @@ mod tests {
         };
 
         let lowered = try_lower_leaf_expr(&cmp).expect("option is-not-none compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver: ref recv,
+                ref method,
+                ref args,
+            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
+                && method == "is_some"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn lowers_option_is_not_none_compare_with_alias_option_name_operand() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Alias(
+                    "MaybeInt".to_string(),
+                    Box::new(Type::Union(vec![Type::Int, Type::None])),
+                ),
+            }),
+            ops: vec!["is not".to_string()],
+            comparators: vec![HirExpr::NoneLiteral],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("alias option is-not-none compare lowered");
         assert!(matches!(
             lowered,
             RustExpr::MethodCall {
