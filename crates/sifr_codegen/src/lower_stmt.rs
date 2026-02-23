@@ -268,13 +268,8 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 else_body: None,
             },
         ]),
-        HirStmt::TupleUnpack { targets, value }
-            if !targets.is_empty() && try_lower_leaf_or_name_expr(value).is_some() =>
-        {
-            Some(vec![RustStmt::LetPattern {
-                pattern: tuple_unpack_pattern(targets),
-                value: try_lower_leaf_or_name_expr(value)?,
-            }])
+        HirStmt::TupleUnpack { targets, value } => {
+            try_lower_simple_tuple_unpack_stmt(targets, value)
         }
         HirStmt::AttributeSubscriptAssign {
             object,
@@ -349,6 +344,16 @@ fn tuple_unpack_pattern(targets: &[(String, Type)]) -> String {
         .collect::<Vec<_>>()
         .join(", ");
     format!("({names})")
+}
+
+fn try_lower_simple_tuple_unpack_stmt(targets: &[(String, Type)], value: &HirExpr) -> Option<Vec<RustStmt>> {
+    if targets.is_empty() {
+        return None;
+    }
+    Some(vec![RustStmt::LetPattern {
+        pattern: tuple_unpack_pattern(targets),
+        value: try_lower_leaf_or_name_expr(value)?,
+    }])
 }
 
 fn try_lower_simple_if_stmt(
