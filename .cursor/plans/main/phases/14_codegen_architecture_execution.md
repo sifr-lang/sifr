@@ -61,7 +61,7 @@ status: done
 - [x] Add `sifr_type_to_rust_type(&Type) -> RustType`
 - [x] Remove/reduce `is_builtin_error_referenced` string scanning
 - [x] Add differential old-vs-new codegen harness for parity
-- [ ] Remove at least 5 clippy suppressions (including `format_push_string`)
+- [x] Remove at least 5 clippy suppressions (including `format_push_string`)
 - [x] Demo: `demos/milestone_codegen_preamble_migration_demo.sifr`
 - [x] Open PR(s), review, merge
 - [x] Mark done in phase docs

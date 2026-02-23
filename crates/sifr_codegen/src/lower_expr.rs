@@ -264,13 +264,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 Type::List(_) | Type::Set(_) | Type::Str => "contains",
                 _ => return None,
             };
-            let arg = if matches!(collection_ty, Type::Str) {
-                try_lower_leaf_or_name_expr(element)?
-            } else {
-                RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(try_lower_leaf_or_name_expr(element)?),
-                }
+            let arg = RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(try_lower_leaf_or_name_expr(element)?),
             };
             Some(RustExpr::MethodCall {
                 receiver: Box::new(try_lower_leaf_or_name_expr(collection)?),
@@ -2064,6 +2060,30 @@ mod tests {
                     Some(RustExpr::Ref { expr, .. })
                         if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "needle")
                 )
+        ));
+    }
+
+    #[test]
+    fn lowers_contains_for_string_collection_with_borrowed_arg() {
+        let expr = HirExpr::ContainsOp {
+            element: Box::new(HirExpr::StringLiteral("T".to_string())),
+            collection: Box::new(HirExpr::Name {
+                name: "current_iso".to_string(),
+                ty: Type::Str,
+            }),
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("string contains lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver,
+                method,
+                args
+            } if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "current_iso")
+                && method == "contains"
+                && matches!(args.first(), Some(RustExpr::Ref { .. }))
         ));
     }
 
