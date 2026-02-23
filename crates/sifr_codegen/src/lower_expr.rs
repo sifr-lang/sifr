@@ -93,9 +93,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 });
             }
             Some(RustExpr::BinOp {
-                left: Box::new(try_lower_leaf_expr(left)?),
+                left: Box::new(try_lower_simple_binop_operand_expr(left)?),
                 op: normalize_binop_op(op).to_string(),
-                right: Box::new(try_lower_leaf_expr(right)?),
+                right: Box::new(try_lower_simple_binop_operand_expr(right)?),
             })
         }
         HirExpr::Compare {
@@ -354,7 +354,7 @@ fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
 }
 
 fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
-    let lowered = try_lower_leaf_expr(expr)?;
+    let lowered = try_lower_simple_binop_operand_expr(expr)?;
     if is_int_like_simple(expr.ty()) {
         return Some(RustExpr::Cast {
             expr: Box::new(lowered),
@@ -362,6 +362,15 @@ fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
         });
     }
     Some(lowered)
+}
+
+fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let HirExpr::Name { name, ty } = expr {
+        if is_numeric_simple(ty) {
+            return Some(RustExpr::Ident(name.clone()));
+        }
+    }
+    try_lower_leaf_expr(expr)
 }
 
 fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
@@ -467,6 +476,62 @@ mod tests {
         assert!(matches!(
             try_lower_leaf_expr(&bin),
             Some(RustExpr::BinOp { op, .. }) if op == "/"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_numeric_binop_with_name_operands() {
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::Name {
+                name: "lhs".to_string(),
+                ty: Type::Int,
+            }),
+            op: "+".to_string(),
+            right: Box::new(HirExpr::Name {
+                name: "rhs".to_string(),
+                ty: Type::Int,
+            }),
+            ty: Type::Int,
+        };
+
+        let lowered = try_lower_leaf_expr(&bin).expect("int-name binop lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, left, right }
+                if op == "+"
+                    && matches!(left.as_ref(), RustExpr::Ident(name) if name == "lhs")
+                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_mixed_int_float_division_with_name_operands() {
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::Name {
+                name: "lhs".to_string(),
+                ty: Type::Int,
+            }),
+            op: "/".to_string(),
+            right: Box::new(HirExpr::Name {
+                name: "rhs".to_string(),
+                ty: Type::Float,
+            }),
+            ty: Type::Float,
+        };
+
+        let lowered = try_lower_leaf_expr(&bin).expect("mixed int/float-name division lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, left, right }
+                if op == "/"
+                    && matches!(
+                        left.as_ref(),
+                        RustExpr::Cast {
+                            expr,
+                            ty: RustType::F64
+                        } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "lhs")
+                    )
+                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
         ));
     }
 
