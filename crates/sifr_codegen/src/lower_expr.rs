@@ -356,7 +356,7 @@ fn try_lower_none_identity_compare_expr(left: &HirExpr, op: &str, right: &HirExp
 
 fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, ty } = expr {
-        if matches!(ty, Type::Int | Type::LiteralInt(_)) {
+        if is_int_like_simple(ty) {
             return Some(RustExpr::Ident(name.clone()));
         }
         return None;
@@ -1312,6 +1312,58 @@ mod tests {
         };
 
         let lowered = try_lower_leaf_expr(&range).expect("range with name step lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall { method, args, .. }
+                if method == "step_by"
+                    && matches!(
+                        args.first(),
+                        Some(RustExpr::Cast { expr, ty: RustType::Named(name) })
+                            if matches!(expr.as_ref(), RustExpr::Ident(step_name) if step_name == "step")
+                                && name == "usize"
+                    )
+        ));
+    }
+
+    #[test]
+    fn lowers_range_literal_with_alias_name_bounds() {
+        let alias_int = Type::Alias("Index".to_string(), Box::new(Type::Int));
+        let range = HirExpr::RangeLiteral {
+            start: Box::new(HirExpr::Name {
+                name: "start".to_string(),
+                ty: alias_int.clone(),
+            }),
+            end: Box::new(HirExpr::Name {
+                name: "end".to_string(),
+                ty: alias_int,
+            }),
+            step: None,
+            ty: Type::Range,
+        };
+
+        let lowered = try_lower_leaf_expr(&range).expect("range with alias-name bounds lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Range { start, end }
+                if matches!(start.as_ref(), RustExpr::Ident(name) if name == "start")
+                    && matches!(end.as_ref(), RustExpr::Ident(name) if name == "end")
+        ));
+    }
+
+    #[test]
+    fn lowers_range_literal_with_alias_name_step() {
+        let alias_int = Type::Alias("Step".to_string(), Box::new(Type::Int));
+        let range = HirExpr::RangeLiteral {
+            start: Box::new(HirExpr::IntLiteral(1)),
+            end: Box::new(HirExpr::IntLiteral(10)),
+            step: Some(Box::new(HirExpr::Name {
+                name: "step".to_string(),
+                ty: alias_int,
+            })),
+            ty: Type::Range,
+        };
+
+        let lowered = try_lower_leaf_expr(&range).expect("range with alias-name step lowered");
         assert!(matches!(
             lowered,
             RustExpr::MethodCall { method, args, .. }
