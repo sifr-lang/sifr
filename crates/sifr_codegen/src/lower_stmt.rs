@@ -457,17 +457,19 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
             args: vec![lowered],
         }))]);
     }
-    if let Some(Type::Union(members)) = ctx.return_type {
-        if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
-            return None;
+    if let Some(return_ty) = ctx.return_type {
+        if let Type::Union(members) = resolve_alias_type(return_ty) {
+            if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
+                return None;
+            }
+            let lowered = try_lower_leaf_or_name_expr(value)?;
+            let variant = crate::helpers::find_union_variant(members, value.ty())?;
+            let enum_name = return_ty.union_enum_name();
+            return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![enum_name, variant])),
+                args: vec![lowered],
+            }))]);
         }
-        let lowered = try_lower_leaf_or_name_expr(value)?;
-        let variant = crate::helpers::find_union_variant(members, value.ty())?;
-        let enum_name = ctx.return_type?.union_enum_name();
-        return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![enum_name, variant])),
-            args: vec![lowered],
-        }))]);
     }
     if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
         return Some(vec![RustStmt::Return(Some(RustExpr::MethodCall {
@@ -1730,6 +1732,75 @@ mod tests {
             RustStmt::Return(Some(RustExpr::FnCall { ref func, ref args }))
                 if matches!(func.as_ref(), RustExpr::Path(parts) if parts.len() == 2)
                     && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "x")
+        ));
+    }
+
+    #[test]
+    fn lowers_return_leaf_with_alias_non_option_union_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::IntLiteral(5)),
+        };
+        let union_ret = Type::Alias(
+            "ValueUnion".to_string(),
+            Box::new(Type::Union(vec![Type::Int, Type::Str])),
+        );
+        let expected_enum = union_ret.union_enum_name();
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&union_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("alias non-option union leaf return lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::FnCall { ref func, .. }))
+                if matches!(
+                    func.as_ref(),
+                    RustExpr::Path(parts) if parts.first().is_some_and(|n| n == &expected_enum)
+                )
+        ));
+    }
+
+    #[test]
+    fn lowers_return_name_with_alias_non_option_union_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+        };
+        let union_ret = Type::Alias(
+            "ValueUnion".to_string(),
+            Box::new(Type::Union(vec![Type::Int, Type::Str])),
+        );
+        let expected_enum = union_ret.union_enum_name();
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&union_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("alias non-option union name return lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::FnCall { ref func, ref args }))
+                if matches!(
+                    func.as_ref(),
+                    RustExpr::Path(parts) if parts.first().is_some_and(|n| n == &expected_enum)
+                ) && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "x")
         ));
     }
 

@@ -219,6 +219,7 @@ status: in_progress
 - [x] PR359 slice: extend simple module primitive-constant item lowering to treat alias-wrapped primitive types as primitive (and avoid helper-const lowering), with regression tests
 - [x] PR360 slice: extend simple module string-constant item lowering to treat alias-wrapped string types as string constants (and avoid helper-const lowering), with regression tests
 - [x] PR361 slice: extend simple module `None`-constant item lowering to treat alias-wrapped `None` types as `None` constants (and avoid helper-const lowering), with regression tests
+- [x] PR362 slice: extend simple non-option union return lowering to support alias-wrapped union return contexts via IR path, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
