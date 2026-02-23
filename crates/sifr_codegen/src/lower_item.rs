@@ -7,6 +7,20 @@ use crate::{
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 
+fn resolve_alias_type(ty: &Type) -> &Type {
+    match ty {
+        Type::Alias(_, inner) => resolve_alias_type(inner),
+        _ => ty,
+    }
+}
+
+fn is_simple_module_primitive_const_type(ty: &Type) -> bool {
+    matches!(
+        resolve_alias_type(ty),
+        Type::Int | Type::Float | Type::Bool | Type::LiteralInt(_) | Type::LiteralBool(_)
+    )
+}
+
 pub fn lower_item_raw(raw: &str) -> Result<Vec<RustItem>, CodegenError> {
     Ok(vec![RustItem::RawCode(raw.to_string())])
 }
@@ -30,7 +44,7 @@ pub fn try_lower_simple_module_const_item(
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if !matches!(ty, Type::Int | Type::Float | Type::Bool | Type::LiteralInt(_) | Type::LiteralBool(_)) {
+    if !is_simple_module_primitive_const_type(ty) {
         return None;
     }
     let rust_name = name.to_uppercase();
@@ -119,17 +133,7 @@ pub fn try_lower_simple_module_helper_const_item(
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if matches!(
-        ty,
-        Type::Int
-            | Type::Float
-            | Type::Bool
-            | Type::LiteralInt(_)
-            | Type::LiteralBool(_)
-            | Type::Str
-            | Type::LiteralStr(_)
-            | Type::None
-    ) {
+    if is_simple_module_primitive_const_type(ty) || matches!(ty, Type::Str | Type::LiteralStr(_) | Type::None) {
         return None;
     }
     let rust_name = format!("__const_{name}");
@@ -277,6 +281,60 @@ mod tests {
                 ..
             } if name == "ENABLED"
         ));
+    }
+
+    #[test]
+    fn lowers_simple_module_alias_int_const_item() {
+        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let (item, rust_name) =
+            try_lower_simple_module_const_item("answer", &alias_int, &HirExpr::IntLiteral(42))
+                .expect("alias int const should lower");
+        assert_eq!(rust_name, "ANSWER");
+        assert!(matches!(
+            item,
+            RustItem::Const {
+                name,
+                visibility: Visibility::Private,
+                ..
+            } if name == "ANSWER"
+        ));
+    }
+
+    #[test]
+    fn dispatcher_lowers_alias_primitive_module_const_as_const_item() {
+        let alias_bool = Type::Alias("Flag".to_string(), Box::new(Type::Bool));
+        let (item, rust_name) = try_lower_simple_module_constant_item(
+            "enabled",
+            &alias_bool,
+            &HirExpr::Name {
+                name: "flag".to_string(),
+                ty: alias_bool.clone(),
+            },
+        )
+        .expect("dispatcher should lower alias primitive constant");
+        assert_eq!(rust_name, "ENABLED");
+        assert!(matches!(
+            item,
+            RustItem::Const {
+                name,
+                visibility: Visibility::Private,
+                value: RustExpr::Ident(ref ident),
+                ..
+            } if name == "ENABLED" && ident == "flag"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_alias_primitive_module_helper_const_item() {
+        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        assert!(
+            try_lower_simple_module_helper_const_item(
+                "answer",
+                &alias_int,
+                &HirExpr::IntLiteral(42),
+            )
+            .is_none()
+        );
     }
 
     #[test]
