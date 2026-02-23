@@ -421,6 +421,10 @@ fn is_alias_equivalent_type(left: &Type, right: &Type) -> bool {
     left == right || resolve_alias_type(left) == resolve_alias_type(right)
 }
 
+fn is_none_type(ty: &Type) -> bool {
+    matches!(resolve_alias_type(ty), Type::None)
+}
+
 fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, .. } = expr {
         return Some(RustExpr::Ident(name.clone()));
@@ -487,20 +491,20 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     }
     if is_option_like_type(ty)
         && is_option_like_type(value.ty())
-        && !matches!(value.ty(), Type::None)
+        && !is_none_type(value.ty())
     {
         return try_lower_name_ident_expr(value);
     }
     if is_option_like_type(ty)
         && !is_option_like_type(value.ty())
-        && !matches!(value.ty(), Type::None)
+        && !is_none_type(value.ty())
     {
         return Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
             args: vec![try_lower_leaf_or_name_expr(value)?],
         });
     }
-    if matches!(ty, Type::None) && matches!(value, HirExpr::NoneLiteral) {
+    if is_none_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::Unit));
     }
     if !is_alias_equivalent_type(ty, value.ty()) {
@@ -884,6 +888,34 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_let_alias_none_literal_to_unit() {
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: alias_none,
+            value: HirExpr::NoneLiteral,
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let alias-none lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                value: RustExpr::Literal(RustLiteral::Unit),
+                ..
+            } if let_name == "x"
+        ));
+    }
+
+    #[test]
     fn lowers_simple_option_let_none_literal_to_none() {
         let option_ty = Type::Union(vec![Type::Int, Type::None]);
         let let_stmt = HirStmt::Let {
@@ -1071,6 +1103,31 @@ mod tests {
                 func: "value".to_string(),
                 args: vec![],
                 ty: Type::Int,
+            },
+            is_mutable: false,
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &let_stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn does_not_lower_option_let_alias_none_name_rhs_to_some() {
+        let option_ty = Type::Union(vec![Type::Int, Type::None]);
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: option_ty,
+            value: HirExpr::Name {
+                name: "none_value".to_string(),
+                ty: alias_none,
             },
             is_mutable: false,
         };
