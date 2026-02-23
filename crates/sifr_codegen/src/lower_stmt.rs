@@ -300,43 +300,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             index,
             value,
             field_ty,
-        } if try_lower_leaf_or_name_expr(index).is_some()
-            && try_lower_leaf_or_name_expr(value).is_some()
-            && matches!(resolve_alias_type(field_ty), Type::List(_)) =>
-        {
-            let receiver = RustExpr::Field {
-                expr: Box::new(RustExpr::Ident(object.clone())),
-                field: field.clone(),
-            };
-            let lowered_index = try_lower_leaf_or_name_expr(index)?;
-            let lowered_value = try_lower_leaf_or_name_expr(value)?;
-            Some(vec![build_list_subscript_assign_stmt(
-                receiver,
-                lowered_index,
-                lowered_value,
-            )])
-        }
-        HirStmt::AttributeSubscriptAssign {
-            object,
-            field,
-            index,
-            value,
-            field_ty,
-        } if try_lower_attribute_dict_insert_key_expr(index, field_ty).is_some()
-            && try_lower_leaf_or_name_expr(value).is_some() =>
-        {
-            let receiver = RustExpr::Field {
-                expr: Box::new(RustExpr::Ident(object.clone())),
-                field: field.clone(),
-            };
-            let lowered_index = try_lower_attribute_dict_insert_key_expr(index, field_ty)?;
-            let lowered_value = try_lower_leaf_or_name_expr(value)?;
-            Some(vec![build_dict_subscript_assign_stmt(
-                receiver,
-                lowered_index,
-                lowered_value,
-            )])
-        }
+        } => try_lower_simple_attribute_subscript_assign_stmt(object, field, index, value, field_ty),
         HirStmt::SubscriptAssign {
             object,
             index,
@@ -672,6 +636,36 @@ fn build_dict_subscript_assign_stmt(
         method: "insert".to_string(),
         args: vec![lowered_index, lowered_value],
     })
+}
+
+fn try_lower_simple_attribute_subscript_assign_stmt(
+    object: &str,
+    field: &str,
+    index: &HirExpr,
+    value: &HirExpr,
+    field_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+
+    match resolve_alias_type(field_ty) {
+        Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
+            RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(object.to_string())),
+                field: field.to_string(),
+            },
+            try_lower_leaf_or_name_expr(index)?,
+            lowered_value,
+        )]),
+        Type::Dict(_, _) => Some(vec![build_dict_subscript_assign_stmt(
+            RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(object.to_string())),
+                field: field.to_string(),
+            },
+            try_lower_attribute_dict_insert_key_expr(index, field_ty)?,
+            lowered_value,
+        )]),
+        _ => None,
+    }
 }
 
 fn try_lower_simple_subscript_augassign_stmt(
