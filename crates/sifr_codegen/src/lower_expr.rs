@@ -82,11 +82,11 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             if !is_safe_simple_binop(op, left.ty(), right.ty(), ty) {
                 return None;
             }
-            if op == "/" && is_mixed_simple_float_division(left.ty(), right.ty(), ty) {
+            if is_mixed_simple_float_binop(op, left.ty(), right.ty(), ty) {
                 return Some(RustExpr::BinOp {
-                    left: Box::new(try_lower_float_division_operand_expr(left)?),
-                    op: "/".to_string(),
-                    right: Box::new(try_lower_float_division_operand_expr(right)?),
+                    left: Box::new(try_lower_mixed_float_operand_expr(left)?),
+                    op: normalize_binop_op(op).to_string(),
+                    right: Box::new(try_lower_mixed_float_operand_expr(right)?),
                 });
             }
             Some(RustExpr::BinOp {
@@ -230,7 +230,10 @@ fn normalize_binop_op(op: &str) -> &str {
     }
 }
 
-fn is_mixed_simple_float_division(left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
+fn is_mixed_simple_float_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
+    if !matches!(op, "/" | "+" | "-" | "*" | "%") {
+        return false;
+    }
     if !matches!(result_ty, Type::Float) {
         return false;
     }
@@ -254,12 +257,17 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
             && matches!(left_ty, Type::Int | Type::LiteralInt(_));
     }
     if op == "/" {
-        if is_mixed_simple_float_division(left_ty, right_ty, result_ty) {
+        if is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty) {
             return true;
         }
         return left_ty == right_ty
             && left_ty == result_ty
             && matches!(left_ty, Type::Float);
+    }
+    if matches!(op, "+" | "-" | "*" | "%")
+        && is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty)
+    {
+        return true;
     }
     if !matches!(op, "+" | "-" | "*" | "%") {
         return false;
@@ -315,7 +323,7 @@ fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_expr(expr)
 }
 
-fn try_lower_float_division_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     let lowered = try_lower_leaf_expr(expr)?;
     if is_int_like_simple(expr.ty()) {
         return Some(RustExpr::Cast {
@@ -477,6 +485,40 @@ mod tests {
             try_lower_leaf_expr(&bin),
             Some(RustExpr::BinOp { op, left, right })
                 if op == "/"
+                    && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                    && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_mixed_int_float_addition_binop() {
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::IntLiteral(7)),
+            op: "+".to_string(),
+            right: Box::new(HirExpr::FloatLiteral(2.0)),
+            ty: Type::Float,
+        };
+        assert!(matches!(
+            try_lower_leaf_expr(&bin),
+            Some(RustExpr::BinOp { op, left, right })
+                if op == "+"
+                    && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                    && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_mixed_float_int_modulo_binop() {
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::FloatLiteral(7.0)),
+            op: "%".to_string(),
+            right: Box::new(HirExpr::IntLiteral(2)),
+            ty: Type::Float,
+        };
+        assert!(matches!(
+            try_lower_leaf_expr(&bin),
+            Some(RustExpr::BinOp { op, left, right })
+                if op == "%"
                     && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
                     && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
         ));
