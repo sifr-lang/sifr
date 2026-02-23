@@ -269,6 +269,40 @@ fn try_lower_simple_tuple_unpack_stmt(targets: &[(String, Type)], value: &HirExp
     }])
 }
 
+fn try_lower_loop_else_stmts(
+    loop_stmt: RustStmt,
+    else_body: &[HirStmt],
+    in_loop_with_else: bool,
+    bindings: SimpleStmtBindings<'_>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    Some(vec![
+        RustStmt::Let {
+            mutable: true,
+            name: "_broke".to_string(),
+            ty: None,
+            value: RustExpr::Literal(RustLiteral::Bool(false)),
+        },
+        loop_stmt,
+        RustStmt::If {
+            cond: RustExpr::UnaryOp {
+                op: "!".to_string(),
+                operand: Box::new(RustExpr::Ident("_broke".to_string())),
+            },
+            // Else body executes outside this loop scope. Preserve enclosing
+            // loop-else context for any break/continue lowering there.
+            then_body: try_lower_simple_stmt_block(
+                else_body,
+                in_loop_with_else,
+                bindings.mutated_vars,
+                bindings.borrowed_params,
+                ctx,
+            )?,
+            else_body: None,
+        },
+    ])
+}
+
 fn try_lower_simple_while_stmt(
     condition: &HirExpr,
     body: &[HirStmt],
@@ -278,13 +312,7 @@ fn try_lower_simple_while_stmt(
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
     if let Some(else_body) = else_body {
-        return Some(vec![
-            RustStmt::Let {
-                mutable: true,
-                name: "_broke".to_string(),
-                ty: None,
-                value: RustExpr::Literal(RustLiteral::Bool(false)),
-            },
+        return try_lower_loop_else_stmts(
             RustStmt::While {
                 cond: try_lower_simple_condition_test_expr(condition)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
@@ -296,23 +324,11 @@ fn try_lower_simple_while_stmt(
                     ctx,
                 )?,
             },
-            RustStmt::If {
-                cond: RustExpr::UnaryOp {
-                    op: "!".to_string(),
-                    operand: Box::new(RustExpr::Ident("_broke".to_string())),
-                },
-                // Else body executes outside this loop scope. Preserve enclosing
-                // loop-else context for any break/continue lowering there.
-                then_body: try_lower_simple_stmt_block(
-                    else_body,
-                    in_loop_with_else,
-                    bindings.mutated_vars,
-                    bindings.borrowed_params,
-                    ctx,
-                )?,
-                else_body: None,
-            },
-        ]);
+            else_body,
+            in_loop_with_else,
+            bindings,
+            ctx,
+        );
     }
 
     Some(vec![RustStmt::While {
@@ -342,13 +358,7 @@ fn try_lower_simple_for_stmt(
     }
 
     if let Some(else_body) = else_body {
-        return Some(vec![
-            RustStmt::Let {
-                mutable: true,
-                name: "_broke".to_string(),
-                ty: None,
-                value: RustExpr::Literal(RustLiteral::Bool(false)),
-            },
+        return try_lower_loop_else_stmts(
             RustStmt::For {
                 var: target.to_string(),
                 iter: try_lower_leaf_or_name_expr(iter)?,
@@ -361,23 +371,11 @@ fn try_lower_simple_for_stmt(
                     ctx,
                 )?,
             },
-            RustStmt::If {
-                cond: RustExpr::UnaryOp {
-                    op: "!".to_string(),
-                    operand: Box::new(RustExpr::Ident("_broke".to_string())),
-                },
-                // Else body executes outside this loop scope. Preserve enclosing
-                // loop-else context for any break/continue lowering there.
-                then_body: try_lower_simple_stmt_block(
-                    else_body,
-                    in_loop_with_else,
-                    bindings.mutated_vars,
-                    bindings.borrowed_params,
-                    ctx,
-                )?,
-                else_body: None,
-            },
-        ]);
+            else_body,
+            in_loop_with_else,
+            bindings,
+            ctx,
+        );
     }
 
     Some(vec![RustStmt::For {
