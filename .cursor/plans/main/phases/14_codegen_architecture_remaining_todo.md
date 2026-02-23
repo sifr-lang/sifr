@@ -24,7 +24,7 @@ Execution loop per part (mandatory):
 
 ## Current Baseline (code-verified)
 
-- `crates/sifr_codegen/src/lib.rs`: `1009` lines
+- `crates/sifr_codegen/src/lib.rs`: `1015` lines
 - Direct string emission calls in `lib.rs`: `2`
 - Largest write-heavy files: `intrinsic_method_emitters.rs` (`523`), `legacy_expr_emitter.rs` (`388`), `legacy_stmt_emitter.rs` (`294`)
 - `lower_stmt` production coverage: `27/27` `HirStmt` variants
@@ -32,7 +32,7 @@ Execution loop per part (mandatory):
 - `lower_expr` production coverage: `35/35` `HirExpr` variants
   - Missing: none
 - Active `sifr_codegen` clippy suppressions in `lib.rs`: none
-- Execution checklist drift: `.cursor/plans/main/phases/14_codegen_architecture_execution.md` still has one unchecked item (`Remove at least 5 clippy suppressions...`) despite later sections claiming broader suppression removals.
+- Execution checklist drift: none (reconciled with merged PR reality).
 
 ---
 
@@ -147,23 +147,23 @@ Root cause: lint suppressions mask conversion and state-structure debt in legacy
   - [x] targeted e2e parity gates (`test_codegen_differential_old_vs_new_corpus_parity`, `test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus`)
 - [x] Demo check:
   - [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
-- [ ] PR loop complete (open -> review -> merge)
+- [x] PR loop complete (open -> review -> merge)
 
 ---
 
 ## Part F: Phase-Document Reconciliation and Final Closeout
 
-status: pending
+status: done
 
 Root cause: phase docs can claim done before code-level gates are actually complete.
 
-- [ ] Reconcile `14_codegen_architecture.md` DoD status with implemented code
-- [ ] Reconcile `14_codegen_architecture_execution.md` checklist with merged PR reality
-- [ ] Close remaining unchecked items only when code gates are actually met
-- [ ] Final validation:
-  - [ ] `cargo test -p sifr_codegen`
-  - [ ] `cargo clippy -p sifr_codegen -- -D warnings`
-  - [ ] targeted `cargo test -p sifr --test e2e`
-- [ ] Final demo check:
-  - [ ] `cargo run -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr`
+- [x] Reconcile `14_codegen_architecture.md` DoD status with implemented code
+- [x] Reconcile `14_codegen_architecture_execution.md` checklist with merged PR reality
+- [x] Close remaining unchecked items only when code gates are actually met
+- [x] Final validation:
+  - [x] `cargo test -p sifr_codegen`
+  - [x] `cargo clippy -p sifr_codegen -- -D warnings`
+  - [x] targeted `cargo test -p sifr --test e2e` (parity + ratio gate)
+- [x] Final demo check:
+  - [x] `cargo run -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr`
 - [ ] PR loop complete (open -> review -> merge)
