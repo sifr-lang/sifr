@@ -1,4 +1,4 @@
-use super::{CodegenLoweringMode, CodegenResult, HirModule, RustEmitter, StdlibCode};
+use super::{CodegenResult, HirModule, RustEmitter, StdlibCode};
 
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
@@ -7,15 +7,7 @@ pub fn generate_rust(module: &HirModule) -> String {
 
 /// Generate Rust source code for a test module (with #[test] attributes).
 pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
-    generate_rust_test_with_mode(module, CodegenLoweringMode::StructuredPreferred)
-}
-
-/// Generate Rust source code for a test module with an explicit lowering mode.
-pub fn generate_rust_test_with_mode(
-    module: &HirModule,
-    lowering_mode: CodegenLoweringMode,
-) -> CodegenResult {
-    let mut emitter = RustEmitter::new_with_mode(lowering_mode);
+    let mut emitter = RustEmitter::new();
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
@@ -42,7 +34,11 @@ pub fn generate_rust_test_with_mode(
     if emitter.runtime_needs.needs_bigint {
         result.push_str("use num_bigint::BigInt;\n");
     }
-    if emitter.collection_needs.needs_hashmap || emitter.collection_needs.needs_hashset || emitter.collection_needs.needs_vecdeque || emitter.runtime_needs.needs_bigint {
+    if emitter.collection_needs.needs_hashmap
+        || emitter.collection_needs.needs_hashset
+        || emitter.collection_needs.needs_vecdeque
+        || emitter.runtime_needs.needs_bigint
+    {
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -70,13 +66,5 @@ pub fn generate_rust_test_with_mode(
 
 /// Generate Rust source code from a HIR module, returning metadata about stdlib usage.
 pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
-    generate_rust_with_metadata_mode(module, CodegenLoweringMode::StructuredPreferred)
-}
-
-/// Generate Rust source code from a HIR module using an explicit lowering mode.
-pub fn generate_rust_with_metadata_mode(
-    module: &HirModule,
-    lowering_mode: CodegenLoweringMode,
-) -> CodegenResult {
-    super::generate_rust_with_stdlib_mode(module, &StdlibCode::default(), lowering_mode)
+    super::generate_rust_with_stdlib(module, &StdlibCode::default())
 }

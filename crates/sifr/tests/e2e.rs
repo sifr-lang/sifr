@@ -16,7 +16,10 @@ use std::process::Command;
 fn extract_expect_stdout(source: &str) -> Option<String> {
     let lines: Vec<&str> = source
         .lines()
-        .filter_map(|line| line.strip_prefix("# expect-stdout:").map(|rest| rest.trim()))
+        .filter_map(|line| {
+            line.strip_prefix("# expect-stdout:")
+                .map(|rest| rest.trim())
+        })
         .collect();
     if lines.is_empty() {
         None
@@ -29,7 +32,10 @@ fn extract_expect_stdout(source: &str) -> Option<String> {
 fn extract_expect_stderr(source: &str) -> Vec<String> {
     source
         .lines()
-        .filter_map(|line| line.strip_prefix("# expect-stderr:").map(|rest| rest.trim().to_string()))
+        .filter_map(|line| {
+            line.strip_prefix("# expect-stderr:")
+                .map(|rest| rest.trim().to_string())
+        })
         .collect()
 }
 
@@ -62,29 +68,7 @@ fn compile_source_with_metadata(source: &str) -> Result<(String, HashSet<String>
             used_stdlib_modules,
             required_crates: _,
             lowering_stats: _,
-        } => {
-            Ok((rust_source, used_stdlib_modules))
-        }
-        sifr_driver::CompileResultFull::Errors { errors } => {
-            Err(errors.iter().map(|e| e.message.clone()).collect())
-        }
-    }
-}
-
-/// Compile source and return generated Rust/stdlib metadata using an explicit codegen lowering mode.
-fn compile_source_with_metadata_mode(
-    source: &str,
-    lowering_mode: sifr_driver::CodegenLoweringMode,
-) -> Result<(String, HashSet<String>), Vec<String>> {
-    match sifr_driver::compile_with_metadata_mode(source, lowering_mode) {
-        sifr_driver::CompileResultFull::Success {
-            rust_source,
-            used_stdlib_modules,
-            required_crates: _,
-            lowering_stats: _,
-        } => {
-            Ok((rust_source, used_stdlib_modules))
-        }
+        } => Ok((rust_source, used_stdlib_modules)),
         sifr_driver::CompileResultFull::Errors { errors } => {
             Err(errors.iter().map(|e| e.message.clone()).collect())
         }
@@ -92,11 +76,10 @@ fn compile_source_with_metadata_mode(
 }
 
 /// Compile source and return Rust/stdlib metadata and lowering stats for gate checks.
-fn compile_source_with_metadata_mode_and_stats(
+fn compile_source_with_metadata_and_stats(
     source: &str,
-    lowering_mode: sifr_driver::CodegenLoweringMode,
 ) -> Result<(String, HashSet<String>, sifr_driver::LoweringStats), Vec<String>> {
-    match sifr_driver::compile_with_metadata_mode(source, lowering_mode) {
+    match sifr_driver::compile_with_metadata(source) {
         sifr_driver::CompileResultFull::Success {
             rust_source,
             used_stdlib_modules,
@@ -115,7 +98,8 @@ fn generate_cargo_toml(stdlib_modules: &HashSet<String>) -> String {
 name = "sifr_output"
 version = "0.1.0"
 edition = "2021"
-"#.to_string();
+"#
+    .to_string();
 
     let mut deps = Vec::new();
     for module_name in stdlib_modules {
@@ -359,7 +343,7 @@ fn test_e2e_pass() {
 }
 
 #[test]
-fn test_codegen_differential_old_vs_new_corpus_parity() {
+fn test_codegen_corpus_subset_parity() {
     let pass_dir = Path::new("tests/e2e/pass");
     let corpus = [
         "if_else",
@@ -380,20 +364,22 @@ fn test_codegen_differential_old_vs_new_corpus_parity() {
         let source = match fs::read_to_string(&path) {
             Ok(source) => source,
             Err(err) => {
-                failures.push(format!("FAIL [{}]: unable to read fixture {}: {}", case, path.display(), err));
+                failures.push(format!(
+                    "FAIL [{}]: unable to read fixture {}: {}",
+                    case,
+                    path.display(),
+                    err
+                ));
                 continue;
             }
         };
         let expected_stdout = extract_expect_stdout(&source);
 
-        let (new_rust, new_modules) = match compile_source_with_metadata_mode(
-            &source,
-            sifr_driver::CodegenLoweringMode::StructuredPreferred,
-        ) {
+        let (rust_source, stdlib_modules) = match compile_source_with_metadata(&source) {
             Ok(result) => result,
             Err(errors) => {
                 failures.push(format!(
-                    "FAIL [{}][StructuredPreferred]: sifr compilation failed:\n  {}",
+                    "FAIL [{}]: sifr compilation failed:\n  {}",
                     case,
                     errors.join("\n  ")
                 ));
@@ -401,87 +387,35 @@ fn test_codegen_differential_old_vs_new_corpus_parity() {
             }
         };
 
-        let (legacy_rust, legacy_modules) = match compile_source_with_metadata_mode(
-            &source,
-            sifr_driver::CodegenLoweringMode::LegacyOnly,
-        ) {
-            Ok(result) => result,
-            Err(errors) => {
-                failures.push(format!(
-                    "FAIL [{}][LegacyOnly]: sifr compilation failed:\n  {}",
-                    case,
-                    errors.join("\n  ")
-                ));
-                continue;
-            }
-        };
-
-        if !new_rust.contains("fn main()") {
+        if !rust_source.contains("fn main()") {
             failures.push(format!(
-                "FAIL [{}][StructuredPreferred]: generated Rust has no main function",
-                case
-            ));
-            continue;
-        }
-        if !legacy_rust.contains("fn main()") {
-            failures.push(format!(
-                "FAIL [{}][LegacyOnly]: generated Rust has no main function",
+                "FAIL [{}]: generated Rust has no main function",
                 case
             ));
             continue;
         }
 
-        let new_stdout = match build_and_run_with_deps(
-            &new_rust,
-            &format!("{case}_structured"),
-            &new_modules,
-        ) {
-            Ok(stdout) => stdout,
-            Err(err) => {
-                failures.push(format!("FAIL [{}][StructuredPreferred]: {}", case, err));
-                continue;
-            }
-        };
+        let stdout =
+            match build_and_run_with_deps(&rust_source, &format!("{case}_single"), &stdlib_modules)
+            {
+                Ok(stdout) => stdout,
+                Err(err) => {
+                    failures.push(format!("FAIL [{}]: {}", case, err));
+                    continue;
+                }
+            };
 
-        let legacy_stdout = match build_and_run_with_deps(
-            &legacy_rust,
-            &format!("{case}_legacy"),
-            &legacy_modules,
-        ) {
-            Ok(stdout) => stdout,
-            Err(err) => {
-                failures.push(format!("FAIL [{}][LegacyOnly]: {}", case, err));
-                continue;
-            }
-        };
-
-        let new_trimmed = new_stdout.trim_end();
-        let legacy_trimmed = legacy_stdout.trim_end();
+        let trimmed_stdout = stdout.trim_end();
 
         if let Some(expected) = &expected_stdout {
             let expected_trimmed = expected.trim_end();
-            if new_trimmed != expected_trimmed {
+            if trimmed_stdout != expected_trimmed {
                 failures.push(format!(
-                    "FAIL [{}][StructuredPreferred]: stdout mismatch\n  expected: {:?}\n  actual:   {:?}",
-                    case, expected_trimmed, new_trimmed
+                    "FAIL [{}]: stdout mismatch\n  expected: {:?}\n  actual:   {:?}",
+                    case, expected_trimmed, trimmed_stdout
                 ));
                 continue;
             }
-            if legacy_trimmed != expected_trimmed {
-                failures.push(format!(
-                    "FAIL [{}][LegacyOnly]: stdout mismatch\n  expected: {:?}\n  actual:   {:?}",
-                    case, expected_trimmed, legacy_trimmed
-                ));
-                continue;
-            }
-        }
-
-        if new_trimmed != legacy_trimmed {
-            failures.push(format!(
-                "FAIL [{}]: differential mismatch\n  structured: {:?}\n  legacy:     {:?}",
-                case, new_trimmed, legacy_trimmed
-            ));
-            continue;
         }
 
         test_count += 1;
@@ -489,7 +423,7 @@ fn test_codegen_differential_old_vs_new_corpus_parity() {
 
     if !failures.is_empty() {
         panic!(
-            "\n{} differential parity test(s) failed:\n\n{}\n\n({} passed, {} failed)",
+            "\n{} corpus parity test(s) failed:\n\n{}\n\n({} passed, {} failed)",
             failures.len(),
             failures.join("\n\n"),
             test_count,
@@ -500,9 +434,9 @@ fn test_codegen_differential_old_vs_new_corpus_parity() {
     assert_eq!(
         test_count,
         corpus.len(),
-        "Not all differential corpus cases executed successfully"
+        "Not all corpus subset cases executed successfully"
     );
-    eprintln!("  {} differential parity tests completed", test_count);
+    eprintln!("  {} corpus subset parity tests completed", test_count);
 }
 
 #[test]
@@ -521,25 +455,28 @@ fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
         let source = match fs::read_to_string(&path) {
             Ok(source) => source,
             Err(err) => {
-                failures.push(format!("FAIL [{}]: unable to read fixture {}: {}", case, path.display(), err));
-                continue;
-            }
-        };
-
-        let (rust_source, _stdlib_modules, stats) = match compile_source_with_metadata_mode_and_stats(
-            &source,
-            sifr_driver::CodegenLoweringMode::StructuredPreferred,
-        ) {
-            Ok(result) => result,
-            Err(errors) => {
                 failures.push(format!(
-                    "FAIL [{}]: structured compile failed:\n  {}",
+                    "FAIL [{}]: unable to read fixture {}: {}",
                     case,
-                    errors.join("\n  ")
+                    path.display(),
+                    err
                 ));
                 continue;
             }
         };
+
+        let (rust_source, _stdlib_modules, stats) =
+            match compile_source_with_metadata_and_stats(&source) {
+                Ok(result) => result,
+                Err(errors) => {
+                    failures.push(format!(
+                        "FAIL [{}]: structured compile failed:\n  {}",
+                        case,
+                        errors.join("\n  ")
+                    ));
+                    continue;
+                }
+            };
 
         if !rust_source.contains("fn main()") {
             failures.push(format!(
