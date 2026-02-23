@@ -421,54 +421,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             op,
             value,
             object_ty,
-        } if try_lower_leaf_or_name_expr(index).is_some()
-            && try_lower_leaf_or_name_expr(value).is_some()
-            && matches!(resolve_alias_type(object_ty), Type::List(_))
-            && is_supported_subscript_augassign_op(op) =>
-        {
-            let lowered_index = try_lower_leaf_or_name_expr(index)?;
-            let lowered_value = try_lower_leaf_or_name_expr(value)?;
-            let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
-            Some(vec![build_list_get_mut_block_stmt(
-                RustExpr::Ident(object.clone()),
-                lowered_index,
-                lowered_body_stmt,
-            )])
-        }
-        HirStmt::SubscriptAugAssign {
-            object,
-            index,
-            op,
-            value,
-            object_ty,
-        } if try_lower_leaf_or_name_expr(index).is_some()
-            && try_lower_leaf_or_name_expr(value).is_some()
-            && matches!(resolve_alias_type(object_ty), Type::Dict(_, _))
-            && is_supported_subscript_augassign_op(op) =>
-        {
-            let lowered_index = try_lower_leaf_or_name_expr(index)?;
-            let lowered_value = try_lower_leaf_or_name_expr(value)?;
-            let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
-            let get_mut_key_arg =
-                if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
-                    lowered_index
-                } else {
-                    RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(lowered_index),
-                    }
-                };
-            Some(vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
-                expr: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.clone())),
-                    method: "get_mut".to_string(),
-                    args: vec![get_mut_key_arg],
-                },
-                then_body: vec![lowered_body_stmt],
-                else_body: None,
-            }])
-        }
+        } => try_lower_simple_subscript_augassign_stmt(object, index, op, value, object_ty),
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -719,6 +672,51 @@ fn build_dict_subscript_assign_stmt(
         method: "insert".to_string(),
         args: vec![lowered_index, lowered_value],
     })
+}
+
+fn try_lower_simple_subscript_augassign_stmt(
+    object: &str,
+    index: &HirExpr,
+    op: &str,
+    value: &HirExpr,
+    object_ty: &Type,
+) -> Option<Vec<RustStmt>> {
+    if !is_supported_subscript_augassign_op(op) {
+        return None;
+    }
+    let lowered_index = try_lower_leaf_or_name_expr(index)?;
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
+
+    match resolve_alias_type(object_ty) {
+        Type::List(_) => Some(vec![build_list_get_mut_block_stmt(
+            RustExpr::Ident(object.to_string()),
+            lowered_index,
+            lowered_body_stmt,
+        )]),
+        Type::Dict(_, _) => Some(vec![RustStmt::IfLet {
+            pattern: "Some(__elem)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "get_mut".to_string(),
+                args: vec![build_dict_get_mut_key_arg(lowered_index)],
+            },
+            then_body: vec![lowered_body_stmt],
+            else_body: None,
+        }]),
+        _ => None,
+    }
+}
+
+fn build_dict_get_mut_key_arg(lowered_index: RustExpr) -> RustExpr {
+    if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
+        lowered_index
+    } else {
+        RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(lowered_index),
+        }
+    }
 }
 
 fn is_supported_subscript_augassign_op(op: &str) -> bool {
