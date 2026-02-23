@@ -99,6 +99,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 if let Some(lowered) = try_lower_option_none_compare_expr(left, &ops[0], right) {
                     return Some(lowered);
                 }
+                if let Some(lowered) = try_lower_none_identity_compare_expr(left, &ops[0], right) {
+                    return Some(lowered);
+                }
             }
 
             let mut lhs_expr = left.as_ref();
@@ -230,6 +233,19 @@ fn try_lower_option_none_compare_expr(left: &HirExpr, op: &str, right: &HirExpr)
         method: method.to_string(),
         args: vec![],
     })
+}
+
+fn try_lower_none_identity_compare_expr(left: &HirExpr, op: &str, right: &HirExpr) -> Option<RustExpr> {
+    if !matches!(right, HirExpr::NoneLiteral) {
+        return None;
+    }
+    if !matches!(op, "is" | "is not") {
+        return None;
+    }
+    if !(matches!(left, HirExpr::NoneLiteral) || matches!(left.ty(), Type::None)) {
+        return None;
+    }
+    Some(RustExpr::Literal(RustLiteral::Bool(op == "is")))
 }
 
 #[cfg(test)]
@@ -527,5 +543,40 @@ mod tests {
         };
 
         assert!(try_lower_leaf_expr(&cmp).is_none());
+    }
+
+    #[test]
+    fn lowers_none_identity_compare_with_none_typed_left() {
+        let is_cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "n".to_string(),
+                ty: Type::None,
+            }),
+            ops: vec!["is".to_string()],
+            comparators: vec![HirExpr::NoneLiteral],
+            ty: Type::Bool,
+        };
+        let is_not_cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "n".to_string(),
+                ty: Type::None,
+            }),
+            ops: vec!["is not".to_string()],
+            comparators: vec![HirExpr::NoneLiteral],
+            ty: Type::Bool,
+        };
+
+        let lowered_is = try_lower_leaf_expr(&is_cmp).expect("none identity is lowered");
+        let lowered_is_not =
+            try_lower_leaf_expr(&is_not_cmp).expect("none identity is-not lowered");
+
+        assert!(matches!(
+            lowered_is,
+            RustExpr::Literal(RustLiteral::Bool(true))
+        ));
+        assert!(matches!(
+            lowered_is_not,
+            RustExpr::Literal(RustLiteral::Bool(false))
+        ));
     }
 }

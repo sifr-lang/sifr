@@ -188,6 +188,7 @@ status: in_progress
 - [x] PR328 slice: extend structured expression lowering by converting simple chained comparisons (`a < b < c` style) into nested IR `RustExpr::BinOp` nodes joined by `&&` in `try_lower_leaf_expr`, with regression tests
 - [x] PR329 slice: extend structured expression lowering by converting unary bitwise-invert integer leaf expressions (`~x` for int-likes) into IR `RustExpr::UnaryOp` (`!`) in `try_lower_leaf_expr`, with regression tests
 - [x] PR330 slice: extend structured expression lowering by converting simple `is`/`is not` comparisons (non-option-none path) into normalized IR `RustExpr::BinOp` (`==`/`!=`) in `try_lower_leaf_expr`, with regression tests
+- [x] PR331 slice: extend structured expression lowering by converting `is None` / `is not None` with statically-`None` left operands into IR boolean literals in `try_lower_leaf_expr`, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
