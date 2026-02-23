@@ -206,6 +206,7 @@ status: in_progress
 - [x] PR346 slice: extend structured binop lowering numeric guards to unwrap `Type::Alias` wrappers (including mixed int/float division cast path) for alias-typed numeric name operands, with regression tests
 - [x] PR347 slice: extend structured unary lowering to support alias-wrapped bool/int operands (`not`, `~`) including name operands via IR path, with regression tests
 - [x] PR348 slice: extend structured range-literal operand lowering to accept alias-wrapped int `Name` bounds/step via IR path, with regression tests
+- [x] PR349 slice: extend structured compare lowering to support alias-wrapped enum compare safety checks (`==`/`!=` only) while preserving ordering fallback, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
