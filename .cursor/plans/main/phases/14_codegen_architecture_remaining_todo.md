@@ -57,27 +57,27 @@ Root cause: remaining work tracking drifted from real code state.
 
 ## Part B: Statement Lowering Coverage Closeout (`lower_stmt`)
 
-status: in_progress
+status: done
 
 Root cause: `emit_stmt` in `lib.rs` still owns unsupported statement semantics.
 
-- [ ] Add explicit lowering paths for missing stmt variants:
+- [x] Add explicit lowering paths for missing stmt variants:
   - [x] `Match` (simple/lowerable pattern+guard+body forms)
-  - [ ] `NestedFunction`
+  - [x] `NestedFunction` (legacy bridge via captured `RustStmt::RawCode` in structured mode)
   - [x] `StarUnpack` (lowered as constrained IR `RawCode` bridge)
-  - [ ] `TryExcept`
+  - [x] `TryExcept` (legacy bridge via captured `RustStmt::RawCode` in structured mode)
   - [x] `With` (non-context-manager protocol path)
   - [x] `Yield`
-- [ ] Prefer structured IR for safe subshapes; use constrained fallback only where unavoidable
-- [ ] Add regression tests for every newly-lowered stmt variant path
-- [ ] Update lowering coverage metrics and gates to reflect new coverage
-- [ ] Validation:
-  - [ ] `cargo test -p sifr_codegen`
-  - [ ] targeted e2e parity tests for changed stmt semantics
-  - [ ] `cargo clippy -p sifr_codegen -- -D warnings`
-- [ ] Demo check:
-  - [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
-- [ ] PR loop complete (open -> review -> merge)
+- [x] Prefer structured IR for safe subshapes; use constrained fallback only where unavoidable
+- [x] Add regression tests for every newly-lowered stmt variant path
+- [x] Update lowering coverage metrics and gates to reflect new coverage (`lower_stmt` variant coverage: `27/27`)
+- [x] Validation:
+  - [x] `cargo test -p sifr_codegen`
+  - [x] targeted e2e parity tests for changed stmt semantics
+  - [x] `cargo clippy -p sifr_codegen -- -D warnings`
+- [x] Demo check:
+  - [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+- [x] PR loop complete (open -> review -> merge)
 
 ---
 

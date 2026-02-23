@@ -1,4 +1,4 @@
-use crate::{RustEmitter, RustStmt};
+use crate::{CodegenLoweringMode, RustEmitter, RustStmt};
 use sifr_hir::HirStmt;
 
 impl RustEmitter {
@@ -48,6 +48,30 @@ impl RustEmitter {
                 }
             }
         }
+    }
+
+    pub(super) fn try_capture_legacy_stmt_as_raw(&mut self, stmt: &HirStmt) -> Option<Vec<RustStmt>> {
+        if !matches!(stmt, HirStmt::TryExcept { .. } | HirStmt::NestedFunction { .. }) {
+            return None;
+        }
+
+        let saved_output = std::mem::take(&mut self.output);
+        let saved_indent = self.indent;
+        let saved_mode = self.lowering_mode;
+
+        self.output = String::new();
+        self.indent = 0;
+        self.lowering_mode = CodegenLoweringMode::LegacyOnly;
+        self.emit_stmt(stmt);
+
+        let captured = std::mem::take(&mut self.output);
+        self.output = saved_output;
+        self.indent = saved_indent;
+        self.lowering_mode = saved_mode;
+
+        Some(vec![RustStmt::RawCode(
+            captured.trim_end_matches('\n').to_string(),
+        )])
     }
 
     pub(super) fn current_loop_has_else(&self) -> bool {
