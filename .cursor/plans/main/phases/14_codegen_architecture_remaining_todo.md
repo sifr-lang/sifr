@@ -166,4 +166,4 @@ Root cause: phase docs can claim done before code-level gates are actually compl
   - [x] targeted `cargo test -p sifr --test e2e` (parity + ratio gate)
 - [x] Final demo check:
   - [x] `cargo run -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr`
-- [ ] PR loop complete (open -> review -> merge)
+- [x] PR loop complete (open -> review -> merge)
