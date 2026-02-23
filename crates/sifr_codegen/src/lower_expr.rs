@@ -232,6 +232,17 @@ fn is_bool_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_compare_scalar_type(ty), Some("bool"))
 }
 
+fn resolve_alias_type(ty: &Type) -> &Type {
+    match ty {
+        Type::Alias(_, inner) => resolve_alias_type(inner),
+        _ => ty,
+    }
+}
+
+fn is_enum_like_simple(ty: &Type) -> bool {
+    matches!(resolve_alias_type(ty), Type::Enum { .. })
+}
+
 fn normalize_compare_op(op: &str) -> &str {
     match op {
         "is" => "==",
@@ -281,7 +292,9 @@ fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
         return false;
     }
-    if left_ty == right_ty && matches!(left_ty, Type::Enum { .. }) {
+    let left_unaliased = resolve_alias_type(left_ty);
+    let right_unaliased = resolve_alias_type(right_ty);
+    if left_unaliased == right_unaliased && matches!(left_unaliased, Type::Enum { .. }) {
         return matches!(op, "==" | "!=");
     }
     let left_norm = normalize_simple_compare_scalar_type(left_ty);
@@ -389,7 +402,7 @@ fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
 
 fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, ty } = expr {
-        if normalize_simple_compare_scalar_type(ty).is_some() || matches!(ty, Type::Enum { .. }) {
+        if normalize_simple_compare_scalar_type(ty).is_some() || is_enum_like_simple(ty) {
             return Some(RustExpr::Ident(name.clone()));
         }
     }
@@ -1127,6 +1140,64 @@ mod tests {
                 enum_name: "Color".to_string(),
                 variant: "BLUE".to_string(),
                 ty: enum_ty,
+            }],
+            ty: Type::Bool,
+        };
+
+        assert!(try_lower_leaf_expr(&cmp).is_none());
+    }
+
+    #[test]
+    fn lowers_alias_wrapped_enum_variant_equality_compare() {
+        let alias_enum_ty = Type::Alias(
+            "ColorAlias".to_string(),
+            Box::new(Type::Enum {
+                name: "Color".to_string(),
+                variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+            }),
+        );
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::EnumVariant {
+                enum_name: "Color".to_string(),
+                variant: "RED".to_string(),
+                ty: alias_enum_ty.clone(),
+            }),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::EnumVariant {
+                enum_name: "Color".to_string(),
+                variant: "BLUE".to_string(),
+                ty: alias_enum_ty,
+            }],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("alias enum equality compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, .. } if op == "=="
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_alias_wrapped_enum_variant_ordering_compare() {
+        let alias_enum_ty = Type::Alias(
+            "ColorAlias".to_string(),
+            Box::new(Type::Enum {
+                name: "Color".to_string(),
+                variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+            }),
+        );
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::EnumVariant {
+                enum_name: "Color".to_string(),
+                variant: "RED".to_string(),
+                ty: alias_enum_ty.clone(),
+            }),
+            ops: vec!["<".to_string()],
+            comparators: vec![HirExpr::EnumVariant {
+                enum_name: "Color".to_string(),
+                variant: "BLUE".to_string(),
+                ty: alias_enum_ty,
             }],
             ty: Type::Bool,
         };
