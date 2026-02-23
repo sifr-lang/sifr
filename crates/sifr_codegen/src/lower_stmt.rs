@@ -363,7 +363,7 @@ fn try_lower_simple_if_clause(
         ctx,
     )?;
 
-    if let Some(option_var) = crate::helpers::detect_option_truthiness(condition) {
+    if let Some(option_var) = detect_option_truthiness_alias(condition) {
         return Some(RustStmt::IfLet {
             pattern: format!("Some({option_var})"),
             expr: RustExpr::Ident(option_var),
@@ -383,12 +383,38 @@ fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }
-    let option_var = crate::helpers::detect_option_truthiness(expr)?;
+    let option_var = detect_option_truthiness_alias(expr)?;
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(option_var)),
         method: "is_some".to_string(),
         args: vec![],
     })
+}
+
+fn resolve_alias_type(ty: &Type) -> &Type {
+    match ty {
+        Type::Alias(_, inner) => resolve_alias_type(inner),
+        _ => ty,
+    }
+}
+
+fn is_option_like_type(ty: &Type) -> bool {
+    if let Type::Union(members) = resolve_alias_type(ty) {
+        let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
+        let has_none = members.iter().any(|m| matches!(m, Type::None));
+        has_none && non_none == 1
+    } else {
+        false
+    }
+}
+
+fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
+    if let HirExpr::Name { name, ty } = expr {
+        if is_option_like_type(ty) {
+            return Some(name.clone());
+        }
+    }
+    None
 }
 
 fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {
@@ -2421,6 +2447,40 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_if_with_alias_option_truthiness_name_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Alias(
+                    "MaybeInt".to_string(),
+                    Box::new(Type::Union(vec![Type::Int, Type::None])),
+                ),
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: Some(vec![HirStmt::Pass]),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("if alias option truthiness lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::IfLet {
+                pattern: ref p,
+                expr: RustExpr::Ident(ref n),
+                else_body: Some(_),
+                ..
+            } if p == "Some(maybe_x)" && n == "maybe_x"
+        ));
+    }
+
+    #[test]
     fn lowers_if_option_truthiness_with_elif() {
         let if_stmt = HirStmt::If {
             condition: HirExpr::Name {
@@ -2784,6 +2844,45 @@ mod tests {
             &HashSet::new(),
         )
         .expect("while with option truthiness name condition lowered");
+        assert_eq!(lowered.len(), 1);
+        match &lowered[0] {
+            RustStmt::While {
+                cond: RustExpr::MethodCall {
+                    receiver,
+                    method,
+                    args,
+                },
+                ..
+            } => {
+                assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
+                assert_eq!(method, "is_some");
+                assert!(args.is_empty());
+            }
+            _ => panic!("expected while with method-call condition"),
+        }
+    }
+
+    #[test]
+    fn lowers_simple_while_with_alias_option_truthiness_name_condition() {
+        let while_stmt = HirStmt::While {
+            condition: HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: Type::Alias(
+                    "MaybeInt".to_string(),
+                    Box::new(Type::Union(vec![Type::Int, Type::None])),
+                ),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &while_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("while with alias option truthiness name condition lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::While {
