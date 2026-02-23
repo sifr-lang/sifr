@@ -97,7 +97,7 @@ impl RustEmitter {
                 self.write(&recursive_field_rust_type(field_ty, &class.name));
             } else if class.name == "deque" && field_name == "_data" {
                 if let Type::List(elem) = field_ty {
-                    self.needs_vecdeque = true;
+                    self.collection_needs.needs_vecdeque = true;
                     self.write(&format!("VecDeque<{}>", elem.rust_type()));
                 } else {
                     self.write(&field_ty.rust_type_for_struct_field());
@@ -243,22 +243,22 @@ impl RustEmitter {
                         self.write(")\n");
                     } else {
                         // Single non-return statement
-                        let saved = self.in_display_impl;
-                        self.in_display_impl = true;
+                        let saved = self.emission_ctx.in_display_impl;
+                        self.emission_ctx.in_display_impl = true;
                         let saved_mutated = std::mem::take(&mut self.mutated_vars);
                         self.mutated_vars = collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
                         for stmt in &str_func.body {
                             self.emit_stmt(stmt);
                         }
                         self.mutated_vars = saved_mutated;
-                        self.in_display_impl = saved;
+                        self.emission_ctx.in_display_impl = saved;
                         self.write_indent();
                         self.write("Ok(())\n");
                     }
                 } else {
                     // Multi-statement body: emit with in_display_impl flag
-                    let saved = self.in_display_impl;
-                    self.in_display_impl = true;
+                    let saved = self.emission_ctx.in_display_impl;
+                    self.emission_ctx.in_display_impl = true;
                     // Pre-scan for mutated variables so let mut is emitted correctly
                     let saved_mutated = std::mem::take(&mut self.mutated_vars);
                     self.mutated_vars = collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
@@ -266,7 +266,7 @@ impl RustEmitter {
                         self.emit_stmt(stmt);
                     }
                     self.mutated_vars = saved_mutated;
-                    self.in_display_impl = saved;
+                    self.emission_ctx.in_display_impl = saved;
                     self.write_indent();
                     self.write("Ok(())\n");
                 }

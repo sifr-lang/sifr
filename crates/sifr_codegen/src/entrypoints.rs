@@ -30,19 +30,19 @@ pub fn generate_rust_test_with_mode(
     emitter.emit_module(module, false, true);
 
     let mut result = String::new();
-    if emitter.needs_hashmap {
+    if emitter.collection_needs.needs_hashmap {
         result.push_str("use std::collections::HashMap;\n");
     }
-    if emitter.needs_hashset {
+    if emitter.collection_needs.needs_hashset {
         result.push_str("use std::collections::HashSet;\n");
     }
-    if emitter.needs_vecdeque {
+    if emitter.collection_needs.needs_vecdeque {
         result.push_str("use std::collections::VecDeque;\n");
     }
-    if emitter.needs_bigint {
+    if emitter.runtime_needs.needs_bigint {
         result.push_str("use num_bigint::BigInt;\n");
     }
-    if emitter.needs_hashmap || emitter.needs_hashset || emitter.needs_vecdeque || emitter.needs_bigint {
+    if emitter.collection_needs.needs_hashmap || emitter.collection_needs.needs_hashset || emitter.collection_needs.needs_vecdeque || emitter.runtime_needs.needs_bigint {
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -57,7 +57,7 @@ pub fn generate_rust_test_with_mode(
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_crates: {
             let mut crates = emitter.intrinsic_registry_crates;
-            if emitter.needs_bigint {
+            if emitter.runtime_needs.needs_bigint {
                 crates.insert("num-bigint".to_string());
                 crates.insert("num-traits".to_string());
             }

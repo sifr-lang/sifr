@@ -927,7 +927,7 @@ impl RustEmitter {
                 self.write("]");
             }
             HirExpr::SetLiteral { elements, .. } => {
-                self.needs_hashset = true;
+                self.collection_needs.needs_hashset = true;
                 self.write("HashSet::from([");
                 for (i, elem) in elements.iter().enumerate() {
                     if i > 0 {
@@ -938,7 +938,7 @@ impl RustEmitter {
                 self.write("])");
             }
             HirExpr::DictLiteral { keys, values, .. } => {
-                self.needs_hashmap = true;
+                self.collection_needs.needs_hashmap = true;
                 self.write("HashMap::from([");
                 for (i, (key, val)) in keys.iter().zip(values.iter()).enumerate() {
                     if i > 0 {
@@ -987,7 +987,11 @@ impl RustEmitter {
                         if let HirExpr::IntLiteral(val) = index.as_ref() {
                             if *val < 0 {
                                 if let Type::Tuple(elems) = obj_ty {
-                                    let resolved = (elems.len() as i64 + val) as usize;
+                                    let resolved = i64::try_from(elems.len())
+                                        .ok()
+                                        .and_then(|len| len.checked_add(*val))
+                                        .and_then(|idx| usize::try_from(idx).ok())
+                                        .unwrap_or(0);
                                     self.emit_expr(object);
                                     self.write(&format!(".{resolved}"));
                                 }
@@ -1089,12 +1093,9 @@ impl RustEmitter {
                         if let Type::Tuple(result_elems) = ty {
                             let start_idx = start
                                 .as_ref()
-                                .and_then(|e| {
-                                    if let HirExpr::IntLiteral(v) = e.as_ref() {
-                                        Some(*v as usize)
-                                    } else {
-                                        None
-                                    }
+                                .and_then(|e| match e.as_ref() {
+                                    HirExpr::IntLiteral(v) => usize::try_from(*v).ok(),
+                                    _ => None,
                                 })
                                 .unwrap_or(0);
                             self.write("(");
@@ -1419,7 +1420,7 @@ impl RustEmitter {
                 generators,
                 ty,
             } => {
-                self.needs_hashset = true;
+                self.collection_needs.needs_hashset = true;
                 if generators.len() == 1 {
                     let (ref var, ref iter_e, ref filter) = generators[0];
                     let is_range = matches!(iter_e.ty(), Type::Range);
@@ -1486,7 +1487,7 @@ impl RustEmitter {
                 generators,
                 ty,
             } => {
-                self.needs_hashmap = true;
+                self.collection_needs.needs_hashmap = true;
                 if generators.len() == 1 {
                     let (ref var, ref iter_e, ref filter) = generators[0];
                     let is_range = matches!(iter_e.ty(), Type::Range);

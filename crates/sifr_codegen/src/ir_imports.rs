@@ -2,9 +2,19 @@ use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct IrImportNeeds {
+    pub(crate) collections: IrCollectionImportNeeds,
+    pub(crate) runtime: IrRuntimeImportNeeds,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct IrCollectionImportNeeds {
     pub(crate) needs_hashmap: bool,
     pub(crate) needs_hashset: bool,
     pub(crate) needs_vecdeque: bool,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct IrRuntimeImportNeeds {
     pub(crate) needs_mutex: bool,
     pub(crate) needs_bigint: bool,
 }
@@ -312,11 +322,11 @@ fn scan_named_text(text: &str, needs: &mut IrImportNeeds) {
 
 fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
     match symbol {
-        "HashMap" => needs.needs_hashmap = true,
-        "HashSet" => needs.needs_hashset = true,
-        "VecDeque" => needs.needs_vecdeque = true,
-        "Mutex" => needs.needs_mutex = true,
-        "BigInt" => needs.needs_bigint = true,
+        "HashMap" => needs.collections.needs_hashmap = true,
+        "HashSet" => needs.collections.needs_hashset = true,
+        "VecDeque" => needs.collections.needs_vecdeque = true,
+        "Mutex" => needs.runtime.needs_mutex = true,
+        "BigInt" => needs.runtime.needs_bigint = true,
         _ => {}
     }
 }
@@ -368,11 +378,11 @@ mod tests {
             is_async: false,
         }];
         let needs = collect_import_needs_from_items(&items);
-        assert!(needs.needs_hashmap);
-        assert!(needs.needs_hashset);
-        assert!(needs.needs_vecdeque);
-        assert!(needs.needs_mutex);
-        assert!(needs.needs_bigint);
+        assert!(needs.collections.needs_hashmap);
+        assert!(needs.collections.needs_hashset);
+        assert!(needs.collections.needs_vecdeque);
+        assert!(needs.runtime.needs_mutex);
+        assert!(needs.runtime.needs_bigint);
     }
 
     #[test]
@@ -398,10 +408,10 @@ mod tests {
             is_async: false,
         }];
         let needs = collect_import_needs_from_items(&items);
-        assert!(!needs.needs_hashmap);
-        assert!(!needs.needs_hashset);
-        assert!(!needs.needs_vecdeque);
-        assert!(!needs.needs_mutex);
-        assert!(!needs.needs_bigint);
+        assert!(!needs.collections.needs_hashmap);
+        assert!(!needs.collections.needs_hashset);
+        assert!(!needs.collections.needs_vecdeque);
+        assert!(!needs.runtime.needs_mutex);
+        assert!(!needs.runtime.needs_bigint);
     }
 }

@@ -1073,7 +1073,7 @@ impl RustEmitter {
             }
             // open() built-in — wraps open_file and constructs FileHandle (raises IOError on failure)
             "builtin_open" => {
-                self.needs_file_handles = true;
+                self.runtime_needs.needs_file_handles = true;
                 self.used_stdlib_modules.insert("io".to_string());
                 self.write("{ use std::io::{BufReader, BufWriter}; let __path = ");
                 self.emit_expr_as_str_ref(&args[0]);
@@ -1083,7 +1083,7 @@ impl RustEmitter {
             }
             // open() built-in file handle intrinsics
             "open_file" => {
-                self.needs_file_handles = true;
+                self.runtime_needs.needs_file_handles = true;
                 self.write("(|| -> Result<i64, IOError> { use std::io::{BufReader, BufWriter}; let __path = ");
                 self.emit_expr_as_str_ref(&args[0]);
                 self.write("; let __mode = ");
@@ -1345,13 +1345,13 @@ impl RustEmitter {
             }
             // sifr.logging
             "set_global_level" => {
-                self.needs_logging_state = true;
+                self.runtime_needs.needs_logging_state = true;
                 self.write("{ *__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap() = ");
                 self.emit_expr(&args[0]);
                 self.write("; }");
             }
             "get_global_level" => {
-                self.needs_logging_state = true;
+                self.runtime_needs.needs_logging_state = true;
                 self.write("*__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap()");
             }
             _ => {

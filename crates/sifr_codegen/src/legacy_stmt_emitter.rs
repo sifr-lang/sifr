@@ -173,7 +173,7 @@ impl RustEmitter {
             HirStmt::Return { value } => {
                 // Inside Display::fmt (for __str__ methods), return statements become
                 // write!(f, "{}", val); return Ok(())
-                if self.in_display_impl {
+                if self.emission_ctx.in_display_impl {
                     if let Some(val) = value {
                         self.write_indent();
                         self.write("write!(f, \"{}\", ");
@@ -1297,7 +1297,7 @@ impl RustEmitter {
                 }
             }
             HirStmt::Yield { value } => {
-                if self.in_generator_closure {
+                if self.emission_ctx.in_generator_closure {
                     // Inside a generator closure: yield becomes return Some(val)
                     self.write_indent();
                     self.write("return Some(");
