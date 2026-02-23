@@ -429,27 +429,11 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             let lowered_index = try_lower_leaf_or_name_expr(index)?;
             let lowered_value = try_lower_leaf_or_name_expr(value)?;
             let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
-            Some(vec![RustStmt::Block(vec![
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__idx".to_string(),
-                    ty: None,
-                    value: RustExpr::Cast {
-                        expr: Box::new(lowered_index),
-                        ty: RustType::Named("usize".to_string()),
-                    },
-                },
-                RustStmt::IfLet {
-                    pattern: "Some(__elem)".to_string(),
-                    expr: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(object.clone())),
-                        method: "get_mut".to_string(),
-                        args: vec![RustExpr::Ident("__idx".to_string())],
-                    },
-                    then_body: vec![lowered_body_stmt],
-                    else_body: None,
-                },
-            ])])
+            Some(vec![build_list_get_mut_block_stmt(
+                RustExpr::Ident(object.clone()),
+                lowered_index,
+                lowered_body_stmt,
+            )])
         }
         HirStmt::SubscriptAugAssign {
             object,
@@ -687,6 +671,21 @@ fn build_list_subscript_assign_stmt(
     lowered_index: RustExpr,
     lowered_value: RustExpr,
 ) -> RustStmt {
+    build_list_get_mut_block_stmt(
+        receiver,
+        lowered_index,
+        RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: lowered_value,
+        },
+    )
+}
+
+fn build_list_get_mut_block_stmt(
+    receiver: RustExpr,
+    lowered_index: RustExpr,
+    then_body_stmt: RustStmt,
+) -> RustStmt {
     RustStmt::Block(vec![
         RustStmt::Let {
             mutable: false,
@@ -704,10 +703,7 @@ fn build_list_subscript_assign_stmt(
                 method: "get_mut".to_string(),
                 args: vec![RustExpr::Ident("__idx".to_string())],
             },
-            then_body: vec![RustStmt::Assign {
-                target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                value: lowered_value,
-            }],
+            then_body: vec![then_body_stmt],
             else_body: None,
         },
     ])
