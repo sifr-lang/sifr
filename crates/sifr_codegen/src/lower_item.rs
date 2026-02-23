@@ -25,6 +25,10 @@ fn is_simple_module_string_const_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::Str | Type::LiteralStr(_))
 }
 
+fn is_simple_module_none_const_type(ty: &Type) -> bool {
+    matches!(resolve_alias_type(ty), Type::None)
+}
+
 pub fn lower_item_raw(raw: &str) -> Result<Vec<RustItem>, CodegenError> {
     Ok(vec![RustItem::RawCode(raw.to_string())])
 }
@@ -112,7 +116,7 @@ pub fn try_lower_simple_module_none_const_item(
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if !matches!(ty, Type::None) || !matches!(value, HirExpr::NoneLiteral) {
+    if !is_simple_module_none_const_type(ty) || !matches!(value, HirExpr::NoneLiteral) {
         return None;
     }
     let rust_name = format!("__const_{name}");
@@ -139,7 +143,7 @@ pub fn try_lower_simple_module_helper_const_item(
 ) -> Option<(RustItem, String)> {
     if is_simple_module_primitive_const_type(ty)
         || is_simple_module_string_const_type(ty)
-        || matches!(ty, Type::None)
+        || is_simple_module_none_const_type(ty)
     {
         return None;
     }
@@ -507,6 +511,42 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_module_alias_none_const_item() {
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let (item, rust_name_call) =
+            try_lower_simple_module_none_const_item("nothing", &alias_none, &HirExpr::NoneLiteral)
+                .expect("alias none const should lower");
+        assert_eq!(rust_name_call, "__const_nothing()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::Unit),
+                ..
+            } if name == "__const_nothing"
+        ));
+    }
+
+    #[test]
+    fn dispatcher_lowers_alias_none_module_const_as_none_item() {
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let (item, rust_name_call) =
+            try_lower_simple_module_constant_item("nothing", &alias_none, &HirExpr::NoneLiteral)
+                .expect("dispatcher should lower alias none constant");
+        assert_eq!(rust_name_call, "__const_nothing()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::Unit),
+                ..
+            } if name == "__const_nothing"
+        ));
+    }
+
+    #[test]
     fn does_not_lower_non_none_module_none_const_item() {
         assert!(try_lower_simple_module_none_const_item(
             "nothing",
@@ -514,6 +554,15 @@ mod tests {
             &HirExpr::IntLiteral(0),
         )
         .is_none());
+    }
+
+    #[test]
+    fn does_not_lower_alias_none_module_helper_const_item() {
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        assert!(
+            try_lower_simple_module_helper_const_item("nothing", &alias_none, &HirExpr::NoneLiteral)
+                .is_none()
+        );
     }
 
     #[test]
