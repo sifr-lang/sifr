@@ -42,6 +42,12 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                     operand: Box::new(try_lower_leaf_expr(operand)?),
                 }),
                 "+" => Some(try_lower_leaf_expr(operand)?),
+                "~" if matches!(operand.ty(), Type::Int | Type::LiteralInt(_)) => {
+                    Some(RustExpr::UnaryOp {
+                        op: "!".to_string(),
+                        operand: Box::new(try_lower_leaf_expr(operand)?),
+                    })
+                }
                 "not" if matches!(operand.ty(), Type::Bool | Type::LiteralBool(_)) => {
                     let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
                         if let HirExpr::Name { name, .. } = operand.as_ref() {
@@ -363,6 +369,35 @@ mod tests {
                 && method == "is_none"
                 && args.is_empty()
         ));
+    }
+
+    #[test]
+    fn lowers_unary_bitwise_invert_with_int_operand() {
+        let unary = HirExpr::UnaryOp {
+            op: "~".to_string(),
+            operand: Box::new(HirExpr::IntLiteral(7)),
+            ty: Type::Int,
+        };
+
+        let lowered = try_lower_leaf_expr(&unary).expect("unary invert int lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::UnaryOp {
+                op: ref operator,
+                operand: ref inner,
+            } if operator == "!" && matches!(inner.as_ref(), RustExpr::Cast { ty: RustType::I64, .. })
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_unary_bitwise_invert_with_non_int_operand() {
+        let unary = HirExpr::UnaryOp {
+            op: "~".to_string(),
+            operand: Box::new(HirExpr::BoolLiteral(true)),
+            ty: Type::Bool,
+        };
+
+        assert!(try_lower_leaf_expr(&unary).is_none());
     }
 
     #[test]
