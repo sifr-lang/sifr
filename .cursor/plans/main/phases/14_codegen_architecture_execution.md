@@ -247,6 +247,7 @@ status: in_progress
 - [x] PR387 slice: extend structured `AugAssign`/`AttributeAugAssign` lowering to support int bitwise/shift ops (`&=`, `|=`, `^=`, `<<=`, `>>=`), while preserving fallback for non-int operands and unsupported ops
 - [x] PR388 slice: refactor duplicated `AugAssign`/`AttributeAugAssign` match-arm routing by consolidating op normalization + IR stmt construction into a shared helper, preserving existing semantics and fallback behavior
 - [x] PR389 slice: refactor duplicated `SubscriptAssign` list/dict match-arm routing by consolidating to a shared subscript-assignment lowering helper, preserving existing semantics and fallback behavior
+- [x] PR390 slice: refactor `NestedSubscriptAssign` match-arm routing by extracting dedicated nested-subscript lowering helper, preserving existing semantics and fallback behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
