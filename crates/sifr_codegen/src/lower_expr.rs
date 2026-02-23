@@ -125,9 +125,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 }
 
                 let cmp = RustExpr::BinOp {
-                    left: Box::new(try_lower_leaf_expr(lhs_expr)?),
+                    left: Box::new(try_lower_simple_compare_operand_expr(lhs_expr)?),
                     op: normalized_op.to_string(),
-                    right: Box::new(try_lower_leaf_expr(rhs_expr)?),
+                    right: Box::new(try_lower_simple_compare_operand_expr(rhs_expr)?),
                 };
 
                 lowered_chain = Some(if let Some(existing) = lowered_chain {
@@ -364,8 +364,18 @@ fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     Some(lowered)
 }
 
+fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let HirExpr::Name { name, ty } = expr {
+        if normalize_simple_compare_scalar_type(ty).is_some() || matches!(ty, Type::Enum { .. }) {
+            return Some(RustExpr::Ident(name.clone()));
+        }
+    }
+    try_lower_leaf_expr(expr)
+}
+
 fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
     match ty {
+        Type::Alias(_, inner) => normalize_simple_compare_scalar_type(inner),
         Type::Int | Type::LiteralInt(_) => Some("int"),
         Type::Float => Some("float"),
         Type::Bool | Type::LiteralBool(_) => Some("bool"),
@@ -926,6 +936,49 @@ mod tests {
                 enum_name: "Color".to_string(),
                 variant: "BLUE".to_string(),
                 ty: enum_ty,
+            }],
+            ty: Type::Bool,
+        };
+
+        assert!(try_lower_leaf_expr(&cmp).is_none());
+    }
+
+    #[test]
+    fn lowers_alias_wrapped_scalar_compare() {
+        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: alias_int.clone(),
+            }),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "y".to_string(),
+                ty: alias_int,
+            }],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("alias scalar compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, .. } if op == "=="
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_mismatched_alias_wrapped_scalar_compare() {
+        let int_alias = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let bool_alias = Type::Alias("Flag".to_string(), Box::new(Type::Bool));
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: int_alias,
+            }),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "ok".to_string(),
+                ty: bool_alias,
             }],
             ty: Type::Bool,
         };
