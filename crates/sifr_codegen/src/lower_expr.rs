@@ -8,6 +8,29 @@ pub fn lower_expr_raw(raw: &str) -> Result<RustExpr, CodegenError> {
     Ok(RustExpr::RawCode(raw.to_string()))
 }
 
+pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
+    match expr {
+        HirExpr::IntLiteral(_)
+        | HirExpr::FloatLiteral(_)
+        | HirExpr::StringLiteral(_)
+        | HirExpr::BoolLiteral(_)
+        | HirExpr::NoneLiteral
+        | HirExpr::Name { .. }
+        | HirExpr::EnumVariant { .. }
+        | HirExpr::UnaryOp { .. }
+        | HirExpr::BinOp { .. }
+        | HirExpr::IfExpr { .. }
+        | HirExpr::TupleLiteral { .. }
+        | HirExpr::ListLiteral { .. }
+        | HirExpr::RangeLiteral { .. } => true,
+        HirExpr::Compare {
+            ops, comparators, ..
+        } => !ops.is_empty() && ops.len() == comparators.len(),
+        HirExpr::BoolOp { values, .. } => values.len() >= 2,
+        _ => false,
+    }
+}
+
 /// Lowers leaf expressions that don't require emitter state.
 /// This is the first incremental bridge from `emit_expr` string writes
 /// to IR + renderer output.

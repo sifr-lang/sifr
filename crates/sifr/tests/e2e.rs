@@ -57,7 +57,12 @@ fn compile_source(source: &str) -> Result<String, Vec<String>> {
 /// Compile source and return the generated Rust code with stdlib metadata.
 fn compile_source_with_metadata(source: &str) -> Result<(String, HashSet<String>), Vec<String>> {
     match sifr_driver::compile_with_metadata(source) {
-        sifr_driver::CompileResultFull::Success { rust_source, used_stdlib_modules, required_crates: _ } => {
+        sifr_driver::CompileResultFull::Success {
+            rust_source,
+            used_stdlib_modules,
+            required_crates: _,
+            lowering_stats: _,
+        } => {
             Ok((rust_source, used_stdlib_modules))
         }
         sifr_driver::CompileResultFull::Errors { errors } => {
@@ -72,9 +77,32 @@ fn compile_source_with_metadata_mode(
     lowering_mode: sifr_driver::CodegenLoweringMode,
 ) -> Result<(String, HashSet<String>), Vec<String>> {
     match sifr_driver::compile_with_metadata_mode(source, lowering_mode) {
-        sifr_driver::CompileResultFull::Success { rust_source, used_stdlib_modules, required_crates: _ } => {
+        sifr_driver::CompileResultFull::Success {
+            rust_source,
+            used_stdlib_modules,
+            required_crates: _,
+            lowering_stats: _,
+        } => {
             Ok((rust_source, used_stdlib_modules))
         }
+        sifr_driver::CompileResultFull::Errors { errors } => {
+            Err(errors.iter().map(|e| e.message.clone()).collect())
+        }
+    }
+}
+
+/// Compile source and return Rust/stdlib metadata and lowering stats for gate checks.
+fn compile_source_with_metadata_mode_and_stats(
+    source: &str,
+    lowering_mode: sifr_driver::CodegenLoweringMode,
+) -> Result<(String, HashSet<String>, sifr_driver::LoweringStats), Vec<String>> {
+    match sifr_driver::compile_with_metadata_mode(source, lowering_mode) {
+        sifr_driver::CompileResultFull::Success {
+            rust_source,
+            used_stdlib_modules,
+            required_crates: _,
+            lowering_stats,
+        } => Ok((rust_source, used_stdlib_modules, lowering_stats)),
         sifr_driver::CompileResultFull::Errors { errors } => {
             Err(errors.iter().map(|e| e.message.clone()).collect())
         }
@@ -475,6 +503,111 @@ fn test_codegen_differential_old_vs_new_corpus_parity() {
         "Not all differential corpus cases executed successfully"
     );
     eprintln!("  {} differential parity tests completed", test_count);
+}
+
+#[test]
+fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
+    let pass_dir = Path::new("tests/e2e/pass");
+    let corpus = ["codegen_structured_ratio_gate"];
+
+    let mut total_stmt_candidate = 0_u64;
+    let mut total_stmt_candidate_structured = 0_u64;
+    let mut total_expr_candidate = 0_u64;
+    let mut total_expr_candidate_structured = 0_u64;
+    let mut failures: Vec<String> = Vec::new();
+
+    for case in &corpus {
+        let path = pass_dir.join(format!("{case}.sifr"));
+        let source = match fs::read_to_string(&path) {
+            Ok(source) => source,
+            Err(err) => {
+                failures.push(format!("FAIL [{}]: unable to read fixture {}: {}", case, path.display(), err));
+                continue;
+            }
+        };
+
+        let (rust_source, _stdlib_modules, stats) = match compile_source_with_metadata_mode_and_stats(
+            &source,
+            sifr_driver::CodegenLoweringMode::StructuredPreferred,
+        ) {
+            Ok(result) => result,
+            Err(errors) => {
+                failures.push(format!(
+                    "FAIL [{}]: structured compile failed:\n  {}",
+                    case,
+                    errors.join("\n  ")
+                ));
+                continue;
+            }
+        };
+
+        if !rust_source.contains("fn main()") {
+            failures.push(format!(
+                "FAIL [{}]: generated Rust has no main function",
+                case
+            ));
+            continue;
+        }
+
+        eprintln!(
+            "  [{}] stmt={}/{} expr={}/{}",
+            case,
+            stats.stmt_candidate_structured,
+            stats.stmt_candidate_total,
+            stats.expr_candidate_structured,
+            stats.expr_candidate_total
+        );
+
+        total_stmt_candidate += stats.stmt_candidate_total;
+        total_stmt_candidate_structured += stats.stmt_candidate_structured;
+        total_expr_candidate += stats.expr_candidate_total;
+        total_expr_candidate_structured += stats.expr_candidate_structured;
+    }
+
+    if !failures.is_empty() {
+        panic!(
+            "\n{} structured-ratio corpus setup failure(s):\n\n{}",
+            failures.len(),
+            failures.join("\n\n")
+        );
+    }
+
+    assert!(
+        total_stmt_candidate > 0,
+        "structured ratio gate: stmt_candidate_total must be > 0"
+    );
+    assert!(
+        total_expr_candidate > 0,
+        "structured ratio gate: expr_candidate_total must be > 0"
+    );
+
+    let stmt_ratio = total_stmt_candidate_structured as f64 / total_stmt_candidate as f64;
+    let expr_ratio = total_expr_candidate_structured as f64 / total_expr_candidate as f64;
+
+    assert!(
+        stmt_ratio >= 0.80,
+        "structured ratio gate failed for statements: {:.3} < 0.80 ({} / {})",
+        stmt_ratio,
+        total_stmt_candidate_structured,
+        total_stmt_candidate
+    );
+    assert!(
+        expr_ratio >= 0.80,
+        "structured ratio gate failed for expressions: {:.3} < 0.80 ({} / {})",
+        expr_ratio,
+        total_expr_candidate_structured,
+        total_expr_candidate
+    );
+
+    eprintln!(
+        "  structured ratio gate passed: stmt={:.3} ({}/{}), expr={:.3} ({}/{})",
+        stmt_ratio,
+        total_stmt_candidate_structured,
+        total_stmt_candidate,
+        expr_ratio,
+        total_expr_candidate_structured,
+        total_expr_candidate
+    );
 }
 
 #[test]
