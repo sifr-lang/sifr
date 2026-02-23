@@ -313,6 +313,19 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 args: lowered_args,
             })
         }
+        HirExpr::Call { .. }
+        | HirExpr::ConstructorCall { .. }
+        | HirExpr::DictComp { .. }
+        | HirExpr::DictLiteral { .. }
+        | HirExpr::FString { .. }
+        | HirExpr::GeneratorExpr { .. }
+        | HirExpr::Index { .. }
+        | HirExpr::Lambda { .. }
+        | HirExpr::ListComp { .. }
+        | HirExpr::MethodCall { .. }
+        | HirExpr::SetComp { .. }
+        | HirExpr::SetLiteral { .. }
+        | HirExpr::Slice { .. } => None,
         _ => None,
     }
 }
