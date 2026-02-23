@@ -33,9 +33,19 @@ struct StdlibIrFile {
 
 #[derive(Debug, Default, Clone, Copy)]
 pub(crate) struct SharedPreludeNeeds {
+    pub(crate) collections: SharedPreludeCollectionNeeds,
+    pub(crate) file_handles: SharedPreludeFileHandleNeeds,
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub(crate) struct SharedPreludeCollectionNeeds {
     pub(crate) needs_hashmap: bool,
     pub(crate) needs_hashset: bool,
     pub(crate) needs_vecdeque: bool,
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub(crate) struct SharedPreludeFileHandleNeeds {
     pub(crate) needs_file_handles: bool,
     pub(crate) provides_file_handle_struct: bool,
 }
@@ -287,17 +297,23 @@ fn derive_shared_needs(filtered: &str, chunks: &[TopLevelChunk]) -> SharedPrelud
             RustToken::Sym(_) => continue,
         };
         match ident.as_str() {
-            "__SIFR_FILE_HANDLES" => shared_needs.needs_file_handles = true,
-            "HashMap" if is_reference_ident(&tokens, idx) => shared_needs.needs_hashmap = true,
-            "HashSet" if is_reference_ident(&tokens, idx) => shared_needs.needs_hashset = true,
-            "VecDeque" if is_reference_ident(&tokens, idx) => shared_needs.needs_vecdeque = true,
+            "__SIFR_FILE_HANDLES" => shared_needs.file_handles.needs_file_handles = true,
+            "HashMap" if is_reference_ident(&tokens, idx) => {
+                shared_needs.collections.needs_hashmap = true;
+            }
+            "HashSet" if is_reference_ident(&tokens, idx) => {
+                shared_needs.collections.needs_hashset = true;
+            }
+            "VecDeque" if is_reference_ident(&tokens, idx) => {
+                shared_needs.collections.needs_vecdeque = true;
+            }
             _ => {}
         }
     }
     for chunk in chunks {
         if let TopLevelChunk::Item(item) = chunk {
             if item.name == "FileHandle" && item.header_line.trim().starts_with("struct FileHandle") {
-                shared_needs.provides_file_handle_struct = true;
+                shared_needs.file_handles.provides_file_handle_struct = true;
             }
         }
     }
@@ -953,11 +969,14 @@ fn keep_me() {
 }
 "#;
         let prepared = collect_and_strip_shared_prelude(input);
-        assert!(prepared.shared_needs.needs_hashmap);
-        assert!(prepared.shared_needs.needs_hashset);
-        assert!(prepared.shared_needs.needs_vecdeque);
-        assert!(prepared.shared_needs.needs_file_handles);
-        assert!(prepared.shared_needs.provides_file_handle_struct);
+        assert!(prepared.shared_needs.collections.needs_hashmap);
+        assert!(prepared.shared_needs.collections.needs_hashset);
+        assert!(prepared.shared_needs.collections.needs_vecdeque);
+        assert!(prepared.shared_needs.file_handles.needs_file_handles);
+        assert!(prepared
+            .shared_needs
+            .file_handles
+            .provides_file_handle_struct);
         assert!(!prepared.stripped_code.contains("use std::collections::HashMap;"));
         assert!(!prepared.stripped_code.contains("enum SifrFileHandle {"));
         assert!(!prepared.stripped_code.contains("static __SIFR_FILE_HANDLES:"));
@@ -971,10 +990,10 @@ fn keep_me() {
 fn keep_me() {}
 "#;
         let prepared = collect_and_strip_shared_prelude(input);
-        assert!(!prepared.shared_needs.needs_hashmap);
-        assert!(!prepared.shared_needs.needs_hashset);
-        assert!(!prepared.shared_needs.needs_vecdeque);
-        assert!(!prepared.shared_needs.needs_file_handles);
+        assert!(!prepared.shared_needs.collections.needs_hashmap);
+        assert!(!prepared.shared_needs.collections.needs_hashset);
+        assert!(!prepared.shared_needs.collections.needs_vecdeque);
+        assert!(!prepared.shared_needs.file_handles.needs_file_handles);
         assert!(prepared.stripped_code.contains("fn keep_me()"));
     }
 }

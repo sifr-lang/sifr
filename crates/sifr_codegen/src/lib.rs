@@ -2,11 +2,7 @@
 //!
 //! Translates the typed HIR into Rust source code.
 
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::cast_possible_wrap)]
 #![allow(dead_code)]
-#![allow(clippy::struct_excessive_bools)]
 
 mod rust_ir;
 pub use rust_ir::*;
@@ -312,12 +308,12 @@ pub fn generate_rust_with_stdlib_mode(
                     };
                 if !filtered.trim().is_empty() {
                     let prepared = collect_and_strip_shared_prelude(&filtered);
-                    stdlib_needs_hashmap |= prepared.shared_needs.needs_hashmap;
-                    stdlib_needs_hashset |= prepared.shared_needs.needs_hashset;
-                    stdlib_needs_vecdeque |= prepared.shared_needs.needs_vecdeque;
-                    stdlib_needs_file_handles |= prepared.shared_needs.needs_file_handles;
+                    stdlib_needs_hashmap |= prepared.shared_needs.collections.needs_hashmap;
+                    stdlib_needs_hashset |= prepared.shared_needs.collections.needs_hashset;
+                    stdlib_needs_vecdeque |= prepared.shared_needs.collections.needs_vecdeque;
+                    stdlib_needs_file_handles |= prepared.shared_needs.file_handles.needs_file_handles;
                     stdlib_provides_file_handle_struct |=
-                        prepared.shared_needs.provides_file_handle_struct;
+                        prepared.shared_needs.file_handles.provides_file_handle_struct;
                     let stripped = prepared.stripped_code;
                     if !stripped.trim().is_empty() {
                         let deduped =
@@ -335,16 +331,16 @@ pub fn generate_rust_with_stdlib_mode(
     }
 
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
-    let needs_file_handles = emitter.needs_file_handles || stdlib_needs_file_handles;
+    let needs_file_handles = emitter.runtime_needs.needs_file_handles || stdlib_needs_file_handles;
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
-        || emitter.needs_logging_state;
+        || emitter.runtime_needs.needs_logging_state;
 
     // File handle infrastructure always relies on HashMap + Mutex.
-    let needs_hashmap_base = emitter.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
-    let needs_hashset_base = emitter.needs_hashset || stdlib_needs_hashset;
-    let needs_vecdeque_base = emitter.needs_vecdeque || stdlib_needs_vecdeque;
-    let needs_bigint_base = emitter.needs_bigint;
+    let needs_hashmap_base = emitter.collection_needs.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
+    let needs_hashset_base = emitter.collection_needs.needs_hashset || stdlib_needs_hashset;
+    let needs_vecdeque_base = emitter.collection_needs.needs_vecdeque || stdlib_needs_vecdeque;
+    let needs_bigint_base = emitter.runtime_needs.needs_bigint;
 
     // Emit built-in error class struct definitions for any that are referenced.
     // For now this remains a compatibility shim that scans generated code.
@@ -422,11 +418,11 @@ pub fn generate_rust_with_stdlib_mode(
 
     remove_trivial_clones_in_items(&mut preamble_items);
     let ir_import_needs = collect_import_needs_from_items(&preamble_items);
-    let needs_hashmap = needs_hashmap_base || ir_import_needs.needs_hashmap;
-    let needs_hashset = needs_hashset_base || ir_import_needs.needs_hashset;
-    let needs_vecdeque = needs_vecdeque_base || ir_import_needs.needs_vecdeque;
-    let needs_bigint = needs_bigint_base || ir_import_needs.needs_bigint;
-    let needs_mutex = needs_file_handles || needs_logging || ir_import_needs.needs_mutex;
+    let needs_hashmap = needs_hashmap_base || ir_import_needs.collections.needs_hashmap;
+    let needs_hashset = needs_hashset_base || ir_import_needs.collections.needs_hashset;
+    let needs_vecdeque = needs_vecdeque_base || ir_import_needs.collections.needs_vecdeque;
+    let needs_bigint = needs_bigint_base || ir_import_needs.runtime.needs_bigint;
+    let needs_mutex = needs_file_handles || needs_logging || ir_import_needs.runtime.needs_mutex;
 
     let mut import_items: Vec<RustItem> = Vec::new();
     if needs_hashmap {
@@ -561,16 +557,16 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
             }
         }
 
-        if emitter.needs_hashmap {
+        if emitter.collection_needs.needs_hashmap {
             result.push_str("use std::collections::HashMap;\n");
         }
-        if emitter.needs_hashset {
+        if emitter.collection_needs.needs_hashset {
             result.push_str("use std::collections::HashSet;\n");
         }
-        if emitter.needs_vecdeque {
+        if emitter.collection_needs.needs_vecdeque {
             result.push_str("use std::collections::VecDeque;\n");
         }
-        if emitter.needs_bigint {
+        if emitter.runtime_needs.needs_bigint {
             result.push_str("use num_bigint::BigInt;\n");
         }
         if !result.is_empty() {
@@ -795,12 +791,8 @@ edition = "2021"
 struct RustEmitter {
     output: String,
     indent: usize,
-    needs_hashmap: bool,
-    needs_hashset: bool,
-    needs_file_handles: bool,
-    needs_logging_state: bool,
-    needs_bigint: bool,
-    needs_vecdeque: bool,
+    collection_needs: CollectionNeeds,
+    runtime_needs: RuntimeNeeds,
     /// Track union enum types that need to be defined (name -> member types)
     union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated enum definitions to prepend
@@ -862,10 +854,9 @@ struct RustEmitter {
     /// This avoids temporal coupling from a sticky bool flag.
     pending_self_field_clone_suppression: usize,
     /// Whether we're inside a generator closure (yield -> return Some(val))
-    in_generator_closure: bool,
+    emission_ctx: EmissionContext,
     /// Whether we're inside a `Display::fmt` implementation (for __str__ methods)
     /// Return statements in this context become write!(f, "{}", val) + return Ok(())
-    in_display_impl: bool,
     /// Counter for generating unique try-block error enum names
     try_enum_counter: usize,
     /// Depth of try-block closures we're currently inside (for return statement handling)
@@ -878,6 +869,26 @@ struct RustEmitter {
     lowering_stats: LoweringStats,
 }
 
+#[derive(Default)]
+struct CollectionNeeds {
+    needs_hashmap: bool,
+    needs_hashset: bool,
+    needs_vecdeque: bool,
+}
+
+#[derive(Default)]
+struct RuntimeNeeds {
+    needs_file_handles: bool,
+    needs_logging_state: bool,
+    needs_bigint: bool,
+}
+
+#[derive(Default)]
+struct EmissionContext {
+    in_generator_closure: bool,
+    in_display_impl: bool,
+}
+
 impl RustEmitter {
     fn new() -> Self {
         Self::new_with_mode(CodegenLoweringMode::StructuredPreferred)
@@ -887,12 +898,8 @@ impl RustEmitter {
         Self {
             output: String::new(),
             indent: 0,
-            needs_hashmap: false,
-            needs_hashset: false,
-            needs_file_handles: false,
-            needs_logging_state: false,
-            needs_bigint: false,
-            needs_vecdeque: false,
+            collection_needs: CollectionNeeds::default(),
+            runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),
             enum_defs: String::new(),
             current_return_type: None,
@@ -918,8 +925,7 @@ impl RustEmitter {
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
             pending_self_field_clone_suppression: 0,
-            in_generator_closure: false,
-            in_display_impl: false,
+            emission_ctx: EmissionContext::default(),
             try_enum_counter: 0,
             try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
@@ -938,7 +944,7 @@ impl RustEmitter {
     fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
         // Pre-scan: detect bigint usage
         if module_uses_bigint(module) {
-            self.needs_bigint = true;
+            self.runtime_needs.needs_bigint = true;
         }
 
         self.prescan_module_metadata(module);
@@ -960,9 +966,9 @@ impl RustEmitter {
                 &self.borrowed_params,
                 SimpleStmtLoweringCtx {
                     return_type: self.current_return_type.as_ref(),
-                    in_display_impl: self.in_display_impl,
+                    in_display_impl: self.emission_ctx.in_display_impl,
                     in_class_scope: self.current_class_name.is_some(),
-                    in_generator_closure: self.in_generator_closure,
+                    in_generator_closure: self.emission_ctx.in_generator_closure,
                 },
             ) {
                 self.lowering_stats.stmt_structured += 1;

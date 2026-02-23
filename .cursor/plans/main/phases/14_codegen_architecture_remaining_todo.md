@@ -31,7 +31,7 @@ Execution loop per part (mandatory):
   - Missing: none
 - `lower_expr` production coverage: `35/35` `HirExpr` variants
   - Missing: none
-- Active `sifr_codegen` clippy suppressions in `lib.rs`: `cast_sign_loss`, `cast_possible_truncation`, `cast_possible_wrap`, `struct_excessive_bools`
+- Active `sifr_codegen` clippy suppressions in `lib.rs`: none
 - Execution checklist drift: `.cursor/plans/main/phases/14_codegen_architecture_execution.md` still has one unchecked item (`Remove at least 5 clippy suppressions...`) despite later sections claiming broader suppression removals.
 
 ---
@@ -124,26 +124,29 @@ Root cause: core codegen logic remains concentrated in a monolithic string-emitt
   - [x] `cargo clippy -p sifr_codegen -- -D warnings`
 - [x] Demo check:
   - [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
-- [ ] PR loop complete (open -> review -> merge)
+- [x] PR loop complete (open -> review -> merge)
 
 ---
 
 ## Part E: Clippy Suppression Burn-down (Root-Cause)
 
-status: pending
+status: done
 
 Root cause: lint suppressions mask conversion and state-structure debt in legacy paths.
 
-- [ ] Remove `#![allow(clippy::cast_sign_loss)]`
-- [ ] Remove `#![allow(clippy::cast_possible_truncation)]`
-- [ ] Remove `#![allow(clippy::cast_possible_wrap)]`
-- [ ] Remove `#![allow(clippy::struct_excessive_bools)]`
-- [ ] Replace suppressions with checked/typed conversions and state refactors
-- [ ] Validation:
-  - [ ] `cargo clippy -p sifr_codegen -- -D warnings`
-  - [ ] `cargo test -p sifr_codegen`
-- [ ] Demo check:
-  - [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+- [x] Remove `#![allow(clippy::cast_sign_loss)]`
+- [x] Remove `#![allow(clippy::cast_possible_truncation)]`
+- [x] Remove `#![allow(clippy::cast_possible_wrap)]`
+- [x] Remove `#![allow(clippy::struct_excessive_bools)]`
+- [x] Replace suppressions with checked/typed conversions and state refactors
+  - [x] Replace lossy tuple/slice index casts with checked conversions in legacy expression emission paths
+  - [x] Refactor bool-heavy state structs (`RustEmitter`, `IrImportNeeds`, `SharedPreludeNeeds`) into grouped state structs with <=3 bools each
+- [x] Validation:
+  - [x] `cargo clippy -p sifr_codegen -- -D warnings`
+  - [x] `cargo test -p sifr_codegen`
+  - [x] targeted e2e parity gates (`test_codegen_differential_old_vs_new_corpus_parity`, `test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus`)
+- [x] Demo check:
+  - [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
 - [ ] PR loop complete (open -> review -> merge)
 
 ---
