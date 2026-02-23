@@ -211,6 +211,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             value,
             object_ty,
         } => try_lower_simple_subscript_augassign_stmt(object, index, op, value, object_ty),
+        HirStmt::Delete { object, index } => try_lower_simple_delete_stmt(object, index),
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -616,6 +617,53 @@ fn try_lower_simple_subscript_assign_stmt(
             lowered_value,
         )]),
         _ => None,
+    }
+}
+
+fn try_lower_simple_delete_stmt(object: &HirExpr, index: &HirExpr) -> Option<Vec<RustStmt>> {
+    let receiver = try_lower_name_ident_expr(object)?;
+    let lowered_index = try_lower_leaf_or_name_expr(index)?;
+    match resolve_alias_type(object.ty()) {
+        Type::List(_) => Some(vec![RustStmt::Let {
+            mutable: false,
+            name: "_".to_string(),
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(receiver),
+                method: "remove".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(lowered_index),
+                    ty: RustType::Named("usize".to_string()),
+                }],
+            },
+        }]),
+        Type::Dict(_, _) => Some(vec![RustStmt::Let {
+            mutable: false,
+            name: "_".to_string(),
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(receiver),
+                method: "remove".to_string(),
+                args: vec![build_dict_delete_key_arg(index)?],
+            },
+        }]),
+        _ => None,
+    }
+}
+
+fn build_dict_delete_key_arg(index: &HirExpr) -> Option<RustExpr> {
+    if matches!(index, HirExpr::Name { .. }) {
+        // Preserve fallback path for name keys to keep borrowing behavior identical.
+        return None;
+    }
+    let lowered_index = try_lower_leaf_expr(index)?;
+    if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
+        Some(lowered_index)
+    } else {
+        Some(RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(lowered_index),
+        })
     }
 }
 
@@ -1327,6 +1375,97 @@ mod tests {
         assert!(
             try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
         );
+    }
+
+    #[test]
+    fn lowers_simple_list_delete_stmt() {
+        let stmt = HirStmt::Delete {
+            object: HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            },
+            index: HirExpr::Name {
+                name: "i".to_string(),
+                ty: Type::Int,
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("list delete lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                ref name,
+                value: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if name == "_"
+                && method == "remove"
+                && matches!(recv.as_ref(), RustExpr::Ident(obj) if obj == "items")
+                && matches!(
+                    args.first(),
+                    Some(RustExpr::Cast {
+                        expr: inner,
+                        ty: RustType::Named(usize_ty),
+                    }) if matches!(inner.as_ref(), RustExpr::Ident(idx) if idx == "i")
+                        && usize_ty == "usize"
+                )
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_dict_delete_with_string_literal_key_stmt() {
+        let stmt = HirStmt::Delete {
+            object: HirExpr::Name {
+                name: "mapping".to_string(),
+                ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+            },
+            index: HirExpr::StringLiteral("key".to_string()),
+        };
+
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("dict delete lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                ref name,
+                value: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if name == "_"
+                && method == "remove"
+                && matches!(recv.as_ref(), RustExpr::Ident(obj) if obj == "mapping")
+                && matches!(
+                    args.first(),
+                    Some(RustExpr::Literal(RustLiteral::Str(key))) if key == "key"
+                )
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_dict_delete_with_name_key() {
+        let stmt = HirStmt::Delete {
+            object: HirExpr::Name {
+                name: "mapping".to_string(),
+                ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+            },
+            index: HirExpr::Name {
+                name: "k".to_string(),
+                ty: Type::Str,
+            },
+        };
+
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 
     #[test]
