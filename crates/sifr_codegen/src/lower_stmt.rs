@@ -92,7 +92,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             if ctx.in_display_impl {
                 return None;
             }
-            if ctx.return_type.is_some_and(crate::helpers::is_option_type) {
+            if ctx.return_type.is_some_and(is_option_like_type) {
                 Some(vec![RustStmt::Return(Some(RustExpr::Literal(
                     RustLiteral::None,
                 )))])
@@ -435,13 +435,13 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
     if ctx.in_display_impl || ctx.in_class_scope {
         return None;
     }
-    let option_return = ctx.return_type.is_some_and(crate::helpers::is_option_type);
+    let option_return = ctx.return_type.is_some_and(is_option_like_type);
     if matches!(value.ty(), Type::TypeVar(_)) {
         return None;
     }
 
     if option_return {
-        if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
+        if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
             return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(value)?))]);
         }
         let lowered = try_lower_leaf_or_name_expr(value)?;
@@ -454,7 +454,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         }))]);
     }
     if let Some(Type::Union(members)) = ctx.return_type {
-        if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
+        if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
             return None;
         }
         let lowered = try_lower_leaf_or_name_expr(value)?;
@@ -465,7 +465,7 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
             args: vec![lowered],
         }))]);
     }
-    if crate::helpers::is_option_type(value.ty()) && !matches!(value.ty(), Type::None) {
+    if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
         return Some(vec![RustStmt::Return(Some(RustExpr::MethodCall {
             receiver: Box::new(try_lower_name_ident_expr(value)?),
             method: "unwrap".to_string(),
@@ -476,17 +476,17 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
 }
 
 fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
-    if crate::helpers::is_option_type(ty) && matches!(value, HirExpr::NoneLiteral) {
+    if is_option_like_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::None));
     }
-    if crate::helpers::is_option_type(ty)
-        && crate::helpers::is_option_type(value.ty())
+    if is_option_like_type(ty)
+        && is_option_like_type(value.ty())
         && !matches!(value.ty(), Type::None)
     {
         return try_lower_name_ident_expr(value);
     }
-    if crate::helpers::is_option_type(ty)
-        && !crate::helpers::is_option_type(value.ty())
+    if is_option_like_type(ty)
+        && !is_option_like_type(value.ty())
         && !matches!(value.ty(), Type::None)
     {
         return Some(RustExpr::FnCall {
@@ -833,6 +833,37 @@ mod tests {
                 name: ref let_name,
                 ty: Some(RustType::Option(_)),
                 value: RustExpr::Literal(RustLiteral::None),
+            } if let_name == "x"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_option_let_none_literal_to_none_with_alias_option_ty() {
+        let option_ty = Type::Alias(
+            "MaybeInt".to_string(),
+            Box::new(Type::Union(vec![Type::Int, Type::None])),
+        );
+        let let_stmt = HirStmt::Let {
+            name: "x".to_string(),
+            ty: option_ty,
+            value: HirExpr::NoneLiteral,
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("alias-option let none lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                value: RustExpr::Literal(RustLiteral::None),
+                ..
             } if let_name == "x"
         ));
     }
@@ -1233,6 +1264,32 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_bare_return_to_none_in_alias_option_context() {
+        let stmt = HirStmt::Return { value: None };
+        let option_ret = Type::Alias(
+            "MaybeInt".to_string(),
+            Box::new(Type::Union(vec![Type::Int, Type::None])),
+        );
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("bare return lowered for alias option context");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None)))
+        ));
+    }
+
+    #[test]
     fn does_not_lower_bare_return_in_display_impl_context() {
         let stmt = HirStmt::Return { value: None };
         assert!(
@@ -1400,6 +1457,37 @@ mod tests {
             },
         )
         .expect("option passthrough name return lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::Ident(ref name))) if name == "maybe_x"
+        ));
+    }
+
+    #[test]
+    fn lowers_option_name_return_with_alias_option_return_context() {
+        let alias_option = Type::Alias(
+            "MaybeInt".to_string(),
+            Box::new(Type::Union(vec![Type::Int, Type::None])),
+        );
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "maybe_x".to_string(),
+                ty: alias_option.clone(),
+            }),
+        };
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&alias_option),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("alias option passthrough name return lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
