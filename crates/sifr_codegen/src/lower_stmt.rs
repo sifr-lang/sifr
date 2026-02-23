@@ -452,10 +452,18 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
         if is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
             return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(value)?))]);
         }
-        if is_none_type(value.ty()) {
+        if matches!(value, HirExpr::NoneLiteral) {
             return Some(vec![RustStmt::Return(Some(RustExpr::Literal(
                 RustLiteral::None,
             )))]);
+        }
+        if is_none_type(value.ty()) {
+            if matches!(value, HirExpr::Name { .. }) {
+                return Some(vec![RustStmt::Return(Some(RustExpr::Literal(
+                    RustLiteral::None,
+                )))]);
+            }
+            return None;
         }
         let lowered = try_lower_leaf_or_name_expr(value)?;
         return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -1792,6 +1800,59 @@ mod tests {
             lowered[0],
             RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None)))
         ));
+    }
+
+    #[test]
+    fn does_not_lower_non_leaf_none_typed_return_with_option_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Call {
+                func: "produce_none".to_string(),
+                args: vec![],
+                ty: Type::None,
+            }),
+        };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        assert!(
+            try_lower_simple_stmt_with_ctx(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+                SimpleStmtLoweringCtx {
+                    return_type: Some(&option_ret),
+                    in_display_impl: false,
+                    in_class_scope: false,
+                },
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn does_not_lower_non_leaf_alias_none_typed_return_with_option_return_context() {
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Call {
+                func: "produce_none".to_string(),
+                args: vec![],
+                ty: alias_none,
+            }),
+        };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        assert!(
+            try_lower_simple_stmt_with_ctx(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+                SimpleStmtLoweringCtx {
+                    return_type: Some(&option_ret),
+                    in_display_impl: false,
+                    in_class_scope: false,
+                },
+            )
+            .is_none()
+        );
     }
 
     #[test]
