@@ -860,11 +860,14 @@ fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<Stri
 }
 
 fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
-    let is_numeric = matches!(
-        resolve_alias_type(value.ty()),
-        Type::Int | Type::Float | Type::LiteralInt(_)
-    );
-    if !(is_numeric && matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=")) {
+    let is_numeric_op = matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=");
+    let is_int_only_op = matches!(op, "&=" | "|=" | "^=" | "<<=" | ">>=");
+    let supports_op = match resolve_alias_type(value.ty()) {
+        Type::Int | Type::LiteralInt(_) => is_numeric_op || is_int_only_op,
+        Type::Float => is_numeric_op,
+        _ => false,
+    };
+    if !supports_op {
         return None;
     }
     try_lower_leaf_or_name_expr(value)
@@ -2602,6 +2605,60 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_augassign_bitwise_and_shift_ops() {
+        for (op, expected) in [
+            ("&=", "&"),
+            ("|=", "|"),
+            ("^=", "^"),
+            ("<<=", "<<"),
+            (">>=", ">>"),
+        ] {
+            let stmt = HirStmt::AugAssign {
+                name: "x".to_string(),
+                op: op.to_string(),
+                value: HirExpr::Name {
+                    name: "delta".to_string(),
+                    ty: Type::Alias("Bits".to_string(), Box::new(Type::Int)),
+                },
+            };
+
+            let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+                .expect("bitwise/shift augassign lowered");
+            assert_eq!(lowered.len(), 1);
+            assert!(matches!(
+                lowered[0],
+                RustStmt::AugAssign {
+                    target: RustExpr::Ident(ref name),
+                    op: ref lowered_op,
+                    value: RustExpr::Ident(ref rhs),
+                } if name == "x" && lowered_op == expected && rhs == "delta"
+            ));
+        }
+    }
+
+    #[test]
+    fn does_not_lower_augassign_bitwise_for_float() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "&=".to_string(),
+            value: HirExpr::Name {
+                name: "mask".to_string(),
+                ty: Type::Float,
+            },
+        };
+
+        assert!(
+            try_lower_simple_stmt(
+                &stmt,
+                false,
+                &HashSet::new(),
+                &HashSet::new(),
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
     fn lowers_simple_attribute_augassign_for_supported_ops() {
         let stmt = HirStmt::AttributeAugAssign {
             object: "self".to_string(),
@@ -2678,6 +2735,42 @@ mod tests {
         };
 
         assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_attribute_augassign_bitwise_and_shift_ops() {
+        for (op, expected) in [
+            ("&=", "&"),
+            ("|=", "|"),
+            ("^=", "^"),
+            ("<<=", "<<"),
+            (">>=", ">>"),
+        ] {
+            let stmt = HirStmt::AttributeAugAssign {
+                object: "self".to_string(),
+                field: "flags".to_string(),
+                op: op.to_string(),
+                value: HirExpr::Name {
+                    name: "delta".to_string(),
+                    ty: Type::Int,
+                },
+            };
+
+            let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+                .expect("attribute bitwise/shift augassign lowered");
+            assert_eq!(lowered.len(), 1);
+            assert!(matches!(
+                lowered[0],
+                RustStmt::AugAssign {
+                    target: RustExpr::Field { ref expr, ref field },
+                    op: ref lowered_op,
+                    value: RustExpr::Ident(ref rhs),
+                } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
+                    && field == "flags"
+                    && lowered_op == expected
+                    && rhs == "delta"
+            ));
+        }
     }
 
     #[test]

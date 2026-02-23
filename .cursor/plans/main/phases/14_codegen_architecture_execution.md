@@ -244,6 +244,7 @@ status: in_progress
 - [x] PR384 slice: refactor duplicated list `get_mut` block scaffolding by extracting shared list-index block helper and reusing it for `SubscriptAssign` and list `SubscriptAugAssign` lowering paths, preserving existing semantics and fallback behavior
 - [x] PR385 slice: refactor duplicated `SubscriptAugAssign` list/dict match-arm routing by consolidating to a shared subscript-augassign lowering helper (including dict `get_mut` key-arg shaping), preserving existing semantics and fallback behavior
 - [x] PR386 slice: refactor duplicated `AttributeSubscriptAssign` list/dict match-arm routing by consolidating to a shared attribute-subscript-assignment lowering helper, preserving existing semantics and fallback behavior (including dict string/typevar name-key fallback)
+- [x] PR387 slice: extend structured `AugAssign`/`AttributeAugAssign` lowering to support int bitwise/shift ops (`&=`, `|=`, `^=`, `<<=`, `>>=`), while preserving fallback for non-int operands and unsupported ops
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
