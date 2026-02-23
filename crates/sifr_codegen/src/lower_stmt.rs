@@ -295,55 +295,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             inner_index,
             value,
             object_ty: _,
-        } if try_lower_leaf_or_name_expr(outer_index).is_some()
-            && try_lower_leaf_or_name_expr(inner_index).is_some()
-            && try_lower_leaf_or_name_expr(value).is_some() =>
-        {
-            Some(vec![RustStmt::Block(vec![
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__oi".to_string(),
-                    ty: None,
-                    value: RustExpr::Cast {
-                        expr: Box::new(try_lower_leaf_or_name_expr(outer_index)?),
-                        ty: RustType::Named("usize".to_string()),
-                    },
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__ii".to_string(),
-                    ty: None,
-                    value: RustExpr::Cast {
-                        expr: Box::new(try_lower_leaf_or_name_expr(inner_index)?),
-                        ty: RustType::Named("usize".to_string()),
-                    },
-                },
-                RustStmt::IfLet {
-                    pattern: "Some(__row)".to_string(),
-                    expr: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(object.clone())),
-                        method: "get_mut".to_string(),
-                        args: vec![RustExpr::Ident("__oi".to_string())],
-                    },
-                    then_body: vec![RustStmt::IfLet {
-                        pattern: "Some(__elem)".to_string(),
-                        expr: RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__row".to_string())),
-                            method: "get_mut".to_string(),
-                            args: vec![RustExpr::Ident("__ii".to_string())],
-                        },
-                        then_body: vec![RustStmt::Assign {
-                            target: RustExpr::Deref(Box::new(RustExpr::Ident(
-                                "__elem".to_string(),
-                            ))),
-                            value: try_lower_leaf_or_name_expr(value)?,
-                        }],
-                        else_body: None,
-                    }],
-                    else_body: None,
-                },
-            ])])
-        }
+        } => try_lower_simple_nested_subscript_assign_stmt(object, outer_index, inner_index, value),
         HirStmt::SubscriptAugAssign {
             object,
             index,
@@ -624,6 +576,56 @@ fn try_lower_simple_subscript_assign_stmt(
         )]),
         _ => None,
     }
+}
+
+fn try_lower_simple_nested_subscript_assign_stmt(
+    object: &str,
+    outer_index: &HirExpr,
+    inner_index: &HirExpr,
+    value: &HirExpr,
+) -> Option<Vec<RustStmt>> {
+    Some(vec![RustStmt::Block(vec![
+        RustStmt::Let {
+            mutable: false,
+            name: "__oi".to_string(),
+            ty: None,
+            value: RustExpr::Cast {
+                expr: Box::new(try_lower_leaf_or_name_expr(outer_index)?),
+                ty: RustType::Named("usize".to_string()),
+            },
+        },
+        RustStmt::Let {
+            mutable: false,
+            name: "__ii".to_string(),
+            ty: None,
+            value: RustExpr::Cast {
+                expr: Box::new(try_lower_leaf_or_name_expr(inner_index)?),
+                ty: RustType::Named("usize".to_string()),
+            },
+        },
+        RustStmt::IfLet {
+            pattern: "Some(__row)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__oi".to_string())],
+            },
+            then_body: vec![RustStmt::IfLet {
+                pattern: "Some(__elem)".to_string(),
+                expr: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                    method: "get_mut".to_string(),
+                    args: vec![RustExpr::Ident("__ii".to_string())],
+                },
+                then_body: vec![RustStmt::Assign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    value: try_lower_leaf_or_name_expr(value)?,
+                }],
+                else_body: None,
+            }],
+            else_body: None,
+        },
+    ])])
 }
 
 fn try_lower_simple_attribute_subscript_assign_stmt(
