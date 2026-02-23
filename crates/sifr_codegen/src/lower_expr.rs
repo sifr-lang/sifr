@@ -84,7 +84,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             }
             Some(RustExpr::BinOp {
                 left: Box::new(try_lower_leaf_expr(left)?),
-                op: op.clone(),
+                op: normalize_binop_op(op).to_string(),
                 right: Box::new(try_lower_leaf_expr(right)?),
             })
         }
@@ -212,6 +212,13 @@ fn normalize_compare_op(op: &str) -> &str {
     }
 }
 
+fn normalize_binop_op(op: &str) -> &str {
+    match op {
+        "//" => "/",
+        _ => op,
+    }
+}
+
 fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
         return false;
@@ -222,6 +229,11 @@ fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
 }
 
 fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
+    if op == "//" {
+        return left_ty == right_ty
+            && left_ty == result_ty
+            && matches!(left_ty, Type::Int | Type::LiteralInt(_));
+    }
     if op == "/" {
         return left_ty == right_ty
             && left_ty == result_ty
@@ -373,6 +385,31 @@ mod tests {
             left: Box::new(HirExpr::IntLiteral(6)),
             op: "/".to_string(),
             right: Box::new(HirExpr::IntLiteral(2)),
+            ty: Type::Float,
+        };
+        assert!(try_lower_leaf_expr(&bin).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_floor_division_int_binop_as_div() {
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::IntLiteral(7)),
+            op: "//".to_string(),
+            right: Box::new(HirExpr::IntLiteral(2)),
+            ty: Type::Int,
+        };
+        assert!(matches!(
+            try_lower_leaf_expr(&bin),
+            Some(RustExpr::BinOp { op, .. }) if op == "/"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_simple_floor_division_float_binop() {
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::FloatLiteral(7.0)),
+            op: "//".to_string(),
+            right: Box::new(HirExpr::FloatLiteral(2.0)),
             ty: Type::Float,
         };
         assert!(try_lower_leaf_expr(&bin).is_none());
