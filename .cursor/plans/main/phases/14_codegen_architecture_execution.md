@@ -250,6 +250,7 @@ status: in_progress
 - [x] PR390 slice: refactor `NestedSubscriptAssign` match-arm routing by extracting dedicated nested-subscript lowering helper, preserving existing semantics and fallback behavior
 - [x] PR391 slice: refactor `TupleUnpack` match-arm routing by extracting dedicated tuple-unpack lowering helper, preserving existing semantics and fallback behavior
 - [x] PR392 slice: refactor duplicated `For`/`For-else` match-arm routing by extracting dedicated for-statement lowering helper, preserving tuple-target fallback and loop-else `_broke` semantics
+- [x] PR393 slice: refactor duplicated `While`/`While-else` match-arm routing by extracting dedicated while-statement lowering helper, preserving loop-else `_broke` semantics and fallback behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
