@@ -179,8 +179,8 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             start, end, step, ..
         } => {
             let lowered_range = RustExpr::Range {
-                start: Box::new(try_lower_leaf_expr(start)?),
-                end: Box::new(try_lower_leaf_expr(end)?),
+                start: Box::new(try_lower_simple_range_operand_expr(start)?),
+                end: Box::new(try_lower_simple_range_operand_expr(end)?),
             };
 
             if let Some(step_expr) = step.as_ref() {
@@ -188,7 +188,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                     receiver: Box::new(lowered_range),
                     method: "step_by".to_string(),
                     args: vec![RustExpr::Cast {
-                        expr: Box::new(try_lower_leaf_expr(step_expr)?),
+                        expr: Box::new(try_lower_simple_range_operand_expr(step_expr)?),
                         ty: RustType::Named("usize".to_string()),
                     }],
                 })
@@ -261,6 +261,19 @@ fn try_lower_none_identity_compare_expr(left: &HirExpr, op: &str, right: &HirExp
         return None;
     }
     Some(RustExpr::Literal(RustLiteral::Bool(op == "is")))
+}
+
+fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let HirExpr::Name { name, ty } = expr {
+        if matches!(ty, Type::Int | Type::LiteralInt(_)) {
+            return Some(RustExpr::Ident(name.clone()));
+        }
+        return None;
+    }
+    if matches!(expr, HirExpr::RangeLiteral { .. }) {
+        return None;
+    }
+    try_lower_leaf_expr(expr)
 }
 
 #[cfg(test)]
@@ -618,5 +631,70 @@ mod tests {
             lowered_is_not,
             RustExpr::Literal(RustLiteral::Bool(false))
         ));
+    }
+
+    #[test]
+    fn lowers_range_literal_with_name_bounds() {
+        let range = HirExpr::RangeLiteral {
+            start: Box::new(HirExpr::Name {
+                name: "start".to_string(),
+                ty: Type::Int,
+            }),
+            end: Box::new(HirExpr::Name {
+                name: "end".to_string(),
+                ty: Type::Int,
+            }),
+            step: None,
+            ty: Type::Range,
+        };
+
+        let lowered = try_lower_leaf_expr(&range).expect("range with name bounds lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Range { start, end }
+                if matches!(start.as_ref(), RustExpr::Ident(name) if name == "start")
+                    && matches!(end.as_ref(), RustExpr::Ident(name) if name == "end")
+        ));
+    }
+
+    #[test]
+    fn lowers_range_literal_with_name_step() {
+        let range = HirExpr::RangeLiteral {
+            start: Box::new(HirExpr::IntLiteral(1)),
+            end: Box::new(HirExpr::IntLiteral(10)),
+            step: Some(Box::new(HirExpr::Name {
+                name: "step".to_string(),
+                ty: Type::Int,
+            })),
+            ty: Type::Range,
+        };
+
+        let lowered = try_lower_leaf_expr(&range).expect("range with name step lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall { method, args, .. }
+                if method == "step_by"
+                    && matches!(
+                        args.first(),
+                        Some(RustExpr::Cast { expr, ty: RustType::Named(name) })
+                            if matches!(expr.as_ref(), RustExpr::Ident(step_name) if step_name == "step")
+                                && name == "usize"
+                    )
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_range_literal_with_non_int_name_operand() {
+        let range = HirExpr::RangeLiteral {
+            start: Box::new(HirExpr::Name {
+                name: "start".to_string(),
+                ty: Type::Bool,
+            }),
+            end: Box::new(HirExpr::IntLiteral(10)),
+            step: None,
+            ty: Type::Range,
+        };
+
+        assert!(try_lower_leaf_expr(&range).is_none());
     }
 }
