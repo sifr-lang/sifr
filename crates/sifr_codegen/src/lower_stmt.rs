@@ -274,6 +274,46 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 value: try_lower_leaf_or_name_expr(value)?,
             }])
         }
+        HirStmt::AttributeSubscriptAssign {
+            object,
+            field,
+            index,
+            value,
+            field_ty,
+        } if try_lower_leaf_or_name_expr(index).is_some()
+            && try_lower_leaf_or_name_expr(value).is_some()
+            && matches!(resolve_alias_type(field_ty), Type::List(_)) =>
+        {
+            Some(vec![RustStmt::Block(vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__idx".to_string(),
+                    ty: None,
+                    value: RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    },
+                },
+                RustStmt::IfLet {
+                    pattern: "Some(__elem)".to_string(),
+                    expr: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident(object.clone())),
+                            field: field.clone(),
+                        }),
+                        method: "get_mut".to_string(),
+                        args: vec![RustExpr::Ident("__idx".to_string())],
+                    },
+                    then_body: vec![RustStmt::Assign {
+                        target: RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "__elem".to_string(),
+                        ))),
+                        value: try_lower_leaf_or_name_expr(value)?,
+                    }],
+                    else_body: None,
+                },
+            ])])
+        }
         HirStmt::SubscriptAssign {
             object,
             index,
@@ -931,6 +971,95 @@ mod tests {
                 &HashSet::new(),
             )
             .is_none()
+        );
+    }
+
+    #[test]
+    fn lowers_simple_attribute_list_subscript_assign_stmt() {
+        let stmt = HirStmt::AttributeSubscriptAssign {
+            object: "self".to_string(),
+            field: "items".to_string(),
+            index: HirExpr::Name {
+                name: "i".to_string(),
+                ty: Type::Int,
+            },
+            value: HirExpr::Name {
+                name: "v".to_string(),
+                ty: Type::Int,
+            },
+            field_ty: Type::List(Box::new(Type::Int)),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("attribute list subscript assign lowered");
+        assert_eq!(lowered.len(), 1);
+        let RustStmt::Block(stmts) = &lowered[0] else {
+            panic!("expected block-lowered attribute list subscript assignment");
+        };
+        assert_eq!(stmts.len(), 2);
+        assert!(matches!(
+            &stmts[1],
+            RustStmt::IfLet {
+                pattern,
+                expr: RustExpr::MethodCall {
+                    receiver,
+                    method,
+                    args,
+                },
+                then_body,
+                else_body: None,
+            } if pattern == "Some(__elem)"
+                && method == "get_mut"
+                && matches!(
+                    receiver.as_ref(),
+                    RustExpr::Field { expr, field }
+                        if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
+                        && field == "items"
+                )
+                && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "__idx")
+                && matches!(
+                    then_body.first(),
+                    Some(RustStmt::Assign {
+                        target: RustExpr::Deref(target),
+                        value: RustExpr::Ident(rhs),
+                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                        && rhs == "v"
+                )
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_alias_attribute_list_subscript_assign_stmt() {
+        let stmt = HirStmt::AttributeSubscriptAssign {
+            object: "self".to_string(),
+            field: "items".to_string(),
+            index: HirExpr::IntLiteral(0),
+            value: HirExpr::IntLiteral(1),
+            field_ty: Type::Alias(
+                "IntList".to_string(),
+                Box::new(Type::List(Box::new(Type::Int))),
+            ),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("alias attribute-list subscript assign lowered");
+        assert!(matches!(lowered[0], RustStmt::Block(_)));
+    }
+
+    #[test]
+    fn does_not_lower_attribute_subscript_assign_with_non_leaf_index() {
+        let stmt = HirStmt::AttributeSubscriptAssign {
+            object: "self".to_string(),
+            field: "items".to_string(),
+            index: HirExpr::Call {
+                func: "next_idx".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            },
+            value: HirExpr::IntLiteral(1),
+            field_ty: Type::List(Box::new(Type::Int)),
+        };
+
+        assert!(
+            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
         );
     }
 
