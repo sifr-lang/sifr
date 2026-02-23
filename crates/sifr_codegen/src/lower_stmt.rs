@@ -464,44 +464,11 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         } if try_lower_leaf_or_name_expr(index).is_some()
             && try_lower_leaf_or_name_expr(value).is_some()
             && matches!(resolve_alias_type(object_ty), Type::List(_))
-            && matches!(
-                op.as_str(),
-                "+=" | "-=" | "*=" | "/=" | "%=" | "//=" | "**=" | "&=" | "|=" | "^="
-                    | "<<=" | ">>="
-            ) =>
+            && is_supported_subscript_augassign_op(op) =>
         {
             let lowered_index = try_lower_leaf_or_name_expr(index)?;
             let lowered_value = try_lower_leaf_or_name_expr(value)?;
-            let lowered_body_stmt = if op == "**=" {
-                RustStmt::Assign {
-                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                    value: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__elem".to_string())),
-                        method: "pow".to_string(),
-                        args: vec![RustExpr::Cast {
-                            expr: Box::new(lowered_value),
-                            ty: RustType::Named("u32".to_string()),
-                        }],
-                    },
-                }
-            } else if op == "//=" {
-                RustStmt::Assign {
-                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                    value: RustExpr::BinOp {
-                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "__elem".to_string(),
-                        )))),
-                        op: "/".to_string(),
-                        right: Box::new(lowered_value),
-                    },
-                }
-            } else {
-                RustStmt::AugAssign {
-                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                    op: op.strip_suffix('=').unwrap_or(op).to_string(),
-                    value: lowered_value,
-                }
-            };
+            let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
             Some(vec![RustStmt::Block(vec![
                 RustStmt::Let {
                     mutable: false,
@@ -533,44 +500,11 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         } if try_lower_leaf_or_name_expr(index).is_some()
             && try_lower_leaf_or_name_expr(value).is_some()
             && matches!(resolve_alias_type(object_ty), Type::Dict(_, _))
-            && matches!(
-                op.as_str(),
-                "+=" | "-=" | "*=" | "/=" | "%=" | "//=" | "**=" | "&=" | "|=" | "^="
-                    | "<<=" | ">>="
-            ) =>
+            && is_supported_subscript_augassign_op(op) =>
         {
             let lowered_index = try_lower_leaf_or_name_expr(index)?;
             let lowered_value = try_lower_leaf_or_name_expr(value)?;
-            let lowered_body_stmt = if op == "**=" {
-                RustStmt::Assign {
-                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                    value: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__elem".to_string())),
-                        method: "pow".to_string(),
-                        args: vec![RustExpr::Cast {
-                            expr: Box::new(lowered_value),
-                            ty: RustType::Named("u32".to_string()),
-                        }],
-                    },
-                }
-            } else if op == "//=" {
-                RustStmt::Assign {
-                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                    value: RustExpr::BinOp {
-                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "__elem".to_string(),
-                        )))),
-                        op: "/".to_string(),
-                        right: Box::new(lowered_value),
-                    },
-                }
-            } else {
-                RustStmt::AugAssign {
-                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                    op: op.strip_suffix('=').unwrap_or(op).to_string(),
-                    value: lowered_value,
-                }
-            };
+            let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
             let get_mut_key_arg =
                 if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
                     lowered_index
@@ -786,6 +720,46 @@ fn try_lower_attribute_dict_insert_key_expr(index: &HirExpr, field_ty: &Type) ->
     }
 
     try_lower_leaf_or_name_expr(index)
+}
+
+fn is_supported_subscript_augassign_op(op: &str) -> bool {
+    matches!(
+        op,
+        "+=" | "-=" | "*=" | "/=" | "%=" | "//=" | "**=" | "&=" | "|=" | "^=" | "<<=" | ">>="
+    )
+}
+
+fn build_subscript_augassign_elem_stmt(op: &str, lowered_value: RustExpr) -> RustStmt {
+    if op == "**=" {
+        return RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__elem".to_string())),
+                method: "pow".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(lowered_value),
+                    ty: RustType::Named("u32".to_string()),
+                }],
+            },
+        };
+    }
+    if op == "//=" {
+        return RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+            value: RustExpr::BinOp {
+                left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                    "__elem".to_string(),
+                )))),
+                op: "/".to_string(),
+                right: Box::new(lowered_value),
+            },
+        };
+    }
+    RustStmt::AugAssign {
+        target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+        op: op.strip_suffix('=').unwrap_or(op).to_string(),
+        value: lowered_value,
+    }
 }
 
 fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {

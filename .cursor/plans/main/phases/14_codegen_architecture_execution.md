@@ -239,6 +239,7 @@ status: in_progress
 - [x] PR379 slice: extend `lower_stmt` dual-path with structured `AttributeSubscriptAssign` lowering for list-typed fields (including alias-wrapped list fields) via guarded `get_mut` IR blocks, while preserving fallback for non-leaf index/value operands and non-list field types
 - [x] PR380 slice: extend `lower_stmt` dual-path with structured `AttributeSubscriptAssign` lowering for dict-typed fields via IR `insert` method calls (including alias-wrapped dict fields), while conservatively preserving fallback for string/typevar name-key ownership-sensitive cases
 - [x] PR381 slice: extend `lower_stmt` dual-path with structured `AttributeAugAssign` lowering for safe numeric ops (`+=`, `-=`, `*=`, `/=`, `//=`, `%=`) via IR `AugAssign` field targets (including `//=` normalization), while preserving fallback for unsupported/string-like ops
+- [x] PR382 slice: refactor duplicated `SubscriptAugAssign` list/dict lowering logic by extracting shared supported-op and element-update IR helpers in `lower_stmt`, preserving existing semantics and fallback behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
