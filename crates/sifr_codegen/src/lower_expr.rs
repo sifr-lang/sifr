@@ -106,13 +106,14 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
 
             for (idx, op) in ops.iter().enumerate() {
                 let rhs_expr = comparators.get(idx)?;
-                if !is_safe_simple_compare(op, lhs_expr.ty(), rhs_expr.ty()) {
+                let normalized_op = normalize_compare_op(op);
+                if !is_safe_simple_compare(normalized_op, lhs_expr.ty(), rhs_expr.ty()) {
                     return None;
                 }
 
                 let cmp = RustExpr::BinOp {
                     left: Box::new(try_lower_leaf_expr(lhs_expr)?),
-                    op: op.clone(),
+                    op: normalized_op.to_string(),
                     right: Box::new(try_lower_leaf_expr(rhs_expr)?),
                 };
 
@@ -183,6 +184,14 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
 
 fn is_numeric_simple(ty: &Type) -> bool {
     matches!(ty, Type::Int | Type::Float | Type::LiteralInt(_))
+}
+
+fn normalize_compare_op(op: &str) -> &str {
+    match op {
+        "is" => "==",
+        "is not" => "!=",
+        _ => op,
+    }
 }
 
 fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
@@ -447,6 +456,38 @@ mod tests {
             } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
                 && method == "is_some"
                 && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_is_compare_as_eq() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::IntLiteral(1)),
+            ops: vec!["is".to_string()],
+            comparators: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("is compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, .. } if op == "=="
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_is_not_compare_as_ne() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::IntLiteral(1)),
+            ops: vec!["is not".to_string()],
+            comparators: vec![HirExpr::IntLiteral(2)],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("is-not compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, .. } if op == "!="
         ));
     }
 
