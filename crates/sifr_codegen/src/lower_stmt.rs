@@ -74,40 +74,22 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 value: try_lower_simple_assign_value(value, bindings.borrowed_params)?,
             }])
         }
-        HirStmt::AugAssign { name, op, value }
-            if try_lower_simple_aug_assign_value(op, value).is_some() =>
-        {
-            let normalized_op = if op == "//=" {
-                "/".to_string()
-            } else {
-                op.strip_suffix('=').unwrap_or(op).to_string()
-            };
-            Some(vec![RustStmt::AugAssign {
-                target: crate::RustExpr::Ident(name.clone()),
-                op: normalized_op,
-                value: try_lower_simple_aug_assign_value(op, value)?,
-            }])
+        HirStmt::AugAssign { name, op, value } => {
+            try_lower_simple_augassign_stmt(crate::RustExpr::Ident(name.clone()), op, value)
         }
         HirStmt::AttributeAugAssign {
             object,
             field,
             op,
             value,
-        } if try_lower_simple_aug_assign_value(op, value).is_some() => {
-            let normalized_op = if op == "//=" {
-                "/".to_string()
-            } else {
-                op.strip_suffix('=').unwrap_or(op).to_string()
-            };
-            Some(vec![RustStmt::AugAssign {
-                target: RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident(object.clone())),
-                    field: field.clone(),
-                },
-                op: normalized_op,
-                value: try_lower_simple_aug_assign_value(op, value)?,
-            }])
-        }
+        } => try_lower_simple_augassign_stmt(
+            RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(object.clone())),
+                field: field.clone(),
+            },
+            op,
+            value,
+        ),
         HirStmt::Return { value: None } => {
             if ctx.in_display_impl {
                 return None;
@@ -871,6 +853,22 @@ fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustEx
         return None;
     }
     try_lower_leaf_or_name_expr(value)
+}
+
+fn try_lower_simple_augassign_stmt(target: RustExpr, op: &str, value: &HirExpr) -> Option<Vec<RustStmt>> {
+    Some(vec![RustStmt::AugAssign {
+        target,
+        op: normalize_augassign_op(op),
+        value: try_lower_simple_aug_assign_value(op, value)?,
+    }])
+}
+
+fn normalize_augassign_op(op: &str) -> String {
+    if op == "//=" {
+        "/".to_string()
+    } else {
+        op.strip_suffix('=').unwrap_or(op).to_string()
+    }
 }
 
 #[cfg(test)]
