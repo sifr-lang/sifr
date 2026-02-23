@@ -319,6 +319,61 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 _ => None,
             }
         }
+        HirStmt::NestedSubscriptAssign {
+            object,
+            outer_index,
+            inner_index,
+            value,
+            object_ty: _,
+        } if try_lower_leaf_or_name_expr(outer_index).is_some()
+            && try_lower_leaf_or_name_expr(inner_index).is_some()
+            && try_lower_leaf_or_name_expr(value).is_some() =>
+        {
+            Some(vec![RustStmt::Block(vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__oi".to_string(),
+                    ty: None,
+                    value: RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(outer_index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    },
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__ii".to_string(),
+                    ty: None,
+                    value: RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_or_name_expr(inner_index)?),
+                        ty: RustType::Named("usize".to_string()),
+                    },
+                },
+                RustStmt::IfLet {
+                    pattern: "Some(__row)".to_string(),
+                    expr: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(object.clone())),
+                        method: "get_mut".to_string(),
+                        args: vec![RustExpr::Ident("__oi".to_string())],
+                    },
+                    then_body: vec![RustStmt::IfLet {
+                        pattern: "Some(__elem)".to_string(),
+                        expr: RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                            method: "get_mut".to_string(),
+                            args: vec![RustExpr::Ident("__ii".to_string())],
+                        },
+                        then_body: vec![RustStmt::Assign {
+                            target: RustExpr::Deref(Box::new(RustExpr::Ident(
+                                "__elem".to_string(),
+                            ))),
+                            value: try_lower_leaf_or_name_expr(value)?,
+                        }],
+                        else_body: None,
+                    }],
+                    else_body: None,
+                },
+            ])])
+        }
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -861,6 +916,112 @@ mod tests {
             },
             value: HirExpr::IntLiteral(1),
             object_ty: Type::List(Box::new(Type::Int)),
+        };
+
+        assert!(
+            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
+        );
+    }
+
+    #[test]
+    fn lowers_simple_nested_subscript_assign_stmt() {
+        let stmt = HirStmt::NestedSubscriptAssign {
+            object: "matrix".to_string(),
+            outer_index: HirExpr::Name {
+                name: "i".to_string(),
+                ty: Type::Int,
+            },
+            inner_index: HirExpr::Name {
+                name: "j".to_string(),
+                ty: Type::Int,
+            },
+            value: HirExpr::Name {
+                name: "v".to_string(),
+                ty: Type::Int,
+            },
+            object_ty: Type::List(Box::new(Type::List(Box::new(Type::Int)))),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("nested subscript assign lowered");
+        assert_eq!(lowered.len(), 1);
+        let RustStmt::Block(stmts) = &lowered[0] else {
+            panic!("expected block-lowered nested subscript assignment");
+        };
+        assert_eq!(stmts.len(), 3);
+        assert!(matches!(
+            &stmts[0],
+            RustStmt::Let {
+                ref name,
+                value: RustExpr::Cast { expr, ty: RustType::Named(ref usize_ty), .. },
+                ..
+            } if name == "__oi"
+                && usize_ty == "usize"
+                && matches!(expr.as_ref(), RustExpr::Ident(idx) if idx == "i")
+        ));
+        assert!(matches!(
+            &stmts[1],
+            RustStmt::Let {
+                ref name,
+                value: RustExpr::Cast { expr, ty: RustType::Named(ref usize_ty), .. },
+                ..
+            } if name == "__ii"
+                && usize_ty == "usize"
+                && matches!(expr.as_ref(), RustExpr::Ident(idx) if idx == "j")
+        ));
+        assert!(matches!(
+            &stmts[2],
+            RustStmt::IfLet {
+                ref pattern,
+                expr: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                then_body: ref outer_body,
+                else_body: None,
+            } if pattern == "Some(__row)"
+                && method == "get_mut"
+                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "matrix")
+                && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "__oi")
+                && matches!(
+                    outer_body.first(),
+                    Some(RustStmt::IfLet {
+                        pattern: inner_pattern,
+                        expr: RustExpr::MethodCall {
+                            receiver: inner_recv,
+                            method: inner_method,
+                            args: inner_args,
+                        },
+                        then_body: inner_then,
+                        else_body: None,
+                    }) if inner_pattern == "Some(__elem)"
+                        && inner_method == "get_mut"
+                        && matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "__row")
+                        && matches!(inner_args.first(), Some(RustExpr::Ident(name)) if name == "__ii")
+                        && matches!(
+                            inner_then.first(),
+                            Some(RustStmt::Assign {
+                                target: RustExpr::Deref(target),
+                                value: RustExpr::Ident(rhs),
+                            }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                                && rhs == "v"
+                        )
+                )
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_nested_subscript_assign_with_non_leaf_inner_index() {
+        let stmt = HirStmt::NestedSubscriptAssign {
+            object: "matrix".to_string(),
+            outer_index: HirExpr::IntLiteral(0),
+            inner_index: HirExpr::Call {
+                func: "inner_idx".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            },
+            value: HirExpr::IntLiteral(1),
+            object_ty: Type::List(Box::new(Type::List(Box::new(Type::Int)))),
         };
 
         assert!(
