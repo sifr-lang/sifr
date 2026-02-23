@@ -304,35 +304,17 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             && try_lower_leaf_or_name_expr(value).is_some()
             && matches!(resolve_alias_type(field_ty), Type::List(_)) =>
         {
-            Some(vec![RustStmt::Block(vec![
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__idx".to_string(),
-                    ty: None,
-                    value: RustExpr::Cast {
-                        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
-                        ty: RustType::Named("usize".to_string()),
-                    },
-                },
-                RustStmt::IfLet {
-                    pattern: "Some(__elem)".to_string(),
-                    expr: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Field {
-                            expr: Box::new(RustExpr::Ident(object.clone())),
-                            field: field.clone(),
-                        }),
-                        method: "get_mut".to_string(),
-                        args: vec![RustExpr::Ident("__idx".to_string())],
-                    },
-                    then_body: vec![RustStmt::Assign {
-                        target: RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "__elem".to_string(),
-                        ))),
-                        value: try_lower_leaf_or_name_expr(value)?,
-                    }],
-                    else_body: None,
-                },
-            ])])
+            let receiver = RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(object.clone())),
+                field: field.clone(),
+            };
+            let lowered_index = try_lower_leaf_or_name_expr(index)?;
+            let lowered_value = try_lower_leaf_or_name_expr(value)?;
+            Some(vec![build_list_subscript_assign_stmt(
+                receiver,
+                lowered_index,
+                lowered_value,
+            )])
         }
         HirStmt::AttributeSubscriptAssign {
             object,
@@ -343,17 +325,17 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         } if try_lower_attribute_dict_insert_key_expr(index, field_ty).is_some()
             && try_lower_leaf_or_name_expr(value).is_some() =>
         {
-            Some(vec![RustStmt::Expr(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident(object.clone())),
-                    field: field.clone(),
-                }),
-                method: "insert".to_string(),
-                args: vec![
-                    try_lower_attribute_dict_insert_key_expr(index, field_ty)?,
-                    try_lower_leaf_or_name_expr(value)?,
-                ],
-            })])
+            let receiver = RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(object.clone())),
+                field: field.clone(),
+            };
+            let lowered_index = try_lower_attribute_dict_insert_key_expr(index, field_ty)?;
+            let lowered_value = try_lower_leaf_or_name_expr(value)?;
+            Some(vec![build_dict_subscript_assign_stmt(
+                receiver,
+                lowered_index,
+                lowered_value,
+            )])
         }
         HirStmt::SubscriptAssign {
             object,
@@ -362,41 +344,19 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             object_ty,
         } if try_lower_leaf_or_name_expr(index).is_some() && try_lower_leaf_or_name_expr(value).is_some() =>
         {
+            let lowered_index = try_lower_leaf_or_name_expr(index)?;
+            let lowered_value = try_lower_leaf_or_name_expr(value)?;
             match resolve_alias_type(object_ty) {
-                Type::List(_) => Some(vec![RustStmt::Block(vec![
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "__idx".to_string(),
-                        ty: None,
-                        value: RustExpr::Cast {
-                            expr: Box::new(try_lower_leaf_or_name_expr(index)?),
-                            ty: RustType::Named("usize".to_string()),
-                        },
-                    },
-                    RustStmt::IfLet {
-                        pattern: "Some(__elem)".to_string(),
-                        expr: RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident(object.clone())),
-                            method: "get_mut".to_string(),
-                            args: vec![RustExpr::Ident("__idx".to_string())],
-                        },
-                        then_body: vec![RustStmt::Assign {
-                            target: RustExpr::Deref(Box::new(RustExpr::Ident(
-                                "__elem".to_string(),
-                            ))),
-                            value: try_lower_leaf_or_name_expr(value)?,
-                        }],
-                        else_body: None,
-                    },
-                ])]),
-                Type::Dict(_, _) => Some(vec![RustStmt::Expr(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.clone())),
-                    method: "insert".to_string(),
-                    args: vec![
-                        try_lower_leaf_or_name_expr(index)?,
-                        try_lower_leaf_or_name_expr(value)?,
-                    ],
-                })]),
+                Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
+                    RustExpr::Ident(object.clone()),
+                    lowered_index,
+                    lowered_value,
+                )]),
+                Type::Dict(_, _) => Some(vec![build_dict_subscript_assign_stmt(
+                    RustExpr::Ident(object.clone()),
+                    lowered_index,
+                    lowered_value,
+                )]),
                 _ => None,
             }
         }
@@ -720,6 +680,49 @@ fn try_lower_attribute_dict_insert_key_expr(index: &HirExpr, field_ty: &Type) ->
     }
 
     try_lower_leaf_or_name_expr(index)
+}
+
+fn build_list_subscript_assign_stmt(
+    receiver: RustExpr,
+    lowered_index: RustExpr,
+    lowered_value: RustExpr,
+) -> RustStmt {
+    RustStmt::Block(vec![
+        RustStmt::Let {
+            mutable: false,
+            name: "__idx".to_string(),
+            ty: None,
+            value: RustExpr::Cast {
+                expr: Box::new(lowered_index),
+                ty: RustType::Named("usize".to_string()),
+            },
+        },
+        RustStmt::IfLet {
+            pattern: "Some(__elem)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(receiver),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__idx".to_string())],
+            },
+            then_body: vec![RustStmt::Assign {
+                target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                value: lowered_value,
+            }],
+            else_body: None,
+        },
+    ])
+}
+
+fn build_dict_subscript_assign_stmt(
+    receiver: RustExpr,
+    lowered_index: RustExpr,
+    lowered_value: RustExpr,
+) -> RustStmt {
+    RustStmt::Expr(RustExpr::MethodCall {
+        receiver: Box::new(receiver),
+        method: "insert".to_string(),
+        args: vec![lowered_index, lowered_value],
+    })
 }
 
 fn is_supported_subscript_augassign_op(op: &str) -> bool {
