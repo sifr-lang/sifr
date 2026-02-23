@@ -251,6 +251,7 @@ status: in_progress
 - [x] PR391 slice: refactor `TupleUnpack` match-arm routing by extracting dedicated tuple-unpack lowering helper, preserving existing semantics and fallback behavior
 - [x] PR392 slice: refactor duplicated `For`/`For-else` match-arm routing by extracting dedicated for-statement lowering helper, preserving tuple-target fallback and loop-else `_broke` semantics
 - [x] PR393 slice: refactor duplicated `While`/`While-else` match-arm routing by extracting dedicated while-statement lowering helper, preserving loop-else `_broke` semantics and fallback behavior
+- [x] PR394 slice: refactor shared loop-else (`_broke`) scaffolding by extracting a dedicated helper reused by `For-else` and `While-else` lowering, preserving existing semantics and fallback behavior
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
