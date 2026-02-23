@@ -524,7 +524,10 @@ fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<Stri
 }
 
 fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustExpr> {
-    let is_numeric = matches!(value.ty(), Type::Int | Type::Float | Type::LiteralInt(_));
+    let is_numeric = matches!(
+        resolve_alias_type(value.ty()),
+        Type::Int | Type::Float | Type::LiteralInt(_)
+    );
     if !(is_numeric && matches!(op, "+=" | "-=" | "*=" | "/=" | "//=" | "%=")) {
         return None;
     }
@@ -1229,6 +1232,35 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_augassign_plus_equal_alias_numeric_name() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "+=".to_string(),
+            value: HirExpr::Name {
+                name: "delta".to_string(),
+                ty: Type::Alias("Meters".to_string(), Box::new(Type::Int)),
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("alias numeric name += lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::AugAssign {
+                target: RustExpr::Ident(ref name),
+                op: ref lowered_op,
+                value: RustExpr::Ident(ref rhs),
+            } if name == "x" && lowered_op == "+" && rhs == "delta"
+        ));
+    }
+
+    #[test]
     fn does_not_lower_augassign_plus_equal_string_name() {
         let stmt = HirStmt::AugAssign {
             name: "s".to_string(),
@@ -1273,6 +1305,35 @@ mod tests {
                 op: ref lowered_op,
                 ..
             } if name == "x" && lowered_op == "/"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_augassign_floor_div_equal_alias_numeric_name() {
+        let stmt = HirStmt::AugAssign {
+            name: "x".to_string(),
+            op: "//=".to_string(),
+            value: HirExpr::Name {
+                name: "step".to_string(),
+                ty: Type::Alias("Step".to_string(), Box::new(Type::Int)),
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("alias numeric //= lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::AugAssign {
+                target: RustExpr::Ident(ref name),
+                op: ref lowered_op,
+                value: RustExpr::Ident(ref rhs),
+            } if name == "x" && lowered_op == "/" && rhs == "step"
         ));
     }
 
