@@ -177,10 +177,25 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         )),
         HirExpr::RangeLiteral {
             start, end, step, ..
-        } if step.is_none() => Some(RustExpr::Range {
-            start: Box::new(try_lower_leaf_expr(start)?),
-            end: Box::new(try_lower_leaf_expr(end)?),
-        }),
+        } => {
+            let lowered_range = RustExpr::Range {
+                start: Box::new(try_lower_leaf_expr(start)?),
+                end: Box::new(try_lower_leaf_expr(end)?),
+            };
+
+            if let Some(step_expr) = step.as_ref() {
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_range),
+                    method: "step_by".to_string(),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(try_lower_leaf_expr(step_expr)?),
+                        ty: RustType::Named("usize".to_string()),
+                    }],
+                })
+            } else {
+                Some(lowered_range)
+            }
+        }
         _ => None,
     }
 }
@@ -543,6 +558,31 @@ mod tests {
         };
 
         assert!(try_lower_leaf_expr(&cmp).is_none());
+    }
+
+    #[test]
+    fn lowers_range_literal_with_step() {
+        let range = HirExpr::RangeLiteral {
+            start: Box::new(HirExpr::IntLiteral(1)),
+            end: Box::new(HirExpr::IntLiteral(10)),
+            step: Some(Box::new(HirExpr::IntLiteral(2))),
+            ty: Type::Range,
+        };
+
+        let lowered = try_lower_leaf_expr(&range).expect("range with step lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver,
+                method,
+                args,
+            } if method == "step_by"
+                && matches!(receiver.as_ref(), RustExpr::Range { .. })
+                && matches!(
+                    args.first(),
+                    Some(RustExpr::Cast { ty: RustType::Named(name), .. }) if name == "usize"
+                )
+        ));
     }
 
     #[test]

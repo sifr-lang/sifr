@@ -735,6 +735,7 @@ impl Renderer {
                 | RustExpr::Closure { .. }
                 | RustExpr::ClosureBlock { .. }
                 | RustExpr::Block { .. }
+                | RustExpr::Range { .. }
         ) {
             return true;
         }
@@ -1079,6 +1080,24 @@ mod tests {
 
         let rendered = render_expr(&expr);
         assert_snapshot!(rendered, @r###"format!("{}-{}", left.trim(), move |x| x + 1)"###);
+    }
+
+    #[test]
+    fn renders_method_call_on_range_receiver_with_parentheses() {
+        let expr = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Range {
+                start: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                end: Box::new(RustExpr::Literal(RustLiteral::Int(10))),
+            }),
+            method: "step_by".to_string(),
+            args: vec![RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Int(2))),
+                ty: RustType::Named("usize".to_string()),
+            }],
+        };
+
+        let rendered = render_expr(&expr);
+        assert_eq!(rendered, "(1..10).step_by(2 as usize)");
     }
 
     #[test]
