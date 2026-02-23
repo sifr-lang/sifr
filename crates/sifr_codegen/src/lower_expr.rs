@@ -42,13 +42,19 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                     operand: Box::new(try_lower_leaf_expr(operand)?),
                 }),
                 "+" => Some(try_lower_leaf_expr(operand)?),
-                "~" if matches!(operand.ty(), Type::Int | Type::LiteralInt(_)) => {
+                "~" if is_int_like_simple(operand.ty()) => {
+                    let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
+                        if let HirExpr::Name { name, .. } = operand.as_ref() {
+                            return Some(RustExpr::Ident(name.clone()));
+                        }
+                        None
+                    })?;
                     Some(RustExpr::UnaryOp {
                         op: "!".to_string(),
-                        operand: Box::new(try_lower_leaf_expr(operand)?),
+                        operand: Box::new(lowered_operand),
                     })
                 }
-                "not" if matches!(operand.ty(), Type::Bool | Type::LiteralBool(_)) => {
+                "not" if is_bool_like_simple(operand.ty()) => {
                     let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
                         if let HirExpr::Name { name, .. } = operand.as_ref() {
                             return Some(RustExpr::Ident(name.clone()));
@@ -220,6 +226,10 @@ fn is_int_like_simple(ty: &Type) -> bool {
 
 fn is_float_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_numeric_scalar_type(ty), Some("float"))
+}
+
+fn is_bool_like_simple(ty: &Type) -> bool {
+    matches!(normalize_simple_compare_scalar_type(ty), Some("bool"))
 }
 
 fn normalize_compare_op(op: &str) -> &str {
@@ -853,6 +863,28 @@ mod tests {
     }
 
     #[test]
+    fn lowers_unary_not_with_alias_bool_name_operand() {
+        let alias_bool = Type::Alias("Decision".to_string(), Box::new(Type::Bool));
+        let unary = HirExpr::UnaryOp {
+            op: "not".to_string(),
+            operand: Box::new(HirExpr::Name {
+                name: "ok".to_string(),
+                ty: alias_bool,
+            }),
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&unary).expect("unary not alias-bool-name lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::UnaryOp {
+                op: ref operator,
+                operand: ref inner,
+            } if operator == "!" && matches!(inner.as_ref(), RustExpr::Ident(name) if name == "ok")
+        ));
+    }
+
+    #[test]
     fn lowers_unary_bitwise_invert_with_int_operand() {
         let unary = HirExpr::UnaryOp {
             op: "~".to_string(),
@@ -867,6 +899,28 @@ mod tests {
                 op: ref operator,
                 operand: ref inner,
             } if operator == "!" && matches!(inner.as_ref(), RustExpr::Cast { ty: RustType::I64, .. })
+        ));
+    }
+
+    #[test]
+    fn lowers_unary_bitwise_invert_with_alias_int_name_operand() {
+        let alias_int = Type::Alias("Bits".to_string(), Box::new(Type::Int));
+        let unary = HirExpr::UnaryOp {
+            op: "~".to_string(),
+            operand: Box::new(HirExpr::Name {
+                name: "mask".to_string(),
+                ty: alias_int,
+            }),
+            ty: Type::Int,
+        };
+
+        let lowered = try_lower_leaf_expr(&unary).expect("unary invert alias-int-name lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::UnaryOp {
+                op: ref operator,
+                operand: ref inner,
+            } if operator == "!" && matches!(inner.as_ref(), RustExpr::Ident(name) if name == "mask")
         ));
     }
 
