@@ -27,7 +27,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::BoolLiteral(v) => Some(RustExpr::Literal(RustLiteral::Bool(*v))),
         HirExpr::NoneLiteral => Some(RustExpr::Literal(RustLiteral::None)),
         HirExpr::Name { name, ty }
-            if is_bool_like_simple(ty) || is_numeric_simple(ty) || is_enum_like_simple(ty) =>
+            if is_bool_like_simple(ty)
+                || is_numeric_simple(ty)
+                || is_string_like_simple(ty)
+                || is_enum_like_simple(ty) =>
         {
             Some(RustExpr::Ident(name.clone()))
         }
@@ -229,6 +232,10 @@ fn is_float_like_simple(ty: &Type) -> bool {
 
 fn is_bool_like_simple(ty: &Type) -> bool {
     matches!(normalize_simple_compare_scalar_type(ty), Some("bool"))
+}
+
+fn is_string_like_simple(ty: &Type) -> bool {
+    matches!(normalize_simple_compare_scalar_type(ty), Some("str"))
 }
 
 fn resolve_alias_type(ty: &Type) -> &Type {
@@ -528,6 +535,26 @@ mod tests {
         assert!(matches!(alias_bool_name_expr, RustExpr::Ident(name) if name == "ready"));
         assert!(matches!(enum_name_expr, RustExpr::Ident(name) if name == "mode"));
         assert!(matches!(alias_enum_name_expr, RustExpr::Ident(name) if name == "mode_alias"));
+    }
+
+    #[test]
+    fn lowers_string_name_leaf_expr_variants() {
+        let string_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "label".to_string(),
+            ty: Type::Str,
+        })
+        .expect("string name lowered");
+        let alias_string_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "title".to_string(),
+            ty: Type::Alias("Title".to_string(), Box::new(Type::Str)),
+        })
+        .expect("alias-string name lowered");
+
+        assert!(matches!(string_name_expr, RustExpr::Ident(name) if name == "label"));
+        assert!(matches!(
+            alias_string_name_expr,
+            RustExpr::Ident(name) if name == "title"
+        ));
     }
 
     #[test]
