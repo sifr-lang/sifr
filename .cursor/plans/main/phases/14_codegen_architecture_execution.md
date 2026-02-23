@@ -202,6 +202,7 @@ status: in_progress
 - [x] PR342 slice: extend structured compare lowering to treat string scalar types (`Str`/`LiteralStr`) as safe simple-comparison peers in `try_lower_leaf_expr`, with regression tests
 - [x] PR343 slice: extend structured compare lowering to support enum-typed safe comparisons for `==`/`!=` (while preserving fallback for enum ordering operators), with regression tests
 - [x] PR344 slice: extend structured compare lowering to unwrap scalar `Type::Alias` wrappers during safe simple-comparison checks, while preserving mismatch fallback behavior, with regression tests
+- [x] PR345 slice: extend structured binop lowering to accept numeric `Name` operands (including mixed int/float division cast path) via IR operand helpers, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
