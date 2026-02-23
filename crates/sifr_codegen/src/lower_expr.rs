@@ -26,13 +26,11 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::StringLiteral(s) => Some(RustExpr::Literal(RustLiteral::Str(s.clone()))),
         HirExpr::BoolLiteral(v) => Some(RustExpr::Literal(RustLiteral::Bool(*v))),
         HirExpr::NoneLiteral => Some(RustExpr::Literal(RustLiteral::None)),
-        HirExpr::Name {
-            name,
-            ty: Type::Bool | Type::LiteralBool(_),
-        } => {
+        HirExpr::Name { name, ty }
+            if is_bool_like_simple(ty) || is_numeric_simple(ty) || is_enum_like_simple(ty) =>
+        {
             Some(RustExpr::Ident(name.clone()))
         }
-        HirExpr::Name { name, ty } if is_numeric_simple(ty) => Some(RustExpr::Ident(name.clone())),
         HirExpr::EnumVariant { enum_name, variant, .. } => {
             Some(RustExpr::Path(vec![enum_name.clone(), variant.clone()]))
         }
@@ -503,6 +501,33 @@ mod tests {
         assert!(matches!(float_name_expr, RustExpr::Ident(name) if name == "ratio"));
         assert!(matches!(alias_int_name_expr, RustExpr::Ident(name) if name == "index"));
         assert!(matches!(alias_float_name_expr, RustExpr::Ident(name) if name == "weight"));
+    }
+
+    #[test]
+    fn lowers_bool_and_enum_name_leaf_expr_variants() {
+        let alias_bool_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "ready".to_string(),
+            ty: Type::Alias("ReadyFlag".to_string(), Box::new(Type::Bool)),
+        })
+        .expect("alias-bool name lowered");
+        let enum_ty = Type::Enum {
+            name: "Mode".to_string(),
+            variants: vec![("A".to_string(), Some(1)), ("B".to_string(), Some(2))],
+        };
+        let enum_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "mode".to_string(),
+            ty: enum_ty.clone(),
+        })
+        .expect("enum name lowered");
+        let alias_enum_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "mode_alias".to_string(),
+            ty: Type::Alias("ModeAlias".to_string(), Box::new(enum_ty)),
+        })
+        .expect("alias-enum name lowered");
+
+        assert!(matches!(alias_bool_name_expr, RustExpr::Ident(name) if name == "ready"));
+        assert!(matches!(enum_name_expr, RustExpr::Ident(name) if name == "mode"));
+        assert!(matches!(alias_enum_name_expr, RustExpr::Ident(name) if name == "mode_alias"));
     }
 
     #[test]
