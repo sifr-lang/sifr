@@ -209,6 +209,7 @@ status: in_progress
 - [x] PR349 slice: extend structured compare lowering to support alias-wrapped enum compare safety checks (`==`/`!=` only) while preserving ordering fallback, with regression tests
 - [x] PR350 slice: extend leaf expression lowering to support numeric `Name` operands (including alias-wrapped int/float) via IR path, with regression tests
 - [x] PR351 slice: extend leaf expression lowering to support bool-like and enum-like `Name` operands (including alias-wrapped variants) via IR path, with regression tests
+- [x] PR352 slice: extend leaf expression lowering to support string-like `Name` operands (including alias-wrapped variants) via IR path, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
