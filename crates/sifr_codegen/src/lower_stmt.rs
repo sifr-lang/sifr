@@ -314,6 +314,27 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 },
             ])])
         }
+        HirStmt::AttributeSubscriptAssign {
+            object,
+            field,
+            index,
+            value,
+            field_ty,
+        } if try_lower_attribute_dict_insert_key_expr(index, field_ty).is_some()
+            && try_lower_leaf_or_name_expr(value).is_some() =>
+        {
+            Some(vec![RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident(object.clone())),
+                    field: field.clone(),
+                }),
+                method: "insert".to_string(),
+                args: vec![
+                    try_lower_attribute_dict_insert_key_expr(index, field_ty)?,
+                    try_lower_leaf_or_name_expr(value)?,
+                ],
+            })])
+        }
         HirStmt::SubscriptAssign {
             object,
             index,
@@ -732,6 +753,21 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
     try_lower_name_ident_expr(expr)
 }
 
+fn try_lower_attribute_dict_insert_key_expr(index: &HirExpr, field_ty: &Type) -> Option<RustExpr> {
+    let Type::Dict(key_ty, _) = resolve_alias_type(field_ty) else {
+        return None;
+    };
+
+    if matches!(resolve_alias_type(key_ty), Type::Str | Type::TypeVar(_))
+        && matches!(index, HirExpr::Name { .. })
+    {
+        // Preserve fallback path for potential borrowed-name key cloning semantics.
+        return None;
+    }
+
+    try_lower_leaf_or_name_expr(index)
+}
+
 fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
     if ctx.in_display_impl || ctx.in_class_scope {
         return None;
@@ -1042,6 +1078,76 @@ mod tests {
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
             .expect("alias attribute-list subscript assign lowered");
         assert!(matches!(lowered[0], RustStmt::Block(_)));
+    }
+
+    #[test]
+    fn lowers_simple_attribute_dict_subscript_assign_stmt() {
+        let stmt = HirStmt::AttributeSubscriptAssign {
+            object: "self".to_string(),
+            field: "mapping".to_string(),
+            index: HirExpr::Name {
+                name: "key".to_string(),
+                ty: Type::Int,
+            },
+            value: HirExpr::Name {
+                name: "val".to_string(),
+                ty: Type::Int,
+            },
+            field_ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("attribute dict subscript assign lowered");
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: ref recv,
+                ref method,
+                ref args,
+            }) if method == "insert"
+                && matches!(
+                    recv.as_ref(),
+                    RustExpr::Field { expr, field }
+                        if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
+                        && field == "mapping"
+                )
+                && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "key")
+                && matches!(args.get(1), Some(RustExpr::Ident(name)) if name == "val")
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_alias_attribute_dict_subscript_assign_stmt() {
+        let stmt = HirStmt::AttributeSubscriptAssign {
+            object: "self".to_string(),
+            field: "mapping".to_string(),
+            index: HirExpr::IntLiteral(1),
+            value: HirExpr::IntLiteral(2),
+            field_ty: Type::Alias(
+                "IntMap".to_string(),
+                Box::new(Type::Dict(Box::new(Type::Int), Box::new(Type::Int))),
+            ),
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("alias attribute-dict subscript assign lowered");
+        assert!(matches!(lowered[0], RustStmt::Expr(_)));
+    }
+
+    #[test]
+    fn does_not_lower_attribute_dict_subscript_assign_with_string_name_key() {
+        let stmt = HirStmt::AttributeSubscriptAssign {
+            object: "self".to_string(),
+            field: "mapping".to_string(),
+            index: HirExpr::Name {
+                name: "k".to_string(),
+                ty: Type::Str,
+            },
+            value: HirExpr::IntLiteral(1),
+            field_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+        };
+
+        assert!(
+            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
+        );
     }
 
     #[test]
