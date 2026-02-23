@@ -806,3 +806,37 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
     assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
     assert!(rust_code.contains("return self.label.clone();"));
 }
+
+#[test]
+fn test_codegen_lowering_mode_switches_structured_stmt_path() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Let {
+                name: "x".to_string(),
+                ty: Type::Int,
+                value: HirExpr::IntLiteral(1),
+                is_mutable: false,
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let structured =
+        generate_rust_with_metadata_mode(&module, CodegenLoweringMode::StructuredPreferred)
+            .rust_source;
+    let legacy =
+        generate_rust_with_metadata_mode(&module, CodegenLoweringMode::LegacyOnly).rust_source;
+
+    assert!(structured.contains("1 as i64"));
+    assert!(legacy.contains("1_i64"));
+}

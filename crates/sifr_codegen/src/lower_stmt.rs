@@ -662,14 +662,10 @@ fn build_dict_delete_key_arg(index: &HirExpr) -> Option<RustExpr> {
         return None;
     }
     let lowered_index = try_lower_leaf_expr(index)?;
-    if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
-        Some(lowered_index)
-    } else {
-        Some(RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(lowered_index),
-        })
-    }
+    Some(RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(lowered_index),
+    })
 }
 
 fn try_lower_simple_nested_subscript_assign_stmt(
@@ -1515,7 +1511,10 @@ mod tests {
                 && matches!(recv.as_ref(), RustExpr::Ident(obj) if obj == "mapping")
                 && matches!(
                     args.first(),
-                    Some(RustExpr::Literal(RustLiteral::Str(key))) if key == "key"
+                    Some(RustExpr::Ref {
+                        mutable: false,
+                        expr: inner,
+                    }) if matches!(inner.as_ref(), RustExpr::Literal(RustLiteral::Str(key)) if key == "key")
                 )
         ));
     }
