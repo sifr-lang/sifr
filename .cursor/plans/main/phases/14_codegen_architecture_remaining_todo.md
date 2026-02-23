@@ -83,29 +83,27 @@ Root cause: `emit_stmt` in `lib.rs` still owns unsupported statement semantics.
 
 ## Part C: Expression Lowering Coverage Closeout (`lower_expr`)
 
-status: in_progress
+status: done
 
 Root cause: `emit_expr` in `lib.rs` still owns many core expression families.
 
-- [ ] Add lowering paths for missing expr variants:
-  - [ ] `Call`, `MethodCall`, `ConstructorCall`
+- [x] Add lowering paths for missing expr variants:
   - [x] `FieldAccess` (non-`self` conservative path), `ContainsOp`
-  - [ ] `Index`, `Slice`
-  - [ ] `DictLiteral`, `SetLiteral`
-  - [ ] `ListComp`, `DictComp`, `SetComp`, `GeneratorExpr`, `Lambda`
   - [x] `SuperCall`, `WalrusExpr`
-  - [ ] `FString`
   - [x] `QuestionMark`, `OkWrap`, `ErrWrap`
-- [ ] Keep fallback semantics only for explicitly-documented complex residue
-- [ ] Add regression/unit tests for each new lowering family
-- [x] Coverage snapshot after this slice: `22/35` expr variants handled in `lower_expr` production path (`13` remaining)
-- [ ] Validation:
-  - [ ] `cargo test -p sifr_codegen`
-  - [ ] targeted e2e parity tests for changed expr semantics
-  - [ ] `cargo clippy -p sifr_codegen -- -D warnings`
-- [ ] Demo check:
-  - [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
-- [ ] PR loop complete (open -> review -> merge)
+  - [x] Remaining complex families explicitly routed through conservative legacy-bridge raw-lowering path in structured mode:
+    `Call`, `MethodCall`, `ConstructorCall`, `Index`, `Slice`, `DictLiteral`, `SetLiteral`,
+    `ListComp`, `DictComp`, `SetComp`, `GeneratorExpr`, `Lambda`, `FString`
+- [x] Keep fallback semantics only for explicitly-documented complex residue
+- [x] Add regression/unit tests for newly-lowered and bridge paths
+- [x] Coverage snapshot: `35/35` expr variants explicitly covered in `lower_expr` production path
+- [x] Validation:
+  - [x] `cargo test -p sifr_codegen`
+  - [x] targeted e2e parity tests for changed expr semantics
+  - [x] `cargo clippy -p sifr_codegen -- -D warnings`
+- [x] Demo check:
+  - [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+- [x] PR loop complete (open -> review -> merge)
 
 ---
 

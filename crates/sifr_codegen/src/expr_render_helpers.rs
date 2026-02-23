@@ -1,4 +1,4 @@
-use crate::RustEmitter;
+use crate::{CodegenLoweringMode, RustEmitter, RustExpr};
 use sifr_hir::{HirExpr, HirFStringPart};
 
 impl RustEmitter {
@@ -15,6 +15,43 @@ impl RustEmitter {
             self.indent = saved_indent;
             result.trim().to_string()
         }
+    }
+
+    pub(super) fn try_capture_legacy_expr_as_raw(&mut self, expr: &HirExpr) -> Option<RustExpr> {
+        if !matches!(
+            expr,
+            HirExpr::Call { .. }
+                | HirExpr::ConstructorCall { .. }
+                | HirExpr::DictComp { .. }
+                | HirExpr::DictLiteral { .. }
+                | HirExpr::FString { .. }
+                | HirExpr::GeneratorExpr { .. }
+                | HirExpr::Index { .. }
+                | HirExpr::Lambda { .. }
+                | HirExpr::ListComp { .. }
+                | HirExpr::MethodCall { .. }
+                | HirExpr::SetComp { .. }
+                | HirExpr::SetLiteral { .. }
+                | HirExpr::Slice { .. }
+        ) {
+            return None;
+        }
+
+        let saved_output = std::mem::take(&mut self.output);
+        let saved_indent = self.indent;
+        let saved_mode = self.lowering_mode;
+
+        self.output = String::new();
+        self.indent = 0;
+        self.lowering_mode = CodegenLoweringMode::LegacyOnly;
+        self.emit_expr(expr);
+        let captured = std::mem::take(&mut self.output);
+
+        self.output = saved_output;
+        self.indent = saved_indent;
+        self.lowering_mode = saved_mode;
+
+        Some(RustExpr::RawCode(captured.trim().to_string()))
     }
 
     pub(super) fn emit_lambda_untyped(&mut self, expr: &HirExpr) {

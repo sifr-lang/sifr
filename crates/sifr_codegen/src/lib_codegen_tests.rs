@@ -891,3 +891,37 @@ fn test_structured_mode_bridges_nested_function_stmt_via_raw_lowering() {
     assert!(legacy.rust_source.contains("fn inner() -> i64"));
     assert!(structured.lowering_stats.stmt_structured > 0);
 }
+
+#[test]
+fn test_structured_mode_bridges_call_expr_via_raw_lowering() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "print".to_string(),
+                    args: vec![HirExpr::StringLiteral("bridge".to_string())],
+                    ty: Type::None,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let structured =
+        generate_rust_with_metadata_mode(&module, CodegenLoweringMode::StructuredPreferred);
+    let legacy = generate_rust_with_metadata_mode(&module, CodegenLoweringMode::LegacyOnly);
+
+    assert!(structured.rust_source.contains("println!"));
+    assert!(legacy.rust_source.contains("println!"));
+    assert!(structured.lowering_stats.expr_structured > 0);
+}

@@ -2526,6 +2526,11 @@ impl RustEmitter {
                 self.write(&crate::render_expr(&lowered_expr));
                 return;
             }
+            if let Some(raw_bridge_expr) = self.try_capture_legacy_expr_as_raw(expr) {
+                self.lowering_stats.expr_structured += 1;
+                self.write(&crate::render_expr(&raw_bridge_expr));
+                return;
+            }
         }
 
         match expr {
