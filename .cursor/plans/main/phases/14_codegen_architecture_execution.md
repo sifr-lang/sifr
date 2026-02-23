@@ -213,6 +213,7 @@ status: in_progress
 - [x] PR353 slice: extend option-related expression lowering to support alias-wrapped option types in unary `not` and `is None` / `is not None` compare paths, with regression tests
 - [x] PR354 slice: extend simple statement condition lowering to detect alias-wrapped option truthiness `Name` conditions (`if`/`while`) in IR paths, with regression tests
 - [x] PR355 slice: extend simple assert-message lowering to support alias-wrapped option `Name` messages in IR path (`map_or` display formatting), with regression tests
+- [x] PR356 slice: extend simple statement return/let option handling to support alias-wrapped option types (bare return, option passthrough return, and option-typed `let None`) in IR paths, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
