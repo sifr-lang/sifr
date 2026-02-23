@@ -88,6 +88,26 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 value: try_lower_simple_aug_assign_value(op, value)?,
             }])
         }
+        HirStmt::AttributeAugAssign {
+            object,
+            field,
+            op,
+            value,
+        } if try_lower_simple_aug_assign_value(op, value).is_some() => {
+            let normalized_op = if op == "//=" {
+                "/".to_string()
+            } else {
+                op.strip_suffix('=').unwrap_or(op).to_string()
+            };
+            Some(vec![RustStmt::AugAssign {
+                target: RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident(object.clone())),
+                    field: field.clone(),
+                },
+                op: normalized_op,
+                value: try_lower_simple_aug_assign_value(op, value)?,
+            }])
+        }
         HirStmt::Return { value: None } => {
             if ctx.in_display_impl {
                 return None;
@@ -2614,6 +2634,85 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn lowers_simple_attribute_augassign_for_supported_ops() {
+        let stmt = HirStmt::AttributeAugAssign {
+            object: "self".to_string(),
+            field: "count".to_string(),
+            op: "-=".to_string(),
+            value: HirExpr::IntLiteral(2),
+        };
+
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("attribute augassign lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::AugAssign {
+                target: RustExpr::Field { ref expr, ref field },
+                op: ref lowered_op,
+                ..
+            } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
+                && field == "count"
+                && lowered_op == "-"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_attribute_augassign_floor_div_equal_alias_numeric_name() {
+        let stmt = HirStmt::AttributeAugAssign {
+            object: "self".to_string(),
+            field: "count".to_string(),
+            op: "//=".to_string(),
+            value: HirExpr::Name {
+                name: "step".to_string(),
+                ty: Type::Alias("Step".to_string(), Box::new(Type::Int)),
+            },
+        };
+
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("attribute floor-div augassign lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::AugAssign {
+                target: RustExpr::Field { ref expr, ref field },
+                op: ref lowered_op,
+                value: RustExpr::Ident(ref rhs),
+            } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
+                && field == "count"
+                && lowered_op == "/"
+                && rhs == "step"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_attribute_augassign_plus_equal_string_name() {
+        let stmt = HirStmt::AttributeAugAssign {
+            object: "self".to_string(),
+            field: "label".to_string(),
+            op: "+=".to_string(),
+            value: HirExpr::Name {
+                name: "suffix".to_string(),
+                ty: Type::Str,
+            },
+        };
+
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_attribute_augassign_power_equal() {
+        let stmt = HirStmt::AttributeAugAssign {
+            object: "self".to_string(),
+            field: "count".to_string(),
+            op: "**=".to_string(),
+            value: HirExpr::IntLiteral(3),
+        };
+
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 
     #[test]
