@@ -1,6 +1,6 @@
 //! Expression lowering scaffolds for the IR migration.
 
-use crate::{CodegenError, RustExpr, RustLiteral, RustType};
+use crate::{CodegenError, RustExpr, RustLiteral, RustStmt, RustType};
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 
@@ -22,7 +22,14 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
         | HirExpr::IfExpr { .. }
         | HirExpr::TupleLiteral { .. }
         | HirExpr::ListLiteral { .. }
-        | HirExpr::RangeLiteral { .. } => true,
+        | HirExpr::RangeLiteral { .. }
+        | HirExpr::FieldAccess { .. }
+        | HirExpr::ContainsOp { .. }
+        | HirExpr::QuestionMark { .. }
+        | HirExpr::OkWrap { .. }
+        | HirExpr::ErrWrap { .. }
+        | HirExpr::WalrusExpr { .. }
+        | HirExpr::SuperCall { .. } => true,
         HirExpr::Compare {
             ops, comparators, ..
         } => !ops.is_empty() && ops.len() == comparators.len(),
@@ -237,8 +244,87 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 Some(lowered_range)
             }
         }
+        HirExpr::FieldAccess { object, field, .. } => {
+            if matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self") {
+                return None;
+            }
+            Some(RustExpr::Field {
+                expr: Box::new(try_lower_leaf_or_name_expr(object)?),
+                field: field.clone(),
+            })
+        }
+        HirExpr::ContainsOp {
+            element,
+            collection,
+            ..
+        } => {
+            let collection_ty = resolve_alias_type(collection.ty());
+            let method = match collection_ty {
+                Type::Dict(_, _) => "contains_key",
+                Type::List(_) | Type::Set(_) | Type::Str => "contains",
+                _ => return None,
+            };
+            let arg = if matches!(collection_ty, Type::Str) {
+                try_lower_leaf_or_name_expr(element)?
+            } else {
+                RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(try_lower_leaf_or_name_expr(element)?),
+                }
+            };
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(try_lower_leaf_or_name_expr(collection)?),
+                method: method.to_string(),
+                args: vec![arg],
+            })
+        }
+        HirExpr::QuestionMark { expr, .. } => {
+            Some(RustExpr::Try(Box::new(try_lower_leaf_or_name_expr(expr)?)))
+        }
+        HirExpr::OkWrap { value, .. } => Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+            args: vec![try_lower_leaf_or_name_expr(value)?],
+        }),
+        HirExpr::ErrWrap { value, .. } => Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+            args: vec![try_lower_leaf_or_name_expr(value)?],
+        }),
+        HirExpr::WalrusExpr { name, value, .. } => Some(RustExpr::Block {
+            stmts: vec![RustStmt::Let {
+                mutable: false,
+                name: name.clone(),
+                ty: None,
+                value: try_lower_leaf_or_name_expr(value)?,
+            }],
+            expr: Some(Box::new(RustExpr::Ident(name.clone()))),
+        }),
+        HirExpr::SuperCall {
+            parent_class,
+            method,
+            args,
+            ..
+        } => {
+            let lowered_args = args
+                .iter()
+                .map(try_lower_leaf_or_name_expr)
+                .collect::<Option<Vec<_>>>()?;
+            Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![parent_class.clone(), method.clone()])),
+                args: lowered_args,
+            })
+        }
         _ => None,
     }
+}
+
+fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_expr(expr) {
+        return Some(lowered);
+    }
+    if let HirExpr::Name { name, .. } = expr {
+        return Some(RustExpr::Ident(name.clone()));
+    }
+    None
 }
 
 fn is_numeric_simple(ty: &Type) -> bool {
@@ -1891,5 +1977,151 @@ mod tests {
         };
 
         assert!(try_lower_leaf_expr(&range).is_none());
+    }
+
+    #[test]
+    fn lowers_field_access_for_non_self_name() {
+        let expr = HirExpr::FieldAccess {
+            object: Box::new(HirExpr::Name {
+                name: "point".to_string(),
+                ty: Type::Class {
+                    name: "Point".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: None,
+                },
+            }),
+            field: "x".to_string(),
+            ty: Type::Int,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("field access lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Field { expr, field }
+                if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "point")
+                    && field == "x"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_self_field_access() {
+        let expr = HirExpr::FieldAccess {
+            object: Box::new(HirExpr::Name {
+                name: "self".to_string(),
+                ty: Type::Class {
+                    name: "Point".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: None,
+                },
+            }),
+            field: "x".to_string(),
+            ty: Type::Int,
+        };
+
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_contains_for_list_name_collection() {
+        let expr = HirExpr::ContainsOp {
+            element: Box::new(HirExpr::Name {
+                name: "needle".to_string(),
+                ty: Type::Int,
+            }),
+            collection: Box::new(HirExpr::Name {
+                name: "haystack".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("contains lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver,
+                method,
+                args
+            } if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "haystack")
+                && method == "contains"
+                && matches!(
+                    args.first(),
+                    Some(RustExpr::Ref { expr, .. })
+                        if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "needle")
+                )
+        ));
+    }
+
+    #[test]
+    fn lowers_question_mark_ok_err_wrap_variants() {
+        let q = HirExpr::QuestionMark {
+            expr: Box::new(HirExpr::Name {
+                name: "res".to_string(),
+                ty: Type::Result(Box::new(Type::Int), Box::new(Type::Any)),
+            }),
+            ty: Type::Int,
+        };
+        let ok = HirExpr::OkWrap {
+            value: Box::new(HirExpr::IntLiteral(1)),
+            ty: Type::Result(Box::new(Type::Int), Box::new(Type::Any)),
+        };
+        let err = HirExpr::ErrWrap {
+            value: Box::new(HirExpr::StringLiteral("boom".to_string())),
+            ty: Type::Result(Box::new(Type::Int), Box::new(Type::Any)),
+        };
+
+        assert!(matches!(try_lower_leaf_expr(&q), Some(RustExpr::Try(_))));
+        assert!(matches!(
+            try_lower_leaf_expr(&ok),
+            Some(RustExpr::FnCall { func, .. })
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Ok".to_string()])
+        ));
+        assert!(matches!(
+            try_lower_leaf_expr(&err),
+            Some(RustExpr::FnCall { func, .. })
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Err".to_string()])
+        ));
+    }
+
+    #[test]
+    fn lowers_walrus_expr_with_leaf_value() {
+        let expr = HirExpr::WalrusExpr {
+            name: "n".to_string(),
+            value: Box::new(HirExpr::IntLiteral(3)),
+            ty: Type::Int,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("walrus lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Block { stmts, expr: Some(inner) }
+                if matches!(stmts.first(), Some(RustStmt::Let { name, .. }) if name == "n")
+                    && matches!(inner.as_ref(), RustExpr::Ident(name) if name == "n")
+        ));
+    }
+
+    #[test]
+    fn lowers_super_call_with_leaf_args() {
+        let expr = HirExpr::SuperCall {
+            parent_class: "Base".to_string(),
+            method: "new".to_string(),
+            args: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Class {
+                name: "Base".to_string(),
+                fields: vec![],
+                methods: vec![],
+                parent_class: None,
+            },
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("super call lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::FnCall { func, args }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Base".to_string(), "new".to_string()])
+                    && args.len() == 1
+        ));
     }
 }

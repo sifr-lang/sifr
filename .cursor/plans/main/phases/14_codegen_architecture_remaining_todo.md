@@ -83,19 +83,22 @@ Root cause: `emit_stmt` in `lib.rs` still owns unsupported statement semantics.
 
 ## Part C: Expression Lowering Coverage Closeout (`lower_expr`)
 
-status: pending
+status: in_progress
 
 Root cause: `emit_expr` in `lib.rs` still owns many core expression families.
 
 - [ ] Add lowering paths for missing expr variants:
   - [ ] `Call`, `MethodCall`, `ConstructorCall`
-  - [ ] `FieldAccess`, `Index`, `Slice`, `ContainsOp`
+  - [x] `FieldAccess` (non-`self` conservative path), `ContainsOp`
+  - [ ] `Index`, `Slice`
   - [ ] `DictLiteral`, `SetLiteral`
   - [ ] `ListComp`, `DictComp`, `SetComp`, `GeneratorExpr`, `Lambda`
-  - [ ] `FString`, `SuperCall`, `WalrusExpr`
-  - [ ] `QuestionMark`, `OkWrap`, `ErrWrap`
+  - [x] `SuperCall`, `WalrusExpr`
+  - [ ] `FString`
+  - [x] `QuestionMark`, `OkWrap`, `ErrWrap`
 - [ ] Keep fallback semantics only for explicitly-documented complex residue
 - [ ] Add regression/unit tests for each new lowering family
+- [x] Coverage snapshot after this slice: `22/35` expr variants handled in `lower_expr` production path (`13` remaining)
 - [ ] Validation:
   - [ ] `cargo test -p sifr_codegen`
   - [ ] targeted e2e parity tests for changed expr semantics
