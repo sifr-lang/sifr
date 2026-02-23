@@ -267,9 +267,9 @@ fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
         return false;
     }
-    let comparable = matches!(left_ty, Type::Int | Type::Float | Type::LiteralInt(_))
-        || matches!(left_ty, Type::Bool | Type::LiteralBool(_));
-    left_ty == right_ty && comparable
+    let left_norm = normalize_simple_compare_scalar_type(left_ty);
+    let right_norm = normalize_simple_compare_scalar_type(right_ty);
+    left_norm.is_some() && left_norm == right_norm
 }
 
 fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
@@ -359,6 +359,15 @@ fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
         });
     }
     Some(lowered)
+}
+
+fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
+    match ty {
+        Type::Int | Type::LiteralInt(_) => Some("int"),
+        Type::Float => Some("float"),
+        Type::Bool | Type::LiteralBool(_) => Some("bool"),
+        _ => None,
+    }
 }
 
 #[cfg(test)]
@@ -801,6 +810,43 @@ mod tests {
             lowered,
             RustExpr::BinOp { op, .. } if op == "!="
         ));
+    }
+
+    #[test]
+    fn lowers_bool_compare_with_literal_bool_name_operands() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "lhs".to_string(),
+                ty: Type::LiteralBool(true),
+            }),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "rhs".to_string(),
+                ty: Type::Bool,
+            }],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("bool/literal-bool compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, left, right }
+                if op == "=="
+                    && matches!(left.as_ref(), RustExpr::Ident(name) if name == "lhs")
+                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_mismatched_bool_int_compare() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::BoolLiteral(true)),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Bool,
+        };
+
+        assert!(try_lower_leaf_expr(&cmp).is_none());
     }
 
     #[test]
