@@ -263,7 +263,7 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
     if op == "//" {
         return left_ty == right_ty
             && left_ty == result_ty
-            && matches!(left_ty, Type::Int | Type::LiteralInt(_));
+            && matches!(left_ty, Type::Int | Type::LiteralInt(_) | Type::Float);
     }
     if op == "/" {
         if is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty)
@@ -457,12 +457,26 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_simple_floor_division_float_binop() {
+    fn lowers_simple_floor_division_float_binop_as_div() {
         let bin = HirExpr::BinOp {
             left: Box::new(HirExpr::FloatLiteral(7.0)),
             op: "//".to_string(),
             right: Box::new(HirExpr::FloatLiteral(2.0)),
             ty: Type::Float,
+        };
+        assert!(matches!(
+            try_lower_leaf_expr(&bin),
+            Some(RustExpr::BinOp { op, .. }) if op == "/"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_simple_floor_division_float_binop_with_non_float_result() {
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::FloatLiteral(7.0)),
+            op: "//".to_string(),
+            right: Box::new(HirExpr::FloatLiteral(2.0)),
+            ty: Type::Int,
         };
         assert!(try_lower_leaf_expr(&bin).is_none());
     }
