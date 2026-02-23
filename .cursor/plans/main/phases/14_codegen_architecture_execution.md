@@ -252,6 +252,7 @@ status: in_progress
 - [x] PR392 slice: refactor duplicated `For`/`For-else` match-arm routing by extracting dedicated for-statement lowering helper, preserving tuple-target fallback and loop-else `_broke` semantics
 - [x] PR393 slice: refactor duplicated `While`/`While-else` match-arm routing by extracting dedicated while-statement lowering helper, preserving loop-else `_broke` semantics and fallback behavior
 - [x] PR394 slice: refactor shared loop-else (`_broke`) scaffolding by extracting a dedicated helper reused by `For-else` and `While-else` lowering, preserving existing semantics and fallback behavior
+- [x] PR395 slice: add structured `Delete` statement lowering for simple list and dict (literal-key) targets so `emit_stmt` uses IR-first path there, while preserving fallback for borrowing-sensitive dict name-key and unsupported shapes
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
