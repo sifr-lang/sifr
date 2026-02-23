@@ -267,6 +267,9 @@ fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
         return false;
     }
+    if left_ty == right_ty && matches!(left_ty, Type::Enum { .. }) {
+        return matches!(op, "==" | "!=");
+    }
     let left_norm = normalize_simple_compare_scalar_type(left_ty);
     let right_norm = normalize_simple_compare_scalar_type(right_ty);
     left_norm.is_some() && left_norm == right_norm
@@ -872,6 +875,58 @@ mod tests {
             left: Box::new(HirExpr::StringLiteral("x".to_string())),
             ops: vec!["==".to_string()],
             comparators: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Bool,
+        };
+
+        assert!(try_lower_leaf_expr(&cmp).is_none());
+    }
+
+    #[test]
+    fn lowers_enum_variant_equality_compare() {
+        let enum_ty = Type::Enum {
+            name: "Color".to_string(),
+            variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+        };
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::EnumVariant {
+                enum_name: "Color".to_string(),
+                variant: "RED".to_string(),
+                ty: enum_ty.clone(),
+            }),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::EnumVariant {
+                enum_name: "Color".to_string(),
+                variant: "BLUE".to_string(),
+                ty: enum_ty,
+            }],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("enum equality compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, .. } if op == "=="
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_enum_variant_ordering_compare() {
+        let enum_ty = Type::Enum {
+            name: "Color".to_string(),
+            variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+        };
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::EnumVariant {
+                enum_name: "Color".to_string(),
+                variant: "RED".to_string(),
+                ty: enum_ty.clone(),
+            }),
+            ops: vec!["<".to_string()],
+            comparators: vec![HirExpr::EnumVariant {
+                enum_name: "Color".to_string(),
+                variant: "BLUE".to_string(),
+                ty: enum_ty,
+            }],
             ty: Type::Bool,
         };
 
