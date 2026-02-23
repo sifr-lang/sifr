@@ -24,13 +24,13 @@ Execution loop per part (mandatory):
 
 ## Current Baseline (code-verified)
 
-- `crates/sifr_codegen/src/lib.rs`: `4134` lines
-- Direct string emission calls in `lib.rs`: `804`
-- Largest write-heavy files: `lib.rs` (`804`), `intrinsic_method_emitters.rs` (`523`)
-- `lower_stmt` production coverage: `21/27` `HirStmt` variants
-  - Missing: `Match`, `NestedFunction`, `StarUnpack`, `TryExcept`, `With`, `Yield`
-- `lower_expr` production coverage: `15/35` `HirExpr` variants
-  - Missing: `Call`, `ConstructorCall`, `ContainsOp`, `DictComp`, `DictLiteral`, `ErrWrap`, `FString`, `FieldAccess`, `GeneratorExpr`, `Index`, `Lambda`, `ListComp`, `MethodCall`, `OkWrap`, `QuestionMark`, `SetComp`, `SetLiteral`, `Slice`, `SuperCall`, `WalrusExpr`
+- `crates/sifr_codegen/src/lib.rs`: `1009` lines
+- Direct string emission calls in `lib.rs`: `2`
+- Largest write-heavy files: `intrinsic_method_emitters.rs` (`523`), `legacy_expr_emitter.rs` (`388`), `legacy_stmt_emitter.rs` (`294`)
+- `lower_stmt` production coverage: `27/27` `HirStmt` variants
+  - Missing: none
+- `lower_expr` production coverage: `35/35` `HirExpr` variants
+  - Missing: none
 - Active `sifr_codegen` clippy suppressions in `lib.rs`: `cast_sign_loss`, `cast_possible_truncation`, `cast_possible_wrap`, `struct_excessive_bools`
 - Execution checklist drift: `.cursor/plans/main/phases/14_codegen_architecture_execution.md` still has one unchecked item (`Remove at least 5 clippy suppressions...`) despite later sections claiming broader suppression removals.
 
@@ -109,20 +109,21 @@ Root cause: `emit_expr` in `lib.rs` still owns many core expression families.
 
 ## Part D: `lib.rs` Decomposition and Orchestration-Only End State
 
-status: pending
+status: done
 
 Root cause: core codegen logic remains concentrated in a monolithic string-emitter file.
 
-- [ ] Move remaining statement/expression emission internals out of `lib.rs`
-- [ ] Keep `lib.rs` focused on orchestration and entrypoint wiring
-- [ ] Reduce direct write-call concentration in `lib.rs` materially
-- [ ] Add guard checks to prevent regression into monolithic emission patterns
-- [ ] Validation:
-  - [ ] `cargo test -p sifr_codegen`
-  - [ ] targeted e2e parity tests on moved paths
-  - [ ] `cargo clippy -p sifr_codegen -- -D warnings`
-- [ ] Demo check:
-  - [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+- [x] Move remaining statement/expression emission internals out of `lib.rs`
+- [x] Keep `lib.rs` focused on orchestration and entrypoint wiring
+- [x] Reduce direct write-call concentration in `lib.rs` materially (`804 -> 2`)
+- [x] Add guard checks to prevent regression into monolithic emission patterns
+  - [x] `test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs` validates wrapper-only `emit_stmt`/`emit_expr`, line-count cap, write-call cap, and migrated legacy-module size floors
+- [x] Validation:
+  - [x] `cargo test -p sifr_codegen`
+  - [x] targeted e2e parity tests on moved paths
+  - [x] `cargo clippy -p sifr_codegen -- -D warnings`
+- [x] Demo check:
+  - [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
 - [ ] PR loop complete (open -> review -> merge)
 
 ---

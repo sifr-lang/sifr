@@ -925,3 +925,57 @@ fn test_structured_mode_bridges_call_expr_via_raw_lowering() {
     assert!(legacy.rust_source.contains("println!"));
     assert!(structured.lowering_stats.expr_structured > 0);
 }
+
+#[test]
+fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
+    let lib_src = include_str!("lib.rs");
+    let legacy_stmt_src = include_str!("legacy_stmt_emitter.rs");
+    let legacy_expr_src = include_str!("legacy_expr_emitter.rs");
+
+    assert!(lib_src.contains("mod legacy_stmt_emitter;"));
+    assert!(lib_src.contains("mod legacy_expr_emitter;"));
+
+    let emit_stmt_start = lib_src
+        .find("fn emit_stmt(&mut self, stmt: &HirStmt) {")
+        .expect("emit_stmt wrapper should exist");
+    let emit_expr_start = lib_src
+        .find("fn emit_expr(&mut self, expr: &HirExpr) {")
+        .expect("emit_expr wrapper should exist");
+    let emit_stmt_wrapper = &lib_src[emit_stmt_start..emit_expr_start];
+    assert!(emit_stmt_wrapper.contains("self.emit_stmt_legacy(stmt);"));
+    assert!(
+        !emit_stmt_wrapper.contains("match stmt"),
+        "emit_stmt should stay orchestration-only"
+    );
+
+    let body_contains_yield_start = lib_src
+        .find("pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {")
+        .expect("body_contains_yield should exist");
+    let emit_expr_wrapper = &lib_src[emit_expr_start..body_contains_yield_start];
+    assert!(emit_expr_wrapper.contains("self.emit_expr_legacy(expr);"));
+    assert!(
+        !emit_expr_wrapper.contains("match expr"),
+        "emit_expr should stay orchestration-only"
+    );
+
+    let lib_lines = lib_src.lines().count();
+    assert!(
+        lib_lines <= 1400,
+        "lib.rs should stay decomposed (current lines: {lib_lines})"
+    );
+
+    let lib_direct_write_calls = lib_src.match_indices("self.write(").count();
+    assert!(
+        lib_direct_write_calls <= 25,
+        "lib.rs should not regain write-heavy emission logic (self.write count: {lib_direct_write_calls})"
+    );
+
+    assert!(
+        legacy_stmt_src.lines().count() > 1000,
+        "statement legacy emitter should hold migrated logic"
+    );
+    assert!(
+        legacy_expr_src.lines().count() > 1000,
+        "expression legacy emitter should hold migrated logic"
+    );
+}
