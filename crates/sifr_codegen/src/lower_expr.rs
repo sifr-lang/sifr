@@ -32,6 +32,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         } => {
             Some(RustExpr::Ident(name.clone()))
         }
+        HirExpr::Name { name, ty } if is_numeric_simple(ty) => Some(RustExpr::Ident(name.clone())),
         HirExpr::EnumVariant { enum_name, variant, .. } => {
             Some(RustExpr::Path(vec![enum_name.clone(), variant.clone()]))
         }
@@ -473,6 +474,35 @@ mod tests {
         assert!(matches!(bool_name_expr, RustExpr::Ident(ref name) if name == "ok"));
         assert!(matches!(none_expr, RustExpr::Literal(RustLiteral::None)));
         assert!(matches!(enum_expr, RustExpr::Path(_)));
+    }
+
+    #[test]
+    fn lowers_numeric_name_leaf_expr_variants() {
+        let int_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "count".to_string(),
+            ty: Type::Int,
+        })
+        .expect("int name lowered");
+        let float_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "ratio".to_string(),
+            ty: Type::Float,
+        })
+        .expect("float name lowered");
+        let alias_int_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "index".to_string(),
+            ty: Type::Alias("Index".to_string(), Box::new(Type::Int)),
+        })
+        .expect("alias-int name lowered");
+        let alias_float_name_expr = try_lower_leaf_expr(&HirExpr::Name {
+            name: "weight".to_string(),
+            ty: Type::Alias("Weight".to_string(), Box::new(Type::Float)),
+        })
+        .expect("alias-float name lowered");
+
+        assert!(matches!(int_name_expr, RustExpr::Ident(name) if name == "count"));
+        assert!(matches!(float_name_expr, RustExpr::Ident(name) if name == "ratio"));
+        assert!(matches!(alias_int_name_expr, RustExpr::Ident(name) if name == "index"));
+        assert!(matches!(alias_float_name_expr, RustExpr::Ident(name) if name == "weight"));
     }
 
     #[test]

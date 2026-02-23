@@ -460,8 +460,9 @@ mod tests {
     fn does_not_lower_non_leaf_module_helper_const_item() {
         let ty = Type::List(Box::new(Type::Int));
         let value = HirExpr::ListLiteral {
-            elements: vec![HirExpr::Name {
-                name: "x".to_string(),
+            elements: vec![HirExpr::Call {
+                func: "build".to_string(),
+                args: vec![],
                 ty: Type::Int,
             }],
             ty: ty.clone(),
