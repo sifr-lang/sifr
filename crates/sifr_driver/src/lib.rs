@@ -6,15 +6,6 @@
 //! Stdlib `.sifr` files are embedded in the compiler binary via `include_str!`.
 //! They are compiled before user code (two-phase compilation).
 
-#![allow(clippy::doc_markdown)]
-#![allow(clippy::uninlined_format_args)]
-#![allow(clippy::inefficient_to_string)]
-#![allow(clippy::print_stderr)]
-#![allow(clippy::unnecessary_map_or)]
-#![allow(clippy::for_kv_map)]
-#![allow(clippy::format_push_string)]
-#![allow(clippy::useless_format)]
-#![allow(clippy::single_match)]
 
 use sifr_python_parser::parse_module;
 use sifr_hir::{lower_module, lower_module_with_externals, lower_module_stdlib_with_externals, ExternalDefs, HirModule};
@@ -24,13 +15,14 @@ use sifr_codegen::{
 };
 use sifr_type_system::{Type, FunctionType, ParamConvention};
 use std::collections::{HashMap, HashSet};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub use sifr_codegen::{CodegenLoweringMode, LoweringStats};
 
 /// Embedded stdlib `.sifr` files.
-/// Each entry is (module_name, source_code).
+/// Each entry is (`module_name`, `source_code`).
 /// Module names use dotted notation (e.g., "sifr.test").
 const STDLIB_FILES: &[(&str, &str)] = &[
     // Tier 1: Modules with no inter-stdlib dependencies
@@ -90,7 +82,17 @@ struct StdlibCompiled {
     code: StdlibCode,
 }
 
-/// Compile all embedded stdlib `.sifr` files and return their exports as ExternalDefs
+fn write_stderr_line(message: &str) {
+    let mut stderr = std::io::stderr().lock();
+    let _ = writeln!(stderr, "{message}");
+}
+
+fn write_stderr(message: &str) {
+    let mut stderr = std::io::stderr().lock();
+    let _ = write!(stderr, "{message}");
+}
+
+/// Compile all embedded stdlib `.sifr` files and return their exports as `ExternalDefs`
 /// along with compiled Rust code for pure Sifr modules.
 /// Stdlib files can import from `_sifr.*` intrinsics (resolved via the intrinsic registry).
 fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
@@ -105,7 +107,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                         .errors()
                         .iter()
                         .map(|e| CompileError {
-                            message: format!("[stdlib:{}] {}", module_name, e),
+                            message: format!("[stdlib:{module_name}] {e}"),
                             phase: CompilePhase::Parse,
                         })
                         .collect();
@@ -115,7 +117,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
             }
             Err(e) => {
                 return Err(vec![CompileError {
-                    message: format!("[stdlib:{}] failed to parse: {}", module_name, e),
+                    message: format!("[stdlib:{module_name}] failed to parse: {e}"),
                     phase: CompilePhase::Parse,
                 }]);
             }
@@ -250,10 +252,10 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                 generic_classes: stdlib_code.generic_classes.clone(),
             };
             let codegen_result = sifr_codegen::generate_rust_with_stdlib(&result.module, &codegen_stdlib);
-            stdlib_code.module_rust_code.insert(module_name.to_string(), codegen_result.rust_source);
+            stdlib_code.module_rust_code.insert((*module_name).to_string(), codegen_result.rust_source);
             // Store constant mappings so user code can reference them with correct Rust names
             if !codegen_result.constant_mappings.is_empty() {
-                stdlib_code.module_constants.insert(module_name.to_string(), codegen_result.constant_mappings);
+                stdlib_code.module_constants.insert((*module_name).to_string(), codegen_result.constant_mappings);
             }
             // Store function signatures for pure Sifr functions (for borrow convention at call sites)
             let mut sig_map = HashMap::new();
@@ -280,7 +282,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                 }
             }
             if !sig_map.is_empty() {
-                stdlib_code.func_signatures.insert(module_name.to_string(), sig_map);
+                stdlib_code.func_signatures.insert((*module_name).to_string(), sig_map);
             }
 
             // Track generator functions (contain yield statements) for .collect() at call sites
@@ -291,7 +293,7 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
                 }
             }
             if !gen_fns.is_empty() {
-                stdlib_code.generator_functions.insert(module_name.to_string(), gen_fns);
+                stdlib_code.generator_functions.insert((*module_name).to_string(), gen_fns);
             }
 
             // Track generic classes for correct type annotation skipping in user code
@@ -302,21 +304,21 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
             }
         }
 
-        stdlib_code.intrinsic_names.insert(module_name.to_string(), intrinsic_names_for_module);
+        stdlib_code.intrinsic_names.insert((*module_name).to_string(), intrinsic_names_for_module);
         if !transitive_deps_for_module.is_empty() {
-            stdlib_code.transitive_deps.insert(module_name.to_string(), transitive_deps_for_module);
+            stdlib_code.transitive_deps.insert((*module_name).to_string(), transitive_deps_for_module);
         }
 
-        stdlib_defs.functions.insert(module_name.to_string(), fn_exports);
-        stdlib_defs.classes.insert(module_name.to_string(), class_exports);
+        stdlib_defs.functions.insert((*module_name).to_string(), fn_exports);
+        stdlib_defs.classes.insert((*module_name).to_string(), class_exports);
         if !const_exports.is_empty() {
-            stdlib_defs.constants.insert(module_name.to_string(), const_exports);
+            stdlib_defs.constants.insert((*module_name).to_string(), const_exports);
         }
         if !result.module.generic_functions.is_empty() {
-            stdlib_defs.generic_functions.insert(module_name.to_string(), result.module.generic_functions.clone());
+            stdlib_defs.generic_functions.insert((*module_name).to_string(), result.module.generic_functions.clone());
         }
         if !result.module.type_param_bounds.is_empty() {
-            stdlib_defs.type_param_bounds.insert(module_name.to_string(), result.module.type_param_bounds.clone());
+            stdlib_defs.type_param_bounds.insert((*module_name).to_string(), result.module.type_param_bounds.clone());
         }
     }
 
@@ -410,7 +412,7 @@ pub fn compile_with_metadata_mode(
                     .errors()
                     .iter()
                     .map(|e| CompileError {
-                        message: format!("{}", e),
+                        message: format!("{e}"),
                         phase: CompilePhase::Parse,
                     })
                     .collect();
@@ -421,7 +423,7 @@ pub fn compile_with_metadata_mode(
         Err(e) => {
             return CompileResultFull::Errors {
                 errors: vec![CompileError {
-                    message: format!("failed to parse: {}", e),
+                    message: format!("failed to parse: {e}"),
                     phase: CompilePhase::Parse,
                 }],
             };
@@ -447,12 +449,12 @@ pub fn compile_with_metadata_mode(
 
     // Print reveal_type diagnostics to stderr
     for diag in &lowering_result.reveal_types {
-        eprintln!("{}", diag);
+        write_stderr_line(diag);
     }
 
     // Print compiler warnings to stderr
     for warning in &lowering_result.warnings {
-        eprintln!("{}", warning);
+        write_stderr_line(warning);
     }
 
     // Phase 3: Generate Rust code with stdlib code
@@ -489,7 +491,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     if let Ok(entries) = std::fs::read_dir(project_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "sifr") {
+            if path.extension().is_some_and(|ext| ext == "sifr") {
                 sifr_files.push(path);
             }
         }
@@ -519,7 +521,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
                         .errors()
                         .iter()
                         .map(|e| CompileError {
-                            message: format!("[{}] {}", module_name, e),
+                            message: format!("[{module_name}] {e}"),
                             phase: CompilePhase::Parse,
                         })
                         .collect();
@@ -529,7 +531,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
             }
             Err(e) => {
                 return Err(vec![CompileError {
-                    message: format!("[{}] failed to parse: {}", module_name, e),
+                    message: format!("[{module_name}] failed to parse: {e}"),
                     phase: CompilePhase::Parse,
                 }]);
             }
@@ -648,7 +650,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     let src_dir = project_path.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to create output directory: {}", e),
+            message: format!("failed to create output directory: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
@@ -660,7 +662,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     );
     std::fs::write(project_path.join("Cargo.toml"), cargo_toml).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to write Cargo.toml: {}", e),
+            message: format!("failed to write Cargo.toml: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
@@ -669,9 +671,11 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     let mut main_rs = String::new();
 
     // Add mod declarations for non-main modules
-    for (module_name, _) in &rust_files {
+    for module_name in rust_files.keys() {
         if module_name != "main" {
-            main_rs.push_str(&format!("mod {};\n", module_name));
+            main_rs.push_str("mod ");
+            main_rs.push_str(module_name);
+            main_rs.push_str(";\n");
         }
     }
     if rust_files.len() > 1 {
@@ -685,7 +689,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
 
     std::fs::write(src_dir.join("main.rs"), &main_rs).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to write main.rs: {}", e),
+            message: format!("failed to write main.rs: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
@@ -693,9 +697,9 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     // Write non-main module files
     for (module_name, code) in &rust_files {
         if module_name != "main" {
-            std::fs::write(src_dir.join(format!("{}.rs", module_name)), code).map_err(|e| {
+            std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|e| {
                 vec![CompileError {
-                    message: format!("failed to write {}.rs: {}", module_name, e),
+                    message: format!("failed to write {module_name}.rs: {e}"),
                     phase: CompilePhase::Build,
                 }]
             })?;
@@ -709,7 +713,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         .output()
         .map_err(|e| {
             vec![CompileError {
-                message: format!("failed to run cargo build: {}", e),
+                message: format!("failed to run cargo build: {e}"),
                 phase: CompilePhase::Build,
             }]
         })?;
@@ -717,7 +721,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(vec![CompileError {
-            message: format!("cargo build failed:\n{}", stderr),
+            message: format!("cargo build failed:\n{stderr}"),
             phase: CompilePhase::Build,
         }]);
     }
@@ -752,7 +756,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
     let src_dir = project_dir.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to create output directory: {}", e),
+            message: format!("failed to create output directory: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
@@ -766,7 +770,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
     );
     std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to write Cargo.toml: {}", e),
+            message: format!("failed to write Cargo.toml: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
@@ -774,7 +778,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
     // Write main.rs
     std::fs::write(src_dir.join("main.rs"), &rust_source).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to write main.rs: {}", e),
+            message: format!("failed to write main.rs: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
@@ -786,7 +790,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
         .output()
         .map_err(|e| {
             vec![CompileError {
-                message: format!("failed to run cargo build: {}", e),
+                message: format!("failed to run cargo build: {e}"),
                 phase: CompilePhase::Build,
             }]
         })?;
@@ -794,7 +798,7 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(vec![CompileError {
-            message: format!("cargo build failed:\n{}", stderr),
+            message: format!("cargo build failed:\n{stderr}"),
             phase: CompilePhase::Build,
         }]);
     }
@@ -822,7 +826,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     if let Ok(entries) = std::fs::read_dir(test_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "sifr") {
+            if path.extension().is_some_and(|ext| ext == "sifr") {
                 let stem = path.file_stem().unwrap().to_string_lossy().to_string();
                 if stem.starts_with("test_") || stem.ends_with("_test") {
                     test_files.push(path);
@@ -833,11 +837,11 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     test_files.sort();
 
     if test_files.is_empty() {
-        eprintln!("No test files found in {}", test_dir.display());
+        write_stderr_line(&format!("No test files found in {}", test_dir.display()));
         return Ok(true);
     }
 
-    eprintln!("Found {} test file(s)", test_files.len());
+    write_stderr_line(&format!("Found {} test file(s)", test_files.len()));
 
     // Compile each test file and combine into a single Rust test binary
     let mut all_rust_code = String::new();
@@ -892,7 +896,9 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
 
         // Generate Rust code in test mode
         let codegen_result = generate_rust_test(&lowering_result.module);
-        all_rust_code.push_str(&format!("// Tests from: {}\n", test_file.file_name().unwrap().to_string_lossy()));
+        all_rust_code.push_str("// Tests from: ");
+        all_rust_code.push_str(&test_file.file_name().unwrap().to_string_lossy());
+        all_rust_code.push('\n');
         all_rust_code.push_str(&codegen_result.rust_source);
         all_rust_code.push('\n');
         all_stdlib_modules.extend(codegen_result.used_stdlib_modules);
@@ -903,26 +909,21 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     let src_dir = project_dir.join("src");
     std::fs::create_dir_all(&src_dir).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to create test directory: {}", e),
+            message: format!("failed to create test directory: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
 
     // Write Cargo.toml with dependencies
-    let mut cargo_toml = format!(
-        r#"[package]
+    let mut cargo_toml = r#"[package]
 name = "sifr_tests"
 version = "0.1.0"
 edition = "2021"
-"#
-    );
+"#.to_string();
 
     let mut deps = Vec::new();
     for module_name in &all_stdlib_modules {
-        match module_name.as_str() {
-            "sifr.json" => deps.push("serde_json = \"1\"".to_string()),
-            _ => {}
-        }
+        if module_name.as_str() == "sifr.json" { deps.push("serde_json = \"1\"".to_string()) }
     }
     if !deps.is_empty() {
         cargo_toml.push_str("\n[dependencies]\n");
@@ -934,7 +935,7 @@ edition = "2021"
 
     std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to write Cargo.toml: {}", e),
+            message: format!("failed to write Cargo.toml: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
@@ -942,7 +943,7 @@ edition = "2021"
     // Write the test source file as lib.rs (so cargo test finds #[test] functions)
     std::fs::write(src_dir.join("lib.rs"), &all_rust_code).map_err(|e| {
         vec![CompileError {
-            message: format!("failed to write lib.rs: {}", e),
+            message: format!("failed to write lib.rs: {e}"),
             phase: CompilePhase::Build,
         }]
     })?;
@@ -954,7 +955,7 @@ edition = "2021"
         .output()
         .map_err(|e| {
             vec![CompileError {
-                message: format!("failed to run cargo test: {}", e),
+                message: format!("failed to run cargo test: {e}"),
                 phase: CompilePhase::Build,
             }]
         })?;
@@ -963,10 +964,10 @@ edition = "2021"
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
     if !stdout.is_empty() {
-        eprint!("{}", stdout);
+        write_stderr(&stdout);
     }
     if !stderr.is_empty() {
-        eprint!("{}", stderr);
+        write_stderr(&stderr);
     }
 
     Ok(output.status.success())
