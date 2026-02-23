@@ -190,6 +190,7 @@ status: in_progress
 - [x] PR330 slice: extend structured expression lowering by converting simple `is`/`is not` comparisons (non-option-none path) into normalized IR `RustExpr::BinOp` (`==`/`!=`) in `try_lower_leaf_expr`, with regression tests
 - [x] PR331 slice: extend structured expression lowering by converting `is None` / `is not None` with statically-`None` left operands into IR boolean literals in `try_lower_leaf_expr`, with regression tests
 - [x] PR332 slice: extend structured expression lowering by converting leaf-stepped range literals (`start..end` with `step`) into IR `RustExpr::MethodCall` on `RustExpr::Range` (`.step_by(step as usize)`), and parenthesize range receivers in renderer with regression tests
+- [x] PR333 slice: extend structured range-literal lowering to accept int-name operands for `start`/`end`/`step` (while preserving fallback for non-int/non-leaf operands) in `try_lower_leaf_expr`, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
