@@ -197,6 +197,7 @@ status: in_progress
 - [x] PR337 slice: extend structured expression lowering to convert simple mixed int/float arithmetic binops (`+`, `-`, `*`, `%`, plus `/`) by casting int-like operands to `f64` in IR when result is float, while preserving unsupported/non-float fallback behavior, with regression tests
 - [x] PR338 slice: extend structured expression lowering to convert simple int true-division binops (`int / int` with float result) by casting both int-like operands to `f64` in IR, matching existing true-division semantics, with regression tests
 - [x] PR339 slice: extend structured expression lowering to convert simple float floor-division binops (`float // float`) into normalized IR `RustExpr::BinOp` (`/`) while preserving non-float-result fallback behavior, with regression tests
+- [x] PR340 slice: extend structured expression lowering to convert simple mixed int/float floor-division binops (`//` with float result) into normalized IR `RustExpr::BinOp` (`/`) with int-like operands cast to `f64`, while preserving non-float-result fallback behavior, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
