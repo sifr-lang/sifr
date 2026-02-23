@@ -375,14 +375,17 @@ fn try_lower_option_none_compare_expr(left: &HirExpr, op: &str, right: &HirExpr)
 }
 
 fn try_lower_none_identity_compare_expr(left: &HirExpr, op: &str, right: &HirExpr) -> Option<RustExpr> {
-    if !matches!(right, HirExpr::NoneLiteral) {
-        return None;
-    }
     if !matches!(op, "is" | "is not") {
         return None;
     }
-    if !(matches!(left, HirExpr::NoneLiteral) || matches!(resolve_alias_type(left.ty()), Type::None))
-    {
+    let other = if matches!(right, HirExpr::NoneLiteral) {
+        left
+    } else if matches!(left, HirExpr::NoneLiteral) {
+        right
+    } else {
+        return None;
+    };
+    if !(matches!(other, HirExpr::NoneLiteral) || matches!(resolve_alias_type(other.ty()), Type::None)) {
         return None;
     }
     Some(RustExpr::Literal(RustLiteral::Bool(op == "is")))
@@ -1605,6 +1608,78 @@ mod tests {
         let lowered_is = try_lower_leaf_expr(&is_cmp).expect("alias-none identity is lowered");
         let lowered_is_not =
             try_lower_leaf_expr(&is_not_cmp).expect("alias-none identity is-not lowered");
+
+        assert!(matches!(
+            lowered_is,
+            RustExpr::Literal(RustLiteral::Bool(true))
+        ));
+        assert!(matches!(
+            lowered_is_not,
+            RustExpr::Literal(RustLiteral::Bool(false))
+        ));
+    }
+
+    #[test]
+    fn lowers_none_identity_compare_with_none_typed_right() {
+        let is_cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::NoneLiteral),
+            ops: vec!["is".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "n".to_string(),
+                ty: Type::None,
+            }],
+            ty: Type::Bool,
+        };
+        let is_not_cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::NoneLiteral),
+            ops: vec!["is not".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "n".to_string(),
+                ty: Type::None,
+            }],
+            ty: Type::Bool,
+        };
+
+        let lowered_is = try_lower_leaf_expr(&is_cmp).expect("none identity reversed is lowered");
+        let lowered_is_not =
+            try_lower_leaf_expr(&is_not_cmp).expect("none identity reversed is-not lowered");
+
+        assert!(matches!(
+            lowered_is,
+            RustExpr::Literal(RustLiteral::Bool(true))
+        ));
+        assert!(matches!(
+            lowered_is_not,
+            RustExpr::Literal(RustLiteral::Bool(false))
+        ));
+    }
+
+    #[test]
+    fn lowers_none_identity_compare_with_alias_none_typed_right() {
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let is_cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::NoneLiteral),
+            ops: vec!["is".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "n".to_string(),
+                ty: alias_none.clone(),
+            }],
+            ty: Type::Bool,
+        };
+        let is_not_cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::NoneLiteral),
+            ops: vec!["is not".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "n".to_string(),
+                ty: alias_none,
+            }],
+            ty: Type::Bool,
+        };
+
+        let lowered_is =
+            try_lower_leaf_expr(&is_cmp).expect("alias-none identity reversed is lowered");
+        let lowered_is_not =
+            try_lower_leaf_expr(&is_not_cmp).expect("alias-none identity reversed is-not lowered");
 
         assert!(matches!(
             lowered_is,

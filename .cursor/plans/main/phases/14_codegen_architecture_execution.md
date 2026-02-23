@@ -225,6 +225,7 @@ status: in_progress
 - [x] PR365 slice: extend none-identity compare lowering to treat alias-wrapped `None` left operands as statically-`None` (`is` -> `true`, `is not` -> `false`), with regression tests
 - [x] PR366 slice: tighten option-return `None` lowering to keep non-leaf `None`/alias-`None` expressions on fallback paths (preserving side effects), while still lowering `NoneLiteral` and `None`-typed names to `return None;`, with regression tests
 - [x] PR367 slice: extend option-none compare lowering to support reversed operand order (`None is x` / `None is not x`) for option-typed names (including alias-wrapped options) via IR method-call path, with regression tests
+- [x] PR368 slice: extend none-identity compare lowering to support reversed operand order (`None is x` / `None is not x`) for statically-`None` typed operands (including alias-wrapped `None`), with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
