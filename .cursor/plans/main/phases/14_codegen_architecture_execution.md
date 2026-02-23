@@ -221,6 +221,7 @@ status: in_progress
 - [x] PR361 slice: extend simple module `None`-constant item lowering to treat alias-wrapped `None` types as `None` constants (and avoid helper-const lowering), with regression tests
 - [x] PR362 slice: extend simple non-option union return lowering to support alias-wrapped union return contexts via IR path, with regression tests
 - [x] PR363 slice: extend simple `let` lowering to treat alias-wrapped `None` types as `None` for unit lowering and to avoid mis-lowering option `let` alias-`None` names to `Some(...)`, with regression tests
+- [x] PR364 slice: extend option-return lowering to treat `None`-typed names (including alias-wrapped `None`) as `return None;` instead of `Some(...)`, with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering

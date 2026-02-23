@@ -449,13 +449,15 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
     }
 
     if option_return {
-        if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
+        if is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
             return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(value)?))]);
         }
-        let lowered = try_lower_leaf_or_name_expr(value)?;
-        if matches!(value, HirExpr::NoneLiteral) {
-            return Some(vec![RustStmt::Return(Some(lowered))]);
+        if is_none_type(value.ty()) {
+            return Some(vec![RustStmt::Return(Some(RustExpr::Literal(
+                RustLiteral::None,
+            )))]);
         }
+        let lowered = try_lower_leaf_or_name_expr(value)?;
         return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
             args: vec![lowered],
@@ -1728,6 +1730,63 @@ mod tests {
             },
         )
         .expect("return None lowered for option context");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None)))
+        ));
+    }
+
+    #[test]
+    fn lowers_return_none_name_with_option_return_context() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "none_value".to_string(),
+                ty: Type::None,
+            }),
+        };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("return none-typed name lowered for option context");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::Literal(RustLiteral::None)))
+        ));
+    }
+
+    #[test]
+    fn lowers_return_alias_none_name_with_option_return_context() {
+        let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "none_value".to_string(),
+                ty: alias_none,
+            }),
+        };
+        let option_ret = Type::Union(vec![Type::Int, Type::None]);
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+            },
+        )
+        .expect("return alias-none name lowered for option context");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
