@@ -231,6 +231,7 @@ status: in_progress
 - [x] PR371 slice: extend simple `let` dual-path direct-type lowering to support `None`-typed name RHS operands (including alias-wrapped `None`) via structured IR path, with regression tests
 - [x] PR372 slice: extend option-typed simple `let` dual-path to lower `None`-typed name RHS operands (including alias-wrapped `None`) to structured `None`, while preserving fallback for non-leaf `None`-typed RHS expressions
 - [x] PR373 slice: add `RustStmt::LetPattern` IR support and lower simple `TupleUnpack` statements (`let (a, b) = ...`) through `lower_stmt` for leaf/name tuple sources, while preserving fallback for non-leaf unpack sources
+- [x] PR374 slice: extend `lower_stmt` dual-path with structured `SubscriptAssign` lowering for simple list/dict targets (including alias-wrapped container types) using IR block/method-call forms, while preserving fallback for non-leaf index/value operands
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
