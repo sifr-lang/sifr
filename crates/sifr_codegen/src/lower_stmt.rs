@@ -157,57 +157,15 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::While {
             condition,
             body,
-            else_body: None,
-        } => Some(vec![RustStmt::While {
-            cond: try_lower_simple_condition_test_expr(condition)?,
-            // Entering a nested while without else resets loop-else break marker context.
-            body: try_lower_simple_stmt_block(
-                body,
-                false,
-                bindings.mutated_vars,
-                bindings.borrowed_params,
-                ctx,
-            )?,
-        }]),
-        HirStmt::While {
+            else_body,
+        } => try_lower_simple_while_stmt(
             condition,
             body,
-            else_body: Some(else_body),
-        } => Some(vec![
-            RustStmt::Let {
-                mutable: true,
-                name: "_broke".to_string(),
-                ty: None,
-                value: RustExpr::Literal(RustLiteral::Bool(false)),
-            },
-            RustStmt::While {
-                cond: try_lower_simple_condition_test_expr(condition)?,
-                // Breaks in the loop body should mark this loop's `_broke`.
-                body: try_lower_simple_stmt_block(
-                    body,
-                    true,
-                    bindings.mutated_vars,
-                    bindings.borrowed_params,
-                    ctx,
-                )?,
-            },
-            RustStmt::If {
-                cond: RustExpr::UnaryOp {
-                    op: "!".to_string(),
-                    operand: Box::new(RustExpr::Ident("_broke".to_string())),
-                },
-                // Else body executes outside this loop scope. Preserve enclosing
-                // loop-else context for any break/continue lowering there.
-                then_body: try_lower_simple_stmt_block(
-                    else_body,
-                    in_loop_with_else,
-                    bindings.mutated_vars,
-                    bindings.borrowed_params,
-                    ctx,
-                )?,
-                else_body: None,
-            },
-        ]),
+            else_body.as_deref(),
+            in_loop_with_else,
+            bindings,
+            ctx,
+        ),
         HirStmt::For {
             target,
             iter,
@@ -308,6 +266,65 @@ fn try_lower_simple_tuple_unpack_stmt(targets: &[(String, Type)], value: &HirExp
     Some(vec![RustStmt::LetPattern {
         pattern: tuple_unpack_pattern(targets),
         value: try_lower_leaf_or_name_expr(value)?,
+    }])
+}
+
+fn try_lower_simple_while_stmt(
+    condition: &HirExpr,
+    body: &[HirStmt],
+    else_body: Option<&[HirStmt]>,
+    in_loop_with_else: bool,
+    bindings: SimpleStmtBindings<'_>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    if let Some(else_body) = else_body {
+        return Some(vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "_broke".to_string(),
+                ty: None,
+                value: RustExpr::Literal(RustLiteral::Bool(false)),
+            },
+            RustStmt::While {
+                cond: try_lower_simple_condition_test_expr(condition)?,
+                // Breaks in the loop body should mark this loop's `_broke`.
+                body: try_lower_simple_stmt_block(
+                    body,
+                    true,
+                    bindings.mutated_vars,
+                    bindings.borrowed_params,
+                    ctx,
+                )?,
+            },
+            RustStmt::If {
+                cond: RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::Ident("_broke".to_string())),
+                },
+                // Else body executes outside this loop scope. Preserve enclosing
+                // loop-else context for any break/continue lowering there.
+                then_body: try_lower_simple_stmt_block(
+                    else_body,
+                    in_loop_with_else,
+                    bindings.mutated_vars,
+                    bindings.borrowed_params,
+                    ctx,
+                )?,
+                else_body: None,
+            },
+        ]);
+    }
+
+    Some(vec![RustStmt::While {
+        cond: try_lower_simple_condition_test_expr(condition)?,
+        // Entering a nested while without else resets loop-else break marker context.
+        body: try_lower_simple_stmt_block(
+            body,
+            false,
+            bindings.mutated_vars,
+            bindings.borrowed_params,
+            ctx,
+        )?,
     }])
 }
 
