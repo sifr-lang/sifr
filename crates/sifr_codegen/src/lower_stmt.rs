@@ -103,7 +103,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::Return { value: Some(value) } => try_lower_simple_return_stmt(value, ctx),
         HirStmt::Assert { test, msg } => {
             let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
-                Some(if crate::helpers::is_option_type(msg_expr.ty()) {
+                Some(if is_option_like_type(msg_expr.ty()) {
                     RustExpr::MethodCall {
                         receiver: Box::new(try_lower_name_ident_expr(msg_expr)?),
                         method: "map_or".to_string(),
@@ -2088,6 +2088,36 @@ mod tests {
             &HashSet::new(),
         )
         .expect("assert with option msg lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Assert {
+                msg: Some(RustExpr::MethodCall { ref method, .. }),
+                ..
+            } if method == "map_or"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_assert_with_alias_option_name_msg() {
+        let stmt = HirStmt::Assert {
+            test: HirExpr::BoolLiteral(true),
+            msg: Some(HirExpr::Name {
+                name: "msg".to_string(),
+                ty: Type::Alias(
+                    "MaybeStr".to_string(),
+                    Box::new(Type::Union(vec![Type::Str, Type::None])),
+                ),
+            }),
+        };
+
+        let lowered = try_lower_simple_stmt(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("assert with alias option msg lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
