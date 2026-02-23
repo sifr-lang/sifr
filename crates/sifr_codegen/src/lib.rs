@@ -965,6 +965,7 @@ impl RustEmitter {
                     return_type: self.current_return_type.as_ref(),
                     in_display_impl: self.in_display_impl,
                     in_class_scope: self.current_class_name.is_some(),
+                    in_generator_closure: self.in_generator_closure,
                 },
             ) {
                 self.lowering_stats.stmt_structured += 1;

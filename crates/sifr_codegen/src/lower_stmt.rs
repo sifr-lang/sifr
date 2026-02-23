@@ -1,9 +1,13 @@
 //! Statement lowering scaffolds for the IR migration.
 
-use crate::{try_lower_leaf_expr, CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
-use sifr_hir::{HirExpr, HirStmt};
+use crate::{
+    try_lower_leaf_expr, CodegenError, RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt,
+    RustType,
+};
+use sifr_hir::{HirExpr, HirPattern, HirStmt};
 use sifr_type_system::Type;
 use std::collections::HashSet;
+use std::fmt::Write as _;
 
 pub fn lower_stmt_raw(raw: &str) -> Result<Vec<RustStmt>, CodegenError> {
     Ok(vec![RustStmt::RawCode(raw.to_string())])
@@ -27,11 +31,15 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::Continue
         | HirStmt::Break
         | HirStmt::TupleUnpack { .. }
+        | HirStmt::StarUnpack { .. }
         | HirStmt::SubscriptAssign { .. }
         | HirStmt::NestedSubscriptAssign { .. }
         | HirStmt::SubscriptAugAssign { .. }
         | HirStmt::AttributeSubscriptAssign { .. }
-        | HirStmt::Delete { .. } => true,
+        | HirStmt::Delete { .. }
+        | HirStmt::Yield { .. }
+        | HirStmt::With { .. }
+        | HirStmt::Match { .. } => true,
         _ => false,
     }
 }
@@ -47,6 +55,7 @@ pub struct SimpleStmtLoweringCtx<'a> {
     pub return_type: Option<&'a Type>,
     pub in_display_impl: bool,
     pub in_class_scope: bool,
+    pub in_generator_closure: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -216,6 +225,12 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::TupleUnpack { targets, value } => {
             try_lower_simple_tuple_unpack_stmt(targets, value)
         }
+        HirStmt::StarUnpack {
+            before,
+            star,
+            after,
+            value,
+        } => try_lower_simple_star_unpack_stmt(before, star, after, value),
         HirStmt::AttributeSubscriptAssign {
             object,
             field,
@@ -244,6 +259,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             object_ty,
         } => try_lower_simple_subscript_augassign_stmt(object, index, op, value, object_ty),
         HirStmt::Delete { object, index } => try_lower_simple_delete_stmt(object, index),
+        HirStmt::Yield { value } => try_lower_simple_yield_stmt(value, ctx),
+        HirStmt::With { items, body } => {
+            try_lower_simple_with_stmt(items, body, in_loop_with_else, bindings, ctx)
+        }
+        HirStmt::Match {
+            subject, arms, ..
+        } => try_lower_simple_match_stmt(subject, arms, in_loop_with_else, bindings, ctx),
+        HirStmt::TryExcept { .. } | HirStmt::NestedFunction { .. } => None,
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -302,6 +325,50 @@ fn try_lower_simple_tuple_unpack_stmt(targets: &[(String, Type)], value: &HirExp
     }])
 }
 
+fn try_lower_simple_star_unpack_stmt(
+    before: &[(String, Type)],
+    star: &(String, Type),
+    after: &[(String, Type)],
+    value: &HirExpr,
+) -> Option<Vec<RustStmt>> {
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let mut raw = String::new();
+    writeln!(
+        &mut raw,
+        "let _star_tmp = {}.clone();",
+        crate::render_expr(&lowered_value)
+    )
+    .ok()?;
+
+    for (idx, (name, _)) in before.iter().enumerate() {
+        writeln!(&mut raw, "let {name} = _star_tmp[{idx}].clone();").ok()?;
+    }
+
+    let (star_name, _) = star;
+    if after.is_empty() {
+        writeln!(&mut raw, "let {star_name} = _star_tmp[{}..].to_vec();", before.len()).ok()?;
+    } else {
+        writeln!(
+            &mut raw,
+            "let {star_name} = _star_tmp[{}.._star_tmp.len() - {}].to_vec();",
+            before.len(),
+            after.len()
+        )
+        .ok()?;
+    }
+
+    for (idx, (name, _)) in after.iter().enumerate() {
+        writeln!(
+            &mut raw,
+            "let {name} = _star_tmp[_star_tmp.len() - {}].clone();",
+            after.len() - idx
+        )
+        .ok()?;
+    }
+
+    Some(vec![RustStmt::RawCode(raw)])
+}
+
 fn try_lower_loop_else_stmts(
     loop_stmt: RustStmt,
     else_body: &[HirStmt],
@@ -334,6 +401,146 @@ fn try_lower_loop_else_stmts(
             else_body: None,
         },
     ])
+}
+
+fn try_lower_simple_with_stmt(
+    items: &[(String, HirExpr, bool)],
+    body: &[HirStmt],
+    in_loop_with_else: bool,
+    bindings: SimpleStmtBindings<'_>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    if items.iter().any(|(_, _, has_cm)| *has_cm) {
+        return None;
+    }
+
+    let mut block = Vec::new();
+    for (name, value, _) in items {
+        block.push(RustStmt::Let {
+            mutable: false,
+            name: name.clone(),
+            ty: None,
+            value: try_lower_leaf_or_name_expr(value)?,
+        });
+    }
+
+    block.extend(try_lower_simple_stmt_block(
+        body,
+        in_loop_with_else,
+        bindings.mutated_vars,
+        bindings.borrowed_params,
+        ctx,
+    )?);
+
+    Some(vec![RustStmt::Block(block)])
+}
+
+fn try_lower_simple_yield_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
+    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    if ctx.in_generator_closure {
+        return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered_value],
+        }))]);
+    }
+
+    Some(vec![RustStmt::Expr(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident("_yields".to_string())),
+        method: "push".to_string(),
+        args: vec![lowered_value],
+    })])
+}
+
+fn try_lower_simple_match_stmt(
+    subject: &HirExpr,
+    arms: &[sifr_hir::HirMatchArm],
+    in_loop_with_else: bool,
+    bindings: SimpleStmtBindings<'_>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    let lowered_subject = try_lower_leaf_or_name_expr(subject)?;
+    let lowered_arms = arms
+        .iter()
+        .map(|arm| {
+            let (pattern, arm_bindings) = try_lower_match_pattern(&arm.pattern)?;
+            let guard = if let Some(guard_expr) = arm.guard.as_ref() {
+                Some(try_lower_leaf_or_name_expr(guard_expr)?)
+            } else {
+                None
+            };
+            let body = try_lower_simple_stmt_block(
+                &arm.body,
+                in_loop_with_else,
+                bindings.mutated_vars,
+                bindings.borrowed_params,
+                ctx,
+            )?;
+            Some(RustMatchArm {
+                pattern,
+                bindings: arm_bindings,
+                guard,
+                body,
+            })
+        })
+        .collect::<Option<Vec<_>>>()?;
+
+    Some(vec![RustStmt::Match {
+        expr: lowered_subject,
+        arms: lowered_arms,
+    }])
+}
+
+fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, Vec<String>)> {
+    match pattern {
+        HirPattern::Wildcard => Some(("_".to_string(), vec![])),
+        HirPattern::Capture { name, .. } => Some((name.clone(), vec![name.clone()])),
+        HirPattern::Literal { value } => Some((try_lower_match_literal_pattern(value)?, vec![])),
+        HirPattern::None => Some(("None".to_string(), vec![])),
+        HirPattern::Value { path } => Some((path.join("::"), vec![])),
+        HirPattern::Or { patterns } => {
+            let mut rendered = Vec::new();
+            for p in patterns {
+                let (pat, binds) = try_lower_match_pattern(p)?;
+                // Keep conservative support only for OR-patterns without bindings.
+                if !binds.is_empty() {
+                    return None;
+                }
+                rendered.push(pat);
+            }
+            Some((rendered.join(" | "), vec![]))
+        }
+        HirPattern::Tuple { elements } => {
+            let mut rendered = Vec::new();
+            let mut bindings = Vec::new();
+            for element in elements {
+                let (pat, binds) = try_lower_match_pattern(element)?;
+                rendered.push(pat);
+                bindings.extend(binds);
+            }
+            Some((format!("({})", rendered.join(", ")), bindings))
+        }
+        HirPattern::Class { .. } => None,
+    }
+}
+
+fn try_lower_match_literal_pattern(expr: &HirExpr) -> Option<String> {
+    match expr {
+        HirExpr::IntLiteral(v) => Some(v.to_string()),
+        HirExpr::FloatLiteral(v) => {
+            let mut s = v.to_string();
+            if !s.contains('.') {
+                s.push_str(".0");
+            }
+            Some(s)
+        }
+        HirExpr::StringLiteral(s) => Some(format!("{s:?}")),
+        HirExpr::BoolLiteral(v) => Some(v.to_string()),
+        HirExpr::NoneLiteral => Some("None".to_string()),
+        HirExpr::EnumVariant {
+            enum_name, variant, ..
+        } => Some(format!("{enum_name}::{variant}")),
+        _ => None,
+    }
 }
 
 fn try_lower_simple_while_stmt(
@@ -3080,6 +3287,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("bare return lowered for option context");
@@ -3106,6 +3314,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("bare return lowered for alias option context");
@@ -3129,6 +3338,7 @@ mod tests {
                     return_type: None,
                     in_display_impl: true,
                     in_class_scope: false,
+                in_generator_closure: false,
                 },
             )
             .is_none()
@@ -3188,6 +3398,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("option return leaf lowered");
@@ -3218,6 +3429,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("option return name lowered");
@@ -3247,6 +3459,7 @@ mod tests {
                 return_type: Some(&Type::Int),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("plain return option name lowered");
@@ -3281,6 +3494,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("option passthrough name return lowered");
@@ -3312,6 +3526,7 @@ mod tests {
                 return_type: Some(&alias_option),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("alias option passthrough name return lowered");
@@ -3342,6 +3557,7 @@ mod tests {
                     return_type: Some(&option_ret),
                     in_display_impl: false,
                     in_class_scope: false,
+                in_generator_closure: false,
                 },
             )
             .is_none()
@@ -3363,6 +3579,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("return None lowered for option context");
@@ -3391,6 +3608,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("return none-typed name lowered for option context");
@@ -3420,6 +3638,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("return alias-none name lowered for option context");
@@ -3450,6 +3669,7 @@ mod tests {
                     return_type: Some(&option_ret),
                     in_display_impl: false,
                     in_class_scope: false,
+                in_generator_closure: false,
                 },
             )
             .is_none()
@@ -3477,6 +3697,7 @@ mod tests {
                     return_type: Some(&option_ret),
                     in_display_impl: false,
                     in_class_scope: false,
+                in_generator_closure: false,
                 },
             )
             .is_none()
@@ -3498,6 +3719,7 @@ mod tests {
                 return_type: Some(&union_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("non-option union leaf return lowered");
@@ -3528,6 +3750,7 @@ mod tests {
                 return_type: Some(&union_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("non-option union name return lowered");
@@ -3559,6 +3782,7 @@ mod tests {
                 return_type: Some(&union_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("alias non-option union leaf return lowered");
@@ -3595,6 +3819,7 @@ mod tests {
                 return_type: Some(&union_ret),
                 in_display_impl: false,
                 in_class_scope: false,
+            in_generator_closure: false,
             },
         )
         .expect("alias non-option union name return lowered");
@@ -3629,6 +3854,7 @@ mod tests {
                     return_type: Some(&union_ret),
                     in_display_impl: false,
                     in_class_scope: false,
+                in_generator_closure: false,
                 },
             )
             .is_none()
@@ -3650,6 +3876,7 @@ mod tests {
                     return_type: Some(&Type::Int),
                     in_display_impl: false,
                     in_class_scope: true,
+                in_generator_closure: false,
                 },
             )
             .is_none()
@@ -3676,6 +3903,7 @@ mod tests {
                     return_type: Some(&option_ret),
                     in_display_impl: false,
                     in_class_scope: false,
+                in_generator_closure: false,
                 },
             )
             .is_none()
@@ -5435,5 +5663,118 @@ mod tests {
             }
             _ => panic!("expected if stmt"),
         }
+    }
+
+    #[test]
+    fn lowers_simple_yield_inside_generator_closure() {
+        let stmt = HirStmt::Yield {
+            value: HirExpr::IntLiteral(7),
+        };
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: None,
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: true,
+            },
+        )
+        .expect("yield lowered");
+
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::FnCall { .. }))
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_yield_outside_generator_closure() {
+        let stmt = HirStmt::Yield {
+            value: HirExpr::IntLiteral(7),
+        };
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx::default(),
+        )
+        .expect("yield lowered");
+
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Expr(RustExpr::MethodCall { .. })
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_star_unpack_from_name() {
+        let stmt = HirStmt::StarUnpack {
+            before: vec![("head".to_string(), Type::Int)],
+            star: ("mid".to_string(), Type::List(Box::new(Type::Int))),
+            after: vec![("tail".to_string(), Type::Int)],
+            value: HirExpr::Name {
+                name: "xs".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            },
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("star unpack lowered");
+        assert!(matches!(lowered[0], RustStmt::RawCode(_)));
+    }
+
+    #[test]
+    fn lowers_simple_with_without_context_manager_protocol() {
+        let stmt = HirStmt::With {
+            items: vec![(
+                "x".to_string(),
+                HirExpr::IntLiteral(1),
+                false,
+            )],
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Name {
+                    name: "x".to_string(),
+                    ty: Type::Int,
+                },
+            }],
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("with lowered");
+        assert!(matches!(lowered[0], RustStmt::Block(_)));
+    }
+
+    #[test]
+    fn lowers_simple_match_with_literal_and_wildcard_patterns() {
+        let stmt = HirStmt::Match {
+            subject: HirExpr::Name {
+                name: "n".to_string(),
+                ty: Type::Int,
+            },
+            subject_ty: Type::Int,
+            arms: vec![
+                sifr_hir::HirMatchArm {
+                    pattern: HirPattern::Literal {
+                        value: HirExpr::IntLiteral(1),
+                    },
+                    guard: None,
+                    body: vec![HirStmt::Expr {
+                        expr: HirExpr::IntLiteral(10),
+                    }],
+                },
+                sifr_hir::HirMatchArm {
+                    pattern: HirPattern::Wildcard,
+                    guard: None,
+                    body: vec![HirStmt::Expr {
+                        expr: HirExpr::IntLiteral(0),
+                    }],
+                },
+            ],
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("match lowered");
+        assert!(matches!(lowered[0], RustStmt::Match { .. }));
     }
 }

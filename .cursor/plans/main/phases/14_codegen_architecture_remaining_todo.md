@@ -38,36 +38,36 @@ Execution loop per part (mandatory):
 
 ## Part A: Re-baseline and Planning Sync
 
-status: in_progress
+status: done
 
 Root cause: remaining work tracking drifted from real code state.
 
-- [ ] Replace stale "all done" narrative with code-verified backlog (this file)
-- [ ] Add explicit variant-gap inventory for stmt/expr lowering
-- [ ] Add explicit clippy suppression inventory for `sifr_codegen`
-- [ ] Define measurable completion gates for each remaining part
-- [ ] Validation:
-  - [ ] `cargo test -p sifr_codegen`
-  - [ ] `cargo clippy -p sifr_codegen -- -D warnings`
-- [ ] Demo check:
-  - [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
-- [ ] PR loop complete (open -> review -> merge)
+- [x] Replace stale "all done" narrative with code-verified backlog (this file)
+- [x] Add explicit variant-gap inventory for stmt/expr lowering
+- [x] Add explicit clippy suppression inventory for `sifr_codegen`
+- [x] Define measurable completion gates for each remaining part
+- [x] Validation:
+  - [x] `cargo test -p sifr_codegen`
+  - [x] `cargo clippy -p sifr_codegen -- -D warnings`
+- [x] Demo check:
+  - [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+- [x] PR loop complete (open -> review -> merge)
 
 ---
 
 ## Part B: Statement Lowering Coverage Closeout (`lower_stmt`)
 
-status: pending
+status: in_progress
 
 Root cause: `emit_stmt` in `lib.rs` still owns unsupported statement semantics.
 
 - [ ] Add explicit lowering paths for missing stmt variants:
-  - [ ] `Match`
+  - [x] `Match` (simple/lowerable pattern+guard+body forms)
   - [ ] `NestedFunction`
-  - [ ] `StarUnpack`
+  - [x] `StarUnpack` (lowered as constrained IR `RawCode` bridge)
   - [ ] `TryExcept`
-  - [ ] `With`
-  - [ ] `Yield`
+  - [x] `With` (non-context-manager protocol path)
+  - [x] `Yield`
 - [ ] Prefer structured IR for safe subshapes; use constrained fallback only where unavoidable
 - [ ] Add regression tests for every newly-lowered stmt variant path
 - [ ] Update lowering coverage metrics and gates to reflect new coverage
