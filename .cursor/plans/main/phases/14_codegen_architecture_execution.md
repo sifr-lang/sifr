@@ -200,6 +200,7 @@ status: in_progress
 - [x] PR340 slice: extend structured expression lowering to convert simple mixed int/float floor-division binops (`//` with float result) into normalized IR `RustExpr::BinOp` (`/`) with int-like operands cast to `f64`, while preserving non-float-result fallback behavior, with regression tests
 - [x] PR341 slice: extend structured compare lowering to treat scalar literal/base types as equivalent (`Bool`/`LiteralBool`, `Int`/`LiteralInt`) for safe simple comparisons in `try_lower_leaf_expr`, with regression tests
 - [x] PR342 slice: extend structured compare lowering to treat string scalar types (`Str`/`LiteralStr`) as safe simple-comparison peers in `try_lower_leaf_expr`, with regression tests
+- [x] PR343 slice: extend structured compare lowering to support enum-typed safe comparisons for `==`/`!=` (while preserving fallback for enum ordering operators), with regression tests
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
