@@ -323,8 +323,8 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
         if is_mixed_simple_float_floor_division_binop(op, left_ty, right_ty, result_ty) {
             return true;
         }
-        return left_ty == right_ty
-            && left_ty == result_ty
+        return is_same_simple_numeric_kind(left_ty, right_ty)
+            && is_same_simple_numeric_kind(left_ty, result_ty)
             && (is_int_like_simple(left_ty) || is_float_like_simple(left_ty));
     }
     if op == "/" {
@@ -333,8 +333,8 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
         {
             return true;
         }
-        return left_ty == right_ty
-            && left_ty == result_ty
+        return is_same_simple_numeric_kind(left_ty, right_ty)
+            && is_same_simple_numeric_kind(left_ty, result_ty)
             && is_float_like_simple(left_ty);
     }
     if matches!(op, "+" | "-" | "*" | "%")
@@ -345,7 +345,16 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
     if !matches!(op, "+" | "-" | "*" | "%") {
         return false;
     }
-    left_ty == right_ty && left_ty == result_ty && is_numeric_simple(left_ty)
+    is_same_simple_numeric_kind(left_ty, right_ty)
+        && is_same_simple_numeric_kind(left_ty, result_ty)
+        && is_numeric_simple(left_ty)
+}
+
+fn is_same_simple_numeric_kind(left: &Type, right: &Type) -> bool {
+    let Some(left_kind) = normalize_simple_numeric_scalar_type(left) else {
+        return false;
+    };
+    normalize_simple_numeric_scalar_type(right).is_some_and(|right_kind| right_kind == left_kind)
 }
 
 fn try_lower_option_none_compare_expr(left: &HirExpr, op: &str, right: &HirExpr) -> Option<RustExpr> {
@@ -698,6 +707,32 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_alias_base_int_binop_with_name_operands() {
+        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::Name {
+                name: "lhs".to_string(),
+                ty: alias_int,
+            }),
+            op: "+".to_string(),
+            right: Box::new(HirExpr::Name {
+                name: "rhs".to_string(),
+                ty: Type::Int,
+            }),
+            ty: Type::Int,
+        };
+
+        let lowered = try_lower_leaf_expr(&bin).expect("alias/base int-name binop lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, left, right }
+                if op == "+"
+                    && matches!(left.as_ref(), RustExpr::Ident(name) if name == "lhs")
+                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+        ));
+    }
+
+    #[test]
     fn lowers_alias_wrapped_mixed_int_float_division_with_name_operands() {
         let alias_int = Type::Alias("Count".to_string(), Box::new(Type::Int));
         let alias_float = Type::Alias("Ratio".to_string(), Box::new(Type::Float));
@@ -726,6 +761,33 @@ mod tests {
                             ty: RustType::F64
                         } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "lhs")
                     )
+                    && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_alias_base_float_division_with_name_operands() {
+        let alias_float = Type::Alias("Ratio".to_string(), Box::new(Type::Float));
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::Name {
+                name: "lhs".to_string(),
+                ty: alias_float,
+            }),
+            op: "/".to_string(),
+            right: Box::new(HirExpr::Name {
+                name: "rhs".to_string(),
+                ty: Type::Float,
+            }),
+            ty: Type::Float,
+        };
+
+        let lowered =
+            try_lower_leaf_expr(&bin).expect("alias/base float-name division lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, left, right }
+                if op == "/"
+                    && matches!(left.as_ref(), RustExpr::Ident(name) if name == "lhs")
                     && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
         ));
     }
