@@ -81,7 +81,16 @@ type UnionVariantTypes = Vec<(String, Type)>;
 type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
 type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
-pub use entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CodegenLoweringMode {
+    StructuredPreferred,
+    LegacyOnly,
+}
+
+pub use entrypoints::{
+    generate_rust, generate_rust_test, generate_rust_test_with_mode, generate_rust_with_metadata,
+    generate_rust_with_metadata_mode,
+};
 
 /// Built-in error class names that the compiler provides.
 const BUILTIN_ERROR_CLASSES: &[&str] = &[
@@ -156,7 +165,15 @@ pub struct StdlibCode {
 
 /// Generate Rust source code from a HIR module with compiled stdlib code.
 pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
-    let mut emitter = RustEmitter::new();
+    generate_rust_with_stdlib_mode(module, stdlib_code, CodegenLoweringMode::StructuredPreferred)
+}
+
+pub fn generate_rust_with_stdlib_mode(
+    module: &HirModule,
+    stdlib_code: &StdlibCode,
+    lowering_mode: CodegenLoweringMode,
+) -> CodegenResult {
+    let mut emitter = RustEmitter::new_with_mode(lowering_mode);
     emitter
         .stdlib_intrinsic_names
         .clone_from(&stdlib_code.intrinsic_names);
@@ -845,10 +862,15 @@ struct RustEmitter {
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
     callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
+    lowering_mode: CodegenLoweringMode,
 }
 
 impl RustEmitter {
     fn new() -> Self {
+        Self::new_with_mode(CodegenLoweringMode::StructuredPreferred)
+    }
+
+    fn new_with_mode(lowering_mode: CodegenLoweringMode) -> Self {
         Self {
             output: String::new(),
             indent: 0,
@@ -888,7 +910,15 @@ impl RustEmitter {
             try_enum_counter: 0,
             try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
+            lowering_mode,
         }
+    }
+
+    fn structured_lowering_enabled(&self) -> bool {
+        matches!(
+            self.lowering_mode,
+            CodegenLoweringMode::StructuredPreferred
+        )
     }
 
     fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
@@ -904,19 +934,21 @@ impl RustEmitter {
     }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
-        if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
-            stmt,
-            self.current_loop_has_else(),
-            &self.mutated_vars,
-            &self.borrowed_params,
-            SimpleStmtLoweringCtx {
-                return_type: self.current_return_type.as_ref(),
-                in_display_impl: self.in_display_impl,
-                in_class_scope: self.current_class_name.is_some(),
-            },
-        ) {
-            self.emit_lowered_stmts(&lowered_stmts);
-            return;
+        if self.structured_lowering_enabled() {
+            if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
+                stmt,
+                self.current_loop_has_else(),
+                &self.mutated_vars,
+                &self.borrowed_params,
+                SimpleStmtLoweringCtx {
+                    return_type: self.current_return_type.as_ref(),
+                    in_display_impl: self.in_display_impl,
+                    in_class_scope: self.current_class_name.is_some(),
+                },
+            ) {
+                self.emit_lowered_stmts(&lowered_stmts);
+                return;
+            }
         }
 
         match stmt {
@@ -2453,9 +2485,11 @@ impl RustEmitter {
     }
 
     fn emit_expr(&mut self, expr: &HirExpr) {
-        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
-            self.write(&crate::render_expr(&lowered_expr));
-            return;
+        if self.structured_lowering_enabled() {
+            if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
+                self.write(&crate::render_expr(&lowered_expr));
+                return;
+            }
         }
 
         match expr {

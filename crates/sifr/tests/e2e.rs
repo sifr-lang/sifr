@@ -66,6 +66,21 @@ fn compile_source_with_metadata(source: &str) -> Result<(String, HashSet<String>
     }
 }
 
+/// Compile source and return generated Rust/stdlib metadata using an explicit codegen lowering mode.
+fn compile_source_with_metadata_mode(
+    source: &str,
+    lowering_mode: sifr_driver::CodegenLoweringMode,
+) -> Result<(String, HashSet<String>), Vec<String>> {
+    match sifr_driver::compile_with_metadata_mode(source, lowering_mode) {
+        sifr_driver::CompileResultFull::Success { rust_source, used_stdlib_modules, required_crates: _ } => {
+            Ok((rust_source, used_stdlib_modules))
+        }
+        sifr_driver::CompileResultFull::Errors { errors } => {
+            Err(errors.iter().map(|e| e.message.clone()).collect())
+        }
+    }
+}
+
 /// Generate Cargo.toml content with optional stdlib dependencies.
 fn generate_cargo_toml(stdlib_modules: &HashSet<String>) -> String {
     let mut cargo_toml = r#"[package]
@@ -313,6 +328,153 @@ fn test_e2e_pass() {
 
     assert!(test_count > 0, "No pass tests found");
     eprintln!("  {} pass tests completed", test_count);
+}
+
+#[test]
+fn test_codegen_differential_old_vs_new_corpus_parity() {
+    let pass_dir = Path::new("tests/e2e/pass");
+    let corpus = [
+        "if_else",
+        "narrowing_elif_equality",
+        "loop_else",
+        "subscript_aug_assign",
+        "subscript_nested_assign",
+        "for_tuple_unpack",
+        "del_statement",
+        "match_guard",
+    ];
+
+    let mut test_count = 0;
+    let mut failures: Vec<String> = Vec::new();
+
+    for case in &corpus {
+        let path = pass_dir.join(format!("{case}.sifr"));
+        let source = match fs::read_to_string(&path) {
+            Ok(source) => source,
+            Err(err) => {
+                failures.push(format!("FAIL [{}]: unable to read fixture {}: {}", case, path.display(), err));
+                continue;
+            }
+        };
+        let expected_stdout = extract_expect_stdout(&source);
+
+        let (new_rust, new_modules) = match compile_source_with_metadata_mode(
+            &source,
+            sifr_driver::CodegenLoweringMode::StructuredPreferred,
+        ) {
+            Ok(result) => result,
+            Err(errors) => {
+                failures.push(format!(
+                    "FAIL [{}][StructuredPreferred]: sifr compilation failed:\n  {}",
+                    case,
+                    errors.join("\n  ")
+                ));
+                continue;
+            }
+        };
+
+        let (legacy_rust, legacy_modules) = match compile_source_with_metadata_mode(
+            &source,
+            sifr_driver::CodegenLoweringMode::LegacyOnly,
+        ) {
+            Ok(result) => result,
+            Err(errors) => {
+                failures.push(format!(
+                    "FAIL [{}][LegacyOnly]: sifr compilation failed:\n  {}",
+                    case,
+                    errors.join("\n  ")
+                ));
+                continue;
+            }
+        };
+
+        if !new_rust.contains("fn main()") {
+            failures.push(format!(
+                "FAIL [{}][StructuredPreferred]: generated Rust has no main function",
+                case
+            ));
+            continue;
+        }
+        if !legacy_rust.contains("fn main()") {
+            failures.push(format!(
+                "FAIL [{}][LegacyOnly]: generated Rust has no main function",
+                case
+            ));
+            continue;
+        }
+
+        let new_stdout = match build_and_run_with_deps(
+            &new_rust,
+            &format!("{case}_structured"),
+            &new_modules,
+        ) {
+            Ok(stdout) => stdout,
+            Err(err) => {
+                failures.push(format!("FAIL [{}][StructuredPreferred]: {}", case, err));
+                continue;
+            }
+        };
+
+        let legacy_stdout = match build_and_run_with_deps(
+            &legacy_rust,
+            &format!("{case}_legacy"),
+            &legacy_modules,
+        ) {
+            Ok(stdout) => stdout,
+            Err(err) => {
+                failures.push(format!("FAIL [{}][LegacyOnly]: {}", case, err));
+                continue;
+            }
+        };
+
+        let new_trimmed = new_stdout.trim_end();
+        let legacy_trimmed = legacy_stdout.trim_end();
+
+        if let Some(expected) = &expected_stdout {
+            let expected_trimmed = expected.trim_end();
+            if new_trimmed != expected_trimmed {
+                failures.push(format!(
+                    "FAIL [{}][StructuredPreferred]: stdout mismatch\n  expected: {:?}\n  actual:   {:?}",
+                    case, expected_trimmed, new_trimmed
+                ));
+                continue;
+            }
+            if legacy_trimmed != expected_trimmed {
+                failures.push(format!(
+                    "FAIL [{}][LegacyOnly]: stdout mismatch\n  expected: {:?}\n  actual:   {:?}",
+                    case, expected_trimmed, legacy_trimmed
+                ));
+                continue;
+            }
+        }
+
+        if new_trimmed != legacy_trimmed {
+            failures.push(format!(
+                "FAIL [{}]: differential mismatch\n  structured: {:?}\n  legacy:     {:?}",
+                case, new_trimmed, legacy_trimmed
+            ));
+            continue;
+        }
+
+        test_count += 1;
+    }
+
+    if !failures.is_empty() {
+        panic!(
+            "\n{} differential parity test(s) failed:\n\n{}\n\n({} passed, {} failed)",
+            failures.len(),
+            failures.join("\n\n"),
+            test_count,
+            failures.len()
+        );
+    }
+
+    assert_eq!(
+        test_count,
+        corpus.len(),
+        "Not all differential corpus cases executed successfully"
+    );
+    eprintln!("  {} differential parity tests completed", test_count);
 }
 
 #[test]

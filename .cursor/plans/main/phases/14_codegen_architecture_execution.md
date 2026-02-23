@@ -60,7 +60,7 @@ status: done
 - [x] Move preamble emission to IR items (`error types`, `FileHandle`, logging, imports)
 - [x] Add `sifr_type_to_rust_type(&Type) -> RustType`
 - [x] Remove/reduce `is_builtin_error_referenced` string scanning
-- [ ] Add differential old-vs-new codegen harness for parity
+- [x] Add differential old-vs-new codegen harness for parity
 - [ ] Remove at least 5 clippy suppressions (including `format_push_string`)
 - [x] Demo: `demos/milestone_codegen_preamble_migration_demo.sifr`
 - [x] Open PR(s), review, merge
@@ -254,12 +254,13 @@ status: in_progress
 - [x] PR394 slice: refactor shared loop-else (`_broke`) scaffolding by extracting a dedicated helper reused by `For-else` and `While-else` lowering, preserving existing semantics and fallback behavior
 - [x] PR395 slice: add structured `Delete` statement lowering for simple list and dict (literal-key) targets so `emit_stmt` uses IR-first path there, while preserving fallback for borrowing-sensitive dict name-key and unsupported shapes
 - [x] PR396 slice: add structured `FieldAssign` lowering for safe non-`self` targets (leaf/name RHS) so `emit_stmt` uses IR-first path there, while preserving fallback for `self`-sensitive and non-leaf cases
+- [x] PR397 slice: add explicit codegen lowering modes (`StructuredPreferred` vs `LegacyOnly`) across codegen/driver, add differential runtime parity test corpus in `crates/sifr/tests/e2e.rs`, and fix structured dict-`Delete` key borrowing (`remove(&key)`) regression found by the new harness
 - [ ] Migrate `emit_*` to `lower_* -> IR -> render` dual path
 - [ ] Implement semantic transforms (`elif`, `for/else`, `while/else`)
 - [x] Replace all `expr_to_string` call sites with structured lowering
 - [ ] Convert >= 80% of stmt/expr arms to structured IR (`RawCode` only for remainder)
 - [x] Remove/replace at least 4 temporal coupling flags
-- [ ] Add differential corpus parity tests
+- [x] Add differential corpus parity tests
 - [x] Demo: `demos/milestone_codegen_stmt_expr_migration_demo.sifr`
 - [ ] Open PR(s), review, merge
 - [ ] Mark done in phase docs
