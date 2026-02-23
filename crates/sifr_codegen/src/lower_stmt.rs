@@ -417,6 +417,10 @@ fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
     None
 }
 
+fn is_alias_equivalent_type(left: &Type, right: &Type) -> bool {
+    left == right || resolve_alias_type(left) == resolve_alias_type(right)
+}
+
 fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, .. } = expr {
         return Some(RustExpr::Ident(name.clone()));
@@ -497,11 +501,11 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     if matches!(ty, Type::None) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::Unit));
     }
-    if ty != value.ty() {
+    if !is_alias_equivalent_type(ty, value.ty()) {
         return None;
     }
     if !matches!(
-        ty,
+        resolve_alias_type(ty),
         Type::Int | Type::Float | Type::Bool | Type::Str | Type::Enum { .. }
     ) {
         return None;
@@ -779,6 +783,71 @@ mod tests {
                 value: RustExpr::Ident(ref rhs),
                 ..
             } if let_name == "x" && rhs == "y"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_let_alias_int_literal_rhs() {
+        let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
+        let let_stmt = HirStmt::Let {
+            name: "distance".to_string(),
+            ty: alias_int,
+            value: HirExpr::IntLiteral(7),
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let alias-int literal rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                value: RustExpr::Cast { ty: RustType::I64, .. },
+                ..
+            } if let_name == "distance"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_let_alias_enum_name_rhs() {
+        let alias_enum = Type::Alias(
+            "ColorAlias".to_string(),
+            Box::new(Type::Enum {
+                name: "Color".to_string(),
+                variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
+            }),
+        );
+        let let_stmt = HirStmt::Let {
+            name: "shade".to_string(),
+            ty: alias_enum.clone(),
+            value: HirExpr::Name {
+                name: "selected".to_string(),
+                ty: alias_enum,
+            },
+            is_mutable: false,
+        };
+        let lowered = try_lower_simple_stmt(
+            &let_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+        )
+        .expect("let alias-enum name rhs lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                mutable: false,
+                name: ref let_name,
+                value: RustExpr::Ident(ref rhs),
+                ..
+            } if let_name == "shade" && rhs == "selected"
         ));
     }
 
