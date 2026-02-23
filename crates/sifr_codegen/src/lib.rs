@@ -973,6 +973,12 @@ impl RustEmitter {
                 self.emit_lowered_stmts(&lowered_stmts);
                 return;
             }
+
+            if let Some(raw_bridge_stmts) = self.try_capture_legacy_stmt_as_raw(stmt) {
+                self.lowering_stats.stmt_structured += 1;
+                self.emit_lowered_stmts(&raw_bridge_stmts);
+                return;
+            }
         }
 
         match stmt {

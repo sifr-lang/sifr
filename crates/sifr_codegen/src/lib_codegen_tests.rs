@@ -840,3 +840,54 @@ fn test_codegen_lowering_mode_switches_structured_stmt_path() {
     assert!(structured.contains("1 as i64"));
     assert!(legacy.contains("1_i64"));
 }
+
+#[test]
+fn test_structured_mode_bridges_nested_function_stmt_via_raw_lowering() {
+    let nested = HirFunction {
+        name: "inner".to_string(),
+        params: vec![],
+        return_type: Type::Int,
+        body: vec![HirStmt::Return {
+            value: Some(HirExpr::IntLiteral(1)),
+        }],
+        method_kind: MethodKind::Regular,
+        decorators: vec![],
+        type_params: vec![],
+    };
+
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::NestedFunction {
+                    func: nested,
+                },
+                HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "inner".to_string(),
+                        args: vec![],
+                        ty: Type::Int,
+                    },
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let structured =
+        generate_rust_with_metadata_mode(&module, CodegenLoweringMode::StructuredPreferred);
+    let legacy = generate_rust_with_metadata_mode(&module, CodegenLoweringMode::LegacyOnly);
+
+    assert!(structured.rust_source.contains("fn inner() -> i64"));
+    assert!(legacy.rust_source.contains("fn inner() -> i64"));
+    assert!(structured.lowering_stats.stmt_structured > 0);
+}
