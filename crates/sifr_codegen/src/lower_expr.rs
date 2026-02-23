@@ -82,7 +82,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             if !is_safe_simple_binop(op, left.ty(), right.ty(), ty) {
                 return None;
             }
-            if is_mixed_simple_float_binop(op, left.ty(), right.ty(), ty) {
+            if is_mixed_simple_float_binop(op, left.ty(), right.ty(), ty)
+                || is_simple_int_true_division_binop(op, left.ty(), right.ty(), ty)
+            {
                 return Some(RustExpr::BinOp {
                     left: Box::new(try_lower_mixed_float_operand_expr(left)?),
                     op: normalize_binop_op(op).to_string(),
@@ -241,6 +243,13 @@ fn is_mixed_simple_float_binop(op: &str, left_ty: &Type, right_ty: &Type, result
         || (matches!(left_ty, Type::Float) && is_int_like_simple(right_ty))
 }
 
+fn is_simple_int_true_division_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
+    op == "/"
+        && matches!(result_ty, Type::Float)
+        && is_int_like_simple(left_ty)
+        && is_int_like_simple(right_ty)
+}
+
 fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     if !matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=") {
         return false;
@@ -257,7 +266,9 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
             && matches!(left_ty, Type::Int | Type::LiteralInt(_));
     }
     if op == "/" {
-        if is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty) {
+        if is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty)
+            || is_simple_int_true_division_binop(op, left_ty, right_ty, result_ty)
+        {
             return true;
         }
         return left_ty == right_ty
@@ -421,12 +432,12 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_simple_int_division_binop() {
+    fn does_not_lower_simple_int_division_binop_with_non_float_result() {
         let bin = HirExpr::BinOp {
             left: Box::new(HirExpr::IntLiteral(6)),
             op: "/".to_string(),
             right: Box::new(HirExpr::IntLiteral(2)),
-            ty: Type::Float,
+            ty: Type::Int,
         };
         assert!(try_lower_leaf_expr(&bin).is_none());
     }
@@ -519,6 +530,23 @@ mod tests {
             try_lower_leaf_expr(&bin),
             Some(RustExpr::BinOp { op, left, right })
                 if op == "%"
+                    && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                    && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_int_true_division_binop_with_float_casts() {
+        let bin = HirExpr::BinOp {
+            left: Box::new(HirExpr::IntLiteral(7)),
+            op: "/".to_string(),
+            right: Box::new(HirExpr::IntLiteral(2)),
+            ty: Type::Float,
+        };
+        assert!(matches!(
+            try_lower_leaf_expr(&bin),
+            Some(RustExpr::BinOp { op, left, right })
+                if op == "/"
                     && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
                     && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
         ));
