@@ -366,6 +366,7 @@ fn normalize_simple_compare_scalar_type(ty: &Type) -> Option<&'static str> {
         Type::Int | Type::LiteralInt(_) => Some("int"),
         Type::Float => Some("float"),
         Type::Bool | Type::LiteralBool(_) => Some("bool"),
+        Type::Str | Type::LiteralStr(_) => Some("str"),
         _ => None,
     }
 }
@@ -841,6 +842,34 @@ mod tests {
     fn does_not_lower_mismatched_bool_int_compare() {
         let cmp = HirExpr::Compare {
             left: Box::new(HirExpr::BoolLiteral(true)),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Bool,
+        };
+
+        assert!(try_lower_leaf_expr(&cmp).is_none());
+    }
+
+    #[test]
+    fn lowers_string_literal_compare() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::StringLiteral("alpha".to_string())),
+            ops: vec!["<".to_string()],
+            comparators: vec![HirExpr::StringLiteral("beta".to_string())],
+            ty: Type::Bool,
+        };
+
+        let lowered = try_lower_leaf_expr(&cmp).expect("string compare lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::BinOp { op, .. } if op == "<"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_mismatched_string_int_compare() {
+        let cmp = HirExpr::Compare {
+            left: Box::new(HirExpr::StringLiteral("x".to_string())),
             ops: vec!["==".to_string()],
             comparators: vec![HirExpr::IntLiteral(1)],
             ty: Type::Bool,
