@@ -21,6 +21,10 @@ fn is_simple_module_primitive_const_type(ty: &Type) -> bool {
     )
 }
 
+fn is_simple_module_string_const_type(ty: &Type) -> bool {
+    matches!(resolve_alias_type(ty), Type::Str | Type::LiteralStr(_))
+}
+
 pub fn lower_item_raw(raw: &str) -> Result<Vec<RustItem>, CodegenError> {
     Ok(vec![RustItem::RawCode(raw.to_string())])
 }
@@ -73,7 +77,7 @@ pub fn try_lower_simple_module_string_const_item(
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if !matches!(ty, Type::Str | Type::LiteralStr(_)) {
+    if !is_simple_module_string_const_type(ty) {
         return None;
     }
     let rust_name = format!("__const_{name}");
@@ -133,7 +137,10 @@ pub fn try_lower_simple_module_helper_const_item(
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if is_simple_module_primitive_const_type(ty) || matches!(ty, Type::Str | Type::LiteralStr(_) | Type::None) {
+    if is_simple_module_primitive_const_type(ty)
+        || is_simple_module_string_const_type(ty)
+        || matches!(ty, Type::None)
+    {
         return None;
     }
     let rust_name = format!("__const_{name}");
@@ -358,6 +365,57 @@ mod tests {
     }
 
     #[test]
+    fn lowers_simple_module_alias_string_const_item() {
+        let alias_str = Type::Alias("Message".to_string(), Box::new(Type::Str));
+        let (item, rust_name_call) = try_lower_simple_module_string_const_item(
+            "greeting",
+            &alias_str,
+            &HirExpr::StringLiteral("hi".to_string()),
+        )
+        .expect("alias string const should lower");
+        assert_eq!(rust_name_call, "__const_greeting()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::String_),
+                ..
+            } if name == "__const_greeting"
+        ));
+    }
+
+    #[test]
+    fn dispatcher_lowers_alias_string_module_const_as_string_item() {
+        let alias_str = Type::Alias("Message".to_string(), Box::new(Type::Str));
+        let (item, rust_name_call) = try_lower_simple_module_constant_item(
+            "greeting",
+            &alias_str,
+            &HirExpr::Name {
+                name: "msg".to_string(),
+                ty: alias_str.clone(),
+            },
+        )
+        .expect("dispatcher should lower alias string constant");
+        assert_eq!(rust_name_call, "__const_greeting()");
+        assert!(matches!(
+            item,
+            RustItem::Fn {
+                name,
+                visibility: Visibility::Private,
+                ret: Some(RustType::String_),
+                body,
+                ..
+            } if name == "__const_greeting"
+                && matches!(
+                    body.first(),
+                    Some(RustStmt::Return(Some(RustExpr::MethodCall { receiver, method, .. })))
+                        if matches!(receiver.as_ref(), RustExpr::Ident(n) if n == "msg") && method == "to_string"
+                )
+        ));
+    }
+
+    #[test]
     fn does_not_lower_non_string_module_string_const_item() {
         assert!(try_lower_simple_module_string_const_item(
             "greeting",
@@ -512,6 +570,19 @@ mod tests {
             &HirExpr::IntLiteral(42),
         )
         .is_none());
+    }
+
+    #[test]
+    fn does_not_lower_alias_string_module_helper_const_item() {
+        let alias_str = Type::Alias("Message".to_string(), Box::new(Type::Str));
+        assert!(
+            try_lower_simple_module_helper_const_item(
+                "greeting",
+                &alias_str,
+                &HirExpr::StringLiteral("hi".to_string()),
+            )
+            .is_none()
+        );
     }
 
     #[test]
