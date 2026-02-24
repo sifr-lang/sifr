@@ -111,6 +111,7 @@ Root cause: `is_builtin_error_referenced` still scans generated Rust text.
 - [x] Replace generated-code scan with structured metadata collection from HIR + intrinsic usage + stdlib preamble refs
 - [x] Remove dependency on `helpers::is_builtin_error_referenced`
 - [x] Keep behavior parity for conditional builtin error emission (validated by `sifr_codegen` test suite)
+- [x] Cover type-position builtin errors (`Result[..., ValueError]`, class fields, constants) with regression tests
 - [x] Validation:
   - [x] `cargo test -p sifr_codegen`
   - [x] `cargo clippy -p sifr_codegen -- -D warnings`
