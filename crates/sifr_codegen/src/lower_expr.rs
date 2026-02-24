@@ -1,7 +1,7 @@
 //! Expression lowering scaffolds for the IR migration.
 
-use crate::{CodegenError, RustExpr, RustLiteral, RustStmt, RustType};
-use sifr_hir::HirExpr;
+use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use sifr_hir::{HirExpr, HirFStringPart, HirParam};
 use sifr_type_system::Type;
 
 pub fn lower_expr_raw(raw: &str) -> Result<RustExpr, CodegenError> {
@@ -29,7 +29,9 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
         | HirExpr::OkWrap { .. }
         | HirExpr::ErrWrap { .. }
         | HirExpr::WalrusExpr { .. }
-        | HirExpr::SuperCall { .. } => true,
+        | HirExpr::SuperCall { .. }
+        | HirExpr::FString { .. }
+        | HirExpr::Lambda { .. } => true,
         HirExpr::Compare {
             ops, comparators, ..
         } => !ops.is_empty() && ops.len() == comparators.len(),
@@ -47,12 +49,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             expr: Box::new(RustExpr::Literal(RustLiteral::Int(*v))),
             ty: RustType::I64,
         }),
-        HirExpr::FloatLiteral(v) => {
-            Some(RustExpr::Cast {
-                expr: Box::new(RustExpr::Literal(RustLiteral::Float(*v))),
-                ty: RustType::F64,
-            })
-        }
+        HirExpr::FloatLiteral(v) => Some(RustExpr::Cast {
+            expr: Box::new(RustExpr::Literal(RustLiteral::Float(*v))),
+            ty: RustType::F64,
+        }),
         HirExpr::StringLiteral(s) => Some(RustExpr::Literal(RustLiteral::Str(s.clone()))),
         HirExpr::BoolLiteral(v) => Some(RustExpr::Literal(RustLiteral::Bool(*v))),
         HirExpr::NoneLiteral => Some(RustExpr::Literal(RustLiteral::None)),
@@ -64,53 +64,51 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         {
             Some(RustExpr::Ident(name.clone()))
         }
-        HirExpr::EnumVariant { enum_name, variant, .. } => {
-            Some(RustExpr::Path(vec![enum_name.clone(), variant.clone()]))
-        }
-        HirExpr::UnaryOp { op, operand, .. } => {
-            match op.as_str() {
-                "-" => Some(RustExpr::UnaryOp {
-                    op: "-".to_string(),
-                    operand: Box::new(try_lower_leaf_expr(operand)?),
-                }),
-                "+" => Some(try_lower_leaf_expr(operand)?),
-                "~" if is_int_like_simple(operand.ty()) => {
-                    let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
-                        if let HirExpr::Name { name, .. } = operand.as_ref() {
-                            return Some(RustExpr::Ident(name.clone()));
-                        }
-                        None
-                    })?;
-                    Some(RustExpr::UnaryOp {
-                        op: "!".to_string(),
-                        operand: Box::new(lowered_operand),
-                    })
-                }
-                "not" if is_bool_like_simple(operand.ty()) => {
-                    let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
-                        if let HirExpr::Name { name, .. } = operand.as_ref() {
-                            return Some(RustExpr::Ident(name.clone()));
-                        }
-                        None
-                    })?;
-                    Some(RustExpr::UnaryOp {
-                        op: "!".to_string(),
-                        operand: Box::new(lowered_operand),
-                    })
-                }
-                "not" if is_option_like_simple(operand.ty()) => {
+        HirExpr::EnumVariant {
+            enum_name, variant, ..
+        } => Some(RustExpr::Path(vec![enum_name.clone(), variant.clone()])),
+        HirExpr::UnaryOp { op, operand, .. } => match op.as_str() {
+            "-" => Some(RustExpr::UnaryOp {
+                op: "-".to_string(),
+                operand: Box::new(try_lower_leaf_expr(operand)?),
+            }),
+            "+" => Some(try_lower_leaf_expr(operand)?),
+            "~" if is_int_like_simple(operand.ty()) => {
+                let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
                     if let HirExpr::Name { name, .. } = operand.as_ref() {
-                        return Some(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident(name.clone())),
-                            method: "is_none".to_string(),
-                            args: vec![],
-                        });
+                        return Some(RustExpr::Ident(name.clone()));
                     }
                     None
-                }
-                _ => None,
+                })?;
+                Some(RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(lowered_operand),
+                })
             }
-        }
+            "not" if is_bool_like_simple(operand.ty()) => {
+                let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
+                    if let HirExpr::Name { name, .. } = operand.as_ref() {
+                        return Some(RustExpr::Ident(name.clone()));
+                    }
+                    None
+                })?;
+                Some(RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(lowered_operand),
+                })
+            }
+            "not" if is_option_like_simple(operand.ty()) => {
+                if let HirExpr::Name { name, .. } = operand.as_ref() {
+                    return Some(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(name.clone())),
+                        method: "is_none".to_string(),
+                        args: vec![],
+                    });
+                }
+                None
+            }
+            _ => None,
+        },
         HirExpr::BinOp {
             left,
             op,
@@ -309,14 +307,14 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 args: lowered_args,
             })
         }
+        HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
+        HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
         HirExpr::Call { .. }
         | HirExpr::ConstructorCall { .. }
         | HirExpr::DictComp { .. }
         | HirExpr::DictLiteral { .. }
-        | HirExpr::FString { .. }
         | HirExpr::GeneratorExpr { .. }
         | HirExpr::Index { .. }
-        | HirExpr::Lambda { .. }
         | HirExpr::ListComp { .. }
         | HirExpr::MethodCall { .. }
         | HirExpr::SetComp { .. }
@@ -334,6 +332,58 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
         return Some(RustExpr::Ident(name.clone()));
     }
     None
+}
+
+fn try_lower_simple_fstring_expr(parts: &[HirFStringPart]) -> Option<RustExpr> {
+    let mut format_str = String::new();
+    let mut lowered_args = Vec::new();
+
+    for part in parts {
+        match part {
+            HirFStringPart::Literal(s) => {
+                for ch in s.chars() {
+                    match ch {
+                        '{' => format_str.push_str("{{"),
+                        '}' => format_str.push_str("}}"),
+                        _ => format_str.push(ch),
+                    }
+                }
+            }
+            HirFStringPart::Expr(expr) => {
+                if is_option_like_simple(expr.ty()) {
+                    return None;
+                }
+                format_str.push_str("{}");
+                lowered_args.push(try_lower_leaf_or_name_expr(expr)?);
+            }
+        }
+    }
+
+    Some(RustExpr::FormatMacro {
+        name: "format".to_string(),
+        format_str,
+        args: lowered_args,
+    })
+}
+
+fn try_lower_simple_lambda_expr(params: &[HirParam], body: &HirExpr) -> Option<RustExpr> {
+    if params.iter().any(|param| param.ty != Type::Any) {
+        return None;
+    }
+
+    let lowered_params = params
+        .iter()
+        .map(|param| RustParam::Named {
+            name: param.name.clone(),
+            ty: RustType::Named("_".to_string()),
+        })
+        .collect::<Vec<_>>();
+
+    Some(RustExpr::Closure {
+        params: lowered_params,
+        body: Box::new(try_lower_leaf_or_name_expr(body)?),
+        is_move: false,
+    })
 }
 
 fn is_numeric_simple(ty: &Type) -> bool {
@@ -392,7 +442,12 @@ fn normalize_binop_op(op: &str) -> &str {
     }
 }
 
-fn is_mixed_simple_float_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
+fn is_mixed_simple_float_binop(
+    op: &str,
+    left_ty: &Type,
+    right_ty: &Type,
+    result_ty: &Type,
+) -> bool {
     if !matches!(op, "/" | "+" | "-" | "*" | "%") {
         return false;
     }
@@ -415,7 +470,12 @@ fn is_mixed_simple_float_floor_division_binop(
             || (is_float_like_simple(left_ty) && is_int_like_simple(right_ty)))
 }
 
-fn is_simple_int_true_division_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &Type) -> bool {
+fn is_simple_int_true_division_binop(
+    op: &str,
+    left_ty: &Type,
+    right_ty: &Type,
+    result_ty: &Type,
+) -> bool {
     op == "/"
         && is_float_like_simple(result_ty)
         && is_int_like_simple(left_ty)
@@ -475,7 +535,11 @@ fn is_same_simple_numeric_kind(left: &Type, right: &Type) -> bool {
     normalize_simple_numeric_scalar_type(right).is_some_and(|right_kind| right_kind == left_kind)
 }
 
-fn try_lower_option_none_compare_expr(left: &HirExpr, op: &str, right: &HirExpr) -> Option<RustExpr> {
+fn try_lower_option_none_compare_expr(
+    left: &HirExpr,
+    op: &str,
+    right: &HirExpr,
+) -> Option<RustExpr> {
     let name_expr = if matches!(right, HirExpr::NoneLiteral) {
         left
     } else if matches!(left, HirExpr::NoneLiteral) {
@@ -501,7 +565,11 @@ fn try_lower_option_none_compare_expr(left: &HirExpr, op: &str, right: &HirExpr)
     })
 }
 
-fn try_lower_none_identity_compare_expr(left: &HirExpr, op: &str, right: &HirExpr) -> Option<RustExpr> {
+fn try_lower_none_identity_compare_expr(
+    left: &HirExpr,
+    op: &str,
+    right: &HirExpr,
+) -> Option<RustExpr> {
     if !matches!(op, "is" | "is not") {
         return None;
     }
@@ -512,7 +580,9 @@ fn try_lower_none_identity_compare_expr(left: &HirExpr, op: &str, right: &HirExp
     } else {
         return None;
     };
-    if !(matches!(other, HirExpr::NoneLiteral) || matches!(resolve_alias_type(other.ty()), Type::None)) {
+    if !(matches!(other, HirExpr::NoneLiteral)
+        || matches!(resolve_alias_type(other.ty()), Type::None))
+    {
         return None;
     }
     Some(RustExpr::Literal(RustLiteral::Bool(op == "is")))
@@ -620,7 +690,10 @@ mod tests {
             }
         ));
         assert!(matches!(str_expr, RustExpr::Literal(RustLiteral::Str(_))));
-        assert!(matches!(bool_expr, RustExpr::Literal(RustLiteral::Bool(true))));
+        assert!(matches!(
+            bool_expr,
+            RustExpr::Literal(RustLiteral::Bool(true))
+        ));
         assert!(matches!(bool_name_expr, RustExpr::Ident(ref name) if name == "ok"));
         assert!(matches!(none_expr, RustExpr::Literal(RustLiteral::None)));
         assert!(matches!(enum_expr, RustExpr::Path(_)));
@@ -723,9 +796,18 @@ mod tests {
             ty: Type::Int,
         };
 
-        assert!(matches!(try_lower_leaf_expr(&bin), Some(RustExpr::BinOp { .. })));
-        assert!(matches!(try_lower_leaf_expr(&cmp), Some(RustExpr::BinOp { .. })));
-        assert!(matches!(try_lower_leaf_expr(&cond), Some(RustExpr::If { .. })));
+        assert!(matches!(
+            try_lower_leaf_expr(&bin),
+            Some(RustExpr::BinOp { .. })
+        ));
+        assert!(matches!(
+            try_lower_leaf_expr(&cmp),
+            Some(RustExpr::BinOp { .. })
+        ));
+        assert!(matches!(
+            try_lower_leaf_expr(&cond),
+            Some(RustExpr::If { .. })
+        ));
     }
 
     #[test]
@@ -867,7 +949,8 @@ mod tests {
             ty: alias_float,
         };
 
-        let lowered = try_lower_leaf_expr(&bin).expect("alias mixed int/float-name division lowered");
+        let lowered =
+            try_lower_leaf_expr(&bin).expect("alias mixed int/float-name division lowered");
         assert!(matches!(
             lowered,
             RustExpr::BinOp { op, left, right }
@@ -899,8 +982,7 @@ mod tests {
             ty: Type::Float,
         };
 
-        let lowered =
-            try_lower_leaf_expr(&bin).expect("alias/base float-name division lowered");
+        let lowered = try_lower_leaf_expr(&bin).expect("alias/base float-name division lowered");
         assert!(matches!(
             lowered,
             RustExpr::BinOp { op, left, right }
@@ -2156,5 +2238,90 @@ mod tests {
                 if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Base".to_string(), "new".to_string()])
                     && args.len() == 1
         ));
+    }
+
+    #[test]
+    fn lowers_fstring_with_leaf_parts() {
+        let expr = HirExpr::FString {
+            parts: vec![
+                HirFStringPart::Literal("value=".to_string()),
+                HirFStringPart::Expr(HirExpr::IntLiteral(7)),
+            ],
+            ty: Type::Str,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("fstring lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::FormatMacro {
+                ref name,
+                ref format_str,
+                ref args
+            } if name == "format" && format_str == "value={}" && args.len() == 1
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_fstring_with_option_expr_part() {
+        let expr = HirExpr::FString {
+            parts: vec![HirFStringPart::Expr(HirExpr::Name {
+                name: "maybe_v".to_string(),
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            })],
+            ty: Type::Str,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_lambda_with_any_params_and_leaf_body() {
+        let expr = HirExpr::Lambda {
+            params: vec![HirParam {
+                name: "x".to_string(),
+                ty: Type::Any,
+                default: None,
+                keyword_only: false,
+                convention: sifr_type_system::ParamConvention::Own,
+            }],
+            body: Box::new(HirExpr::IntLiteral(1)),
+            ty: Type::Callable(
+                vec![Type::Any],
+                vec![sifr_type_system::ParamConvention::Own],
+                Box::new(Type::Int),
+            ),
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("lambda lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Closure {
+                ref params,
+                ref body,
+                is_move: false
+            } if params.len() == 1 && matches!(body.as_ref(), RustExpr::Cast { ty: RustType::I64, .. })
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_lambda_with_typed_param() {
+        let expr = HirExpr::Lambda {
+            params: vec![HirParam {
+                name: "x".to_string(),
+                ty: Type::Int,
+                default: None,
+                keyword_only: false,
+                convention: sifr_type_system::ParamConvention::Own,
+            }],
+            body: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            ty: Type::Callable(
+                vec![Type::Int],
+                vec![sifr_type_system::ParamConvention::Own],
+                Box::new(Type::Int),
+            ),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
     }
 }

@@ -24,13 +24,18 @@ Execution loop per part (mandatory):
 
 ## Current Baseline (code-verified)
 
-- `crates/sifr_codegen/src/lib.rs`: `1015` lines
+- `crates/sifr_codegen/src/lib.rs`: `1345` lines
 - Direct string emission calls in `lib.rs`: `2`
-- Largest write-heavy files: `intrinsic_method_emitters.rs` (`523`), `legacy_expr_emitter.rs` (`388`), `legacy_stmt_emitter.rs` (`294`)
+- Largest write-heavy files: `intrinsic_method_emitters.rs` (`523`), `expr_emitter.rs` (`394`), `stmt_emitter.rs` (`295`)
+- Legacy emitter files: none (`legacy_expr_emitter.rs` and `legacy_stmt_emitter.rs` removed)
 - `lower_stmt` production coverage: `27/27` `HirStmt` variants
   - Missing: none
 - `lower_expr` production coverage: `35/35` `HirExpr` variants
   - Missing: none
+- Remaining `RawCode` bridge loci in core paths:
+  - `stmt_support_emitter::try_capture_fallback_stmt_as_raw` for `TryExcept` and `NestedFunction`
+  - `expr_render_helpers::try_capture_fallback_expr_as_raw` for complex expression residue
+  - `lower_expr` residue still not structurally lowered: `Call`, `MethodCall`, `ConstructorCall`, `Index`, `Slice`, `DictLiteral`, `SetLiteral`, `ListComp`, `DictComp`, `SetComp`, `GeneratorExpr`
 - Active `sifr_codegen` clippy suppressions in `lib.rs`: none
 - Execution checklist drift: none (reconciled with merged PR reality).
 
@@ -64,7 +69,7 @@ Root cause: `emit_stmt` in `lib.rs` still owns unsupported statement semantics.
 - [x] Add explicit lowering paths for missing stmt variants:
   - [x] `Match` (simple/lowerable pattern+guard+body forms)
   - [x] `NestedFunction` (legacy bridge via captured `RustStmt::RawCode` in structured mode)
-  - [x] `StarUnpack` (lowered as constrained IR `RawCode` bridge)
+  - [x] `StarUnpack` (fully lowered via structured IR `Let`/`Index`/`Range`/`MethodCall`)
   - [x] `TryExcept` (legacy bridge via captured `RustStmt::RawCode` in structured mode)
   - [x] `With` (non-context-manager protocol path)
   - [x] `Yield`
@@ -91,9 +96,10 @@ Root cause: `emit_expr` in `lib.rs` still owns many core expression families.
   - [x] `FieldAccess` (non-`self` conservative path), `ContainsOp`
   - [x] `SuperCall`, `WalrusExpr`
   - [x] `QuestionMark`, `OkWrap`, `ErrWrap`
+  - [x] Added conservative structured lowering for safe `FString` and `Lambda` subshapes
   - [x] Remaining complex families explicitly routed through conservative legacy-bridge raw-lowering path in structured mode:
     `Call`, `MethodCall`, `ConstructorCall`, `Index`, `Slice`, `DictLiteral`, `SetLiteral`,
-    `ListComp`, `DictComp`, `SetComp`, `GeneratorExpr`, `Lambda`, `FString`
+    `ListComp`, `DictComp`, `SetComp`, `GeneratorExpr` plus unsupported `Lambda`/`FString` subshapes
 - [x] Keep fallback semantics only for explicitly-documented complex residue
 - [x] Add regression/unit tests for newly-lowered and bridge paths
 - [x] Coverage snapshot: `35/35` expr variants explicitly covered in `lower_expr` production path
@@ -167,3 +173,36 @@ Root cause: phase docs can claim done before code-level gates are actually compl
 - [x] Final demo check:
   - [x] `cargo run -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr`
 - [x] PR loop complete (open -> review -> merge)
+
+---
+
+## Part G: RawCode-Zero Gate Closeout (Re-opened)
+
+status: in_progress
+
+Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bridge capture still exists for complex stmt/expr families.
+
+- [x] Remove `RawCode` bridge from `StarUnpack` lowering (`lower_stmt`)
+- [x] Remove `RawCode` bridge from top-level exiting `if x is None` narrowing path (`lower_stmt`)
+- [x] Add conservative structured lowering for safe `FString` and `Lambda` subshapes (`lower_expr`)
+- [ ] Eliminate stmt fallback raw-capture for `TryExcept` by introducing structured IR lowering path
+- [ ] Eliminate stmt fallback raw-capture for `NestedFunction` by introducing structured IR lowering path
+- [ ] Eliminate expr fallback raw-capture by adding structured lowering for remaining residue:
+  - [ ] `Call`
+  - [ ] `MethodCall`
+  - [ ] `ConstructorCall`
+  - [ ] `Index`
+  - [ ] `Slice`
+  - [ ] `DictLiteral`
+  - [ ] `SetLiteral`
+  - [ ] `ListComp`
+  - [ ] `DictComp`
+  - [ ] `SetComp`
+  - [ ] `GeneratorExpr`
+- [ ] Delete `try_capture_fallback_expr_as_raw` and `try_capture_fallback_stmt_as_raw` once no callsites remain
+- [ ] Validation for each slice:
+  - [ ] `cargo test -p sifr_codegen`
+  - [ ] `cargo clippy -p sifr_codegen -- -D warnings`
+  - [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+  - [ ] `cargo test -p sifr --test e2e test_e2e_pass`
+- [ ] PR loop complete (open -> review -> merge)
