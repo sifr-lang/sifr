@@ -335,10 +335,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::DictLiteral { keys, values, ty } => {
             try_lower_simple_dict_literal_expr(keys, values, ty)
         }
+        HirExpr::SetLiteral { elements, ty } => try_lower_simple_set_literal_expr(elements, ty),
         HirExpr::DictComp { .. } | HirExpr::GeneratorExpr { .. }
         | HirExpr::ListComp { .. }
-        | HirExpr::SetComp { .. }
-        | HirExpr::SetLiteral { .. } => None,
+        | HirExpr::SetComp { .. } => None,
         _ => None,
     }
 }
@@ -503,6 +503,41 @@ fn try_lower_simple_dict_literal_expr(
     Some(RustExpr::Block {
         stmts,
         expr: Some(Box::new(RustExpr::Ident(map_ident))),
+    })
+}
+
+fn try_lower_simple_set_literal_expr(elements: &[HirExpr], ty: &Type) -> Option<RustExpr> {
+    if resolve_alias_type(ty) != &Type::Any {
+        return None;
+    }
+
+    let set_ident = "__sifr_set_literal".to_string();
+    let mut stmts = vec![RustStmt::Let {
+        mutable: true,
+        name: set_ident.clone(),
+        ty: None,
+        value: RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "collections".to_string(),
+                "HashSet".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![],
+        },
+    }];
+
+    for element in elements {
+        stmts.push(RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(set_ident.clone())),
+            method: "insert".to_string(),
+            args: vec![try_lower_leaf_or_name_expr(element)?],
+        }));
+    }
+
+    Some(RustExpr::Block {
+        stmts,
+        expr: Some(Box::new(RustExpr::Ident(set_ident))),
     })
 }
 
@@ -2723,6 +2758,54 @@ mod tests {
             keys: vec![HirExpr::StringLiteral("k".to_string())],
             values: vec![HirExpr::IntLiteral(1)],
             ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_set_literal_with_leaf_entries() {
+        let expr = HirExpr::SetLiteral {
+            elements: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("set literal lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Block { stmts, expr: Some(result) }
+                if matches!(stmts.first(), Some(RustStmt::Let { name, mutable, .. }) if name == "__sifr_set_literal" && *mutable)
+                    && matches!(result.as_ref(), RustExpr::Ident(name) if name == "__sifr_set_literal")
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_set_literal_with_non_leaf_entry() {
+        let expr = HirExpr::SetLiteral {
+            elements: vec![HirExpr::ListComp {
+                expr: Box::new(HirExpr::Name {
+                    name: "x".to_string(),
+                    ty: Type::Int,
+                }),
+                generators: vec![(
+                    "x".to_string(),
+                    HirExpr::Name {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    None,
+                )],
+                ty: Type::List(Box::new(Type::Int)),
+            }],
+            ty: Type::Any,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_set_literal_on_typed_set() {
+        let expr = HirExpr::SetLiteral {
+            elements: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Set(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
     }

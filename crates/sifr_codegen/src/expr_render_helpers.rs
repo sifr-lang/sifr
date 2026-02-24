@@ -218,7 +218,6 @@ impl RustEmitter {
                 | HirExpr::Lambda { .. }
                 | HirExpr::ListComp { .. }
                 | HirExpr::SetComp { .. }
-                | HirExpr::SetLiteral { .. }
         ) {
             return None;
         }
