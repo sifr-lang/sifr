@@ -24,6 +24,15 @@ pub(crate) fn lower_method(
     lower_method_with_context(object_ty, method, rendered_object, rendered_args, false)
 }
 
+pub(crate) fn lower_method_ir(
+    object_ty: &Type,
+    method: &str,
+    object: &RustExpr,
+    args: &[RustExpr],
+) -> Option<LoweredMethod> {
+    lower_method_with_context_ir(object_ty, method, object, args, false)
+}
+
 pub(crate) fn lower_method_with_context(
     object_ty: &Type,
     method: &str,
@@ -117,6 +126,28 @@ pub(crate) fn lower_method_with_context(
     };
 
     Some(LoweredMethod { expr: expr? })
+}
+
+/// IR-first method lowering entrypoint.
+///
+/// Most method lowerers are currently string-arg based; this keeps call sites
+/// typed while compatibility rendering remains internal.
+pub(crate) fn lower_method_with_context_ir(
+    object_ty: &Type,
+    method: &str,
+    object: &RustExpr,
+    args: &[RustExpr],
+    is_deque_data_field: bool,
+) -> Option<LoweredMethod> {
+    let rendered_object = crate::render_expr(object);
+    let rendered_args = args.iter().map(crate::render_expr).collect::<Vec<_>>();
+    lower_method_with_context(
+        object_ty,
+        method,
+        &rendered_object,
+        &rendered_args,
+        is_deque_data_field,
+    )
 }
 
 #[cfg(test)]
@@ -533,5 +564,25 @@ mod tests {
             render_expr(&set_sdiff.expr),
             "s.symmetric_difference(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
         );
+    }
+
+    #[test]
+    fn lower_method_ir_matches_legacy_lower_method_for_sample() {
+        let legacy = lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "append",
+            "xs",
+            &["v".to_string()],
+        )
+        .expect("legacy append");
+        let ir = lower_method_ir(
+            &Type::List(Box::new(Type::Int)),
+            "append",
+            &RustExpr::Ident("xs".to_string()),
+            &[RustExpr::Ident("v".to_string())],
+        )
+        .expect("ir append");
+
+        assert_eq!(render_expr(&legacy.expr), render_expr(&ir.expr));
     }
 }

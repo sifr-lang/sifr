@@ -122,11 +122,17 @@ impl RustEmitter {
             }
         }
 
-        let Some(lowered) = methods::lower_method_with_context(
+        let object_expr = crate::RustExpr::RawCode(rendered_object);
+        let arg_exprs = rendered_args
+            .iter()
+            .cloned()
+            .map(crate::RustExpr::RawCode)
+            .collect::<Vec<_>>();
+        let Some(lowered) = methods::lower_method_with_context_ir(
             object_ty,
             method,
-            &rendered_object,
-            &rendered_args,
+            &object_expr,
+            &arg_exprs,
             is_deque_data_field,
         ) else {
             return false;
