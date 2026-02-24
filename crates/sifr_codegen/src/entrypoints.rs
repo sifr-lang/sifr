@@ -1,4 +1,5 @@
-use super::{CodegenResult, HirModule, RustEmitter, StdlibCode};
+use super::{render_items, CodegenResult, HirModule, RustEmitter, RustItem, StdlibCode};
+use crate::ir_imports::collect_import_needs_from_items;
 
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
@@ -21,24 +22,47 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     // Second pass: emit the actual code
     emitter.emit_module(module, false, true);
 
+    let mut emitted_items = Vec::new();
+    if !emitter.enum_defs.is_empty() {
+        emitted_items.push(RustItem::RawCode(emitter.enum_defs.clone()));
+    }
+    if !emitter.output.is_empty() {
+        emitted_items.push(RustItem::RawCode(emitter.output.clone()));
+    }
+    let import_needs = collect_import_needs_from_items(&emitted_items);
+
+    let mut import_items = Vec::new();
+    if import_needs.collections.needs_hashmap {
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "HashMap".to_string(),
+        ]));
+    }
+    if import_needs.collections.needs_hashset {
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "HashSet".to_string(),
+        ]));
+    }
+    if import_needs.collections.needs_vecdeque {
+        import_items.push(RustItem::Use(vec![
+            "std".to_string(),
+            "collections".to_string(),
+            "VecDeque".to_string(),
+        ]));
+    }
+    if import_needs.runtime.needs_bigint {
+        import_items.push(RustItem::Use(vec![
+            "num_bigint".to_string(),
+            "BigInt".to_string(),
+        ]));
+    }
+
     let mut result = String::new();
-    if emitter.collection_needs.needs_hashmap {
-        result.push_str("use std::collections::HashMap;\n");
-    }
-    if emitter.collection_needs.needs_hashset {
-        result.push_str("use std::collections::HashSet;\n");
-    }
-    if emitter.collection_needs.needs_vecdeque {
-        result.push_str("use std::collections::VecDeque;\n");
-    }
-    if emitter.runtime_needs.needs_bigint {
-        result.push_str("use num_bigint::BigInt;\n");
-    }
-    if emitter.collection_needs.needs_hashmap
-        || emitter.collection_needs.needs_hashset
-        || emitter.collection_needs.needs_vecdeque
-        || emitter.runtime_needs.needs_bigint
-    {
+    if !import_items.is_empty() {
+        result.push_str(&render_items(&import_items));
         result.push('\n');
     }
     if !emitter.enum_defs.is_empty() {
@@ -53,7 +77,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_crates: {
             let mut crates = emitter.intrinsic_registry_crates;
-            if emitter.runtime_needs.needs_bigint {
+            if emitter.runtime_needs.needs_bigint || import_needs.runtime.needs_bigint {
                 crates.insert("num-bigint".to_string());
                 crates.insert("num-traits".to_string());
             }

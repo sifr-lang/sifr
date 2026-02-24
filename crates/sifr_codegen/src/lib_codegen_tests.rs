@@ -741,6 +741,69 @@ fn test_generate_rust_test_uses_explicit_test_mode_context() {
 }
 
 #[test]
+fn test_generate_rust_test_collects_imports_from_emitted_code() {
+    let module = HirModule {
+        functions: vec![
+            HirFunction {
+                name: "test_collections".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![
+                    HirStmt::Expr {
+                        expr: HirExpr::DictLiteral {
+                            keys: vec![HirExpr::StringLiteral("k".to_string())],
+                            values: vec![HirExpr::IntLiteral(1)],
+                            ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+                        },
+                    },
+                    HirStmt::Expr {
+                        expr: HirExpr::SetLiteral {
+                            elements: vec![HirExpr::IntLiteral(1)],
+                            ty: Type::Set(Box::new(Type::Int)),
+                        },
+                    },
+                ],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+            HirFunction {
+                name: "helper_bigint".to_string(),
+                params: vec![HirParam {
+                    name: "x".to_string(),
+                    ty: Type::BigInt,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::Own,
+                }],
+                return_type: Type::BigInt,
+                body: vec![HirStmt::Return {
+                    value: Some(HirExpr::Name {
+                        name: "x".to_string(),
+                        ty: Type::BigInt,
+                    }),
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        ],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let result = generate_rust_test(&module);
+    assert!(result.rust_source.contains("use std::collections::HashMap;"));
+    assert!(result.rust_source.contains("use std::collections::HashSet;"));
+    assert!(result.rust_source.contains("use num_bigint::BigInt;"));
+    assert!(result.required_crates.contains("num-bigint"));
+    assert!(result.required_crates.contains("num-traits"));
+}
+
+#[test]
 fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
     let items_ty = Type::List(Box::new(Type::Int));
     let table_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));

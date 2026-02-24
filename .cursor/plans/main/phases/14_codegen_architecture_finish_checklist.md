@@ -118,13 +118,13 @@ Root cause: `is_builtin_error_referenced` still scans generated Rust text.
 
 ## Slice 2: Make `generate_rust_test` Use Structural Import Collection
 
-status: **pending**
+status: **done**
 
 Root cause: test entrypoint still relies on emitter boolean flags for imports.
 
-- [ ] Build import set via structural pass on produced IR artifacts (not direct flags)
-- [ ] Remove direct `collection_needs/runtime_needs` import rendering in `entrypoints.rs`
-- [ ] Keep required crate metadata parity
+- [x] Build import set via structural pass on produced IR artifacts (not direct flags)
+- [x] Remove direct `collection_needs/runtime_needs` import rendering in `entrypoints.rs`
+- [x] Keep required crate metadata parity
 
 ## Slice 3: Replace `enum_defs` String Path with IR Items
 
