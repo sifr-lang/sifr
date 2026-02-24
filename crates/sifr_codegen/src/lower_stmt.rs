@@ -8,7 +8,7 @@ use crate::{
     try_lower_leaf_expr, CodegenError, RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt,
     RustType,
 };
-use sifr_hir::{HirExpr, HirFunction, HirPattern, HirStmt, MethodKind};
+use sifr_hir::{HirExceptHandler, HirExpr, HirFunction, HirPattern, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 
@@ -43,8 +43,8 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::Yield { .. }
         | HirStmt::With { .. }
         | HirStmt::Match { .. }
-        | HirStmt::NestedFunction { .. } => true,
-        HirStmt::TryExcept { .. } => false,
+        | HirStmt::NestedFunction { .. }
+        | HirStmt::TryExcept { .. } => true,
     }
 }
 
@@ -275,7 +275,9 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::NestedFunction { func } => {
             try_lower_simple_nested_function_stmt(func, in_loop_with_else, bindings)
         }
-        HirStmt::TryExcept { .. } => None,
+        HirStmt::TryExcept { body, handlers, .. } => {
+            try_lower_simple_try_except_stmt(body, handlers, in_loop_with_else, bindings, ctx)
+        }
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -356,6 +358,245 @@ fn try_lower_simple_nested_function_stmt(
             is_move: false,
         },
     }])
+}
+
+fn try_lower_simple_try_except_stmt(
+    body: &[HirStmt],
+    handlers: &[HirExceptHandler],
+    in_loop_with_else: bool,
+    bindings: SimpleStmtBindings<'_>,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
+    if handlers.len() != 1 {
+        return None;
+    }
+    let handler = handlers.first()?;
+    if handler
+        .error_type
+        .as_deref()
+        .is_some_and(|error_type| error_type != "Error")
+        || handler.name.is_some()
+    {
+        return None;
+    }
+    if !body.iter().all(is_simple_try_except_body_stmt)
+        || !handler.body.iter().all(is_simple_try_except_body_stmt)
+    {
+        return None;
+    }
+    if !body.iter().any(stmt_has_result_flow) {
+        return None;
+    }
+
+    let lowered_try_body = try_lower_simple_stmt_block(
+        body,
+        in_loop_with_else,
+        bindings.mutated_vars,
+        bindings.borrowed_params,
+        ctx,
+    )?;
+    let lowered_handler_body = try_lower_simple_stmt_block(
+        &handler.body,
+        in_loop_with_else,
+        bindings.mutated_vars,
+        bindings.borrowed_params,
+        ctx,
+    )?;
+
+    let mut closure_body = lowered_try_body;
+    closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+        args: vec![RustExpr::Literal(RustLiteral::Unit)],
+    })));
+
+    Some(vec![
+        RustStmt::Let {
+            mutable: false,
+            name: "__sifr_try_res".to_string(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::ClosureBlock {
+                    params: vec![],
+                    body: closure_body,
+                    is_move: false,
+                }),
+                args: vec![],
+            },
+        },
+        RustStmt::IfLet {
+            pattern: "Err(_e)".to_string(),
+            expr: RustExpr::Ident("__sifr_try_res".to_string()),
+            then_body: lowered_handler_body,
+            else_body: None,
+        },
+    ])
+}
+
+fn is_simple_try_except_body_stmt(stmt: &HirStmt) -> bool {
+    matches!(
+        stmt,
+        HirStmt::Expr { .. }
+            | HirStmt::Let { .. }
+            | HirStmt::Assign { .. }
+            | HirStmt::AugAssign { .. }
+            | HirStmt::AttributeAugAssign { .. }
+            | HirStmt::FieldAssign { .. }
+            | HirStmt::Assert { .. }
+            | HirStmt::Raise { .. }
+            | HirStmt::TupleUnpack { .. }
+            | HirStmt::StarUnpack { .. }
+            | HirStmt::SubscriptAssign { .. }
+            | HirStmt::NestedSubscriptAssign { .. }
+            | HirStmt::SubscriptAugAssign { .. }
+            | HirStmt::AttributeSubscriptAssign { .. }
+            | HirStmt::Delete { .. }
+            | HirStmt::Pass
+    )
+}
+
+fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
+    match stmt {
+        HirStmt::Raise { .. } => true,
+        HirStmt::Expr { expr } => expr_has_result_flow(expr),
+        HirStmt::Let { value, .. }
+        | HirStmt::Assign { value, .. }
+        | HirStmt::AugAssign { value, .. }
+        | HirStmt::FieldAssign { value, .. } => expr_has_result_flow(value),
+        HirStmt::AttributeAugAssign { value, .. }
+        | HirStmt::SubscriptAssign { value, .. }
+        | HirStmt::NestedSubscriptAssign { value, .. }
+        | HirStmt::SubscriptAugAssign { value, .. }
+        | HirStmt::AttributeSubscriptAssign { value, .. } => expr_has_result_flow(value),
+        HirStmt::Assert { test, msg } => {
+            expr_has_result_flow(test) || msg.as_ref().is_some_and(expr_has_result_flow)
+        }
+        HirStmt::TupleUnpack { value, .. } | HirStmt::StarUnpack { value, .. } => {
+            expr_has_result_flow(value)
+        }
+        HirStmt::Delete { object, index } => {
+            expr_has_result_flow(object) || expr_has_result_flow(index)
+        }
+        HirStmt::Pass => false,
+        HirStmt::Return { .. }
+        | HirStmt::If { .. }
+        | HirStmt::While { .. }
+        | HirStmt::For { .. }
+        | HirStmt::Break
+        | HirStmt::Continue
+        | HirStmt::TryExcept { .. }
+        | HirStmt::With { .. }
+        | HirStmt::Match { .. }
+        | HirStmt::Yield { .. }
+        | HirStmt::NestedFunction { .. } => false,
+    }
+}
+
+fn expr_has_result_flow(expr: &HirExpr) -> bool {
+    match expr {
+        HirExpr::QuestionMark { .. } | HirExpr::OkWrap { .. } | HirExpr::ErrWrap { .. } => true,
+        HirExpr::UnaryOp { operand, .. } => expr_has_result_flow(operand),
+        HirExpr::BinOp { left, right, .. } => {
+            expr_has_result_flow(left) || expr_has_result_flow(right)
+        }
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            expr_has_result_flow(left) || comparators.iter().any(expr_has_result_flow)
+        }
+        HirExpr::BoolOp { values, .. } => values.iter().any(expr_has_result_flow),
+        HirExpr::Call { args, .. }
+        | HirExpr::MethodCall { args, .. }
+        | HirExpr::ConstructorCall { args, .. }
+        | HirExpr::SuperCall { args, .. } => args.iter().any(expr_has_result_flow),
+        HirExpr::Index { object, index, .. } => {
+            expr_has_result_flow(object) || expr_has_result_flow(index)
+        }
+        HirExpr::Slice {
+            object,
+            start,
+            stop,
+            step,
+            ..
+        } => {
+            expr_has_result_flow(object)
+                || start.as_ref().is_some_and(|e| expr_has_result_flow(e))
+                || stop.as_ref().is_some_and(|e| expr_has_result_flow(e))
+                || step.as_ref().is_some_and(|e| expr_has_result_flow(e))
+        }
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            expr_has_result_flow(condition)
+                || expr_has_result_flow(then_expr)
+                || expr_has_result_flow(else_expr)
+        }
+        HirExpr::TupleLiteral { elements, .. }
+        | HirExpr::ListLiteral { elements, .. }
+        | HirExpr::SetLiteral { elements, .. } => elements.iter().any(expr_has_result_flow),
+        HirExpr::DictLiteral { keys, values, .. } => keys
+            .iter()
+            .zip(values.iter())
+            .any(|(k, v)| expr_has_result_flow(k) || expr_has_result_flow(v)),
+        HirExpr::FString { parts, .. } => parts.iter().any(|part| match part {
+            sifr_hir::HirFStringPart::Literal(_) => false,
+            sifr_hir::HirFStringPart::Expr(e) => expr_has_result_flow(e),
+        }),
+        HirExpr::Lambda { body, .. } => expr_has_result_flow(body),
+        HirExpr::WalrusExpr { value, .. } => expr_has_result_flow(value),
+        HirExpr::FieldAccess { object, .. } => expr_has_result_flow(object),
+        HirExpr::ContainsOp {
+            element, collection, ..
+        } => expr_has_result_flow(element) || expr_has_result_flow(collection),
+        HirExpr::RangeLiteral {
+            start, end, step, ..
+        } => {
+            expr_has_result_flow(start)
+                || expr_has_result_flow(end)
+                || step.as_ref().is_some_and(|e| expr_has_result_flow(e))
+        }
+        HirExpr::ListComp {
+            expr, generators, ..
+        }
+        | HirExpr::SetComp {
+            expr, generators, ..
+        } => {
+            expr_has_result_flow(expr)
+                || generators.iter().any(|(_, iter, cond)| {
+                    expr_has_result_flow(iter)
+                        || cond.as_ref().is_some_and(expr_has_result_flow)
+                })
+        }
+        HirExpr::DictComp {
+            key_expr,
+            val_expr,
+            generators,
+            ..
+        } => {
+            expr_has_result_flow(key_expr)
+                || expr_has_result_flow(val_expr)
+                || generators.iter().any(|(_, iter, cond)| {
+                    expr_has_result_flow(iter)
+                        || cond.as_ref().is_some_and(expr_has_result_flow)
+                })
+        }
+        HirExpr::GeneratorExpr {
+            expr, iter, filter, ..
+        } => {
+            expr_has_result_flow(expr)
+                || expr_has_result_flow(iter)
+                || filter.as_ref().is_some_and(|c| expr_has_result_flow(c))
+        }
+        HirExpr::Name { .. }
+        | HirExpr::IntLiteral(_)
+        | HirExpr::FloatLiteral(_)
+        | HirExpr::StringLiteral(_)
+        | HirExpr::BoolLiteral(_)
+        | HirExpr::NoneLiteral
+        | HirExpr::EnumVariant { .. } => false,
+    }
 }
 
 fn try_lower_simple_stmt_block(
@@ -5804,6 +6045,91 @@ mod tests {
                 decorators: vec![],
                 type_params: vec![],
             },
+        };
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_try_except_catch_all_with_result_flow() {
+        let stmt = HirStmt::TryExcept {
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::QuestionMark {
+                    expr: Box::new(HirExpr::Name {
+                        name: "res".to_string(),
+                        ty: Type::Result(Box::new(Type::Int), Box::new(Type::Any)),
+                    }),
+                    ty: Type::Int,
+                },
+            }],
+            handlers: vec![HirExceptHandler {
+                error_type: None,
+                error_resolved_type: None,
+                name: None,
+                body: vec![HirStmt::Pass],
+            }],
+            body_error_types: vec!["Error".to_string()],
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("try/except lowered");
+        assert_eq!(lowered.len(), 2);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                ref name,
+                value: RustExpr::FnCall { .. },
+                ..
+            } if name == "__sifr_try_res"
+        ));
+        assert!(matches!(
+            lowered[1],
+            RustStmt::IfLet {
+                ref pattern,
+                expr: RustExpr::Ident(ref expr_name),
+                ..
+            } if pattern == "Err(_e)" && expr_name == "__sifr_try_res"
+        ));
+        assert!(lowered.iter().all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
+    }
+
+    #[test]
+    fn does_not_lower_try_except_with_typed_handler() {
+        let stmt = HirStmt::TryExcept {
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::QuestionMark {
+                    expr: Box::new(HirExpr::Name {
+                        name: "res".to_string(),
+                        ty: Type::Result(Box::new(Type::Int), Box::new(Type::Any)),
+                    }),
+                    ty: Type::Int,
+                },
+            }],
+            handlers: vec![HirExceptHandler {
+                error_type: Some("IOError".to_string()),
+                error_resolved_type: Some(Type::Class {
+                    name: "IOError".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: None,
+                }),
+                name: None,
+                body: vec![HirStmt::Pass],
+            }],
+            body_error_types: vec!["IOError".to_string()],
+        };
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_try_except_without_result_flow() {
+        let stmt = HirStmt::TryExcept {
+            body: vec![HirStmt::Pass],
+            handlers: vec![HirExceptHandler {
+                error_type: None,
+                error_resolved_type: None,
+                name: None,
+                body: vec![HirStmt::Pass],
+            }],
+            body_error_types: vec!["Error".to_string()],
         };
         assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }

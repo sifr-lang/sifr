@@ -185,7 +185,7 @@ Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bri
 - [x] Remove `RawCode` bridge from `StarUnpack` lowering (`lower_stmt`)
 - [x] Remove `RawCode` bridge from top-level exiting `if x is None` narrowing path (`lower_stmt`)
 - [x] Add conservative structured lowering for safe `FString` and `Lambda` subshapes (`lower_expr`)
-- [ ] Eliminate stmt fallback raw-capture for `TryExcept` by introducing structured IR lowering path
+- [x] Eliminate stmt fallback raw-capture for `TryExcept` by introducing structured IR lowering path
 - [x] Eliminate stmt fallback raw-capture for `NestedFunction` by introducing structured IR lowering path
 - [ ] Eliminate expr fallback raw-capture by adding structured lowering for remaining residue:
   - [ ] `Call`

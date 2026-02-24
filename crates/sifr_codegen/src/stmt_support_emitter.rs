@@ -52,33 +52,6 @@ impl RustEmitter {
         }
     }
 
-    pub(super) fn try_capture_fallback_stmt_as_raw(
-        &mut self,
-        stmt: &HirStmt,
-    ) -> Option<Vec<RustStmt>> {
-        if !matches!(stmt, HirStmt::TryExcept { .. }) {
-            return None;
-        }
-
-        let saved_output = std::mem::take(&mut self.output);
-        let saved_indent = self.indent;
-        let saved_fallback_depth = self.fallback_depth;
-
-        self.output = String::new();
-        self.indent = 0;
-        self.fallback_depth += 1;
-        self.emit_stmt(stmt);
-
-        let captured = std::mem::take(&mut self.output);
-        self.output = saved_output;
-        self.indent = saved_indent;
-        self.fallback_depth = saved_fallback_depth;
-
-        Some(vec![RustStmt::RawCode(
-            captured.trim_end_matches('\n').to_string(),
-        )])
-    }
-
     pub(super) fn current_loop_has_else(&self) -> bool {
         self.loop_else_stack.last().copied().unwrap_or(false)
     }
