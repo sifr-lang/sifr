@@ -1,6 +1,6 @@
 //! File-handle intrinsic lowerers for registry migration.
 
-use crate::{RustExpr, RustMatchArm, RustStmt};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustStmt};
 
 fn owned_str(arg: &str) -> String {
     format!("({arg}).to_string()")
@@ -72,12 +72,16 @@ fn wrap_handle_result(
     }
 }
 
-fn remove_handle_stmt(hid_expr: &str) -> String {
-    let mut code = String::new();
-    code.push_str("{ let __hid = (");
-    code.push_str(hid_expr);
-    code.push_str("); __SIFR_FILE_HANDLES.lock().unwrap().remove(&__hid); () }");
-    code
+fn file_handles_lock_expr() -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__SIFR_FILE_HANDLES".to_string())),
+            method: "lock".to_string(),
+            args: vec![],
+        }),
+        method: "unwrap".to_string(),
+        args: vec![],
+    }
 }
 
 fn open_arm(pattern: &str, open_expr: &str, variant: &str, success_expr: &str) -> String {
@@ -282,11 +286,29 @@ pub(super) fn lower_file_readlines(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_file_close(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_file_close(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(remove_handle_stmt(&args[0])))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__hid".to_string(),
+                ty: None,
+                value: args[0].clone(),
+            },
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(file_handles_lock_expr()),
+                method: "remove".to_string(),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident("__hid".to_string())),
+                }],
+            }),
+        ],
+        expr: Some(Box::new(RustExpr::Literal(RustLiteral::Unit))),
+    })
 }
 
 pub(super) fn lower_file_read_bytes(args: &[String]) -> Option<RustExpr> {

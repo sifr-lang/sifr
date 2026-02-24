@@ -161,7 +161,7 @@ fn lower_intrinsic_rendered(
         "file_write" => (file_handles::lower_file_write(rendered_args), None),
         "file_readline" => (file_handles::lower_file_readline(rendered_args), None),
         "file_readlines" => (file_handles::lower_file_readlines(rendered_args), None),
-        "file_close" => (file_handles::lower_file_close(rendered_args), None),
+        "file_close" => (file_handles::lower_file_close(args), None),
         "file_read_bytes" => (file_handles::lower_file_read_bytes(rendered_args), None),
         "file_write_bytes" => (file_handles::lower_file_write_bytes(rendered_args), None),
         "json_loads" => (json::lower_json_loads(rendered_args), Some("serde_json")),
@@ -1059,6 +1059,10 @@ mod tests {
         let write = lower_intrinsic("file_write", &["hid".to_string(), "text".to_string()])
             .expect("file_write");
         assert!(render_expr(&write.expr).contains("TextWrite"));
+
+        let close = lower_intrinsic("file_close", &["hid".to_string()]).expect("file_close");
+        assert!(render_expr(&close.expr).contains("__SIFR_FILE_HANDLES"));
+        assert!(!matches!(close.expr, RustExpr::RawCode(_)));
 
         let builtin_open =
             lower_intrinsic("builtin_open", &["path".to_string(), "mode".to_string()])
