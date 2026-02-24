@@ -12,7 +12,7 @@ fn random_expr(ty: &str) -> RustExpr {
     }
 }
 
-pub(super) fn lower_uuid4(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_uuid4(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }

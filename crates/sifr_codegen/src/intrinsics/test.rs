@@ -2,37 +2,31 @@
 
 use crate::{RustExpr, RustLiteral, RustStmt};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
-pub(super) fn lower_assert_eq(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_assert_eq(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
     Some(RustExpr::MacroCall {
         name: "assert_eq".to_string(),
-        args: vec![
-            RustExpr::Ident(args[0].clone()),
-            RustExpr::Ident(args[1].clone()),
-        ],
+        args: vec![args[0].clone(), args[1].clone()],
     })
 }
 
-pub(super) fn lower_assert_ne(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_assert_ne(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
     Some(RustExpr::MacroCall {
         name: "assert_ne".to_string(),
-        args: vec![
-            RustExpr::Ident(args[0].clone()),
-            RustExpr::Ident(args[1].clone()),
-        ],
+        args: vec![args[0].clone(), args[1].clone()],
     })
 }
 
-pub(super) fn lower_assert_true(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_assert_true(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -42,7 +36,7 @@ pub(super) fn lower_assert_true(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_assert_false(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_assert_false(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -63,7 +57,7 @@ pub(super) fn lower_assert_false(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_assert_almost_eq(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_assert_almost_eq(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
@@ -115,7 +109,7 @@ pub(super) fn lower_assert_almost_eq(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_assert_gt(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_assert_gt(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -123,20 +117,20 @@ pub(super) fn lower_assert_gt(args: &[String]) -> Option<RustExpr> {
         name: "assert".to_string(),
         args: vec![
             RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident(args[0].clone())),
+                left: Box::new(args[0].clone()),
                 op: ">".to_string(),
-                right: Box::new(RustExpr::Ident(args[1].clone())),
+                right: Box::new(args[1].clone()),
             },
             RustExpr::Literal(crate::RustLiteral::Str(
                 "assert_gt failed: {} is not > {}".to_string(),
             )),
-            RustExpr::Ident(args[0].clone()),
-            RustExpr::Ident(args[1].clone()),
+            args[0].clone(),
+            args[1].clone(),
         ],
     })
 }
 
-pub(super) fn lower_assert_lt(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_assert_lt(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -144,15 +138,15 @@ pub(super) fn lower_assert_lt(args: &[String]) -> Option<RustExpr> {
         name: "assert".to_string(),
         args: vec![
             RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident(args[0].clone())),
+                left: Box::new(args[0].clone()),
                 op: "<".to_string(),
-                right: Box::new(RustExpr::Ident(args[1].clone())),
+                right: Box::new(args[1].clone()),
             },
             RustExpr::Literal(crate::RustLiteral::Str(
                 "assert_lt failed: {} is not < {}".to_string(),
             )),
-            RustExpr::Ident(args[0].clone()),
-            RustExpr::Ident(args[1].clone()),
+            args[0].clone(),
+            args[1].clone(),
         ],
     })
 }
