@@ -1,8 +1,8 @@
 //! Item lowering scaffolds for the IR migration.
 
 use crate::{
-    try_lower_leaf_expr, CodegenError, RustExpr, RustItem, RustLiteral, RustStmt, RustType,
-    Visibility,
+    try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustItem,
+    RustLiteral, RustStmt, RustType, Visibility,
 };
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
@@ -39,7 +39,7 @@ pub fn try_lower_simple_module_constant_item_result(
     value: &HirExpr,
 ) -> Result<Option<(RustItem, String)>, CodegenError> {
     validate_module_constant_shape(name)?;
-    Ok(try_lower_simple_module_constant_item(name, ty, value))
+    try_lower_simple_module_constant_item_result_impl(name, ty, value)
 }
 
 fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
@@ -61,6 +61,104 @@ fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
         ));
     }
     Ok(())
+}
+
+fn try_lower_leaf_or_name_expr_result(value: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
+    if let Some(lowered) = try_lower_leaf_expr_result(value)? {
+        return Ok(Some(lowered));
+    }
+    if let HirExpr::Name { name, .. } = value {
+        return Ok(Some(RustExpr::Ident(name.clone())));
+    }
+    Ok(None)
+}
+
+fn try_lower_simple_module_constant_item_result_impl(
+    name: &str,
+    ty: &Type,
+    value: &HirExpr,
+) -> Result<Option<(RustItem, String)>, CodegenError> {
+    if is_simple_module_primitive_const_type(ty) {
+        let Some(lowered_value) = try_lower_leaf_or_name_expr_result(value)? else {
+            return Ok(None);
+        };
+        let rust_name = name.to_uppercase();
+        return Ok(Some((
+            RustItem::Const {
+                name: rust_name.clone(),
+                visibility: Visibility::Private,
+                ty: crate::sifr_type_to_rust_type(ty),
+                value: lowered_value,
+            },
+            rust_name,
+        )));
+    }
+
+    if is_simple_module_string_const_type(ty) {
+        let Some(lowered_value) = try_lower_leaf_or_name_expr_result(value)? else {
+            return Ok(None);
+        };
+        let rust_name = format!("__const_{name}");
+        return Ok(Some((
+            RustItem::Fn {
+                name: rust_name.clone(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: Some(RustType::String_),
+                body: vec![RustStmt::Return(Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_value),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                }))],
+                is_async: false,
+            },
+            format!("{rust_name}()"),
+        )));
+    }
+
+    if is_simple_module_none_const_type(ty) {
+        let lowered_value = if matches!(value, HirExpr::NoneLiteral) {
+            RustExpr::Literal(RustLiteral::Unit)
+        } else if let HirExpr::Name { name, ty } = value {
+            if !is_simple_module_none_const_type(ty) {
+                return Ok(None);
+            }
+            RustExpr::Ident(name.clone())
+        } else {
+            return Ok(None);
+        };
+        let rust_name = format!("__const_{name}");
+        return Ok(Some((
+            RustItem::Fn {
+                name: rust_name.clone(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: Some(RustType::Unit),
+                body: vec![RustStmt::Return(Some(lowered_value))],
+                is_async: false,
+            },
+            format!("{rust_name}()"),
+        )));
+    }
+
+    let Some(lowered_value) = try_lower_leaf_or_name_expr_result(value)? else {
+        return Ok(None);
+    };
+    let rust_name = format!("__const_{name}");
+    Ok(Some((
+        RustItem::Fn {
+            name: rust_name.clone(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: Some(crate::sifr_type_to_rust_type(ty)),
+            body: vec![RustStmt::Return(Some(lowered_value))],
+            is_async: false,
+        },
+        format!("{rust_name}()"),
+    )))
 }
 
 /// Conservative dispatcher for simple module-constant item lowering.
@@ -249,6 +347,22 @@ mod tests {
         )
         .expect_err("invalid constant name should return error");
         assert!(err.message.contains("name must start with ASCII letter or underscore"));
+    }
+
+    #[test]
+    fn dispatcher_result_propagates_leaf_lowering_errors() {
+        let err = try_lower_simple_module_constant_item_result(
+            "answer",
+            &Type::Int,
+            &HirExpr::Compare {
+                left: Box::new(HirExpr::IntLiteral(1)),
+                ops: vec!["==".to_string()],
+                comparators: vec![],
+                ty: Type::Bool,
+            },
+        )
+        .expect_err("invalid compare shape should propagate as codegen error");
+        assert!(err.message.contains("ops/comparators length mismatch"));
     }
 
     #[test]
