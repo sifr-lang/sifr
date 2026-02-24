@@ -5,18 +5,10 @@
 //!   sifr run <file.sifr>      Compile and run
 //!   sifr check <file.sifr>    Type-check only
 //!   sifr emit <file.sifr>     Show generated Rust code
-#![allow(
-    clippy::uninlined_format_args,
-    clippy::print_stderr,
-    clippy::print_stdout,
-    clippy::unnecessary_map_or,
-    clippy::ptr_arg,
-    clippy::items_after_statements
-)]
-
 use clap::{Parser, Subcommand};
 use sifr_driver::{build, build_project, check, compile, run_tests, CompileResult};
-use std::path::PathBuf;
+use std::io::{self, Write};
+use std::path::{Path, PathBuf};
 use std::process;
 
 #[derive(Parser)]
@@ -75,44 +67,52 @@ fn main() {
     }
 }
 
-fn read_source(file: &PathBuf) -> String {
+fn read_source(file: &Path) -> String {
     match std::fs::read_to_string(file) {
         Ok(source) => source,
         Err(e) => {
-            eprintln!("error: could not read file '{}': {}", file.display(), e);
+            let _ = writeln!(
+                io::stderr(),
+                "error: could not read file '{}': {e}",
+                file.display()
+            );
             process::exit(1);
         }
     }
 }
 
-fn cmd_build(file: &PathBuf, output: &PathBuf) {
+fn cmd_build(file: &Path, output: &Path) {
     let source = read_source(file);
 
     match build(&source, output) {
         Ok(binary_path) => {
-            eprintln!("compiled successfully: {}", binary_path.display());
+            let _ = writeln!(
+                io::stderr(),
+                "compiled successfully: {}",
+                binary_path.display()
+            );
         }
         Err(errors) => {
             for error in &errors {
-                eprintln!("{}", error);
+                let _ = writeln!(io::stderr(), "{error}");
             }
             process::exit(1);
         }
     }
 }
 
-fn cmd_run(file: &PathBuf) {
+fn cmd_run(file: &Path) {
     let temp_dir = std::env::temp_dir().join("sifr_run");
 
     // Check if this is a multi-file project:
     // The file must be named main.sifr AND there must be other .sifr files in the same directory
-    let is_multi_file = file.file_stem().map_or(false, |stem| stem == "main")
+    let is_multi_file = file.file_stem().is_some_and(|stem| stem == "main")
         && if let Some(parent) = file.parent() {
             if let Ok(entries) = std::fs::read_dir(parent) {
                 entries
                     .flatten()
-                    .filter(|e| e.path().extension().map_or(false, |ext| ext == "sifr"))
-                    .filter(|e| e.path() != *file)
+                    .filter(|e| e.path().extension().is_some_and(|ext| ext == "sifr"))
+                    .filter(|e| e.path() != file)
                     .count()
                     > 0
             } else {
@@ -134,12 +134,11 @@ fn cmd_run(file: &PathBuf) {
             let output = std::process::Command::new(&binary_path)
                 .output()
                 .unwrap_or_else(|e| {
-                    eprintln!("error: could not run binary: {}", e);
+                    let _ = writeln!(io::stderr(), "error: could not run binary: {e}");
                     process::exit(1);
                 });
 
             // Forward stdout and stderr
-            use std::io::Write;
             std::io::stdout().write_all(&output.stdout).ok();
             std::io::stderr().write_all(&output.stderr).ok();
 
@@ -149,28 +148,28 @@ fn cmd_run(file: &PathBuf) {
         }
         Err(errors) => {
             for error in &errors {
-                eprintln!("{}", error);
+                let _ = writeln!(io::stderr(), "{error}");
             }
             process::exit(1);
         }
     }
 }
 
-fn cmd_check(file: &PathBuf) {
+fn cmd_check(file: &Path) {
     let source = read_source(file);
     let errors = check(&source);
 
     if errors.is_empty() {
-        eprintln!("no errors found");
+        let _ = writeln!(io::stderr(), "no errors found");
     } else {
         for error in &errors {
-            eprintln!("{}", error);
+            let _ = writeln!(io::stderr(), "{error}");
         }
         process::exit(1);
     }
 }
 
-fn cmd_test(dir: &PathBuf) {
+fn cmd_test(dir: &Path) {
     match run_tests(dir) {
         Ok(success) => {
             if !success {
@@ -179,23 +178,23 @@ fn cmd_test(dir: &PathBuf) {
         }
         Err(errors) => {
             for error in &errors {
-                eprintln!("{}", error);
+                let _ = writeln!(io::stderr(), "{error}");
             }
             process::exit(1);
         }
     }
 }
 
-fn cmd_emit(file: &PathBuf) {
+fn cmd_emit(file: &Path) {
     let source = read_source(file);
 
     match compile(&source) {
         CompileResult::Success { rust_source } => {
-            print!("{}", rust_source);
+            let _ = write!(io::stdout(), "{rust_source}");
         }
         CompileResult::Errors { errors } => {
             for error in &errors {
-                eprintln!("{}", error);
+                let _ = writeln!(io::stderr(), "{error}");
             }
             process::exit(1);
         }

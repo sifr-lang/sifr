@@ -354,7 +354,10 @@ fn build_and_run_capture_with_deps(
     };
     let binary_path = tmp_dir.join("target").join("debug").join(binary_name);
 
+    // Run inside the isolated temp project dir so relative file IO in demos/tests
+    // does not leak artifacts into the repository workspace.
     let run_output = Command::new(&binary_path)
+        .current_dir(&tmp_dir)
         .output()
         .map_err(|e| format!("failed to run binary: {}", e))?;
 

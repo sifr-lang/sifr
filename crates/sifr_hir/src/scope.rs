@@ -195,7 +195,7 @@ impl Scope {
         for (name, narrowed) in snapshot {
             for frame in self.frames.iter_mut().rev() {
                 if let Some(info) = frame.get_mut(name) {
-                    info.narrowed_type = narrowed.clone();
+                    info.narrowed_type.clone_from(narrowed);
                     break;
                 }
             }
@@ -204,7 +204,7 @@ impl Scope {
 
     /// Get the effective type of a variable (narrowed if available, otherwise declared).
     pub fn effective_type(&self, name: &str) -> Option<&Type> {
-        self.lookup(name).map(|info| info.effective_type())
+        self.lookup(name).map(VarInfo::effective_type)
     }
 
     // --- Moved state snapshot support ---
