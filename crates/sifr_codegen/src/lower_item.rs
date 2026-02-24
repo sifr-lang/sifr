@@ -33,6 +33,36 @@ pub fn lower_item_raw(raw: &str) -> Result<Vec<RustItem>, CodegenError> {
     Ok(vec![RustItem::RawCode(raw.to_string())])
 }
 
+pub fn try_lower_simple_module_constant_item_result(
+    name: &str,
+    ty: &Type,
+    value: &HirExpr,
+) -> Result<Option<(RustItem, String)>, CodegenError> {
+    validate_module_constant_shape(name)?;
+    Ok(try_lower_simple_module_constant_item(name, ty, value))
+}
+
+fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
+    if name.trim().is_empty() {
+        return Err(CodegenError::new("invalid module constant shape: empty name"));
+    }
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return Err(CodegenError::new("invalid module constant shape: empty name"));
+    };
+    if !(first == '_' || first.is_ascii_alphabetic()) {
+        return Err(CodegenError::new(
+            "invalid module constant shape: name must start with ASCII letter or underscore",
+        ));
+    }
+    if !chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric()) {
+        return Err(CodegenError::new(
+            "invalid module constant shape: name must be ASCII identifier",
+        ));
+    }
+    Ok(())
+}
+
 /// Conservative dispatcher for simple module-constant item lowering.
 pub fn try_lower_simple_module_constant_item(
     name: &str,
@@ -198,6 +228,27 @@ mod tests {
                 .expect("dispatcher should lower simple constant");
         assert_eq!(rust_name, "ANSWER");
         assert!(matches!(item, RustItem::Const { .. }));
+    }
+
+    #[test]
+    fn dispatcher_result_lowers_simple_module_constant_item() {
+        let lowered =
+            try_lower_simple_module_constant_item_result("answer", &Type::Int, &HirExpr::IntLiteral(42))
+                .expect("result dispatcher should validate and lower")
+                .expect("dispatcher should lower simple constant");
+        assert_eq!(lowered.1, "ANSWER");
+        assert!(matches!(lowered.0, RustItem::Const { .. }));
+    }
+
+    #[test]
+    fn dispatcher_result_reports_invalid_module_constant_name() {
+        let err = try_lower_simple_module_constant_item_result(
+            "9bad",
+            &Type::Int,
+            &HirExpr::IntLiteral(42),
+        )
+        .expect_err("invalid constant name should return error");
+        assert!(err.message.contains("name must start with ASCII letter or underscore"));
     }
 
     #[test]

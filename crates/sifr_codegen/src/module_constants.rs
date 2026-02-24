@@ -1,4 +1,4 @@
-use crate::{render_items, try_lower_simple_module_constant_item, RustEmitter};
+use crate::{render_items, try_lower_simple_module_constant_item_result, RustEmitter};
 use sifr_hir::{HirExpr, HirModule};
 use sifr_type_system::Type;
 
@@ -16,8 +16,11 @@ impl RustEmitter {
     }
 
     fn try_emit_lowered_module_constant(&mut self, name: &str, ty: &Type, value: &HirExpr) -> bool {
-        let Some((item, rust_name_call)) = try_lower_simple_module_constant_item(name, ty, value)
-        else {
+        let Ok(lowered) = try_lower_simple_module_constant_item_result(name, ty, value) else {
+            self.lowering_stats.item_lowering_errors += 1;
+            return false;
+        };
+        let Some((item, rust_name_call)) = lowered else {
             return false;
         };
         self.output.push_str(&render_items(&[item]));
