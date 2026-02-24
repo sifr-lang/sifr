@@ -14,13 +14,13 @@ mod hashlib;
 mod html;
 mod io;
 mod json;
+mod logging;
 mod math;
 mod os;
 mod pathlib;
 mod platform;
 mod random;
 mod re;
-mod logging;
 mod subprocess;
 mod sys;
 mod test;
@@ -45,7 +45,12 @@ fn additional_required_crates(name: &str) -> &'static [&'static str] {
     }
 }
 
-pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<LoweredIntrinsic> {
+pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
+    let rendered_args = args.iter().map(crate::render_expr).collect::<Vec<_>>();
+    lower_intrinsic_rendered(name, &rendered_args)
+}
+
+fn lower_intrinsic_rendered(name: &str, rendered_args: &[String]) -> Option<LoweredIntrinsic> {
     let (expr, required_crate) = match name {
         "sqrt" => (math::lower_sqrt(rendered_args), None),
         "floor" => (math::lower_floor(rendered_args), None),
@@ -344,19 +349,19 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
     })
 }
 
-/// IR-first intrinsic lowering entrypoint.
-///
-/// Most intrinsic lowerers are still string-arg based; this keeps call sites
-/// typed (`RustExpr`) while compatibility rendering remains internal.
-pub(crate) fn lower_intrinsic_ir(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
-    let rendered_args = args.iter().map(crate::render_expr).collect::<Vec<_>>();
-    lower_intrinsic(name, &rendered_args)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::render_expr;
+
+    fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<LoweredIntrinsic> {
+        let args = rendered_args
+            .iter()
+            .cloned()
+            .map(RustExpr::RawCode)
+            .collect::<Vec<_>>();
+        super::lower_intrinsic(name, &args)
+    }
 
     #[test]
     fn lowers_math_intrinsics_via_registry() {
@@ -1023,8 +1028,8 @@ mod tests {
 
     #[test]
     fn lowers_extended_math_intrinsics_via_registry() {
-        let remainder = lower_intrinsic("remainder", &["x".to_string(), "y".to_string()])
-            .expect("remainder");
+        let remainder =
+            lower_intrinsic("remainder", &["x".to_string(), "y".to_string()]).expect("remainder");
         assert!(render_expr(&remainder.expr).contains("__q = __x / __y"));
 
         let dist = lower_intrinsic("dist", &["p".to_string(), "q".to_string()]).expect("dist");
@@ -1051,11 +1056,9 @@ mod tests {
             .expect("file_write");
         assert!(render_expr(&write.expr).contains("TextWrite"));
 
-        let builtin_open = lower_intrinsic(
-            "builtin_open",
-            &["path".to_string(), "mode".to_string()],
-        )
-        .expect("builtin_open");
+        let builtin_open =
+            lower_intrinsic("builtin_open", &["path".to_string(), "mode".to_string()])
+                .expect("builtin_open");
         assert!(render_expr(&builtin_open.expr).contains("FileHandle"));
 
         let set_level =
@@ -1067,10 +1070,8 @@ mod tests {
     }
 
     #[test]
-    fn lower_intrinsic_ir_matches_legacy_lower_intrinsic_for_sample() {
-        let legacy = lower_intrinsic("file_write", &["hid".to_string(), "text".to_string()])
-            .expect("legacy file_write");
-        let ir = lower_intrinsic_ir(
+    fn lower_intrinsic_accepts_ir_inputs() {
+        let ir = super::lower_intrinsic(
             "file_write",
             &[
                 RustExpr::Ident("hid".to_string()),
@@ -1079,7 +1080,7 @@ mod tests {
         )
         .expect("ir file_write");
 
-        assert_eq!(render_expr(&legacy.expr), render_expr(&ir.expr));
-        assert_eq!(legacy.required_crate, ir.required_crate);
+        assert!(render_expr(&ir.expr).contains("TextWrite"));
+        assert_eq!(ir.required_crate, None);
     }
 }
