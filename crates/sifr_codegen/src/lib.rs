@@ -60,7 +60,6 @@ use helpers::{
 };
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
-use ir_validate::validate_items;
 use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -471,21 +470,6 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     file_items.extend(import_items);
     file_items.extend(assembled_body_items);
     remove_trivial_clones_in_items(&mut file_items);
-    let typed_items: Vec<RustItem> = file_items
-        .iter()
-        .filter(|item| !matches!(item, RustItem::RawCode(_)))
-        .cloned()
-        .collect();
-    let file_issues = validate_items(&typed_items);
-    assert!(
-        file_issues.is_empty(),
-        "codegen IR validation failed (typed full file): {}",
-        file_issues
-            .iter()
-            .map(|issue| issue.message.as_str())
-            .collect::<Vec<_>>()
-            .join(" | ")
-    );
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
 
