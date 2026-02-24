@@ -29,7 +29,8 @@ pub(crate) fn collect_import_needs_from_items(items: &[RustItem]) -> IrImportNee
 
 fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
     match item {
-        RustItem::Use(_) | RustItem::Attr(_) | RustItem::RawCode(_) => {}
+        RustItem::Use(_) | RustItem::Attr(_) => {}
+        RustItem::RawCode(code) => scan_named_text(code, needs),
         RustItem::Struct { fields, .. } => {
             for (_, ty) in fields {
                 collect_type(ty, needs);
@@ -93,7 +94,8 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
                 collect_expr(msg, needs);
             }
         }
-        RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue | RustStmt::RawCode(_) => {}
+        RustStmt::RawCode(code) => scan_named_text(code, needs),
+        RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => {}
         RustStmt::If {
             cond,
             then_body,
@@ -158,7 +160,8 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
 
 fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
     match expr {
-        RustExpr::Literal(_) | RustExpr::RawCode(_) => {}
+        RustExpr::Literal(_) => {}
+        RustExpr::RawCode(code) => scan_named_text(code, needs),
         RustExpr::Ident(name) => scan_named_text(name, needs),
         RustExpr::Path(segments) => {
             if let Some(first) = segments.first() {
@@ -269,8 +272,8 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
         | RustType::F64
         | RustType::Bool
         | RustType::String_
-        | RustType::Unit
-        | RustType::RawCode(_) => {}
+        | RustType::Unit => {}
+        RustType::RawCode(code) => scan_named_text(code, needs),
         RustType::Vec(inner)
         | RustType::HashSet(inner)
         | RustType::VecDeque(inner)
@@ -416,6 +419,41 @@ mod tests {
             })],
             is_async: false,
         }];
+        let needs = collect_import_needs_from_items(&items);
+        assert!(!needs.collections.needs_hashmap);
+        assert!(!needs.collections.needs_hashset);
+        assert!(!needs.collections.needs_vecdeque);
+        assert!(!needs.runtime.needs_mutex);
+        assert!(!needs.runtime.needs_bigint);
+    }
+
+    #[test]
+    fn collects_symbols_from_raw_code_items() {
+        let items = vec![RustItem::RawCode(
+            "fn demo(m: HashMap<String, i64>) -> BigInt { \
+             let _s: HashSet<String> = HashSet::new(); \
+             let _q: VecDeque<i64> = VecDeque::new(); \
+             let _m = Mutex::new(1); \
+             BigInt::from(1) \
+             }"
+                .to_string(),
+        )];
+        let needs = collect_import_needs_from_items(&items);
+        assert!(needs.collections.needs_hashmap);
+        assert!(needs.collections.needs_hashset);
+        assert!(needs.collections.needs_vecdeque);
+        assert!(needs.runtime.needs_mutex);
+        assert!(needs.runtime.needs_bigint);
+    }
+
+    #[test]
+    fn ignores_fully_qualified_symbols_in_raw_code() {
+        let items = vec![RustItem::RawCode(
+            "fn demo() { let _ = std::collections::HashMap::<String, i64>::new(); \
+             let _ = num_bigint::BigInt::from(1); \
+             let _ = std::sync::Mutex::new(1); }"
+                .to_string(),
+        )];
         let needs = collect_import_needs_from_items(&items);
         assert!(!needs.collections.needs_hashmap);
         assert!(!needs.collections.needs_hashset);
