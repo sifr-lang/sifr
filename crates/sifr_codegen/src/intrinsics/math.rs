@@ -1,6 +1,6 @@
 //! Math intrinsic lowerers for registry migration.
 
-use crate::{RustExpr, RustType};
+use crate::{RustExpr, RustLiteral, RustType};
 
 fn unary_method(args: &[String], method: &str) -> Option<RustExpr> {
     if args.len() != 1 {
@@ -393,14 +393,28 @@ pub(super) fn lower_frexp(args: &[String]) -> Option<RustExpr> {
     )))
 }
 
-pub(super) fn lower_ldexp(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_ldexp(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __m: f64 = ({}); let __e: i64 = ({}); __m * (2.0f64).powi(__e as i32) }}",
-        args[0], args[1]
-    )))
+    Some(RustExpr::BinOp {
+        left: Box::new(RustExpr::Cast {
+            expr: Box::new(args[0].clone()),
+            ty: RustType::F64,
+        }),
+        op: "*".to_string(),
+        right: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Float(2.0))),
+                ty: RustType::F64,
+            }),
+            method: "powi".to_string(),
+            args: vec![RustExpr::Cast {
+                expr: Box::new(args[1].clone()),
+                ty: RustType::Named("i32".to_string()),
+            }],
+        }),
+    })
 }
 
 pub(super) fn lower_modf(args: &[String]) -> Option<RustExpr> {
