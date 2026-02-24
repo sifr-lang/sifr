@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn thread_rng_expr() -> RustExpr {
@@ -71,7 +71,7 @@ fn gen_range_expr(start: RustExpr, end: RustExpr) -> RustExpr {
     }
 }
 
-pub(super) fn lower_random_int(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_random_int(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -109,14 +109,14 @@ pub(super) fn lower_random_int(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_random_float(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_random_float(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
     Some(random_f64_expr())
 }
 
-pub(super) fn lower_random_choice(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_random_choice(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -145,7 +145,7 @@ pub(super) fn lower_random_choice(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_random_uniform(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_random_uniform(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -180,7 +180,7 @@ pub(super) fn lower_random_uniform(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_random_shuffle(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_random_shuffle(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -220,7 +220,7 @@ pub(super) fn lower_random_shuffle(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_random_sample(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_random_sample(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -296,7 +296,7 @@ pub(super) fn lower_random_sample(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_random_randrange(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_random_randrange(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
@@ -398,7 +398,7 @@ pub(super) fn lower_random_randrange(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_random_gauss(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_random_gauss(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
