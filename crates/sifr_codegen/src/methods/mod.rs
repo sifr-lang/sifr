@@ -120,11 +120,11 @@ mod tests {
         rendered_object: &str,
         rendered_args: &[String],
     ) -> Option<LoweredMethod> {
-        let object = RustExpr::RawCode(rendered_object.to_string());
+        let object = RustExpr::Ident(rendered_object.to_string());
         let args = rendered_args
             .iter()
             .cloned()
-            .map(RustExpr::RawCode)
+            .map(RustExpr::Ident)
             .collect::<Vec<_>>();
         super::lower_method(object_ty, method, &object, &args)
     }
@@ -136,11 +136,11 @@ mod tests {
         rendered_args: &[String],
         is_deque_data_field: bool,
     ) -> Option<LoweredMethod> {
-        let object = RustExpr::RawCode(rendered_object.to_string());
+        let object = RustExpr::Ident(rendered_object.to_string());
         let args = rendered_args
             .iter()
             .cloned()
-            .map(RustExpr::RawCode)
+            .map(RustExpr::Ident)
             .collect::<Vec<_>>();
         super::lower_method_with_context(object_ty, method, &object, &args, is_deque_data_field)
     }
@@ -154,7 +154,7 @@ mod tests {
             &[],
         )
         .expect("tuple len lowers");
-        assert_eq!(render_expr(&tuple_len.expr), "3_i64");
+        assert_eq!(render_expr(&tuple_len.expr), "3 as i64");
 
         let tuple_count = lower_method(
             &Type::Tuple(vec![Type::Int, Type::Str, Type::Bool]),
@@ -163,10 +163,7 @@ mod tests {
             &["1".to_string()],
         )
         .expect("tuple count lowers");
-        assert_eq!(
-            render_expr(&tuple_count.expr),
-            "0_i64 /* tuple.count() not fully supported */"
-        );
+        assert_eq!(render_expr(&tuple_count.expr), "0 as i64");
 
         let str_len = lower_method(&Type::Str, "len", "s", &[]).expect("str len lowers");
         assert_eq!(render_expr(&str_len.expr), "s.chars().count() as i64");
