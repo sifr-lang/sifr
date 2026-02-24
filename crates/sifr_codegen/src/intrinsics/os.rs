@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn ref_expr(expr: RustExpr) -> RustExpr {
@@ -13,7 +13,7 @@ fn ref_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+fn ref_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     ref_expr(arg_expr(args, idx))
 }
 
@@ -111,7 +111,7 @@ fn zero_usage_vec() -> RustExpr {
     RustExpr::Vec(vec![int(0), int(0), int(0)])
 }
 
-fn lower_cfg_windows_string(args: &[String], windows: &str, other: &str) -> Option<RustExpr> {
+fn lower_cfg_windows_string(args: &[RustExpr], windows: &str, other: &str) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -133,7 +133,7 @@ fn lower_cfg_windows_string(args: &[String], windows: &str, other: &str) -> Opti
     })
 }
 
-pub(super) fn lower_run_command(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_run_command(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -167,7 +167,7 @@ pub(super) fn lower_run_command(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_get_args(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_get_args(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -185,7 +185,7 @@ pub(super) fn lower_get_args(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_chdir(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_chdir(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -203,7 +203,7 @@ pub(super) fn lower_chdir(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_getpid(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_getpid(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -220,7 +220,7 @@ pub(super) fn lower_getpid(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_cpu_count(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_cpu_count(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -264,7 +264,7 @@ pub(super) fn lower_cpu_count(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_stat_size(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_stat_size(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -300,7 +300,7 @@ pub(super) fn lower_stat_size(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_which(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_which(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -390,7 +390,7 @@ pub(super) fn lower_which(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_disk_usage(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_disk_usage(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -591,7 +591,7 @@ pub(super) fn lower_disk_usage(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_os_sep(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_os_sep(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -606,10 +606,10 @@ pub(super) fn lower_os_sep(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_os_linesep(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_os_linesep(args: &[RustExpr]) -> Option<RustExpr> {
     lower_cfg_windows_string(args, "\r\n", "\n")
 }
 
-pub(super) fn lower_os_name(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_os_name(args: &[RustExpr]) -> Option<RustExpr> {
     lower_cfg_windows_string(args, "nt", "posix")
 }
