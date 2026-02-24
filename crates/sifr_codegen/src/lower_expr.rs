@@ -347,8 +347,12 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             generators,
             ty,
         } => try_lower_simple_dict_comp_expr(key_expr, val_expr, generators, ty),
-        HirExpr::GeneratorExpr { .. }
-        | HirExpr::SetComp { .. } => None,
+        HirExpr::SetComp {
+            expr,
+            generators,
+            ty,
+        } => try_lower_simple_set_comp_expr(expr, generators, ty),
+        HirExpr::GeneratorExpr { .. } => None,
         _ => None,
     }
 }
@@ -677,6 +681,80 @@ fn try_lower_simple_dict_comp_expr(
                     "std".to_string(),
                     "collections".to_string(),
                     "HashMap".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            },
+        },
+        RustStmt::For {
+            var: var.clone(),
+            iter,
+            body: loop_body,
+        },
+    ];
+
+    Some(RustExpr::Block {
+        stmts,
+        expr: Some(Box::new(RustExpr::Ident(result_ident))),
+    })
+}
+
+fn try_lower_simple_set_comp_expr(
+    expr: &HirExpr,
+    generators: &[(String, HirExpr, Option<HirExpr>)],
+    ty: &Type,
+) -> Option<RustExpr> {
+    if generators.len() != 1 || resolve_alias_type(ty) != &Type::Any {
+        return None;
+    }
+
+    let (var, iter_expr, maybe_filter) = generators.first()?;
+    if var.contains(',') {
+        return None;
+    }
+
+    let lowered_iter = try_lower_leaf_or_name_expr(iter_expr)?;
+    let iter = if matches!(iter_expr.ty(), Type::Range) {
+        lowered_iter
+    } else {
+        RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "clone".to_string(),
+                args: vec![],
+            }),
+            method: "into_iter".to_string(),
+            args: vec![],
+        }
+    };
+
+    let result_ident = "__sifr_set_comp".to_string();
+    let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(result_ident.clone())),
+        method: "insert".to_string(),
+        args: vec![try_lower_leaf_or_name_expr(expr)?],
+    });
+
+    let loop_body = if let Some(filter) = maybe_filter {
+        vec![RustStmt::If {
+            cond: try_lower_leaf_or_name_expr(filter)?,
+            then_body: vec![insert_stmt],
+            else_body: None,
+        }]
+    } else {
+        vec![insert_stmt]
+    };
+
+    let stmts = vec![
+        RustStmt::Let {
+            mutable: true,
+            name: result_ident.clone(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "collections".to_string(),
+                    "HashSet".to_string(),
                     "new".to_string(),
                 ])),
                 args: vec![],
@@ -3128,6 +3206,84 @@ mod tests {
                 None,
             )],
             ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_set_comp_with_single_generator() {
+        let expr = HirExpr::SetComp {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            generators: vec![(
+                "x".to_string(),
+                HirExpr::Name {
+                    name: "items".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+                None,
+            )],
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("set comp lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Block { stmts, expr: Some(result) }
+                if matches!(stmts.first(), Some(RustStmt::Let { name, mutable, .. }) if name == "__sifr_set_comp" && *mutable)
+                    && matches!(stmts.get(1), Some(RustStmt::For { var, .. }) if var == "x")
+                    && matches!(result.as_ref(), RustExpr::Ident(name) if name == "__sifr_set_comp")
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_set_comp_with_multiple_generators() {
+        let expr = HirExpr::SetComp {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            generators: vec![
+                (
+                    "x".to_string(),
+                    HirExpr::Name {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    None,
+                ),
+                (
+                    "y".to_string(),
+                    HirExpr::Name {
+                        name: "other".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    None,
+                ),
+            ],
+            ty: Type::Any,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_set_comp_on_typed_set() {
+        let expr = HirExpr::SetComp {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            generators: vec![(
+                "x".to_string(),
+                HirExpr::Name {
+                    name: "items".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+                None,
+            )],
+            ty: Type::Set(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
     }
