@@ -76,6 +76,7 @@ status: **partially met**
 - [x] Legacy intrinsic fallback dispatcher remains huge and active (`emit_intrinsic_call` fallback arms)
 - [x] Legacy method fallback path remains active (`emit_method_call` fallback arms)
 - [x] `builtin_open` and related file-handle intrinsics still giant string literals
+- [x] Logging intrinsics (`set_global_level`, `get_global_level`) now lower via structured IR nodes (no `RawCode` emission path)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes

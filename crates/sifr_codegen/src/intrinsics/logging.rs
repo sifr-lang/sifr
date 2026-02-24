@@ -1,22 +1,35 @@
 //! Logging state intrinsic lowerers for registry migration.
 
-use crate::RustExpr;
+use crate::{RustExpr, RustLiteral, RustStmt};
 
-pub(super) fn lower_set_global_level(args: &[String]) -> Option<RustExpr> {
+fn global_log_level_lock_expr() -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__SIFR_GLOBAL_LOG_LEVEL".to_string())),
+            method: "lock".to_string(),
+            args: vec![],
+        }),
+        method: "unwrap".to_string(),
+        args: vec![],
+    }
+}
+
+pub(super) fn lower_set_global_level(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ *__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap() = ({}); () }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Assign {
+            target: RustExpr::Deref(Box::new(global_log_level_lock_expr())),
+            value: args[0].clone(),
+        }],
+        expr: Some(Box::new(RustExpr::Literal(RustLiteral::Unit))),
+    })
 }
 
-pub(super) fn lower_get_global_level(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_get_global_level(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(
-        "*__SIFR_GLOBAL_LOG_LEVEL.lock().unwrap()".to_string(),
-    ))
+    Some(RustExpr::Deref(Box::new(global_log_level_lock_expr())))
 }
