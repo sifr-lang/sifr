@@ -704,14 +704,193 @@ pub(super) fn lower_dist(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_fsum(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_fsum(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __data = &({}); let mut __sum = 0.0f64; let mut __comp = 0.0f64; let mut __pos_inf = false; let mut __neg_inf = false; let mut __has_nan = false; for __x in __data.iter() {{ let __v = *__x; if __v.is_nan() {{ __has_nan = true; continue; }} if __v.is_infinite() {{ if __v.is_sign_positive() {{ __pos_inf = true; }} else {{ __neg_inf = true; }} continue; }} let __t = __sum + __v; if __sum.abs() >= __v.abs() {{ __comp += (__sum - __t) + __v; }} else {{ __comp += (__v - __t) + __sum; }} __sum = __t; }} if __has_nan || (__pos_inf && __neg_inf) {{ f64::NAN }} else if __pos_inf {{ f64::INFINITY }} else if __neg_inf {{ f64::NEG_INFINITY }} else {{ __sum + __comp }} }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__data".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(args[0].clone()),
+                },
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__sum".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::Literal(RustLiteral::Float(0.0)),
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__comp".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::Literal(RustLiteral::Float(0.0)),
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__pos_inf".to_string(),
+                ty: Some(RustType::Bool),
+                value: RustExpr::Literal(RustLiteral::Bool(false)),
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__neg_inf".to_string(),
+                ty: Some(RustType::Bool),
+                value: RustExpr::Literal(RustLiteral::Bool(false)),
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__has_nan".to_string(),
+                ty: Some(RustType::Bool),
+                value: RustExpr::Literal(RustLiteral::Bool(false)),
+            },
+            RustStmt::For {
+                var: "__x".to_string(),
+                iter: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__data".to_string())),
+                    method: "iter".to_string(),
+                    args: vec![],
+                },
+                body: vec![
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__v".to_string(),
+                        ty: Some(RustType::F64),
+                        value: RustExpr::Deref(Box::new(RustExpr::Ident("__x".to_string()))),
+                    },
+                    RustStmt::If {
+                        cond: RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__v".to_string())),
+                            method: "is_nan".to_string(),
+                            args: vec![],
+                        },
+                        then_body: vec![
+                            RustStmt::Assign {
+                                target: RustExpr::Ident("__has_nan".to_string()),
+                                value: RustExpr::Literal(RustLiteral::Bool(true)),
+                            },
+                            RustStmt::Continue,
+                        ],
+                        else_body: None,
+                    },
+                    RustStmt::If {
+                        cond: RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__v".to_string())),
+                            method: "is_infinite".to_string(),
+                            args: vec![],
+                        },
+                        then_body: vec![
+                            RustStmt::If {
+                                cond: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__v".to_string())),
+                                    method: "is_sign_positive".to_string(),
+                                    args: vec![],
+                                },
+                                then_body: vec![RustStmt::Assign {
+                                    target: RustExpr::Ident("__pos_inf".to_string()),
+                                    value: RustExpr::Literal(RustLiteral::Bool(true)),
+                                }],
+                                else_body: Some(vec![RustStmt::Assign {
+                                    target: RustExpr::Ident("__neg_inf".to_string()),
+                                    value: RustExpr::Literal(RustLiteral::Bool(true)),
+                                }]),
+                            },
+                            RustStmt::Continue,
+                        ],
+                        else_body: None,
+                    },
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__t".to_string(),
+                        ty: Some(RustType::F64),
+                        value: RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("__sum".to_string())),
+                            op: "+".to_string(),
+                            right: Box::new(RustExpr::Ident("__v".to_string())),
+                        },
+                    },
+                    RustStmt::If {
+                        cond: RustExpr::BinOp {
+                            left: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__sum".to_string())),
+                                method: "abs".to_string(),
+                                args: vec![],
+                            }),
+                            op: ">=".to_string(),
+                            right: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__v".to_string())),
+                                method: "abs".to_string(),
+                                args: vec![],
+                            }),
+                        },
+                        then_body: vec![RustStmt::AugAssign {
+                            target: RustExpr::Ident("__comp".to_string()),
+                            op: "+".to_string(),
+                            value: RustExpr::BinOp {
+                                left: Box::new(RustExpr::BinOp {
+                                    left: Box::new(RustExpr::Ident("__sum".to_string())),
+                                    op: "-".to_string(),
+                                    right: Box::new(RustExpr::Ident("__t".to_string())),
+                                }),
+                                op: "+".to_string(),
+                                right: Box::new(RustExpr::Ident("__v".to_string())),
+                            },
+                        }],
+                        else_body: Some(vec![RustStmt::AugAssign {
+                            target: RustExpr::Ident("__comp".to_string()),
+                            op: "+".to_string(),
+                            value: RustExpr::BinOp {
+                                left: Box::new(RustExpr::BinOp {
+                                    left: Box::new(RustExpr::Ident("__v".to_string())),
+                                    op: "-".to_string(),
+                                    right: Box::new(RustExpr::Ident("__t".to_string())),
+                                }),
+                                op: "+".to_string(),
+                                right: Box::new(RustExpr::Ident("__sum".to_string())),
+                            },
+                        }]),
+                    },
+                    RustStmt::Assign {
+                        target: RustExpr::Ident("__sum".to_string()),
+                        value: RustExpr::Ident("__t".to_string()),
+                    },
+                ],
+            },
+        ],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__has_nan".to_string())),
+                op: "||".to_string(),
+                right: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__pos_inf".to_string())),
+                    op: "&&".to_string(),
+                    right: Box::new(RustExpr::Ident("__neg_inf".to_string())),
+                }),
+            }),
+            then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()])),
+            else_expr: Some(Box::new(RustExpr::If {
+                cond: Box::new(RustExpr::Ident("__pos_inf".to_string())),
+                then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()])),
+                else_expr: Some(Box::new(RustExpr::If {
+                    cond: Box::new(RustExpr::Ident("__neg_inf".to_string())),
+                    then_expr: Box::new(RustExpr::Path(vec![
+                        "f64".to_string(),
+                        "NEG_INFINITY".to_string(),
+                    ])),
+                    else_expr: Some(Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__sum".to_string())),
+                        op: "+".to_string(),
+                        right: Box::new(RustExpr::Ident("__comp".to_string())),
+                    })),
+                })),
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_sumprod(args: &[RustExpr]) -> Option<RustExpr> {

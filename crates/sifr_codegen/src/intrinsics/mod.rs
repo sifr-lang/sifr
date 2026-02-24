@@ -104,7 +104,7 @@ fn lower_intrinsic_rendered(
         "isqrt" => (math::lower_isqrt(rendered_args), None),
         "remainder" => (math::lower_remainder(args), None),
         "dist" => (math::lower_dist(args), None),
-        "fsum" => (math::lower_fsum(rendered_args), None),
+        "fsum" => (math::lower_fsum(args), None),
         "sumprod" => (math::lower_sumprod(args), None),
         "erf" => (math::lower_erf(rendered_args), None),
         "erfc" => (math::lower_erfc(rendered_args), None),
@@ -1043,6 +1043,7 @@ mod tests {
 
         let fsum = lower_intrinsic("fsum", &["vals".to_string()]).expect("fsum");
         assert!(render_expr(&fsum.expr).contains("__sum + __comp"));
+        assert!(!matches!(fsum.expr, RustExpr::RawCode(_)));
 
         let sumprod =
             lower_intrinsic("sumprod", &["a".to_string(), "b".to_string()]).expect("sumprod");
