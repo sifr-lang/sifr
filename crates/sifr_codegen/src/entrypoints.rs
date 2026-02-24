@@ -1,5 +1,7 @@
-use super::{render_items, CodegenResult, HirModule, RustEmitter, RustItem, StdlibCode};
+use super::{CodegenResult, HirModule, Renderer, RustEmitter, RustFile, RustItem, StdlibCode};
 use crate::ir_imports::collect_import_needs_from_items;
+use crate::ir_optimize::remove_trivial_clones_in_items;
+use crate::ir_validate::validate_items;
 
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
@@ -22,7 +24,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     // Second pass: emit the actual code
     emitter.emit_module(module, false, true);
 
-    let mut emitted_items = Vec::new();
+    let mut emitted_items: Vec<RustItem> = Vec::new();
     if !emitter.enum_items.is_empty() {
         emitted_items.extend(emitter.enum_items.clone());
     }
@@ -60,19 +62,30 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         ]));
     }
 
-    let mut result = String::new();
-    if !import_items.is_empty() {
-        result.push_str(&render_items(&import_items));
-        result.push('\n');
-    }
-    if !emitter.enum_items.is_empty() {
-        result.push_str(&render_items(&emitter.enum_items));
-        result.push('\n');
-    }
-    result.push_str(&emitter.output);
+    let mut file_items: Vec<RustItem> = Vec::new();
+    file_items.extend(import_items);
+    file_items.extend(emitted_items);
+    remove_trivial_clones_in_items(&mut file_items);
+    let typed_items: Vec<RustItem> = file_items
+        .iter()
+        .filter(|item| !matches!(item, RustItem::RawCode(_)))
+        .cloned()
+        .collect();
+    let file_issues = validate_items(&typed_items);
+    assert!(
+        file_issues.is_empty(),
+        "codegen IR validation failed (typed test file): {}",
+        file_issues
+            .iter()
+            .map(|issue| issue.message.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ")
+    );
+    let rust_file = RustFile { items: file_items };
+    let rust_source = Renderer::new().render_file(&rust_file);
 
     CodegenResult {
-        rust_source: result,
+        rust_source,
         used_stdlib_modules: emitter.used_stdlib_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_crates: {

@@ -16,8 +16,8 @@ mod lower_expr;
 pub use lower_expr::*;
 mod lower_stmt;
 pub use lower_stmt::*;
-mod expr_emitter;
 mod error_refs;
+mod expr_emitter;
 mod lower_item;
 mod stmt_emitter;
 pub use lower_item::*;
@@ -53,6 +53,7 @@ mod union_type_helpers;
 #[cfg(test)]
 mod lib_codegen_tests;
 
+use error_refs::collect_referenced_builtin_error_classes;
 use helpers::{
     collect_mutated_vars_with_sigs, is_hashable_type_codegen, module_uses_bigint,
     type_contains_typevar,
@@ -60,7 +61,6 @@ use helpers::{
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
-use error_refs::collect_referenced_builtin_error_classes;
 use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -410,24 +410,26 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         preamble_items.extend(build_logging_items());
     }
 
-    remove_trivial_clones_in_items(&mut preamble_items);
-    let ir_import_needs = collect_import_needs_from_items(&preamble_items);
-    let enum_import_needs = collect_import_needs_from_items(&emitter.enum_items);
-    let needs_hashmap = needs_hashmap_base
-        || ir_import_needs.collections.needs_hashmap
-        || enum_import_needs.collections.needs_hashmap;
-    let needs_hashset = needs_hashset_base
-        || ir_import_needs.collections.needs_hashset
-        || enum_import_needs.collections.needs_hashset;
-    let needs_vecdeque = needs_vecdeque_base
-        || ir_import_needs.collections.needs_vecdeque
-        || enum_import_needs.collections.needs_vecdeque;
-    let needs_bigint =
-        needs_bigint_base || ir_import_needs.runtime.needs_bigint || enum_import_needs.runtime.needs_bigint;
-    let needs_mutex = needs_file_handles
-        || needs_logging
-        || ir_import_needs.runtime.needs_mutex
-        || enum_import_needs.runtime.needs_mutex;
+    let mut assembled_body_items: Vec<RustItem> = Vec::new();
+    if !emitter.enum_items.is_empty() {
+        assembled_body_items.extend(emitter.enum_items.clone());
+    }
+    if !preamble_items.is_empty() {
+        assembled_body_items.extend(preamble_items.clone());
+    }
+    if !stdlib_preamble.is_empty() {
+        assembled_body_items.push(RustItem::RawCode(stdlib_preamble.clone()));
+    }
+    if !emitter.output.is_empty() {
+        assembled_body_items.push(RustItem::RawCode(emitter.output.clone()));
+    }
+
+    let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
+    let needs_hashmap = needs_hashmap_base || body_import_needs.collections.needs_hashmap;
+    let needs_hashset = needs_hashset_base || body_import_needs.collections.needs_hashset;
+    let needs_vecdeque = needs_vecdeque_base || body_import_needs.collections.needs_vecdeque;
+    let needs_bigint = needs_bigint_base || body_import_needs.runtime.needs_bigint;
+    let needs_mutex = needs_file_handles || needs_logging || body_import_needs.runtime.needs_mutex;
 
     let mut import_items: Vec<RustItem> = Vec::new();
     if needs_hashmap {
@@ -465,57 +467,27 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         ]));
     }
 
-    remove_trivial_clones_in_items(&mut import_items);
-    let mut result = String::new();
-    let import_issues = validate_items(&import_items);
+    let mut file_items: Vec<RustItem> = Vec::new();
+    file_items.extend(import_items);
+    file_items.extend(assembled_body_items);
+    remove_trivial_clones_in_items(&mut file_items);
+    let typed_items: Vec<RustItem> = file_items
+        .iter()
+        .filter(|item| !matches!(item, RustItem::RawCode(_)))
+        .cloned()
+        .collect();
+    let file_issues = validate_items(&typed_items);
     assert!(
-        import_issues.is_empty(),
-        "codegen IR validation failed (imports): {}",
-        import_issues
+        file_issues.is_empty(),
+        "codegen IR validation failed (typed full file): {}",
+        file_issues
             .iter()
             .map(|issue| issue.message.as_str())
             .collect::<Vec<_>>()
             .join(" | ")
     );
-    let preamble_issues = validate_items(&preamble_items);
-    assert!(
-        preamble_issues.is_empty(),
-        "codegen IR validation failed (preamble): {}",
-        preamble_issues
-            .iter()
-            .map(|issue| issue.message.as_str())
-            .collect::<Vec<_>>()
-            .join(" | ")
-    );
-    if !import_items.is_empty() {
-        result.push_str(&render_items(&import_items));
-        result.push('\n');
-    }
-    let enum_issues = validate_items(&emitter.enum_items);
-    assert!(
-        enum_issues.is_empty(),
-        "codegen IR validation failed (union enums): {}",
-        enum_issues
-            .iter()
-            .map(|issue| issue.message.as_str())
-            .collect::<Vec<_>>()
-            .join(" | ")
-    );
-    if !emitter.enum_items.is_empty() {
-        result.push_str(&render_items(&emitter.enum_items));
-        result.push('\n');
-    }
-
-    if !preamble_items.is_empty() {
-        result.push_str(&render_items(&preamble_items));
-        result.push('\n');
-    }
-
-    if !stdlib_preamble.is_empty() {
-        result.push_str(&stdlib_preamble);
-    }
-
-    result.push_str(&emitter.output);
+    let rust_file = RustFile { items: file_items };
+    let rust_source = Renderer::new().render_file(&rust_file);
 
     // Add transitive dependencies from stdlib modules
     let mut all_used_modules = emitter.used_stdlib_modules.clone();
@@ -526,7 +498,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     CodegenResult {
-        rust_source: result,
+        rust_source,
         used_stdlib_modules: all_used_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_crates: {
