@@ -2,7 +2,7 @@
 
 use crate::RustExpr;
 
-fn lower_const_to_string(args: &[String], constant: &str) -> Option<RustExpr> {
+fn lower_const_to_string(args: &[RustExpr], constant: &str) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -18,15 +18,15 @@ fn lower_const_to_string(args: &[String], constant: &str) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_platform_system(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_platform_system(args: &[RustExpr]) -> Option<RustExpr> {
     lower_const_to_string(args, "OS")
 }
 
-pub(super) fn lower_platform_arch(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_platform_arch(args: &[RustExpr]) -> Option<RustExpr> {
     lower_const_to_string(args, "ARCH")
 }
 
-pub(super) fn lower_platform_node(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_platform_node(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -35,7 +35,7 @@ pub(super) fn lower_platform_node(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_platform_release(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_platform_release(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -44,7 +44,7 @@ pub(super) fn lower_platform_release(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_platform_version(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_platform_version(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -53,6 +53,6 @@ pub(super) fn lower_platform_version(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_platform_processor(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_platform_processor(args: &[RustExpr]) -> Option<RustExpr> {
     lower_const_to_string(args, "ARCH")
 }

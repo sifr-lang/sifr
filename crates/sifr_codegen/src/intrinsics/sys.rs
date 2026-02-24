@@ -2,7 +2,11 @@
 
 use crate::{RustExpr, RustLiteral, RustType};
 
-pub(super) fn lower_sys_exit(args: &[String]) -> Option<RustExpr> {
+fn parenthesized(expr: &RustExpr) -> RustExpr {
+    RustExpr::RawCode(format!("({})", crate::render_expr(expr)))
+}
+
+pub(super) fn lower_sys_exit(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -13,13 +17,13 @@ pub(super) fn lower_sys_exit(args: &[String]) -> Option<RustExpr> {
             "exit".to_string(),
         ])),
         args: vec![RustExpr::Cast {
-            expr: Box::new(RustExpr::Ident(args[0].clone())),
+            expr: Box::new(parenthesized(&args[0])),
             ty: RustType::Named("i32".to_string()),
         }],
     })
 }
 
-pub(super) fn lower_sys_version(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_sys_version(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -28,7 +32,7 @@ pub(super) fn lower_sys_version(args: &[String]) -> Option<RustExpr> {
     )))
 }
 
-pub(super) fn lower_sys_platform(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_sys_platform(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -44,7 +48,7 @@ pub(super) fn lower_sys_platform(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_sys_maxsize(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_sys_maxsize(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }

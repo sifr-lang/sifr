@@ -269,14 +269,14 @@ fn lower_intrinsic_rendered(
         "re_replace_flags" => (re::lower_re_replace_flags(rendered_args), Some("regex")),
         "re_findall_flags" => (re::lower_re_findall_flags(rendered_args), Some("regex")),
         "re_split_flags" => (re::lower_re_split_flags(rendered_args), Some("regex")),
-        "sha256" => (hash::lower_sha256(rendered_args), Some("sha2")),
-        "md5" => (hash::lower_md5(rendered_args), Some("md5")),
-        "platform_system" => (platform::lower_platform_system(rendered_args), None),
-        "platform_arch" => (platform::lower_platform_arch(rendered_args), None),
-        "platform_node" => (platform::lower_platform_node(rendered_args), None),
-        "platform_release" => (platform::lower_platform_release(rendered_args), None),
-        "platform_version" => (platform::lower_platform_version(rendered_args), None),
-        "platform_processor" => (platform::lower_platform_processor(rendered_args), None),
+        "sha256" => (hash::lower_sha256(args), Some("sha2")),
+        "md5" => (hash::lower_md5(args), Some("md5")),
+        "platform_system" => (platform::lower_platform_system(args), None),
+        "platform_arch" => (platform::lower_platform_arch(args), None),
+        "platform_node" => (platform::lower_platform_node(args), None),
+        "platform_release" => (platform::lower_platform_release(args), None),
+        "platform_version" => (platform::lower_platform_version(args), None),
+        "platform_processor" => (platform::lower_platform_processor(args), None),
         "uuid4" => (uuid::lower_uuid4(rendered_args), Some("rand")),
         "toml_parse" => (toml::lower_toml_parse(rendered_args), Some("toml")),
         "datetime_now" => (datetime::lower_datetime_now(rendered_args), Some("chrono")),
@@ -289,10 +289,10 @@ fn lower_intrinsic_rendered(
             datetime::lower_datetime_from_timestamp(rendered_args),
             Some("chrono"),
         ),
-        "sys_exit" => (sys::lower_sys_exit(rendered_args), None),
-        "sys_version" => (sys::lower_sys_version(rendered_args), None),
-        "sys_platform" => (sys::lower_sys_platform(rendered_args), None),
-        "sys_maxsize" => (sys::lower_sys_maxsize(rendered_args), None),
+        "sys_exit" => (sys::lower_sys_exit(args), None),
+        "sys_version" => (sys::lower_sys_version(args), None),
+        "sys_platform" => (sys::lower_sys_platform(args), None),
+        "sys_maxsize" => (sys::lower_sys_maxsize(args), None),
         "subprocess_run" => (subprocess::lower_subprocess_run(rendered_args), None),
         "subprocess_run_with_input" => (
             subprocess::lower_subprocess_run_with_input(rendered_args),
@@ -335,12 +335,12 @@ fn lower_intrinsic_rendered(
         "b32decode" => (base32::lower_b32decode(rendered_args), None),
         "b32hexencode" => (base32::lower_b32hexencode(rendered_args), None),
         "b32hexdecode" => (base32::lower_b32hexdecode(rendered_args), None),
-        "sha1" => (hashlib::lower_sha1(rendered_args), Some("sha1")),
-        "sha512" => (hashlib::lower_sha512(rendered_args), Some("sha2")),
-        "sha224" => (hashlib::lower_sha224(rendered_args), Some("sha2")),
-        "sha384" => (hashlib::lower_sha384(rendered_args), Some("sha2")),
-        "blake2b" => (hashlib::lower_blake2b(rendered_args), Some("blake2")),
-        "blake2s" => (hashlib::lower_blake2s(rendered_args), Some("blake2")),
+        "sha1" => (hashlib::lower_sha1(args), Some("sha1")),
+        "sha512" => (hashlib::lower_sha512(args), Some("sha2")),
+        "sha224" => (hashlib::lower_sha224(args), Some("sha2")),
+        "sha384" => (hashlib::lower_sha384(args), Some("sha2")),
+        "blake2b" => (hashlib::lower_blake2b(args), Some("blake2")),
+        "blake2s" => (hashlib::lower_blake2s(args), Some("blake2")),
         "set_global_level" => (logging::lower_set_global_level(args), None),
         "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,
@@ -834,7 +834,8 @@ mod tests {
     #[test]
     fn lowers_sys_intrinsics_via_registry() {
         let exit = lower_intrinsic("sys_exit", &["code".to_string()]).expect("sys_exit");
-        assert!(render_expr(&exit.expr).contains("std::process::exit(code as i32)"));
+        assert!(render_expr(&exit.expr).contains("std::process::exit("));
+        assert!(render_expr(&exit.expr).contains("as i32"));
 
         let version = lower_intrinsic("sys_version", &[]).expect("sys_version");
         assert_eq!(render_expr(&version.expr), "\"sifr 0.1.0\".to_string()");

@@ -93,6 +93,7 @@ status: **partially met**
 - [x] Math intrinsic `gamma` now lowers via structured IR Lanczos/reflection path (no monolithic `RawCode` template)
 - [x] Math intrinsic `lgamma` now lowers via structured IR log-gamma path (no monolithic `RawCode` template)
 - [x] Core scalar math intrinsic lowerers (`sqrt`..`isqrt`) now take typed IR args in registry dispatch (no string-arg dispatcher path)
+- [x] `sys`/`platform`/`hash`/`hashlib` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes

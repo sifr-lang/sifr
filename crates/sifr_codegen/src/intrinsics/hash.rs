@@ -2,7 +2,11 @@
 
 use crate::RustExpr;
 
-pub(super) fn lower_sha256(args: &[String]) -> Option<RustExpr> {
+fn parenthesized(expr: &RustExpr) -> RustExpr {
+    RustExpr::RawCode(format!("({})", crate::render_expr(expr)))
+}
+
+pub(super) fn lower_sha256(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -14,7 +18,7 @@ pub(super) fn lower_sha256(args: &[String]) -> Option<RustExpr> {
                 "<sha2::Sha256 as sha2::Digest>::digest".to_string(),
             )),
             args: vec![RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(args[0].clone())),
+                receiver: Box::new(parenthesized(&args[0])),
                 method: "as_bytes".to_string(),
                 args: vec![],
             }],
@@ -22,7 +26,7 @@ pub(super) fn lower_sha256(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_md5(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_md5(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -36,7 +40,7 @@ pub(super) fn lower_md5(args: &[String]) -> Option<RustExpr> {
                 "compute".to_string(),
             ])),
             args: vec![RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(args[0].clone())),
+                receiver: Box::new(parenthesized(&args[0])),
                 method: "as_bytes".to_string(),
                 args: vec![],
             }],
