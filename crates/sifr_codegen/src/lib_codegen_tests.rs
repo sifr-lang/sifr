@@ -796,8 +796,12 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
     };
 
     let result = generate_rust_test(&module);
-    assert!(result.rust_source.contains("use std::collections::HashMap;"));
-    assert!(result.rust_source.contains("use std::collections::HashSet;"));
+    assert!(result
+        .rust_source
+        .contains("use std::collections::HashMap;"));
+    assert!(result
+        .rust_source
+        .contains("use std::collections::HashSet;"));
     assert!(result.rust_source.contains("use num_bigint::BigInt;"));
     assert!(result.required_crates.contains("num-bigint"));
     assert!(result.required_crates.contains("num-traits"));
@@ -1110,4 +1114,20 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         expr_src.lines().count() > 1000,
         "expression fallback emitter should hold migrated logic"
     );
+}
+
+#[test]
+fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
+    let lib_src = include_str!("lib.rs");
+    let start = lib_src
+        .find("pub fn generate_rust_with_stdlib")
+        .expect("generate_rust_with_stdlib should exist");
+    let end = lib_src
+        .find("/// Generate Rust source code for a multi-module project.")
+        .expect("generate_rust_multi docs should exist");
+    let generate_block = &lib_src[start..end];
+
+    assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
+    assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(!generate_block.contains("result.push_str(&emitter.output)"));
 }

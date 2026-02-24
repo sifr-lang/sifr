@@ -159,14 +159,14 @@ Root cause: `emit_method_call` still has broad fallback string emission.
 
 ## Slice 6: Promote Full IR Module Assembly to Production Path
 
-status: **pending**
+status: **done**
 
 Root cause: production codegen still centers around string emitters + fallback.
 
-- [ ] Build `RustFile` for user code items in production path
-- [ ] Run structural passes on full `RustFile`
-- [ ] Render once at end (single renderer sink)
-- [ ] Keep parity tests green
+- [x] Build `RustFile` for user code items in production path
+- [x] Run structural passes on full `RustFile`
+- [x] Render once at end (single renderer sink)
+- [x] Keep parity tests green
 
 ## Slice 7: Structural DCE on IR (Replace Text-Token DCE)
 
