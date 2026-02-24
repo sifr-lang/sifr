@@ -177,6 +177,18 @@ Root cause: stdlib pruning is still text-token chunk parsing.
 - [x] Replace `stdlib_filter` token/chunk DCE with IR item graph traversal
 - [x] Keep transitive dependency behavior and order stability
 - [x] Delete obsolete text/chunk parsing helpers after migration
+- [x] Follow-up regression fix: macro-argument dependency tracking + file-handle lowering lifetime correction (PR #687)
+
+## Slice 8: File-handle Open Intrinsic Template Cleanup
+
+status: **done**
+
+Root cause: `builtin_open` / `open_file` lowering still relied on monolithic raw string literals.
+
+- [x] Centralize mode-branch generation into template helpers
+- [x] Preserve runtime semantics while reducing giant inline string bodies for open paths
+- [x] Validate with full completion gate + demos
+- [x] PR merged (#688)
 
 ---
 
@@ -184,8 +196,8 @@ Root cause: stdlib pruning is still text-token chunk parsing.
 
 Phase 14 is complete only when all slices above are marked done and the following pass:
 
-- [ ] `cargo test --workspace`
-- [ ] `cargo clippy --workspace -- -D warnings`
-- [ ] `cargo test -p sifr --test e2e`
-- [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
-- [ ] `cargo run -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr`
+- [x] `cargo test --workspace`
+- [x] `cargo clippy --workspace -- -D warnings`
+- [x] `cargo test -p sifr --test e2e`
+- [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+- [x] `cargo run -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr`
