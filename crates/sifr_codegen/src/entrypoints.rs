@@ -23,8 +23,8 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     emitter.emit_module(module, false, true);
 
     let mut emitted_items = Vec::new();
-    if !emitter.enum_defs.is_empty() {
-        emitted_items.push(RustItem::RawCode(emitter.enum_defs.clone()));
+    if !emitter.enum_items.is_empty() {
+        emitted_items.extend(emitter.enum_items.clone());
     }
     if !emitter.output.is_empty() {
         emitted_items.push(RustItem::RawCode(emitter.output.clone()));
@@ -65,8 +65,8 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         result.push_str(&render_items(&import_items));
         result.push('\n');
     }
-    if !emitter.enum_defs.is_empty() {
-        result.push_str(&emitter.enum_defs);
+    if !emitter.enum_items.is_empty() {
+        result.push_str(&render_items(&emitter.enum_items));
         result.push('\n');
     }
     result.push_str(&emitter.output);

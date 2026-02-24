@@ -128,13 +128,13 @@ Root cause: test entrypoint still relies on emitter boolean flags for imports.
 
 ## Slice 3: Replace `enum_defs` String Path with IR Items
 
-status: **pending**
+status: **done**
 
 Root cause: union enum generation remains string accumulation.
 
-- [ ] Refactor union enum generation to produce `Vec<RustItem>`
-- [ ] Render through common renderer path only
-- [ ] Remove `enum_defs: String` plumbing from `RustEmitter`
+- [x] Refactor union enum generation to produce `Vec<RustItem>`
+- [x] Render through common renderer path only
+- [x] Remove `enum_defs: String` plumbing from `RustEmitter`
 
 ## Slice 4: Intrinsic Fallback Deletion (Registry-Only)
 
