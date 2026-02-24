@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn ref_expr(expr: RustExpr) -> RustExpr {
@@ -13,7 +13,7 @@ fn ref_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+fn ref_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     ref_expr(arg_expr(args, idx))
 }
 
@@ -61,7 +61,7 @@ fn ok_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-pub(super) fn lower_zip_create(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_zip_create(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -97,7 +97,7 @@ pub(super) fn lower_zip_create(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_zip_add_file(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_zip_add_file(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
@@ -217,7 +217,7 @@ pub(super) fn lower_zip_add_file(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_zip_read_file(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_zip_read_file(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -295,7 +295,7 @@ pub(super) fn lower_zip_read_file(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_zip_namelist(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_zip_namelist(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
