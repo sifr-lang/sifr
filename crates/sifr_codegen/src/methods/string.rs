@@ -2,24 +2,28 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn lower_zero_arg_method(object: &str, args: &[String], method: &str) -> Option<RustExpr> {
+fn lower_zero_arg_method(object: &RustExpr, args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        receiver: Box::new(object.clone()),
         method: method.to_string(),
         args: vec![],
     })
 }
 
-fn lower_trim_to_string(object: &str, args: &[String], trim_method: &str) -> Option<RustExpr> {
+fn lower_trim_to_string(
+    object: &RustExpr,
+    args: &[RustExpr],
+    trim_method: &str,
+) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(object.to_string())),
+            receiver: Box::new(object.clone()),
             method: trim_method.to_string(),
             args: vec![],
         }),
@@ -28,20 +32,22 @@ fn lower_trim_to_string(object: &str, args: &[String], trim_method: &str) -> Opt
     })
 }
 
-fn render_borrowed_arg_expr(arg: &str) -> RustExpr {
-    if arg.ends_with(".as_str()") || arg.starts_with('&') {
-        RustExpr::Ident(arg.to_string())
-    } else {
-        RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(RustExpr::Ident(format!("({arg})"))),
+fn render_borrowed_arg_expr(arg: &RustExpr) -> RustExpr {
+    match arg {
+        RustExpr::Ref { .. } => arg.clone(),
+        RustExpr::RawCode(code) if code.ends_with(".as_str()") || code.starts_with('&') => {
+            RustExpr::RawCode(code.clone())
         }
+        _ => RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(arg.clone()),
+        },
     }
 }
 
 fn lower_non_empty_char_all(
-    object: &str,
-    args: &[String],
+    object: &RustExpr,
+    args: &[RustExpr],
     char_predicate_method: &str,
 ) -> Option<RustExpr> {
     if !args.is_empty() {
@@ -51,7 +57,7 @@ fn lower_non_empty_char_all(
         left: Box::new(RustExpr::UnaryOp {
             op: "!".to_string(),
             operand: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                receiver: Box::new(object.clone()),
                 method: "is_empty".to_string(),
                 args: vec![],
             }),
@@ -59,7 +65,7 @@ fn lower_non_empty_char_all(
         op: "&&".to_string(),
         right: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                receiver: Box::new(object.clone()),
                 method: "chars".to_string(),
                 args: vec![],
             }),
@@ -96,8 +102,8 @@ fn char_predicate_closure(method: &str) -> RustExpr {
 }
 
 fn lower_has_alpha_and_filtered_all(
-    object: &str,
-    args: &[String],
+    object: &RustExpr,
+    args: &[RustExpr],
     alpha_case_method: &str,
 ) -> Option<RustExpr> {
     if !args.is_empty() {
@@ -106,7 +112,7 @@ fn lower_has_alpha_and_filtered_all(
     Some(RustExpr::BinOp {
         left: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                receiver: Box::new(object.clone()),
                 method: "chars".to_string(),
                 args: vec![],
             }),
@@ -117,7 +123,7 @@ fn lower_has_alpha_and_filtered_all(
         right: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    receiver: Box::new(object.clone()),
                     method: "chars".to_string(),
                     args: vec![],
                 }),
@@ -130,46 +136,46 @@ fn lower_has_alpha_and_filtered_all(
     })
 }
 
-pub(super) fn lower_upper(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_upper(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_zero_arg_method(object, args, "to_uppercase")
 }
 
-pub(super) fn lower_lower(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_lower(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_zero_arg_method(object, args, "to_lowercase")
 }
 
-pub(super) fn lower_strip(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_strip(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_trim_to_string(object, args, "trim")
 }
 
-pub(super) fn lower_startswith(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_startswith(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        receiver: Box::new(object.clone()),
         method: "starts_with".to_string(),
         args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 
-pub(super) fn lower_endswith(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_endswith(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        receiver: Box::new(object.clone()),
         method: "ends_with".to_string(),
         args: vec![render_borrowed_arg_expr(&args[0])],
     })
 }
 
-pub(super) fn lower_split(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     match args.len() {
         0 => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    receiver: Box::new(object.clone()),
                     method: "split_whitespace".to_string(),
                     args: vec![],
                 }),
@@ -193,7 +199,7 @@ pub(super) fn lower_split(object: &str, args: &[String]) -> Option<RustExpr> {
         1 => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    receiver: Box::new(object.clone()),
                     method: "split".to_string(),
                     args: vec![render_borrowed_arg_expr(&args[0])],
                 }),
@@ -218,12 +224,12 @@ pub(super) fn lower_split(object: &str, args: &[String]) -> Option<RustExpr> {
     }
 }
 
-pub(super) fn lower_replace(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(object.to_string())),
+        receiver: Box::new(object.clone()),
         method: "replace".to_string(),
         args: vec![
             render_borrowed_arg_expr(&args[0]),
@@ -232,13 +238,13 @@ pub(super) fn lower_replace(object: &str, args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_find(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(object.to_string())),
+            receiver: Box::new(object.clone()),
             method: "find".to_string(),
             args: vec![render_borrowed_arg_expr(&args[0])],
         }),
@@ -257,22 +263,22 @@ pub(super) fn lower_find(object: &str, args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_lstrip(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_lstrip(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_trim_to_string(object, args, "trim_start")
 }
 
-pub(super) fn lower_rstrip(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_rstrip(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_trim_to_string(object, args, "trim_end")
 }
 
-pub(super) fn lower_count(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_count(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::Cast {
         expr: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                receiver: Box::new(object.clone()),
                 method: "matches".to_string(),
                 args: vec![render_borrowed_arg_expr(&args[0])],
             }),
@@ -283,18 +289,18 @@ pub(super) fn lower_count(object: &str, args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_join(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_join(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(args[0].clone())),
+        receiver: Box::new(args[0].clone()),
         method: "join".to_string(),
         args: vec![render_borrowed_arg_expr(object)],
     })
 }
 
-pub(super) fn lower_title(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_title(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -302,7 +308,7 @@ pub(super) fn lower_title(object: &str, args: &[String]) -> Option<RustExpr> {
         receiver: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    receiver: Box::new(object.clone()),
                     method: "split_whitespace".to_string(),
                     args: vec![],
                 }),
@@ -378,11 +384,14 @@ pub(super) fn lower_title(object: &str, args: &[String]) -> Option<RustExpr> {
             args: vec![],
         }),
         method: "join".to_string(),
-        args: vec![render_borrowed_arg_expr("\" \"")],
+        args: vec![RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::Literal(RustLiteral::Str(" ".to_string()))),
+        }],
     })
 }
 
-pub(super) fn lower_capitalize(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_capitalize(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -392,7 +401,7 @@ pub(super) fn lower_capitalize(object: &str, args: &[String]) -> Option<RustExpr
                 mutable: false,
                 name: "_s".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(object.to_string()))),
+                value: RustExpr::Clone(Box::new(object.clone())),
             },
             RustStmt::Let {
                 mutable: true,
@@ -451,14 +460,14 @@ pub(super) fn lower_capitalize(object: &str, args: &[String]) -> Option<RustExpr
     })
 }
 
-pub(super) fn lower_swapcase(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_swapcase(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                receiver: Box::new(object.clone()),
                 method: "chars".to_string(),
                 args: vec![],
             }),
@@ -501,31 +510,31 @@ pub(super) fn lower_swapcase(object: &str, args: &[String]) -> Option<RustExpr> 
     })
 }
 
-pub(super) fn lower_isdigit(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isdigit(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_non_empty_char_all(object, args, "is_ascii_digit")
 }
 
-pub(super) fn lower_isalpha(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isalpha(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_non_empty_char_all(object, args, "is_alphabetic")
 }
 
-pub(super) fn lower_isalnum(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isalnum(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_non_empty_char_all(object, args, "is_alphanumeric")
 }
 
-pub(super) fn lower_isspace(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isspace(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_non_empty_char_all(object, args, "is_whitespace")
 }
 
-pub(super) fn lower_isupper(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isupper(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_has_alpha_and_filtered_all(object, args, "is_uppercase")
 }
 
-pub(super) fn lower_islower(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_islower(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     lower_has_alpha_and_filtered_all(object, args, "is_lowercase")
 }
 
-pub(super) fn lower_center(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_center(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -535,14 +544,14 @@ pub(super) fn lower_center(object: &str, args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "_s".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(object.to_string()))),
+                value: RustExpr::Clone(Box::new(object.clone())),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "_w".to_string(),
                 ty: None,
                 value: RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident(args[0].clone())),
+                    expr: Box::new(args[0].clone()),
                     ty: RustType::Named("usize".to_string()),
                 },
             },
@@ -627,7 +636,7 @@ pub(super) fn lower_center(object: &str, args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_ljust(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_ljust(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -635,13 +644,13 @@ pub(super) fn lower_ljust(object: &str, args: &[String]) -> Option<RustExpr> {
         name: "format".to_string(),
         format_str: "{:<width$}".to_string(),
         args: vec![
-            RustExpr::Ident(object.to_string()),
-            RustExpr::Ident(format!("width = {} as usize", args[0])),
+            object.clone(),
+            RustExpr::Ident(format!("width = {} as usize", crate::render_expr(&args[0]))),
         ],
     })
 }
 
-pub(super) fn lower_rjust(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_rjust(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -649,13 +658,13 @@ pub(super) fn lower_rjust(object: &str, args: &[String]) -> Option<RustExpr> {
         name: "format".to_string(),
         format_str: "{:>width$}".to_string(),
         args: vec![
-            RustExpr::Ident(object.to_string()),
-            RustExpr::Ident(format!("width = {} as usize", args[0])),
+            object.clone(),
+            RustExpr::Ident(format!("width = {} as usize", crate::render_expr(&args[0]))),
         ],
     })
 }
 
-pub(super) fn lower_zfill(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_zfill(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -663,8 +672,8 @@ pub(super) fn lower_zfill(object: &str, args: &[String]) -> Option<RustExpr> {
         name: "format".to_string(),
         format_str: "{:0>width$}".to_string(),
         args: vec![
-            RustExpr::Ident(object.to_string()),
-            RustExpr::Ident(format!("width = {} as usize", args[0])),
+            object.clone(),
+            RustExpr::Ident(format!("width = {} as usize", crate::render_expr(&args[0]))),
         ],
     })
 }

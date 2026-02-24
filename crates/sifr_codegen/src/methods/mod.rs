@@ -18,101 +18,91 @@ pub(crate) struct LoweredMethod {
 pub(crate) fn lower_method(
     object_ty: &Type,
     method: &str,
-    rendered_object: &str,
-    rendered_args: &[String],
+    object: &RustExpr,
+    args: &[RustExpr],
 ) -> Option<LoweredMethod> {
-    lower_method_with_context(object_ty, method, rendered_object, rendered_args, false)
+    lower_method_with_context(object_ty, method, object, args, false)
 }
 
 pub(crate) fn lower_method_with_context(
     object_ty: &Type,
     method: &str,
-    rendered_object: &str,
-    rendered_args: &[String],
+    object: &RustExpr,
+    args: &[RustExpr],
     is_deque_data_field: bool,
 ) -> Option<LoweredMethod> {
     let expr = match (object_ty, method) {
-        (Type::Tuple(elems), "len") => common::lower_tuple_len(elems.len(), rendered_args),
-        (Type::Tuple(_), "count") => common::lower_tuple_count_placeholder(rendered_args),
-        (Type::Str, "len") => common::lower_string_char_len(rendered_object, rendered_args),
-        (ty, "len") if is_option_type(ty) => {
-            common::lower_option_len(rendered_object, rendered_args)
-        }
-        (_, "len") => common::lower_len(rendered_object, rendered_args),
-        (Type::Str, "upper") => string::lower_upper(rendered_object, rendered_args),
-        (Type::Str, "lower") => string::lower_lower(rendered_object, rendered_args),
-        (Type::Str, "strip") => string::lower_strip(rendered_object, rendered_args),
-        (Type::Str, "startswith") => string::lower_startswith(rendered_object, rendered_args),
-        (Type::Str, "endswith") => string::lower_endswith(rendered_object, rendered_args),
-        (Type::Str, "split") => string::lower_split(rendered_object, rendered_args),
-        (Type::Str, "replace") => string::lower_replace(rendered_object, rendered_args),
-        (Type::Str, "find") => string::lower_find(rendered_object, rendered_args),
-        (Type::Str, "lstrip") => string::lower_lstrip(rendered_object, rendered_args),
-        (Type::Str, "rstrip") => string::lower_rstrip(rendered_object, rendered_args),
-        (Type::Str, "count") => string::lower_count(rendered_object, rendered_args),
-        (Type::Str, "join") => string::lower_join(rendered_object, rendered_args),
-        (Type::Str, "title") => string::lower_title(rendered_object, rendered_args),
-        (Type::Str, "capitalize") => string::lower_capitalize(rendered_object, rendered_args),
-        (Type::Str, "swapcase") => string::lower_swapcase(rendered_object, rendered_args),
-        (Type::Str, "isdigit") => string::lower_isdigit(rendered_object, rendered_args),
-        (Type::Str, "isalpha") => string::lower_isalpha(rendered_object, rendered_args),
-        (Type::Str, "isalnum") => string::lower_isalnum(rendered_object, rendered_args),
-        (Type::Str, "isspace") => string::lower_isspace(rendered_object, rendered_args),
-        (Type::Str, "isupper") => string::lower_isupper(rendered_object, rendered_args),
-        (Type::Str, "islower") => string::lower_islower(rendered_object, rendered_args),
-        (Type::Str, "center") => string::lower_center(rendered_object, rendered_args),
-        (Type::Str, "ljust") => string::lower_ljust(rendered_object, rendered_args),
-        (Type::Str, "rjust") => string::lower_rjust(rendered_object, rendered_args),
-        (Type::Str, "zfill") => string::lower_zfill(rendered_object, rendered_args),
-        (Type::List(_), "append") if is_deque_data_field => {
-            deque::lower_append(rendered_object, rendered_args)
-        }
+        (Type::Tuple(elems), "len") => common::lower_tuple_len(elems.len(), args),
+        (Type::Tuple(_), "count") => common::lower_tuple_count_placeholder(args),
+        (Type::Str, "len") => common::lower_string_char_len(object, args),
+        (ty, "len") if is_option_type(ty) => common::lower_option_len(object, args),
+        (_, "len") => common::lower_len(object, args),
+        (Type::Str, "upper") => string::lower_upper(object, args),
+        (Type::Str, "lower") => string::lower_lower(object, args),
+        (Type::Str, "strip") => string::lower_strip(object, args),
+        (Type::Str, "startswith") => string::lower_startswith(object, args),
+        (Type::Str, "endswith") => string::lower_endswith(object, args),
+        (Type::Str, "split") => string::lower_split(object, args),
+        (Type::Str, "replace") => string::lower_replace(object, args),
+        (Type::Str, "find") => string::lower_find(object, args),
+        (Type::Str, "lstrip") => string::lower_lstrip(object, args),
+        (Type::Str, "rstrip") => string::lower_rstrip(object, args),
+        (Type::Str, "count") => string::lower_count(object, args),
+        (Type::Str, "join") => string::lower_join(object, args),
+        (Type::Str, "title") => string::lower_title(object, args),
+        (Type::Str, "capitalize") => string::lower_capitalize(object, args),
+        (Type::Str, "swapcase") => string::lower_swapcase(object, args),
+        (Type::Str, "isdigit") => string::lower_isdigit(object, args),
+        (Type::Str, "isalpha") => string::lower_isalpha(object, args),
+        (Type::Str, "isalnum") => string::lower_isalnum(object, args),
+        (Type::Str, "isspace") => string::lower_isspace(object, args),
+        (Type::Str, "isupper") => string::lower_isupper(object, args),
+        (Type::Str, "islower") => string::lower_islower(object, args),
+        (Type::Str, "center") => string::lower_center(object, args),
+        (Type::Str, "ljust") => string::lower_ljust(object, args),
+        (Type::Str, "rjust") => string::lower_rjust(object, args),
+        (Type::Str, "zfill") => string::lower_zfill(object, args),
+        (Type::List(_), "append") if is_deque_data_field => deque::lower_append(object, args),
         (Type::List(_), "appendleft") if is_deque_data_field => {
-            deque::lower_appendleft(rendered_object, rendered_args)
+            deque::lower_appendleft(object, args)
         }
-        (Type::List(_), "pop") if is_deque_data_field => {
-            deque::lower_pop(rendered_object, rendered_args)
-        }
-        (Type::List(_), "popleft") if is_deque_data_field => {
-            deque::lower_popleft(rendered_object, rendered_args)
-        }
-        (Type::List(_), "append") => list::lower_append(rendered_object, rendered_args),
-        (Type::List(_), "extend") => list::lower_extend(rendered_object, rendered_args),
-        (Type::List(_), "insert") => list::lower_insert(rendered_object, rendered_args),
-        (Type::List(_), "clear") => list::lower_clear(rendered_object, rendered_args),
-        (Type::List(_), "copy") => list::lower_copy(rendered_object, rendered_args),
-        (Type::List(_), "reverse") => list::lower_reverse(rendered_object, rendered_args),
-        (Type::List(_), "sort") => list::lower_sort(rendered_object, rendered_args),
-        (Type::List(_), "count") => list::lower_count(rendered_object, rendered_args),
-        (Type::List(_), "contains") => list::lower_contains(rendered_object, rendered_args),
-        (Type::List(_), "pop") => list::lower_pop(rendered_object, rendered_args),
-        (Type::List(_), "remove") => list::lower_remove(rendered_object, rendered_args),
-        (Type::List(_), "index") => list::lower_index(rendered_object, rendered_args),
-        (Type::Dict(_, _), "keys") => dict::lower_keys(rendered_object, rendered_args),
-        (Type::Dict(_, _), "values") => dict::lower_values(rendered_object, rendered_args),
-        (Type::Dict(_, _), "items") => dict::lower_items(rendered_object, rendered_args),
-        (Type::Dict(_, _), "update") => dict::lower_update(rendered_object, rendered_args),
-        (Type::Dict(_, _), "clear") => dict::lower_clear(rendered_object, rendered_args),
-        (Type::Dict(_, _), "copy") => dict::lower_copy(rendered_object, rendered_args),
-        (Type::Dict(_, _), "contains") => dict::lower_contains(rendered_object, rendered_args),
-        (Type::Dict(_, _), "get") => dict::lower_get(rendered_object, rendered_args),
-        (Type::Dict(_, _), "pop") => dict::lower_pop(rendered_object, rendered_args),
-        (Type::Set(_), "add") => set::lower_add(rendered_object, rendered_args),
-        (Type::Set(_), "remove") => set::lower_remove(rendered_object, rendered_args),
-        (Type::Set(_), "discard") => set::lower_discard(rendered_object, rendered_args),
-        (Type::Set(_), "contains") => set::lower_contains(rendered_object, rendered_args),
-        (Type::Set(_), "clear") => set::lower_clear(rendered_object, rendered_args),
-        (Type::Set(_), "copy") => set::lower_copy(rendered_object, rendered_args),
-        (Type::Set(_), "issubset") => set::lower_issubset(rendered_object, rendered_args),
-        (Type::Set(_), "issuperset") => set::lower_issuperset(rendered_object, rendered_args),
-        (Type::Set(_), "isdisjoint") => set::lower_isdisjoint(rendered_object, rendered_args),
-        (Type::Set(_), "pop") => set::lower_pop(rendered_object, rendered_args),
-        (Type::Set(_), "union") => set::lower_union(rendered_object, rendered_args),
-        (Type::Set(_), "intersection") => set::lower_intersection(rendered_object, rendered_args),
-        (Type::Set(_), "difference") => set::lower_difference(rendered_object, rendered_args),
-        (Type::Set(_), "symmetric_difference") => {
-            set::lower_symmetric_difference(rendered_object, rendered_args)
-        }
+        (Type::List(_), "pop") if is_deque_data_field => deque::lower_pop(object, args),
+        (Type::List(_), "popleft") if is_deque_data_field => deque::lower_popleft(object, args),
+        (Type::List(_), "append") => list::lower_append(object, args),
+        (Type::List(_), "extend") => list::lower_extend(object, args),
+        (Type::List(_), "insert") => list::lower_insert(object, args),
+        (Type::List(_), "clear") => list::lower_clear(object, args),
+        (Type::List(_), "copy") => list::lower_copy(object, args),
+        (Type::List(_), "reverse") => list::lower_reverse(object, args),
+        (Type::List(_), "sort") => list::lower_sort(object, args),
+        (Type::List(_), "count") => list::lower_count(object, args),
+        (Type::List(_), "contains") => list::lower_contains(object, args),
+        (Type::List(_), "pop") => list::lower_pop(object, args),
+        (Type::List(_), "remove") => list::lower_remove(object, args),
+        (Type::List(_), "index") => list::lower_index(object, args),
+        (Type::Dict(_, _), "keys") => dict::lower_keys(object, args),
+        (Type::Dict(_, _), "values") => dict::lower_values(object, args),
+        (Type::Dict(_, _), "items") => dict::lower_items(object, args),
+        (Type::Dict(_, _), "update") => dict::lower_update(object, args),
+        (Type::Dict(_, _), "clear") => dict::lower_clear(object, args),
+        (Type::Dict(_, _), "copy") => dict::lower_copy(object, args),
+        (Type::Dict(_, _), "contains") => dict::lower_contains(object, args),
+        (Type::Dict(_, _), "get") => dict::lower_get(object, args),
+        (Type::Dict(_, _), "pop") => dict::lower_pop(object, args),
+        (Type::Set(_), "add") => set::lower_add(object, args),
+        (Type::Set(_), "remove") => set::lower_remove(object, args),
+        (Type::Set(_), "discard") => set::lower_discard(object, args),
+        (Type::Set(_), "contains") => set::lower_contains(object, args),
+        (Type::Set(_), "clear") => set::lower_clear(object, args),
+        (Type::Set(_), "copy") => set::lower_copy(object, args),
+        (Type::Set(_), "issubset") => set::lower_issubset(object, args),
+        (Type::Set(_), "issuperset") => set::lower_issuperset(object, args),
+        (Type::Set(_), "isdisjoint") => set::lower_isdisjoint(object, args),
+        (Type::Set(_), "pop") => set::lower_pop(object, args),
+        (Type::Set(_), "union") => set::lower_union(object, args),
+        (Type::Set(_), "intersection") => set::lower_intersection(object, args),
+        (Type::Set(_), "difference") => set::lower_difference(object, args),
+        (Type::Set(_), "symmetric_difference") => set::lower_symmetric_difference(object, args),
         _ => return None,
     };
 
@@ -123,6 +113,37 @@ pub(crate) fn lower_method_with_context(
 mod tests {
     use super::*;
     use crate::render_expr;
+
+    fn lower_method(
+        object_ty: &Type,
+        method: &str,
+        rendered_object: &str,
+        rendered_args: &[String],
+    ) -> Option<LoweredMethod> {
+        let object = RustExpr::RawCode(rendered_object.to_string());
+        let args = rendered_args
+            .iter()
+            .cloned()
+            .map(RustExpr::RawCode)
+            .collect::<Vec<_>>();
+        super::lower_method(object_ty, method, &object, &args)
+    }
+
+    fn lower_method_with_context(
+        object_ty: &Type,
+        method: &str,
+        rendered_object: &str,
+        rendered_args: &[String],
+        is_deque_data_field: bool,
+    ) -> Option<LoweredMethod> {
+        let object = RustExpr::RawCode(rendered_object.to_string());
+        let args = rendered_args
+            .iter()
+            .cloned()
+            .map(RustExpr::RawCode)
+            .collect::<Vec<_>>();
+        super::lower_method_with_context(object_ty, method, &object, &args, is_deque_data_field)
+    }
 
     #[test]
     fn lowers_string_methods_via_registry() {
@@ -182,11 +203,11 @@ mod tests {
 
         let starts = lower_method(&Type::Str, "startswith", "s", &["prefix".to_string()])
             .expect("startswith lowers");
-        assert_eq!(render_expr(&starts.expr), "s.starts_with(&(prefix))");
+        assert_eq!(render_expr(&starts.expr), "s.starts_with(&prefix)");
 
         let ends = lower_method(&Type::Str, "endswith", "s", &["suffix".to_string()])
             .expect("endswith lowers");
-        assert_eq!(render_expr(&ends.expr), "s.ends_with(&(suffix))");
+        assert_eq!(render_expr(&ends.expr), "s.ends_with(&suffix)");
 
         let split_default = lower_method(&Type::Str, "split", "s", &[]).expect("split default");
         assert!(render_expr(&split_default.expr).contains("split_whitespace"));
@@ -195,7 +216,7 @@ mod tests {
             lower_method(&Type::Str, "split", "s", &["sep".to_string()]).expect("split sep");
         assert_eq!(
             render_expr(&split_sep.expr),
-            "s.split(&(sep)).map(|s| s.to_string()).collect::<Vec<String>>()"
+            "s.split(&sep).map(|s| s.to_string()).collect::<Vec<String>>()"
         );
 
         let replace = lower_method(
@@ -205,14 +226,11 @@ mod tests {
             &["old".to_string(), "new".to_string()],
         )
         .expect("replace lowers");
-        assert_eq!(render_expr(&replace.expr), "s.replace(&(old), &(new))");
+        assert_eq!(render_expr(&replace.expr), "s.replace(&old, &new)");
 
         let find =
             lower_method(&Type::Str, "find", "s", &["needle".to_string()]).expect("find lowers");
-        assert_eq!(
-            render_expr(&find.expr),
-            "s.find(&(needle)).map(|i| i as i64)"
-        );
+        assert_eq!(render_expr(&find.expr), "s.find(&needle).map(|i| i as i64)");
 
         let lstrip = lower_method(&Type::Str, "lstrip", "s", &[]).expect("lstrip lowers");
         assert_eq!(render_expr(&lstrip.expr), "s.trim_start().to_string()");
@@ -224,12 +242,12 @@ mod tests {
             lower_method(&Type::Str, "count", "s", &["needle".to_string()]).expect("count lowers");
         assert_eq!(
             render_expr(&count.expr),
-            "s.matches(&(needle)).count() as i64"
+            "s.matches(&needle).count() as i64"
         );
 
         let join =
             lower_method(&Type::Str, "join", "sep", &["parts".to_string()]).expect("join lowers");
-        assert_eq!(render_expr(&join.expr), "parts.join(&(sep))");
+        assert_eq!(render_expr(&join.expr), "parts.join(&sep)");
 
         let title = lower_method(&Type::Str, "title", "s", &[]).expect("title lowers");
         assert!(render_expr(&title.expr).contains("split_whitespace"));
@@ -345,7 +363,7 @@ mod tests {
             &["1".to_string()],
         )
         .expect("list contains lowers");
-        assert_eq!(render_expr(&list_contains.expr), "xs.contains(&(1))");
+        assert_eq!(render_expr(&list_contains.expr), "xs.contains(&1)");
 
         let list_pop = lower_method(&Type::List(Box::new(Type::Int)), "pop", "xs", &[])
             .expect("list pop lowers");
@@ -438,19 +456,16 @@ mod tests {
             .expect("dict contains literal lowers");
         assert_eq!(
             render_expr(&dict_contains_lit.expr),
-            "d.contains_key(&(\"k\"))"
+            "d.contains_key(&\"k\")"
         );
 
         let dict_contains_name = lower_method(&dict_ty, "contains", "d", &["k".to_string()])
             .expect("dict contains name lowers");
-        assert_eq!(
-            render_expr(&dict_contains_name.expr),
-            "d.contains_key(&(k))"
-        );
+        assert_eq!(render_expr(&dict_contains_name.expr), "d.contains_key(&k)");
 
         let dict_get_one = lower_method(&dict_ty, "get", "d", &["\"k\"".to_string()])
             .expect("dict get one lowers");
-        assert_eq!(render_expr(&dict_get_one.expr), "d.get(&(\"k\")).cloned()");
+        assert_eq!(render_expr(&dict_get_one.expr), "d.get(&\"k\").cloned()");
 
         let dict_get_two = lower_method(
             &dict_ty,
@@ -461,12 +476,12 @@ mod tests {
         .expect("dict get default lowers");
         assert_eq!(
             render_expr(&dict_get_two.expr),
-            "d.get(&(\"k\")).cloned().unwrap_or(0)"
+            "d.get(&\"k\").cloned().unwrap_or(0)"
         );
 
         let dict_pop =
             lower_method(&dict_ty, "pop", "d", &["\"k\"".to_string()]).expect("dict pop lowers");
-        assert_eq!(render_expr(&dict_pop.expr), "d.remove(&(\"k\"))");
+        assert_eq!(render_expr(&dict_pop.expr), "d.remove(&\"k\")");
 
         let set_ty = Type::Set(Box::new(Type::Int));
         let set_add =
@@ -475,15 +490,15 @@ mod tests {
 
         let set_remove =
             lower_method(&set_ty, "remove", "s", &["1".to_string()]).expect("set remove lowers");
-        assert_eq!(render_expr(&set_remove.expr), "s.remove(&(1))");
+        assert_eq!(render_expr(&set_remove.expr), "s.remove(&1)");
 
         let set_discard =
             lower_method(&set_ty, "discard", "s", &["1".to_string()]).expect("set discard lowers");
-        assert_eq!(render_expr(&set_discard.expr), "s.remove(&(1))");
+        assert_eq!(render_expr(&set_discard.expr), "s.remove(&1)");
 
         let set_contains = lower_method(&set_ty, "contains", "s", &["1".to_string()])
             .expect("set contains lowers");
-        assert_eq!(render_expr(&set_contains.expr), "s.contains(&(1))");
+        assert_eq!(render_expr(&set_contains.expr), "s.contains(&1)");
 
         let set_clear = lower_method(&set_ty, "clear", "s", &[]).expect("set clear lowers");
         assert_eq!(render_expr(&set_clear.expr), "s.clear()");
@@ -493,15 +508,15 @@ mod tests {
 
         let set_subset = lower_method(&set_ty, "issubset", "s", &["other".to_string()])
             .expect("set issubset lowers");
-        assert_eq!(render_expr(&set_subset.expr), "s.is_subset(&(other))");
+        assert_eq!(render_expr(&set_subset.expr), "s.is_subset(&other)");
 
         let set_superset = lower_method(&set_ty, "issuperset", "s", &["other".to_string()])
             .expect("set issuperset lowers");
-        assert_eq!(render_expr(&set_superset.expr), "s.is_superset(&(other))");
+        assert_eq!(render_expr(&set_superset.expr), "s.is_superset(&other)");
 
         let set_disjoint = lower_method(&set_ty, "isdisjoint", "s", &["other".to_string()])
             .expect("set isdisjoint lowers");
-        assert_eq!(render_expr(&set_disjoint.expr), "s.is_disjoint(&(other))");
+        assert_eq!(render_expr(&set_disjoint.expr), "s.is_disjoint(&other)");
 
         let set_pop = lower_method(&set_ty, "pop", "s", &[]).expect("set pop lowers");
         assert!(render_expr(&set_pop.expr).contains("iter().next().cloned()"));
@@ -510,28 +525,40 @@ mod tests {
             lower_method(&set_ty, "union", "s", &["other".to_string()]).expect("set union lowers");
         assert_eq!(
             render_expr(&set_union.expr),
-            "s.union(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.union(&other).cloned().collect::<std::collections::HashSet<_>>()"
         );
 
         let set_intersection = lower_method(&set_ty, "intersection", "s", &["other".to_string()])
             .expect("set intersection lowers");
         assert_eq!(
             render_expr(&set_intersection.expr),
-            "s.intersection(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.intersection(&other).cloned().collect::<std::collections::HashSet<_>>()"
         );
 
         let set_difference = lower_method(&set_ty, "difference", "s", &["other".to_string()])
             .expect("set difference lowers");
         assert_eq!(
             render_expr(&set_difference.expr),
-            "s.difference(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.difference(&other).cloned().collect::<std::collections::HashSet<_>>()"
         );
 
         let set_sdiff = lower_method(&set_ty, "symmetric_difference", "s", &["other".to_string()])
             .expect("set symmetric_difference lowers");
         assert_eq!(
             render_expr(&set_sdiff.expr),
-            "s.symmetric_difference(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
+            "s.symmetric_difference(&other).cloned().collect::<std::collections::HashSet<_>>()"
         );
+    }
+
+    #[test]
+    fn lower_method_accepts_ir_inputs() {
+        let ir = super::lower_method(
+            &Type::List(Box::new(Type::Int)),
+            "append",
+            &RustExpr::Ident("xs".to_string()),
+            &[RustExpr::Ident("v".to_string())],
+        )
+        .expect("ir append");
+        assert_eq!(render_expr(&ir.expr), "xs.push(v)");
     }
 }

@@ -5988,7 +5988,7 @@ fn lower_tuple_unpack_assign(
     // Extract target names
     let mut target_names = Vec::new();
     for elt in &tuple.elts {
-        if let Expr::Name(n) = elt { target_names.push(n.id.clone()) } else {
+        if let Expr::Name(n) = elt { target_names.push(n.id.clone()); } else {
             ctx.error("tuple unpacking target must be a simple name".to_string());
             return None;
         }

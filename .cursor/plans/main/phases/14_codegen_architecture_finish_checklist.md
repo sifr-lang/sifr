@@ -146,6 +146,7 @@ Root cause: giant legacy intrinsic fallback still in production.
 - [x] Delete legacy match arms from `emit_intrinsic_call`
 - [x] Enforce no >100-char direct `self.write(...)` literal bodies in intrinsic lowering
 - [x] Add guard test to prevent fallback reintroduction
+- [x] Introduce IR-typed intrinsic dispatch boundary (`lower_intrinsic_ir`) with compatibility rendering internal to registry
 
 ## Slice 5: Method Fallback Deletion (Registry-Only)
 
@@ -156,6 +157,7 @@ Root cause: `emit_method_call` still has broad fallback string emission.
 - [x] Migrate remaining method lowering into registry modules
 - [x] Reduce `emit_method_call` to registry dispatch + tightly-scoped non-registry semantics if unavoidable
 - [x] Add guard test for registry-first/no-large-fallback growth
+- [x] Delete string-arg method lowering boundary; method registry now consumes IR expressions directly
 
 ## Slice 6: Promote Full IR Module Assembly to Production Path
 

@@ -27,7 +27,7 @@ impl RustEmitter {
         }
     }
 
-    fn should_force_render_fallback(&self, expr: &HirExpr) -> bool {
+    pub(super) fn should_force_render_fallback(&self, expr: &HirExpr) -> bool {
         if render_expr_contains_force_fallback_name(self, expr) {
             return true;
         }

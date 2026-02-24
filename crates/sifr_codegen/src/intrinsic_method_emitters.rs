@@ -42,9 +42,7 @@ impl RustEmitter {
     pub(crate) fn try_emit_intrinsic_via_registry(&mut self, func: &str, args: &[HirExpr]) -> bool {
         let ir_args = args
             .iter()
-            .map(|arg| {
-                crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(arg))
-            })
+            .map(|arg| crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(arg)))
             .collect::<Vec<_>>();
         let Some(lowered) = intrinsics::lower_intrinsic_ir(func, &ir_args) else {
             return false;
@@ -92,24 +90,28 @@ impl RustEmitter {
         args: &[HirExpr],
     ) -> bool {
         let is_deque_data_field = self.is_deque_data_field(object);
-        let rendered_object = self.render_expr_with_lowered_fallback(object);
-        let mut rendered_args = args
+        let object_expr = self.lower_registry_expr_with_fallback(object);
+        let mut arg_exprs = args
             .iter()
-            .map(|arg| self.render_expr_with_lowered_fallback(arg))
+            .map(|arg| self.lower_registry_expr_with_fallback(arg))
             .collect::<Vec<_>>();
 
         if matches!(object_ty, Type::List(_))
             && matches!(method, "append" | "appendleft")
             && !args.is_empty()
         {
-            // Preserve legacy behavior: clone TypeVar list args to avoid move issues.
+            // Clone TypeVar list args to avoid move issues.
             if matches!(args[0].ty(), Type::TypeVar(_)) {
-                rendered_args[0] = format!("{}.clone()", rendered_args[0]);
+                arg_exprs[0] = crate::RustExpr::MethodCall {
+                    receiver: Box::new(arg_exprs[0].clone()),
+                    method: "clone".to_string(),
+                    args: vec![],
+                };
             }
         }
 
         if matches!(object_ty, Type::List(_)) && method == "insert" && args.len() >= 2 {
-            // Preserve legacy behavior: clone borrowed/mut-borrowed move-owned values.
+            // Clone borrowed/mut-borrowed move-owned values.
             let needs_clone = if let HirExpr::Name { name, ty } = &args[1] {
                 (self.borrowed_params.contains(name.as_str())
                     || self.mut_borrowed_params.contains(name.as_str()))
@@ -118,21 +120,34 @@ impl RustEmitter {
                 false
             };
             if needs_clone {
-                rendered_args[1] = format!("{}.clone()", rendered_args[1]);
+                arg_exprs[1] = crate::RustExpr::MethodCall {
+                    receiver: Box::new(arg_exprs[1].clone()),
+                    method: "clone".to_string(),
+                    args: vec![],
+                };
             }
         }
 
         let Some(lowered) = methods::lower_method_with_context(
             object_ty,
             method,
-            &rendered_object,
-            &rendered_args,
+            &object_expr,
+            &arg_exprs,
             is_deque_data_field,
         ) else {
             return false;
         };
         self.write(&crate::render_expr(&lowered.expr));
         true
+    }
+
+    fn lower_registry_expr_with_fallback(&mut self, expr: &HirExpr) -> crate::RustExpr {
+        if self.should_force_render_fallback(expr) {
+            return crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(expr));
+        }
+        crate::try_lower_leaf_expr(expr).unwrap_or_else(|| {
+            crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(expr))
+        })
     }
 }
 
