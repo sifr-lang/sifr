@@ -114,7 +114,7 @@ fn lower_intrinsic_rendered(
         "ldexp" => (math::lower_ldexp(args), None),
         "modf" => (math::lower_modf(args), None),
         "nextafter" => (math::lower_nextafter(rendered_args), None),
-        "ulp" => (math::lower_ulp(rendered_args), None),
+        "ulp" => (math::lower_ulp(args), None),
         "env_get" => (env::lower_env_get(rendered_args), None),
         "env_set" => (env::lower_env_set(rendered_args), None),
         "env_unset" => (env::lower_env_unset(rendered_args), None),
@@ -1054,6 +1054,10 @@ mod tests {
         let modf = lower_intrinsic("modf", &["x".to_string()]).expect("modf");
         assert!(render_expr(&modf.expr).contains("__x.is_nan()"));
         assert!(!matches!(modf.expr, RustExpr::RawCode(_)));
+
+        let ulp = lower_intrinsic("ulp", &["x".to_string()]).expect("ulp");
+        assert!(render_expr(&ulp.expr).contains("__x.is_infinite()"));
+        assert!(!matches!(ulp.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
