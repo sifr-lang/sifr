@@ -113,7 +113,7 @@ fn lower_intrinsic_rendered(
         "frexp" => (math::lower_frexp(rendered_args), None),
         "ldexp" => (math::lower_ldexp(args), None),
         "modf" => (math::lower_modf(args), None),
-        "nextafter" => (math::lower_nextafter(rendered_args), None),
+        "nextafter" => (math::lower_nextafter(args), None),
         "ulp" => (math::lower_ulp(args), None),
         "env_get" => (env::lower_env_get(rendered_args), None),
         "env_set" => (env::lower_env_set(rendered_args), None),
@@ -1058,6 +1058,11 @@ mod tests {
         let ulp = lower_intrinsic("ulp", &["x".to_string()]).expect("ulp");
         assert!(render_expr(&ulp.expr).contains("__x.is_infinite()"));
         assert!(!matches!(ulp.expr, RustExpr::RawCode(_)));
+
+        let nextafter = lower_intrinsic("nextafter", &["x".to_string(), "y".to_string()])
+            .expect("nextafter");
+        assert!(render_expr(&nextafter.expr).contains("__x == __y"));
+        assert!(!matches!(nextafter.expr, RustExpr::RawCode(_)));
     }
 
     #[test]

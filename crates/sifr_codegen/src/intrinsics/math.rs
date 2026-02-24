@@ -575,14 +575,155 @@ pub(super) fn lower_modf(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_nextafter(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_nextafter(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __x: f64 = ({}); let __y: f64 = ({}); if __x.is_nan() || __y.is_nan() {{ f64::NAN }} else if __x == __y {{ __y }} else if __x == 0.0 {{ let __sign = if __y.is_sign_negative() {{ 1u64 << 63 }} else {{ 0u64 }}; f64::from_bits(__sign | 1u64) }} else {{ let mut __bits = __x.to_bits(); if (__x < __y) == (__x > 0.0) {{ __bits += 1; }} else {{ __bits -= 1; }} f64::from_bits(__bits) }} }}",
-        args[0], args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__x".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::Cast {
+                    expr: Box::new(args[0].clone()),
+                    ty: RustType::F64,
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__y".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::Cast {
+                    expr: Box::new(args[1].clone()),
+                    ty: RustType::F64,
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                    method: "is_nan".to_string(),
+                    args: vec![],
+                }),
+                op: "||".to_string(),
+                right: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__y".to_string())),
+                    method: "is_nan".to_string(),
+                    args: vec![],
+                }),
+            }),
+            then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()])),
+            else_expr: Some(Box::new(RustExpr::If {
+                cond: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__x".to_string())),
+                    op: "==".to_string(),
+                    right: Box::new(RustExpr::Ident("__y".to_string())),
+                }),
+                then_expr: Box::new(RustExpr::Ident("__y".to_string())),
+                else_expr: Some(Box::new(RustExpr::If {
+                    cond: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__x".to_string())),
+                        op: "==".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                    }),
+                    then_expr: Box::new(RustExpr::Block {
+                        stmts: vec![RustStmt::Let {
+                            mutable: false,
+                            name: "__sign".to_string(),
+                            ty: Some(RustType::Named("u64".to_string())),
+                            value: RustExpr::If {
+                                cond: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__y".to_string())),
+                                    method: "is_sign_negative".to_string(),
+                                    args: vec![],
+                                }),
+                                then_expr: Box::new(RustExpr::BinOp {
+                                    left: Box::new(RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                        ty: RustType::Named("u64".to_string()),
+                                    }),
+                                    op: "<<".to_string(),
+                                    right: Box::new(RustExpr::Literal(RustLiteral::Int(63))),
+                                }),
+                                else_expr: Some(Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                                    ty: RustType::Named("u64".to_string()),
+                                })),
+                            },
+                        }],
+                        expr: Some(Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "f64".to_string(),
+                                "from_bits".to_string(),
+                            ])),
+                            args: vec![RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__sign".to_string())),
+                                op: "|".to_string(),
+                                right: Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                    ty: RustType::Named("u64".to_string()),
+                                }),
+                            }],
+                        })),
+                    }),
+                    else_expr: Some(Box::new(RustExpr::Block {
+                        stmts: vec![
+                            RustStmt::Let {
+                                mutable: true,
+                                name: "__bits".to_string(),
+                                ty: Some(RustType::Named("u64".to_string())),
+                                value: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                                    method: "to_bits".to_string(),
+                                    args: vec![],
+                                },
+                            },
+                            RustStmt::If {
+                                cond: RustExpr::BinOp {
+                                    left: Box::new(RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__x".to_string())),
+                                        op: "<".to_string(),
+                                        right: Box::new(RustExpr::Ident("__y".to_string())),
+                                    }),
+                                    op: "==".to_string(),
+                                    right: Box::new(RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__x".to_string())),
+                                        op: ">".to_string(),
+                                        right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                                    }),
+                                },
+                                then_body: vec![RustStmt::AugAssign {
+                                    target: RustExpr::Ident("__bits".to_string()),
+                                    op: "+".to_string(),
+                                    value: RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                        ty: RustType::Named("u64".to_string()),
+                                    },
+                                }],
+                                else_body: Some(vec![RustStmt::AugAssign {
+                                    target: RustExpr::Ident("__bits".to_string()),
+                                    op: "-".to_string(),
+                                    value: RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                        ty: RustType::Named("u64".to_string()),
+                                    },
+                                }]),
+                            },
+                        ],
+                        expr: Some(Box::new(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "f64".to_string(),
+                                "from_bits".to_string(),
+                            ])),
+                            args: vec![RustExpr::Ident("__bits".to_string())],
+                        })),
+                    })),
+                })),
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_ulp(args: &[RustExpr]) -> Option<RustExpr> {
