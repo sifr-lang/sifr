@@ -57,6 +57,7 @@ status: **partially met**
 - [ ] Core pipeline still fallback-emitter first-class (`emit_*_fallback` remains active)
 - [x] `emit_module` still string-emitter orchestration, not full `RustFile` assembly + single render
 - [ ] `lower_*` contract is not full `Result<_, CodegenError>` end-to-end for production path
+- [x] Production stmt lowering entry now has explicit `Result` contract (`try_lower_simple_stmt_with_scope_result`) with context validation
 - [x] Production statement lowering now enters through `ScopeContext` (`try_lower_simple_stmt_with_scope` in `emit_stmt`)
 - [x] Union enums still emitted as raw `enum_defs` strings, not `RustItem::Enum` nodes
 
