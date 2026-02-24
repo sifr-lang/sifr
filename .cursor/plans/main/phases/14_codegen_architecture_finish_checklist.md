@@ -149,13 +149,13 @@ Root cause: giant legacy intrinsic fallback still in production.
 
 ## Slice 5: Method Fallback Deletion (Registry-Only)
 
-status: **pending**
+status: **done**
 
 Root cause: `emit_method_call` still has broad fallback string emission.
 
-- [ ] Migrate remaining method lowering into registry modules
-- [ ] Reduce `emit_method_call` to registry dispatch + tightly-scoped non-registry semantics if unavoidable
-- [ ] Add guard test for registry-first/no-large-fallback growth
+- [x] Migrate remaining method lowering into registry modules
+- [x] Reduce `emit_method_call` to registry dispatch + tightly-scoped non-registry semantics if unavoidable
+- [x] Add guard test for registry-first/no-large-fallback growth
 
 ## Slice 6: Promote Full IR Module Assembly to Production Path
 

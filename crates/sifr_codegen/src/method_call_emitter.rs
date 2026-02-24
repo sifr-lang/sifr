@@ -1,7 +1,7 @@
-use crate::helpers::{is_option_type, MUTATING_METHODS};
+use crate::helpers::MUTATING_METHODS;
 use crate::RustEmitter;
 use sifr_hir::HirExpr;
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::{FunctionType, ParamConvention, Type};
 
 impl RustEmitter {
     /// Check if an expression is a call to a generator function
@@ -25,117 +25,98 @@ impl RustEmitter {
         if self.try_emit_method_via_registry(obj_ty, object, method, args) {
             return;
         }
-        match (obj_ty, method) {
-            (Type::Set(_), "len") => {
-                self.write("(");
-                self.emit_expr(object);
-                self.write(".len() as i64)");
+        if let Type::Class {
+            name: class_name,
+            fields,
+            methods,
+            ..
+        } = obj_ty
+        {
+            if self.emit_class_callable_field_call(object, method, args, fields, methods) {
+                return;
             }
-            // Tuple count()
-            (Type::Tuple(_), "count") => {
-                // For tuples, count is tricky - we need to check each element
-                // For now, emit a simple comparison chain
-                self.write("0_i64 /* tuple.count() not fully supported */");
-            }
-            // Tuple len() - compile-time constant
-            (Type::Tuple(elems), "len") => {
-                self.write(&format!("{}_i64", elems.len()));
-            }
-            // String len() - character count
-            (Type::Str, "len") => {
-                self.write("(");
-                self.emit_expr(object);
-                self.write(".chars().count() as i64)");
-            }
-            // len() on Option types (T|None) - unwrap first
-            (ty, "len") if is_option_type(ty) => {
-                self.write("(");
-                self.emit_expr(object);
-                self.write(".as_ref().unwrap().len() as i64)");
-            }
-            // Generic len() for all types
-            (_, "len") => {
-                self.write("(");
-                self.emit_expr(object);
-                self.write(".len() as i64)");
-            }
-            (
-                Type::Class {
-                    name: ref class_name,
-                    fields,
-                    methods,
-                    ..
-                },
-                _,
-            ) => {
-                // Check if this is a callable field invocation (not a real method)
-                let is_callable_field = !methods.iter().any(|(n, _)| n == method)
-                    && fields
-                        .iter()
-                        .any(|(n, t)| n == method && matches!(t, Type::Callable(..)));
-
-                if is_callable_field {
-                    // Callable field: emit (obj.field)(args) instead of obj.method(args)
-                    self.write("(");
-                    self.emit_expr(object);
-                    self.write(&format!(".{method})("));
-                    for (i, arg) in args.iter().enumerate() {
-                        if i > 0 {
-                            self.write(", ");
-                        }
-                        self.emit_expr(arg);
-                    }
-                    self.write(")");
-                } else {
-                    // Regular class instance method call -- use convention-aware argument emission
-                    self.emit_expr(object);
-                    self.write(&format!(".{method}("));
-                    // Look up method conventions from func_signatures
-                    let method_key = format!("{class_name}::{method}");
-                    let method_info = self.func_signatures.get(&method_key).cloned();
-                    for (i, arg) in args.iter().enumerate() {
-                        if i > 0 {
-                            self.write(", ");
-                        }
-                        if let Some((ref params, _)) = method_info {
-                            // Method params skip self, so param index i corresponds to params[i]
-                            // (self is not in func_signatures params)
-                            if let Some((param_ty, convention)) = params.get(i) {
-                                // For borrowed generic params (&T), wrapping expressions
-                                // avoids Rust precedence pitfalls like `&(x) as i64`.
-                                // This includes literals which otherwise produce invalid code like `&3_i64`.
-                                if *convention == ParamConvention::Borrow
-                                    && matches!(param_ty, Type::TypeVar(_))
-                                {
-                                    self.write("&(");
-                                    self.emit_expr(arg);
-                                    self.write(")");
-                                    continue;
-                                }
-                                self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
-                                self.emit_expr(arg);
-                                continue;
-                            }
-                        }
-                        // Fallback: emit as-is
-                        self.emit_expr(arg);
-                    }
-                    self.write(")");
-                }
-            }
-            _ => {
-                // Fallback: emit as-is
-                self.emit_expr(object);
-                self.write(&format!(".{method}("));
-                for (i, arg) in args.iter().enumerate() {
-                    if i > 0 {
-                        self.write(", ");
-                    }
-                    self.emit_expr(arg);
-                }
-                self.write(")");
-            }
+            self.emit_class_method_call_with_conventions(object, class_name, method, args);
+            return;
         }
+
+        self.emit_generic_method_call(object, method, args);
+    }
+
+    fn emit_class_callable_field_call(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+        fields: &[(String, Type)],
+        methods: &[(String, FunctionType)],
+    ) -> bool {
+        let is_callable_field = !methods.iter().any(|(name, _)| name == method)
+            && fields
+                .iter()
+                .any(|(name, ty)| name == method && matches!(ty, Type::Callable(..)));
+        if !is_callable_field {
+            return false;
+        }
+
+        self.write("(");
+        self.emit_expr(object);
+        self.write(&format!(".{method})("));
+        for (i, arg) in args.iter().enumerate() {
+            if i > 0 {
+                self.write(", ");
+            }
+            self.emit_expr(arg);
+        }
+        self.write(")");
+        true
+    }
+
+    fn emit_class_method_call_with_conventions(
+        &mut self,
+        object: &HirExpr,
+        class_name: &str,
+        method: &str,
+        args: &[HirExpr],
+    ) {
+        self.emit_expr(object);
+        self.write(&format!(".{method}("));
+
+        let method_key = format!("{class_name}::{method}");
+        let method_info = self.func_signatures.get(&method_key).cloned();
+        for (i, arg) in args.iter().enumerate() {
+            if i > 0 {
+                self.write(", ");
+            }
+            if let Some((ref params, _)) = method_info {
+                if let Some((param_ty, convention)) = params.get(i) {
+                    if *convention == ParamConvention::Borrow
+                        && matches!(param_ty, Type::TypeVar(_))
+                    {
+                        self.write("&(");
+                        self.emit_expr(arg);
+                        self.write(")");
+                        continue;
+                    }
+                    self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
+                    self.emit_expr(arg);
+                    continue;
+                }
+            }
+            self.emit_expr(arg);
+        }
+        self.write(")");
+    }
+
+    fn emit_generic_method_call(&mut self, object: &HirExpr, method: &str, args: &[HirExpr]) {
+        self.emit_expr(object);
+        self.write(&format!(".{method}("));
+        for (i, arg) in args.iter().enumerate() {
+            if i > 0 {
+                self.write(", ");
+            }
+            self.emit_expr(arg);
+        }
+        self.write(")");
     }
 
     /// Emit `&` or `&mut` prefix for a function argument based on parameter convention.
@@ -196,5 +177,22 @@ impl RustEmitter {
             ParamConvention::MutBorrow => self.write("&mut "),
             ParamConvention::Own => {} // no prefix -- pass by value (move)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn emit_method_call_uses_registry_first_without_legacy_type_match() {
+        let src = include_str!("method_call_emitter.rs");
+        let start = src
+            .find("pub(crate) fn emit_method_call")
+            .expect("emit_method_call should exist");
+        let end = src
+            .find("fn emit_class_callable_field_call")
+            .expect("class callable helper should exist");
+        let emit_block = &src[start..end];
+        assert!(!emit_block.contains("match (obj_ty, method)"));
+        assert!(!emit_block.contains("tuple.count() not fully supported"));
     }
 }
