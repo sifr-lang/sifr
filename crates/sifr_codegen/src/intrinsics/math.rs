@@ -1098,14 +1098,131 @@ pub(super) fn lower_erf(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_erfc(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_erfc(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __x: f64 = ({}); let __t = 1.0 / (1.0 + 0.3275911 * __x.abs()); let __poly = __t * (0.254829592 + __t * (-0.284496736 + __t * (1.421413741 + __t * (-1.453152027 + __t * 1.061405429)))); let __r = __poly * (-__x * __x).exp(); if __x >= 0.0 {{ __r }} else {{ 2.0 - __r }} }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__x".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::Cast {
+                    expr: Box::new(args[0].clone()),
+                    ty: RustType::F64,
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__t".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::BinOp {
+                    left: Box::new(RustExpr::Literal(RustLiteral::Float(1.0))),
+                    op: "/".to_string(),
+                    right: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Literal(RustLiteral::Float(1.0))),
+                        op: "+".to_string(),
+                        right: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::Literal(RustLiteral::Float(0.327_591_1))),
+                            op: "*".to_string(),
+                            right: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                                method: "abs".to_string(),
+                                args: vec![],
+                            }),
+                        }),
+                    }),
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__poly".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__t".to_string())),
+                    op: "*".to_string(),
+                    right: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Literal(RustLiteral::Float(0.254_829_592))),
+                        op: "+".to_string(),
+                        right: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("__t".to_string())),
+                            op: "*".to_string(),
+                            right: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Literal(RustLiteral::Float(
+                                    -0.284_496_736,
+                                ))),
+                                op: "+".to_string(),
+                                right: Box::new(RustExpr::BinOp {
+                                    left: Box::new(RustExpr::Ident("__t".to_string())),
+                                    op: "*".to_string(),
+                                    right: Box::new(RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Literal(RustLiteral::Float(
+                                            1.421_413_741,
+                                        ))),
+                                        op: "+".to_string(),
+                                        right: Box::new(RustExpr::BinOp {
+                                            left: Box::new(RustExpr::Ident("__t".to_string())),
+                                            op: "*".to_string(),
+                                            right: Box::new(RustExpr::BinOp {
+                                                left: Box::new(RustExpr::Literal(
+                                                    RustLiteral::Float(-1.453_152_027),
+                                                )),
+                                                op: "+".to_string(),
+                                                right: Box::new(RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::Ident(
+                                                        "__t".to_string(),
+                                                    )),
+                                                    op: "*".to_string(),
+                                                    right: Box::new(RustExpr::Literal(
+                                                        RustLiteral::Float(1.061_405_429),
+                                                    )),
+                                                }),
+                                            }),
+                                        }),
+                                    }),
+                                }),
+                            }),
+                        }),
+                    }),
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__r".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__poly".to_string())),
+                    op: "*".to_string(),
+                    right: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::UnaryOp {
+                                op: "-".to_string(),
+                                operand: Box::new(RustExpr::Ident("__x".to_string())),
+                            }),
+                            op: "*".to_string(),
+                            right: Box::new(RustExpr::Ident("__x".to_string())),
+                        }),
+                        method: "exp".to_string(),
+                        args: vec![],
+                    }),
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__x".to_string())),
+                op: ">=".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+            }),
+            then_expr: Box::new(RustExpr::Ident("__r".to_string())),
+            else_expr: Some(Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::Literal(RustLiteral::Float(2.0))),
+                op: "-".to_string(),
+                right: Box::new(RustExpr::Ident("__r".to_string())),
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_gamma(args: &[String]) -> Option<RustExpr> {
