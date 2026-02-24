@@ -1,6 +1,6 @@
 //! Math intrinsic lowerers for registry migration.
 
-use crate::{RustExpr, RustLiteral, RustType};
+use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 
 fn unary_method(args: &[String], method: &str) -> Option<RustExpr> {
     if args.len() != 1 {
@@ -333,14 +333,79 @@ pub(super) fn lower_fsum(args: &[String]) -> Option<RustExpr> {
     )))
 }
 
-pub(super) fn lower_sumprod(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_sumprod(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __p = &({}); let __q = &({}); let __len = __p.len().min(__q.len()); let mut __sum = 0.0f64; for __i in 0..__len {{ __sum += __p[__i] * __q[__i]; }} __sum }}",
-        args[0], args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__p".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(args[0].clone()),
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__q".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(args[1].clone()),
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__len".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__p".to_string())),
+                        method: "len".to_string(),
+                        args: vec![],
+                    }),
+                    method: "min".to_string(),
+                    args: vec![RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__q".to_string())),
+                        method: "len".to_string(),
+                        args: vec![],
+                    }],
+                },
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__sum".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::Literal(RustLiteral::Float(0.0)),
+            },
+            RustStmt::For {
+                var: "__i".to_string(),
+                iter: RustExpr::Range {
+                    start: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                    end: Box::new(RustExpr::Ident("__len".to_string())),
+                },
+                body: vec![RustStmt::AugAssign {
+                    target: RustExpr::Ident("__sum".to_string()),
+                    op: "+".to_string(),
+                    value: RustExpr::BinOp {
+                        left: Box::new(RustExpr::Index {
+                            expr: Box::new(RustExpr::Ident("__p".to_string())),
+                            index: Box::new(RustExpr::Ident("__i".to_string())),
+                        }),
+                        op: "*".to_string(),
+                        right: Box::new(RustExpr::Index {
+                            expr: Box::new(RustExpr::Ident("__q".to_string())),
+                            index: Box::new(RustExpr::Ident("__i".to_string())),
+                        }),
+                    },
+                }],
+            },
+        ],
+        expr: Some(Box::new(RustExpr::Ident("__sum".to_string()))),
+    })
 }
 
 pub(super) fn lower_erf(args: &[String]) -> Option<RustExpr> {
