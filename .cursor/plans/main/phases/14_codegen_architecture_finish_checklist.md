@@ -80,7 +80,7 @@ status: **partially met**
 - [x] IR clone optimization exists (`ir_optimize.rs`)
 - [x] IR validation exists (`ir_validate.rs`)
 - [x] Old helper names (`filter_rust_code_to_needed`, `parse_rust_blocks`, etc.) removed
-- [ ] Boolean import flags still active in primary codegen state/path
+- [x] Boolean import flags removed from primary import selection path (imports now derived from structural IR needs)
 - [ ] Stdlib DCE still text/chunk/token based (`stdlib_filter.rs`), not full `RustFile` IR DCE
 - [ ] `RawCode`-zero gate not enforced for all core production paths (IR type still carries bridge; fallback emitters remain)
 - [ ] Structural passes not run over full user-code IR because full user-code IR assembly is not yet the production path

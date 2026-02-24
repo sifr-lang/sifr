@@ -243,9 +243,6 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     infra_skip_types.insert("__io_err".to_string());
     let mut all_needed: Vec<String> = Vec::new();
-    let mut stdlib_needs_hashmap = false;
-    let mut stdlib_needs_hashset = false;
-    let mut stdlib_needs_vecdeque = false;
     let mut stdlib_needs_file_handles = false;
     let mut stdlib_provides_file_handle_struct = false;
     for module_name in &emitter.used_stdlib_modules {
@@ -292,9 +289,6 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
                     };
                 if !filtered.trim().is_empty() {
                     let prepared = collect_and_strip_shared_prelude(&filtered);
-                    stdlib_needs_hashmap |= prepared.shared_needs.collections.needs_hashmap;
-                    stdlib_needs_hashset |= prepared.shared_needs.collections.needs_hashset;
-                    stdlib_needs_vecdeque |= prepared.shared_needs.collections.needs_vecdeque;
                     stdlib_needs_file_handles |=
                         prepared.shared_needs.file_handles.needs_file_handles;
                     stdlib_provides_file_handle_struct |= prepared
@@ -322,13 +316,6 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let needs_logging = emitter.used_stdlib_modules.contains("sifr.logging")
         || emitter.used_stdlib_modules.contains("_sifr.logging")
         || emitter.runtime_needs.needs_logging_state;
-
-    // File handle infrastructure always relies on HashMap + Mutex.
-    let needs_hashmap_base =
-        emitter.collection_needs.needs_hashmap || stdlib_needs_hashmap || needs_file_handles;
-    let needs_hashset_base = emitter.collection_needs.needs_hashset || stdlib_needs_hashset;
-    let needs_vecdeque_base = emitter.collection_needs.needs_vecdeque || stdlib_needs_vecdeque;
-    let needs_bigint_base = emitter.runtime_needs.needs_bigint;
 
     // Emit built-in error class struct definitions for referenced error types.
     let referenced_error_classes = collect_referenced_builtin_error_classes(
@@ -424,10 +411,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
-    let needs_hashmap = needs_hashmap_base || body_import_needs.collections.needs_hashmap;
-    let needs_hashset = needs_hashset_base || body_import_needs.collections.needs_hashset;
-    let needs_vecdeque = needs_vecdeque_base || body_import_needs.collections.needs_vecdeque;
-    let needs_bigint = needs_bigint_base || body_import_needs.runtime.needs_bigint;
+    let needs_hashmap = body_import_needs.collections.needs_hashmap;
+    let needs_hashset = body_import_needs.collections.needs_hashset;
+    let needs_vecdeque = body_import_needs.collections.needs_vecdeque;
+    let needs_bigint = body_import_needs.runtime.needs_bigint;
     let needs_mutex = needs_file_handles || needs_logging || body_import_needs.runtime.needs_mutex;
 
     let mut import_items: Vec<RustItem> = Vec::new();
@@ -528,16 +515,25 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
             }
         }
 
-        if emitter.collection_needs.needs_hashmap {
+        let mut assembled_items: Vec<RustItem> = Vec::new();
+        if !emitter.enum_items.is_empty() {
+            assembled_items.extend(emitter.enum_items.clone());
+        }
+        if !emitter.output.is_empty() {
+            assembled_items.push(RustItem::RawCode(emitter.output.clone()));
+        }
+        let import_needs = collect_import_needs_from_items(&assembled_items);
+
+        if import_needs.collections.needs_hashmap {
             result.push_str("use std::collections::HashMap;\n");
         }
-        if emitter.collection_needs.needs_hashset {
+        if import_needs.collections.needs_hashset {
             result.push_str("use std::collections::HashSet;\n");
         }
-        if emitter.collection_needs.needs_vecdeque {
+        if import_needs.collections.needs_vecdeque {
             result.push_str("use std::collections::VecDeque;\n");
         }
-        if emitter.runtime_needs.needs_bigint {
+        if import_needs.runtime.needs_bigint {
             result.push_str("use num_bigint::BigInt;\n");
         }
         if !result.is_empty() {
