@@ -59,6 +59,7 @@ status: **partially met**
 - [ ] `lower_*` contract is not full `Result<_, CodegenError>` end-to-end for production path
 - [x] Production stmt lowering entry now has explicit `Result` contract (`try_lower_simple_stmt_with_scope_result`) with context validation
 - [x] Production expr lowering entry now has explicit `Result` contract (`try_lower_leaf_expr_result`) with shape validation
+- [x] Production module-constant item lowering entry now has explicit `Result` contract (`try_lower_simple_module_constant_item_result`) with name-shape validation
 - [x] Production statement lowering now enters through `ScopeContext` (`try_lower_simple_stmt_with_scope` in `emit_stmt`)
 - [x] Union enums still emitted as raw `enum_defs` strings, not `RustItem::Enum` nodes
 

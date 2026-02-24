@@ -133,6 +133,7 @@ pub struct LoweringStats {
     pub expr_total: u64,
     pub expr_structured: u64,
     pub expr_lowering_errors: u64,
+    pub item_lowering_errors: u64,
     pub stmt_candidate_total: u64,
     pub stmt_candidate_structured: u64,
     pub expr_candidate_total: u64,
