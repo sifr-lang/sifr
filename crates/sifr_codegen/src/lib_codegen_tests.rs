@@ -957,7 +957,7 @@ fn test_fallback_stmt_path_handles_nested_function() {
 
     let generated = generate_rust_with_metadata(&module);
 
-    assert!(generated.rust_source.contains("fn inner() -> i64"));
+    assert!(generated.rust_source.contains("let inner = || {"));
     assert!(generated.rust_source.contains("inner()"));
 }
 
