@@ -6,16 +6,87 @@ fn owned_str(arg: &str) -> String {
     format!("({arg}).to_string()")
 }
 
+fn open_arm(pattern: &str, open_expr: &str, variant: &str, success_expr: &str) -> String {
+    let (buffer_ty, buffer_var) = if variant.ends_with("Read") {
+        ("BufReader", "__reader")
+    } else {
+        ("BufWriter", "__writer")
+    };
+    format!(
+        "{pattern} => {{ \
+            let __f = {open_expr}.map_err(__io_err)?; \
+            let {buffer_var} = {buffer_ty}::new(__f); \
+            __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::{variant}({buffer_var})); \
+            {success_expr} \
+        }}"
+    )
+}
+
+fn build_open_match(path_ref: &str, success_expr: &str, invalid_expr: &str) -> String {
+    let arms = [
+        open_arm(
+            "\"r\" | \"rt\"",
+            &format!("std::fs::File::open({path_ref})"),
+            "TextRead",
+            success_expr,
+        ),
+        open_arm(
+            "\"w\" | \"wt\"",
+            &format!("std::fs::File::create({path_ref})"),
+            "TextWrite",
+            success_expr,
+        ),
+        open_arm(
+            "\"a\" | \"at\"",
+            &format!("std::fs::OpenOptions::new().append(true).create(true).open({path_ref})"),
+            "TextWrite",
+            success_expr,
+        ),
+        open_arm(
+            "\"rb\"",
+            &format!("std::fs::File::open({path_ref})"),
+            "BinaryRead",
+            success_expr,
+        ),
+        open_arm(
+            "\"wb\"",
+            &format!("std::fs::File::create({path_ref})"),
+            "BinaryWrite",
+            success_expr,
+        ),
+        open_arm(
+            "\"ab\"",
+            &format!("std::fs::OpenOptions::new().append(true).create(true).open({path_ref})"),
+            "BinaryWrite",
+            success_expr,
+        ),
+    ];
+    format!("match __mode.as_str() {{ {}, _ => {invalid_expr} }}", arms.join(", "))
+}
+
 pub(super) fn lower_builtin_open(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let mut code = String::new();
-    code.push_str("{ use std::io::{BufReader, BufWriter}; let __path = ");
-    code.push_str(&owned_str(&args[0]));
-    code.push_str("; let __mode = ");
-    code.push_str(&owned_str(&args[1]));
-    code.push_str("; let __handle_id: i64 = { use std::sync::atomic::{AtomicI64, Ordering}; static __NEXT_FH_ID: AtomicI64 = AtomicI64::new(1); __NEXT_FH_ID.fetch_add(1, Ordering::SeqCst) }; match __mode.as_str() { \"r\" | \"rt\" => { let __f = std::fs::File::open(__path.as_str()).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextRead(__reader)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"w\" | \"wt\" => { let __f = std::fs::File::create(__path.as_str()).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"a\" | \"at\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path.as_str()).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"rb\" => { let __f = std::fs::File::open(__path.as_str()).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryRead(__reader)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"wb\" => { let __f = std::fs::File::create(__path.as_str()).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, \"ab\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path.as_str()).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); FileHandle { _handle: __handle_id, _mode: __mode.to_string() } }, _ => return Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() }) } }");
+    let path_expr = owned_str(&args[0]);
+    let mode_expr = owned_str(&args[1]);
+    let match_expr = build_open_match(
+        "__path.as_str()",
+        "FileHandle { _handle: __handle_id, _mode: __mode.to_string() }",
+        "return Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() })",
+    );
+    let code = format!(
+        "{{ use std::io::{{BufReader, BufWriter}}; \
+            let __path = {path_expr}; \
+            let __mode = {mode_expr}; \
+            let __handle_id: i64 = {{ \
+                use std::sync::atomic::{{AtomicI64, Ordering}}; \
+                static __NEXT_FH_ID: AtomicI64 = AtomicI64::new(1); \
+                __NEXT_FH_ID.fetch_add(1, Ordering::SeqCst) \
+            }}; \
+            {match_expr} \
+        }}"
+    );
     Some(RustExpr::RawCode(code))
 }
 
@@ -23,12 +94,26 @@ pub(super) fn lower_open_file(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let mut code = String::new();
-    code.push_str("(|| -> Result<i64, IOError> { use std::io::{BufReader, BufWriter}; let __path = ");
-    code.push_str(&owned_str(&args[0]));
-    code.push_str("; let __mode = ");
-    code.push_str(&owned_str(&args[1]));
-    code.push_str("; let __handle_id: i64 = { use std::sync::atomic::{AtomicI64, Ordering}; static __NEXT_ID: AtomicI64 = AtomicI64::new(1); __NEXT_ID.fetch_add(1, Ordering::SeqCst) }; let __mode_s: &str = __mode.as_str(); let __path_s: &str = __path.as_str(); match __mode_s { \"r\" | \"rt\" => { let __f = std::fs::File::open(__path_s).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextRead(__reader)); Ok(__handle_id) }, \"w\" | \"wt\" => { let __f = std::fs::File::create(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"a\" | \"at\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::TextWrite(__writer)); Ok(__handle_id) }, \"rb\" => { let __f = std::fs::File::open(__path_s).map_err(__io_err)?; let __reader = BufReader::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryRead(__reader)); Ok(__handle_id) }, \"wb\" => { let __f = std::fs::File::create(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, \"ab\" => { let __f = std::fs::OpenOptions::new().append(true).create(true).open(__path_s).map_err(__io_err)?; let __writer = BufWriter::new(__f); __SIFR_FILE_HANDLES.lock().unwrap().insert(__handle_id, SifrFileHandle::BinaryWrite(__writer)); Ok(__handle_id) }, _ => Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() }) } })()");
+    let path_expr = owned_str(&args[0]);
+    let mode_expr = owned_str(&args[1]);
+    let match_expr = build_open_match(
+        "__path.as_str()",
+        "Ok(__handle_id)",
+        "Err(IOError { message: format!(\"invalid mode: {}\", __mode), kind: \"Other\".to_string() })",
+    );
+    let code = format!(
+        "(|| -> Result<i64, IOError> {{ \
+            use std::io::{{BufReader, BufWriter}}; \
+            let __path = {path_expr}; \
+            let __mode = {mode_expr}; \
+            let __handle_id: i64 = {{ \
+                use std::sync::atomic::{{AtomicI64, Ordering}}; \
+                static __NEXT_ID: AtomicI64 = AtomicI64::new(1); \
+                __NEXT_ID.fetch_add(1, Ordering::SeqCst) \
+            }}; \
+            {match_expr} \
+        }})()"
+    );
     Some(RustExpr::RawCode(code))
 }
 
