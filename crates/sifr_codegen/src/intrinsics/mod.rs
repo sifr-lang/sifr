@@ -109,7 +109,7 @@ fn lower_intrinsic_rendered(
         "erf" => (math::lower_erf(args), None),
         "erfc" => (math::lower_erfc(args), None),
         "gamma" => (math::lower_gamma(args), None),
-        "lgamma" => (math::lower_lgamma(rendered_args), None),
+        "lgamma" => (math::lower_lgamma(args), None),
         "frexp" => (math::lower_frexp(args), None),
         "ldexp" => (math::lower_ldexp(args), None),
         "modf" => (math::lower_modf(args), None),
@@ -1082,6 +1082,10 @@ mod tests {
         let gamma = lower_intrinsic("gamma", &["x".to_string()]).expect("gamma");
         assert!(render_expr(&gamma.expr).contains("__x <= 0.0"));
         assert!(!matches!(gamma.expr, RustExpr::RawCode(_)));
+
+        let lgamma = lower_intrinsic("lgamma", &["x".to_string()]).expect("lgamma");
+        assert!(render_expr(&lgamma.expr).contains("__r.exp()"));
+        assert!(!matches!(lgamma.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
