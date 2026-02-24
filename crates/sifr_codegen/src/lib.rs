@@ -988,7 +988,10 @@ impl RustEmitter {
             self.write(&crate::render_expr(&raw_bridge_expr));
             return;
         }
-        if matches!(expr, HirExpr::Call { .. } | HirExpr::MethodCall { .. }) {
+        if matches!(
+            expr,
+            HirExpr::Call { .. } | HirExpr::MethodCall { .. } | HirExpr::ConstructorCall { .. }
+        ) {
             let saved_fallback_depth = self.fallback_depth;
             self.fallback_depth += 1;
             self.emit_expr_fallback(expr);

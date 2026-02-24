@@ -190,7 +190,7 @@ Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bri
 - [ ] Eliminate expr fallback raw-capture by adding structured lowering for remaining residue:
   - [x] `Call`
   - [x] `MethodCall`
-  - [ ] `ConstructorCall`
+  - [x] `ConstructorCall`
   - [ ] `Index`
   - [ ] `Slice`
   - [ ] `DictLiteral`
