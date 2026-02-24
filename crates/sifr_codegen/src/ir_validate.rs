@@ -227,6 +227,15 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
             validate_expr(expr, issues, in_function);
             validate_expr(index, issues, in_function);
         }
+        RustExpr::Slice { expr, start, stop } => {
+            validate_expr(expr, issues, in_function);
+            if let Some(start) = start {
+                validate_expr(start, issues, in_function);
+            }
+            if let Some(stop) = stop {
+                validate_expr(stop, issues, in_function);
+            }
+        }
         RustExpr::Ref { expr, .. } => validate_expr(expr, issues, in_function),
         RustExpr::Cast { expr, ty } => {
             validate_expr(expr, issues, in_function);

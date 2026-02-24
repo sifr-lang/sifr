@@ -192,7 +192,7 @@ Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bri
   - [x] `MethodCall`
   - [x] `ConstructorCall`
   - [x] `Index`
-  - [ ] `Slice`
+  - [x] `Slice`
   - [ ] `DictLiteral`
   - [ ] `SetLiteral`
   - [ ] `ListComp`

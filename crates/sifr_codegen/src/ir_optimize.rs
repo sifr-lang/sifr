@@ -172,6 +172,11 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
         | RustExpr::Await(operand) => optimize_expr(operand),
         RustExpr::Field { expr, .. } => optimize_expr(expr),
         RustExpr::Index { expr, index } => optimize_expr(expr) + optimize_expr(index),
+        RustExpr::Slice { expr, start, stop } => {
+            optimize_expr(expr)
+                + start.as_mut().map(|s| optimize_expr(s)).unwrap_or(0)
+                + stop.as_mut().map(|s| optimize_expr(s)).unwrap_or(0)
+        }
         RustExpr::Ref { expr, .. } => optimize_expr(expr),
         RustExpr::Cast { expr, .. } => optimize_expr(expr),
         RustExpr::Block { stmts, expr } => {

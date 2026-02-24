@@ -994,6 +994,7 @@ impl RustEmitter {
                 | HirExpr::MethodCall { .. }
                 | HirExpr::ConstructorCall { .. }
                 | HirExpr::Index { .. }
+                | HirExpr::Slice { .. }
         ) {
             let saved_fallback_depth = self.fallback_depth;
             self.fallback_depth += 1;
