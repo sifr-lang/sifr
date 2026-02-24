@@ -316,8 +316,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             args,
             ..
         } => try_lower_simple_method_call_expr(object, method, args),
-        HirExpr::ConstructorCall { .. }
-        | HirExpr::DictComp { .. }
+        HirExpr::ConstructorCall {
+            class_name, args, ..
+        } => try_lower_simple_constructor_call_expr(class_name, args),
+        HirExpr::DictComp { .. }
         | HirExpr::DictLiteral { .. }
         | HirExpr::GeneratorExpr { .. }
         | HirExpr::Index { .. }
@@ -382,6 +384,33 @@ fn try_lower_simple_method_call_expr(
     Some(RustExpr::MethodCall {
         receiver: Box::new(lowered_object),
         method: method.to_string(),
+        args: lowered_args,
+    })
+}
+
+fn try_lower_simple_constructor_call_expr(
+    class_name: &str,
+    args: &[HirExpr],
+) -> Option<RustExpr> {
+    // Keep local/user class constructors on fallback path due recursive-field boxing
+    // and subclass-to-base remapping handled by legacy emitter state.
+    if !class_name.contains("::") {
+        return None;
+    }
+
+    let lowered_args = args
+        .iter()
+        .map(try_lower_leaf_or_name_expr)
+        .collect::<Option<Vec<_>>>()?;
+
+    let mut path = class_name
+        .split("::")
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    path.push("new".to_string());
+
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(path)),
         args: lowered_args,
     })
 }
@@ -2439,6 +2468,33 @@ mod tests {
             method: "len".to_string(),
             args: vec![],
             ty: Type::Int,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_path_constructor_call_with_leaf_args() {
+        let expr = HirExpr::ConstructorCall {
+            class_name: "pkg::Widget".to_string(),
+            args: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("constructor lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::FnCall { func, args }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["pkg".to_string(), "Widget".to_string(), "new".to_string()])
+                    && args.len() == 1
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_non_path_constructor_call() {
+        let expr = HirExpr::ConstructorCall {
+            class_name: "Widget".to_string(),
+            args: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Any,
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
     }

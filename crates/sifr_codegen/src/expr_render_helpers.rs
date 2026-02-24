@@ -212,8 +212,7 @@ impl RustEmitter {
     pub(super) fn try_capture_fallback_expr_as_raw(&mut self, expr: &HirExpr) -> Option<RustExpr> {
         if !matches!(
             expr,
-            HirExpr::ConstructorCall { .. }
-                | HirExpr::DictComp { .. }
+            HirExpr::DictComp { .. }
                 | HirExpr::DictLiteral { .. }
                 | HirExpr::FString { .. }
                 | HirExpr::GeneratorExpr { .. }
