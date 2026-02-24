@@ -13,17 +13,29 @@ impl RustEmitter {
             self.indent = saved_indent;
             return result.trim().to_string();
         }
-        if let Some(lowered_expr) = crate::try_lower_leaf_expr(expr) {
-            crate::render_expr(&lowered_expr)
-        } else {
-            let saved_output = std::mem::take(&mut self.output);
-            let saved_indent = self.indent;
-            self.indent = 0;
-            self.emit_expr(expr);
-            let result = std::mem::take(&mut self.output);
-            self.output = saved_output;
-            self.indent = saved_indent;
-            result.trim().to_string()
+        match crate::try_lower_leaf_expr_result(expr) {
+            Ok(Some(lowered_expr)) => crate::render_expr(&lowered_expr),
+            Ok(None) => {
+                let saved_output = std::mem::take(&mut self.output);
+                let saved_indent = self.indent;
+                self.indent = 0;
+                self.emit_expr(expr);
+                let result = std::mem::take(&mut self.output);
+                self.output = saved_output;
+                self.indent = saved_indent;
+                result.trim().to_string()
+            }
+            Err(_) => {
+                self.lowering_stats.expr_lowering_errors += 1;
+                let saved_output = std::mem::take(&mut self.output);
+                let saved_indent = self.indent;
+                self.indent = 0;
+                self.emit_expr(expr);
+                let result = std::mem::take(&mut self.output);
+                self.output = saved_output;
+                self.indent = saved_indent;
+                result.trim().to_string()
+            }
         }
     }
 
