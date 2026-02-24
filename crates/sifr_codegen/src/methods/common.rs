@@ -1,21 +1,26 @@
 //! Shared method lowerers that are not container-specific.
 
-use crate::{RustExpr, RustType};
+use crate::{RustExpr, RustLiteral, RustType};
 
 pub(super) fn lower_tuple_len(elem_count: usize, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::RawCode(format!("{elem_count}_i64")))
+    let elem_count = i64::try_from(elem_count).ok()?;
+    Some(RustExpr::Cast {
+        expr: Box::new(RustExpr::Literal(RustLiteral::Int(elem_count))),
+        ty: RustType::I64,
+    })
 }
 
 pub(super) fn lower_tuple_count_placeholder(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(
-        "0_i64 /* tuple.count() not fully supported */".to_string(),
-    ))
+    Some(RustExpr::Cast {
+        expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        ty: RustType::I64,
+    })
 }
 
 pub(super) fn lower_string_char_len(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {

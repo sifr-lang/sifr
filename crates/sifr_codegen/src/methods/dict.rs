@@ -2,12 +2,15 @@
 
 use crate::{RustExpr, RustParam, RustType};
 
+fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
+    let rendered = crate::render_expr(arg);
+    rendered.ends_with(".as_str()") || rendered.starts_with('&')
+}
+
 fn render_key_arg_expr(arg: &RustExpr) -> RustExpr {
     match arg {
         RustExpr::Ref { .. } => arg.clone(),
-        RustExpr::RawCode(code) if code.ends_with(".as_str()") || code.starts_with('&') => {
-            RustExpr::RawCode(code.clone())
-        }
+        _ if is_already_borrowed_rendered_expr(arg) => arg.clone(),
         _ => RustExpr::Ref {
             mutable: false,
             expr: Box::new(arg.clone()),
