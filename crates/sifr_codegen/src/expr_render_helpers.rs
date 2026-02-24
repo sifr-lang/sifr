@@ -216,7 +216,6 @@ impl RustEmitter {
                 | HirExpr::DictLiteral { .. }
                 | HirExpr::FString { .. }
                 | HirExpr::GeneratorExpr { .. }
-                | HirExpr::Index { .. }
                 | HirExpr::Lambda { .. }
                 | HirExpr::ListComp { .. }
                 | HirExpr::SetComp { .. }
