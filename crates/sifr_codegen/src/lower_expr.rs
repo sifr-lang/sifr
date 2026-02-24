@@ -352,7 +352,13 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             generators,
             ty,
         } => try_lower_simple_set_comp_expr(expr, generators, ty),
-        HirExpr::GeneratorExpr { .. } => None,
+        HirExpr::GeneratorExpr {
+            expr,
+            var,
+            iter,
+            filter,
+            ty,
+        } => try_lower_simple_generator_expr(expr, var, iter, filter.as_deref(), ty),
         _ => None,
     }
 }
@@ -770,6 +776,41 @@ fn try_lower_simple_set_comp_expr(
     Some(RustExpr::Block {
         stmts,
         expr: Some(Box::new(RustExpr::Ident(result_ident))),
+    })
+}
+
+fn try_lower_simple_generator_expr(
+    expr: &HirExpr,
+    var: &str,
+    iter: &HirExpr,
+    filter: Option<&HirExpr>,
+    ty: &Type,
+) -> Option<RustExpr> {
+    if resolve_alias_type(ty) != &Type::Any || filter.is_some() || var.contains(',') {
+        return None;
+    }
+
+    let iter_chain = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(try_lower_leaf_or_name_expr(iter)?),
+            method: "clone".to_string(),
+            args: vec![],
+        }),
+        method: "into_iter".to_string(),
+        args: vec![],
+    };
+
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(iter_chain),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: var.to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(try_lower_leaf_or_name_expr(expr)?),
+            is_move: false,
+        }],
     })
 }
 
@@ -3284,6 +3325,76 @@ mod tests {
                 None,
             )],
             ty: Type::Set(Box::new(Type::Int)),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_generator_expr_without_filter() {
+        let expr = HirExpr::GeneratorExpr {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            var: "x".to_string(),
+            iter: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            filter: None,
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("generator expr lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall { method, args, .. }
+                if method == "map"
+                    && args.len() == 1
+                    && matches!(args.first(), Some(RustExpr::Closure { params, .. }) if params.len() == 1)
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_generator_expr_with_filter() {
+        let expr = HirExpr::GeneratorExpr {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            var: "x".to_string(),
+            iter: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            filter: Some(Box::new(HirExpr::Compare {
+                left: Box::new(HirExpr::Name {
+                    name: "x".to_string(),
+                    ty: Type::Int,
+                }),
+                ops: vec![">".to_string()],
+                comparators: vec![HirExpr::IntLiteral(0)],
+                ty: Type::Bool,
+            })),
+            ty: Type::Any,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_generator_expr_on_typed_result() {
+        let expr = HirExpr::GeneratorExpr {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            var: "x".to_string(),
+            iter: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            filter: None,
+            ty: Type::List(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
     }
