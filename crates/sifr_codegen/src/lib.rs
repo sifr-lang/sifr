@@ -990,7 +990,10 @@ impl RustEmitter {
         }
         if matches!(
             expr,
-            HirExpr::Call { .. } | HirExpr::MethodCall { .. } | HirExpr::ConstructorCall { .. }
+            HirExpr::Call { .. }
+                | HirExpr::MethodCall { .. }
+                | HirExpr::ConstructorCall { .. }
+                | HirExpr::Index { .. }
         ) {
             let saved_fallback_depth = self.fallback_depth;
             self.fallback_depth += 1;

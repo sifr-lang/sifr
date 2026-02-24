@@ -319,10 +319,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::ConstructorCall {
             class_name, args, ..
         } => try_lower_simple_constructor_call_expr(class_name, args),
+        HirExpr::Index { object, index, .. } => try_lower_simple_index_expr(object, index),
         HirExpr::DictComp { .. }
         | HirExpr::DictLiteral { .. }
         | HirExpr::GeneratorExpr { .. }
-        | HirExpr::Index { .. }
         | HirExpr::ListComp { .. }
         | HirExpr::SetComp { .. }
         | HirExpr::SetLiteral { .. }
@@ -412,6 +412,18 @@ fn try_lower_simple_constructor_call_expr(
     Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(path)),
         args: lowered_args,
+    })
+}
+
+fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
+    // Keep typed indexing rewrites (dict/list/string/tuple/option) on fallback path.
+    if object.ty() != &Type::Any {
+        return None;
+    }
+
+    Some(RustExpr::Index {
+        expr: Box::new(try_lower_leaf_or_name_expr(object)?),
+        index: Box::new(try_lower_leaf_or_name_expr(index)?),
     })
 }
 
@@ -2495,6 +2507,39 @@ mod tests {
             class_name: "Widget".to_string(),
             args: vec![HirExpr::IntLiteral(1)],
             ty: Type::Any,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_index_on_any_with_leaf_index() {
+        let expr = HirExpr::Index {
+            object: Box::new(HirExpr::Name {
+                name: "data".to_string(),
+                ty: Type::Any,
+            }),
+            index: Box::new(HirExpr::IntLiteral(0)),
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("index lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Index { expr, index }
+                if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "data")
+                    && matches!(index.as_ref(), RustExpr::Cast { .. })
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_index_on_typed_object() {
+        let expr = HirExpr::Index {
+            object: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            index: Box::new(HirExpr::IntLiteral(0)),
+            ty: Type::Union(vec![Type::Int, Type::None]),
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
     }
