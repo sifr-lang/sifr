@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use syn::visit::{self, Visit};
 
 #[derive(Debug, Clone)]
 struct TopLevelItem {
@@ -217,14 +218,14 @@ fn parse_stdlib_ir_file(rust_code: &str) -> StdlibIrFile {
             TopLevelChunk::OtherLine(_) => None,
         })
         .collect();
-    let global_types: HashSet<&str> = GLOBAL_INFRA_TYPES.iter().copied().collect();
+    let global_types: HashSet<String> = GLOBAL_INFRA_TYPES.iter().map(|s| (*s).to_string()).collect();
 
     let chunks = chunks
         .into_iter()
         .map(|chunk| match chunk {
             TopLevelChunk::Item(item) => {
                 let refs =
-                    referenced_item_names(&item.code, &item_names, &item.name, &global_types);
+                    referenced_item_names_via_ast(&item.code, &item_names, &item.name, &global_types);
                 StdlibIrChunk::Item(StdlibIrItem {
                     name: item.name,
                     code: item.code,
@@ -322,6 +323,127 @@ fn derive_shared_needs(filtered: &str, chunks: &[TopLevelChunk]) -> SharedPrelud
     shared_needs
 }
 
+fn referenced_item_names_via_ast(
+    code: &str,
+    item_names: &HashSet<String>,
+    current_name: &str,
+    global_types: &HashSet<String>,
+) -> HashSet<String> {
+    let Ok(item) = syn::parse_str::<syn::Item>(code) else {
+        return HashSet::new();
+    };
+    let mut local_bindings = LocalBindingCollector::default();
+    local_bindings.visit_item(&item);
+    let mut collector = ItemRefCollector::new(item_names, current_name, global_types, local_bindings.locals);
+    collector.visit_item(&item);
+    collector.refs
+}
+
+#[derive(Default)]
+struct LocalBindingCollector {
+    locals: HashSet<String>,
+}
+
+impl<'ast> Visit<'ast> for LocalBindingCollector {
+    fn visit_pat_ident(&mut self, node: &'ast syn::PatIdent) {
+        self.locals.insert(node.ident.to_string());
+        visit::visit_pat_ident(self, node);
+    }
+}
+
+struct ItemRefCollector<'a> {
+    item_names: &'a HashSet<String>,
+    current_name: &'a str,
+    global_types: &'a HashSet<String>,
+    locals: HashSet<String>,
+    refs: HashSet<String>,
+}
+
+impl<'a> ItemRefCollector<'a> {
+    fn new(
+        item_names: &'a HashSet<String>,
+        current_name: &'a str,
+        global_types: &'a HashSet<String>,
+        locals: HashSet<String>,
+    ) -> Self {
+        Self {
+            item_names,
+            current_name,
+            global_types,
+            locals,
+            refs: HashSet::new(),
+        }
+    }
+
+    fn try_insert_ref(&mut self, ident: &str) {
+        if ident == self.current_name {
+            return;
+        }
+        if self.global_types.contains(ident) {
+            return;
+        }
+        if self.item_names.contains(ident) {
+            self.refs.insert(ident.to_string());
+        }
+    }
+}
+
+impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
+    fn visit_item_impl(&mut self, node: &'ast syn::ItemImpl) {
+        if let Some((_, trait_path, _)) = &node.trait_ {
+            if let Some(first) = trait_path.segments.first() {
+                self.try_insert_ref(&first.ident.to_string());
+            }
+        }
+        if let syn::Type::Path(type_path) = node.self_ty.as_ref() {
+            if let Some(first) = type_path.path.segments.first() {
+                self.try_insert_ref(&first.ident.to_string());
+            }
+        }
+        visit::visit_item_impl(self, node);
+    }
+
+    fn visit_type_path(&mut self, node: &'ast syn::TypePath) {
+        if let Some(first) = node.path.segments.first() {
+            self.try_insert_ref(&first.ident.to_string());
+        }
+        visit::visit_type_path(self, node);
+    }
+
+    fn visit_path(&mut self, node: &'ast syn::Path) {
+        if let Some(first) = node.segments.first() {
+            let ident = first.ident.to_string();
+            let is_single_local = node.leading_colon.is_none()
+                && node.segments.len() == 1
+                && self.locals.contains(&ident);
+            if !is_single_local {
+                self.try_insert_ref(&ident);
+            }
+        }
+        visit::visit_path(self, node);
+    }
+
+    fn visit_expr_path(&mut self, node: &'ast syn::ExprPath) {
+        if node.qself.is_none() {
+            if let Some(first) = node.path.segments.first() {
+                let ident = first.ident.to_string();
+                let is_single_segment = node.path.segments.len() == 1;
+                if !(is_single_segment && self.locals.contains(&ident)) {
+                    self.try_insert_ref(&ident);
+                }
+            }
+        }
+        visit::visit_expr_path(self, node);
+    }
+
+    fn visit_macro(&mut self, node: &'ast syn::Macro) {
+        if let Some(first) = node.path.segments.first() {
+            self.try_insert_ref(&first.ident.to_string());
+        }
+        visit::visit_macro(self, node);
+    }
+}
+
 fn parse_top_level_chunks(rust_code: &str) -> Vec<TopLevelChunk> {
     let lines: Vec<&str> = rust_code.lines().collect();
     let mut chunks = Vec::new();
@@ -383,29 +505,6 @@ fn parse_top_level_chunks(rust_code: &str) -> Vec<TopLevelChunk> {
     }
 
     chunks
-}
-
-fn referenced_item_names(
-    code: &str,
-    item_names: &HashSet<String>,
-    current_name: &str,
-    global_types: &HashSet<&str>,
-) -> HashSet<String> {
-    let tokens = tokenize_rust_like(code);
-    let mut refs = HashSet::new();
-    for (idx, token) in tokens.iter().enumerate() {
-        let ident = match token {
-            RustToken::Ident(ident) => ident,
-            RustToken::Sym(_) => continue,
-        };
-        if ident == current_name || global_types.contains(ident.as_str()) {
-            continue;
-        }
-        if item_names.contains(ident) && is_reference_ident(&tokens, idx) {
-            refs.insert(ident.clone());
-        }
-    }
-    refs
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

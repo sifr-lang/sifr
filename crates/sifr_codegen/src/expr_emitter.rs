@@ -322,24 +322,34 @@ impl RustEmitter {
                             self.emit_expr(&comparators[0]);
                         } else {
                             // Dereference borrowed params in comparisons to avoid &String == String
+                            self.write("(");
                             self.emit_expr_for_compare(left);
+                            self.write(")");
                             self.write(&format!(" {op} "));
+                            self.write("(");
                             self.emit_expr_for_compare(&comparators[0]);
+                            self.write(")");
                         }
                     }
                 } else {
                     // Chained comparisons: a < b < c -> a < b && b < c
-                    // Cast expressions need parentheses when followed by comparison operators
-                    // to avoid Rust parsing `1 as i64 < x` as a generic argument
                     self.write("(");
-                    self.emit_expr_with_parens_for_compare(left);
+                    self.write("(");
+                    self.emit_expr_for_compare(left);
+                    self.write(")");
                     self.write(&format!(" {} ", ops[0]));
-                    self.emit_expr(&comparators[0]);
+                    self.write("(");
+                    self.emit_expr_for_compare(&comparators[0]);
+                    self.write(")");
                     for i in 1..ops.len() {
                         self.write(" && ");
-                        self.emit_expr(&comparators[i - 1]);
+                        self.write("(");
+                        self.emit_expr_for_compare(&comparators[i - 1]);
+                        self.write(")");
                         self.write(&format!(" {} ", ops[i]));
-                        self.emit_expr(&comparators[i]);
+                        self.write("(");
+                        self.emit_expr_for_compare(&comparators[i]);
+                        self.write(")");
                     }
                     self.write(")");
                 }
