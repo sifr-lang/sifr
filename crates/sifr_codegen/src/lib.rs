@@ -996,6 +996,7 @@ impl RustEmitter {
                 | HirExpr::Index { .. }
                 | HirExpr::Slice { .. }
                 | HirExpr::DictLiteral { .. }
+                | HirExpr::SetLiteral { .. }
         ) {
             let saved_fallback_depth = self.fallback_depth;
             self.fallback_depth += 1;
