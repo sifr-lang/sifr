@@ -1008,6 +1008,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     // Compile each test file and combine into a single Rust test binary
     let mut all_rust_code = String::new();
     let mut all_stdlib_modules = HashSet::new();
+    let mut all_required_crates = HashSet::new();
 
     for test_file in &test_files {
         let source = std::fs::read_to_string(test_file).map_err(|e| {
@@ -1064,6 +1065,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         all_rust_code.push_str(&codegen_result.rust_source);
         all_rust_code.push('\n');
         all_stdlib_modules.extend(codegen_result.used_stdlib_modules);
+        all_required_crates.extend(codegen_result.required_crates);
     }
 
     // Build and run with cargo test
@@ -1076,27 +1078,8 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         }]
     })?;
 
-    // Write Cargo.toml with dependencies
-    let mut cargo_toml = r#"[package]
-name = "sifr_tests"
-version = "0.1.0"
-edition = "2021"
-"#
-    .to_string();
-
-    let mut deps = Vec::new();
-    for module_name in &all_stdlib_modules {
-        if module_name.as_str() == "sifr.json" {
-            deps.push("serde_json = \"1\"".to_string());
-        }
-    }
-    if !deps.is_empty() {
-        cargo_toml.push_str("\n[dependencies]\n");
-        for dep in &deps {
-            cargo_toml.push_str(dep);
-            cargo_toml.push('\n');
-        }
-    }
+    // Write Cargo.toml with stdlib + explicit required crates from codegen metadata.
+    let cargo_toml = generate_test_runner_cargo_toml(&all_stdlib_modules, &all_required_crates);
 
     std::fs::write(project_dir.join("Cargo.toml"), cargo_toml).map_err(|e| {
         vec![CompileError {
@@ -1136,6 +1119,26 @@ edition = "2021"
     }
 
     Ok(output.status.success())
+}
+
+fn generate_test_runner_cargo_toml(
+    stdlib_modules: &HashSet<String>,
+    required_crates: &HashSet<String>,
+) -> String {
+    let (cargo_toml, _) = generate_project_with_deps_and_crates(
+        &HirModule {
+            functions: vec![],
+            classes: vec![],
+            imports: vec![],
+            constants: vec![],
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        },
+        "sifr_tests",
+        stdlib_modules,
+        required_crates,
+    );
+    cargo_toml
 }
 
 #[cfg(test)]
@@ -1203,5 +1206,31 @@ def main():
 "#;
         let errors = check(source);
         assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_generate_test_runner_cargo_toml_includes_required_crates() {
+        let stdlib_modules = HashSet::new();
+        let required_crates = HashSet::from([
+            "regex".to_string(),
+            "rand".to_string(),
+            "rand_distr".to_string(),
+        ]);
+
+        let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
+        assert!(cargo_toml.contains("name = \"sifr_tests\""));
+        assert!(cargo_toml.contains("regex = \"1\""));
+        assert!(cargo_toml.contains("rand = \"0.8\""));
+        assert!(cargo_toml.contains("rand_distr = \"0.4\""));
+    }
+
+    #[test]
+    fn test_generate_test_runner_cargo_toml_preserves_stdlib_deps() {
+        let stdlib_modules = HashSet::from(["sifr.json".to_string()]);
+        let required_crates = HashSet::new();
+
+        let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
+        assert!(cargo_toml.contains("serde_json = \"1\""));
+        assert!(cargo_toml.contains("serde = { version = \"1\", features = [\"derive\"] }"));
     }
 }
