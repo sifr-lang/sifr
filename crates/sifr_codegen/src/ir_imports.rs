@@ -1,4 +1,5 @@
 use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType};
+use syn::visit::{self, Visit};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct IrImportNeeds {
@@ -30,7 +31,7 @@ pub(crate) fn collect_import_needs_from_items(items: &[RustItem]) -> IrImportNee
 fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
     match item {
         RustItem::Use(_) | RustItem::Attr(_) => {}
-        RustItem::RawCode(code) => scan_named_text(code, needs),
+        RustItem::RawCode(code) => collect_from_raw_item_code(code, needs),
         RustItem::Struct { fields, .. } => {
             for (_, ty) in fields {
                 collect_type(ty, needs);
@@ -94,7 +95,7 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
                 collect_expr(msg, needs);
             }
         }
-        RustStmt::RawCode(code) => scan_named_text(code, needs),
+        RustStmt::RawCode(code) => collect_from_raw_stmt_code(code, needs),
         RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => {}
         RustStmt::If {
             cond,
@@ -161,8 +162,8 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
 fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
     match expr {
         RustExpr::Literal(_) => {}
-        RustExpr::RawCode(code) => scan_named_text(code, needs),
-        RustExpr::Ident(name) => scan_named_text(name, needs),
+        RustExpr::RawCode(code) => collect_from_raw_expr_code(code, needs),
+        RustExpr::Ident(name) => mark_symbol(name, needs),
         RustExpr::Path(segments) => {
             if let Some(first) = segments.first() {
                 mark_symbol(first, needs);
@@ -268,12 +269,8 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
 
 fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
     match ty {
-        RustType::I64
-        | RustType::F64
-        | RustType::Bool
-        | RustType::String_
-        | RustType::Unit => {}
-        RustType::RawCode(code) => scan_named_text(code, needs),
+        RustType::I64 | RustType::F64 | RustType::Bool | RustType::String_ | RustType::Unit => {}
+        RustType::RawCode(code) => collect_from_raw_type_code(code, needs),
         RustType::Vec(inner)
         | RustType::HashSet(inner)
         | RustType::VecDeque(inner)
@@ -290,9 +287,9 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
             }
         }
         RustType::Ref { inner, .. } => collect_type(inner, needs),
-        RustType::Named(name) | RustType::DynTrait(name) | RustType::Impl(name) => {
-            scan_named_text(name, needs);
-        }
+        RustType::Named(name) => collect_from_type_text(name, needs),
+        RustType::DynTrait(name) => collect_from_type_text(&format!("dyn {name}"), needs),
+        RustType::Impl(name) => collect_from_type_text(&format!("impl {name}"), needs),
         RustType::Generic { base, params } => {
             mark_symbol(base, needs);
             for param in params {
@@ -308,7 +305,82 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
     }
 }
 
-fn scan_named_text(text: &str, needs: &mut IrImportNeeds) {
+fn collect_from_raw_item_code(code: &str, needs: &mut IrImportNeeds) {
+    if let Ok(file) = syn::parse_file(code) {
+        collect_from_syn_file(&file, needs);
+        return;
+    }
+    scan_named_text_fallback(code, needs);
+}
+
+fn collect_from_raw_stmt_code(code: &str, needs: &mut IrImportNeeds) {
+    if let Ok(stmt) = syn::parse_str::<syn::Stmt>(code) {
+        collect_from_syn_stmt(&stmt, needs);
+        return;
+    }
+    scan_named_text_fallback(code, needs);
+}
+
+fn collect_from_raw_expr_code(code: &str, needs: &mut IrImportNeeds) {
+    if let Ok(expr) = syn::parse_str::<syn::Expr>(code) {
+        collect_from_syn_expr(&expr, needs);
+        return;
+    }
+    scan_named_text_fallback(code, needs);
+}
+
+fn collect_from_raw_type_code(code: &str, needs: &mut IrImportNeeds) {
+    if let Ok(ty) = syn::parse_str::<syn::Type>(code) {
+        collect_from_syn_type(&ty, needs);
+        return;
+    }
+    scan_named_text_fallback(code, needs);
+}
+
+fn collect_from_type_text(text: &str, needs: &mut IrImportNeeds) {
+    if let Ok(ty) = syn::parse_str::<syn::Type>(text) {
+        collect_from_syn_type(&ty, needs);
+        return;
+    }
+    scan_named_text_fallback(text, needs);
+}
+
+fn collect_from_syn_file(file: &syn::File, needs: &mut IrImportNeeds) {
+    let mut collector = SynImportNeedsCollector { needs };
+    collector.visit_file(file);
+}
+
+fn collect_from_syn_stmt(stmt: &syn::Stmt, needs: &mut IrImportNeeds) {
+    let mut collector = SynImportNeedsCollector { needs };
+    collector.visit_stmt(stmt);
+}
+
+fn collect_from_syn_expr(expr: &syn::Expr, needs: &mut IrImportNeeds) {
+    let mut collector = SynImportNeedsCollector { needs };
+    collector.visit_expr(expr);
+}
+
+fn collect_from_syn_type(ty: &syn::Type, needs: &mut IrImportNeeds) {
+    let mut collector = SynImportNeedsCollector { needs };
+    collector.visit_type(ty);
+}
+
+struct SynImportNeedsCollector<'a> {
+    needs: &'a mut IrImportNeeds,
+}
+
+impl Visit<'_> for SynImportNeedsCollector<'_> {
+    fn visit_path(&mut self, path: &syn::Path) {
+        if path.leading_colon.is_none() {
+            if let Some(first) = path.segments.first() {
+                mark_symbol(&first.ident.to_string(), self.needs);
+            }
+        }
+        visit::visit_path(self, path);
+    }
+}
+
+fn scan_named_text_fallback(text: &str, needs: &mut IrImportNeeds) {
     let bytes = text.as_bytes();
     let mut i = 0usize;
     while i < bytes.len() {
@@ -436,7 +508,7 @@ mod tests {
              let _m = Mutex::new(1); \
              BigInt::from(1) \
              }"
-                .to_string(),
+            .to_string(),
         )];
         let needs = collect_import_needs_from_items(&items);
         assert!(needs.collections.needs_hashmap);
