@@ -111,7 +111,7 @@ fn lower_intrinsic_rendered(
         "gamma" => (math::lower_gamma(rendered_args), None),
         "lgamma" => (math::lower_lgamma(rendered_args), None),
         "frexp" => (math::lower_frexp(rendered_args), None),
-        "ldexp" => (math::lower_ldexp(rendered_args), None),
+        "ldexp" => (math::lower_ldexp(args), None),
         "modf" => (math::lower_modf(rendered_args), None),
         "nextafter" => (math::lower_nextafter(rendered_args), None),
         "ulp" => (math::lower_ulp(rendered_args), None),
@@ -1045,6 +1045,10 @@ mod tests {
         let sumprod =
             lower_intrinsic("sumprod", &["a".to_string(), "b".to_string()]).expect("sumprod");
         assert!(render_expr(&sumprod.expr).contains("__p.len().min(__q.len())"));
+
+        let ldexp = lower_intrinsic("ldexp", &["m".to_string(), "e".to_string()]).expect("ldexp");
+        assert!(render_expr(&ldexp.expr).contains("(2.0 as f64).powi"));
+        assert!(!matches!(ldexp.expr, RustExpr::RawCode(_)));
     }
 
     #[test]

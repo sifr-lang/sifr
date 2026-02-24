@@ -79,6 +79,7 @@ status: **partially met**
 - [x] Logging intrinsics (`set_global_level`, `get_global_level`) now lower via structured IR nodes (no `RawCode` emission path)
 - [x] `file_close` intrinsic now lowers via structured IR (typed arg + `remove(&__hid)`), removing monolithic `RawCode` template
 - [x] Method registry borrowed-arg helpers now avoid `RawCode` variant handling; tuple helpers use structured literals/casts
+- [x] Math intrinsic `ldexp` now lowers via typed structured IR (`f64` cast + `2.0.powi(i32)`), removing its monolithic `RawCode` template
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes
