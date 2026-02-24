@@ -213,7 +213,6 @@ impl RustEmitter {
         if !matches!(
             expr,
             HirExpr::DictComp { .. }
-                | HirExpr::DictLiteral { .. }
                 | HirExpr::FString { .. }
                 | HirExpr::GeneratorExpr { .. }
                 | HirExpr::Lambda { .. }

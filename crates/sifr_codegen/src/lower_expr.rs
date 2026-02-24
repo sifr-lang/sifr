@@ -332,9 +332,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             stop.as_deref(),
             step.as_deref(),
         ),
-        HirExpr::DictComp { .. }
-        | HirExpr::DictLiteral { .. }
-        | HirExpr::GeneratorExpr { .. }
+        HirExpr::DictLiteral { keys, values, ty } => {
+            try_lower_simple_dict_literal_expr(keys, values, ty)
+        }
+        HirExpr::DictComp { .. } | HirExpr::GeneratorExpr { .. }
         | HirExpr::ListComp { .. }
         | HirExpr::SetComp { .. }
         | HirExpr::SetLiteral { .. } => None,
@@ -456,6 +457,52 @@ fn try_lower_simple_slice_expr(
         expr: Box::new(try_lower_leaf_or_name_expr(object)?),
         start: lowered_start,
         stop: lowered_stop,
+    })
+}
+
+fn try_lower_simple_dict_literal_expr(
+    keys: &[HirExpr],
+    values: &[HirExpr],
+    ty: &Type,
+) -> Option<RustExpr> {
+    if keys.len() != values.len() {
+        return None;
+    }
+
+    if resolve_alias_type(ty) != &Type::Any {
+        return None;
+    }
+
+    let map_ident = "__sifr_dict_literal".to_string();
+    let mut stmts = vec![RustStmt::Let {
+        mutable: true,
+        name: map_ident.clone(),
+        ty: None,
+        value: RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "collections".to_string(),
+                "HashMap".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![],
+        },
+    }];
+
+    for (key, value) in keys.iter().zip(values.iter()) {
+        stmts.push(RustStmt::Expr(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(map_ident.clone())),
+            method: "insert".to_string(),
+            args: vec![
+                try_lower_leaf_or_name_expr(key)?,
+                try_lower_leaf_or_name_expr(value)?,
+            ],
+        }));
+    }
+
+    Some(RustExpr::Block {
+        stmts,
+        expr: Some(Box::new(RustExpr::Ident(map_ident))),
     })
 }
 
@@ -2625,6 +2672,57 @@ mod tests {
             stop: Some(Box::new(HirExpr::IntLiteral(3))),
             step: None,
             ty: Type::List(Box::new(Type::Int)),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_dict_literal_with_leaf_entries() {
+        let expr = HirExpr::DictLiteral {
+            keys: vec![HirExpr::StringLiteral("k".to_string())],
+            values: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("dict literal lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Block { stmts, expr: Some(result) }
+                if matches!(stmts.first(), Some(RustStmt::Let { name, mutable, .. }) if name == "__sifr_dict_literal" && *mutable)
+                    && matches!(result.as_ref(), RustExpr::Ident(name) if name == "__sifr_dict_literal")
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_dict_literal_with_non_leaf_entry() {
+        let expr = HirExpr::DictLiteral {
+            keys: vec![HirExpr::StringLiteral("k".to_string())],
+            values: vec![HirExpr::ListComp {
+                expr: Box::new(HirExpr::Name {
+                    name: "x".to_string(),
+                    ty: Type::Int,
+                }),
+                generators: vec![(
+                    "x".to_string(),
+                    HirExpr::Name {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    None,
+                )],
+                ty: Type::List(Box::new(Type::Int)),
+            }],
+            ty: Type::Any,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_dict_literal_on_typed_dict() {
+        let expr = HirExpr::DictLiteral {
+            keys: vec![HirExpr::StringLiteral("k".to_string())],
+            values: vec![HirExpr::IntLiteral(1)],
+            ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
     }
