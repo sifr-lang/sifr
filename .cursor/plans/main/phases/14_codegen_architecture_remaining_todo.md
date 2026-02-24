@@ -32,10 +32,7 @@ Execution loop per part (mandatory):
   - Missing: none
 - `lower_expr` production coverage: `35/35` `HirExpr` variants
   - Missing: none
-- Remaining `RawCode` bridge loci in core paths:
-  - `stmt_support_emitter::try_capture_fallback_stmt_as_raw` for `TryExcept` and `NestedFunction`
-  - `expr_render_helpers::try_capture_fallback_expr_as_raw` for complex expression residue
-  - `lower_expr` residue still not structurally lowered: `Call`, `MethodCall`, `ConstructorCall`, `Index`, `Slice`, `DictLiteral`, `SetLiteral`, `ListComp`, `DictComp`, `SetComp`, `GeneratorExpr`
+- Remaining `RawCode` bridge loci in core paths: none
 - Active `sifr_codegen` clippy suppressions in `lib.rs`: none
 - Execution checklist drift: none (reconciled with merged PR reality).
 
@@ -178,7 +175,7 @@ Root cause: phase docs can claim done before code-level gates are actually compl
 
 ## Part G: RawCode-Zero Gate Closeout (Re-opened)
 
-status: in_progress
+status: done
 
 Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bridge capture still exists for complex stmt/expr families.
 
@@ -187,7 +184,7 @@ Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bri
 - [x] Add conservative structured lowering for safe `FString` and `Lambda` subshapes (`lower_expr`)
 - [x] Eliminate stmt fallback raw-capture for `TryExcept` by introducing structured IR lowering path
 - [x] Eliminate stmt fallback raw-capture for `NestedFunction` by introducing structured IR lowering path
-- [ ] Eliminate expr fallback raw-capture by adding structured lowering for remaining residue:
+- [x] Eliminate expr fallback raw-capture by adding structured lowering for remaining residue:
   - [x] `Call`
   - [x] `MethodCall`
   - [x] `ConstructorCall`
@@ -199,10 +196,10 @@ Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bri
   - [x] `DictComp`
   - [x] `SetComp`
   - [x] `GeneratorExpr`
-- [ ] Delete `try_capture_fallback_expr_as_raw` and `try_capture_fallback_stmt_as_raw` once no callsites remain
-- [ ] Validation for each slice:
-  - [ ] `cargo test -p sifr_codegen`
-  - [ ] `cargo clippy -p sifr_codegen -- -D warnings`
-  - [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
-  - [ ] `cargo test -p sifr --test e2e test_e2e_pass`
-- [ ] PR loop complete (open -> review -> merge)
+- [x] Delete `try_capture_fallback_expr_as_raw` and `try_capture_fallback_stmt_as_raw` once no callsites remain
+- [x] Validation for each slice:
+  - [x] `cargo test -p sifr_codegen`
+  - [x] `cargo clippy -p sifr_codegen -- -D warnings`
+  - [x] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+  - [x] `cargo test -p sifr --test e2e test_e2e_pass`
+- [x] PR loop complete (open -> review -> merge)
