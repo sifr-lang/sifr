@@ -1,0 +1,188 @@
+# Phase 14 Strict Finish Checklist (Code-Verified)
+
+Last verified: 2026-02-24
+
+This document is the source of truth for closing Phase 14 with no claimed-done gaps.
+Every unchecked item below is a mandatory implementation slice.
+
+Execution loop per slice:
+
+1. Implement root-cause fix
+2. Validate (`cargo test`, targeted e2e, `cargo clippy -- -D warnings`)
+3. Demo verification
+4. PR
+5. Review
+6. Merge
+7. Update this checklist
+
+---
+
+## Milestone Status (Strict)
+
+### milestone_rust_ir_types
+
+status: **met**
+
+- [x] `rust_ir.rs` exists with IR node families and `RawCode` variants
+- [x] Derives present (`Debug`, `Clone`)
+- [x] Export wiring in `lib.rs`
+- [x] Representative unit tests present
+
+### milestone_rust_ir_renderer
+
+status: **met**
+
+- [x] `render.rs` exists and renders all IR families
+- [x] `RawCode` passthrough exists for item/stmt/expr/type
+- [x] `insta` snapshot coverage present
+- [x] `render_items([RawCode]) == raw` test present
+
+### milestone_codegen_preamble_migration
+
+status: **partially met**
+
+- [x] IR preamble builders implemented (`error`, `file handles`, `logging`, imports)
+- [x] `sifr_type_to_rust_type` implemented
+- [x] Preamble validated/optimized via IR passes
+- [ ] Remove compatibility string scan for builtin error references (currently active shim)
+- [ ] Ensure preamble error reachability is structural (HIR/codegen metadata), not generated-code text scan
+
+### milestone_codegen_stmt_expr_migration
+
+status: **partially met**
+
+- [x] `lower_expr.rs`, `lower_stmt.rs`, `lower_item.rs`, `context.rs`, `preamble.rs` exist
+- [x] Broad variant coverage exists in simple lowering paths
+- [x] `expr_to_string` helper removed from production path
+- [ ] Core pipeline still fallback-emitter first-class (`emit_*_fallback` remains active)
+- [ ] `emit_module` still string-emitter orchestration, not full `RustFile` assembly + single render
+- [ ] `lower_*` contract is not full `Result<_, CodegenError>` end-to-end for production path
+- [ ] `CodegenContext`/`ScopeContext` are defined but not the primary lowering contract
+- [ ] Union enums still emitted as raw `enum_defs` strings, not `RustItem::Enum` nodes
+
+### milestone_codegen_intrinsic_migration
+
+status: **partially met**
+
+- [x] Intrinsic registry exists (`intrinsics/mod.rs`) with dependency metadata
+- [x] Method registry exists (`methods/mod.rs`)
+- [x] Codegen returns `required_crates`
+- [ ] Legacy intrinsic fallback dispatcher remains huge and active (`emit_intrinsic_call` fallback arms)
+- [ ] Legacy method fallback path remains active (`emit_method_call` fallback arms)
+- [ ] `builtin_open` and related file-handle intrinsics still giant string literals
+- [ ] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
+
+### milestone_codegen_structural_passes
+
+status: **partially met**
+
+- [x] IR import pass exists (`ir_imports.rs`)
+- [x] IR clone optimization exists (`ir_optimize.rs`)
+- [x] IR validation exists (`ir_validate.rs`)
+- [x] Old helper names (`filter_rust_code_to_needed`, `parse_rust_blocks`, etc.) removed
+- [ ] Boolean import flags still active in primary codegen state/path
+- [ ] Stdlib DCE still text/chunk/token based (`stdlib_filter.rs`), not full `RustFile` IR DCE
+- [ ] `RawCode`-zero gate not enforced for all core production paths (IR type still carries bridge; fallback emitters remain)
+- [ ] Structural passes not run over full user-code IR because full user-code IR assembly is not yet the production path
+
+---
+
+## Reopened Work Slices
+
+## Slice 0: Metadata Dependency Parity in Test Runner
+
+status: **done**
+
+Root cause: `run_tests` built `Cargo.toml` manually and ignored codegen `required_crates`.
+
+- [x] Route test-runner dependency generation through metadata-aware path
+- [x] Aggregate `required_crates` across test files
+- [x] Add unit tests for required crate inclusion and stdlib dependency preservation
+- [x] Validate:
+  - [x] `cargo test -p sifr_driver`
+  - [x] `cargo clippy -p sifr_driver -- -D warnings`
+
+## Slice 1: Eliminate Builtin Error Text Scan Shim
+
+status: **pending**
+
+Root cause: `is_builtin_error_referenced` still scans generated Rust text.
+
+- [ ] Replace scan with structured metadata collection during lowering/emission
+- [ ] Remove runtime dependency on `helpers::is_builtin_error_referenced`
+- [ ] Keep behavior parity for conditional builtin error emission
+- [ ] Add regression tests for emitted error items (positive/negative reachability)
+
+## Slice 2: Make `generate_rust_test` Use Structural Import Collection
+
+status: **pending**
+
+Root cause: test entrypoint still relies on emitter boolean flags for imports.
+
+- [ ] Build import set via structural pass on produced IR artifacts (not direct flags)
+- [ ] Remove direct `collection_needs/runtime_needs` import rendering in `entrypoints.rs`
+- [ ] Keep required crate metadata parity
+
+## Slice 3: Replace `enum_defs` String Path with IR Items
+
+status: **pending**
+
+Root cause: union enum generation remains string accumulation.
+
+- [ ] Refactor union enum generation to produce `Vec<RustItem>`
+- [ ] Render through common renderer path only
+- [ ] Remove `enum_defs: String` plumbing from `RustEmitter`
+
+## Slice 4: Intrinsic Fallback Deletion (Registry-Only)
+
+status: **pending**
+
+Root cause: giant legacy intrinsic fallback still in production.
+
+- [ ] Migrate remaining fallback-only intrinsics into registry modules
+- [ ] Delete legacy match arms from `emit_intrinsic_call`
+- [ ] Enforce no >100-char direct `self.write(...)` literal bodies in intrinsic lowering
+- [ ] Add guard test to prevent fallback reintroduction
+
+## Slice 5: Method Fallback Deletion (Registry-Only)
+
+status: **pending**
+
+Root cause: `emit_method_call` still has broad fallback string emission.
+
+- [ ] Migrate remaining method lowering into registry modules
+- [ ] Reduce `emit_method_call` to registry dispatch + tightly-scoped non-registry semantics if unavoidable
+- [ ] Add guard test for registry-first/no-large-fallback growth
+
+## Slice 6: Promote Full IR Module Assembly to Production Path
+
+status: **pending**
+
+Root cause: production codegen still centers around string emitters + fallback.
+
+- [ ] Build `RustFile` for user code items in production path
+- [ ] Run structural passes on full `RustFile`
+- [ ] Render once at end (single renderer sink)
+- [ ] Keep parity tests green
+
+## Slice 7: Structural DCE on IR (Replace Text-Token DCE)
+
+status: **pending**
+
+Root cause: stdlib pruning is still text-token chunk parsing.
+
+- [ ] Replace `stdlib_filter` token/chunk DCE with IR item graph traversal
+- [ ] Keep transitive dependency behavior and order stability
+- [ ] Delete obsolete text/chunk parsing helpers after migration
+
+---
+
+## Completion Gate (Phase 14)
+
+Phase 14 is complete only when all slices above are marked done and the following pass:
+
+- [ ] `cargo test --workspace`
+- [ ] `cargo clippy --workspace -- -D warnings`
+- [ ] `cargo test -p sifr --test e2e`
+- [ ] `cargo run -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr`
+- [ ] `cargo run -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr`
