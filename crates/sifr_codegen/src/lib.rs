@@ -17,6 +17,7 @@ pub use lower_expr::*;
 mod lower_stmt;
 pub use lower_stmt::*;
 mod expr_emitter;
+mod error_refs;
 mod lower_item;
 mod stmt_emitter;
 pub use lower_item::*;
@@ -53,12 +54,13 @@ mod union_type_helpers;
 mod lib_codegen_tests;
 
 use helpers::{
-    collect_mutated_vars_with_sigs, is_builtin_error_referenced, is_hashable_type_codegen,
-    module_uses_bigint, type_contains_typevar,
+    collect_mutated_vars_with_sigs, is_hashable_type_codegen, module_uses_bigint,
+    type_contains_typevar,
 };
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
+use error_refs::collect_referenced_builtin_error_classes;
 use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -329,9 +331,14 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     let needs_vecdeque_base = emitter.collection_needs.needs_vecdeque || stdlib_needs_vecdeque;
     let needs_bigint_base = emitter.runtime_needs.needs_bigint;
 
-    // Emit built-in error class struct definitions for any that are referenced.
-    // For now this remains a compatibility shim that scans generated code.
-    let combined_code = format!("{}{}", stdlib_preamble, emitter.output);
+    // Emit built-in error class struct definitions for referenced error types.
+    let referenced_error_classes = collect_referenced_builtin_error_classes(
+        module,
+        &stdlib_preamble,
+        &emitter.intrinsic_functions,
+        needs_file_handles,
+        BUILTIN_ERROR_CLASSES,
+    );
     let user_defined_error_classes: HashSet<String> = module
         .classes
         .iter()
@@ -339,10 +346,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         .map(|c| c.name.clone())
         .collect();
     let user_defined_file_handle_struct = module.classes.iter().any(|c| c.name == "FileHandle");
-    let io_error_referenced = is_builtin_error_referenced(&combined_code, "IOError")
+    let io_error_referenced = referenced_error_classes.contains("IOError")
         || IO_ERROR_SUBCLASSES
             .iter()
-            .any(|s| is_builtin_error_referenced(&combined_code, s))
+            .any(|subclass| referenced_error_classes.contains(*subclass))
         || needs_file_handles;
 
     let mut preamble_items: Vec<RustItem> = Vec::new();
@@ -355,7 +362,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         if error_name == "IOError" || IO_ERROR_SUBCLASSES.contains(&error_name) {
             continue;
         }
-        let is_referenced = is_builtin_error_referenced(&combined_code, error_name);
+        let is_referenced = referenced_error_classes.contains(error_name);
         if is_referenced && !user_defined_error_classes.contains(error_name) {
             let (extra_fields, defaults) =
                 if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
