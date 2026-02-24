@@ -40,7 +40,8 @@ pub(super) fn is_builtin_error_referenced(code: &str, error_name: &str) -> bool 
         if before_ok && after_ok {
             // Skip matches inside "std::error::Error" (the Rust trait)
             let prefix_end = abs_pos;
-            let is_std_error = prefix_end >= 12 && &code[prefix_end - 12..prefix_end] == "std::error::";
+            let is_std_error =
+                prefix_end >= 12 && &code[prefix_end - 12..prefix_end] == "std::error::";
             if !is_std_error {
                 return true;
             }
@@ -63,7 +64,10 @@ pub(super) fn default_param_convention(ty: &Type) -> ParamConvention {
 
 pub(super) fn is_option_type(ty: &Type) -> bool {
     if let Type::Union(members) = ty {
-        let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+        let non_none: Vec<&Type> = members
+            .iter()
+            .filter(|m| !matches!(m, Type::None))
+            .collect();
         let has_none = members.iter().any(|m| matches!(m, Type::None));
         has_none && non_none.len() == 1
     } else {
@@ -83,7 +87,13 @@ pub(super) fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
 
 /// Detect `x is not None` pattern in a Compare expression. Returns the variable name.
 pub(super) fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
-    if let HirExpr::Compare { left, ops, comparators, .. } = expr {
+    if let HirExpr::Compare {
+        left,
+        ops,
+        comparators,
+        ..
+    } = expr
+    {
         if ops.len() == 1 && ops[0] == "is not" && matches!(comparators[0], HirExpr::NoneLiteral) {
             if let HirExpr::Name { name, ty } = left.as_ref() {
                 // Only match for Option types (2-member unions with None)
@@ -132,9 +142,9 @@ pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
                                 "bool" => Type::Bool,
                                 other => {
                                     // Check if it's a class type in the union members
-                                    if let Some(class_ty) = members.iter().find(|m| {
-                                        matches!(m, Type::Class { name, .. } if name == other)
-                                    }) {
+                                    if let Some(class_ty) = members.iter().find(
+                                        |m| matches!(m, Type::Class { name, .. } if name == other),
+                                    ) {
                                         class_ty.clone()
                                     } else {
                                         return None;
@@ -146,7 +156,8 @@ pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
                                 let variant = target_ty.union_variant_name();
                                 let enum_name = ty.union_enum_name();
                                 // Collect other variants for else branch destructuring
-                                let other_variants: Vec<(String, Type)> = members.iter()
+                                let other_variants: Vec<(String, Type)> = members
+                                    .iter()
                                     .filter(|m| *m != &target_ty)
                                     .map(|m| (m.union_variant_name(), m.clone()))
                                     .collect();
@@ -185,7 +196,13 @@ pub(super) fn codegen_body_always_exits(stmts: &[HirStmt]) -> bool {
 /// Detect `x is None` pattern. Returns the variable name.
 /// Only matches when the variable type is an Option (T | None with exactly 2 members).
 pub(super) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
-    if let HirExpr::Compare { left, ops, comparators, .. } = expr {
+    if let HirExpr::Compare {
+        left,
+        ops,
+        comparators,
+        ..
+    } = expr
+    {
         if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
             if let HirExpr::Name { name, ty } = left.as_ref() {
                 // Only match for Option types (2-member unions with None)
@@ -201,16 +218,26 @@ pub(super) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
 /// Detect `x is None` pattern for 3+ member unions containing None.
 /// Returns (`var_name`, `enum_name`, `non_none_variants`).
 pub(super) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatch> {
-    if let HirExpr::Compare { left, ops, comparators, .. } = expr {
+    if let HirExpr::Compare {
+        left,
+        ops,
+        comparators,
+        ..
+    } = expr
+    {
         if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
             if let HirExpr::Name { name, ty } = left.as_ref() {
                 if let Type::Union(members) = ty {
                     let has_none = members.iter().any(|m| matches!(m, Type::None));
-                    let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+                    let non_none: Vec<&Type> = members
+                        .iter()
+                        .filter(|m| !matches!(m, Type::None))
+                        .collect();
                     // Only match for 3+ member unions (not simple Option)
                     if has_none && non_none.len() >= 2 {
                         let enum_name = ty.union_enum_name();
-                        let non_none_variants: Vec<(String, Type)> = non_none.iter()
+                        let non_none_variants: Vec<(String, Type)> = non_none
+                            .iter()
                             .map(|t| (t.union_variant_name(), (*t).clone()))
                             .collect();
                         return Some((name.clone(), enum_name, non_none_variants));
@@ -221,7 +248,6 @@ pub(super) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatc
     }
     None
 }
-
 
 pub(super) fn is_hashable_type_codegen(ty: &Type) -> bool {
     match ty {
@@ -254,9 +280,19 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
             HirStmt::Let { ty, value, .. } => type_has_bigint(ty) || expr_has_bigint(value),
             HirStmt::Return { value } => value.as_ref().map(expr_has_bigint).unwrap_or(false),
             HirStmt::Expr { expr } => expr_has_bigint(expr),
-            HirStmt::If { condition, then_body, else_body, elif_clauses, .. } => {
-                expr_has_bigint(condition) || stmts_have_bigint(then_body)
-                    || else_body.as_ref().map(|b| stmts_have_bigint(b)).unwrap_or(false)
+            HirStmt::If {
+                condition,
+                then_body,
+                else_body,
+                elif_clauses,
+                ..
+            } => {
+                expr_has_bigint(condition)
+                    || stmts_have_bigint(then_body)
+                    || else_body
+                        .as_ref()
+                        .map(|b| stmts_have_bigint(b))
+                        .unwrap_or(false)
                     || elif_clauses.iter().any(|(_, b)| stmts_have_bigint(b))
             }
             HirStmt::While { body, .. } => stmts_have_bigint(body),
@@ -265,16 +301,30 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
         }
     }
     for func in &module.functions {
-        if type_has_bigint(&func.return_type) { return true; }
-        if func.params.iter().any(|p| type_has_bigint(&p.ty)) { return true; }
-        if stmts_have_bigint(&func.body) { return true; }
+        if type_has_bigint(&func.return_type) {
+            return true;
+        }
+        if func.params.iter().any(|p| type_has_bigint(&p.ty)) {
+            return true;
+        }
+        if stmts_have_bigint(&func.body) {
+            return true;
+        }
     }
     for class in &module.classes {
-        if class.fields.iter().any(|(_, t)| type_has_bigint(t)) { return true; }
+        if class.fields.iter().any(|(_, t)| type_has_bigint(t)) {
+            return true;
+        }
         for method in &class.methods {
-            if type_has_bigint(&method.return_type) { return true; }
-            if method.params.iter().any(|p| type_has_bigint(&p.ty)) { return true; }
-            if stmts_have_bigint(&method.body) { return true; }
+            if type_has_bigint(&method.return_type) {
+                return true;
+            }
+            if method.params.iter().any(|p| type_has_bigint(&p.ty)) {
+                return true;
+            }
+            if stmts_have_bigint(&method.body) {
+                return true;
+            }
         }
     }
     false
@@ -283,7 +333,13 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
 /// Collect all parts of a chained string concatenation (`a + b + c`).
 /// Recursively flattens nested `BinOp::Add` on strings into a flat list of expressions.
 pub(super) fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
-    if let HirExpr::BinOp { left, op, right, ty } = expr {
+    if let HirExpr::BinOp {
+        left,
+        op,
+        right,
+        ty,
+    } = expr
+    {
         if op == "+" && *ty == Type::Str {
             collect_string_concat_parts(left, parts);
             collect_string_concat_parts(right, parts);
@@ -295,26 +351,31 @@ pub(super) fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec
 
 /// Check if a method body contains any field assignments or attribute augmented assignments (self.field = ... or self.field += ...).
 pub(super) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
-    stmts.iter().any(|s| {
-        match s {
-            HirStmt::FieldAssign { .. }
-            | HirStmt::AttributeAugAssign { .. }
-            | HirStmt::AttributeSubscriptAssign { .. } => true,
-            HirStmt::Expr { expr } => expr_contains_self_field_mutation(expr),
-            HirStmt::Return { value: Some(expr) } => expr_contains_self_field_mutation(expr),
-            HirStmt::Let { value, .. } => expr_contains_self_field_mutation(value),
-            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
-                body_contains_field_assign_codegen(then_body)
-                    || elif_clauses.iter().any(|(_, body)| body_contains_field_assign_codegen(body))
-                    || else_body
-                        .as_ref()
-                        .is_some_and(|b| body_contains_field_assign_codegen(b))
-            }
-            HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
-                body_contains_field_assign_codegen(body)
-            }
-            _ => false,
+    stmts.iter().any(|s| match s {
+        HirStmt::FieldAssign { .. }
+        | HirStmt::AttributeAugAssign { .. }
+        | HirStmt::AttributeSubscriptAssign { .. } => true,
+        HirStmt::Expr { expr } => expr_contains_self_field_mutation(expr),
+        HirStmt::Return { value: Some(expr) } => expr_contains_self_field_mutation(expr),
+        HirStmt::Let { value, .. } => expr_contains_self_field_mutation(value),
+        HirStmt::If {
+            then_body,
+            elif_clauses,
+            else_body,
+            ..
+        } => {
+            body_contains_field_assign_codegen(then_body)
+                || elif_clauses
+                    .iter()
+                    .any(|(_, body)| body_contains_field_assign_codegen(body))
+                || else_body
+                    .as_ref()
+                    .is_some_and(|b| body_contains_field_assign_codegen(b))
         }
+        HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
+            body_contains_field_assign_codegen(body)
+        }
+        _ => false,
     })
 }
 
@@ -341,14 +402,24 @@ pub(super) fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
         Type::TypeVar(name) => name == tv_name,
         Type::List(inner) => type_contains_typevar(inner, tv_name),
         Type::Set(inner) => type_contains_typevar(inner, tv_name),
-        Type::Dict(key, val) => type_contains_typevar(key, tv_name) || type_contains_typevar(val, tv_name),
+        Type::Dict(key, val) => {
+            type_contains_typevar(key, tv_name) || type_contains_typevar(val, tv_name)
+        }
         Type::Tuple(elems) => elems.iter().any(|e| type_contains_typevar(e, tv_name)),
         Type::Union(members) => members.iter().any(|m| type_contains_typevar(m, tv_name)),
-        Type::Result(ok, err) => type_contains_typevar(ok, tv_name) || type_contains_typevar(err, tv_name),
-        Type::Class { fields, methods, .. } => {
-            fields.iter().any(|(_, t)| type_contains_typevar(t, tv_name))
+        Type::Result(ok, err) => {
+            type_contains_typevar(ok, tv_name) || type_contains_typevar(err, tv_name)
+        }
+        Type::Class {
+            fields, methods, ..
+        } => {
+            fields
+                .iter()
+                .any(|(_, t)| type_contains_typevar(t, tv_name))
                 || methods.iter().any(|(_, ft)| {
-                    ft.params.iter().any(|(_, t, _)| type_contains_typevar(t, tv_name))
+                    ft.params
+                        .iter()
+                        .any(|(_, t, _)| type_contains_typevar(t, tv_name))
                         || type_contains_typevar(&ft.return_type, tv_name)
                 })
         }
@@ -362,9 +433,13 @@ pub(super) fn type_references_class(ty: &Type, class_name: &str) -> bool {
         Type::Class { name, .. } => name == class_name,
         Type::Union(members) => members.iter().any(|m| type_references_class(m, class_name)),
         Type::List(inner) => type_references_class(inner, class_name),
-        Type::Dict(key, val) => type_references_class(key, class_name) || type_references_class(val, class_name),
+        Type::Dict(key, val) => {
+            type_references_class(key, class_name) || type_references_class(val, class_name)
+        }
         Type::Tuple(elems) => elems.iter().any(|e| type_references_class(e, class_name)),
-        Type::Result(ok, err) => type_references_class(ok, class_name) || type_references_class(err, class_name),
+        Type::Result(ok, err) => {
+            type_references_class(ok, class_name) || type_references_class(err, class_name)
+        }
         _ => false,
     }
 }
@@ -375,7 +450,10 @@ pub(super) fn type_references_class(ty: &Type, class_name: &str) -> bool {
 pub(super) fn recursive_field_rust_type(ty: &Type, class_name: &str) -> String {
     match ty {
         Type::Union(members) => {
-            let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+            let non_none: Vec<&Type> = members
+                .iter()
+                .filter(|m| !matches!(m, Type::None))
+                .collect();
             let has_none = members.iter().any(|m| matches!(m, Type::None));
             if has_none && non_none.len() == 1 {
                 // T | None where T references the class -> Option<Box<T>>
@@ -401,67 +479,122 @@ pub(super) fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
     for stmt in stmts {
         match stmt {
             HirStmt::Expr { expr } => {
-                if expr_references_var(expr, var_name) { return true; }
+                if expr_references_var(expr, var_name) {
+                    return true;
+                }
             }
             HirStmt::Return { value: Some(expr) } => {
-                if expr_references_var(expr, var_name) { return true; }
+                if expr_references_var(expr, var_name) {
+                    return true;
+                }
             }
             HirStmt::Return { value: None } => {}
             HirStmt::Yield { value } => {
-                if expr_references_var(value, var_name) { return true; }
+                if expr_references_var(value, var_name) {
+                    return true;
+                }
             }
             HirStmt::Let { value, .. } => {
-                if expr_references_var(value, var_name) { return true; }
+                if expr_references_var(value, var_name) {
+                    return true;
+                }
             }
             HirStmt::Assign { value, .. } => {
-                if expr_references_var(value, var_name) { return true; }
+                if expr_references_var(value, var_name) {
+                    return true;
+                }
             }
             HirStmt::FieldAssign { value, .. } => {
-                if expr_references_var(value, var_name) { return true; }
+                if expr_references_var(value, var_name) {
+                    return true;
+                }
             }
             HirStmt::SubscriptAssign { index, value, .. } => {
-                if expr_references_var(index, var_name) { return true; }
-                if expr_references_var(value, var_name) { return true; }
+                if expr_references_var(index, var_name) {
+                    return true;
+                }
+                if expr_references_var(value, var_name) {
+                    return true;
+                }
             }
             HirStmt::AttributeAugAssign { value, .. } => {
-                if expr_references_var(value, var_name) { return true; }
+                if expr_references_var(value, var_name) {
+                    return true;
+                }
             }
-            HirStmt::If { condition, then_body, elif_clauses, else_body } => {
-                if expr_references_var(condition, var_name) { return true; }
-                if stmts_reference_var(then_body, var_name) { return true; }
+            HirStmt::If {
+                condition,
+                then_body,
+                elif_clauses,
+                else_body,
+            } => {
+                if expr_references_var(condition, var_name) {
+                    return true;
+                }
+                if stmts_reference_var(then_body, var_name) {
+                    return true;
+                }
                 for (cond, body) in elif_clauses {
-                    if expr_references_var(cond, var_name) { return true; }
-                    if stmts_reference_var(body, var_name) { return true; }
+                    if expr_references_var(cond, var_name) {
+                        return true;
+                    }
+                    if stmts_reference_var(body, var_name) {
+                        return true;
+                    }
                 }
                 if let Some(eb) = else_body {
-                    if stmts_reference_var(eb, var_name) { return true; }
+                    if stmts_reference_var(eb, var_name) {
+                        return true;
+                    }
                 }
             }
-            HirStmt::While { condition, body, .. } => {
-                if expr_references_var(condition, var_name) { return true; }
-                if stmts_reference_var(body, var_name) { return true; }
+            HirStmt::While {
+                condition, body, ..
+            } => {
+                if expr_references_var(condition, var_name) {
+                    return true;
+                }
+                if stmts_reference_var(body, var_name) {
+                    return true;
+                }
             }
             HirStmt::For { iter, body, .. } => {
-                if expr_references_var(iter, var_name) { return true; }
-                if stmts_reference_var(body, var_name) { return true; }
+                if expr_references_var(iter, var_name) {
+                    return true;
+                }
+                if stmts_reference_var(body, var_name) {
+                    return true;
+                }
             }
             HirStmt::With { items, body, .. } => {
                 for (_, value, _) in items {
-                    if expr_references_var(value, var_name) { return true; }
+                    if expr_references_var(value, var_name) {
+                        return true;
+                    }
                 }
-                if stmts_reference_var(body, var_name) { return true; }
+                if stmts_reference_var(body, var_name) {
+                    return true;
+                }
             }
             HirStmt::TryExcept { body, handlers, .. } => {
-                if stmts_reference_var(body, var_name) { return true; }
+                if stmts_reference_var(body, var_name) {
+                    return true;
+                }
                 for handler in handlers {
-                    if stmts_reference_var(&handler.body, var_name) { return true; }
+                    if stmts_reference_var(&handler.body, var_name) {
+                        return true;
+                    }
                 }
             }
             HirStmt::Raise { value } => {
-                if expr_references_var(value, var_name) { return true; }
+                if expr_references_var(value, var_name) {
+                    return true;
+                }
             }
             HirStmt::AugAssign { value, .. } => {
-                if expr_references_var(value, var_name) { return true; }
+                if expr_references_var(value, var_name) {
+                    return true;
+                }
             }
             _ => {}
         }
@@ -476,40 +609,63 @@ pub(super) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
         HirExpr::BinOp { left, right, .. } => {
             expr_references_var(left, var_name) || expr_references_var(right, var_name)
         }
-        HirExpr::BoolOp { values, .. } => {
-            values.iter().any(|v| expr_references_var(v, var_name))
-        }
+        HirExpr::BoolOp { values, .. } => values.iter().any(|v| expr_references_var(v, var_name)),
         HirExpr::UnaryOp { operand, .. } => expr_references_var(operand, var_name),
         HirExpr::Call { args, .. } => args.iter().any(|a| expr_references_var(a, var_name)),
         HirExpr::MethodCall { object, args, .. } => {
-            expr_references_var(object, var_name) || args.iter().any(|a| expr_references_var(a, var_name))
+            expr_references_var(object, var_name)
+                || args.iter().any(|a| expr_references_var(a, var_name))
         }
         HirExpr::FieldAccess { object, .. } => expr_references_var(object, var_name),
         HirExpr::Index { object, index, .. } => {
             expr_references_var(object, var_name) || expr_references_var(index, var_name)
         }
-        HirExpr::ListLiteral { elements, .. } => elements.iter().any(|e| expr_references_var(e, var_name)),
-        HirExpr::SetLiteral { elements, .. } => elements.iter().any(|e| expr_references_var(e, var_name)),
-        HirExpr::TupleLiteral { elements, .. } => elements.iter().any(|e| expr_references_var(e, var_name)),
-        HirExpr::Compare { left, comparators, .. } => {
-            expr_references_var(left, var_name) || comparators.iter().any(|c| expr_references_var(c, var_name))
+        HirExpr::ListLiteral { elements, .. } => {
+            elements.iter().any(|e| expr_references_var(e, var_name))
         }
-        HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
-            expr_references_var(condition, var_name) || expr_references_var(then_expr, var_name) || expr_references_var(else_expr, var_name)
+        HirExpr::SetLiteral { elements, .. } => {
+            elements.iter().any(|e| expr_references_var(e, var_name))
+        }
+        HirExpr::TupleLiteral { elements, .. } => {
+            elements.iter().any(|e| expr_references_var(e, var_name))
+        }
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            expr_references_var(left, var_name)
+                || comparators.iter().any(|c| expr_references_var(c, var_name))
+        }
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            expr_references_var(condition, var_name)
+                || expr_references_var(then_expr, var_name)
+                || expr_references_var(else_expr, var_name)
         }
         HirExpr::Lambda { body, .. } => expr_references_var(body, var_name),
-        HirExpr::ListComp { expr: e, generators, .. } => {
-            expr_references_var(e, var_name) || generators.iter().any(|(_, iter, filter)| {
-                expr_references_var(iter, var_name)
-                    || filter
-                        .as_ref()
-                        .is_some_and(|f| expr_references_var(f, var_name))
-            })
+        HirExpr::ListComp {
+            expr: e,
+            generators,
+            ..
+        } => {
+            expr_references_var(e, var_name)
+                || generators.iter().any(|(_, iter, filter)| {
+                    expr_references_var(iter, var_name)
+                        || filter
+                            .as_ref()
+                            .is_some_and(|f| expr_references_var(f, var_name))
+                })
         }
         HirExpr::QuestionMark { expr, .. } => expr_references_var(expr, var_name),
         HirExpr::OkWrap { value, .. } => expr_references_var(value, var_name),
         HirExpr::ErrWrap { value, .. } => expr_references_var(value, var_name),
-        HirExpr::DictLiteral { keys, values, .. } => keys.iter().chain(values.iter()).any(|e| expr_references_var(e, var_name)),
+        HirExpr::DictLiteral { keys, values, .. } => keys
+            .iter()
+            .chain(values.iter())
+            .any(|e| expr_references_var(e, var_name)),
         _ => false,
     }
 }
@@ -526,23 +682,40 @@ pub(super) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
                     return true;
                 }
             }
-            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
-                if try_body_has_value_return(then_body) { return true; }
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
+                if try_body_has_value_return(then_body) {
+                    return true;
+                }
                 for (_, body) in elif_clauses {
-                    if try_body_has_value_return(body) { return true; }
+                    if try_body_has_value_return(body) {
+                        return true;
+                    }
                 }
                 if let Some(eb) = else_body {
-                    if try_body_has_value_return(eb) { return true; }
+                    if try_body_has_value_return(eb) {
+                        return true;
+                    }
                 }
             }
             HirStmt::While { body, .. } => {
-                if try_body_has_value_return(body) { return true; }
+                if try_body_has_value_return(body) {
+                    return true;
+                }
             }
             HirStmt::For { body, .. } => {
-                if try_body_has_value_return(body) { return true; }
+                if try_body_has_value_return(body) {
+                    return true;
+                }
             }
             HirStmt::With { body, .. } => {
-                if try_body_has_value_return(body) { return true; }
+                if try_body_has_value_return(body) {
+                    return true;
+                }
             }
             _ => {}
         }
@@ -554,29 +727,54 @@ pub(super) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
     for stmt in stmts {
         match stmt {
             HirStmt::Yield { .. } => return true,
-            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
-                if body_contains_yield_inner(then_body) { return true; }
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
+                if body_contains_yield_inner(then_body) {
+                    return true;
+                }
                 for (_, body) in elif_clauses {
-                    if body_contains_yield_inner(body) { return true; }
+                    if body_contains_yield_inner(body) {
+                        return true;
+                    }
                 }
                 if let Some(eb) = else_body {
-                    if body_contains_yield_inner(eb) { return true; }
-                }
-            }
-            HirStmt::While { body, else_body, .. } => {
-                if body_contains_yield_inner(body) { return true; }
-                if let Some(eb) = else_body {
-                    if body_contains_yield_inner(eb) { return true; }
+                    if body_contains_yield_inner(eb) {
+                        return true;
+                    }
                 }
             }
-            HirStmt::For { body, else_body, .. } => {
-                if body_contains_yield_inner(body) { return true; }
+            HirStmt::While {
+                body, else_body, ..
+            } => {
+                if body_contains_yield_inner(body) {
+                    return true;
+                }
                 if let Some(eb) = else_body {
-                    if body_contains_yield_inner(eb) { return true; }
+                    if body_contains_yield_inner(eb) {
+                        return true;
+                    }
+                }
+            }
+            HirStmt::For {
+                body, else_body, ..
+            } => {
+                if body_contains_yield_inner(body) {
+                    return true;
+                }
+                if let Some(eb) = else_body {
+                    if body_contains_yield_inner(eb) {
+                        return true;
+                    }
                 }
             }
             HirStmt::With { body, .. } => {
-                if body_contains_yield_inner(body) { return true; }
+                if body_contains_yield_inner(body) {
+                    return true;
+                }
             }
             _ => {}
         }
@@ -595,16 +793,27 @@ pub(super) fn needs_clone_for_type(ty: &Type) -> bool {
         Type::Class { .. } => true,
         Type::Newtype { .. } => true,
         Type::TypeVar(_) => true, // Generic type params have T: Clone bound, so .clone() is safe
-        Type::BigInt => true, // num_bigint::BigInt is not Copy
+        Type::BigInt => true,     // num_bigint::BigInt is not Copy
         _ => false,
     }
 }
 
 /// Mutating methods that require the receiver variable to be `mut`.
 pub(super) const MUTATING_METHODS: &[&str] = &[
-    "append", "appendleft", "extend", "insert", "clear", "reverse", "sort",
-    "pop", "popleft", "remove",
-    "push_str", "update", "add", "discard",
+    "append",
+    "appendleft",
+    "extend",
+    "insert",
+    "clear",
+    "reverse",
+    "sort",
+    "pop",
+    "popleft",
+    "remove",
+    "push_str",
+    "update",
+    "add",
+    "discard",
 ];
 
 /// Collect the set of variable names that are mutated in a function body.
@@ -619,13 +828,20 @@ pub(super) fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
     mutated
 }
 
-pub(super) fn collect_mutated_vars_with_sigs(stmts: &[HirStmt], func_signatures: &ModuleFuncSignatures) -> HashSet<String> {
+pub(super) fn collect_mutated_vars_with_sigs(
+    stmts: &[HirStmt],
+    func_signatures: &ModuleFuncSignatures,
+) -> HashSet<String> {
     let mut mutated = HashSet::new();
     collect_mutated_vars_inner(stmts, &mut mutated, Some(func_signatures));
     mutated
 }
 
-pub(super) fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSet<String>, func_signatures: Option<&ModuleFuncSignatures>) {
+pub(super) fn collect_mutated_vars_inner(
+    stmts: &[HirStmt],
+    mutated: &mut HashSet<String>,
+    func_signatures: Option<&ModuleFuncSignatures>,
+) {
     for stmt in stmts {
         match stmt {
             HirStmt::Assign { name, .. } => {
@@ -644,7 +860,12 @@ pub(super) fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSe
             HirStmt::Return { value: Some(expr) } => {
                 collect_mutated_vars_in_expr(expr, mutated, func_signatures);
             }
-            HirStmt::If { condition, then_body, elif_clauses, else_body } => {
+            HirStmt::If {
+                condition,
+                then_body,
+                elif_clauses,
+                else_body,
+            } => {
                 collect_mutated_vars_in_expr(condition, mutated, func_signatures);
                 collect_mutated_vars_inner(then_body, mutated, func_signatures);
                 for (cond, body) in elif_clauses {
@@ -655,14 +876,20 @@ pub(super) fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSe
                     collect_mutated_vars_inner(body, mutated, func_signatures);
                 }
             }
-            HirStmt::While { condition, body, else_body } => {
+            HirStmt::While {
+                condition,
+                body,
+                else_body,
+            } => {
                 collect_mutated_vars_in_expr(condition, mutated, func_signatures);
                 collect_mutated_vars_inner(body, mutated, func_signatures);
                 if let Some(eb) = else_body {
                     collect_mutated_vars_inner(eb, mutated, func_signatures);
                 }
             }
-            HirStmt::For { body, else_body, .. } => {
+            HirStmt::For {
+                body, else_body, ..
+            } => {
                 collect_mutated_vars_inner(body, mutated, func_signatures);
                 if let Some(eb) = else_body {
                     collect_mutated_vars_inner(eb, mutated, func_signatures);
@@ -686,7 +913,10 @@ pub(super) fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSe
             HirStmt::AttributeAugAssign { object, .. } => {
                 mutated.insert(object.clone());
             }
-            HirStmt::Delete { object: HirExpr::Name { name, .. }, .. } => {
+            HirStmt::Delete {
+                object: HirExpr::Name { name, .. },
+                ..
+            } => {
                 mutated.insert(name.clone());
             }
             HirStmt::Yield { value } => {
@@ -703,9 +933,18 @@ pub(super) fn collect_mutated_vars_inner(stmts: &[HirStmt], mutated: &mut HashSe
     }
 }
 
-pub(super) fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet<String>, func_signatures: Option<&ModuleFuncSignatures>) {
+pub(super) fn collect_mutated_vars_in_expr(
+    expr: &HirExpr,
+    mutated: &mut HashSet<String>,
+    func_signatures: Option<&ModuleFuncSignatures>,
+) {
     match expr {
-        HirExpr::MethodCall { object, method, args, .. } => {
+        HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ..
+        } => {
             if MUTATING_METHODS.contains(&method.as_str()) {
                 if let HirExpr::Name { name, .. } = object.as_ref() {
                     mutated.insert(name.clone());
@@ -747,7 +986,9 @@ pub(super) fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet
         HirExpr::UnaryOp { operand, .. } => {
             collect_mutated_vars_in_expr(operand, mutated, func_signatures);
         }
-        HirExpr::Compare { left, comparators, .. } => {
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
             collect_mutated_vars_in_expr(left, mutated, func_signatures);
             for c in comparators {
                 collect_mutated_vars_in_expr(c, mutated, func_signatures);
@@ -758,7 +999,12 @@ pub(super) fn collect_mutated_vars_in_expr(expr: &HirExpr, mutated: &mut HashSet
                 collect_mutated_vars_in_expr(v, mutated, func_signatures);
             }
         }
-        HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
             collect_mutated_vars_in_expr(condition, mutated, func_signatures);
             collect_mutated_vars_in_expr(then_expr, mutated, func_signatures);
             collect_mutated_vars_in_expr(else_expr, mutated, func_signatures);
@@ -785,7 +1031,10 @@ pub(super) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(Stri
     refs.into_iter().collect()
 }
 
-pub(super) fn collect_referenced_vars_with_types_inner(stmts: &[HirStmt], refs: &mut HashMap<String, Type>) {
+pub(super) fn collect_referenced_vars_with_types_inner(
+    stmts: &[HirStmt],
+    refs: &mut HashMap<String, Type>,
+) {
     for stmt in stmts {
         match stmt {
             HirStmt::Let { value, .. } => {
@@ -803,7 +1052,12 @@ pub(super) fn collect_referenced_vars_with_types_inner(stmts: &[HirStmt], refs: 
             HirStmt::Expr { expr } => {
                 collect_typed_refs_in_expr(expr, refs);
             }
-            HirStmt::If { condition, then_body, elif_clauses, else_body } => {
+            HirStmt::If {
+                condition,
+                then_body,
+                elif_clauses,
+                else_body,
+            } => {
                 collect_typed_refs_in_expr(condition, refs);
                 collect_referenced_vars_with_types_inner(then_body, refs);
                 for (cond, body) in elif_clauses {
@@ -814,7 +1068,9 @@ pub(super) fn collect_referenced_vars_with_types_inner(stmts: &[HirStmt], refs: 
                     collect_referenced_vars_with_types_inner(body, refs);
                 }
             }
-            HirStmt::While { condition, body, .. } => {
+            HirStmt::While {
+                condition, body, ..
+            } => {
                 collect_typed_refs_in_expr(condition, refs);
                 collect_referenced_vars_with_types_inner(body, refs);
             }
@@ -851,7 +1107,9 @@ pub(super) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<Stri
         HirExpr::UnaryOp { operand, .. } => {
             collect_typed_refs_in_expr(operand, refs);
         }
-        HirExpr::Compare { left, comparators, .. } => {
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
             collect_typed_refs_in_expr(left, refs);
             for c in comparators {
                 collect_typed_refs_in_expr(c, refs);
@@ -872,19 +1130,30 @@ pub(super) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<Stri
             collect_typed_refs_in_expr(object, refs);
             collect_typed_refs_in_expr(index, refs);
         }
-        HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
             collect_typed_refs_in_expr(condition, refs);
             collect_typed_refs_in_expr(then_expr, refs);
             collect_typed_refs_in_expr(else_expr, refs);
         }
-        HirExpr::ListLiteral { elements, .. } | HirExpr::TupleLiteral { elements, .. } | HirExpr::SetLiteral { elements, .. } => {
+        HirExpr::ListLiteral { elements, .. }
+        | HirExpr::TupleLiteral { elements, .. }
+        | HirExpr::SetLiteral { elements, .. } => {
             for e in elements {
                 collect_typed_refs_in_expr(e, refs);
             }
         }
         HirExpr::DictLiteral { keys, values, .. } => {
-            for k in keys { collect_typed_refs_in_expr(k, refs); }
-            for v in values { collect_typed_refs_in_expr(v, refs); }
+            for k in keys {
+                collect_typed_refs_in_expr(k, refs);
+            }
+            for v in values {
+                collect_typed_refs_in_expr(v, refs);
+            }
         }
         HirExpr::Lambda { body, .. } => {
             collect_typed_refs_in_expr(body, refs);
@@ -912,7 +1181,12 @@ pub(super) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
                     defined.insert(name.clone());
                 }
             }
-            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
                 defined.extend(collect_locally_defined_vars(then_body));
                 for (_, body) in elif_clauses {
                     defined.extend(collect_locally_defined_vars(body));
@@ -939,37 +1213,70 @@ pub(super) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
     for stmt in stmts {
         match stmt {
             HirStmt::Let { value, .. } => {
-                if expr_calls_function(value, func_name) { return true; }
+                if expr_calls_function(value, func_name) {
+                    return true;
+                }
             }
             HirStmt::Assign { value, .. } => {
-                if expr_calls_function(value, func_name) { return true; }
+                if expr_calls_function(value, func_name) {
+                    return true;
+                }
             }
             HirStmt::AugAssign { value, .. } => {
-                if expr_calls_function(value, func_name) { return true; }
+                if expr_calls_function(value, func_name) {
+                    return true;
+                }
             }
             HirStmt::Return { value: Some(expr) } => {
-                if expr_calls_function(expr, func_name) { return true; }
+                if expr_calls_function(expr, func_name) {
+                    return true;
+                }
             }
             HirStmt::Expr { expr } => {
-                if expr_calls_function(expr, func_name) { return true; }
+                if expr_calls_function(expr, func_name) {
+                    return true;
+                }
             }
-            HirStmt::If { condition, then_body, elif_clauses, else_body } => {
-                if expr_calls_function(condition, func_name) { return true; }
-                if body_calls_function(then_body, func_name) { return true; }
+            HirStmt::If {
+                condition,
+                then_body,
+                elif_clauses,
+                else_body,
+            } => {
+                if expr_calls_function(condition, func_name) {
+                    return true;
+                }
+                if body_calls_function(then_body, func_name) {
+                    return true;
+                }
                 for (cond, body) in elif_clauses {
-                    if expr_calls_function(cond, func_name) { return true; }
-                    if body_calls_function(body, func_name) { return true; }
+                    if expr_calls_function(cond, func_name) {
+                        return true;
+                    }
+                    if body_calls_function(body, func_name) {
+                        return true;
+                    }
                 }
                 if let Some(body) = else_body {
-                    if body_calls_function(body, func_name) { return true; }
+                    if body_calls_function(body, func_name) {
+                        return true;
+                    }
                 }
             }
-            HirStmt::While { condition, body, .. } => {
-                if expr_calls_function(condition, func_name) { return true; }
-                if body_calls_function(body, func_name) { return true; }
+            HirStmt::While {
+                condition, body, ..
+            } => {
+                if expr_calls_function(condition, func_name) {
+                    return true;
+                }
+                if body_calls_function(body, func_name) {
+                    return true;
+                }
             }
             HirStmt::For { body, .. } => {
-                if body_calls_function(body, func_name) { return true; }
+                if body_calls_function(body, func_name) {
+                    return true;
+                }
             }
             _ => {}
         }
@@ -980,36 +1287,47 @@ pub(super) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
 pub(super) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
     match expr {
         HirExpr::Call { func, args, .. } => {
-            if func == func_name { return true; }
+            if func == func_name {
+                return true;
+            }
             args.iter().any(|a| expr_calls_function(a, func_name))
         }
         HirExpr::BinOp { left, right, .. } => {
             expr_calls_function(left, func_name) || expr_calls_function(right, func_name)
         }
-        HirExpr::BoolOp { values, .. } => {
-            values.iter().any(|v| expr_calls_function(v, func_name))
-        }
-        HirExpr::UnaryOp { operand, .. } => {
-            expr_calls_function(operand, func_name)
-        }
-        HirExpr::Compare { left, comparators, .. } => {
-            expr_calls_function(left, func_name) || comparators.iter().any(|c| expr_calls_function(c, func_name))
+        HirExpr::BoolOp { values, .. } => values.iter().any(|v| expr_calls_function(v, func_name)),
+        HirExpr::UnaryOp { operand, .. } => expr_calls_function(operand, func_name),
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            expr_calls_function(left, func_name)
+                || comparators
+                    .iter()
+                    .any(|c| expr_calls_function(c, func_name))
         }
         HirExpr::MethodCall { object, args, .. } => {
-            expr_calls_function(object, func_name) || args.iter().any(|a| expr_calls_function(a, func_name))
+            expr_calls_function(object, func_name)
+                || args.iter().any(|a| expr_calls_function(a, func_name))
         }
-        HirExpr::IfExpr { condition, then_expr, else_expr, .. } => {
-            expr_calls_function(condition, func_name) || expr_calls_function(then_expr, func_name) || expr_calls_function(else_expr, func_name)
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            expr_calls_function(condition, func_name)
+                || expr_calls_function(then_expr, func_name)
+                || expr_calls_function(else_expr, func_name)
         }
         HirExpr::Index { object, index, .. } => {
             expr_calls_function(object, func_name) || expr_calls_function(index, func_name)
         }
-        HirExpr::ListLiteral { elements, .. } | HirExpr::TupleLiteral { elements, .. } | HirExpr::SetLiteral { elements, .. } => {
+        HirExpr::ListLiteral { elements, .. }
+        | HirExpr::TupleLiteral { elements, .. }
+        | HirExpr::SetLiteral { elements, .. } => {
             elements.iter().any(|e| expr_calls_function(e, func_name))
         }
-        HirExpr::Lambda { body, .. } => {
-            expr_calls_function(body, func_name)
-        }
+        HirExpr::Lambda { body, .. } => expr_calls_function(body, func_name),
         _ => false,
     }
 }

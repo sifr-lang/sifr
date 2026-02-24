@@ -1,7 +1,6 @@
 use crate::{
     helpers::{
-        body_contains_field_assign_codegen,
-        collect_mutated_vars_with_sigs,
+        body_contains_field_assign_codegen, collect_mutated_vars_with_sigs,
         recursive_field_rust_type,
     },
     RustEmitter,
@@ -10,7 +9,12 @@ use sifr_hir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
-    pub(super) fn emit_class_method(&mut self, method: &HirFunction, class: &HirClass, module_public: bool) {
+    pub(super) fn emit_class_method(
+        &mut self,
+        method: &HirFunction,
+        class: &HirClass,
+        module_public: bool,
+    ) {
         self.current_return_type = Some(method.return_type.clone());
 
         // Pre-scan: collect mutated variables so we know which need `mut`
@@ -81,7 +85,9 @@ impl RustEmitter {
                         self.write(&param.name);
                         self.write(": ");
                         // Check if this parameter corresponds to a recursive field
-                        let is_recursive = self.recursive_fields.contains(&(class.name.clone(), param.name.clone()));
+                        let is_recursive = self
+                            .recursive_fields
+                            .contains(&(class.name.clone(), param.name.clone()));
                         if is_recursive {
                             self.write(&recursive_field_rust_type(&param.ty, &class.name));
                         } else if matches!(&param.ty, Type::Callable(..)) {
@@ -103,7 +109,11 @@ impl RustEmitter {
                         }
                     });
 
-                    let inheritance_parent = if has_super { class.parent_class.as_ref() } else { None };
+                    let inheritance_parent = if has_super {
+                        class.parent_class.as_ref()
+                    } else {
+                        None
+                    };
                     if let Some(parent_name) = inheritance_parent {
                         // Inheritance constructor: emit super call, then Self { parent: ..., own fields }
                         let mut super_args: Option<&Vec<HirExpr>> = None;
@@ -111,7 +121,10 @@ impl RustEmitter {
                         let mut other_stmts: Vec<&HirStmt> = Vec::new();
 
                         for stmt in &method.body {
-                            if let HirStmt::Expr { expr: HirExpr::SuperCall { args, .. } } = stmt {
+                            if let HirStmt::Expr {
+                                expr: HirExpr::SuperCall { args, .. },
+                            } = stmt
+                            {
                                 super_args = Some(args);
                             } else if let HirStmt::FieldAssign { field, value, .. } = stmt {
                                 field_inits.push((field, value));
@@ -195,8 +208,13 @@ impl RustEmitter {
                                 }
                             }
                             // Wrap Callable values in Box::new() for struct fields
-                            let field_ty = class.fields.iter().find(|(n, _)| n == field_name).map(|(_, t)| t);
-                            let needs_box = field_ty.is_some_and(|t| matches!(t, Type::Callable(..)));
+                            let field_ty = class
+                                .fields
+                                .iter()
+                                .find(|(n, _)| n == field_name)
+                                .map(|(_, t)| t);
+                            let needs_box =
+                                field_ty.is_some_and(|t| matches!(t, Type::Callable(..)));
                             if needs_box {
                                 self.write("Box::new(");
                                 self.emit_expr(value);
@@ -213,7 +231,9 @@ impl RustEmitter {
                                     self.write_indent();
                                     // Wrap Callable params in Box::new() for struct fields
                                     if matches!(field_ty, Type::Callable(..)) {
-                                        self.write(&format!("{field_name}: Box::new({field_name})"));
+                                        self.write(&format!(
+                                            "{field_name}: Box::new({field_name})"
+                                        ));
                                     } else {
                                         self.write(field_name);
                                     }
@@ -267,15 +287,16 @@ impl RustEmitter {
                     if method.return_type != Type::None {
                         self.write(" -> ");
                         // If return type is the same generic class, include type params
-                        let ret_rust_type = if let Type::Class { name: ret_name, .. } = &method.return_type {
-                            if !class.type_params.is_empty() && ret_name == &class.name {
-                                format!("{}<{}>", ret_name, class.type_params.join(", "))
+                        let ret_rust_type =
+                            if let Type::Class { name: ret_name, .. } = &method.return_type {
+                                if !class.type_params.is_empty() && ret_name == &class.name {
+                                    format!("{}<{}>", ret_name, class.type_params.join(", "))
+                                } else {
+                                    method.return_type.rust_type()
+                                }
                             } else {
                                 method.return_type.rust_type()
-                            }
-                        } else {
-                            method.return_type.rust_type()
-                        };
+                            };
                         self.write(&ret_rust_type);
                     }
 

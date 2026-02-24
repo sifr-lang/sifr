@@ -32,9 +32,7 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
                 if !seen.insert(field_name.as_str()) {
                     issues.push(IrValidationIssue {
                         kind: IrValidationKind::DuplicateStructField,
-                        message: format!(
-                            "struct `{name}` has duplicate field `{field_name}`"
-                        ),
+                        message: format!("struct `{name}` has duplicate field `{field_name}`"),
                     });
                 }
                 validate_type(field_ty, issues);
@@ -495,7 +493,9 @@ mod tests {
             visibility: Visibility::Private,
             ty: RustType::I64,
             value: RustExpr::Block {
-                stmts: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Int(1))))],
+                stmts: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Int(
+                    1,
+                ))))],
                 expr: Some(Box::new(RustExpr::Literal(RustLiteral::Int(0)))),
             },
         }];

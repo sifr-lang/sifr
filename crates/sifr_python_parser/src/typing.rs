@@ -1,9 +1,9 @@
 //! This module takes care of parsing a type annotation.
 
+use ruff_text_size::Ranged;
 use sifr_python_ast::relocate::relocate_expr;
 use sifr_python_ast::str::raw_contents;
 use sifr_python_ast::{ExprStringLiteral, ModExpression, StringFlags, StringLiteral};
-use ruff_text_size::Ranged;
 
 use crate::{parse_expression, parse_expression_range, ParseError, Parsed};
 

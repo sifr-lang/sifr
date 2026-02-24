@@ -3,19 +3,24 @@
 //! Defines the type representations, type inference, type checking,
 //! and subtyping rules for the Sifr language.
 
-mod types;
 mod check;
 pub mod infer;
-pub mod union;
 pub mod literal;
+mod types;
+pub mod union;
 
-pub use types::{Type, FunctionType, OwnershipKind, ParamConvention};
-pub use check::{type_check_binary_op, type_check_unary_op, type_check_comparison, type_check_bool_op};
+pub use check::{
+    type_check_binary_op, type_check_bool_op, type_check_comparison, type_check_unary_op,
+};
 pub use infer::infer_literal_type;
+pub use types::{FunctionType, OwnershipKind, ParamConvention, Type};
 pub mod narrow;
-pub use union::{make_union, subtract_from_union, intersect_with_union, remove_none_from_union, union_contains, union_contains_none};
-pub use literal::{LiteralValue, widen as widen_literal};
-pub use narrow::{NarrowingCondition, narrow_type};
+pub use literal::{widen as widen_literal, LiteralValue};
+pub use narrow::{narrow_type, NarrowingCondition};
+pub use union::{
+    intersect_with_union, make_union, remove_none_from_union, subtract_from_union, union_contains,
+    union_contains_none,
+};
 
 /// A type error produced during type checking.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -26,14 +31,33 @@ pub struct TypeError {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TypeErrorKind {
-    TypeMismatch { expected: Type, actual: Type },
-    UndefinedVariable { name: String },
-    UndefinedFunction { name: String },
-    WrongArgumentCount { expected: usize, actual: usize },
-    UseAfterMove { name: String },
-    MissingTypeAnnotation { name: String },
-    InvalidOperator { op: String, ty: Type },
-    NotCallable { ty: Type },
+    TypeMismatch {
+        expected: Box<Type>,
+        actual: Box<Type>,
+    },
+    UndefinedVariable {
+        name: String,
+    },
+    UndefinedFunction {
+        name: String,
+    },
+    WrongArgumentCount {
+        expected: usize,
+        actual: usize,
+    },
+    UseAfterMove {
+        name: String,
+    },
+    MissingTypeAnnotation {
+        name: String,
+    },
+    InvalidOperator {
+        op: String,
+        ty: Box<Type>,
+    },
+    NotCallable {
+        ty: Box<Type>,
+    },
 }
 
 impl std::fmt::Display for TypeError {

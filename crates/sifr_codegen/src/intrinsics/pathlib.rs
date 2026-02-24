@@ -21,12 +21,12 @@ fn ref_ident(name: &str) -> RustExpr {
     ref_expr(RustExpr::Ident(name.to_string()))
 }
 
-fn string_lit(v: &str) -> RustExpr {
-    RustExpr::Literal(RustLiteral::Str(v.to_string()))
-}
-
 fn bool_lit(v: bool) -> RustExpr {
     RustExpr::Literal(RustLiteral::Bool(v))
+}
+
+fn str_ref_lit(v: &str) -> RustExpr {
+    RustExpr::Ident(format!("{v:?}"))
 }
 
 fn io_map_err(expr: RustExpr) -> RustExpr {
@@ -47,7 +47,10 @@ fn io_map_err_new(expr: RustExpr) -> RustExpr {
                 ty: RustType::Named("_".to_string()),
             }],
             body: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["IOError".to_string(), "new".to_string()])),
+                func: Box::new(RustExpr::Path(vec![
+                    "IOError".to_string(),
+                    "new".to_string(),
+                ])),
                 args: vec![RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident("e".to_string())),
                     method: "to_string".to_string(),
@@ -80,11 +83,14 @@ fn regex_source_expr(pattern_ident: &str) -> RustExpr {
         format_str: "^{}$".to_string(),
         args: vec![RustExpr::MethodCall {
             receiver: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["regex".to_string(), "escape".to_string()])),
+                func: Box::new(RustExpr::Path(vec![
+                    "regex".to_string(),
+                    "escape".to_string(),
+                ])),
                 args: vec![RustExpr::Ident(pattern_ident.to_string())],
             }),
             method: "replace".to_string(),
-            args: vec![string_lit("\\*"), string_lit(".*")],
+            args: vec![str_ref_lit("\\*"), str_ref_lit(".*")],
         }],
     }
 }
@@ -447,7 +453,9 @@ pub(super) fn lower_rglob_pattern(args: &[String]) -> Option<RustExpr> {
                                         receiver: Box::new(RustExpr::Ident("__stack".to_string())),
                                         method: "push".to_string(),
                                         args: vec![to_string_expr(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__path".to_string(),
+                                            )),
                                             method: "to_string_lossy".to_string(),
                                             args: vec![],
                                         })],
@@ -461,10 +469,14 @@ pub(super) fn lower_rglob_pattern(args: &[String]) -> Option<RustExpr> {
                                         args: vec![ref_ident("__name")],
                                     },
                                     then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident("__results".to_string())),
+                                        receiver: Box::new(RustExpr::Ident(
+                                            "__results".to_string(),
+                                        )),
                                         method: "push".to_string(),
                                         args: vec![to_string_expr(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__path".to_string(),
+                                            )),
                                             method: "to_string_lossy".to_string(),
                                             args: vec![],
                                         })],

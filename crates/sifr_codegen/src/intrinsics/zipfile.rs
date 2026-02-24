@@ -39,7 +39,10 @@ fn zip_map_err(expr: RustExpr) -> RustExpr {
                 ty: RustType::Named("_".to_string()),
             }],
             body: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["IOError".to_string(), "new".to_string()])),
+                func: Box::new(RustExpr::Path(vec![
+                    "IOError".to_string(),
+                    "new".to_string(),
+                ])),
                 args: vec![RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident("e".to_string())),
                     method: "to_string".to_string(),
@@ -262,7 +265,10 @@ pub(super) fn lower_zip_read_file(args: &[String]) -> Option<RustExpr> {
                 name: "__content".to_string(),
                 ty: None,
                 value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["String".to_string(), "new".to_string()])),
+                    func: Box::new(RustExpr::Path(vec![
+                        "String".to_string(),
+                        "new".to_string(),
+                    ])),
                     args: vec![],
                 },
             },

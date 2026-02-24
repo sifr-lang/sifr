@@ -31,7 +31,6 @@ pub enum Type {
     Never,
 
     // --- M3: Advanced Type System ---
-
     /// Union type: value is one of several types (`int | str`)
     /// Members are normalized: flattened, deduplicated, sorted.
     Union(Vec<Type>),
@@ -51,7 +50,6 @@ pub enum Type {
     Unknown,
 
     // --- milestone_classes: Basic Classes ---
-
     /// Result type: `Result[T, E]` -> `Result<T, E>` in Rust
     Result(Box<Type>, Box<Type>),
 
@@ -65,7 +63,6 @@ pub enum Type {
     },
 
     // --- milestone_protocols: Protocols, Operators, Discriminated Unions ---
-
     /// Protocol type: structural interface that maps to Rust `trait`.
     /// Any class with the required methods satisfies the protocol.
     Protocol {
@@ -75,13 +72,9 @@ pub enum Type {
 
     /// Newtype wrapper around a primitive type.
     /// `class Port(int)` -> `struct Port(i64)`
-    Newtype {
-        name: String,
-        inner: Box<Type>,
-    },
+    Newtype { name: String, inner: Box<Type> },
 
     // --- milestone_generics_impl: Generics ---
-
     /// Type variable: a generic type parameter (e.g., `T` in `def first[T](items: list[T]) -> T`)
     TypeVar(String),
 
@@ -90,7 +83,6 @@ pub enum Type {
     Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>),
 
     // --- milestone_enums: Enum Types ---
-
     /// Enum type: `class Color(Enum): RED = 1; GREEN = 2; BLUE = 3`
     /// Maps to a Rust `#[repr(i64)] enum Color { RED = 1, GREEN = 2, BLUE = 3 }`
     Enum {
@@ -99,7 +91,6 @@ pub enum Type {
     },
 
     // --- milestone_integer_safety: BigInt ---
-
     /// Arbitrary-precision integer (`bigint` in Sifr, `num_bigint::BigInt` in Rust)
     /// Unlike `int` (i64), `bigint` never overflows — it grows as needed.
     BigInt,
@@ -118,14 +109,18 @@ impl FunctionType {
     /// Create a `FunctionType` where all parameters use the default convention
     /// (Borrow for Move types, Own for Copy/TypeVar types).
     pub fn new(params: Vec<(String, Type)>, return_type: Type) -> Self {
-        let params = params.into_iter().map(|(name, ty)| {
-            let conv = if matches!(ty, Type::TypeVar(_)) || ty.ownership() == OwnershipKind::Copy {
-                ParamConvention::Own
-            } else {
-                ParamConvention::Borrow
-            };
-            (name, ty, conv)
-        }).collect();
+        let params = params
+            .into_iter()
+            .map(|(name, ty)| {
+                let conv =
+                    if matches!(ty, Type::TypeVar(_)) || ty.ownership() == OwnershipKind::Copy {
+                        ParamConvention::Own
+                    } else {
+                        ParamConvention::Borrow
+                    };
+                (name, ty, conv)
+            })
+            .collect();
         FunctionType {
             params,
             return_type: Box::new(return_type),
@@ -134,9 +129,10 @@ impl FunctionType {
 
     /// Create a `FunctionType` where all parameters borrow (for built-in functions).
     pub fn all_borrow(params: Vec<(String, Type)>, return_type: Type) -> Self {
-        let params = params.into_iter().map(|(name, ty)| {
-            (name, ty, ParamConvention::Borrow)
-        }).collect();
+        let params = params
+            .into_iter()
+            .map(|(name, ty)| (name, ty, ParamConvention::Borrow))
+            .collect();
         FunctionType {
             params,
             return_type: Box::new(return_type),
@@ -176,10 +172,17 @@ impl Type {
     /// - `Function` is `Copy` (function pointers).
     pub fn ownership(&self) -> OwnershipKind {
         match self {
-            Self::Int | Self::Float | Self::Bool | Self::None | Self::Never | Self::Range => OwnershipKind::Copy,
+            Self::Int | Self::Float | Self::Bool | Self::None | Self::Never | Self::Range => {
+                OwnershipKind::Copy
+            }
             Self::LiteralInt(_) | Self::LiteralBool(_) => OwnershipKind::Copy,
             Self::Function(_) => OwnershipKind::Copy,
-            Self::Str | Self::Any | Self::List(_) | Self::Dict(_, _) | Self::Set(_) | Self::Tuple(_) => OwnershipKind::Move,
+            Self::Str
+            | Self::Any
+            | Self::List(_)
+            | Self::Dict(_, _)
+            | Self::Set(_)
+            | Self::Tuple(_) => OwnershipKind::Move,
             Self::LiteralStr(_) => OwnershipKind::Move,
             Self::Unknown => OwnershipKind::Move,
             Self::Class { .. } => OwnershipKind::Move,
@@ -189,7 +192,7 @@ impl Type {
             Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
             Self::Callable(..) => OwnershipKind::Copy, // function pointers are Copy
             Self::Enum { .. } => OwnershipKind::Copy, // enums are Copy (repr(i64))
-            Self::BigInt => OwnershipKind::Move, // heap-allocated, not Copy
+            Self::BigInt => OwnershipKind::Move,     // heap-allocated, not Copy
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
                 if members.iter().any(|m| m.ownership() == OwnershipKind::Move) {
@@ -233,12 +236,18 @@ impl Type {
             Self::LiteralInt(v) => format!("{v}"),
             Self::LiteralStr(v) => format!("\"{v}\""),
             Self::LiteralBool(v) => {
-                if *v { "True".to_string() } else { "False".to_string() }
+                if *v {
+                    "True".to_string()
+                } else {
+                    "False".to_string()
+                }
             }
             Self::Alias(name, _) => name.clone(),
             Self::Unknown => "Unknown".to_string(),
             Self::Class { name, .. } => name.clone(),
-            Self::Result(ok, err) => format!("Result[{}, {}]", ok.display_name(), err.display_name()),
+            Self::Result(ok, err) => {
+                format!("Result[{}, {}]", ok.display_name(), err.display_name())
+            }
             Self::Protocol { name, .. } => name.clone(),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(),
@@ -283,7 +292,10 @@ impl Type {
             Self::LiteralBool(_) => "bool".to_string(),
             // Union: special case for T | None -> Option<T>
             Self::Union(members) => {
-                let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+                let non_none: Vec<&Type> = members
+                    .iter()
+                    .filter(|m| !matches!(m, Type::None))
+                    .collect();
                 let has_none = members.iter().any(|m| matches!(m, Type::None));
                 if has_none && non_none.len() == 1 {
                     // T | None -> Option<T>
@@ -304,18 +316,22 @@ impl Type {
             Self::Enum { name, .. } => name.clone(), // Enum type maps to its Rust enum name
             Self::BigInt => "BigInt".to_string(),
             Self::Callable(params, conventions, ret) => {
-                let param_types: Vec<String> = params.iter().zip(conventions.iter()).map(|(t, conv)| {
-                    let rust_ty = t.rust_type();
-                    match conv {
-                        ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
-                            format!("&{rust_ty}")
+                let param_types: Vec<String> = params
+                    .iter()
+                    .zip(conventions.iter())
+                    .map(|(t, conv)| {
+                        let rust_ty = t.rust_type();
+                        match conv {
+                            ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
+                                format!("&{rust_ty}")
+                            }
+                            ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
+                                format!("&mut {rust_ty}")
+                            }
+                            _ => rust_ty,
                         }
-                        ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
-                            format!("&mut {rust_ty}")
-                        }
-                        _ => rust_ty,
-                    }
-                }).collect();
+                    })
+                    .collect();
                 let ret_type = ret.rust_type();
                 if ret_type == "()" {
                     format!("impl Fn({})", param_types.join(", "))
@@ -333,18 +349,22 @@ impl Type {
     pub fn rust_type_for_struct_field(&self) -> String {
         match self {
             Self::Callable(params, conventions, ret) => {
-                let param_types: Vec<String> = params.iter().zip(conventions.iter()).map(|(t, conv)| {
-                    let rust_ty = t.rust_type();
-                    match conv {
-                        ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
-                            format!("&{rust_ty}")
+                let param_types: Vec<String> = params
+                    .iter()
+                    .zip(conventions.iter())
+                    .map(|(t, conv)| {
+                        let rust_ty = t.rust_type();
+                        match conv {
+                            ParamConvention::Borrow if t.ownership() == OwnershipKind::Move => {
+                                format!("&{rust_ty}")
+                            }
+                            ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
+                                format!("&mut {rust_ty}")
+                            }
+                            _ => rust_ty,
                         }
-                        ParamConvention::MutBorrow if t.ownership() == OwnershipKind::Move => {
-                            format!("&mut {rust_ty}")
-                        }
-                        _ => rust_ty,
-                    }
-                }).collect();
+                    })
+                    .collect();
                 let ret_type = ret.rust_type();
                 if ret_type == "()" {
                     format!("Box<dyn Fn({})>", param_types.join(", "))
@@ -413,7 +433,10 @@ impl Type {
 
     /// Check if this type is a numeric type (int or float).
     pub fn is_numeric(&self) -> bool {
-        matches!(self, Self::Int | Self::Float | Self::LiteralInt(_) | Self::BigInt)
+        matches!(
+            self,
+            Self::Int | Self::Float | Self::LiteralInt(_) | Self::BigInt
+        )
     }
 
     /// Check if this type is a union type.
@@ -502,7 +525,10 @@ impl Type {
             }
             // Union type: if T|None where T is indexable, unwrap and delegate
             Self::Union(members) => {
-                let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+                let non_none: Vec<&Type> = members
+                    .iter()
+                    .filter(|m| !matches!(m, Type::None))
+                    .collect();
                 if non_none.len() == 1 {
                     non_none[0].index_result_type(index_ty)
                 } else {
@@ -559,7 +585,10 @@ impl Type {
         }
         // Union source is assignable to target if ALL members are assignable
         if let Self::Union(source_members) = source {
-            if source_members.iter().all(|m| m.is_assignable_to(target_resolved)) {
+            if source_members
+                .iter()
+                .all(|m| m.is_assignable_to(target_resolved))
+            {
                 return true;
             }
         }
@@ -567,12 +596,21 @@ impl Type {
         match (source, target_resolved) {
             (Self::List(a), Self::List(b)) => a.is_assignable_to(b),
             (Self::Set(a), Self::Set(b)) => a.is_assignable_to(b),
-            (Self::Dict(ak, av), Self::Dict(bk, bv)) => ak.is_assignable_to(bk) && av.is_assignable_to(bv),
+            (Self::Dict(ak, av), Self::Dict(bk, bv)) => {
+                ak.is_assignable_to(bk) && av.is_assignable_to(bv)
+            }
             (Self::Tuple(a), Self::Tuple(b)) => {
                 a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))
             }
             // Class types: nominal typing with inheritance support
-            (Self::Class { name: a, parent_class: ref parent_a, .. }, Self::Class { name: b, .. }) => {
+            (
+                Self::Class {
+                    name: a,
+                    parent_class: ref parent_a,
+                    ..
+                },
+                Self::Class { name: b, .. },
+            ) => {
                 if a == b {
                     return true;
                 }
@@ -593,16 +631,27 @@ impl Type {
                 ok_a.is_assignable_to(ok_b) && err_a.is_assignable_to(err_b)
             }
             // Protocol: a class satisfies a protocol if it has all required methods
-            (Self::Class { methods: class_methods, .. }, Self::Protocol { methods: proto_methods, .. }) => {
-                proto_methods.iter().all(|(pname, pft)| {
-                    class_methods.iter().any(|(cname, cft)| {
-                        cname == pname
-                            && cft.params.len() == pft.params.len()
-                            && cft.params.iter().zip(pft.params.iter()).all(|((_, ct, _), (_, pt, _))| ct.is_assignable_to(pt))
-                            && cft.return_type.is_assignable_to(&pft.return_type)
-                    })
+            (
+                Self::Class {
+                    methods: class_methods,
+                    ..
+                },
+                Self::Protocol {
+                    methods: proto_methods,
+                    ..
+                },
+            ) => proto_methods.iter().all(|(pname, pft)| {
+                class_methods.iter().any(|(cname, cft)| {
+                    cname == pname
+                        && cft.params.len() == pft.params.len()
+                        && cft
+                            .params
+                            .iter()
+                            .zip(pft.params.iter())
+                            .all(|((_, ct, _), (_, pt, _))| ct.is_assignable_to(pt))
+                        && cft.return_type.is_assignable_to(&pft.return_type)
                 })
-            }
+            }),
             // Protocol types: same name means same protocol
             (Self::Protocol { name: a, .. }, Self::Protocol { name: b, .. }) => a == b,
             // Newtype: same name means same newtype (nominal)
@@ -612,13 +661,20 @@ impl Type {
             // Callable: compatible if param and return types match
             (Self::Callable(params_a, _, ret_a), Self::Callable(params_b, _, ret_b)) => {
                 params_a.len() == params_b.len()
-                    && params_a.iter().zip(params_b.iter()).all(|(a, b)| a.is_assignable_to(b))
+                    && params_a
+                        .iter()
+                        .zip(params_b.iter())
+                        .all(|(a, b)| a.is_assignable_to(b))
                     && ret_a.is_assignable_to(ret_b)
             }
             // A Function type is assignable to a Callable if signatures match
             (Self::Function(ft), Self::Callable(params, _, ret)) => {
                 ft.params.len() == params.len()
-                    && ft.params.iter().zip(params.iter()).all(|((_, pt, _), ct)| pt.is_assignable_to(ct))
+                    && ft
+                        .params
+                        .iter()
+                        .zip(params.iter())
+                        .all(|((_, pt, _), ct)| pt.is_assignable_to(ct))
                     && ft.return_type.is_assignable_to(ret)
             }
             // Enum: nominal typing - same name means same enum
@@ -718,7 +774,10 @@ mod tests {
     fn test_index_result_type() {
         let list_int = Type::List(Box::new(Type::Int));
         // Safe indexing returns Option[T] = T | None
-        assert_eq!(list_int.index_result_type(&Type::Int), Some(Type::Union(vec![Type::Int, Type::None])));
+        assert_eq!(
+            list_int.index_result_type(&Type::Int),
+            Some(Type::Union(vec![Type::Int, Type::None]))
+        );
         assert_eq!(list_int.index_result_type(&Type::Str), None);
     }
 
@@ -733,7 +792,10 @@ mod tests {
     #[test]
     fn test_literal_display_name() {
         assert_eq!(Type::LiteralInt(42).display_name(), "42");
-        assert_eq!(Type::LiteralStr("GET".to_string()).display_name(), "\"GET\"");
+        assert_eq!(
+            Type::LiteralStr("GET".to_string()).display_name(),
+            "\"GET\""
+        );
         assert_eq!(Type::LiteralBool(true).display_name(), "True");
         assert_eq!(Type::LiteralBool(false).display_name(), "False");
     }

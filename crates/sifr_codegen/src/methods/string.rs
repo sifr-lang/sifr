@@ -339,7 +339,9 @@ pub(super) fn lower_title(object: &str, args: &[String]) -> Option<RustExpr> {
                                     body: Box::new(RustExpr::BinOp {
                                         left: Box::new(RustExpr::MethodCall {
                                             receiver: Box::new(RustExpr::MethodCall {
-                                                receiver: Box::new(RustExpr::Ident("f".to_string())),
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "f".to_string(),
+                                                )),
                                                 method: "to_uppercase".to_string(),
                                                 args: vec![],
                                             }),

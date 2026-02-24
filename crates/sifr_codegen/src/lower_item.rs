@@ -348,14 +348,12 @@ mod tests {
     #[test]
     fn does_not_lower_alias_primitive_module_helper_const_item() {
         let alias_int = Type::Alias("Meters".to_string(), Box::new(Type::Int));
-        assert!(
-            try_lower_simple_module_helper_const_item(
-                "answer",
-                &alias_int,
-                &HirExpr::IntLiteral(42),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_module_helper_const_item(
+            "answer",
+            &alias_int,
+            &HirExpr::IntLiteral(42),
+        )
+        .is_none());
     }
 
     #[test]
@@ -645,26 +643,26 @@ mod tests {
 
     #[test]
     fn does_not_lower_non_none_name_module_none_const_item() {
-        assert!(
-            try_lower_simple_module_none_const_item(
-                "nothing",
-                &Type::None,
-                &HirExpr::Name {
-                    name: "x".to_string(),
-                    ty: Type::Int,
-                },
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_module_none_const_item(
+            "nothing",
+            &Type::None,
+            &HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            },
+        )
+        .is_none());
     }
 
     #[test]
     fn does_not_lower_alias_none_module_helper_const_item() {
         let alias_none = Type::Alias("Nothing".to_string(), Box::new(Type::None));
-        assert!(
-            try_lower_simple_module_helper_const_item("nothing", &alias_none, &HirExpr::NoneLiteral)
-                .is_none()
-        );
+        assert!(try_lower_simple_module_helper_const_item(
+            "nothing",
+            &alias_none,
+            &HirExpr::NoneLiteral
+        )
+        .is_none());
     }
 
     #[test]
@@ -674,9 +672,8 @@ mod tests {
             elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
             ty: ty.clone(),
         };
-        let (item, rust_name_call) =
-            try_lower_simple_module_helper_const_item("nums", &ty, &value)
-                .expect("simple non-primitive helper const should lower");
+        let (item, rust_name_call) = try_lower_simple_module_helper_const_item("nums", &ty, &value)
+            .expect("simple non-primitive helper const should lower");
         assert_eq!(rust_name_call, "__const_nums()");
         assert!(matches!(
             item,
@@ -696,9 +693,8 @@ mod tests {
             name: "nums".to_string(),
             ty: ty.clone(),
         };
-        let (item, rust_name_call) =
-            try_lower_simple_module_helper_const_item("data", &ty, &value)
-                .expect("simple helper name const should lower");
+        let (item, rust_name_call) = try_lower_simple_module_helper_const_item("data", &ty, &value)
+            .expect("simple helper name const should lower");
         assert_eq!(rust_name_call, "__const_data()");
         assert!(matches!(
             item,
@@ -726,14 +722,12 @@ mod tests {
     #[test]
     fn does_not_lower_alias_string_module_helper_const_item() {
         let alias_str = Type::Alias("Message".to_string(), Box::new(Type::Str));
-        assert!(
-            try_lower_simple_module_helper_const_item(
-                "greeting",
-                &alias_str,
-                &HirExpr::StringLiteral("hi".to_string()),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_module_helper_const_item(
+            "greeting",
+            &alias_str,
+            &HirExpr::StringLiteral("hi".to_string()),
+        )
+        .is_none());
     }
 
     #[test]

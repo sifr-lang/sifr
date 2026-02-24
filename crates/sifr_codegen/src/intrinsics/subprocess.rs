@@ -70,7 +70,10 @@ fn piped_stdio() -> RustExpr {
 
 fn from_utf8_lossy(expr: RustExpr) -> RustExpr {
     RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec!["String".to_string(), "from_utf8_lossy".to_string()])),
+        func: Box::new(RustExpr::Path(vec![
+            "String".to_string(),
+            "from_utf8_lossy".to_string(),
+        ])),
         args: vec![ref_expr(expr)],
     }
 }

@@ -6,6 +6,36 @@ fn arg_expr(args: &[String], idx: usize) -> RustExpr {
     RustExpr::Ident(args[idx].clone())
 }
 
+fn str_lit(v: &str) -> RustExpr {
+    RustExpr::Ident(format!("{v:?}"))
+}
+
+fn value_error_from_ident(name: &str) -> RustExpr {
+    RustExpr::StructInit {
+        name: "ValueError".to_string(),
+        fields: vec![(
+            "message".to_string(),
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(name.to_string())),
+                method: "to_string".to_string(),
+                args: vec![],
+            },
+        )],
+    }
+}
+
+fn format_iso8601(dt_expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(dt_expr),
+            method: "format".to_string(),
+            args: vec![str_lit("%Y-%m-%dT%H:%M:%S")],
+        }),
+        method: "to_string".to_string(),
+        args: vec![],
+    }
+}
+
 pub(super) fn lower_time_now(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
@@ -152,17 +182,7 @@ pub(super) fn lower_strptime(args: &[String]) -> Option<RustExpr> {
                     name: "dt".to_string(),
                     ty: RustType::Named("_".to_string()),
                 }],
-                body: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("dt".to_string())),
-                        method: "format".to_string(),
-                        args: vec![RustExpr::Literal(RustLiteral::Str(
-                            "%Y-%m-%dT%H:%M:%S".to_string(),
-                        ))],
-                    }),
-                    method: "to_string".to_string(),
-                    args: vec![],
-                }),
+                body: Box::new(format_iso8601(RustExpr::Ident("dt".to_string()))),
                 is_move: false,
             }],
         }),
@@ -172,17 +192,7 @@ pub(super) fn lower_strptime(args: &[String]) -> Option<RustExpr> {
                 name: "e".to_string(),
                 ty: RustType::Named("_".to_string()),
             }],
-            body: Box::new(RustExpr::StructInit {
-                name: "ValueError".to_string(),
-                fields: vec![(
-                    "message".to_string(),
-                    RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("e".to_string())),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    },
-                )],
-            }),
+            body: Box::new(value_error_from_ident("e")),
             is_move: false,
         }],
     })
@@ -198,7 +208,7 @@ pub(super) fn lower_gmtime(args: &[String]) -> Option<RustExpr> {
             name: "__ts".to_string(),
             ty: None,
             value: RustExpr::Cast {
-                expr: Box::new(RustExpr::Ident(args[0].clone())),
+                expr: Box::new(arg_expr(args, 0)),
                 ty: RustType::I64,
             },
         }],
@@ -207,7 +217,7 @@ pub(super) fn lower_gmtime(args: &[String]) -> Option<RustExpr> {
                 receiver: Box::new(RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec![
                         "chrono".to_string(),
-                        "DateTime::<Utc>".to_string(),
+                        "DateTime::<chrono::Utc>".to_string(),
                         "from_timestamp".to_string(),
                     ])),
                     args: vec![
@@ -221,17 +231,7 @@ pub(super) fn lower_gmtime(args: &[String]) -> Option<RustExpr> {
                         name: "dt".to_string(),
                         ty: RustType::Named("_".to_string()),
                     }],
-                    body: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("dt".to_string())),
-                            method: "format".to_string(),
-                            args: vec![RustExpr::Literal(RustLiteral::Str(
-                                "%Y-%m-%dT%H:%M:%S".to_string(),
-                            ))],
-                        }),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    }),
+                    body: Box::new(format_iso8601(RustExpr::Ident("dt".to_string()))),
                     is_move: false,
                 }],
             }),
@@ -251,7 +251,7 @@ pub(super) fn lower_localtime(args: &[String]) -> Option<RustExpr> {
             name: "__ts".to_string(),
             ty: None,
             value: RustExpr::Cast {
-                expr: Box::new(RustExpr::Ident(args[0].clone())),
+                expr: Box::new(arg_expr(args, 0)),
                 ty: RustType::I64,
             },
         }],
@@ -260,7 +260,7 @@ pub(super) fn lower_localtime(args: &[String]) -> Option<RustExpr> {
                 receiver: Box::new(RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec![
                         "chrono".to_string(),
-                        "DateTime::<Utc>".to_string(),
+                        "DateTime::<chrono::Utc>".to_string(),
                         "from_timestamp".to_string(),
                     ])),
                     args: vec![
@@ -274,24 +274,17 @@ pub(super) fn lower_localtime(args: &[String]) -> Option<RustExpr> {
                         name: "dt".to_string(),
                         ty: RustType::Named("_".to_string()),
                     }],
-                    body: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("dt".to_string())),
-                                method: "with_timezone".to_string(),
-                                args: vec![RustExpr::Ref {
-                                    mutable: false,
-                                    expr: Box::new(RustExpr::Path(vec!["Local".to_string()])),
-                                }],
-                            }),
-                            method: "format".to_string(),
-                            args: vec![RustExpr::Literal(RustLiteral::Str(
-                                "%Y-%m-%dT%H:%M:%S".to_string(),
-                            ))],
-                        }),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    }),
+                    body: Box::new(format_iso8601(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("dt".to_string())),
+                        method: "with_timezone".to_string(),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Path(vec![
+                                "chrono".to_string(),
+                                "Local".to_string(),
+                            ])),
+                        }],
+                    })),
                     is_move: false,
                 }],
             }),

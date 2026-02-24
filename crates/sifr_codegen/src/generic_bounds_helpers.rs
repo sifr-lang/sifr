@@ -15,7 +15,10 @@ impl RustEmitter {
                 _ => false,
             }
         }
-        class.fields.iter().any(|(_, ty)| type_has_typevar_dict_key(ty))
+        class
+            .fields
+            .iter()
+            .any(|(_, ty)| type_has_typevar_dict_key(ty))
     }
 
     /// Check if a generic function needs Hash + Eq bounds (uses `TypeVar` as dict key
@@ -26,7 +29,9 @@ impl RustEmitter {
                 Type::Dict(key, _) => matches!(key.as_ref(), Type::TypeVar(_)),
                 Type::List(inner) => type_has_typevar_dict_key(inner),
                 Type::Union(members) => members.iter().any(type_has_typevar_dict_key),
-                Type::Class { fields, .. } => fields.iter().any(|(_, t)| type_has_typevar_dict_key(t)),
+                Type::Class { fields, .. } => {
+                    fields.iter().any(|(_, t)| type_has_typevar_dict_key(t))
+                }
                 _ => false,
             }
         }
@@ -74,13 +79,23 @@ impl RustEmitter {
         extra
     }
 
-    fn scan_body_for_typevar_ops(tp: &str, stmts: &[HirStmt], needs_add: &mut bool, needs_sub: &mut bool) {
+    fn scan_body_for_typevar_ops(
+        tp: &str,
+        stmts: &[HirStmt],
+        needs_add: &mut bool,
+        needs_sub: &mut bool,
+    ) {
         for stmt in stmts {
             Self::scan_stmt_for_typevar_ops(tp, stmt, needs_add, needs_sub);
         }
     }
 
-    fn scan_stmt_for_typevar_ops(tp: &str, stmt: &HirStmt, needs_add: &mut bool, needs_sub: &mut bool) {
+    fn scan_stmt_for_typevar_ops(
+        tp: &str,
+        stmt: &HirStmt,
+        needs_add: &mut bool,
+        needs_sub: &mut bool,
+    ) {
         match stmt {
             HirStmt::Let { value, .. } => {
                 Self::scan_expr_for_typevar_ops(tp, value, needs_add, needs_sub);
@@ -125,7 +140,12 @@ impl RustEmitter {
         }
     }
 
-    fn scan_expr_for_typevar_ops(tp: &str, expr: &HirExpr, needs_add: &mut bool, needs_sub: &mut bool) {
+    fn scan_expr_for_typevar_ops(
+        tp: &str,
+        expr: &HirExpr,
+        needs_add: &mut bool,
+        needs_sub: &mut bool,
+    ) {
         if let HirExpr::BinOp {
             left,
             op,

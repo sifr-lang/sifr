@@ -121,9 +121,17 @@ impl RustEmitter {
 
         self.write_indent();
         if module_public {
-            self.write(&format!("pub struct {}({});\n\n", class.name, inner.rust_type()));
+            self.write(&format!(
+                "pub struct {}({});\n\n",
+                class.name,
+                inner.rust_type()
+            ));
         } else {
-            self.write(&format!("struct {}({});\n\n", class.name, inner.rust_type()));
+            self.write(&format!(
+                "struct {}({});\n\n",
+                class.name,
+                inner.rust_type()
+            ));
         }
 
         // Impl block with constructor and value() accessor
@@ -136,7 +144,11 @@ impl RustEmitter {
         // Constructor: fn new(value: InnerType) -> Self
         self.write_indent();
         let pub_prefix = if module_public { "pub " } else { "" };
-        self.write(&format!("{}fn new(value: {}) -> Self {{\n", pub_prefix, inner.rust_type()));
+        self.write(&format!(
+            "{}fn new(value: {}) -> Self {{\n",
+            pub_prefix,
+            inner.rust_type()
+        ));
         self.indent += 1;
         self.write_indent();
         self.write("Self(value)\n");
@@ -146,7 +158,11 @@ impl RustEmitter {
 
         // Accessor: fn value(&self) -> InnerType
         self.write_indent();
-        self.write(&format!("{}fn value(&self) -> {} {{\n", pub_prefix, inner.rust_type()));
+        self.write(&format!(
+            "{}fn value(&self) -> {} {{\n",
+            pub_prefix,
+            inner.rust_type()
+        ));
         self.indent += 1;
         self.write_indent();
         if inner.ownership() == sifr_type_system::OwnershipKind::Copy {

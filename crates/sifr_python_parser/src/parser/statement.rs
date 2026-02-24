@@ -3,10 +3,10 @@ use std::hash::BuildHasherDefault;
 
 use rustc_hash::FxHashSet;
 
+use ruff_text_size::{Ranged, TextSize};
 use sifr_python_ast::{
     self as ast, ExceptHandler, Expr, ExprContext, IpyEscapeKind, Operator, Stmt, WithItem,
 };
-use ruff_text_size::{Ranged, TextSize};
 
 use crate::lexer::TokenValue;
 use crate::parser::expression::{ParsedExpr, EXPR_SET};

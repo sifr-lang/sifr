@@ -23,7 +23,9 @@ pub(super) fn lower_sys_version(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::Literal(RustLiteral::Str("sifr 0.1.0".to_string())))
+    Some(RustExpr::Literal(RustLiteral::Str(
+        "sifr 0.1.0".to_string(),
+    )))
 }
 
 pub(super) fn lower_sys_platform(args: &[String]) -> Option<RustExpr> {

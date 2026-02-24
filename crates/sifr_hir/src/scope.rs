@@ -3,7 +3,7 @@
 //! Supports type narrowing: variables can have a `narrowed_type` that
 //! differs from their `declared_type` within control flow branches.
 
-use sifr_type_system::{Type, OwnershipKind};
+use sifr_type_system::{OwnershipKind, Type};
 use std::collections::HashMap;
 
 /// Tracks variable state for ownership and narrowing.
@@ -67,7 +67,15 @@ impl Scope {
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
         if let Some(frame) = self.frames.last_mut() {
-            frame.insert(name, VarInfo { ty, narrowed_type: None, is_moved: false, is_mut_borrowed: false });
+            frame.insert(
+                name,
+                VarInfo {
+                    ty,
+                    narrowed_type: None,
+                    is_moved: false,
+                    is_mut_borrowed: false,
+                },
+            );
         }
     }
 

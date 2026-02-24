@@ -2,7 +2,12 @@ use crate::RustEmitter;
 use sifr_hir::HirModule;
 
 impl RustEmitter {
-    pub(super) fn emit_module_body(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
+    pub(super) fn emit_module_body(
+        &mut self,
+        module: &HirModule,
+        module_public: bool,
+        test_mode: bool,
+    ) {
         self.emit_module_classes(module, module_public);
         self.emit_module_functions(module, module_public, test_mode);
     }

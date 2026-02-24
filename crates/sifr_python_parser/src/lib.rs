@@ -75,9 +75,9 @@ pub use crate::token::TokenKind;
 
 use crate::parser::Parser;
 
-use sifr_python_ast::{Expr, Mod, ModExpression, ModModule, PySourceType, Suite};
 use ruff_python_trivia::CommentRanges;
 use ruff_text_size::{Ranged, TextRange, TextSize};
+use sifr_python_ast::{Expr, Mod, ModExpression, ModModule, PySourceType, Suite};
 
 mod error;
 pub mod lexer;

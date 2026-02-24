@@ -371,7 +371,10 @@ impl Renderer {
                 self.writeln("}");
             }
             RustStmt::For { var, iter, body } => {
-                self.writeln(&format!("for {var} in {} {{", Self::render_expr_string(iter)));
+                self.writeln(&format!(
+                    "for {var} in {} {{",
+                    Self::render_expr_string(iter)
+                ));
                 self.indent();
                 for stmt in body {
                     self.render_stmt(stmt);
@@ -584,15 +587,17 @@ impl Renderer {
                     )
                 }
             }
-            RustExpr::BinOp { left, op, right } => format!(
-                "{} {op} {}",
-                Self::wrap_expr(left),
-                Self::wrap_expr(right)
-            ),
+            RustExpr::BinOp { left, op, right } => {
+                format!("{} {op} {}", Self::wrap_expr(left), Self::wrap_expr(right))
+            }
             RustExpr::UnaryOp { op, operand } => format!("{op}{}", Self::wrap_expr(operand)),
             RustExpr::Field { expr, field } => format!("{}.{}", Self::wrap_expr(expr), field),
             RustExpr::Index { expr, index } => {
-                format!("{}[{}]", Self::wrap_expr(expr), Self::render_expr_string(index))
+                format!(
+                    "{}[{}]",
+                    Self::wrap_expr(expr),
+                    Self::render_expr_string(index)
+                )
             }
             RustExpr::Ref { mutable, expr } => {
                 if *mutable {
@@ -604,7 +609,11 @@ impl Renderer {
             RustExpr::Deref(expr) => format!("*{}", Self::wrap_expr(expr)),
             RustExpr::Clone(expr) => format!("{}.clone()", Self::wrap_expr(expr)),
             RustExpr::Cast { expr, ty } => {
-                format!("{} as {}", Self::wrap_expr(expr), Self::render_type_string(ty))
+                format!(
+                    "{} as {}",
+                    Self::wrap_expr(expr),
+                    Self::render_type_string(ty)
+                )
             }
             RustExpr::Block { stmts, expr } => Self::render_block_expr(stmts, expr.as_deref()),
             RustExpr::If {

@@ -121,17 +121,23 @@ impl RustEmitter {
                     // Power: int ** int -> i64::pow, otherwise float
                     if left.ty() == &Type::BigInt {
                         // bigint ** bigint or bigint ** int -> num_bigint pow
+                        self.write("(");
                         self.emit_expr(left);
+                        self.write(")");
                         self.write(".pow(u32::try_from(");
                         self.emit_expr(right);
                         self.write(").unwrap_or(0))");
                     } else if left.ty() == &Type::Int && right.ty() == &Type::Int {
+                        self.write("(");
                         self.emit_expr(left);
+                        self.write(")");
                         self.write(".pow(");
                         self.emit_expr(right);
                         self.write(" as u32)");
                     } else if left.ty() == &Type::Float && right.ty() == &Type::Int {
+                        self.write("(");
                         self.emit_expr(left);
+                        self.write(")");
                         self.write(".powi(");
                         self.emit_expr(right);
                         self.write(" as i32)");

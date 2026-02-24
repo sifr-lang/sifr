@@ -1,5 +1,5 @@
-use sifr_python_ast::{self as ast, Expr, ExprContext, Pattern};
 use ruff_text_size::{Ranged, TextLen, TextRange};
+use sifr_python_ast::{self as ast, Expr, ExprContext, Pattern};
 
 /// Convert the given [`Pattern`] to an [`Expr`].
 ///

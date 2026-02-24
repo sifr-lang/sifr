@@ -7,17 +7,18 @@ use crate::TypeError;
 /// Type-check a binary operation (e.g., `a + b`, `a - b`).
 ///
 /// Returns the result type or an error.
-#[allow(clippy::result_large_err)]
 pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
     // Mixed int/bigint arithmetic is a compile error (except bigint ** int which is allowed)
     let is_bigint_pow_int = left == &Type::BigInt && right == &Type::Int && op == "**";
     if !is_bigint_pow_int {
-        if (left == &Type::Int && right == &Type::BigInt) || (left == &Type::BigInt && right == &Type::Int) {
+        if (left == &Type::Int && right == &Type::BigInt)
+            || (left == &Type::BigInt && right == &Type::Int)
+        {
             return Err(TypeError {
                 message: "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly".to_string(),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             });
         }
@@ -69,7 +70,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -111,7 +112,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -135,7 +136,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -162,7 +163,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -189,7 +190,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -210,7 +211,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -227,7 +228,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -235,24 +236,25 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> Result<Type,
             message: format!("unknown binary operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
-                ty: left.clone(),
+                ty: Box::new(left.clone()),
             },
         }),
     }
 }
 
 /// Type-check a comparison operation (e.g., `a == b`, `a < b`).
-#[allow(clippy::result_large_err)]
 pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
     match op {
         "==" | "!=" => {
             // Block mixed int/bigint equality comparisons
-            if (left == &Type::Int && right == &Type::BigInt) || (left == &Type::BigInt && right == &Type::Int) {
+            if (left == &Type::Int && right == &Type::BigInt)
+                || (left == &Type::BigInt && right == &Type::Int)
+            {
                 return Err(TypeError {
                     message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
                     kind: crate::TypeErrorKind::TypeMismatch {
-                        expected: left.clone(),
-                        actual: right.clone(),
+                        expected: Box::new(left.clone()),
+                        actual: Box::new(right.clone()),
                     },
                 });
             }
@@ -291,19 +293,21 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                     right.display_name()
                 ),
                 kind: crate::TypeErrorKind::TypeMismatch {
-                    expected: left.clone(),
-                    actual: right.clone(),
+                    expected: Box::new(left.clone()),
+                    actual: Box::new(right.clone()),
                 },
             })
         }
         "<" | ">" | "<=" | ">=" => {
             // Block mixed int/bigint comparisons
-            if (left == &Type::Int && right == &Type::BigInt) || (left == &Type::BigInt && right == &Type::Int) {
+            if (left == &Type::Int && right == &Type::BigInt)
+                || (left == &Type::BigInt && right == &Type::Int)
+            {
                 return Err(TypeError {
                     message: "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
                     kind: crate::TypeErrorKind::TypeMismatch {
-                        expected: left.clone(),
-                        actual: right.clone(),
+                        expected: Box::new(left.clone()),
+                        actual: Box::new(right.clone()),
                     },
                 });
             }
@@ -339,7 +343,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -347,14 +351,13 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> Result<Type
             message: format!("unknown comparison operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
-                ty: left.clone(),
+                ty: Box::new(left.clone()),
             },
         }),
     }
 }
 
 /// Type-check a unary operation (e.g., `-x`, `not x`).
-#[allow(clippy::result_large_err)]
 pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> {
     match op {
         "-" | "+" => {
@@ -368,7 +371,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: operand.clone(),
+                    ty: Box::new(operand.clone()),
                 },
             })
         }
@@ -394,7 +397,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: operand.clone(),
+                    ty: Box::new(operand.clone()),
                 },
             })
         }
@@ -404,13 +407,10 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
                 return Ok(Type::Int);
             }
             Err(TypeError {
-                message: format!(
-                    "bad operand type for unary ~: '{}'",
-                    operand.display_name()
-                ),
+                message: format!("bad operand type for unary ~: '{}'", operand.display_name()),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: operand.clone(),
+                    ty: Box::new(operand.clone()),
                 },
             })
         }
@@ -418,14 +418,13 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> Result<Type, TypeError> 
             message: format!("unknown unary operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
-                ty: operand.clone(),
+                ty: Box::new(operand.clone()),
             },
         }),
     }
 }
 
 /// Type-check a boolean operation (e.g., `a and b`, `a or b`).
-#[allow(clippy::result_large_err)]
 pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, TypeError> {
     match op {
         "and" | "or" => {
@@ -440,7 +439,7 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
                 ),
                 kind: crate::TypeErrorKind::InvalidOperator {
                     op: op.to_string(),
-                    ty: left.clone(),
+                    ty: Box::new(left.clone()),
                 },
             })
         }
@@ -448,7 +447,7 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> Result<Type, T
             message: format!("unknown boolean operator: {op}"),
             kind: crate::TypeErrorKind::InvalidOperator {
                 op: op.to_string(),
-                ty: left.clone(),
+                ty: Box::new(left.clone()),
             },
         }),
     }
@@ -482,27 +481,54 @@ mod tests {
 
     #[test]
     fn test_int_arithmetic() {
-        assert_eq!(type_check_binary_op(&Type::Int, "+", &Type::Int).unwrap(), Type::Int);
-        assert_eq!(type_check_binary_op(&Type::Int, "-", &Type::Int).unwrap(), Type::Int);
-        assert_eq!(type_check_binary_op(&Type::Int, "*", &Type::Int).unwrap(), Type::Int);
-        assert_eq!(type_check_binary_op(&Type::Int, "//", &Type::Int).unwrap(), Type::Int);
-        assert_eq!(type_check_binary_op(&Type::Int, "%", &Type::Int).unwrap(), Type::Int);
+        assert_eq!(
+            type_check_binary_op(&Type::Int, "+", &Type::Int).unwrap(),
+            Type::Int
+        );
+        assert_eq!(
+            type_check_binary_op(&Type::Int, "-", &Type::Int).unwrap(),
+            Type::Int
+        );
+        assert_eq!(
+            type_check_binary_op(&Type::Int, "*", &Type::Int).unwrap(),
+            Type::Int
+        );
+        assert_eq!(
+            type_check_binary_op(&Type::Int, "//", &Type::Int).unwrap(),
+            Type::Int
+        );
+        assert_eq!(
+            type_check_binary_op(&Type::Int, "%", &Type::Int).unwrap(),
+            Type::Int
+        );
     }
 
     #[test]
     fn test_division_returns_float() {
-        assert_eq!(type_check_binary_op(&Type::Int, "/", &Type::Int).unwrap(), Type::Float);
+        assert_eq!(
+            type_check_binary_op(&Type::Int, "/", &Type::Int).unwrap(),
+            Type::Float
+        );
     }
 
     #[test]
     fn test_mixed_numeric() {
-        assert_eq!(type_check_binary_op(&Type::Int, "+", &Type::Float).unwrap(), Type::Float);
-        assert_eq!(type_check_binary_op(&Type::Float, "*", &Type::Int).unwrap(), Type::Float);
+        assert_eq!(
+            type_check_binary_op(&Type::Int, "+", &Type::Float).unwrap(),
+            Type::Float
+        );
+        assert_eq!(
+            type_check_binary_op(&Type::Float, "*", &Type::Int).unwrap(),
+            Type::Float
+        );
     }
 
     #[test]
     fn test_string_concat() {
-        assert_eq!(type_check_binary_op(&Type::Str, "+", &Type::Str).unwrap(), Type::Str);
+        assert_eq!(
+            type_check_binary_op(&Type::Str, "+", &Type::Str).unwrap(),
+            Type::Str
+        );
     }
 
     #[test]
@@ -514,9 +540,18 @@ mod tests {
 
     #[test]
     fn test_comparison() {
-        assert_eq!(type_check_comparison(&Type::Int, "==", &Type::Int).unwrap(), Type::Bool);
-        assert_eq!(type_check_comparison(&Type::Int, "<", &Type::Int).unwrap(), Type::Bool);
-        assert_eq!(type_check_comparison(&Type::Str, "==", &Type::Str).unwrap(), Type::Bool);
+        assert_eq!(
+            type_check_comparison(&Type::Int, "==", &Type::Int).unwrap(),
+            Type::Bool
+        );
+        assert_eq!(
+            type_check_comparison(&Type::Int, "<", &Type::Int).unwrap(),
+            Type::Bool
+        );
+        assert_eq!(
+            type_check_comparison(&Type::Str, "==", &Type::Str).unwrap(),
+            Type::Bool
+        );
         assert!(type_check_comparison(&Type::Int, "==", &Type::Str).is_err());
     }
 
@@ -542,8 +577,14 @@ mod tests {
 
     #[test]
     fn test_bool_ops() {
-        assert_eq!(type_check_bool_op(&Type::Bool, "and", &Type::Bool).unwrap(), Type::Bool);
-        assert_eq!(type_check_bool_op(&Type::Bool, "or", &Type::Bool).unwrap(), Type::Bool);
+        assert_eq!(
+            type_check_bool_op(&Type::Bool, "and", &Type::Bool).unwrap(),
+            Type::Bool
+        );
+        assert_eq!(
+            type_check_bool_op(&Type::Bool, "or", &Type::Bool).unwrap(),
+            Type::Bool
+        );
         assert!(type_check_bool_op(&Type::Int, "and", &Type::Int).is_err());
     }
 }

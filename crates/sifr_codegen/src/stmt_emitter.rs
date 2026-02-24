@@ -10,6 +10,31 @@ use sifr_hir::{HirExpr, HirStmt};
 use sifr_type_system::Type;
 use std::collections::HashSet;
 
+fn resolve_alias_type(ty: &Type) -> &Type {
+    match ty {
+        Type::Alias(_, inner) => resolve_alias_type(inner),
+        _ => ty,
+    }
+}
+
+fn is_result_ok_none_type(ty: &Type) -> bool {
+    let Type::Result(ok, _) = resolve_alias_type(ty) else {
+        return false;
+    };
+    matches!(resolve_alias_type(ok.as_ref()), Type::None)
+}
+
+fn is_none_like_return_value(expr: &HirExpr) -> bool {
+    if matches!(expr, HirExpr::NoneLiteral) || matches!(expr.ty(), Type::None) {
+        return true;
+    }
+    matches!(
+        expr,
+        HirExpr::OkWrap { value, .. }
+            if matches!(value.as_ref(), HirExpr::NoneLiteral) || matches!(value.ty(), Type::None)
+    )
+}
+
 impl RustEmitter {
     pub(super) fn emit_stmt_fallback(&mut self, stmt: &HirStmt) {
         match stmt {
@@ -191,6 +216,10 @@ impl RustEmitter {
                     .current_return_type
                     .as_ref()
                     .is_some_and(is_option_type);
+                let ret_is_result_none = self
+                    .current_return_type
+                    .as_ref()
+                    .is_some_and(is_result_ok_none_type);
                 let ret_is_non_option_union = self
                     .current_return_type
                     .as_ref()
@@ -198,7 +227,9 @@ impl RustEmitter {
                 self.write_indent();
                 if let Some(val) = value {
                     self.write("return ");
-                    if ret_is_option && matches!(val, HirExpr::NoneLiteral) {
+                    if ret_is_result_none && is_none_like_return_value(val) {
+                        self.write("Ok(())");
+                    } else if ret_is_option && matches!(val, HirExpr::NoneLiteral) {
                         // `return None` in Python -> `return None` in Rust Option
                         self.write("None");
                     } else if ret_is_option && !is_option_type(val.ty()) {

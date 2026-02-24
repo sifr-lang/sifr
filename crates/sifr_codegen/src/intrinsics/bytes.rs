@@ -76,9 +76,7 @@ pub(super) fn lower_encode_utf8(args: &[String]) -> Option<RustExpr> {
                         ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "b".to_string(),
-                        )))),
+                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident("b".to_string())))),
                         ty: RustType::I64,
                     }),
                     is_move: false,
@@ -314,7 +312,7 @@ pub(super) fn lower_bytes_to_hex(args: &[String]) -> Option<RustExpr> {
             body: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("__parts".to_string())),
                 method: "join".to_string(),
-                args: vec![RustExpr::Literal(RustLiteral::Str(String::new()))],
+                args: vec![RustExpr::Ident("\"\"".to_string())],
             }),
             is_move: false,
         }],
@@ -338,7 +336,10 @@ pub(super) fn lower_bytes_from_hex(args: &[String]) -> Option<RustExpr> {
                 name: "cleaned".to_string(),
                 ty: None,
                 value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["String".to_string(), "new".to_string()])),
+                    func: Box::new(RustExpr::Path(vec![
+                        "String".to_string(),
+                        "new".to_string(),
+                    ])),
                     args: vec![],
                 },
             },
@@ -368,11 +369,13 @@ pub(super) fn lower_bytes_from_hex(args: &[String]) -> Option<RustExpr> {
                                 args: vec![],
                             }),
                         },
-                        then_body: vec![RustStmt::Return(Some(err_parse_expr(RustExpr::FormatMacro {
-                            name: "format".to_string(),
-                            format_str: "invalid hex character: {}".to_string(),
-                            args: vec![RustExpr::Ident("ch".to_string())],
-                        })))],
+                        then_body: vec![RustStmt::Return(Some(err_parse_expr(
+                            RustExpr::FormatMacro {
+                                name: "format".to_string(),
+                                format_str: "invalid hex character: {}".to_string(),
+                                args: vec![RustExpr::Ident("ch".to_string())],
+                            },
+                        )))],
                         else_body: None,
                     },
                     RustStmt::Expr(RustExpr::MethodCall {
@@ -396,13 +399,15 @@ pub(super) fn lower_bytes_from_hex(args: &[String]) -> Option<RustExpr> {
                     op: "!=".to_string(),
                     right: Box::new(int(0)),
                 },
-                then_body: vec![RustStmt::Return(Some(err_parse_expr(RustExpr::MethodCall {
-                    receiver: Box::new(string_lit(
-                        "fromhex() arg must contain an even number of hexadecimal digits",
-                    )),
-                    method: "to_string".to_string(),
-                    args: vec![],
-                })))],
+                then_body: vec![RustStmt::Return(Some(err_parse_expr(
+                    RustExpr::MethodCall {
+                        receiver: Box::new(string_lit(
+                            "fromhex() arg must contain an even number of hexadecimal digits",
+                        )),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    },
+                )))],
                 else_body: None,
             },
             RustStmt::Let {

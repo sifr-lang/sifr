@@ -60,15 +60,17 @@ fn compile_source(source: &str) -> Result<String, Vec<String>> {
     }
 }
 
-/// Compile source and return the generated Rust code with stdlib metadata.
-fn compile_source_with_metadata(source: &str) -> Result<(String, HashSet<String>), Vec<String>> {
+/// Compile source and return the generated Rust code with stdlib/crate metadata.
+fn compile_source_with_metadata(
+    source: &str,
+) -> Result<(String, HashSet<String>, HashSet<String>), Vec<String>> {
     match sifr_driver::compile_with_metadata(source) {
         sifr_driver::CompileResultFull::Success {
             rust_source,
             used_stdlib_modules,
-            required_crates: _,
+            required_crates,
             lowering_stats: _,
-        } => Ok((rust_source, used_stdlib_modules)),
+        } => Ok((rust_source, used_stdlib_modules, required_crates)),
         sifr_driver::CompileResultFull::Errors { errors } => {
             Err(errors.iter().map(|e| e.message.clone()).collect())
         }
@@ -78,14 +80,27 @@ fn compile_source_with_metadata(source: &str) -> Result<(String, HashSet<String>
 /// Compile source and return Rust/stdlib metadata and lowering stats for gate checks.
 fn compile_source_with_metadata_and_stats(
     source: &str,
-) -> Result<(String, HashSet<String>, sifr_driver::LoweringStats), Vec<String>> {
+) -> Result<
+    (
+        String,
+        HashSet<String>,
+        HashSet<String>,
+        sifr_driver::LoweringStats,
+    ),
+    Vec<String>,
+> {
     match sifr_driver::compile_with_metadata(source) {
         sifr_driver::CompileResultFull::Success {
             rust_source,
             used_stdlib_modules,
-            required_crates: _,
+            required_crates,
             lowering_stats,
-        } => Ok((rust_source, used_stdlib_modules, lowering_stats)),
+        } => Ok((
+            rust_source,
+            used_stdlib_modules,
+            required_crates,
+            lowering_stats,
+        )),
         sifr_driver::CompileResultFull::Errors { errors } => {
             Err(errors.iter().map(|e| e.message.clone()).collect())
         }
@@ -93,7 +108,10 @@ fn compile_source_with_metadata_and_stats(
 }
 
 /// Generate Cargo.toml content with optional stdlib dependencies.
-fn generate_cargo_toml(stdlib_modules: &HashSet<String>) -> String {
+fn generate_cargo_toml(
+    stdlib_modules: &HashSet<String>,
+    required_crates: &HashSet<String>,
+) -> String {
     let mut cargo_toml = r#"[package]
 name = "sifr_output"
 version = "0.1.0"
@@ -137,6 +155,7 @@ edition = "2021"
                 if !deps.contains(&"sha2 = \"0.10\"") {
                     deps.push("sha2 = \"0.10\"");
                     deps.push("md5 = \"0.7\"");
+                    deps.push("sha1 = \"0.10\"");
                     deps.push("blake2 = \"0.10\"");
                 }
             }
@@ -173,6 +192,90 @@ edition = "2021"
         }
     }
 
+    for crate_name in required_crates {
+        match crate_name.as_str() {
+            "serde_json" => {
+                if !deps.contains(&"serde_json = \"1\"") {
+                    deps.push("serde_json = \"1\"");
+                }
+                if !deps.contains(&"serde = { version = \"1\", features = [\"derive\"] }") {
+                    deps.push("serde = { version = \"1\", features = [\"derive\"] }");
+                }
+            }
+            "chrono" => {
+                if !deps.contains(&"chrono = \"0.4\"") {
+                    deps.push("chrono = \"0.4\"");
+                }
+            }
+            "rand" => {
+                if !deps.contains(&"rand = \"0.8\"") {
+                    deps.push("rand = \"0.8\"");
+                }
+            }
+            "rand_distr" => {
+                if !deps.contains(&"rand_distr = \"0.4\"") {
+                    deps.push("rand_distr = \"0.4\"");
+                }
+            }
+            "regex" => {
+                if !deps.contains(&"regex = \"1\"") {
+                    deps.push("regex = \"1\"");
+                }
+            }
+            "sha2" => {
+                if !deps.contains(&"sha2 = \"0.10\"") {
+                    deps.push("sha2 = \"0.10\"");
+                }
+            }
+            "md5" => {
+                if !deps.contains(&"md5 = \"0.7\"") {
+                    deps.push("md5 = \"0.7\"");
+                }
+            }
+            "sha1" => {
+                if !deps.contains(&"sha1 = \"0.10\"") {
+                    deps.push("sha1 = \"0.10\"");
+                }
+            }
+            "blake2" => {
+                if !deps.contains(&"blake2 = \"0.10\"") {
+                    deps.push("blake2 = \"0.10\"");
+                }
+            }
+            "base64" => {
+                if !deps.contains(&"base64 = \"0.22\"") {
+                    deps.push("base64 = \"0.22\"");
+                }
+            }
+            "toml" => {
+                if !deps.contains(&"toml = \"0.8\"") {
+                    deps.push("toml = \"0.8\"");
+                }
+            }
+            "flate2" => {
+                if !deps.contains(&"flate2 = \"1\"") {
+                    deps.push("flate2 = \"1\"");
+                }
+            }
+            "zip" => {
+                if !deps.contains(&"zip = \"0.6\"") {
+                    deps.push("zip = \"0.6\"");
+                }
+            }
+            "num-bigint" => {
+                if !deps.contains(&"num-bigint = \"0.4\"") {
+                    deps.push("num-bigint = \"0.4\"");
+                }
+            }
+            "num-traits" => {
+                if !deps.contains(&"num-traits = \"0.2\"") {
+                    deps.push("num-traits = \"0.2\"");
+                }
+            }
+            _ => {}
+        }
+    }
+
     if !deps.is_empty() {
         cargo_toml.push_str("\n[dependencies]\n");
         for dep in &deps {
@@ -190,6 +293,7 @@ fn build_and_run_capture_with_deps(
     rust_source: &str,
     test_name: &str,
     stdlib_modules: &HashSet<String>,
+    required_crates: &HashSet<String>,
 ) -> Result<(String, String, bool), String> {
     let tmp_dir = std::env::temp_dir().join("sifr_e2e_tests").join(test_name);
     let src_dir = tmp_dir.join("src");
@@ -197,10 +301,29 @@ fn build_and_run_capture_with_deps(
 
     // Write Cargo.toml with stdlib dependencies (also detect bigint usage)
     let mut effective_modules = stdlib_modules.clone();
+    let mut effective_required_crates = required_crates.clone();
     if rust_source.contains("num_bigint::BigInt") || rust_source.contains("use num_bigint") {
         effective_modules.insert("_bigint".to_string());
     }
-    let cargo_toml = generate_cargo_toml(&effective_modules);
+    if rust_source.contains("regex::") {
+        effective_required_crates.insert("regex".to_string());
+    }
+    if rust_source.contains("rand::thread_rng") {
+        effective_required_crates.insert("rand".to_string());
+    }
+    if rust_source.contains("rand_distr::") {
+        effective_required_crates.insert("rand_distr".to_string());
+    }
+    if rust_source.contains("sha1::") {
+        effective_required_crates.insert("sha1".to_string());
+    }
+    if rust_source.contains("sha2::") {
+        effective_required_crates.insert("sha2".to_string());
+    }
+    if rust_source.contains("blake2::") {
+        effective_required_crates.insert("blake2".to_string());
+    }
+    let cargo_toml = generate_cargo_toml(&effective_modules, &effective_required_crates);
     fs::write(tmp_dir.join("Cargo.toml"), cargo_toml)
         .map_err(|e| format!("failed to write Cargo.toml: {}", e))?;
 
@@ -245,8 +368,9 @@ fn build_and_run_with_deps(
     rust_source: &str,
     test_name: &str,
     stdlib_modules: &HashSet<String>,
+    required_crates: &HashSet<String>,
 ) -> Result<String, String> {
-    match build_and_run_capture_with_deps(rust_source, test_name, stdlib_modules) {
+    match build_and_run_capture_with_deps(rust_source, test_name, stdlib_modules, required_crates) {
         Ok((stdout, stderr, success)) => {
             if success {
                 Ok(stdout)
@@ -282,17 +406,18 @@ fn test_e2e_pass() {
         let expected_stdout = extract_expect_stdout(&source);
 
         // Step 1: Sifr compilation (parse + type-check + codegen)
-        let (rust_source, used_stdlib_modules) = match compile_source_with_metadata(&source) {
-            Ok(result) => result,
-            Err(errors) => {
-                failures.push(format!(
-                    "FAIL [{}]: sifr compilation failed:\n  {}",
-                    test_name,
-                    errors.join("\n  ")
-                ));
-                continue;
-            }
-        };
+        let (rust_source, used_stdlib_modules, required_crates) =
+            match compile_source_with_metadata(&source) {
+                Ok(result) => result,
+                Err(errors) => {
+                    failures.push(format!(
+                        "FAIL [{}]: sifr compilation failed:\n  {}",
+                        test_name,
+                        errors.join("\n  ")
+                    ));
+                    continue;
+                }
+            };
 
         // Verify the generated Rust contains a main function
         if !rust_source.contains("fn main()") {
@@ -304,7 +429,12 @@ fn test_e2e_pass() {
         }
 
         // Step 2: Compile generated Rust with rustc and run it
-        match build_and_run_with_deps(&rust_source, &test_name, &used_stdlib_modules) {
+        match build_and_run_with_deps(
+            &rust_source,
+            &test_name,
+            &used_stdlib_modules,
+            &required_crates,
+        ) {
             Ok(stdout) => {
                 // Step 3: Verify stdout if expected
                 if let Some(expected) = &expected_stdout {
@@ -375,17 +505,18 @@ fn test_codegen_corpus_subset_parity() {
         };
         let expected_stdout = extract_expect_stdout(&source);
 
-        let (rust_source, stdlib_modules) = match compile_source_with_metadata(&source) {
-            Ok(result) => result,
-            Err(errors) => {
-                failures.push(format!(
-                    "FAIL [{}]: sifr compilation failed:\n  {}",
-                    case,
-                    errors.join("\n  ")
-                ));
-                continue;
-            }
-        };
+        let (rust_source, stdlib_modules, required_crates) =
+            match compile_source_with_metadata(&source) {
+                Ok(result) => result,
+                Err(errors) => {
+                    failures.push(format!(
+                        "FAIL [{}]: sifr compilation failed:\n  {}",
+                        case,
+                        errors.join("\n  ")
+                    ));
+                    continue;
+                }
+            };
 
         if !rust_source.contains("fn main()") {
             failures.push(format!(
@@ -395,15 +526,18 @@ fn test_codegen_corpus_subset_parity() {
             continue;
         }
 
-        let stdout =
-            match build_and_run_with_deps(&rust_source, &format!("{case}_single"), &stdlib_modules)
-            {
-                Ok(stdout) => stdout,
-                Err(err) => {
-                    failures.push(format!("FAIL [{}]: {}", case, err));
-                    continue;
-                }
-            };
+        let stdout = match build_and_run_with_deps(
+            &rust_source,
+            &format!("{case}_single"),
+            &stdlib_modules,
+            &required_crates,
+        ) {
+            Ok(stdout) => stdout,
+            Err(err) => {
+                failures.push(format!("FAIL [{}]: {}", case, err));
+                continue;
+            }
+        };
 
         let trimmed_stdout = stdout.trim_end();
 
@@ -465,7 +599,7 @@ fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
             }
         };
 
-        let (rust_source, _stdlib_modules, stats) =
+        let (rust_source, _stdlib_modules, _required_crates, stats) =
             match compile_source_with_metadata_and_stats(&source) {
                 Ok(result) => result,
                 Err(errors) => {
@@ -616,19 +750,25 @@ fn test_e2e_runtime_fail() {
         let source = fs::read_to_string(&path).unwrap();
         let expected_stderr = extract_expect_stderr(&source);
 
-        let (rust_source, used_stdlib_modules) = match compile_source_with_metadata(&source) {
-            Ok(result) => result,
-            Err(errors) => {
-                failures.push(format!(
+        let (rust_source, used_stdlib_modules, required_crates) =
+            match compile_source_with_metadata(&source) {
+                Ok(result) => result,
+                Err(errors) => {
+                    failures.push(format!(
                     "FAIL [{}]: sifr compilation failed (runtime-fail tests must compile):\n  {}",
                     test_name,
                     errors.join("\n  ")
                 ));
-                continue;
-            }
-        };
+                    continue;
+                }
+            };
 
-        match build_and_run_capture_with_deps(&rust_source, &test_name, &used_stdlib_modules) {
+        match build_and_run_capture_with_deps(
+            &rust_source,
+            &test_name,
+            &used_stdlib_modules,
+            &required_crates,
+        ) {
             Ok((_stdout, stderr, success)) => {
                 if success {
                     failures.push(format!(
