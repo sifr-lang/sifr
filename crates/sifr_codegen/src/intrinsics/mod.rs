@@ -344,6 +344,15 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
     })
 }
 
+/// IR-first intrinsic lowering entrypoint.
+///
+/// Most intrinsic lowerers are still string-arg based; this keeps call sites
+/// typed (`RustExpr`) while compatibility rendering remains internal.
+pub(crate) fn lower_intrinsic_ir(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
+    let rendered_args = args.iter().map(crate::render_expr).collect::<Vec<_>>();
+    lower_intrinsic(name, &rendered_args)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1055,5 +1064,22 @@ mod tests {
 
         let get_level = lower_intrinsic("get_global_level", &[]).expect("get_global_level");
         assert!(render_expr(&get_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
+    }
+
+    #[test]
+    fn lower_intrinsic_ir_matches_legacy_lower_intrinsic_for_sample() {
+        let legacy = lower_intrinsic("file_write", &["hid".to_string(), "text".to_string()])
+            .expect("legacy file_write");
+        let ir = lower_intrinsic_ir(
+            "file_write",
+            &[
+                RustExpr::Ident("hid".to_string()),
+                RustExpr::Ident("text".to_string()),
+            ],
+        )
+        .expect("ir file_write");
+
+        assert_eq!(render_expr(&legacy.expr), render_expr(&ir.expr));
+        assert_eq!(legacy.required_crate, ir.required_crate);
     }
 }
