@@ -55,10 +55,10 @@ status: **partially met**
 - [x] Broad variant coverage exists in simple lowering paths
 - [x] `expr_to_string` helper removed from production path
 - [ ] Core pipeline still fallback-emitter first-class (`emit_*_fallback` remains active)
-- [ ] `emit_module` still string-emitter orchestration, not full `RustFile` assembly + single render
+- [x] `emit_module` still string-emitter orchestration, not full `RustFile` assembly + single render
 - [ ] `lower_*` contract is not full `Result<_, CodegenError>` end-to-end for production path
 - [ ] `CodegenContext`/`ScopeContext` are defined but not the primary lowering contract
-- [ ] Union enums still emitted as raw `enum_defs` strings, not `RustItem::Enum` nodes
+- [x] Union enums still emitted as raw `enum_defs` strings, not `RustItem::Enum` nodes
 
 ### milestone_codegen_intrinsic_migration
 
@@ -67,8 +67,8 @@ status: **partially met**
 - [x] Intrinsic registry exists (`intrinsics/mod.rs`) with dependency metadata
 - [x] Method registry exists (`methods/mod.rs`)
 - [x] Codegen returns `required_crates`
-- [ ] Legacy intrinsic fallback dispatcher remains huge and active (`emit_intrinsic_call` fallback arms)
-- [ ] Legacy method fallback path remains active (`emit_method_call` fallback arms)
+- [x] Legacy intrinsic fallback dispatcher remains huge and active (`emit_intrinsic_call` fallback arms)
+- [x] Legacy method fallback path remains active (`emit_method_call` fallback arms)
 - [ ] `builtin_open` and related file-handle intrinsics still giant string literals
 - [ ] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
