@@ -2,7 +2,7 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-pub(super) fn lower_env_get(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_env_get(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -11,7 +11,7 @@ pub(super) fn lower_env_get(args: &[String]) -> Option<RustExpr> {
             mutable: false,
             name: "__k".to_string(),
             ty: None,
-            value: RustExpr::Ident(args[0].clone()),
+            value: args[0].clone(),
         }],
         expr: Some(Box::new(RustExpr::If {
             cond: Box::new(RustExpr::BinOp {
@@ -59,7 +59,7 @@ pub(super) fn lower_env_get(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_env_set(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_env_set(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -69,13 +69,13 @@ pub(super) fn lower_env_set(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__k".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: args[0].clone(),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__v".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: args[1].clone(),
             },
             RustStmt::If {
                 cond: RustExpr::BinOp {
@@ -151,7 +151,7 @@ pub(super) fn lower_env_set(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_env_unset(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_env_unset(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -161,7 +161,7 @@ pub(super) fn lower_env_unset(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__k".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: args[0].clone(),
             },
             RustStmt::If {
                 cond: RustExpr::BinOp {
@@ -216,7 +216,7 @@ pub(super) fn lower_env_unset(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_env_keys(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_env_keys(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -256,7 +256,7 @@ pub(super) fn lower_env_keys(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_env_values(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_env_values(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -296,7 +296,7 @@ pub(super) fn lower_env_values(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_env_items(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_env_items(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
