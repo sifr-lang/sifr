@@ -320,13 +320,24 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             class_name, args, ..
         } => try_lower_simple_constructor_call_expr(class_name, args),
         HirExpr::Index { object, index, .. } => try_lower_simple_index_expr(object, index),
+        HirExpr::Slice {
+            object,
+            start,
+            stop,
+            step,
+            ..
+        } => try_lower_simple_slice_expr(
+            object,
+            start.as_deref(),
+            stop.as_deref(),
+            step.as_deref(),
+        ),
         HirExpr::DictComp { .. }
         | HirExpr::DictLiteral { .. }
         | HirExpr::GeneratorExpr { .. }
         | HirExpr::ListComp { .. }
         | HirExpr::SetComp { .. }
-        | HirExpr::SetLiteral { .. }
-        | HirExpr::Slice { .. } => None,
+        | HirExpr::SetLiteral { .. } => None,
         _ => None,
     }
 }
@@ -424,6 +435,27 @@ fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<Rust
     Some(RustExpr::Index {
         expr: Box::new(try_lower_leaf_or_name_expr(object)?),
         index: Box::new(try_lower_leaf_or_name_expr(index)?),
+    })
+}
+
+fn try_lower_simple_slice_expr(
+    object: &HirExpr,
+    start: Option<&HirExpr>,
+    stop: Option<&HirExpr>,
+    step: Option<&HirExpr>,
+) -> Option<RustExpr> {
+    // Keep typed slice rewrites and stepped slices on fallback path.
+    if object.ty() != &Type::Any || step.is_some() {
+        return None;
+    }
+
+    let lowered_start = start.and_then(try_lower_leaf_or_name_expr).map(Box::new);
+    let lowered_stop = stop.and_then(try_lower_leaf_or_name_expr).map(Box::new);
+
+    Some(RustExpr::Slice {
+        expr: Box::new(try_lower_leaf_or_name_expr(object)?),
+        start: lowered_start,
+        stop: lowered_stop,
     })
 }
 
@@ -2540,6 +2572,59 @@ mod tests {
             }),
             index: Box::new(HirExpr::IntLiteral(0)),
             ty: Type::Union(vec![Type::Int, Type::None]),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_slice_on_any_without_step() {
+        let expr = HirExpr::Slice {
+            object: Box::new(HirExpr::Name {
+                name: "values".to_string(),
+                ty: Type::Any,
+            }),
+            start: Some(Box::new(HirExpr::IntLiteral(1))),
+            stop: Some(Box::new(HirExpr::IntLiteral(3))),
+            step: None,
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("slice lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Slice { expr, start, stop }
+                if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "values")
+                    && matches!(start.as_ref(), Some(s) if matches!(s.as_ref(), RustExpr::Cast { .. }))
+                    && matches!(stop.as_ref(), Some(s) if matches!(s.as_ref(), RustExpr::Cast { .. }))
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_slice_with_step_on_any() {
+        let expr = HirExpr::Slice {
+            object: Box::new(HirExpr::Name {
+                name: "values".to_string(),
+                ty: Type::Any,
+            }),
+            start: None,
+            stop: None,
+            step: Some(Box::new(HirExpr::IntLiteral(2))),
+            ty: Type::Any,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_slice_on_typed_object() {
+        let expr = HirExpr::Slice {
+            object: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            start: Some(Box::new(HirExpr::IntLiteral(1))),
+            stop: Some(Box::new(HirExpr::IntLiteral(3))),
+            step: None,
+            ty: Type::List(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
     }

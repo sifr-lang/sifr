@@ -1394,6 +1394,11 @@ mod tests {
             | RustExpr::Await(operand) => count_raw_in_expr(operand),
             RustExpr::Field { expr, .. } => count_raw_in_expr(expr),
             RustExpr::Index { expr, index } => count_raw_in_expr(expr) + count_raw_in_expr(index),
+            RustExpr::Slice { expr, start, stop } => {
+                count_raw_in_expr(expr)
+                    + start.as_ref().map(|s| count_raw_in_expr(s)).unwrap_or(0)
+                    + stop.as_ref().map(|s| count_raw_in_expr(s)).unwrap_or(0)
+            }
             RustExpr::Ref { expr, .. } => count_raw_in_expr(expr),
             RustExpr::Cast { expr, ty } => count_raw_in_expr(expr) + count_raw_in_type(ty),
             RustExpr::Block { stmts, expr } => {

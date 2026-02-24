@@ -164,6 +164,11 @@ pub enum RustExpr {
         expr: Box<RustExpr>,
         index: Box<RustExpr>,
     },
+    Slice {
+        expr: Box<RustExpr>,
+        start: Option<Box<RustExpr>>,
+        stop: Option<Box<RustExpr>>,
+    },
     Ref {
         mutable: bool,
         expr: Box<RustExpr>,

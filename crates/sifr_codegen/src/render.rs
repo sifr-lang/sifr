@@ -599,6 +599,22 @@ impl Renderer {
                     Self::render_expr_string(index)
                 )
             }
+            RustExpr::Slice { expr, start, stop } => {
+                let start_rendered = start
+                    .as_ref()
+                    .map(|s| Self::render_expr_string(s))
+                    .unwrap_or_default();
+                let stop_rendered = stop
+                    .as_ref()
+                    .map(|s| Self::render_expr_string(s))
+                    .unwrap_or_default();
+                format!(
+                    "{}[{}..{}]",
+                    Self::wrap_expr(expr),
+                    start_rendered,
+                    stop_rendered
+                )
+            }
             RustExpr::Ref { mutable, expr } => {
                 if *mutable {
                     format!("&mut {}", Self::wrap_expr(expr))
@@ -1113,6 +1129,18 @@ mod tests {
 
         let rendered = render_expr(&expr);
         assert_eq!(rendered, "(1..10).step_by(2 as usize)");
+    }
+
+    #[test]
+    fn renders_slice_expression() {
+        let expr = RustExpr::Slice {
+            expr: Box::new(RustExpr::Ident("values".to_string())),
+            start: Some(Box::new(RustExpr::Literal(RustLiteral::Int(1)))),
+            stop: Some(Box::new(RustExpr::Literal(RustLiteral::Int(3)))),
+        };
+
+        let rendered = render_expr(&expr);
+        assert_eq!(rendered, "values[1..3]");
     }
 
     #[test]

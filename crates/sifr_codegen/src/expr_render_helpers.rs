@@ -220,7 +220,6 @@ impl RustEmitter {
                 | HirExpr::ListComp { .. }
                 | HirExpr::SetComp { .. }
                 | HirExpr::SetLiteral { .. }
-                | HirExpr::Slice { .. }
         ) {
             return None;
         }

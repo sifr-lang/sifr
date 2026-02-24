@@ -201,6 +201,15 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
             collect_expr(expr, needs);
             collect_expr(index, needs);
         }
+        RustExpr::Slice { expr, start, stop } => {
+            collect_expr(expr, needs);
+            if let Some(start) = start {
+                collect_expr(start, needs);
+            }
+            if let Some(stop) = stop {
+                collect_expr(stop, needs);
+            }
+        }
         RustExpr::Ref { expr, .. } => collect_expr(expr, needs),
         RustExpr::Cast { expr, ty } => {
             collect_expr(expr, needs);
