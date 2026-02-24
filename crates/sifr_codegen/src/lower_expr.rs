@@ -336,8 +336,12 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             try_lower_simple_dict_literal_expr(keys, values, ty)
         }
         HirExpr::SetLiteral { elements, ty } => try_lower_simple_set_literal_expr(elements, ty),
+        HirExpr::ListComp {
+            expr,
+            generators,
+            ty,
+        } => try_lower_simple_list_comp_expr(expr, generators, ty),
         HirExpr::DictComp { .. } | HirExpr::GeneratorExpr { .. }
-        | HirExpr::ListComp { .. }
         | HirExpr::SetComp { .. } => None,
         _ => None,
     }
@@ -538,6 +542,72 @@ fn try_lower_simple_set_literal_expr(elements: &[HirExpr], ty: &Type) -> Option<
     Some(RustExpr::Block {
         stmts,
         expr: Some(Box::new(RustExpr::Ident(set_ident))),
+    })
+}
+
+fn try_lower_simple_list_comp_expr(
+    expr: &HirExpr,
+    generators: &[(String, HirExpr, Option<HirExpr>)],
+    ty: &Type,
+) -> Option<RustExpr> {
+    if generators.len() != 1 || resolve_alias_type(ty) != &Type::Any {
+        return None;
+    }
+
+    let (var, iter_expr, maybe_filter) = generators.first()?;
+    if var.contains(',') {
+        return None;
+    }
+
+    let lowered_iter = try_lower_leaf_or_name_expr(iter_expr)?;
+    let iter = if matches!(iter_expr.ty(), Type::Range) {
+        lowered_iter
+    } else {
+        RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "clone".to_string(),
+                args: vec![],
+            }),
+            method: "into_iter".to_string(),
+            args: vec![],
+        }
+    };
+
+    let result_ident = "__sifr_list_comp".to_string();
+    let push_stmt = RustStmt::Expr(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(result_ident.clone())),
+        method: "push".to_string(),
+        args: vec![try_lower_leaf_or_name_expr(expr)?],
+    });
+
+    let loop_body = if let Some(filter) = maybe_filter {
+        vec![RustStmt::If {
+            cond: try_lower_leaf_or_name_expr(filter)?,
+            then_body: vec![push_stmt],
+            else_body: None,
+        }]
+    } else {
+        vec![push_stmt]
+    };
+
+    let stmts = vec![
+        RustStmt::Let {
+            mutable: true,
+            name: result_ident.clone(),
+            ty: None,
+            value: RustExpr::Vec(vec![]),
+        },
+        RustStmt::For {
+            var: var.clone(),
+            iter,
+            body: loop_body,
+        },
+    ];
+
+    Some(RustExpr::Block {
+        stmts,
+        expr: Some(Box::new(RustExpr::Ident(result_ident))),
     })
 }
 
@@ -2806,6 +2876,84 @@ mod tests {
         let expr = HirExpr::SetLiteral {
             elements: vec![HirExpr::IntLiteral(1)],
             ty: Type::Set(Box::new(Type::Int)),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_list_comp_with_single_generator() {
+        let expr = HirExpr::ListComp {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            generators: vec![(
+                "x".to_string(),
+                HirExpr::Name {
+                    name: "items".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+                None,
+            )],
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("list comp lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::Block { stmts, expr: Some(result) }
+                if matches!(stmts.first(), Some(RustStmt::Let { name, mutable, .. }) if name == "__sifr_list_comp" && *mutable)
+                    && matches!(stmts.get(1), Some(RustStmt::For { var, .. }) if var == "x")
+                    && matches!(result.as_ref(), RustExpr::Ident(name) if name == "__sifr_list_comp")
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_list_comp_with_multiple_generators() {
+        let expr = HirExpr::ListComp {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            generators: vec![
+                (
+                    "x".to_string(),
+                    HirExpr::Name {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    None,
+                ),
+                (
+                    "y".to_string(),
+                    HirExpr::Name {
+                        name: "other".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    None,
+                ),
+            ],
+            ty: Type::Any,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_list_comp_on_typed_list() {
+        let expr = HirExpr::ListComp {
+            expr: Box::new(HirExpr::Name {
+                name: "x".to_string(),
+                ty: Type::Int,
+            }),
+            generators: vec![(
+                "x".to_string(),
+                HirExpr::Name {
+                    name: "items".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+                None,
+            )],
+            ty: Type::List(Box::new(Type::Int)),
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
     }
