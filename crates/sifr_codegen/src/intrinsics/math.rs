@@ -1245,14 +1245,311 @@ pub(super) fn lower_lgamma(args: &[String]) -> Option<RustExpr> {
     )))
 }
 
-pub(super) fn lower_frexp(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_frexp(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __x: f64 = ({}); if __x == 0.0 {{ vec![__x, 0.0] }} else if !__x.is_finite() {{ vec![__x, 0.0] }} else {{ let __bits = __x.to_bits(); let __sign = __bits & 0x8000000000000000; let __exp = ((__bits >> 52) & 0x7ff) as i32; let __frac = __bits & 0x000fffffffffffff; if __exp == 0 {{ let __scaled = __x * (2.0f64).powi(54); let __sbits = __scaled.to_bits(); let __sexp = ((__sbits >> 52) & 0x7ff) as i32; let __sfrac = __sbits & 0x000fffffffffffff; let __mant = f64::from_bits(__sign | (0x3feu64 << 52) | __sfrac); let __e = __sexp - 1022 - 54; vec![__mant, __e as f64] }} else {{ let __mant = f64::from_bits(__sign | (0x3feu64 << 52) | __frac); let __e = __exp - 1022; vec![__mant, __e as f64] }} }} }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__x".to_string(),
+            ty: Some(RustType::F64),
+            value: RustExpr::Cast {
+                expr: Box::new(args[0].clone()),
+                ty: RustType::F64,
+            },
+        }],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__x".to_string())),
+                op: "==".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+            }),
+            then_expr: Box::new(RustExpr::Vec(vec![
+                RustExpr::Ident("__x".to_string()),
+                RustExpr::Literal(RustLiteral::Float(0.0)),
+            ])),
+            else_expr: Some(Box::new(RustExpr::If {
+                cond: Box::new(RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                        method: "is_finite".to_string(),
+                        args: vec![],
+                    }),
+                }),
+                then_expr: Box::new(RustExpr::Vec(vec![
+                    RustExpr::Ident("__x".to_string()),
+                    RustExpr::Literal(RustLiteral::Float(0.0)),
+                ])),
+                else_expr: Some(Box::new(RustExpr::Block {
+                    stmts: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__bits".to_string(),
+                            ty: Some(RustType::Named("u64".to_string())),
+                            value: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                                method: "to_bits".to_string(),
+                                args: vec![],
+                            },
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__sign_mask".to_string(),
+                            ty: Some(RustType::Named("u64".to_string())),
+                            value: RustExpr::BinOp {
+                                left: Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                    ty: RustType::Named("u64".to_string()),
+                                }),
+                                op: "<<".to_string(),
+                                right: Box::new(RustExpr::Literal(RustLiteral::Int(63))),
+                            },
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__frac_mask".to_string(),
+                            ty: Some(RustType::Named("u64".to_string())),
+                            value: RustExpr::BinOp {
+                                left: Box::new(RustExpr::BinOp {
+                                    left: Box::new(RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                        ty: RustType::Named("u64".to_string()),
+                                    }),
+                                    op: "<<".to_string(),
+                                    right: Box::new(RustExpr::Literal(RustLiteral::Int(52))),
+                                }),
+                                op: "-".to_string(),
+                                right: Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                    ty: RustType::Named("u64".to_string()),
+                                }),
+                            },
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__sign".to_string(),
+                            ty: Some(RustType::Named("u64".to_string())),
+                            value: RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__bits".to_string())),
+                                op: "&".to_string(),
+                                right: Box::new(RustExpr::Ident("__sign_mask".to_string())),
+                            },
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__exp".to_string(),
+                            ty: Some(RustType::Named("i32".to_string())),
+                            value: RustExpr::Cast {
+                                expr: Box::new(RustExpr::BinOp {
+                                    left: Box::new(RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__bits".to_string())),
+                                        op: ">>".to_string(),
+                                        right: Box::new(RustExpr::Literal(RustLiteral::Int(52))),
+                                    }),
+                                    op: "&".to_string(),
+                                    right: Box::new(RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(2047))),
+                                        ty: RustType::Named("u64".to_string()),
+                                    }),
+                                }),
+                                ty: RustType::Named("i32".to_string()),
+                            },
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__frac".to_string(),
+                            ty: Some(RustType::Named("u64".to_string())),
+                            value: RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__bits".to_string())),
+                                op: "&".to_string(),
+                                right: Box::new(RustExpr::Ident("__frac_mask".to_string())),
+                            },
+                        },
+                    ],
+                    expr: Some(Box::new(RustExpr::If {
+                        cond: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("__exp".to_string())),
+                            op: "==".to_string(),
+                            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                        }),
+                        then_expr: Box::new(RustExpr::Block {
+                            stmts: vec![
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__scaled".to_string(),
+                                    ty: Some(RustType::F64),
+                                    value: RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__x".to_string())),
+                                        op: "*".to_string(),
+                                        right: Box::new(RustExpr::MethodCall {
+                                            receiver: Box::new(RustExpr::Cast {
+                                                expr: Box::new(RustExpr::Literal(RustLiteral::Float(
+                                                    2.0,
+                                                ))),
+                                                ty: RustType::F64,
+                                            }),
+                                            method: "powi".to_string(),
+                                            args: vec![RustExpr::Literal(RustLiteral::Int(54))],
+                                        }),
+                                    },
+                                },
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__sbits".to_string(),
+                                    ty: Some(RustType::Named("u64".to_string())),
+                                    value: RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::Ident("__scaled".to_string())),
+                                        method: "to_bits".to_string(),
+                                        args: vec![],
+                                    },
+                                },
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__sexp".to_string(),
+                                    ty: Some(RustType::Named("i32".to_string())),
+                                    value: RustExpr::Cast {
+                                        expr: Box::new(RustExpr::BinOp {
+                                            left: Box::new(RustExpr::BinOp {
+                                                left: Box::new(RustExpr::Ident("__sbits".to_string())),
+                                                op: ">>".to_string(),
+                                                right: Box::new(RustExpr::Literal(
+                                                    RustLiteral::Int(52),
+                                                )),
+                                            }),
+                                            op: "&".to_string(),
+                                            right: Box::new(RustExpr::Cast {
+                                                expr: Box::new(RustExpr::Literal(RustLiteral::Int(
+                                                    2047,
+                                                ))),
+                                                ty: RustType::Named("u64".to_string()),
+                                            }),
+                                        }),
+                                        ty: RustType::Named("i32".to_string()),
+                                    },
+                                },
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__sfrac".to_string(),
+                                    ty: Some(RustType::Named("u64".to_string())),
+                                    value: RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__sbits".to_string())),
+                                        op: "&".to_string(),
+                                        right: Box::new(RustExpr::Ident("__frac_mask".to_string())),
+                                    },
+                                },
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__mant".to_string(),
+                                    ty: Some(RustType::F64),
+                                    value: RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "f64".to_string(),
+                                            "from_bits".to_string(),
+                                        ])),
+                                        args: vec![RustExpr::BinOp {
+                                            left: Box::new(RustExpr::BinOp {
+                                                left: Box::new(RustExpr::Ident("__sign".to_string())),
+                                                op: "|".to_string(),
+                                                right: Box::new(RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::Cast {
+                                                        expr: Box::new(RustExpr::Literal(
+                                                            RustLiteral::Int(1022),
+                                                        )),
+                                                        ty: RustType::Named("u64".to_string()),
+                                                    }),
+                                                    op: "<<".to_string(),
+                                                    right: Box::new(RustExpr::Literal(
+                                                        RustLiteral::Int(52),
+                                                    )),
+                                                }),
+                                            }),
+                                            op: "|".to_string(),
+                                            right: Box::new(RustExpr::Ident("__sfrac".to_string())),
+                                        }],
+                                    },
+                                },
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__e".to_string(),
+                                    ty: Some(RustType::Named("i32".to_string())),
+                                    value: RustExpr::BinOp {
+                                        left: Box::new(RustExpr::BinOp {
+                                            left: Box::new(RustExpr::Ident("__sexp".to_string())),
+                                            op: "-".to_string(),
+                                            right: Box::new(RustExpr::Literal(RustLiteral::Int(1022))),
+                                        }),
+                                        op: "-".to_string(),
+                                        right: Box::new(RustExpr::Literal(RustLiteral::Int(54))),
+                                    },
+                                },
+                            ],
+                            expr: Some(Box::new(RustExpr::Vec(vec![
+                                RustExpr::Ident("__mant".to_string()),
+                                RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Ident("__e".to_string())),
+                                    ty: RustType::F64,
+                                },
+                            ]))),
+                        }),
+                        else_expr: Some(Box::new(RustExpr::Block {
+                            stmts: vec![
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__mant".to_string(),
+                                    ty: Some(RustType::F64),
+                                    value: RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "f64".to_string(),
+                                            "from_bits".to_string(),
+                                        ])),
+                                        args: vec![RustExpr::BinOp {
+                                            left: Box::new(RustExpr::BinOp {
+                                                left: Box::new(RustExpr::Ident("__sign".to_string())),
+                                                op: "|".to_string(),
+                                                right: Box::new(RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::Cast {
+                                                        expr: Box::new(RustExpr::Literal(
+                                                            RustLiteral::Int(1022),
+                                                        )),
+                                                        ty: RustType::Named("u64".to_string()),
+                                                    }),
+                                                    op: "<<".to_string(),
+                                                    right: Box::new(RustExpr::Literal(
+                                                        RustLiteral::Int(52),
+                                                    )),
+                                                }),
+                                            }),
+                                            op: "|".to_string(),
+                                            right: Box::new(RustExpr::Ident("__frac".to_string())),
+                                        }],
+                                    },
+                                },
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__e".to_string(),
+                                    ty: Some(RustType::Named("i32".to_string())),
+                                    value: RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__exp".to_string())),
+                                        op: "-".to_string(),
+                                        right: Box::new(RustExpr::Literal(RustLiteral::Int(1022))),
+                                    },
+                                },
+                            ],
+                            expr: Some(Box::new(RustExpr::Vec(vec![
+                                RustExpr::Ident("__mant".to_string()),
+                                RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Ident("__e".to_string())),
+                                    ty: RustType::F64,
+                                },
+                            ]))),
+                        })),
+                    })),
+                })),
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_ldexp(args: &[RustExpr]) -> Option<RustExpr> {
