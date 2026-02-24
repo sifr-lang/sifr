@@ -146,7 +146,7 @@ Root cause: giant legacy intrinsic fallback still in production.
 - [x] Delete legacy match arms from `emit_intrinsic_call`
 - [x] Enforce no >100-char direct `self.write(...)` literal bodies in intrinsic lowering
 - [x] Add guard test to prevent fallback reintroduction
-- [x] Introduce IR-typed intrinsic dispatch boundary (`lower_intrinsic_ir`) with compatibility rendering internal to registry
+- [x] Delete string-arg intrinsic lowering boundary; registry entrypoint now consumes IR expressions directly
 
 ## Slice 5: Method Fallback Deletion (Registry-Only)
 

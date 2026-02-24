@@ -44,7 +44,7 @@ impl RustEmitter {
             .iter()
             .map(|arg| crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(arg)))
             .collect::<Vec<_>>();
-        let Some(lowered) = intrinsics::lower_intrinsic_ir(func, &ir_args) else {
+        let Some(lowered) = intrinsics::lower_intrinsic(func, &ir_args) else {
             return false;
         };
 
