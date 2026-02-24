@@ -215,7 +215,6 @@ impl RustEmitter {
             HirExpr::FString { .. }
                 | HirExpr::GeneratorExpr { .. }
                 | HirExpr::Lambda { .. }
-                | HirExpr::SetComp { .. }
         ) {
             return None;
         }
