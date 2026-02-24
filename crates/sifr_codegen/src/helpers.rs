@@ -3,8 +3,6 @@ use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
-/// Check if a built-in error class name is referenced in the generated Rust code.
-/// Uses word-boundary-aware matching to avoid false positives like "`EmailError`" matching "Error".
 /// Check if a type can be auto-formatted with `{}` (implements Display).
 /// Used to determine if auto-generated Display impl is safe for a class field.
 pub(super) fn is_auto_display_type(ty: &Type) -> bool {
@@ -16,39 +14,6 @@ pub(super) fn is_auto_display_type(ty: &Type) -> bool {
         // Union types map to Option<T> or Rust enum — neither implements Display
         _ => false,
     }
-}
-
-pub(super) fn is_builtin_error_referenced(code: &str, error_name: &str) -> bool {
-    let mut start = 0;
-    while let Some(pos) = code[start..].find(error_name) {
-        let abs_pos = start + pos;
-        let before_ok = if abs_pos == 0 {
-            true
-        } else {
-            let ch = code.as_bytes()[abs_pos - 1];
-            // Must not be preceded by an alphanumeric char or underscore
-            !(ch.is_ascii_alphanumeric() || ch == b'_')
-        };
-        let after_pos = abs_pos + error_name.len();
-        let after_ok = if after_pos >= code.len() {
-            true
-        } else {
-            let ch = code.as_bytes()[after_pos];
-            // Must not be followed by an alphanumeric char or underscore
-            !(ch.is_ascii_alphanumeric() || ch == b'_')
-        };
-        if before_ok && after_ok {
-            // Skip matches inside "std::error::Error" (the Rust trait)
-            let prefix_end = abs_pos;
-            let is_std_error =
-                prefix_end >= 12 && &code[prefix_end - 12..prefix_end] == "std::error::";
-            if !is_std_error {
-                return true;
-            }
-        }
-        start = abs_pos + error_name.len();
-    }
-    false
 }
 
 /// Returns the default parameter convention for a type.

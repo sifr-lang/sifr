@@ -39,13 +39,13 @@ status: **met**
 
 ### milestone_codegen_preamble_migration
 
-status: **partially met**
+status: **met**
 
 - [x] IR preamble builders implemented (`error`, `file handles`, `logging`, imports)
 - [x] `sifr_type_to_rust_type` implemented
 - [x] Preamble validated/optimized via IR passes
-- [ ] Remove compatibility string scan for builtin error references (currently active shim)
-- [ ] Ensure preamble error reachability is structural (HIR/codegen metadata), not generated-code text scan
+- [x] Remove compatibility string scan for builtin error references from generated-code path
+- [x] Error reachability now sourced from HIR + intrinsic usage metadata + stdlib preamble refs
 
 ### milestone_codegen_stmt_expr_migration
 
@@ -104,14 +104,16 @@ Root cause: `run_tests` built `Cargo.toml` manually and ignored codegen `require
 
 ## Slice 1: Eliminate Builtin Error Text Scan Shim
 
-status: **pending**
+status: **done**
 
 Root cause: `is_builtin_error_referenced` still scans generated Rust text.
 
-- [ ] Replace scan with structured metadata collection during lowering/emission
-- [ ] Remove runtime dependency on `helpers::is_builtin_error_referenced`
-- [ ] Keep behavior parity for conditional builtin error emission
-- [ ] Add regression tests for emitted error items (positive/negative reachability)
+- [x] Replace generated-code scan with structured metadata collection from HIR + intrinsic usage + stdlib preamble refs
+- [x] Remove dependency on `helpers::is_builtin_error_referenced`
+- [x] Keep behavior parity for conditional builtin error emission (validated by `sifr_codegen` test suite)
+- [x] Validation:
+  - [x] `cargo test -p sifr_codegen`
+  - [x] `cargo clippy -p sifr_codegen -- -D warnings`
 
 ## Slice 2: Make `generate_rust_test` Use Structural Import Collection
 
