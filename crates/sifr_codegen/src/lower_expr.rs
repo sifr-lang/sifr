@@ -8,6 +8,25 @@ pub fn lower_expr_raw(raw: &str) -> Result<RustExpr, CodegenError> {
     Ok(RustExpr::RawCode(raw.to_string()))
 }
 
+pub fn try_lower_leaf_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
+    validate_leaf_expr_shape(expr)?;
+    Ok(try_lower_leaf_expr(expr))
+}
+
+fn validate_leaf_expr_shape(expr: &HirExpr) -> Result<(), CodegenError> {
+    if let HirExpr::Compare {
+        ops, comparators, ..
+    } = expr
+    {
+        if !ops.is_empty() && ops.len() != comparators.len() {
+            return Err(CodegenError::new(
+                "invalid compare expression shape: ops/comparators length mismatch",
+            ));
+        }
+    }
+    Ok(())
+}
+
 pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::IntLiteral(_)
@@ -326,12 +345,9 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             stop,
             step,
             ..
-        } => try_lower_simple_slice_expr(
-            object,
-            start.as_deref(),
-            stop.as_deref(),
-            step.as_deref(),
-        ),
+        } => {
+            try_lower_simple_slice_expr(object, start.as_deref(), stop.as_deref(), step.as_deref())
+        }
         HirExpr::DictLiteral { keys, values, ty } => {
             try_lower_simple_dict_literal_expr(keys, values, ty)
         }
@@ -420,10 +436,7 @@ fn try_lower_simple_method_call_expr(
     })
 }
 
-fn try_lower_simple_constructor_call_expr(
-    class_name: &str,
-    args: &[HirExpr],
-) -> Option<RustExpr> {
+fn try_lower_simple_constructor_call_expr(class_name: &str, args: &[HirExpr]) -> Option<RustExpr> {
     // Keep local/user class constructors on fallback path due recursive-field boxing
     // and subclass-to-base remapping handled by legacy emitter state.
     if !class_name.contains("::") {
@@ -1207,6 +1220,19 @@ mod tests {
         assert!(matches!(bool_name_expr, RustExpr::Ident(ref name) if name == "ok"));
         assert!(matches!(none_expr, RustExpr::Literal(RustLiteral::None)));
         assert!(matches!(enum_expr, RustExpr::Path(_)));
+    }
+
+    #[test]
+    fn leaf_expr_result_reports_invalid_compare_shape() {
+        let expr = HirExpr::Compare {
+            left: Box::new(HirExpr::IntLiteral(1)),
+            ops: vec!["==".to_string()],
+            comparators: vec![],
+            ty: Type::Bool,
+        };
+        let err =
+            try_lower_leaf_expr_result(&expr).expect_err("invalid compare shape should error");
+        assert!(err.message.contains("ops/comparators length mismatch"));
     }
 
     #[test]

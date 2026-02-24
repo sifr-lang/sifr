@@ -132,6 +132,7 @@ pub struct LoweringStats {
     pub stmt_lowering_errors: u64,
     pub expr_total: u64,
     pub expr_structured: u64,
+    pub expr_lowering_errors: u64,
     pub stmt_candidate_total: u64,
     pub stmt_candidate_structured: u64,
     pub expr_candidate_total: u64,
@@ -971,11 +972,19 @@ impl RustEmitter {
             self.emit_expr_fallback(expr);
             return;
         }
-        if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
-            self.lowering_stats.expr_structured += 1;
-            self.lowering_stats.expr_candidate_structured += 1;
-            self.write(&crate::render_expr(&lowered_expr));
-            return;
+        match try_lower_leaf_expr_result(expr) {
+            Ok(Some(lowered_expr)) => {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                self.write(&crate::render_expr(&lowered_expr));
+                return;
+            }
+            Ok(None) => {}
+            Err(_) => {
+                self.lowering_stats.expr_lowering_errors += 1;
+                self.emit_expr_fallback(expr);
+                return;
+            }
         }
         if matches!(
             expr,
