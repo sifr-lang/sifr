@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn ref_expr(expr: RustExpr) -> RustExpr {
@@ -13,7 +13,7 @@ fn ref_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-pub(super) fn lower_toml_parse(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_toml_parse(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }

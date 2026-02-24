@@ -95,6 +95,7 @@ status: **partially met**
 - [x] Core scalar math intrinsic lowerers (`sqrt`..`isqrt`) now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `sys`/`platform`/`hash`/`hashlib` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `test` assertion intrinsics and `uuid4` now take typed IR args in registry dispatch (no string-arg dispatcher path)
+- [x] `calendar` and `toml` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes

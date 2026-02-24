@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn int(v: i64) -> RustExpr {
@@ -179,7 +179,7 @@ fn weekday_expr(year_ident: &str, month_ident: &str, day_expr: RustExpr) -> Rust
     }
 }
 
-pub(super) fn lower_calendar_isleap(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_calendar_isleap(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -194,7 +194,7 @@ pub(super) fn lower_calendar_isleap(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_calendar_weekday(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_calendar_weekday(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
@@ -227,7 +227,7 @@ pub(super) fn lower_calendar_weekday(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_calendar_monthrange(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_calendar_monthrange(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
