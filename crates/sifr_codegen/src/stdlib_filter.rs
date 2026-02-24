@@ -386,6 +386,20 @@ impl<'a> ItemRefCollector<'a> {
             self.refs.insert(ident.to_string());
         }
     }
+
+    fn collect_macro_token_refs(&mut self, macro_tokens: &str) {
+        let tokens = tokenize_rust_like(macro_tokens);
+        for token in tokens {
+            let ident = match token {
+                RustToken::Ident(ident) => ident,
+                RustToken::Sym(_) => continue,
+            };
+            if self.locals.contains(&ident) {
+                continue;
+            }
+            self.try_insert_ref(&ident);
+        }
+    }
 }
 
 impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
@@ -440,6 +454,7 @@ impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
         if let Some(first) = node.path.segments.first() {
             self.try_insert_ref(&first.ident.to_string());
         }
+        self.collect_macro_token_refs(&node.tokens.to_string());
         visit::visit_macro(self, node);
     }
 }
@@ -1002,6 +1017,32 @@ pub fn helper() -> i64 {
         let filtered = filter_stdlib_ir_to_needed(code, &imported);
         assert!(filtered.contains("pub fn root()"));
         assert!(!filtered.contains("pub fn helper()"));
+    }
+
+    #[test]
+    fn filter_tracks_dependencies_used_in_macro_arguments() {
+        let code = r#"
+fn root() {
+    helper();
+}
+
+fn helper() -> String {
+    format!("v={}", leaf())
+}
+
+fn leaf() -> String {
+    "ok".to_string()
+}
+
+fn unused() {}
+"#;
+        let imported = HashSet::from(["root".to_string()]);
+        let filtered = filter_stdlib_ir_to_needed(code, &imported);
+
+        assert!(filtered.contains("fn root()"));
+        assert!(filtered.contains("fn helper()"));
+        assert!(filtered.contains("fn leaf()"));
+        assert!(!filtered.contains("fn unused()"));
     }
 
     #[test]
