@@ -147,6 +147,7 @@ Root cause: giant legacy intrinsic fallback still in production.
 - [x] Enforce no >100-char direct `self.write(...)` literal bodies in intrinsic lowering
 - [x] Add guard test to prevent fallback reintroduction
 - [x] Delete string-arg intrinsic lowering boundary; registry entrypoint now consumes IR expressions directly
+- [x] Intrinsic registry caller now builds typed IR args (not blanket `RawCode` wrappers)
 
 ## Slice 5: Method Fallback Deletion (Registry-Only)
 

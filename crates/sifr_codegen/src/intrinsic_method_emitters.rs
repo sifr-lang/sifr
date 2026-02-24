@@ -42,7 +42,7 @@ impl RustEmitter {
     pub(crate) fn try_emit_intrinsic_via_registry(&mut self, func: &str, args: &[HirExpr]) -> bool {
         let ir_args = args
             .iter()
-            .map(|arg| crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(arg)))
+            .map(|arg| self.lower_registry_expr_with_fallback(arg))
             .collect::<Vec<_>>();
         let Some(lowered) = intrinsics::lower_intrinsic(func, &ir_args) else {
             return false;
