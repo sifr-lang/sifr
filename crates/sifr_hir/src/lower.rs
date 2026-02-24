@@ -353,7 +353,7 @@ fn lower_module_impl(
                         if let Expr::Name(func_name) = call.func.as_ref() {
                             if func_name.id.as_str() == "TypeVar" {
                                 // Register this name as a type variable
-                                ctx.type_vars.insert(name.id.to_string());
+                                ctx.type_vars.insert(name.id.clone());
                             }
                         }
                     }
@@ -376,37 +376,31 @@ fn lower_module_impl(
     resolve_imports_early(stmts, externals, &mut ctx);
 
     for stmt in stmts {
-        match stmt {
-            Stmt::TypeAlias(type_alias) => {
-                let name = match type_alias.name.as_ref() {
-                    Expr::Name(n) => n.id.to_string(),
-                    _ => {
-                        ctx.error("type alias name must be a simple name".to_string());
-                        continue;
+        if let Stmt::TypeAlias(type_alias) = stmt {
+            let name = if let Expr::Name(n) = type_alias.name.as_ref() { n.id.clone() } else {
+                ctx.error("type alias name must be a simple name".to_string());
+                continue;
+            };
+            let mut alias_type_params = Vec::new();
+            if let Some(ref tps) = type_alias.type_params {
+                for tp in tps.iter() {
+                    if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
+                        let tp_name = tv.name.to_string();
+                        ctx.type_vars.insert(tp_name.clone());
+                        alias_type_params.push(tp_name);
                     }
-                };
-                let mut alias_type_params = Vec::new();
-                if let Some(ref tps) = type_alias.type_params {
-                    for tp in tps.iter() {
-                        if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
-                            let tp_name = tv.name.to_string();
-                            ctx.type_vars.insert(tp_name.clone());
-                            alias_type_params.push(tp_name);
-                        }
-                    }
-                }
-                let ty = resolve_annotation_expr(&type_alias.value, &mut ctx);
-                if alias_type_params.is_empty() {
-                    ctx.scope.define_type_alias(name, ty);
-                } else {
-                    ctx.scope
-                        .define_generic_type_alias(name, alias_type_params.clone(), ty);
-                }
-                for tp_name in &alias_type_params {
-                    ctx.type_vars.remove(tp_name.as_str());
                 }
             }
-            _ => {}
+            let ty = resolve_annotation_expr(&type_alias.value, &mut ctx);
+            if alias_type_params.is_empty() {
+                ctx.scope.define_type_alias(name, ty);
+            } else {
+                ctx.scope
+                    .define_generic_type_alias(name, alias_type_params.clone(), ty);
+            }
+            for tp_name in &alias_type_params {
+                ctx.type_vars.remove(tp_name.as_str());
+            }
         }
     }
     for stmt in stmts {
@@ -421,67 +415,66 @@ fn lower_module_impl(
                         pep695_type_vars.push(name.clone());
                         if let Some(ref bound) = tv.bound {
                             let bound_name = match bound.as_ref() {
-                                Expr::Name(n) => n.id.to_string(),
+                                Expr::Name(n) => n.id.clone(),
                                 _ => continue,
                             };
                             ctx.type_param_bounds
                                 .entry(func.name.to_string())
-                                .or_insert_with(HashMap::new)
+                                .or_default()
                                 .entry(name)
-                                .or_insert_with(Vec::new)
+                                .or_default()
                                 .push(bound_name);
                         }
                     }
                 }
             }
 
-            if let Some(ft) = extract_function_type(func, &mut ctx) {
-                // Track which type variables this function uses (makes it generic)
-                let mut func_type_vars = Vec::new();
-                for (_, ty, _) in &ft.params {
-                    collect_type_vars(ty, &mut func_type_vars);
+            let ft = extract_function_type(func, &mut ctx);
+            // Track which type variables this function uses (makes it generic)
+            let mut func_type_vars = Vec::new();
+            for (_, ty, _) in &ft.params {
+                collect_type_vars(ty, &mut func_type_vars);
+            }
+            collect_type_vars(&ft.return_type, &mut func_type_vars);
+            // Also include PEP 695 type params
+            for tv in &pep695_type_vars {
+                if !func_type_vars.contains(tv) {
+                    func_type_vars.push(tv.clone());
                 }
-                collect_type_vars(&ft.return_type, &mut func_type_vars);
-                // Also include PEP 695 type params
-                for tv in &pep695_type_vars {
-                    if !func_type_vars.contains(tv) {
-                        func_type_vars.push(tv.clone());
-                    }
-                }
-                func_type_vars.sort();
-                func_type_vars.dedup();
-                if !func_type_vars.is_empty() {
-                    ctx.generic_functions
-                        .insert(func.name.to_string(), func_type_vars);
-                }
+            }
+            func_type_vars.sort();
+            func_type_vars.dedup();
+            if !func_type_vars.is_empty() {
+                ctx.generic_functions
+                    .insert(func.name.to_string(), func_type_vars);
+            }
 
-                // Collect default values for parameters
-                let mut defaults = Vec::new();
-                for (i, param) in func.parameters.args.iter().enumerate() {
-                    if let Some(ref default_expr) = param.default {
-                        if let Some(hir_default) = lower_expr_simple(default_expr) {
-                            defaults.push((i, hir_default));
-                        }
+            // Collect default values for parameters
+            let mut defaults = Vec::new();
+            for (i, param) in func.parameters.args.iter().enumerate() {
+                if let Some(ref default_expr) = param.default {
+                    if let Some(hir_default) = lower_expr_simple(default_expr) {
+                        defaults.push((i, hir_default));
                     }
                 }
-                // Also collect defaults for keyword-only args
-                let regular_count = func.parameters.args.len();
-                for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
-                    if let Some(ref default_expr) = param.default {
-                        if let Some(hir_default) = lower_expr_simple(default_expr) {
-                            defaults.push((regular_count + i, hir_default));
-                        }
+            }
+            // Also collect defaults for keyword-only args
+            let regular_count = func.parameters.args.len();
+            for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
+                if let Some(ref default_expr) = param.default {
+                    if let Some(hir_default) = lower_expr_simple(default_expr) {
+                        defaults.push((regular_count + i, hir_default));
                     }
                 }
-                if !defaults.is_empty() {
-                    ctx.function_defaults
-                        .insert(func.name.to_string(), defaults);
-                }
-                ctx.functions.insert(func.name.to_string(), ft);
-                // Track vararg functions
-                if func.parameters.vararg.is_some() {
-                    ctx.vararg_functions.insert(func.name.to_string());
-                }
+            }
+            if !defaults.is_empty() {
+                ctx.function_defaults
+                    .insert(func.name.to_string(), defaults);
+            }
+            ctx.functions.insert(func.name.to_string(), ft);
+            // Track vararg functions
+            if func.parameters.vararg.is_some() {
+                ctx.vararg_functions.insert(func.name.to_string());
             }
         }
     }
@@ -557,10 +550,9 @@ fn lower_module_impl(
                             aliases,
                         });
                         continue;
-                    } else {
-                        ctx.error(format!("unknown intrinsic module '{module_name}'"));
-                        continue;
                     }
+                    ctx.error(format!("unknown intrinsic module '{module_name}'"));
+                    continue;
                 }
 
                 // Check if this is a stdlib import (sifr.*)
@@ -666,11 +658,10 @@ fn lower_module_impl(
                             aliases,
                         });
                         continue;
-                    } else {
-                        // Module doesn't exist in stdlib — emit clear error at the import site
-                        ctx.error(format!("unknown stdlib module '{module_name}'"));
-                        continue;
                     }
+                    // Module doesn't exist in stdlib — emit clear error at the import site
+                    ctx.error(format!("unknown stdlib module '{module_name}'"));
+                    continue;
                 }
 
                 // Check if the local module exists in externals before resolving
@@ -755,7 +746,7 @@ fn lower_module_impl(
     for stmt in stmts {
         if let Stmt::AnnAssign(ann) = stmt {
             if let Expr::Name(name) = ann.target.as_ref() {
-                let var_name = name.id.to_string();
+                let var_name = name.id.clone();
                 let ty = resolve_annotation_expr(&ann.annotation, &mut ctx);
                 if let Some(ref value_expr) = ann.value {
                     if let Some(hir_value) = lower_expr_simple(value_expr) {
@@ -769,7 +760,7 @@ fn lower_module_impl(
         if let Stmt::Assign(assign) = stmt {
             if assign.targets.len() == 1 {
                 if let Expr::Name(name) = &assign.targets[0] {
-                    let var_name = name.id.to_string();
+                    let var_name = name.id.clone();
                     // Skip TypeVar declarations (already handled)
                     if ctx.type_vars.contains(&var_name) {
                         continue;
@@ -892,9 +883,7 @@ fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut Low
                     for name in &names {
                         let local = local_name_for(name);
                         if let Some(ft) = module_fns.get(name) {
-                            if !ctx.functions.contains_key(&local) {
-                                ctx.functions.insert(local, ft.clone());
-                            }
+                            ctx.functions.entry(local).or_insert_with(|| ft.clone());
                         }
                     }
                 }
@@ -1090,7 +1079,7 @@ fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Option<i64>)>
             Stmt::Assign(assign) => {
                 if assign.targets.len() == 1 {
                     if let Expr::Name(name) = &assign.targets[0] {
-                        let variant_name = name.id.to_string();
+                        let variant_name = name.id.clone();
                         // Check if it has an integer value
                         let value = if let Expr::NumberLiteral(num) = assign.value.as_ref() {
                             if let sifr_python_ast::Number::Int(i) = &num.value {
@@ -1110,7 +1099,7 @@ fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Option<i64>)>
             Stmt::AnnAssign(ann) => {
                 // `RED: int = 1` style
                 if let Expr::Name(name) = ann.target.as_ref() {
-                    let variant_name = name.id.to_string();
+                    let variant_name = name.id.clone();
                     let value = if let Some(val_expr) = &ann.value {
                         if let Expr::NumberLiteral(num) = val_expr.as_ref() {
                             if let sifr_python_ast::Number::Int(i) = &num.value {
@@ -1137,7 +1126,7 @@ fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<(String, Option<i64>)>
 
 /// Check if a function definition has a specific decorator.
 fn has_decorator(func: &StmtFunctionDef, decorator_name: &str) -> bool {
-    for decorator in func.decorator_list.iter() {
+    for decorator in &func.decorator_list {
         if let Expr::Name(n) = &decorator.expression {
             if n.id.as_str() == decorator_name {
                 return true;
@@ -1168,10 +1157,10 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                     if let Expr::Name(n) = bound.as_ref() {
                         ctx.type_param_bounds
                             .entry(class_name.clone())
-                            .or_insert_with(HashMap::new)
+                            .or_default()
                             .entry(tp_name)
-                            .or_insert_with(Vec::new)
-                            .push(n.id.to_string());
+                            .or_default()
+                            .push(n.id.clone());
                     }
                 }
             }
@@ -1209,8 +1198,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 if let Some(existing) = seen_values.get(&val) {
                     if vval.is_some() {
                         ctx.error(format!(
-                            "enum '{}' has duplicate value {}: variants '{}' and '{}'",
-                            class_name, val, existing, vname
+                            "enum '{class_name}' has duplicate value {val}: variants '{existing}' and '{vname}'"
                         ));
                     }
                 } else if vval.is_some() {
@@ -1345,7 +1333,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 if let Expr::Name(name) = ann.target.as_ref() {
                     let ty = resolve_annotation_expr(&ann.annotation, ctx);
                     let field_idx = fields.len();
-                    fields.push((name.id.to_string(), ty));
+                    fields.push((name.id.clone(), ty));
                     // Collect default value if present (for auto-init default params)
                     if let Some(ref default_expr) = ann.value {
                         if let Some(hir_default) = lower_expr_simple(default_expr) {
@@ -1394,7 +1382,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                     // For @staticmethod, don't skip any params
                     // For @classmethod and regular methods, skip `self`/`cls`
                     let is_static = has_decorator(func, "staticmethod");
-                    let skip_count = if is_static { 0 } else { 1 };
+                    let skip_count = usize::from(!is_static);
                     let mut params = Vec::new();
                     for param in func.parameters.args.iter().skip(skip_count) {
                         let param_name = param.parameter.name.to_string();
@@ -1434,7 +1422,7 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
 
     // Update the constructor function to return the class type
     if let Some(ft) = ctx.functions.get_mut(&class_name) {
-        ft.return_type = Box::new(class_ty.clone());
+        *ft.return_type = class_ty.clone();
     } else {
         // No __init__ defined -- create a default constructor from fields
 
@@ -1695,7 +1683,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         });
     }
 
-    let (all_fields, _method_types) = match &class_ty {
+    let (all_fields, method_types) = match &class_ty {
         Type::Class {
             fields, methods, ..
         } => (fields.clone(), methods.clone()),
@@ -1706,19 +1694,15 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
 
     // Separate own fields from inherited fields
     // For struct codegen, we only want the child's own fields (parent is embedded)
-    let parent_field_names: Vec<String> = if let Some(ref parent_name) = parent_class_name {
-        if let Some(parent_ty) = ctx.class_types.get(parent_name) {
-            if let Type::Class { fields: pf, .. } = parent_ty {
-                pf.iter().map(|(n, _)| n.clone()).collect()
-            } else {
-                vec![]
-            }
+    let parent_field_names: Vec<String> =
+        if let Some(Type::Class { fields: pf, .. }) = parent_class_name
+            .as_ref()
+            .and_then(|parent_name| ctx.class_types.get(parent_name))
+        {
+            pf.iter().map(|(n, _)| n.clone()).collect()
         } else {
             vec![]
-        }
-    } else {
-        vec![]
-    };
+        };
 
     let own_fields: Vec<(String, Type)> = all_fields
         .iter()
@@ -1749,7 +1733,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
 
             // Set current class context for `self` resolution
             ctx.current_class = Some(class_name.clone());
-            ctx.current_parent_class = parent_class_name.clone();
+            ctx.current_parent_class.clone_from(&parent_class_name);
 
             // Push a new scope for the method
             ctx.scope.push();
@@ -1757,7 +1741,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             // For static methods, don't skip any parameter (no self/cls)
             // For class methods, skip `cls` parameter
             // For regular methods, skip `self` parameter
-            let skip_count = if is_staticmethod { 0 } else { 1 }; // classmethod has cls, regular has self
+            let skip_count = usize::from(!is_staticmethod); // classmethod has cls, regular has self
 
             // Define `self` in scope (for regular methods)
             if !is_staticmethod && !is_classmethod {
@@ -1816,7 +1800,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 .iter()
                 .filter_map(|d| {
                     if let Expr::Name(n) = &d.expression {
-                        let name = n.id.to_string();
+                        let name = n.id.clone();
                         if name != "classmethod" && name != "staticmethod" {
                             Some(name)
                         } else {
@@ -1864,7 +1848,7 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             // Check if class has all required methods
             let satisfies = proto_methods
                 .iter()
-                .all(|(pname, _pft)| _method_types.iter().any(|(mname, _)| mname == pname));
+                .all(|(pname, _pft)| method_types.iter().any(|(mname, _)| mname == pname));
             if satisfies {
                 implements_protocols.push(proto_name.clone());
             }
@@ -1922,6 +1906,28 @@ fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
         .any(|s| matches!(s, HirStmt::FieldAssign { .. }))
 }
 
+fn collect_literal_coverage(
+    pattern: &HirPattern,
+    covered_literal_strs: &mut std::collections::HashSet<String>,
+    covered_literal_ints: &mut std::collections::HashSet<i64>,
+    covered_literal_bools: &mut std::collections::HashSet<bool>,
+) {
+    if let HirPattern::Literal { value } = pattern {
+        match value {
+            HirExpr::StringLiteral(s) => {
+                covered_literal_strs.insert(s.clone());
+            }
+            HirExpr::IntLiteral(n) => {
+                covered_literal_ints.insert(*n);
+            }
+            HirExpr::BoolLiteral(b) => {
+                covered_literal_bools.insert(*b);
+            }
+            _ => {}
+        }
+    }
+}
+
 /// Lower a simple expression (literal values only) without requiring a full `LowerCtx`.
 /// Used for collecting default parameter values in the first pass.
 fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
@@ -1929,7 +1935,7 @@ fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
         Expr::NumberLiteral(num) => match &num.value {
             Number::Int(i) => Some(HirExpr::IntLiteral(i.as_i64()?)),
             Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
-            _ => None,
+            Number::Complex { .. } => None,
         },
         Expr::StringLiteral(s) => Some(HirExpr::StringLiteral(s.value.to_str().to_string())),
         Expr::BooleanLiteral(b) => Some(HirExpr::BoolLiteral(b.value)),
@@ -2150,7 +2156,7 @@ fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConventi
     }
 }
 
-fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<FunctionType> {
+fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> FunctionType {
     let mut params: Vec<(String, Type, ParamConvention)> = Vec::new();
 
     for param in &func.parameters.args {
@@ -2207,10 +2213,10 @@ fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<F
         Type::Any // marker for "needs inference" -- will be inferred from body
     };
 
-    Some(FunctionType {
+    FunctionType {
         params,
         return_type: Box::new(return_type),
-    })
+    }
 }
 
 fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
@@ -2218,7 +2224,7 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
         Expr::Name(name) => {
             // Check type variables first (e.g., T from TypeVar)
             if ctx.type_vars.contains(name.id.as_str()) {
-                return Type::TypeVar(name.id.to_string());
+                return Type::TypeVar(name.id.clone());
             }
             // Check type aliases first
             if let Some(alias_ty) = ctx.scope.lookup_type_alias(&name.id) {
@@ -2243,30 +2249,24 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
         // Literal string in type position: "GET" | "POST"
         Expr::StringLiteral(s) => Type::LiteralStr(s.value.to_str().to_string()),
         // Literal int in type position: 200 | 404
-        Expr::NumberLiteral(num) => match &num.value {
-            Number::Int(i) => {
-                if let Some(val) = i.as_i64() {
-                    Type::LiteralInt(val)
-                } else {
-                    ctx.error("integer literal too large for type annotation".to_string());
-                    Type::Any
-                }
-            }
-            _ => {
-                ctx.error("only integer literals are supported in type annotations".to_string());
+        Expr::NumberLiteral(num) => if let Number::Int(i) = &num.value {
+            if let Some(val) = i.as_i64() {
+                Type::LiteralInt(val)
+            } else {
+                ctx.error("integer literal too large for type annotation".to_string());
                 Type::Any
             }
+        } else {
+            ctx.error("only integer literals are supported in type annotations".to_string());
+            Type::Any
         },
         // Literal bool in type position: True | False
         Expr::BooleanLiteral(b) => Type::LiteralBool(b.value),
         Expr::Subscript(sub) => {
             // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
-            let base_name = match sub.value.as_ref() {
-                Expr::Name(n) => n.id.to_string(),
-                _ => {
-                    ctx.error("unsupported type annotation base".to_string());
-                    return Type::Any;
-                }
+            let base_name = if let Expr::Name(n) = sub.value.as_ref() { n.id.clone() } else {
+                ctx.error("unsupported type annotation base".to_string());
+                return Type::Any;
             };
             match base_name.as_str() {
                 "list" => {
@@ -2279,72 +2279,63 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                 }
                 "dict" => {
                     // dict[K, V] -- the slice is a Tuple expression
-                    match sub.slice.as_ref() {
-                        Expr::Tuple(tuple) => {
-                            if tuple.elts.len() != 2 {
-                                ctx.error(
-                                    "dict type annotation requires exactly 2 type parameters"
-                                        .to_string(),
-                                );
-                                return Type::Any;
-                            }
-                            let key_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
-                            let val_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
-                            Type::Dict(Box::new(key_ty), Box::new(val_ty))
+                    if let Expr::Tuple(tuple) = sub.slice.as_ref() {
+                        if tuple.elts.len() != 2 {
+                            ctx.error(
+                                "dict type annotation requires exactly 2 type parameters"
+                                    .to_string(),
+                            );
+                            return Type::Any;
                         }
-                        _ => {
-                            ctx.error("dict type annotation requires [K, V] syntax".to_string());
-                            Type::Any
-                        }
+                        let key_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
+                        let val_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
+                        Type::Dict(Box::new(key_ty), Box::new(val_ty))
+                    } else {
+                        ctx.error("dict type annotation requires [K, V] syntax".to_string());
+                        Type::Any
                     }
                 }
                 "tuple" => {
                     // tuple[A, B, ...] -- the slice is a Tuple expression
-                    match sub.slice.as_ref() {
-                        Expr::Tuple(tuple) => {
-                            let elem_types: Vec<Type> = tuple
-                                .elts
-                                .iter()
-                                .map(|e| resolve_annotation_expr(e, ctx))
-                                .collect();
-                            Type::Tuple(elem_types)
-                        }
-                        _ => {
-                            // Single-element tuple: tuple[int]
-                            let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
-                            Type::Tuple(vec![elem_ty])
-                        }
+                    if let Expr::Tuple(tuple) = sub.slice.as_ref() {
+                        let elem_types: Vec<Type> = tuple
+                            .elts
+                            .iter()
+                            .map(|e| resolve_annotation_expr(e, ctx))
+                            .collect();
+                        Type::Tuple(elem_types)
+                    } else {
+                        // Single-element tuple: tuple[int]
+                        let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                        Type::Tuple(vec![elem_ty])
                     }
                 }
                 "Result" => {
                     // Result[T, E] -- the slice is a Tuple expression
-                    match sub.slice.as_ref() {
-                        Expr::Tuple(tuple) => {
-                            if tuple.elts.len() != 2 {
-                                ctx.error(
-                                    "Result type annotation requires exactly 2 type parameters"
-                                        .to_string(),
-                                );
-                                return Type::Any;
-                            }
-                            let ok_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
-                            let err_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
-                            // Enforce: E must be a class extending Error
-                            if !is_valid_error_type(&err_ty, ctx) {
-                                let err_name = format_type_name(&err_ty);
-                                ctx.error(format!(
-                                    "`{}` is not a valid error type in Result — use a class extending Error, e.g. `Result[{}, ValueError]`",
-                                    err_name,
-                                    format_type_name(&ok_ty),
-                                ));
-                                return Type::Any;
-                            }
-                            Type::Result(Box::new(ok_ty), Box::new(err_ty))
+                    if let Expr::Tuple(tuple) = sub.slice.as_ref() {
+                        if tuple.elts.len() != 2 {
+                            ctx.error(
+                                "Result type annotation requires exactly 2 type parameters"
+                                    .to_string(),
+                            );
+                            return Type::Any;
                         }
-                        _ => {
-                            ctx.error("Result type annotation requires [T, E] syntax".to_string());
-                            Type::Any
+                        let ok_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
+                        let err_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
+                        // Enforce: E must be a class extending Error
+                        if !is_valid_error_type(&err_ty, ctx) {
+                            let err_name = format_type_name(&err_ty);
+                            ctx.error(format!(
+                                "`{}` is not a valid error type in Result — use a class extending Error, e.g. `Result[{}, ValueError]`",
+                                err_name,
+                                format_type_name(&ok_ty),
+                            ));
+                            return Type::Any;
                         }
+                        Type::Result(Box::new(ok_ty), Box::new(err_ty))
+                    } else {
+                        ctx.error("Result type annotation requires [T, E] syntax".to_string());
+                        Type::Any
                     }
                 }
                 "Option" => {
@@ -2354,52 +2345,46 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                 }
                 "TypeGuard" => {
                     // TypeGuard[T] -- type predicate return type
-                    let inner_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    
                     // Store as the inner type; the function signature handler
                     // will recognize TypeGuard and mark it as a type predicate
-                    inner_ty
+                    resolve_annotation_expr(&sub.slice, ctx)
                 }
                 "Callable" => {
                     // Callable[[param_types], return_type]
                     // The slice is a Tuple of [List[param_types], return_type]
-                    match sub.slice.as_ref() {
-                        Expr::Tuple(tuple) => {
-                            if tuple.elts.len() != 2 {
-                                ctx.error("Callable type requires exactly 2 type parameters: [[param_types], return_type]".to_string());
-                                return Type::Any;
-                            }
-                            // First element should be a list of parameter types
-                            let param_types = match &tuple.elts[0] {
-                                Expr::List(list) => list
-                                    .elts
-                                    .iter()
-                                    .map(|e| resolve_annotation_expr(e, ctx))
-                                    .collect::<Vec<_>>(),
-                                _ => {
-                                    ctx.error("Callable parameter types must be a list: Callable[[int, str], bool]".to_string());
-                                    return Type::Any;
+                    if let Expr::Tuple(tuple) = sub.slice.as_ref() {
+                        if tuple.elts.len() != 2 {
+                            ctx.error("Callable type requires exactly 2 type parameters: [[param_types], return_type]".to_string());
+                            return Type::Any;
+                        }
+                        // First element should be a list of parameter types
+                        let param_types = if let Expr::List(list) = &tuple.elts[0] { list
+                        .elts
+                        .iter()
+                        .map(|e| resolve_annotation_expr(e, ctx))
+                        .collect::<Vec<_>>() } else {
+                            ctx.error("Callable parameter types must be a list: Callable[[int, str], bool]".to_string());
+                            return Type::Any;
+                        };
+                        let return_type = resolve_annotation_expr(&tuple.elts[1], ctx);
+                        let conventions = param_types
+                            .iter()
+                            .map(|ty| {
+                                if ty.ownership() == OwnershipKind::Copy {
+                                    ParamConvention::Own
+                                } else {
+                                    ParamConvention::Borrow
                                 }
-                            };
-                            let return_type = resolve_annotation_expr(&tuple.elts[1], ctx);
-                            let conventions = param_types
-                                .iter()
-                                .map(|ty| {
-                                    if ty.ownership() == OwnershipKind::Copy {
-                                        ParamConvention::Own
-                                    } else {
-                                        ParamConvention::Borrow
-                                    }
-                                })
-                                .collect();
-                            Type::Callable(param_types, conventions, Box::new(return_type))
-                        }
-                        _ => {
-                            ctx.error(
-                                "Callable type requires [[param_types], return_type] syntax"
-                                    .to_string(),
-                            );
-                            Type::Any
-                        }
+                            })
+                            .collect();
+                        Type::Callable(param_types, conventions, Box::new(return_type))
+                    } else {
+                        ctx.error(
+                            "Callable type requires [[param_types], return_type] syntax"
+                                .to_string(),
+                        );
+                        Type::Any
                     }
                 }
                 _ => {
@@ -2531,7 +2516,7 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
 }
 
 fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunction> {
-    let ft = ctx.functions.get(&func.name.to_string())?.clone();
+    let ft = ctx.functions.get::<str>(func.name.as_ref())?.clone();
 
     ctx.scope.push();
 
@@ -2584,11 +2569,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
 
     // Keyword-only args (after * separator)
     let regular_count = func.parameters.args.len()
-        + if func.parameters.vararg.is_some() {
-            1
-        } else {
-            0
-        };
+        + usize::from(func.parameters.vararg.is_some());
     for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
         let name = param_def.parameter.name.to_string();
         let ty = ft
@@ -2642,7 +2623,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
         } else {
             // Multiple return types -> union
             let mut members: Vec<Type> = return_types.into_iter().collect();
-            members.sort_by(|a, b| a.display_name().cmp(&b.display_name()));
+            members.sort_by_key(sifr_type_system::Type::display_name);
             members.dedup();
             if members.len() == 1 {
                 members.into_iter().next().unwrap()
@@ -2660,7 +2641,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
         .iter()
         .filter_map(|d| {
             if let Expr::Name(n) = &d.expression {
-                let name = n.id.to_string();
+                let name = n.id.clone();
                 if name != "classmethod" && name != "staticmethod" {
                     Some(name)
                 } else {
@@ -2675,7 +2656,7 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     // Collect type parameters for generic functions
     let type_params = ctx
         .generic_functions
-        .get(&func.name.to_string())
+        .get::<str>(func.name.as_ref())
         .cloned()
         .unwrap_or_default();
 
@@ -2720,10 +2701,9 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 if let Some(ref val) = yield_expr.value {
                     let value = lower_expr(val, ctx)?;
                     return Some(HirStmt::Yield { value });
-                } else {
-                    ctx.error("yield without a value is not supported".to_string());
-                    return None;
                 }
+                ctx.error("yield without a value is not supported".to_string());
+                return None;
             }
             let expr = lower_expr(&expr_stmt.value, ctx)?;
             // #[must_use] enforcement: Result values must not be silently discarded
@@ -2759,19 +2739,16 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 ctx.error("del with multiple targets not supported".to_string());
                 return None;
             }
-            match &del_stmt.targets[0] {
-                Expr::Subscript(sub) => {
-                    let object = lower_expr(&sub.value, ctx)?;
-                    let index = lower_expr(&sub.slice, ctx)?;
-                    Some(HirStmt::Delete { object, index })
-                }
-                _ => {
-                    ctx.error(
-                        "del is only supported for collection items (del d[key], del a[i])"
-                            .to_string(),
-                    );
-                    None
-                }
+            if let Expr::Subscript(sub) = &del_stmt.targets[0] {
+                let object = lower_expr(&sub.value, ctx)?;
+                let index = lower_expr(&sub.slice, ctx)?;
+                Some(HirStmt::Delete { object, index })
+            } else {
+                ctx.error(
+                    "del is only supported for collection items (del d[key], del a[i])"
+                        .to_string(),
+                );
+                None
             }
         }
         Stmt::Assert(assert_stmt) => {
@@ -2816,44 +2793,34 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             for item in &with_stmt.items {
                 let value = lower_expr(&item.context_expr, ctx)?;
                 let var_name = if let Some(ref vars) = item.optional_vars {
-                    match vars.as_ref() {
-                        Expr::Name(n) => n.id.to_string(),
-                        _ => {
-                            ctx.error("with target must be a simple name".to_string());
-                            return None;
-                        }
+                    if let Expr::Name(n) = vars.as_ref() { n.id.clone() } else {
+                        ctx.error("with target must be a simple name".to_string());
+                        return None;
                     }
                 } else {
                     format!("_with_val_{}", items.len())
                 };
                 let val_ty = value.ty().clone();
                 // Check if the type implements the ContextManager protocol (__enter__/__exit__)
-                let has_context_manager = match &val_ty {
-                    Type::Class { methods, .. } => {
-                        let has_enter = methods.iter().any(|(name, _)| name == "__enter__");
-                        let has_exit = methods.iter().any(|(name, _)| name == "__exit__");
-                        if has_enter && has_exit {
-                            true
-                        } else if has_enter || has_exit {
-                            ctx.error(format!(
-                                "type used in 'with' statement must implement both __enter__ and __exit__ methods"
-                            ));
-                            false
-                        } else {
-                            ctx.error(format!(
-                                "type '{}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
-                                match &val_ty { Type::Class { name, .. } => name.clone(), _ => "unknown".to_string() }
-                            ));
-                            false
-                        }
-                    }
-                    _ => {
-                        // Non-class types don't have methods — can't be context managers
+                let has_context_manager = if let Type::Class { methods, .. } = &val_ty {
+                    let has_enter = methods.iter().any(|(name, _)| name == "__enter__");
+                    let has_exit = methods.iter().any(|(name, _)| name == "__exit__");
+                    if has_enter && has_exit {
+                        true
+                    } else if has_enter || has_exit {
+                        ctx.error("type used in 'with' statement must implement both __enter__ and __exit__ methods".to_string());
+                        false
+                    } else {
                         ctx.error(format!(
-                            "type used in 'with' statement must implement the ContextManager protocol (__enter__/__exit__)"
+                            "type '{}' does not implement the ContextManager protocol (missing __enter__ and __exit__ methods)",
+                            match &val_ty { Type::Class { name, .. } => name.clone(), _ => "unknown".to_string() }
                         ));
                         false
                     }
+                } else {
+                    // Non-class types don't have methods — can't be context managers
+                    ctx.error("type used in 'with' statement must implement the ContextManager protocol (__enter__/__exit__)".to_string());
+                    false
                 };
                 // If the type has __enter__, the variable is bound to __enter__()'s return type
                 // We resolve the actual class type from ctx.class_types to get full fields/methods
@@ -2903,14 +2870,14 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 let ExceptHandler::ExceptHandler(h) = handler;
                 let error_type = if let Some(ref type_expr) = h.type_ {
                     if let Expr::Name(n) = type_expr.as_ref() {
-                        Some(n.id.to_string())
+                        Some(n.id.clone())
                     } else {
                         None
                     }
                 } else {
                     None
                 };
-                let name = h.name.as_ref().map(|n| n.to_string());
+                let name = h.name.as_ref().map(std::string::ToString::to_string);
 
                 // Check if this is a catch-all (except Error) or a specific handler
                 if let Some(ref et) = error_type {
@@ -3034,7 +3001,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
             // Extract the function type (params + return type)
-            let ft = extract_function_type(func, ctx)?;
+            let ft = extract_function_type(func, ctx);
 
             // Register the nested function in the current scope so it can be called
             ctx.functions.insert(func.name.to_string(), ft.clone());
@@ -3083,11 +3050,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
 
             // Keyword-only args
             let regular_count = func.parameters.args.len()
-                + if func.parameters.vararg.is_some() {
-                    1
-                } else {
-                    0
-                };
+                + usize::from(func.parameters.vararg.is_some());
             for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
                 let name = param_def.parameter.name.to_string();
                 let ty = ft
@@ -3118,7 +3081,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                     return_types.into_iter().next().unwrap()
                 } else {
                     let mut members: Vec<Type> = return_types.into_iter().collect();
-                    members.sort_by(|a, b| a.display_name().cmp(&b.display_name()));
+                    members.sort_by_key(sifr_type_system::Type::display_name);
                     members.dedup();
                     if members.len() == 1 {
                         members.into_iter().next().unwrap()
@@ -3136,7 +3099,7 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 .iter()
                 .filter_map(|d| {
                     if let Expr::Name(n) = &d.expression {
-                        let name = n.id.to_string();
+                        let name = n.id.clone();
                         if name != "classmethod" && name != "staticmethod" {
                             Some(name)
                         } else {
@@ -3232,28 +3195,6 @@ fn lower_match(
                 std::collections::HashSet::new();
             let mut covered_literal_bools: std::collections::HashSet<bool> =
                 std::collections::HashSet::new();
-
-            fn collect_literal_coverage(
-                pattern: &HirPattern,
-                covered_literal_strs: &mut std::collections::HashSet<String>,
-                covered_literal_ints: &mut std::collections::HashSet<i64>,
-                covered_literal_bools: &mut std::collections::HashSet<bool>,
-            ) {
-                if let HirPattern::Literal { value } = pattern {
-                    match value {
-                        HirExpr::StringLiteral(s) => {
-                            covered_literal_strs.insert(s.clone());
-                        }
-                        HirExpr::IntLiteral(n) => {
-                            covered_literal_ints.insert(*n);
-                        }
-                        HirExpr::BoolLiteral(b) => {
-                            covered_literal_bools.insert(*b);
-                        }
-                        _ => {}
-                    }
-                }
-            }
 
             for arm in &arms {
                 match &arm.pattern {
@@ -3441,13 +3382,12 @@ fn lower_pattern(pattern: &Pattern, subject_ty: &Type, ctx: &mut LowerCtx) -> Op
                         name: var_name,
                         ty: narrowed_ty,
                     });
-                } else {
-                    // `case x:` — capture pattern
-                    return Some(HirPattern::Capture {
-                        name: var_name,
-                        ty: subject_ty.clone(),
-                    });
                 }
+                // `case x:` — capture pattern
+                return Some(HirPattern::Capture {
+                    name: var_name,
+                    ty: subject_ty.clone(),
+                });
             }
             if let Some(inner_pat) = &pat_as.pattern {
                 return lower_pattern(inner_pat, subject_ty, ctx);
@@ -3465,25 +3405,19 @@ fn lower_pattern(pattern: &Pattern, subject_ty: &Type, ctx: &mut LowerCtx) -> Op
         },
         Pattern::MatchValue(val_pat) => {
             // Could be a literal or an attribute access like Color.RED
-            match val_pat.value.as_ref() {
-                Expr::Attribute(attr) => {
-                    let obj_name = match attr.value.as_ref() {
-                        Expr::Name(n) => n.id.to_string(),
-                        _ => {
-                            ctx.error("complex attribute pattern not supported".to_string());
-                            return None;
-                        }
-                    };
-                    let attr_name = attr.attr.to_string();
-                    Some(HirPattern::Value {
-                        path: vec![obj_name, attr_name],
-                    })
-                }
-                _ => {
-                    // Try to lower as a literal expression
-                    let expr = lower_expr(val_pat.value.as_ref(), ctx)?;
-                    Some(HirPattern::Literal { value: expr })
-                }
+            if let Expr::Attribute(attr) = val_pat.value.as_ref() {
+                let obj_name = if let Expr::Name(n) = attr.value.as_ref() { n.id.clone() } else {
+                    ctx.error("complex attribute pattern not supported".to_string());
+                    return None;
+                };
+                let attr_name = attr.attr.to_string();
+                Some(HirPattern::Value {
+                    path: vec![obj_name, attr_name],
+                })
+            } else {
+                // Try to lower as a literal expression
+                let expr = lower_expr(val_pat.value.as_ref(), ctx)?;
+                Some(HirPattern::Literal { value: expr })
             }
         }
         Pattern::MatchOr(or_pat) => {
@@ -3494,12 +3428,9 @@ fn lower_pattern(pattern: &Pattern, subject_ty: &Type, ctx: &mut LowerCtx) -> Op
             Some(HirPattern::Or { patterns })
         }
         Pattern::MatchClass(class_pat) => {
-            let class_name = match class_pat.cls.as_ref() {
-                Expr::Name(n) => n.id.to_string(),
-                _ => {
-                    ctx.error("class pattern class name must be a simple name".to_string());
-                    return None;
-                }
+            let class_name = if let Expr::Name(n) = class_pat.cls.as_ref() { n.id.clone() } else {
+                ctx.error("class pattern class name must be a simple name".to_string());
+                return None;
             };
 
             // Resolve the class type to get field types
@@ -3612,12 +3543,9 @@ fn bind_pattern_vars(pattern: &HirPattern, ctx: &mut LowerCtx) {
 }
 
 fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
-    let name = match ann.target.as_ref() {
-        Expr::Name(n) => n.id.to_string(),
-        _ => {
-            ctx.error("annotated assignment target must be a simple name".to_string());
-            return None;
-        }
+    let name = if let Expr::Name(n) = ann.target.as_ref() { n.id.clone() } else {
+        ctx.error("annotated assignment target must be a simple name".to_string());
+        return None;
     };
 
     let declared_type = resolve_annotation_expr(&ann.annotation, ctx);
@@ -3693,9 +3621,8 @@ fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Vec<HirStmt>
     let mut result = Vec::new();
 
     // Lower the value expression once
-    let value = match lower_expr(&assign.value, ctx) {
-        Some(v) => v,
-        None => return result,
+    let Some(value) = lower_expr(&assign.value, ctx) else {
+        return result;
     };
     let val_ty = value.ty().clone();
 
@@ -3703,7 +3630,7 @@ fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Vec<HirStmt>
     let targets: Vec<_> = assign.targets.iter().collect();
     for (i, target) in targets.iter().rev().enumerate() {
         if let Expr::Name(n) = target {
-            let name = n.id.to_string();
+            let name = n.id.clone();
             if i == 0 {
                 // First (rightmost) target gets the actual value
                 let existing = ctx.scope.lookup(&name);
@@ -3726,7 +3653,7 @@ fn lower_chained_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Vec<HirStmt>
             } else {
                 // Subsequent targets get a reference to the previous target
                 let prev_target = match targets.get(targets.len() - i) {
-                    Some(Expr::Name(prev_n)) => prev_n.id.to_string(),
+                    Some(Expr::Name(prev_n)) => prev_n.id.clone(),
                     _ => continue,
                 };
                 let name_expr = HirExpr::Name {
@@ -3775,12 +3702,9 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
 
     // Handle attribute assignment: self.field = value or obj.field = value
     if let Expr::Attribute(attr) = &assign.targets[0] {
-        let obj_name = match attr.value.as_ref() {
-            Expr::Name(n) => n.id.to_string(),
-            _ => {
-                ctx.error("attribute assignment target must be a simple name".to_string());
-                return None;
-            }
+        let obj_name = if let Expr::Name(n) = attr.value.as_ref() { n.id.clone() } else {
+            ctx.error("attribute assignment target must be a simple name".to_string());
+            return None;
         };
         let field_name = attr.attr.to_string();
         let value = lower_expr(&assign.value, ctx)?;
@@ -3795,14 +3719,11 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if let Expr::Subscript(sub) = &assign.targets[0] {
         // Handle nested subscript: matrix[i][j] = val
         if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
-            let obj_name = match inner_sub.value.as_ref() {
-                Expr::Name(n) => n.id.to_string(),
-                _ => {
-                    ctx.error(
-                        "nested subscript assignment target must be a simple name".to_string(),
-                    );
-                    return None;
-                }
+            let obj_name = if let Expr::Name(n) = inner_sub.value.as_ref() { n.id.clone() } else {
+                ctx.error(
+                    "nested subscript assignment target must be a simple name".to_string(),
+                );
+                return None;
             };
             let obj_ty = ctx
                 .scope
@@ -3822,12 +3743,9 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
         }
         // Handle attribute subscript assignment: self.field[key] = val
         if let Expr::Attribute(attr) = sub.value.as_ref() {
-            let obj_name = match attr.value.as_ref() {
-                Expr::Name(n) => n.id.to_string(),
-                _ => {
-                    ctx.error("subscript assignment target must be a simple name".to_string());
-                    return None;
-                }
+            let obj_name = if let Expr::Name(n) = attr.value.as_ref() { n.id.clone() } else {
+                ctx.error("subscript assignment target must be a simple name".to_string());
+                return None;
             };
             let field_name = attr.attr.to_string();
             // Look up field type from the object's class definition
@@ -3873,12 +3791,9 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
                 field_ty,
             });
         }
-        let obj_name = match sub.value.as_ref() {
-            Expr::Name(n) => n.id.to_string(),
-            _ => {
-                ctx.error("subscript assignment target must be a simple name".to_string());
-                return None;
-            }
+        let obj_name = if let Expr::Name(n) = sub.value.as_ref() { n.id.clone() } else {
+            ctx.error("subscript assignment target must be a simple name".to_string());
+            return None;
         };
         let obj_ty = ctx
             .scope
@@ -3895,12 +3810,9 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
         });
     }
 
-    let name = match &assign.targets[0] {
-        Expr::Name(n) => n.id.to_string(),
-        _ => {
-            ctx.error("assignment target must be a simple name".to_string());
-            return None;
-        }
+    let name = if let Expr::Name(n) = &assign.targets[0] { n.id.clone() } else {
+        ctx.error("assignment target must be a simple name".to_string());
+        return None;
     };
 
     // Handle `_ = expr` as explicit discard (suppresses #[must_use] warnings)
@@ -3958,14 +3870,11 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
 fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     // Handle augmented assignment on attributes: self.field += val
     if let Expr::Attribute(attr) = aug.target.as_ref() {
-        let obj_name = match attr.value.as_ref() {
-            Expr::Name(n) => n.id.to_string(),
-            _ => {
-                ctx.error(
-                    "augmented attribute assignment target must be a simple name".to_string(),
-                );
-                return None;
-            }
+        let obj_name = if let Expr::Name(n) = attr.value.as_ref() { n.id.clone() } else {
+            ctx.error(
+                "augmented attribute assignment target must be a simple name".to_string(),
+            );
+            return None;
         };
         let field_name = attr.attr.to_string();
         let value = lower_expr(&aug.value, ctx)?;
@@ -3997,14 +3906,11 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
 
     // Handle augmented assignment on subscript: list[i] += val
     if let Expr::Subscript(sub) = aug.target.as_ref() {
-        let obj_name = match sub.value.as_ref() {
-            Expr::Name(n) => n.id.to_string(),
-            _ => {
-                ctx.error(
-                    "augmented subscript assignment target must be a simple name".to_string(),
-                );
-                return None;
-            }
+        let obj_name = if let Expr::Name(n) = sub.value.as_ref() { n.id.clone() } else {
+            ctx.error(
+                "augmented subscript assignment target must be a simple name".to_string(),
+            );
+            return None;
         };
         let obj_ty = ctx
             .scope
@@ -4040,12 +3946,9 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         });
     }
 
-    let name = match aug.target.as_ref() {
-        Expr::Name(n) => n.id.to_string(),
-        _ => {
-            ctx.error("augmented assignment target must be a simple name".to_string());
-            return None;
-        }
+    let name = if let Expr::Name(n) = aug.target.as_ref() { n.id.clone() } else {
+        ctx.error("augmented assignment target must be a simple name".to_string());
+        return None;
     };
 
     let value = lower_expr(&aug.value, ctx)?;
@@ -4356,7 +4259,7 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
             if let Expr::Name(func_name) = call.func.as_ref() {
                 if func_name.id.as_str() == "isinstance" && call.arguments.args.len() == 2 {
                     if let Expr::Name(var) = &call.arguments.args[0] {
-                        let var_name = var.id.to_string();
+                        let var_name = var.id.clone();
                         // Check that the variable exists and has a union/Unknown type
                         if ctx.scope.lookup(&var_name).is_some() {
                             if let Expr::Name(type_name) = &call.arguments.args[1] {
@@ -4385,7 +4288,7 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
                         if let (Expr::Name(var), Expr::NoneLiteral(_)) =
                             (cmp.left.as_ref(), &cmp.comparators[0])
                         {
-                            let var_name = var.id.to_string();
+                            let var_name = var.id.clone();
                             if ctx.scope.lookup(&var_name).is_some() {
                                 return Some(NarrowingCondition::IsNone(var_name));
                             }
@@ -4395,7 +4298,7 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
                         if let (Expr::Name(var), Expr::NoneLiteral(_)) =
                             (cmp.left.as_ref(), &cmp.comparators[0])
                         {
-                            let var_name = var.id.to_string();
+                            let var_name = var.id.clone();
                             if ctx.scope.lookup(&var_name).is_some() {
                                 return Some(NarrowingCondition::IsNotNone(var_name));
                             }
@@ -4404,7 +4307,7 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
                     // x == "value" -> Equality narrowing
                     CmpOp::Eq => {
                         if let Expr::Name(var) = cmp.left.as_ref() {
-                            let var_name = var.id.to_string();
+                            let var_name = var.id.clone();
                             if ctx.scope.lookup(&var_name).is_some() {
                                 if let Some(lit_val) = expr_to_literal_value(&cmp.comparators[0]) {
                                     return Some(NarrowingCondition::Equality(var_name, lit_val));
@@ -4419,7 +4322,7 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
         }
         // Simple variable name -> Truthiness narrowing
         Expr::Name(name) => {
-            let var_name = name.id.to_string();
+            let var_name = name.id.clone();
             if ctx.scope.lookup(&var_name).is_some() {
                 Some(NarrowingCondition::Truthiness(var_name))
             } else {
@@ -4522,13 +4425,13 @@ fn lower_while(
         ));
     }
 
-    let else_body = if !while_stmt.orelse.is_empty() {
+    let else_body = if while_stmt.orelse.is_empty() {
+        None
+    } else {
         ctx.scope.push();
         let else_stmts = lower_stmts(&while_stmt.orelse, func_type, ctx);
         ctx.scope.pop();
         Some(else_stmts)
-    } else {
-        None
     };
 
     Some(HirStmt::While {
@@ -4554,7 +4457,7 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
 
     // Extract the target variable name(s)
     let target_name = match for_stmt.target.as_ref() {
-        Expr::Name(n) => n.id.to_string(),
+        Expr::Name(n) => n.id.clone(),
         Expr::Tuple(tup) => {
             // Tuple unpacking: for i, v in enumerate(lst)
             let names: Vec<String> = tup
@@ -4562,7 +4465,7 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
                 .iter()
                 .filter_map(|e| {
                     if let Expr::Name(n) = e {
-                        Some(n.id.to_string())
+                        Some(n.id.clone())
                     } else {
                         None
                     }
@@ -4591,12 +4494,12 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
         if let Type::Tuple(elem_types) = &elem_ty {
             for (i, name) in names.iter().enumerate() {
                 let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
-                ctx.scope.define(name.to_string(), ty);
+                ctx.scope.define((*name).to_string(), ty);
             }
         } else {
             // Fallback: define all as Any
             for name in &names {
-                ctx.scope.define(name.to_string(), Type::Any);
+                ctx.scope.define((*name).to_string(), Type::Any);
             }
         }
     } else {
@@ -4615,13 +4518,13 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
         ));
     }
 
-    let else_body = if !for_stmt.orelse.is_empty() {
+    let else_body = if for_stmt.orelse.is_empty() {
+        None
+    } else {
         ctx.scope.push();
         let else_stmts = lower_stmts(&for_stmt.orelse, func_type, ctx);
         ctx.scope.pop();
         Some(else_stmts)
-    } else {
-        None
     };
 
     Some(HirStmt::For {
@@ -4681,7 +4584,7 @@ fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
 }
 
 fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let var_name = name.id.to_string();
+    let var_name = name.id.clone();
 
     // Check if it's a known variable
     if let Some(info) = ctx.scope.lookup(&var_name) {
@@ -5000,12 +4903,9 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         return lower_method_call(attr, call, ctx);
     }
 
-    let func_name = match call.func.as_ref() {
-        Expr::Name(n) => n.id.to_string(),
-        _ => {
-            ctx.error("only simple function calls are supported".to_string());
-            return None;
-        }
+    let func_name = if let Expr::Name(n) = call.func.as_ref() { n.id.clone() } else {
+        ctx.error("only simple function calls are supported".to_string());
+        return None;
     };
 
     // Handle `cls(...)` in @classmethod as constructor call for the current class
@@ -5324,15 +5224,12 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             });
         } else if call.arguments.args.len() == 1 {
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let elem_ty = match arg.ty() {
-                Type::List(elem) => *elem.clone(),
-                _ => {
-                    ctx.error(format!(
-                        "min() argument must be a list, got '{}'",
-                        arg.ty().display_name()
-                    ));
-                    return None;
-                }
+            let elem_ty = if let Type::List(elem) = arg.ty() { *elem.clone() } else {
+                ctx.error(format!(
+                    "min() argument must be a list, got '{}'",
+                    arg.ty().display_name()
+                ));
+                return None;
             };
             // Returns Option[T] = T | None (safe: None on empty list)
             return Some(HirExpr::Call {
@@ -5340,10 +5237,9 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 args: vec![arg],
                 ty: Type::Union(vec![elem_ty, Type::None]),
             });
-        } else {
-            ctx.error("min() takes 1 or 2 arguments".to_string());
-            return None;
         }
+        ctx.error("min() takes 1 or 2 arguments".to_string());
+        return None;
     }
 
     // max(iterable) or max(a, b) -> element type
@@ -5360,15 +5256,12 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             });
         } else if call.arguments.args.len() == 1 {
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
-            let elem_ty = match arg.ty() {
-                Type::List(elem) => *elem.clone(),
-                _ => {
-                    ctx.error(format!(
-                        "max() argument must be a list, got '{}'",
-                        arg.ty().display_name()
-                    ));
-                    return None;
-                }
+            let elem_ty = if let Type::List(elem) = arg.ty() { *elem.clone() } else {
+                ctx.error(format!(
+                    "max() argument must be a list, got '{}'",
+                    arg.ty().display_name()
+                ));
+                return None;
             };
             // Returns Option[T] = T | None (safe: None on empty list)
             return Some(HirExpr::Call {
@@ -5376,10 +5269,9 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 args: vec![arg],
                 ty: Type::Union(vec![elem_ty, Type::None]),
             });
-        } else {
-            ctx.error("max() takes 1 or 2 arguments".to_string());
-            return None;
         }
+        ctx.error("max() takes 1 or 2 arguments".to_string());
+        return None;
     }
 
     // sum(iterable) -> element type (int or float)
@@ -5389,15 +5281,12 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let elem_ty = match arg.ty() {
-            Type::List(elem) => *elem.clone(),
-            _ => {
-                ctx.error(format!(
-                    "sum() argument must be a list, got '{}'",
-                    arg.ty().display_name()
-                ));
-                return None;
-            }
+        let elem_ty = if let Type::List(elem) = arg.ty() { *elem.clone() } else {
+            ctx.error(format!(
+                "sum() argument must be a list, got '{}'",
+                arg.ty().display_name()
+            ));
+            return None;
         };
         return Some(HirExpr::Call {
             func: "sum".to_string(),
@@ -5413,15 +5302,12 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let list_ty = match arg.ty() {
-            Type::List(_) => arg.ty().clone(),
-            _ => {
-                ctx.error(format!(
-                    "sorted() argument must be a list, got '{}'",
-                    arg.ty().display_name()
-                ));
-                return None;
-            }
+        let list_ty = if let Type::List(_) = arg.ty() { arg.ty().clone() } else {
+            ctx.error(format!(
+                "sorted() argument must be a list, got '{}'",
+                arg.ty().display_name()
+            ));
+            return None;
         };
         return Some(HirExpr::Call {
             func: "sorted".to_string(),
@@ -5437,15 +5323,12 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let list_ty = match arg.ty() {
-            Type::List(_) => arg.ty().clone(),
-            _ => {
-                ctx.error(format!(
-                    "reversed() argument must be a list, got '{}'",
-                    arg.ty().display_name()
-                ));
-                return None;
-            }
+        let list_ty = if let Type::List(_) = arg.ty() { arg.ty().clone() } else {
+            ctx.error(format!(
+                "reversed() argument must be a list, got '{}'",
+                arg.ty().display_name()
+            ));
+            return None;
         };
         return Some(HirExpr::Call {
             func: "reversed".to_string(),
@@ -5461,15 +5344,12 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let elem_ty = match arg.ty() {
-            Type::List(elem) => *elem.clone(),
-            _ => {
-                ctx.error(format!(
-                    "enumerate() argument must be a list, got '{}'",
-                    arg.ty().display_name()
-                ));
-                return None;
-            }
+        let elem_ty = if let Type::List(elem) = arg.ty() { *elem.clone() } else {
+            ctx.error(format!(
+                "enumerate() argument must be a list, got '{}'",
+                arg.ty().display_name()
+            ));
+            return None;
         };
         let tuple_ty = Type::Tuple(vec![Type::Int, elem_ty]);
         let result_ty = Type::List(Box::new(tuple_ty));
@@ -5488,25 +5368,19 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         }
         let arg1 = lower_expr(&call.arguments.args[0], ctx)?;
         let arg2 = lower_expr(&call.arguments.args[1], ctx)?;
-        let elem1 = match arg1.ty() {
-            Type::List(elem) => *elem.clone(),
-            _ => {
-                ctx.error(format!(
-                    "zip() argument 1 must be a list, got '{}'",
-                    arg1.ty().display_name()
-                ));
-                return None;
-            }
+        let elem1 = if let Type::List(elem) = arg1.ty() { *elem.clone() } else {
+            ctx.error(format!(
+                "zip() argument 1 must be a list, got '{}'",
+                arg1.ty().display_name()
+            ));
+            return None;
         };
-        let elem2 = match arg2.ty() {
-            Type::List(elem) => *elem.clone(),
-            _ => {
-                ctx.error(format!(
-                    "zip() argument 2 must be a list, got '{}'",
-                    arg2.ty().display_name()
-                ));
-                return None;
-            }
+        let elem2 = if let Type::List(elem) = arg2.ty() { *elem.clone() } else {
+            ctx.error(format!(
+                "zip() argument 2 must be a list, got '{}'",
+                arg2.ty().display_name()
+            ));
+            return None;
         };
         let tuple_ty = Type::Tuple(vec![elem1, elem2]);
         let result_ty = Type::List(Box::new(tuple_ty));
@@ -5813,8 +5687,8 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             // Vararg function: collect extra args into a list for the last param
             let regular_count = ft.params.len() - 1; // all params except the vararg
             let mut args = Vec::new();
-            for i in 0..regular_count {
-                args.push(positional_args[i].clone());
+            for arg in positional_args.iter().take(regular_count) {
+                args.push(arg.clone());
             }
             // Collect remaining args into a list literal
             let vararg_elements: Vec<HirExpr> = positional_args[regular_count..].to_vec();
@@ -6036,13 +5910,13 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             func_bounds.into_iter().flat_map(move |owner_bounds| {
                 owner_bounds.get(tv_name).into_iter().flat_map(move |bounds| {
                     bounds.iter().filter_map(move |bound| {
-                        if !type_satisfies_bound(concrete_ty, bound) {
+                        if type_satisfies_bound(concrete_ty, bound) {
+                            None
+                        } else {
                             Some(format!(
                                 "type '{}' does not implement protocol '{}' required by type parameter '{}'",
                                 concrete_ty.display_name(), bound, tv_name
                             ))
-                        } else {
-                            None
                         }
                     })
                 })
@@ -6085,7 +5959,7 @@ fn lower_fstring(fstring: &ExprFString, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 parts.push(HirFStringPart::Literal(s.to_string()));
             }
             sifr_python_ast::FStringPart::FString(fs) => {
-                for element in fs.elements.iter() {
+                for element in &fs.elements {
                     match element {
                         FStringElement::Literal(lit) => {
                             parts.push(HirFStringPart::Literal(lit.value.to_string()));
@@ -6114,12 +5988,9 @@ fn lower_tuple_unpack_assign(
     // Extract target names
     let mut target_names = Vec::new();
     for elt in &tuple.elts {
-        match elt {
-            Expr::Name(n) => target_names.push(n.id.to_string()),
-            _ => {
-                ctx.error("tuple unpacking target must be a simple name".to_string());
-                return None;
-            }
+        if let Expr::Name(n) = elt { target_names.push(n.id.clone()) } else {
+            ctx.error("tuple unpacking target must be a simple name".to_string());
+            return None;
         }
     }
 
@@ -6128,25 +5999,22 @@ fn lower_tuple_unpack_assign(
     let value_ty = value_expr.ty().clone();
 
     // Check that the value is a tuple with matching length
-    let elem_types = match &value_ty {
-        Type::Tuple(elems) => {
-            if elems.len() != target_names.len() {
-                ctx.error(format!(
-                    "tuple unpacking: expected {} values, got {}",
-                    target_names.len(),
-                    elems.len()
-                ));
-                return None;
-            }
-            elems.clone()
-        }
-        _ => {
+    let elem_types = if let Type::Tuple(elems) = &value_ty {
+        if elems.len() != target_names.len() {
             ctx.error(format!(
-                "cannot unpack non-tuple type '{}'",
-                value_ty.display_name()
+                "tuple unpacking: expected {} values, got {}",
+                target_names.len(),
+                elems.len()
             ));
             return None;
         }
+        elems.clone()
+    } else {
+        ctx.error(format!(
+            "cannot unpack non-tuple type '{}'",
+            value_ty.display_name()
+        ));
+        return None;
     };
 
     // Define variables in scope
@@ -6171,12 +6039,9 @@ fn lower_star_unpack_assign(
     let value_ty = value_expr.ty().clone();
 
     // Get the element type from the list
-    let elem_ty = match &value_ty {
-        Type::List(elem) => *elem.clone(),
-        _ => {
-            ctx.error("star unpacking requires a list type".to_string());
-            return None;
-        }
+    let elem_ty = if let Type::List(elem) = &value_ty { *elem.clone() } else {
+        ctx.error("star unpacking requires a list type".to_string());
+        return None;
     };
 
     let mut before = Vec::new();
@@ -6191,7 +6056,7 @@ fn lower_star_unpack_assign(
                     return None;
                 }
                 if let Expr::Name(n) = starred.value.as_ref() {
-                    let name = n.id.to_string();
+                    let name = n.id.clone();
                     let star_ty = Type::List(Box::new(elem_ty.clone()));
                     ctx.scope.define(name.clone(), star_ty.clone());
                     star = Some((name, star_ty));
@@ -6201,7 +6066,7 @@ fn lower_star_unpack_assign(
                 }
             }
             Expr::Name(n) => {
-                let name = n.id.to_string();
+                let name = n.id.clone();
                 ctx.scope.define(name.clone(), elem_ty.clone());
                 if star.is_none() {
                     before.push((name, elem_ty.clone()));
@@ -6393,18 +6258,33 @@ fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option<HirExpr> {
                     if let (HirExpr::IntLiteral(s), HirExpr::IntLiteral(e)) =
                         (start_expr.as_ref(), stop_expr.as_ref())
                     {
-                        let s = if *s < 0 {
-                            (elems.len() as i64 + s) as usize
-                        } else {
-                            *s as usize
+                        let Ok(len_i64) = i64::try_from(elems.len()) else {
+                            ctx.error("tuple too large for slicing index computation".to_string());
+                            return Some(HirExpr::Slice {
+                                object: Box::new(object),
+                                start,
+                                stop,
+                                step,
+                                ty: Type::Any,
+                            });
                         };
-                        let e = if *e < 0 {
-                            (elems.len() as i64 + e) as usize
-                        } else {
-                            *e as usize
-                        };
-                        if s <= e && e <= elems.len() {
-                            Type::Tuple(elems[s..e].to_vec())
+                        let normalize = |idx: i64| if idx < 0 { len_i64 + idx } else { idx };
+                        let s = normalize(*s);
+                        let e = normalize(*e);
+                        if s <= e {
+                            if let (Ok(s_usize), Ok(e_usize)) =
+                                (usize::try_from(s), usize::try_from(e))
+                            {
+                                if e_usize <= elems.len() {
+                                    Type::Tuple(elems[s_usize..e_usize].to_vec())
+                                } else {
+                                    ctx.error("tuple slice indices out of range".to_string());
+                                    Type::Any
+                                }
+                            } else {
+                                ctx.error("tuple slice indices out of range".to_string());
+                                Type::Any
+                            }
                         } else {
                             ctx.error("tuple slice indices out of range".to_string());
                             Type::Any
@@ -6419,22 +6299,16 @@ fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option<HirExpr> {
                     // Partial slice on tuple
                     let s = start
                         .as_ref()
-                        .and_then(|e| {
-                            if let HirExpr::IntLiteral(v) = e.as_ref() {
-                                Some(*v as usize)
-                            } else {
-                                None
-                            }
+                        .and_then(|e| match e.as_ref() {
+                            HirExpr::IntLiteral(v) => usize::try_from(*v).ok(),
+                            _ => None,
                         })
                         .unwrap_or(0);
                     let e = stop
                         .as_ref()
-                        .and_then(|e| {
-                            if let HirExpr::IntLiteral(v) = e.as_ref() {
-                                Some(*v as usize)
-                            } else {
-                                None
-                            }
+                        .and_then(|e| match e.as_ref() {
+                            HirExpr::IntLiteral(v) => usize::try_from(*v).ok(),
+                            _ => None,
                         })
                         .unwrap_or(elems.len());
                     if s <= e && e <= elems.len() {
@@ -6483,7 +6357,7 @@ fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> 
 
     // Check for enum variant access: Color.RED
     if let Expr::Name(name) = attr.value.as_ref() {
-        let class_name = name.id.to_string();
+        let class_name = name.id.clone();
         if let Some(ty) = ctx.class_types.get(&class_name).cloned() {
             if let Type::Enum { ref variants, .. } = ty {
                 if variants.iter().any(|(v, _)| v == &field_name) {
@@ -6589,7 +6463,7 @@ fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) 
 
     // Handle ClassName.method() calls (classmethod/staticmethod)
     if let Expr::Name(name) = attr.value.as_ref() {
-        let class_name = name.id.to_string();
+        let class_name = name.id.clone();
         if ctx.class_types.contains_key(&class_name) {
             let method_name = attr.attr.to_string();
             // Lower arguments
@@ -6599,16 +6473,14 @@ fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) 
                 args.push(expr);
             }
             // Look up the method's return type from the class type
-            if let Some(class_ty) = ctx.class_types.get(&class_name) {
-                if let Type::Class { methods, .. } = class_ty {
-                    if let Some((_, ft)) = methods.iter().find(|(n, _)| n == &method_name) {
-                        let return_ty = *ft.return_type.clone();
-                        return Some(HirExpr::Call {
-                            func: format!("{class_name}::{method_name}"),
-                            args,
-                            ty: return_ty,
-                        });
-                    }
+            if let Some(Type::Class { methods, .. }) = ctx.class_types.get(&class_name) {
+                if let Some((_, ft)) = methods.iter().find(|(n, _)| n == &method_name) {
+                    let return_ty = *ft.return_type.clone();
+                    return Some(HirExpr::Call {
+                        func: format!("{class_name}::{method_name}"),
+                        args,
+                        ty: return_ty,
+                    });
                 }
             }
             ctx.error(format!(
@@ -7216,18 +7088,15 @@ fn resolve_method_type(
                 }
             }
         }
-        Type::BigInt => match method {
-            "clone" => {
-                if !args.is_empty() {
-                    ctx.error("bigint.clone() takes no arguments".to_string());
-                    return None;
-                }
-                Some(Type::BigInt)
+        Type::BigInt => if method == "clone" {
+            if !args.is_empty() {
+                ctx.error("bigint.clone() takes no arguments".to_string());
+                return None;
             }
-            _ => {
-                ctx.error(format!("type 'bigint' has no method '{method}'"));
-                None
-            }
+            Some(Type::BigInt)
+        } else {
+            ctx.error(format!("type 'bigint' has no method '{method}'"));
+            None
         },
         _ => {
             ctx.error(format!(
@@ -7296,7 +7165,7 @@ fn lower_isinstance_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     // Extract the type name as a string literal so codegen can use it for match arms
     let type_name = match &call.arguments.args[1] {
-        Expr::Name(n) => n.id.to_string(),
+        Expr::Name(n) => n.id.clone(),
         _ => "unknown".to_string(),
     };
     // isinstance() always returns bool -- the narrowing happens at the if-statement level
@@ -7531,14 +7400,14 @@ fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Process each generator: push scope, define var, lower iter
     for gen in &comp.generators {
         let var_name = match &gen.target {
-            Expr::Name(n) => n.id.to_string(),
+            Expr::Name(n) => n.id.clone(),
             Expr::Tuple(tup) => {
                 let names: Vec<String> = tup
                     .elts
                     .iter()
                     .filter_map(|e| {
                         if let Expr::Name(n) = e {
-                            Some(n.id.to_string())
+                            Some(n.id.clone())
                         } else {
                             None
                         }
@@ -7582,18 +7451,20 @@ fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
             if let Type::Tuple(elem_types) = &elem_ty {
                 for (i, name) in names.iter().enumerate() {
                     let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
-                    ctx.scope.define(name.to_string(), ty);
+                    ctx.scope.define((*name).to_string(), ty);
                 }
             } else {
                 for name in &names {
-                    ctx.scope.define(name.to_string(), Type::Any);
+                    ctx.scope.define((*name).to_string(), Type::Any);
                 }
             }
         } else {
             ctx.scope.define(var_name.clone(), elem_ty.clone());
         }
 
-        let filter = if !gen.ifs.is_empty() {
+        let filter = if gen.ifs.is_empty() {
+            None
+        } else {
             let first = lower_expr(&gen.ifs[0], ctx)?;
             if gen.ifs.len() == 1 {
                 Some(first)
@@ -7609,8 +7480,6 @@ fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 }
                 Some(combined)
             }
-        } else {
-            None
         };
 
         generators.push((var_name, iter_expr, filter));
@@ -7638,12 +7507,9 @@ fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut generators = Vec::new();
     let num_gens = comp.generators.len();
     for gen in &comp.generators {
-        let var_name = match &gen.target {
-            Expr::Name(n) => n.id.to_string(),
-            _ => {
-                ctx.error("set comprehension target must be a simple name".to_string());
-                return None;
-            }
+        let var_name = if let Expr::Name(n) = &gen.target { n.id.clone() } else {
+            ctx.error("set comprehension target must be a simple name".to_string());
+            return None;
         };
         let iter_expr = lower_expr(&gen.iter, ctx)?;
         let iter_ty = iter_expr.ty().clone();
@@ -7661,10 +7527,10 @@ fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
         };
         ctx.scope.push();
         ctx.scope.define(var_name.clone(), elem_ty);
-        let filter = if !gen.ifs.is_empty() {
-            Some(lower_expr(&gen.ifs[0], ctx)?)
-        } else {
+        let filter = if gen.ifs.is_empty() {
             None
+        } else {
+            Some(lower_expr(&gen.ifs[0], ctx)?)
         };
         generators.push((var_name, iter_expr, filter));
     }
@@ -7686,14 +7552,14 @@ fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let num_gens = comp.generators.len();
     for gen in &comp.generators {
         let var_name = match &gen.target {
-            Expr::Name(n) => n.id.to_string(),
+            Expr::Name(n) => n.id.clone(),
             Expr::Tuple(tup) => {
                 let names: Vec<String> = tup
                     .elts
                     .iter()
                     .filter_map(|e| {
                         if let Expr::Name(n) = e {
-                            Some(n.id.to_string())
+                            Some(n.id.clone())
                         } else {
                             None
                         }
@@ -7727,20 +7593,20 @@ fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
             if let Type::Tuple(elem_types) = &elem_ty {
                 for (i, name) in names.iter().enumerate() {
                     let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
-                    ctx.scope.define(name.to_string(), ty);
+                    ctx.scope.define((*name).to_string(), ty);
                 }
             } else {
                 for name in &names {
-                    ctx.scope.define(name.to_string(), Type::Any);
+                    ctx.scope.define((*name).to_string(), Type::Any);
                 }
             }
         } else {
             ctx.scope.define(var_name.clone(), elem_ty);
         }
-        let filter = if !gen.ifs.is_empty() {
-            Some(lower_expr(&gen.ifs[0], ctx)?)
-        } else {
+        let filter = if gen.ifs.is_empty() {
             None
+        } else {
+            Some(lower_expr(&gen.ifs[0], ctx)?)
         };
         generators.push((var_name, iter_expr, filter));
     }
@@ -7770,12 +7636,9 @@ fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirEx
     let comp = &gen.generators[0];
 
     // Get the variable name
-    let var_name = match &comp.target {
-        Expr::Name(n) => n.id.to_string(),
-        _ => {
-            ctx.error("generator target must be a simple name".to_string());
-            return None;
-        }
+    let var_name = if let Expr::Name(n) = &comp.target { n.id.clone() } else {
+        ctx.error("generator target must be a simple name".to_string());
+        return None;
     };
 
     // Lower the iterable
@@ -7804,7 +7667,9 @@ fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirEx
     let expr_ty = expr.ty().clone();
 
     // Lower the filter condition if present
-    let filter = if !comp.ifs.is_empty() {
+    let filter = if comp.ifs.is_empty() {
+        None
+    } else {
         let first = lower_expr(&comp.ifs[0], ctx)?;
         if comp.ifs.len() == 1 {
             Some(Box::new(first))
@@ -7820,8 +7685,6 @@ fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirEx
             }
             Some(Box::new(combined))
         }
-    } else {
-        None
     };
 
     ctx.scope.pop();
@@ -7838,12 +7701,9 @@ fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirEx
 }
 
 fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let name = match named.target.as_ref() {
-        Expr::Name(n) => n.id.to_string(),
-        _ => {
-            ctx.error("walrus operator target must be a simple name".to_string());
-            return None;
-        }
+    let name = if let Expr::Name(n) = named.target.as_ref() { n.id.clone() } else {
+        ctx.error("walrus operator target must be a simple name".to_string());
+        return None;
     };
 
     let value = lower_expr(&named.value, ctx)?;
