@@ -1,4 +1,4 @@
-use crate::{RustEmitter, RustExpr};
+use crate::RustEmitter;
 use sifr_hir::{HirExpr, HirFStringPart};
 
 impl RustEmitter {
@@ -209,32 +209,6 @@ fn render_expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExp
 }
 
 impl RustEmitter {
-    pub(super) fn try_capture_fallback_expr_as_raw(&mut self, expr: &HirExpr) -> Option<RustExpr> {
-        if !matches!(
-            expr,
-            HirExpr::FString { .. }
-                | HirExpr::Lambda { .. }
-        ) {
-            return None;
-        }
-
-        let saved_output = std::mem::take(&mut self.output);
-        let saved_indent = self.indent;
-        let saved_fallback_depth = self.fallback_depth;
-
-        self.output = String::new();
-        self.indent = 0;
-        self.fallback_depth += 1;
-        self.emit_expr(expr);
-        let captured = std::mem::take(&mut self.output);
-
-        self.output = saved_output;
-        self.indent = saved_indent;
-        self.fallback_depth = saved_fallback_depth;
-
-        Some(RustExpr::RawCode(captured.trim().to_string()))
-    }
-
     pub(super) fn emit_lambda_untyped(&mut self, expr: &HirExpr) {
         if let HirExpr::Lambda { params, body, .. } = expr {
             self.write("|");
