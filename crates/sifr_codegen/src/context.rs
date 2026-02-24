@@ -14,6 +14,14 @@ pub struct ScopeContext {
     pub in_generator_closure: bool,
     pub in_display_impl: bool,
     pub in_loop_with_else: bool,
+    pub class_scope: ClassScope,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ClassScope {
+    #[default]
+    Outside,
+    Inside,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

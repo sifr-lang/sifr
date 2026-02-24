@@ -6,7 +6,7 @@ use crate::helpers::{
 };
 use crate::{
     try_lower_leaf_expr, CodegenError, RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt,
-    RustType,
+    RustType, ScopeContext,
 };
 use sifr_hir::{HirExceptHandler, HirExpr, HirFunction, HirPattern, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
@@ -76,12 +76,30 @@ pub fn try_lower_simple_stmt(
     mutated_vars: &HashSet<String>,
     borrowed_params: &HashSet<String>,
 ) -> Option<Vec<RustStmt>> {
+    let scope_ctx = ScopeContext {
+        in_loop_with_else,
+        ..ScopeContext::default()
+    };
+    try_lower_simple_stmt_with_scope(stmt, mutated_vars, borrowed_params, &scope_ctx)
+}
+
+pub(crate) fn try_lower_simple_stmt_with_scope(
+    stmt: &HirStmt,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+    scope_ctx: &ScopeContext,
+) -> Option<Vec<RustStmt>> {
     try_lower_simple_stmt_with_ctx(
         stmt,
-        in_loop_with_else,
+        scope_ctx.in_loop_with_else,
         mutated_vars,
         borrowed_params,
-        SimpleStmtLoweringCtx::default(),
+        SimpleStmtLoweringCtx {
+            return_type: scope_ctx.function_return_type.as_ref(),
+            in_display_impl: scope_ctx.in_display_impl,
+            in_class_scope: matches!(scope_ctx.class_scope, crate::ClassScope::Inside),
+            in_generator_closure: scope_ctx.in_generator_closure,
+        },
     )
 }
 
@@ -500,9 +518,7 @@ fn expr_has_result_flow(expr: &HirExpr) -> bool {
         }
         HirExpr::Compare {
             left, comparators, ..
-        } => {
-            expr_has_result_flow(left) || comparators.iter().any(expr_has_result_flow)
-        }
+        } => expr_has_result_flow(left) || comparators.iter().any(expr_has_result_flow),
         HirExpr::BoolOp { values, .. } => values.iter().any(expr_has_result_flow),
         HirExpr::Call { args, .. }
         | HirExpr::MethodCall { args, .. }
@@ -548,7 +564,9 @@ fn expr_has_result_flow(expr: &HirExpr) -> bool {
         HirExpr::WalrusExpr { value, .. } => expr_has_result_flow(value),
         HirExpr::FieldAccess { object, .. } => expr_has_result_flow(object),
         HirExpr::ContainsOp {
-            element, collection, ..
+            element,
+            collection,
+            ..
         } => expr_has_result_flow(element) || expr_has_result_flow(collection),
         HirExpr::RangeLiteral {
             start, end, step, ..
@@ -565,8 +583,7 @@ fn expr_has_result_flow(expr: &HirExpr) -> bool {
         } => {
             expr_has_result_flow(expr)
                 || generators.iter().any(|(_, iter, cond)| {
-                    expr_has_result_flow(iter)
-                        || cond.as_ref().is_some_and(expr_has_result_flow)
+                    expr_has_result_flow(iter) || cond.as_ref().is_some_and(expr_has_result_flow)
                 })
         }
         HirExpr::DictComp {
@@ -578,8 +595,7 @@ fn expr_has_result_flow(expr: &HirExpr) -> bool {
             expr_has_result_flow(key_expr)
                 || expr_has_result_flow(val_expr)
                 || generators.iter().any(|(_, iter, cond)| {
-                    expr_has_result_flow(iter)
-                        || cond.as_ref().is_some_and(expr_has_result_flow)
+                    expr_has_result_flow(iter) || cond.as_ref().is_some_and(expr_has_result_flow)
                 })
         }
         HirExpr::GeneratorExpr {
@@ -1083,7 +1099,8 @@ fn try_lower_simple_if_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body) {
+    if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body)
+    {
         if let Some(option_var) = detect_is_none_var(condition) {
             let lowered_cond =
                 try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?;
@@ -4928,7 +4945,9 @@ mod tests {
                 ..
             } if name == "maybe_x" && method == "unwrap"
         ));
-        assert!(lowered.iter().all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
+        assert!(lowered
+            .iter()
+            .all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
     }
 
     #[test]
@@ -5948,7 +5967,9 @@ mod tests {
             lowered[0],
             RustStmt::Let { ref name, .. } if name == "_star_tmp"
         ));
-        assert!(lowered.iter().all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
+        assert!(lowered
+            .iter()
+            .all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
     }
 
     #[test]
@@ -6088,7 +6109,9 @@ mod tests {
                 ..
             } if pattern == "Err(_e)" && expr_name == "__sifr_try_res"
         ));
-        assert!(lowered.iter().all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
+        assert!(lowered
+            .iter()
+            .all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
     }
 
     #[test]
