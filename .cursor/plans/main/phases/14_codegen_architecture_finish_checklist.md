@@ -58,6 +58,7 @@ status: **partially met**
 - [x] `emit_module` still string-emitter orchestration, not full `RustFile` assembly + single render
 - [ ] `lower_*` contract is not full `Result<_, CodegenError>` end-to-end for production path
 - [x] Production stmt lowering entry now has explicit `Result` contract (`try_lower_simple_stmt_with_scope_result`) with context validation
+- [x] Production stmt lowering `Result` entry now validates nested stmt/expr shapes before fallback routing
 - [x] Production expr lowering entry now has explicit `Result` contract (`try_lower_leaf_expr_result`) with shape validation
 - [x] Production helper rendering paths now consume expr `Result` contract (`expr_render_helpers`, `intrinsic_method_emitters`)
 - [x] Production module-constant item lowering entry now has explicit `Result` contract (`try_lower_simple_module_constant_item_result`) with name-shape validation

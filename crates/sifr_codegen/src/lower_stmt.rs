@@ -5,10 +5,12 @@ use crate::helpers::{
     detect_is_none_var, detect_is_not_none_var,
 };
 use crate::{
-    try_lower_leaf_expr, CodegenError, RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt,
-    RustType, ScopeContext,
+    try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustLiteral,
+    RustMatchArm, RustParam, RustStmt, RustType, ScopeContext,
 };
-use sifr_hir::{HirExceptHandler, HirExpr, HirFunction, HirPattern, HirStmt, MethodKind};
+use sifr_hir::{
+    HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt, MethodKind,
+};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 
@@ -110,6 +112,7 @@ pub(crate) fn try_lower_simple_stmt_with_scope_result(
     scope_ctx: &ScopeContext,
 ) -> Result<Option<Vec<RustStmt>>, CodegenError> {
     validate_scope_context(scope_ctx)?;
+    validate_stmt_lowering_shape(stmt)?;
     Ok(try_lower_simple_stmt_with_scope(
         stmt,
         mutated_vars,
@@ -125,6 +128,333 @@ fn validate_scope_context(scope_ctx: &ScopeContext) -> Result<(), CodegenError> 
         ));
     }
     Ok(())
+}
+
+fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), CodegenError> {
+    match stmt {
+        HirStmt::Let { value, .. }
+        | HirStmt::Assign { value, .. }
+        | HirStmt::AugAssign { value, .. }
+        | HirStmt::AttributeAugAssign { value, .. }
+        | HirStmt::FieldAssign { value, .. }
+        | HirStmt::Raise { value }
+        | HirStmt::Yield { value }
+        | HirStmt::TupleUnpack { value, .. }
+        | HirStmt::StarUnpack { value, .. } => validate_expr_lowering_shape(value),
+        HirStmt::Return { value: Some(value) } => validate_expr_lowering_shape(value),
+        HirStmt::Expr { expr } => validate_expr_lowering_shape(expr),
+        HirStmt::Assert { test, msg } => {
+            validate_expr_lowering_shape(test)?;
+            if let Some(msg) = msg {
+                validate_expr_lowering_shape(msg)?;
+            }
+            Ok(())
+        }
+        HirStmt::If {
+            condition,
+            then_body,
+            elif_clauses,
+            else_body,
+        } => {
+            validate_expr_lowering_shape(condition)?;
+            validate_stmt_block_lowering_shape(then_body)?;
+            for (elif_cond, elif_body) in elif_clauses {
+                validate_expr_lowering_shape(elif_cond)?;
+                validate_stmt_block_lowering_shape(elif_body)?;
+            }
+            if let Some(else_body) = else_body {
+                validate_stmt_block_lowering_shape(else_body)?;
+            }
+            Ok(())
+        }
+        HirStmt::While {
+            condition,
+            body,
+            else_body,
+        } => {
+            validate_expr_lowering_shape(condition)?;
+            validate_stmt_block_lowering_shape(body)?;
+            if let Some(else_body) = else_body {
+                validate_stmt_block_lowering_shape(else_body)?;
+            }
+            Ok(())
+        }
+        HirStmt::For {
+            iter,
+            body,
+            else_body,
+            ..
+        } => {
+            validate_expr_lowering_shape(iter)?;
+            validate_stmt_block_lowering_shape(body)?;
+            if let Some(else_body) = else_body {
+                validate_stmt_block_lowering_shape(else_body)?;
+            }
+            Ok(())
+        }
+        HirStmt::SubscriptAssign { index, value, .. }
+        | HirStmt::SubscriptAugAssign { index, value, .. }
+        | HirStmt::AttributeSubscriptAssign { index, value, .. } => {
+            validate_expr_lowering_shape(index)?;
+            validate_expr_lowering_shape(value)
+        }
+        HirStmt::NestedSubscriptAssign {
+            outer_index,
+            inner_index,
+            value,
+            ..
+        } => {
+            validate_expr_lowering_shape(outer_index)?;
+            validate_expr_lowering_shape(inner_index)?;
+            validate_expr_lowering_shape(value)
+        }
+        HirStmt::Delete { object, index } => {
+            validate_expr_lowering_shape(object)?;
+            validate_expr_lowering_shape(index)
+        }
+        HirStmt::With { items, body } => {
+            for (_, context_expr, _) in items {
+                validate_expr_lowering_shape(context_expr)?;
+            }
+            validate_stmt_block_lowering_shape(body)
+        }
+        HirStmt::NestedFunction { func } => {
+            for param in &func.params {
+                if let Some(default) = &param.default {
+                    validate_expr_lowering_shape(default)?;
+                }
+            }
+            validate_stmt_block_lowering_shape(&func.body)
+        }
+        HirStmt::Match { subject, arms, .. } => {
+            validate_expr_lowering_shape(subject)?;
+            for arm in arms {
+                validate_pattern_lowering_shape(&arm.pattern)?;
+                if let Some(guard) = &arm.guard {
+                    validate_expr_lowering_shape(guard)?;
+                }
+                validate_stmt_block_lowering_shape(&arm.body)?;
+            }
+            Ok(())
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            validate_stmt_block_lowering_shape(body)?;
+            for handler in handlers {
+                validate_stmt_block_lowering_shape(&handler.body)?;
+            }
+            Ok(())
+        }
+        HirStmt::Pass | HirStmt::Continue | HirStmt::Break | HirStmt::Return { value: None } => {
+            Ok(())
+        }
+    }
+}
+
+fn validate_stmt_block_lowering_shape(stmts: &[HirStmt]) -> Result<(), CodegenError> {
+    for stmt in stmts {
+        validate_stmt_lowering_shape(stmt)?;
+    }
+    Ok(())
+}
+
+fn validate_pattern_lowering_shape(pattern: &HirPattern) -> Result<(), CodegenError> {
+    match pattern {
+        HirPattern::Literal { value } => validate_expr_lowering_shape(value),
+        HirPattern::Or { patterns } => {
+            for pattern in patterns {
+                validate_pattern_lowering_shape(pattern)?;
+            }
+            Ok(())
+        }
+        HirPattern::Class { fields, .. } => {
+            for (_, pattern) in fields {
+                validate_pattern_lowering_shape(pattern)?;
+            }
+            Ok(())
+        }
+        HirPattern::Tuple { elements } => {
+            for pattern in elements {
+                validate_pattern_lowering_shape(pattern)?;
+            }
+            Ok(())
+        }
+        HirPattern::Wildcard
+        | HirPattern::Capture { .. }
+        | HirPattern::None
+        | HirPattern::Value { .. } => Ok(()),
+    }
+}
+
+fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
+    let _ = try_lower_leaf_expr_result(expr)?;
+    match expr {
+        HirExpr::BinOp { left, right, .. } => {
+            validate_expr_lowering_shape(left)?;
+            validate_expr_lowering_shape(right)
+        }
+        HirExpr::UnaryOp { operand, .. } => validate_expr_lowering_shape(operand),
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            validate_expr_lowering_shape(left)?;
+            for comparator in comparators {
+                validate_expr_lowering_shape(comparator)?;
+            }
+            Ok(())
+        }
+        HirExpr::BoolOp { values, .. }
+        | HirExpr::Call { args: values, .. }
+        | HirExpr::ListLiteral { elements: values, .. }
+        | HirExpr::SetLiteral { elements: values, .. }
+        | HirExpr::TupleLiteral { elements: values, .. } => {
+            for value in values {
+                validate_expr_lowering_shape(value)?;
+            }
+            Ok(())
+        }
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            validate_expr_lowering_shape(condition)?;
+            validate_expr_lowering_shape(then_expr)?;
+            validate_expr_lowering_shape(else_expr)
+        }
+        HirExpr::RangeLiteral {
+            start, end, step, ..
+        } => {
+            validate_expr_lowering_shape(start)?;
+            validate_expr_lowering_shape(end)?;
+            if let Some(step) = step {
+                validate_expr_lowering_shape(step)?;
+            }
+            Ok(())
+        }
+        HirExpr::DictLiteral { keys, values, .. } => {
+            for key in keys {
+                validate_expr_lowering_shape(key)?;
+            }
+            for value in values {
+                validate_expr_lowering_shape(value)?;
+            }
+            Ok(())
+        }
+        HirExpr::Index { object, index, .. } => {
+            validate_expr_lowering_shape(object)?;
+            validate_expr_lowering_shape(index)
+        }
+        HirExpr::MethodCall { object, args, .. } => {
+            validate_expr_lowering_shape(object)?;
+            for arg in args {
+                validate_expr_lowering_shape(arg)?;
+            }
+            Ok(())
+        }
+        HirExpr::ContainsOp {
+            element,
+            collection,
+            ..
+        } => {
+            validate_expr_lowering_shape(element)?;
+            validate_expr_lowering_shape(collection)
+        }
+        HirExpr::FString { parts, .. } => {
+            for part in parts {
+                if let HirFStringPart::Expr(expr) = part {
+                    validate_expr_lowering_shape(expr)?;
+                }
+            }
+            Ok(())
+        }
+        HirExpr::Slice {
+            object,
+            start,
+            stop,
+            step,
+            ..
+        } => {
+            validate_expr_lowering_shape(object)?;
+            if let Some(start) = start {
+                validate_expr_lowering_shape(start)?;
+            }
+            if let Some(stop) = stop {
+                validate_expr_lowering_shape(stop)?;
+            }
+            if let Some(step) = step {
+                validate_expr_lowering_shape(step)?;
+            }
+            Ok(())
+        }
+        HirExpr::WalrusExpr { value, .. }
+        | HirExpr::QuestionMark { expr: value, .. }
+        | HirExpr::OkWrap { value, .. }
+        | HirExpr::ErrWrap { value, .. } => validate_expr_lowering_shape(value),
+        HirExpr::FieldAccess { object, .. } => validate_expr_lowering_shape(object),
+        HirExpr::ConstructorCall { args, .. } | HirExpr::SuperCall { args, .. } => {
+            for arg in args {
+                validate_expr_lowering_shape(arg)?;
+            }
+            Ok(())
+        }
+        HirExpr::Lambda { params, body, .. } => {
+            for param in params {
+                if let Some(default) = &param.default {
+                    validate_expr_lowering_shape(default)?;
+                }
+            }
+            validate_expr_lowering_shape(body)
+        }
+        HirExpr::ListComp {
+            expr, generators, ..
+        }
+        | HirExpr::SetComp {
+            expr, generators, ..
+        } => {
+            validate_expr_lowering_shape(expr)?;
+            for (_, iter_expr, filter) in generators {
+                validate_expr_lowering_shape(iter_expr)?;
+                if let Some(filter) = filter {
+                    validate_expr_lowering_shape(filter)?;
+                }
+            }
+            Ok(())
+        }
+        HirExpr::DictComp {
+            key_expr,
+            val_expr,
+            generators,
+            ..
+        } => {
+            validate_expr_lowering_shape(key_expr)?;
+            validate_expr_lowering_shape(val_expr)?;
+            for (_, iter_expr, filter) in generators {
+                validate_expr_lowering_shape(iter_expr)?;
+                if let Some(filter) = filter {
+                    validate_expr_lowering_shape(filter)?;
+                }
+            }
+            Ok(())
+        }
+        HirExpr::GeneratorExpr {
+            expr, iter, filter, ..
+        } => {
+            validate_expr_lowering_shape(expr)?;
+            validate_expr_lowering_shape(iter)?;
+            if let Some(filter) = filter {
+                validate_expr_lowering_shape(filter)?;
+            }
+            Ok(())
+        }
+        HirExpr::IntLiteral(_)
+        | HirExpr::FloatLiteral(_)
+        | HirExpr::StringLiteral(_)
+        | HirExpr::BoolLiteral(_)
+        | HirExpr::NoneLiteral
+        | HirExpr::Name { .. }
+        | HirExpr::EnumVariant { .. } => Ok(()),
+    }
 }
 
 pub(crate) fn try_lower_simple_stmt_with_ctx(
@@ -1890,6 +2220,31 @@ mod tests {
         assert!(err
             .message
             .contains("display impl and generator closure cannot both be active"));
+    }
+
+    #[test]
+    fn scope_result_propagates_stmt_expr_shape_errors() {
+        let stmt = HirStmt::Let {
+            name: "ok".to_string(),
+            ty: Type::Bool,
+            value: HirExpr::Compare {
+                left: Box::new(HirExpr::IntLiteral(1)),
+                ops: vec!["==".to_string()],
+                comparators: vec![],
+                ty: Type::Bool,
+            },
+            is_mutable: false,
+        };
+
+        let err = try_lower_simple_stmt_with_scope_result(
+            &stmt,
+            &HashSet::new(),
+            &HashSet::new(),
+            &ScopeContext::default(),
+        )
+        .expect_err("invalid compare shape should return lowering error");
+
+        assert!(err.message.contains("ops/comparators length mismatch"));
     }
 
     #[test]
