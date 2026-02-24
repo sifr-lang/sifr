@@ -138,14 +138,14 @@ Root cause: union enum generation remains string accumulation.
 
 ## Slice 4: Intrinsic Fallback Deletion (Registry-Only)
 
-status: **pending**
+status: **done**
 
 Root cause: giant legacy intrinsic fallback still in production.
 
-- [ ] Migrate remaining fallback-only intrinsics into registry modules
-- [ ] Delete legacy match arms from `emit_intrinsic_call`
-- [ ] Enforce no >100-char direct `self.write(...)` literal bodies in intrinsic lowering
-- [ ] Add guard test to prevent fallback reintroduction
+- [x] Migrate remaining fallback-only intrinsics into registry modules
+- [x] Delete legacy match arms from `emit_intrinsic_call`
+- [x] Enforce no >100-char direct `self.write(...)` literal bodies in intrinsic lowering
+- [x] Add guard test to prevent fallback reintroduction
 
 ## Slice 5: Method Fallback Deletion (Registry-Only)
 

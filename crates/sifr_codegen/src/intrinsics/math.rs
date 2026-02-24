@@ -302,3 +302,133 @@ pub(super) fn lower_isqrt(args: &[String]) -> Option<RustExpr> {
         ty: RustType::I64,
     })
 }
+
+pub(super) fn lower_remainder(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); let __y: f64 = ({}); if __x.is_nan() || __y.is_nan() {{ f64::NAN }} else if __y == 0.0 || __x.is_infinite() {{ f64::NAN }} else if __y.is_infinite() {{ __x }} else {{ let __q = __x / __y; let __n0 = __q.trunc(); let __frac = __q - __n0; let __abs_frac = __frac.abs(); let __n = if __abs_frac < 0.5 {{ __n0 }} else if __abs_frac > 0.5 {{ __n0 + __q.signum() }} else if (__n0 as i64) % 2 == 0 {{ __n0 }} else {{ __n0 + __q.signum() }}; let __r = __x - __n * __y; if __r == 0.0 {{ 0.0f64.copysign(__x) }} else {{ __r }} }} }}",
+        args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_dist(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __p = &({}); let __q = &({}); if __p.len() != __q.len() {{ f64::NAN }} else if __p.is_empty() {{ 0.0 }} else {{ let mut __scale = 0.0f64; let mut __ssq = 1.0f64; for __i in 0..__p.len() {{ let __d = (__p[__i] - __q[__i]).abs(); if __d != 0.0 {{ if __scale < __d {{ let __r = __scale / __d; __ssq = 1.0 + __ssq * __r * __r; __scale = __d; }} else {{ let __r = __d / __scale; __ssq += __r * __r; }} }} }} if __scale == 0.0 {{ 0.0 }} else {{ __scale * __ssq.sqrt() }} }} }}",
+        args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_fsum(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __data = &({}); let mut __sum = 0.0f64; let mut __comp = 0.0f64; let mut __pos_inf = false; let mut __neg_inf = false; let mut __has_nan = false; for __x in __data.iter() {{ let __v = *__x; if __v.is_nan() {{ __has_nan = true; continue; }} if __v.is_infinite() {{ if __v.is_sign_positive() {{ __pos_inf = true; }} else {{ __neg_inf = true; }} continue; }} let __t = __sum + __v; if __sum.abs() >= __v.abs() {{ __comp += (__sum - __t) + __v; }} else {{ __comp += (__v - __t) + __sum; }} __sum = __t; }} if __has_nan || (__pos_inf && __neg_inf) {{ f64::NAN }} else if __pos_inf {{ f64::INFINITY }} else if __neg_inf {{ f64::NEG_INFINITY }} else {{ __sum + __comp }} }}",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_sumprod(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __p = &({}); let __q = &({}); let __len = __p.len().min(__q.len()); let mut __sum = 0.0f64; for __i in 0..__len {{ __sum += __p[__i] * __q[__i]; }} __sum }}",
+        args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_erf(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); let __t = 1.0 / (1.0 + 0.3275911 * __x.abs()); let __poly = __t * (0.254829592 + __t * (-0.284496736 + __t * (1.421413741 + __t * (-1.453152027 + __t * 1.061405429)))); let __r = 1.0 - __poly * (-__x * __x).exp(); if __x >= 0.0 {{ __r }} else {{ -__r }} }}",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_erfc(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); let __t = 1.0 / (1.0 + 0.3275911 * __x.abs()); let __poly = __t * (0.254829592 + __t * (-0.284496736 + __t * (1.421413741 + __t * (-1.453152027 + __t * 1.061405429)))); let __r = __poly * (-__x * __x).exp(); if __x >= 0.0 {{ __r }} else {{ 2.0 - __r }} }}",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_gamma(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); if __x <= 0.0 && __x == __x.floor() {{ f64::INFINITY }} else {{ let __g = 7usize; let __c = [0.99999999999980993f64, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7]; let __z = if __x < 0.5 {{ let __y = std::f64::consts::PI / ((__x * std::f64::consts::PI).sin() * {{ let __xn = 1.0 - __x; let mut __s = __c[0]; for __i in 1..=__g+1 {{ __s += __c[__i] / (__xn + __i as f64 - 1.0); }} let __t2 = __xn + __g as f64 - 0.5; (2.0 * std::f64::consts::PI).sqrt() * __t2.powf(__xn - 0.5) * (-__t2).exp() * __s }}); __y }} else {{ let __xm = __x - 1.0; let mut __s = __c[0]; for __i in 1..=__g+1 {{ __s += __c[__i] / (__xm + __i as f64); }} let __t2 = __xm + __g as f64 + 0.5; (2.0 * std::f64::consts::PI).sqrt() * __t2.powf(__xm + 0.5) * (-__t2).exp() * __s }}; __z }} }}",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_lgamma(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); if __x <= 0.0 && __x == __x.floor() {{ f64::INFINITY }} else {{ let __g = 7usize; let __c = [0.99999999999980993f64, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7]; let __xm = if __x < 0.5 {{ 1.0 - __x }} else {{ __x - 1.0 }}; let mut __s = __c[0]; for __i in 1..=__g+1 {{ __s += __c[__i] / (__xm + __i as f64); }} let __t2 = __xm + __g as f64 + 0.5; let __r = (2.0 * std::f64::consts::PI).sqrt().ln() + (__xm + 0.5) * __t2.ln() - __t2 + __s.ln(); if __x < 0.5 {{ (std::f64::consts::PI / ((__x * std::f64::consts::PI).sin() * __r.exp())).abs().ln() }} else {{ __r }} }} }}",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_frexp(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); if __x == 0.0 {{ vec![__x, 0.0] }} else if !__x.is_finite() {{ vec![__x, 0.0] }} else {{ let __bits = __x.to_bits(); let __sign = __bits & 0x8000000000000000; let __exp = ((__bits >> 52) & 0x7ff) as i32; let __frac = __bits & 0x000fffffffffffff; if __exp == 0 {{ let __scaled = __x * (2.0f64).powi(54); let __sbits = __scaled.to_bits(); let __sexp = ((__sbits >> 52) & 0x7ff) as i32; let __sfrac = __sbits & 0x000fffffffffffff; let __mant = f64::from_bits(__sign | (0x3feu64 << 52) | __sfrac); let __e = __sexp - 1022 - 54; vec![__mant, __e as f64] }} else {{ let __mant = f64::from_bits(__sign | (0x3feu64 << 52) | __frac); let __e = __exp - 1022; vec![__mant, __e as f64] }} }} }}",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_ldexp(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __m: f64 = ({}); let __e: i64 = ({}); __m * (2.0f64).powi(__e as i32) }}",
+        args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_modf(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); if __x.is_nan() {{ vec![f64::NAN, f64::NAN] }} else if __x.is_infinite() {{ vec![0.0f64.copysign(__x), __x] }} else {{ let __int = __x.trunc(); let mut __frac = __x - __int; if __frac == 0.0 {{ __frac = 0.0f64.copysign(__x); }} vec![__frac, __int] }} }}",
+        args[0]
+    )))
+}
+
+pub(super) fn lower_nextafter(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 2 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); let __y: f64 = ({}); if __x.is_nan() || __y.is_nan() {{ f64::NAN }} else if __x == __y {{ __y }} else if __x == 0.0 {{ let __sign = if __y.is_sign_negative() {{ 1u64 << 63 }} else {{ 0u64 }}; f64::from_bits(__sign | 1u64) }} else {{ let mut __bits = __x.to_bits(); if (__x < __y) == (__x > 0.0) {{ __bits += 1; }} else {{ __bits -= 1; }} f64::from_bits(__bits) }} }}",
+        args[0], args[1]
+    )))
+}
+
+pub(super) fn lower_ulp(args: &[String]) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::RawCode(format!(
+        "{{ let __x: f64 = ({}); if __x.is_nan() {{ f64::NAN }} else if __x.is_infinite() {{ f64::INFINITY }} else {{ let __a = __x.abs(); if __a == 0.0 {{ f64::from_bits(1u64) }} else if __a == f64::MAX {{ __a - f64::from_bits(__a.to_bits() - 1) }} else {{ f64::from_bits(__a.to_bits() + 1) - __a }} }} }}",
+        args[0]
+    )))
+}
