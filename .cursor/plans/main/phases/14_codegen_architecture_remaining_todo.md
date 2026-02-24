@@ -188,7 +188,7 @@ Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bri
 - [x] Eliminate stmt fallback raw-capture for `TryExcept` by introducing structured IR lowering path
 - [x] Eliminate stmt fallback raw-capture for `NestedFunction` by introducing structured IR lowering path
 - [ ] Eliminate expr fallback raw-capture by adding structured lowering for remaining residue:
-  - [ ] `Call`
+  - [x] `Call`
   - [ ] `MethodCall`
   - [ ] `ConstructorCall`
   - [ ] `Index`
