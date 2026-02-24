@@ -187,6 +187,7 @@ Root cause: `builtin_open` / `open_file` lowering still relied on monolithic raw
 
 - [x] Centralize mode-branch generation into template helpers
 - [x] Preserve runtime semantics while reducing giant inline string bodies for open paths
+- [x] Migrate handle-result wrappers to typed IR closure/match structure (minimize monolithic `RawCode` wrappers)
 - [x] Validate with full completion gate + demos
 - [x] PR merged (#688)
 
