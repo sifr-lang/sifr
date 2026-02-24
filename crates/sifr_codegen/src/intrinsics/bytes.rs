@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn int(v: i64) -> RustExpr {
@@ -47,7 +47,7 @@ fn parse_map_err(expr: RustExpr) -> RustExpr {
     }
 }
 
-pub(super) fn lower_encode_utf8(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_encode_utf8(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -88,7 +88,7 @@ pub(super) fn lower_encode_utf8(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_decode_utf8(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_decode_utf8(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -97,7 +97,7 @@ pub(super) fn lower_decode_utf8(args: &[String]) -> Option<RustExpr> {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(args[0].clone())),
+                        receiver: Box::new(args[0].clone()),
                         method: "iter".to_string(),
                         args: vec![],
                     }),
@@ -213,7 +213,7 @@ pub(super) fn lower_decode_utf8(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_bytes_to_hex(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_bytes_to_hex(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -222,7 +222,7 @@ pub(super) fn lower_bytes_to_hex(args: &[String]) -> Option<RustExpr> {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(args[0].clone())),
+                        receiver: Box::new(args[0].clone()),
                         method: "iter".to_string(),
                         args: vec![],
                     }),
@@ -319,7 +319,7 @@ pub(super) fn lower_bytes_to_hex(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_bytes_from_hex(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_bytes_from_hex(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
