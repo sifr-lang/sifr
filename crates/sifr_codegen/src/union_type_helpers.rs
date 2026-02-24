@@ -1,4 +1,4 @@
-use crate::RustEmitter;
+use crate::{sifr_type_to_rust_type, RustEmitter, RustEnumVariant, RustItem, RustParam, RustStmt, RustType, Visibility};
 use sifr_hir::{HirModule, HirStmt};
 use sifr_type_system::ParamConvention;
 use sifr_type_system::Type;
@@ -119,39 +119,60 @@ impl RustEmitter {
         let mut enums: Vec<(String, Vec<Type>)> = self.union_enums.clone().into_iter().collect();
         enums.sort_by(|a, b| a.0.cmp(&b.0));
 
-        for (enum_name, members) in &enums {
-            // Generate the enum definition
-            self.enum_defs.push_str("#[derive(Debug, Clone)]\n");
-            let _ = writeln!(self.enum_defs, "enum {enum_name} {{");
-            for member in members {
-                let variant = member.union_variant_name();
-                let rust_ty = member.rust_type();
-                let _ = writeln!(self.enum_defs, "    {variant}({rust_ty}),");
-            }
-            self.enum_defs.push_str("}\n\n");
+        self.enum_items.clear();
+        for (enum_name, members) in enums {
+            let variants = members
+                .iter()
+                .map(|member| RustEnumVariant {
+                    name: member.union_variant_name(),
+                    tuple_fields: vec![sifr_type_to_rust_type(member)],
+                    fields: Vec::new(),
+                    value: None,
+                })
+                .collect();
+            self.enum_items.push(RustItem::Enum {
+                name: enum_name.clone(),
+                visibility: Visibility::Private,
+                derives: vec!["Debug".to_string(), "Clone".to_string()],
+                repr: None,
+                variants,
+            });
 
-            // Generate Display impl so println!("{}", x) works
-            let _ = writeln!(self.enum_defs, "impl std::fmt::Display for {enum_name} {{");
-            self.enum_defs.push_str(
-                "    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n",
-            );
-            self.enum_defs.push_str("        match self {\n");
-            for member in members {
+            let mut match_lines = String::from("match self {\n");
+            for member in &members {
                 let variant = member.union_variant_name();
-                // Use {:?} for class types (they derive Debug, not Display)
                 let fmt_spec = if matches!(member, Type::Class { .. }) {
                     "{:?}"
                 } else {
                     "{}"
                 };
                 let _ = writeln!(
-                    self.enum_defs,
-                    "            {enum_name}::{variant}(v) => write!(f, \"{fmt_spec}\", v),"
+                    match_lines,
+                    "    {enum_name}::{variant}(v) => write!(f, \"{fmt_spec}\", v),"
                 );
             }
-            self.enum_defs.push_str("        }\n");
-            self.enum_defs.push_str("    }\n");
-            self.enum_defs.push_str("}\n\n");
+            match_lines.push('}');
+
+            self.enum_items.push(RustItem::Impl {
+                target: enum_name,
+                type_params: Vec::new(),
+                trait_: Some("std::fmt::Display".to_string()),
+                items: vec![RustItem::Fn {
+                    name: "fmt".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: Vec::new(),
+                    params: vec![
+                        RustParam::SelfParam { mutable: false },
+                        RustParam::Named {
+                            name: "f".to_string(),
+                            ty: RustType::RawCode("&mut std::fmt::Formatter<'_>".to_string()),
+                        },
+                    ],
+                    ret: Some(RustType::RawCode("std::fmt::Result".to_string())),
+                    body: vec![RustStmt::RawCode(match_lines)],
+                    is_async: false,
+                }],
+            });
         }
     }
 }

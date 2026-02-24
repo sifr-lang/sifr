@@ -412,11 +412,22 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
 
     remove_trivial_clones_in_items(&mut preamble_items);
     let ir_import_needs = collect_import_needs_from_items(&preamble_items);
-    let needs_hashmap = needs_hashmap_base || ir_import_needs.collections.needs_hashmap;
-    let needs_hashset = needs_hashset_base || ir_import_needs.collections.needs_hashset;
-    let needs_vecdeque = needs_vecdeque_base || ir_import_needs.collections.needs_vecdeque;
-    let needs_bigint = needs_bigint_base || ir_import_needs.runtime.needs_bigint;
-    let needs_mutex = needs_file_handles || needs_logging || ir_import_needs.runtime.needs_mutex;
+    let enum_import_needs = collect_import_needs_from_items(&emitter.enum_items);
+    let needs_hashmap = needs_hashmap_base
+        || ir_import_needs.collections.needs_hashmap
+        || enum_import_needs.collections.needs_hashmap;
+    let needs_hashset = needs_hashset_base
+        || ir_import_needs.collections.needs_hashset
+        || enum_import_needs.collections.needs_hashset;
+    let needs_vecdeque = needs_vecdeque_base
+        || ir_import_needs.collections.needs_vecdeque
+        || enum_import_needs.collections.needs_vecdeque;
+    let needs_bigint =
+        needs_bigint_base || ir_import_needs.runtime.needs_bigint || enum_import_needs.runtime.needs_bigint;
+    let needs_mutex = needs_file_handles
+        || needs_logging
+        || ir_import_needs.runtime.needs_mutex
+        || enum_import_needs.runtime.needs_mutex;
 
     let mut import_items: Vec<RustItem> = Vec::new();
     if needs_hashmap {
@@ -480,8 +491,18 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         result.push_str(&render_items(&import_items));
         result.push('\n');
     }
-    if !emitter.enum_defs.is_empty() {
-        result.push_str(&emitter.enum_defs);
+    let enum_issues = validate_items(&emitter.enum_items);
+    assert!(
+        enum_issues.is_empty(),
+        "codegen IR validation failed (union enums): {}",
+        enum_issues
+            .iter()
+            .map(|issue| issue.message.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ")
+    );
+    if !emitter.enum_items.is_empty() {
+        result.push_str(&render_items(&emitter.enum_items));
         result.push('\n');
     }
 
@@ -566,8 +587,8 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         if !result.is_empty() {
             result.push('\n');
         }
-        if !emitter.enum_defs.is_empty() {
-            result.push_str(&emitter.enum_defs);
+        if !emitter.enum_items.is_empty() {
+            result.push_str(&render_items(&emitter.enum_items));
             result.push('\n');
         }
 
@@ -789,8 +810,8 @@ struct RustEmitter {
     runtime_needs: RuntimeNeeds,
     /// Track union enum types that need to be defined (name -> member types)
     union_enums: HashMap<String, Vec<Type>>,
-    /// Accumulated enum definitions to prepend
-    enum_defs: String,
+    /// Accumulated union enum items to prepend
+    enum_items: Vec<RustItem>,
     /// The return type of the function currently being emitted
     current_return_type: Option<Type>,
     /// Set of variable names currently narrowed via `if let Some(...)` unwrap
@@ -893,7 +914,7 @@ impl RustEmitter {
             collection_needs: CollectionNeeds::default(),
             runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),
-            enum_defs: String::new(),
+            enum_items: Vec::new(),
             current_return_type: None,
             option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
