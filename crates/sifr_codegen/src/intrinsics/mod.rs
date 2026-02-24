@@ -107,7 +107,7 @@ fn lower_intrinsic_rendered(
         "fsum" => (math::lower_fsum(args), None),
         "sumprod" => (math::lower_sumprod(args), None),
         "erf" => (math::lower_erf(args), None),
-        "erfc" => (math::lower_erfc(rendered_args), None),
+        "erfc" => (math::lower_erfc(args), None),
         "gamma" => (math::lower_gamma(rendered_args), None),
         "lgamma" => (math::lower_lgamma(rendered_args), None),
         "frexp" => (math::lower_frexp(rendered_args), None),
@@ -1070,6 +1070,10 @@ mod tests {
         let erf = lower_intrinsic("erf", &["x".to_string()]).expect("erf");
         assert!(render_expr(&erf.expr).contains("__x >= 0.0"));
         assert!(!matches!(erf.expr, RustExpr::RawCode(_)));
+
+        let erfc = lower_intrinsic("erfc", &["x".to_string()]).expect("erfc");
+        assert!(render_expr(&erfc.expr).contains("2.0 - __r"));
+        assert!(!matches!(erfc.expr, RustExpr::RawCode(_)));
     }
 
     #[test]

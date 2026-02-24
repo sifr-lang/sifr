@@ -88,6 +88,7 @@ status: **partially met**
 - [x] Math intrinsic `dist` now lowers via structured IR loop/scale accumulation path (no monolithic `RawCode` template)
 - [x] Math intrinsic `fsum` now lowers via structured IR compensated-sum loop path (no monolithic `RawCode` template)
 - [x] Math intrinsic `erf` now lowers via structured IR polynomial path (no monolithic `RawCode` template)
+- [x] Math intrinsic `erfc` now lowers via structured IR complementary polynomial path (no monolithic `RawCode` template)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes
