@@ -2,7 +2,7 @@
 
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 
-pub(super) fn lower_json_loads(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_json_loads(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -11,7 +11,7 @@ pub(super) fn lower_json_loads(args: &[String]) -> Option<RustExpr> {
             mutable: false,
             name: "__json_input".to_string(),
             ty: None,
-            value: RustExpr::Ident(args[0].clone()),
+            value: args[0].clone(),
         }],
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
@@ -87,7 +87,7 @@ pub(super) fn lower_json_loads(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_json_dumps(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_json_dumps(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -99,7 +99,7 @@ pub(super) fn lower_json_dumps(args: &[String]) -> Option<RustExpr> {
             ])),
             args: vec![RustExpr::Ref {
                 mutable: false,
-                expr: Box::new(RustExpr::Ident(args[0].clone())),
+                expr: Box::new(args[0].clone()),
             }],
         }),
         method: "unwrap_or_default".to_string(),
