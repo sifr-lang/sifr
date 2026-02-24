@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn ref_expr(expr: RustExpr) -> RustExpr {
@@ -13,7 +13,7 @@ fn ref_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+fn ref_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     ref_expr(arg_expr(args, idx))
 }
 
@@ -134,7 +134,7 @@ fn entry_path_to_string(entry_ident: &str) -> RustExpr {
     })
 }
 
-pub(super) fn lower_touch(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_touch(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -172,7 +172,7 @@ pub(super) fn lower_touch(args: &[String]) -> Option<RustExpr> {
     }))
 }
 
-pub(super) fn lower_resolve_path(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_resolve_path(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -201,7 +201,7 @@ pub(super) fn lower_resolve_path(args: &[String]) -> Option<RustExpr> {
     }))
 }
 
-pub(super) fn lower_iterdir(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_iterdir(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -253,7 +253,7 @@ pub(super) fn lower_iterdir(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_glob_pattern(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_glob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -348,7 +348,7 @@ pub(super) fn lower_glob_pattern(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_rglob_pattern(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_rglob_pattern(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
