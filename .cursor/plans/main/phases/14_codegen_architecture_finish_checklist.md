@@ -82,6 +82,7 @@ status: **partially met**
 - [x] Math intrinsic `ldexp` now lowers via typed structured IR (`f64` cast + `2.0.powi(i32)`), removing its monolithic `RawCode` template
 - [x] Math intrinsic `sumprod` now lowers via structured IR block/for-loop accumulation (no monolithic `RawCode` template)
 - [x] Math intrinsic `modf` now lowers via structured IR conditional block shape (no monolithic `RawCode` template)
+- [x] Math intrinsic `ulp` now lowers via structured IR conditional/numeric path (no monolithic `RawCode` template)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes
