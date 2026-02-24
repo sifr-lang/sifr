@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn ref_expr(expr: RustExpr) -> RustExpr {
@@ -13,7 +13,7 @@ fn ref_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+fn ref_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     ref_expr(arg_expr(args, idx))
 }
 
@@ -189,7 +189,7 @@ fn is_base64_char(var_name: &str) -> RustExpr {
     }
 }
 
-pub(super) fn lower_base64_encode(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_base64_encode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -199,7 +199,7 @@ pub(super) fn lower_base64_encode(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_base64_decode(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_base64_decode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -219,7 +219,7 @@ pub(super) fn lower_base64_decode(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_base64_encode_opts(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_base64_encode_opts(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
@@ -475,7 +475,7 @@ pub(super) fn lower_base64_encode_opts(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_base64_decode_opts(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_base64_decode_opts(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 4 {
         return None;
     }
@@ -727,7 +727,7 @@ pub(super) fn lower_base64_decode_opts(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_urlsafe_b64encode(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_urlsafe_b64encode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -737,7 +737,7 @@ pub(super) fn lower_urlsafe_b64encode(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_urlsafe_b64decode(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_urlsafe_b64decode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
