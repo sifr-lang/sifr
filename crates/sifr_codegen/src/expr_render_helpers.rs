@@ -213,7 +213,6 @@ impl RustEmitter {
         if !matches!(
             expr,
             HirExpr::FString { .. }
-                | HirExpr::GeneratorExpr { .. }
                 | HirExpr::Lambda { .. }
         ) {
             return None;
