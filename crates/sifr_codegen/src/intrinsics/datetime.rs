@@ -2,7 +2,7 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-pub(super) fn lower_datetime_now(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_datetime_now(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -27,7 +27,7 @@ pub(super) fn lower_datetime_now(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_datetime_now_struct(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_datetime_now_struct(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -134,7 +134,7 @@ pub(super) fn lower_datetime_now_struct(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_datetime_format(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_datetime_format(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -151,11 +151,11 @@ pub(super) fn lower_datetime_format(args: &[String]) -> Option<RustExpr> {
                     args: vec![
                         RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(RustExpr::Ident(args[0].clone())),
+                            expr: Box::new(args[0].clone()),
                         },
                         RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(RustExpr::Ident(args[1].clone())),
+                            expr: Box::new(args[1].clone()),
                         },
                     ],
                 }),
@@ -207,7 +207,7 @@ pub(super) fn lower_datetime_format(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_datetime_from_timestamp(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_datetime_from_timestamp(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -217,7 +217,7 @@ pub(super) fn lower_datetime_from_timestamp(args: &[String]) -> Option<RustExpr>
             name: "__ts".to_string(),
             ty: None,
             value: RustExpr::Cast {
-                expr: Box::new(RustExpr::Ident(args[0].clone())),
+                expr: Box::new(args[0].clone()),
                 ty: RustType::I64,
             },
         }],
