@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn str_lit(value: &str) -> RustExpr {
@@ -14,7 +14,7 @@ fn char_lit(value: char) -> RustExpr {
     RustExpr::Literal(RustLiteral::Char(value))
 }
 
-pub(super) fn lower_html_escape(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_html_escape(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -41,7 +41,7 @@ pub(super) fn lower_html_escape(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_html_unescape(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_html_unescape(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }

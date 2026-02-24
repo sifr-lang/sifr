@@ -101,6 +101,7 @@ status: **partially met**
 - [x] `base32` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `base64` (`base64_*`, `urlsafe_b64*`) intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `json` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
+- [x] `html` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `gzip` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
