@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn int(v: i64) -> RustExpr {
@@ -582,7 +582,7 @@ fn decode_with_alphabet(input: RustExpr, alphabet: &str, invalid_msg: &str) -> R
     }
 }
 
-pub(super) fn lower_b32encode(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_b32encode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -592,7 +592,7 @@ pub(super) fn lower_b32encode(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_b32decode(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_b32decode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -603,7 +603,7 @@ pub(super) fn lower_b32decode(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_b32hexencode(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_b32hexencode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -613,7 +613,7 @@ pub(super) fn lower_b32hexencode(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_b32hexdecode(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_b32hexdecode(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
