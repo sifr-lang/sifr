@@ -170,13 +170,13 @@ Root cause: production codegen still centers around string emitters + fallback.
 
 ## Slice 7: Structural DCE on IR (Replace Text-Token DCE)
 
-status: **pending**
+status: **done**
 
 Root cause: stdlib pruning is still text-token chunk parsing.
 
-- [ ] Replace `stdlib_filter` token/chunk DCE with IR item graph traversal
-- [ ] Keep transitive dependency behavior and order stability
-- [ ] Delete obsolete text/chunk parsing helpers after migration
+- [x] Replace `stdlib_filter` token/chunk DCE with IR item graph traversal
+- [x] Keep transitive dependency behavior and order stability
+- [x] Delete obsolete text/chunk parsing helpers after migration
 
 ---
 

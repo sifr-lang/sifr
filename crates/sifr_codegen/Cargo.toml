@@ -9,6 +9,7 @@ license = { workspace = true }
 [dependencies]
 sifr_hir = { workspace = true }
 sifr_type_system = { workspace = true }
+syn = { version = "2", features = ["full", "visit"] }
 
 [dev-dependencies]
 sifr_python_parser = { workspace = true }
