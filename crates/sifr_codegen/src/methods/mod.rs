@@ -1,11 +1,13 @@
 //! Method registry and dispatch for incremental migration.
 
+mod common;
 mod deque;
 mod dict;
 mod list;
 mod set;
 mod string;
 
+use crate::helpers::is_option_type;
 use crate::RustExpr;
 use sifr_type_system::Type;
 
@@ -30,6 +32,13 @@ pub(crate) fn lower_method_with_context(
     is_deque_data_field: bool,
 ) -> Option<LoweredMethod> {
     let expr = match (object_ty, method) {
+        (Type::Tuple(elems), "len") => common::lower_tuple_len(elems.len(), rendered_args),
+        (Type::Tuple(_), "count") => common::lower_tuple_count_placeholder(rendered_args),
+        (Type::Str, "len") => common::lower_string_char_len(rendered_object, rendered_args),
+        (ty, "len") if is_option_type(ty) => {
+            common::lower_option_len(rendered_object, rendered_args)
+        }
+        (_, "len") => common::lower_len(rendered_object, rendered_args),
         (Type::Str, "upper") => string::lower_upper(rendered_object, rendered_args),
         (Type::Str, "lower") => string::lower_lower(rendered_object, rendered_args),
         (Type::Str, "strip") => string::lower_strip(rendered_object, rendered_args),
@@ -117,6 +126,51 @@ mod tests {
 
     #[test]
     fn lowers_string_methods_via_registry() {
+        let tuple_len = lower_method(
+            &Type::Tuple(vec![Type::Int, Type::Str, Type::Bool]),
+            "len",
+            "t",
+            &[],
+        )
+        .expect("tuple len lowers");
+        assert_eq!(render_expr(&tuple_len.expr), "3_i64");
+
+        let tuple_count = lower_method(
+            &Type::Tuple(vec![Type::Int, Type::Str, Type::Bool]),
+            "count",
+            "t",
+            &["1".to_string()],
+        )
+        .expect("tuple count lowers");
+        assert_eq!(
+            render_expr(&tuple_count.expr),
+            "0_i64 /* tuple.count() not fully supported */"
+        );
+
+        let str_len = lower_method(&Type::Str, "len", "s", &[]).expect("str len lowers");
+        assert_eq!(render_expr(&str_len.expr), "s.chars().count() as i64");
+
+        let option_len = lower_method(
+            &Type::Union(vec![Type::List(Box::new(Type::Int)), Type::None]),
+            "len",
+            "opt",
+            &[],
+        )
+        .expect("option len lowers");
+        assert_eq!(
+            render_expr(&option_len.expr),
+            "opt.as_ref().unwrap().len() as i64"
+        );
+
+        let generic_len = lower_method(
+            &Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
+            "len",
+            "d",
+            &[],
+        )
+        .expect("generic len lowers");
+        assert_eq!(render_expr(&generic_len.expr), "d.len() as i64");
+
         let upper = lower_method(&Type::Str, "upper", "s", &[]).expect("upper lowers");
         assert_eq!(render_expr(&upper.expr), "s.to_uppercase()");
 
