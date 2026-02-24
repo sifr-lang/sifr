@@ -102,7 +102,7 @@ fn lower_intrinsic_rendered(
         "asinh" => (math::lower_asinh(rendered_args), None),
         "atanh" => (math::lower_atanh(rendered_args), None),
         "isqrt" => (math::lower_isqrt(rendered_args), None),
-        "remainder" => (math::lower_remainder(rendered_args), None),
+        "remainder" => (math::lower_remainder(args), None),
         "dist" => (math::lower_dist(rendered_args), None),
         "fsum" => (math::lower_fsum(rendered_args), None),
         "sumprod" => (math::lower_sumprod(args), None),
@@ -1034,7 +1034,8 @@ mod tests {
     fn lowers_extended_math_intrinsics_via_registry() {
         let remainder =
             lower_intrinsic("remainder", &["x".to_string(), "y".to_string()]).expect("remainder");
-        assert!(render_expr(&remainder.expr).contains("__q = __x / __y"));
+        assert!(render_expr(&remainder.expr).contains("__abs_frac < 0.5"));
+        assert!(!matches!(remainder.expr, RustExpr::RawCode(_)));
 
         let dist = lower_intrinsic("dist", &["p".to_string(), "q".to_string()]).expect("dist");
         assert!(render_expr(&dist.expr).contains("__p.len() != __q.len()"));

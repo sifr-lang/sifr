@@ -303,14 +303,207 @@ pub(super) fn lower_isqrt(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_remainder(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_remainder(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __x: f64 = ({}); let __y: f64 = ({}); if __x.is_nan() || __y.is_nan() {{ f64::NAN }} else if __y == 0.0 || __x.is_infinite() {{ f64::NAN }} else if __y.is_infinite() {{ __x }} else {{ let __q = __x / __y; let __n0 = __q.trunc(); let __frac = __q - __n0; let __abs_frac = __frac.abs(); let __n = if __abs_frac < 0.5 {{ __n0 }} else if __abs_frac > 0.5 {{ __n0 + __q.signum() }} else if (__n0 as i64) % 2 == 0 {{ __n0 }} else {{ __n0 + __q.signum() }}; let __r = __x - __n * __y; if __r == 0.0 {{ 0.0f64.copysign(__x) }} else {{ __r }} }} }}",
-        args[0], args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__x".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::Cast {
+                    expr: Box::new(args[0].clone()),
+                    ty: RustType::F64,
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__y".to_string(),
+                ty: Some(RustType::F64),
+                value: RustExpr::Cast {
+                    expr: Box::new(args[1].clone()),
+                    ty: RustType::F64,
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                    method: "is_nan".to_string(),
+                    args: vec![],
+                }),
+                op: "||".to_string(),
+                right: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__y".to_string())),
+                    method: "is_nan".to_string(),
+                    args: vec![],
+                }),
+            }),
+            then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()])),
+            else_expr: Some(Box::new(RustExpr::If {
+                cond: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__y".to_string())),
+                        op: "==".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                    }),
+                    op: "||".to_string(),
+                    right: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                        method: "is_infinite".to_string(),
+                        args: vec![],
+                    }),
+                }),
+                then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()])),
+                else_expr: Some(Box::new(RustExpr::If {
+                    cond: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__y".to_string())),
+                        method: "is_infinite".to_string(),
+                        args: vec![],
+                    }),
+                    then_expr: Box::new(RustExpr::Ident("__x".to_string())),
+                    else_expr: Some(Box::new(RustExpr::Block {
+                        stmts: vec![
+                            RustStmt::Let {
+                                mutable: false,
+                                name: "__q".to_string(),
+                                ty: Some(RustType::F64),
+                                value: RustExpr::BinOp {
+                                    left: Box::new(RustExpr::Ident("__x".to_string())),
+                                    op: "/".to_string(),
+                                    right: Box::new(RustExpr::Ident("__y".to_string())),
+                                },
+                            },
+                            RustStmt::Let {
+                                mutable: false,
+                                name: "__n0".to_string(),
+                                ty: Some(RustType::F64),
+                                value: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__q".to_string())),
+                                    method: "trunc".to_string(),
+                                    args: vec![],
+                                },
+                            },
+                            RustStmt::Let {
+                                mutable: false,
+                                name: "__frac".to_string(),
+                                ty: Some(RustType::F64),
+                                value: RustExpr::BinOp {
+                                    left: Box::new(RustExpr::Ident("__q".to_string())),
+                                    op: "-".to_string(),
+                                    right: Box::new(RustExpr::Ident("__n0".to_string())),
+                                },
+                            },
+                            RustStmt::Let {
+                                mutable: false,
+                                name: "__abs_frac".to_string(),
+                                ty: Some(RustType::F64),
+                                value: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__frac".to_string())),
+                                    method: "abs".to_string(),
+                                    args: vec![],
+                                },
+                            },
+                            RustStmt::Let {
+                                mutable: false,
+                                name: "__n".to_string(),
+                                ty: Some(RustType::F64),
+                                value: RustExpr::If {
+                                    cond: Box::new(RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__abs_frac".to_string())),
+                                        op: "<".to_string(),
+                                        right: Box::new(RustExpr::Literal(RustLiteral::Float(0.5))),
+                                    }),
+                                    then_expr: Box::new(RustExpr::Ident("__n0".to_string())),
+                                    else_expr: Some(Box::new(RustExpr::If {
+                                        cond: Box::new(RustExpr::BinOp {
+                                            left: Box::new(RustExpr::Ident("__abs_frac".to_string())),
+                                            op: ">".to_string(),
+                                            right: Box::new(RustExpr::Literal(RustLiteral::Float(0.5))),
+                                        }),
+                                        then_expr: Box::new(RustExpr::BinOp {
+                                            left: Box::new(RustExpr::Ident("__n0".to_string())),
+                                            op: "+".to_string(),
+                                            right: Box::new(RustExpr::MethodCall {
+                                                receiver: Box::new(RustExpr::Ident("__q".to_string())),
+                                                method: "signum".to_string(),
+                                                args: vec![],
+                                            }),
+                                        }),
+                                        else_expr: Some(Box::new(RustExpr::If {
+                                            cond: Box::new(RustExpr::BinOp {
+                                                left: Box::new(RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::Cast {
+                                                        expr: Box::new(RustExpr::Ident(
+                                                            "__n0".to_string(),
+                                                        )),
+                                                        ty: RustType::I64,
+                                                    }),
+                                                    op: "%".to_string(),
+                                                    right: Box::new(RustExpr::Literal(
+                                                        RustLiteral::Int(2),
+                                                    )),
+                                                }),
+                                                op: "==".to_string(),
+                                                right: Box::new(RustExpr::Literal(
+                                                    RustLiteral::Int(0),
+                                                )),
+                                            }),
+                                            then_expr: Box::new(RustExpr::Ident("__n0".to_string())),
+                                            else_expr: Some(Box::new(RustExpr::BinOp {
+                                                left: Box::new(RustExpr::Ident("__n0".to_string())),
+                                                op: "+".to_string(),
+                                                right: Box::new(RustExpr::MethodCall {
+                                                    receiver: Box::new(RustExpr::Ident(
+                                                        "__q".to_string(),
+                                                    )),
+                                                    method: "signum".to_string(),
+                                                    args: vec![],
+                                                }),
+                                            })),
+                                        })),
+                                    })),
+                                },
+                            },
+                            RustStmt::Let {
+                                mutable: false,
+                                name: "__r".to_string(),
+                                ty: Some(RustType::F64),
+                                value: RustExpr::BinOp {
+                                    left: Box::new(RustExpr::Ident("__x".to_string())),
+                                    op: "-".to_string(),
+                                    right: Box::new(RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__n".to_string())),
+                                        op: "*".to_string(),
+                                        right: Box::new(RustExpr::Ident("__y".to_string())),
+                                    }),
+                                },
+                            },
+                        ],
+                        expr: Some(Box::new(RustExpr::If {
+                            cond: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__r".to_string())),
+                                op: "==".to_string(),
+                                right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                            }),
+                            then_expr: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                                    ty: RustType::F64,
+                                }),
+                                method: "copysign".to_string(),
+                                args: vec![RustExpr::Ident("__x".to_string())],
+                            }),
+                            else_expr: Some(Box::new(RustExpr::Ident("__r".to_string()))),
+                        })),
+                    })),
+                })),
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_dist(args: &[String]) -> Option<RustExpr> {
