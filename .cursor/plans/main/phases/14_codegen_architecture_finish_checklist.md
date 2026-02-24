@@ -157,7 +157,7 @@ Root cause: `emit_method_call` still has broad fallback string emission.
 - [x] Migrate remaining method lowering into registry modules
 - [x] Reduce `emit_method_call` to registry dispatch + tightly-scoped non-registry semantics if unavoidable
 - [x] Add guard test for registry-first/no-large-fallback growth
-- [x] Introduce IR-typed method dispatch boundary (`lower_method_with_context_ir`) with compatibility rendering internal to registry
+- [x] Delete string-arg method lowering boundary; method registry now consumes IR expressions directly
 
 ## Slice 6: Promote Full IR Module Assembly to Production Path
 

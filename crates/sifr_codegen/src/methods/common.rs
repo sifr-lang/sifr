@@ -2,14 +2,14 @@
 
 use crate::{RustExpr, RustType};
 
-pub(super) fn lower_tuple_len(elem_count: usize, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_tuple_len(elem_count: usize, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
     Some(RustExpr::RawCode(format!("{elem_count}_i64")))
 }
 
-pub(super) fn lower_tuple_count_placeholder(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_tuple_count_placeholder(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -18,14 +18,14 @@ pub(super) fn lower_tuple_count_placeholder(args: &[String]) -> Option<RustExpr>
     ))
 }
 
-pub(super) fn lower_string_char_len(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_string_char_len(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
     Some(RustExpr::Cast {
         expr: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                receiver: Box::new(object.clone()),
                 method: "chars".to_string(),
                 args: vec![],
             }),
@@ -36,7 +36,7 @@ pub(super) fn lower_string_char_len(object: &str, args: &[String]) -> Option<Rus
     })
 }
 
-pub(super) fn lower_option_len(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_option_len(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -44,7 +44,7 @@ pub(super) fn lower_option_len(object: &str, args: &[String]) -> Option<RustExpr
         expr: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.to_string())),
+                    receiver: Box::new(object.clone()),
                     method: "as_ref".to_string(),
                     args: vec![],
                 }),
@@ -58,13 +58,13 @@ pub(super) fn lower_option_len(object: &str, args: &[String]) -> Option<RustExpr
     })
 }
 
-pub(super) fn lower_len(object: &str, args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_len(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
     Some(RustExpr::Cast {
         expr: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(object.to_string())),
+            receiver: Box::new(object.clone()),
             method: "len".to_string(),
             args: vec![],
         }),
