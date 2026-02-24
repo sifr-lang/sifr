@@ -1,4 +1,5 @@
 use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
+use sifr_type_system::Type;
 use std::collections::HashSet;
 
 pub(crate) fn collect_referenced_builtin_error_classes(
@@ -11,14 +12,26 @@ pub(crate) fn collect_referenced_builtin_error_classes(
     let mut referenced = HashSet::new();
 
     for func in &module.functions {
+        for param in &func.params {
+            collect_type_error_refs(&param.ty, &mut referenced, builtin_error_classes);
+        }
+        collect_type_error_refs(&func.return_type, &mut referenced, builtin_error_classes);
         collect_stmt_error_refs(&func.body, &mut referenced, builtin_error_classes);
     }
     for class in &module.classes {
+        for (_, field_ty) in &class.fields {
+            collect_type_error_refs(field_ty, &mut referenced, builtin_error_classes);
+        }
         for method in &class.methods {
+            for param in &method.params {
+                collect_type_error_refs(&param.ty, &mut referenced, builtin_error_classes);
+            }
+            collect_type_error_refs(&method.return_type, &mut referenced, builtin_error_classes);
             collect_stmt_error_refs(&method.body, &mut referenced, builtin_error_classes);
         }
     }
-    for (_, _, value) in &module.constants {
+    for (_, ty, value) in &module.constants {
+        collect_type_error_refs(ty, &mut referenced, builtin_error_classes);
         collect_expr_error_refs(value, &mut referenced, builtin_error_classes);
     }
 
@@ -43,6 +56,61 @@ pub(crate) fn collect_referenced_builtin_error_classes(
     }
 
     referenced
+}
+
+fn collect_type_error_refs(
+    ty: &Type,
+    referenced: &mut HashSet<String>,
+    builtin_error_classes: &[&str],
+) {
+    match ty {
+        Type::Class { name, .. } | Type::Protocol { name, .. } | Type::Enum { name, .. } => {
+            if builtin_error_classes.contains(&name.as_str()) {
+                referenced.insert(name.clone());
+            }
+        }
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Alias(_, inner)
+        | Type::Newtype { inner, .. } => {
+            collect_type_error_refs(inner, referenced, builtin_error_classes);
+        }
+        Type::Dict(key, value) | Type::Result(key, value) => {
+            collect_type_error_refs(key, referenced, builtin_error_classes);
+            collect_type_error_refs(value, referenced, builtin_error_classes);
+        }
+        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+            for item in items {
+                collect_type_error_refs(item, referenced, builtin_error_classes);
+            }
+        }
+        Type::Function(sig) => {
+            for (_, param_ty, _) in &sig.params {
+                collect_type_error_refs(param_ty, referenced, builtin_error_classes);
+            }
+            collect_type_error_refs(&sig.return_type, referenced, builtin_error_classes);
+        }
+        Type::Callable(params, _, ret) => {
+            for param_ty in params {
+                collect_type_error_refs(param_ty, referenced, builtin_error_classes);
+            }
+            collect_type_error_refs(ret, referenced, builtin_error_classes);
+        }
+        Type::Int
+        | Type::Float
+        | Type::Bool
+        | Type::Str
+        | Type::None
+        | Type::Range
+        | Type::Any
+        | Type::Never
+        | Type::LiteralInt(_)
+        | Type::LiteralStr(_)
+        | Type::LiteralBool(_)
+        | Type::Unknown
+        | Type::TypeVar(_)
+        | Type::BigInt => {}
+    }
 }
 
 fn collect_stmt_error_refs(
@@ -367,5 +435,114 @@ fn collect_text_error_refs(
     }
     if !token.is_empty() && builtin_error_classes.contains(&token.as_str()) {
         referenced.insert(token);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::collect_referenced_builtin_error_classes;
+    use sifr_hir::{HirClass, HirClassKind, HirFunction, HirModule, HirParam, MethodKind};
+    use sifr_type_system::{ParamConvention, Type};
+    use std::collections::{HashMap, HashSet};
+
+    fn error_type(name: &str) -> Type {
+        Type::Class {
+            name: name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        }
+    }
+
+    fn empty_module() -> HirModule {
+        HirModule {
+            functions: Vec::new(),
+            classes: Vec::new(),
+            imports: Vec::new(),
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn collects_builtin_error_refs_from_function_type_positions() {
+        let mut module = empty_module();
+        module.functions.push(HirFunction {
+            name: "work".to_string(),
+            params: vec![HirParam {
+                name: "err".to_string(),
+                ty: error_type("ValueError"),
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::Own,
+            }],
+            return_type: Type::Result(Box::new(Type::Int), Box::new(error_type("IOError"))),
+            body: Vec::new(),
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            type_params: Vec::new(),
+        });
+
+        let referenced = collect_referenced_builtin_error_classes(
+            &module,
+            "",
+            &HashSet::new(),
+            false,
+            &["ValueError", "IOError"],
+        );
+
+        assert!(referenced.contains("ValueError"));
+        assert!(referenced.contains("IOError"));
+    }
+
+    #[test]
+    fn collects_builtin_error_refs_from_class_fields_and_constant_types() {
+        let mut module = empty_module();
+        module.classes.push(HirClass {
+            name: "Holder".to_string(),
+            fields: vec![("err".to_string(), error_type("ParseError"))],
+            methods: vec![HirFunction {
+                name: "check".to_string(),
+                params: vec![HirParam {
+                    name: "e".to_string(),
+                    ty: Type::Alias("AliasErr".to_string(), Box::new(error_type("RegexError"))),
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::Own,
+                }],
+                return_type: Type::None,
+                body: Vec::new(),
+                method_kind: MethodKind::Regular,
+                decorators: Vec::new(),
+                type_params: Vec::new(),
+            }],
+            is_hashable: false,
+            is_error_type: false,
+            kind: HirClassKind::Regular,
+            operator_impls: Vec::new(),
+            newtype_inner: None,
+            implements_protocols: Vec::new(),
+            parent_class: None,
+            type_params: Vec::new(),
+            enum_variants: Vec::new(),
+        });
+        module.constants.push((
+            "LAST_ERR".to_string(),
+            Type::Result(Box::new(Type::Int), Box::new(error_type("JSONDecodeError"))),
+            sifr_hir::HirExpr::NoneLiteral,
+        ));
+
+        let referenced = collect_referenced_builtin_error_classes(
+            &module,
+            "",
+            &HashSet::new(),
+            false,
+            &["ParseError", "RegexError", "JSONDecodeError"],
+        );
+
+        assert!(referenced.contains("ParseError"));
+        assert!(referenced.contains("RegexError"));
+        assert!(referenced.contains("JSONDecodeError"));
     }
 }
