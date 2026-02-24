@@ -309,8 +309,8 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         }
         HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
         HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
-        HirExpr::Call { .. }
-        | HirExpr::ConstructorCall { .. }
+        HirExpr::Call { func, args, .. } => try_lower_simple_call_expr(func, args),
+        HirExpr::ConstructorCall { .. }
         | HirExpr::DictComp { .. }
         | HirExpr::DictLiteral { .. }
         | HirExpr::GeneratorExpr { .. }
@@ -332,6 +332,60 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
         return Some(RustExpr::Ident(name.clone()));
     }
     None
+}
+
+fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> {
+    // Keep plain function-name calls on the legacy fallback path for now because
+    // they may require emitter-context rewrites (ownership/convention wrappers).
+    if !func.contains("::") || is_fallback_special_call_func(func) {
+        return None;
+    }
+
+    let lowered_args = args
+        .iter()
+        .map(try_lower_leaf_or_name_expr)
+        .collect::<Option<Vec<_>>>()?;
+
+    let lowered_func = if func.contains("::") {
+        RustExpr::Path(func.split("::").map(str::to_string).collect())
+    } else {
+        RustExpr::Ident(func.to_string())
+    };
+
+    Some(RustExpr::FnCall {
+        func: Box::new(lowered_func),
+        args: lowered_args,
+    })
+}
+
+fn is_fallback_special_call_func(func: &str) -> bool {
+    matches!(
+        func,
+        "print"
+            | "isinstance"
+            | "str"
+            | "pow"
+            | "abs"
+            | "hash"
+            | "round"
+            | "repr"
+            | "int"
+            | "bigint"
+            | "float"
+            | "bool"
+            | "min"
+            | "max"
+            | "sum"
+            | "sorted"
+            | "reversed"
+            | "enumerate"
+            | "zip"
+            | "any"
+            | "all"
+            | "map"
+            | "filter"
+            | "builtin_open"
+    )
 }
 
 fn try_lower_simple_fstring_expr(parts: &[HirFStringPart]) -> Option<RustExpr> {
@@ -2238,6 +2292,74 @@ mod tests {
                 if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Base".to_string(), "new".to_string()])
                     && args.len() == 1
         ));
+    }
+
+    #[test]
+    fn does_not_lower_non_path_call_with_leaf_args() {
+        let expr = HirExpr::Call {
+            func: "compute".to_string(),
+            args: vec![
+                HirExpr::IntLiteral(1),
+                HirExpr::Name {
+                    name: "n".to_string(),
+                    ty: Type::Int,
+                },
+            ],
+            ty: Type::Int,
+        };
+
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_path_call_with_leaf_args() {
+        let expr = HirExpr::Call {
+            func: "pkg::helper".to_string(),
+            args: vec![HirExpr::BoolLiteral(true)],
+            ty: Type::Int,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("path call lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::FnCall { func, args }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["pkg".to_string(), "helper".to_string()])
+                    && args.len() == 1
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_special_builtin_call() {
+        let expr = HirExpr::Call {
+            func: "print".to_string(),
+            args: vec![HirExpr::StringLiteral("x".to_string())],
+            ty: Type::None,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_call_with_non_leaf_arg() {
+        let expr = HirExpr::Call {
+            func: "compute".to_string(),
+            args: vec![HirExpr::ListComp {
+                expr: Box::new(HirExpr::Name {
+                    name: "x".to_string(),
+                    ty: Type::Int,
+                }),
+                generators: vec![(
+                    "x".to_string(),
+                    HirExpr::Name {
+                        name: "items".to_string(),
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    None,
+                )],
+                ty: Type::List(Box::new(Type::Int)),
+            }],
+            ty: Type::Int,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
     }
 
     #[test]

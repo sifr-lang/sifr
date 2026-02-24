@@ -988,6 +988,13 @@ impl RustEmitter {
             self.write(&crate::render_expr(&raw_bridge_expr));
             return;
         }
+        if matches!(expr, HirExpr::Call { .. }) {
+            let saved_fallback_depth = self.fallback_depth;
+            self.fallback_depth += 1;
+            self.emit_expr_fallback(expr);
+            self.fallback_depth = saved_fallback_depth;
+            return;
+        }
         self.emit_expr_fallback(expr);
     }
 }
@@ -1031,9 +1038,15 @@ fn expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExpr) -> b
         HirExpr::BoolOp { values, .. } => values
             .iter()
             .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
-        HirExpr::Call { args, .. } => args
-            .iter()
-            .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
+        HirExpr::Call { func, args, .. } => {
+            emitter.intrinsic_functions.contains(func.as_str())
+                || func == "builtin_open"
+                || emitter.func_signatures.contains_key(func)
+                || emitter.callable_var_conventions.contains_key(func)
+                || args
+                    .iter()
+                    .any(|expr| expr_contains_force_fallback_name(emitter, expr))
+        }
         HirExpr::IfExpr {
             condition,
             then_expr,
