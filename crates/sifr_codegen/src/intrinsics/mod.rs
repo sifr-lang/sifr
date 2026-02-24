@@ -47,10 +47,14 @@ fn additional_required_crates(name: &str) -> &'static [&'static str] {
 
 pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
     let rendered_args = args.iter().map(crate::render_expr).collect::<Vec<_>>();
-    lower_intrinsic_rendered(name, &rendered_args)
+    lower_intrinsic_rendered(name, args, &rendered_args)
 }
 
-fn lower_intrinsic_rendered(name: &str, rendered_args: &[String]) -> Option<LoweredIntrinsic> {
+fn lower_intrinsic_rendered(
+    name: &str,
+    args: &[RustExpr],
+    rendered_args: &[String],
+) -> Option<LoweredIntrinsic> {
     let (expr, required_crate) = match name {
         "sqrt" => (math::lower_sqrt(rendered_args), None),
         "floor" => (math::lower_floor(rendered_args), None),
@@ -337,8 +341,8 @@ fn lower_intrinsic_rendered(name: &str, rendered_args: &[String]) -> Option<Lowe
         "sha384" => (hashlib::lower_sha384(rendered_args), Some("sha2")),
         "blake2b" => (hashlib::lower_blake2b(rendered_args), Some("blake2")),
         "blake2s" => (hashlib::lower_blake2s(rendered_args), Some("blake2")),
-        "set_global_level" => (logging::lower_set_global_level(rendered_args), None),
-        "get_global_level" => (logging::lower_get_global_level(rendered_args), None),
+        "set_global_level" => (logging::lower_set_global_level(args), None),
+        "get_global_level" => (logging::lower_get_global_level(args), None),
         _ => return None,
     };
 
@@ -1064,9 +1068,11 @@ mod tests {
         let set_level =
             lower_intrinsic("set_global_level", &["n".to_string()]).expect("set_global_level");
         assert!(render_expr(&set_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
+        assert!(!matches!(set_level.expr, RustExpr::RawCode(_)));
 
         let get_level = lower_intrinsic("get_global_level", &[]).expect("get_global_level");
         assert!(render_expr(&get_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
+        assert!(!matches!(get_level.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
