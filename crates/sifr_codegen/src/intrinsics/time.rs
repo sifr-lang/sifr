@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn str_lit(v: &str) -> RustExpr {
@@ -36,7 +36,7 @@ fn format_iso8601(dt_expr: RustExpr) -> RustExpr {
     }
 }
 
-pub(super) fn lower_time_now(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_time_now(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -67,7 +67,7 @@ pub(super) fn lower_time_now(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_sleep(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_sleep(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -84,12 +84,12 @@ pub(super) fn lower_sleep(args: &[String]) -> Option<RustExpr> {
                 "Duration".to_string(),
                 "from_secs_f64".to_string(),
             ])),
-            args: vec![RustExpr::Ident(args[0].clone())],
+            args: vec![args[0].clone()],
         }],
     })
 }
 
-pub(super) fn lower_time_format(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_time_format(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -100,7 +100,7 @@ pub(super) fn lower_time_format(args: &[String]) -> Option<RustExpr> {
                 name: "secs".to_string(),
                 ty: None,
                 value: RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident(args[0].clone())),
+                    expr: Box::new(args[0].clone()),
                     ty: RustType::I64,
                 },
             },
@@ -140,7 +140,7 @@ pub(super) fn lower_time_format(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_perf_counter(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_perf_counter(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -149,11 +149,11 @@ pub(super) fn lower_perf_counter(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_monotonic(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_monotonic(args: &[RustExpr]) -> Option<RustExpr> {
     lower_perf_counter(args)
 }
 
-pub(super) fn lower_strptime(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_strptime(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -198,7 +198,7 @@ pub(super) fn lower_strptime(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_gmtime(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_gmtime(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -241,7 +241,7 @@ pub(super) fn lower_gmtime(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_localtime(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_localtime(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -294,7 +294,7 @@ pub(super) fn lower_localtime(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_time_strptime_compat(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_time_strptime_compat(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -471,7 +471,7 @@ pub(super) fn lower_time_strptime_compat(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_time_gmtime_compat(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_time_gmtime_compat(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -608,7 +608,7 @@ pub(super) fn lower_time_gmtime_compat(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_time_localtime_compat(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_time_localtime_compat(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
