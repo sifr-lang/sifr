@@ -293,15 +293,9 @@ fn lower_intrinsic_rendered(
         "sys_version" => (sys::lower_sys_version(args), None),
         "sys_platform" => (sys::lower_sys_platform(args), None),
         "sys_maxsize" => (sys::lower_sys_maxsize(args), None),
-        "subprocess_run" => (subprocess::lower_subprocess_run(rendered_args), None),
-        "subprocess_run_with_input" => (
-            subprocess::lower_subprocess_run_with_input(rendered_args),
-            None,
-        ),
-        "subprocess_run_structured" => (
-            subprocess::lower_subprocess_run_structured(rendered_args),
-            None,
-        ),
+        "subprocess_run" => (subprocess::lower_subprocess_run(args), None),
+        "subprocess_run_with_input" => (subprocess::lower_subprocess_run_with_input(args), None),
+        "subprocess_run_structured" => (subprocess::lower_subprocess_run_structured(args), None),
         "html_escape" => (html::lower_html_escape(args), None),
         "html_unescape" => (html::lower_html_unescape(args), None),
         "calendar_isleap" => (calendar::lower_calendar_isleap(args), None),
