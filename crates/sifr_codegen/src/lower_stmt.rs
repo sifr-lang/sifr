@@ -1,14 +1,15 @@
 //! Statement lowering scaffolds for the IR migration.
 
 use crate::helpers::{
-    codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var, detect_is_not_none_var,
+    body_calls_function, codegen_body_always_exits, collect_mutated_vars, detect_and_not_none_vars,
+    detect_is_none_var, detect_is_not_none_var,
 };
 use crate::{
     try_lower_leaf_expr, CodegenError, RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt,
     RustType,
 };
-use sifr_hir::{HirExpr, HirPattern, HirStmt};
-use sifr_type_system::Type;
+use sifr_hir::{HirExpr, HirFunction, HirPattern, HirStmt, MethodKind};
+use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 
 pub fn lower_stmt_raw(raw: &str) -> Result<Vec<RustStmt>, CodegenError> {
@@ -41,8 +42,9 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::Delete { .. }
         | HirStmt::Yield { .. }
         | HirStmt::With { .. }
-        | HirStmt::Match { .. } => true,
-        _ => false,
+        | HirStmt::Match { .. }
+        | HirStmt::NestedFunction { .. } => true,
+        HirStmt::TryExcept { .. } => false,
     }
 }
 
@@ -270,7 +272,10 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::Match { subject, arms, .. } => {
             try_lower_simple_match_stmt(subject, arms, in_loop_with_else, bindings, ctx)
         }
-        HirStmt::TryExcept { .. } | HirStmt::NestedFunction { .. } => None,
+        HirStmt::NestedFunction { func } => {
+            try_lower_simple_nested_function_stmt(func, in_loop_with_else, bindings)
+        }
+        HirStmt::TryExcept { .. } => None,
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
         HirStmt::Break => {
@@ -288,6 +293,69 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         }
         _ => None,
     }
+}
+
+fn try_lower_simple_nested_function_stmt(
+    func: &HirFunction,
+    in_loop_with_else: bool,
+    outer_bindings: SimpleStmtBindings<'_>,
+) -> Option<Vec<RustStmt>> {
+    if func.method_kind != MethodKind::Regular
+        || !func.decorators.is_empty()
+        || !func.type_params.is_empty()
+        || body_calls_function(&func.body, &func.name)
+    {
+        return None;
+    }
+    if func
+        .params
+        .iter()
+        .any(|param| param.default.is_some() || param.keyword_only)
+    {
+        return None;
+    }
+
+    let nested_mutated_vars = collect_mutated_vars(&func.body);
+    let nested_borrowed_params: HashSet<String> = func
+        .params
+        .iter()
+        .filter(|param| {
+            param.convention == ParamConvention::Borrow
+                || param.convention == ParamConvention::MutBorrow
+        })
+        .map(|param| param.name.clone())
+        .collect();
+    let lowered_body = try_lower_simple_stmt_block(
+        &func.body,
+        in_loop_with_else,
+        &nested_mutated_vars,
+        &nested_borrowed_params,
+        SimpleStmtLoweringCtx {
+            return_type: Some(&func.return_type),
+            in_display_impl: false,
+            in_class_scope: false,
+            in_generator_closure: false,
+        },
+    )?;
+    let lowered_params = func
+        .params
+        .iter()
+        .map(|param| RustParam::Named {
+            name: param.name.clone(),
+            ty: RustType::Named("_".to_string()),
+        })
+        .collect::<Vec<_>>();
+
+    Some(vec![RustStmt::Let {
+        mutable: outer_bindings.mutated_vars.contains(&func.name),
+        name: func.name.clone(),
+        ty: None,
+        value: RustExpr::ClosureBlock {
+            params: lowered_params,
+            body: lowered_body,
+            is_move: false,
+        },
+    }])
 }
 
 fn try_lower_simple_stmt_block(
@@ -5688,5 +5756,55 @@ mod tests {
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
             .expect("match lowered");
         assert!(matches!(lowered[0], RustStmt::Match { .. }));
+    }
+
+    #[test]
+    fn lowers_simple_nested_function_to_closure_block() {
+        let stmt = HirStmt::NestedFunction {
+            func: HirFunction {
+                name: "inner".to_string(),
+                params: vec![],
+                return_type: Type::Int,
+                body: vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(1)),
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        };
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("nested function lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let {
+                ref name,
+                value: RustExpr::ClosureBlock { .. },
+                ..
+            } if name == "inner"
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_recursive_nested_function() {
+        let stmt = HirStmt::NestedFunction {
+            func: HirFunction {
+                name: "inner".to_string(),
+                params: vec![],
+                return_type: Type::Int,
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "inner".to_string(),
+                        args: vec![],
+                        ty: Type::Int,
+                    },
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        };
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 }

@@ -56,10 +56,7 @@ impl RustEmitter {
         &mut self,
         stmt: &HirStmt,
     ) -> Option<Vec<RustStmt>> {
-        if !matches!(
-            stmt,
-            HirStmt::TryExcept { .. } | HirStmt::NestedFunction { .. }
-        ) {
+        if !matches!(stmt, HirStmt::TryExcept { .. }) {
             return None;
         }
 
