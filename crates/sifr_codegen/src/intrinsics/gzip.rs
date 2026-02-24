@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn ref_expr(expr: RustExpr, mutable: bool) -> RustExpr {
@@ -13,7 +13,7 @@ fn ref_expr(expr: RustExpr, mutable: bool) -> RustExpr {
     }
 }
 
-pub(super) fn lower_gzip_compress(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_gzip_compress(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -110,7 +110,7 @@ pub(super) fn lower_gzip_compress(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_gzip_decompress(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_gzip_decompress(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
