@@ -2,11 +2,11 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
-fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+fn ref_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     RustExpr::Ref {
         mutable: false,
         expr: Box::new(arg_expr(args, idx)),
@@ -20,7 +20,7 @@ fn ref_ident(name: &str) -> RustExpr {
     }
 }
 
-fn replacer_arg(args: &[String], idx: usize) -> RustExpr {
+fn replacer_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     RustExpr::Ref {
         mutable: false,
         expr: Box::new(RustExpr::Deref(Box::new(arg_expr(args, idx)))),
@@ -122,7 +122,7 @@ fn map_str_to_string(expr: RustExpr) -> RustExpr {
     }
 }
 
-pub(super) fn lower_re_match(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_match(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -145,7 +145,7 @@ pub(super) fn lower_re_match(args: &[String]) -> Option<RustExpr> {
     Some(map_regex_error(mapped))
 }
 
-pub(super) fn lower_re_find(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_find(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -171,7 +171,7 @@ pub(super) fn lower_re_find(args: &[String]) -> Option<RustExpr> {
     Some(map_regex_error(mapped))
 }
 
-pub(super) fn lower_re_replace(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_replace(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
@@ -194,7 +194,7 @@ pub(super) fn lower_re_replace(args: &[String]) -> Option<RustExpr> {
     Some(map_regex_error(mapped))
 }
 
-pub(super) fn lower_re_findall(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_findall(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -224,7 +224,7 @@ pub(super) fn lower_re_findall(args: &[String]) -> Option<RustExpr> {
     Some(map_regex_error(mapped))
 }
 
-pub(super) fn lower_re_split(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_split(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -251,7 +251,7 @@ pub(super) fn lower_re_split(args: &[String]) -> Option<RustExpr> {
     Some(map_regex_error(mapped))
 }
 
-pub(super) fn lower_re_find_start(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_find_start(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -295,7 +295,7 @@ pub(super) fn lower_re_find_start(args: &[String]) -> Option<RustExpr> {
     Some(map_regex_error(mapped))
 }
 
-pub(super) fn lower_re_find_end(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_find_end(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -359,7 +359,7 @@ fn push_flag_stmt(bit: i64, marker: &str) -> RustStmt {
     }
 }
 
-fn build_flags_prefix_stmts(args: &[String], flag_idx: usize) -> Vec<RustStmt> {
+fn build_flags_prefix_stmts(args: &[RustExpr], flag_idx: usize) -> Vec<RustStmt> {
     vec![
         RustStmt::Let {
             mutable: false,
@@ -402,7 +402,7 @@ fn build_flags_prefix_stmts(args: &[String], flag_idx: usize) -> Vec<RustStmt> {
     ]
 }
 
-fn lower_flags_common(args: &[String], mode: &str) -> Option<RustExpr> {
+fn lower_flags_common(args: &[RustExpr], mode: &str) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
@@ -451,23 +451,23 @@ fn lower_flags_common(args: &[String], mode: &str) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_re_match_flags(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_match_flags(args: &[RustExpr]) -> Option<RustExpr> {
     lower_flags_common(args, "match")
 }
 
-pub(super) fn lower_re_find_flags(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_find_flags(args: &[RustExpr]) -> Option<RustExpr> {
     lower_flags_common(args, "find")
 }
 
-pub(super) fn lower_re_findall_flags(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_findall_flags(args: &[RustExpr]) -> Option<RustExpr> {
     lower_flags_common(args, "findall")
 }
 
-pub(super) fn lower_re_split_flags(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_split_flags(args: &[RustExpr]) -> Option<RustExpr> {
     lower_flags_common(args, "split")
 }
 
-pub(super) fn lower_re_replace_flags(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_re_replace_flags(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 4 {
         return None;
     }
