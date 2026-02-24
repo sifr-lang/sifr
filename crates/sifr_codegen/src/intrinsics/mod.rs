@@ -7,6 +7,7 @@ mod calendar;
 mod collections;
 mod datetime;
 mod env;
+mod file_handles;
 mod gzip;
 mod hash;
 mod hashlib;
@@ -19,6 +20,7 @@ mod pathlib;
 mod platform;
 mod random;
 mod re;
+mod logging;
 mod subprocess;
 mod sys;
 mod test;
@@ -91,6 +93,19 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "asinh" => (math::lower_asinh(rendered_args), None),
         "atanh" => (math::lower_atanh(rendered_args), None),
         "isqrt" => (math::lower_isqrt(rendered_args), None),
+        "remainder" => (math::lower_remainder(rendered_args), None),
+        "dist" => (math::lower_dist(rendered_args), None),
+        "fsum" => (math::lower_fsum(rendered_args), None),
+        "sumprod" => (math::lower_sumprod(rendered_args), None),
+        "erf" => (math::lower_erf(rendered_args), None),
+        "erfc" => (math::lower_erfc(rendered_args), None),
+        "gamma" => (math::lower_gamma(rendered_args), None),
+        "lgamma" => (math::lower_lgamma(rendered_args), None),
+        "frexp" => (math::lower_frexp(rendered_args), None),
+        "ldexp" => (math::lower_ldexp(rendered_args), None),
+        "modf" => (math::lower_modf(rendered_args), None),
+        "nextafter" => (math::lower_nextafter(rendered_args), None),
+        "ulp" => (math::lower_ulp(rendered_args), None),
         "env_get" => (env::lower_env_get(rendered_args), None),
         "env_set" => (env::lower_env_set(rendered_args), None),
         "env_unset" => (env::lower_env_unset(rendered_args), None),
@@ -131,6 +146,15 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "rmdir_all" => (io::lower_rmdir_all(rendered_args), None),
         "gettempdir" => (io::lower_gettempdir(rendered_args), None),
         "makedirs" => (io::lower_makedirs(rendered_args), None),
+        "builtin_open" => (file_handles::lower_builtin_open(rendered_args), None),
+        "open_file" => (file_handles::lower_open_file(rendered_args), None),
+        "file_read" => (file_handles::lower_file_read(rendered_args), None),
+        "file_write" => (file_handles::lower_file_write(rendered_args), None),
+        "file_readline" => (file_handles::lower_file_readline(rendered_args), None),
+        "file_readlines" => (file_handles::lower_file_readlines(rendered_args), None),
+        "file_close" => (file_handles::lower_file_close(rendered_args), None),
+        "file_read_bytes" => (file_handles::lower_file_read_bytes(rendered_args), None),
+        "file_write_bytes" => (file_handles::lower_file_write_bytes(rendered_args), None),
         "json_loads" => (json::lower_json_loads(rendered_args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(rendered_args), Some("serde_json")),
         "assert_eq" => (test::lower_assert_eq(rendered_args), None),
@@ -308,6 +332,8 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "sha384" => (hashlib::lower_sha384(rendered_args), Some("sha2")),
         "blake2b" => (hashlib::lower_blake2b(rendered_args), Some("blake2")),
         "blake2s" => (hashlib::lower_blake2s(rendered_args), Some("blake2")),
+        "set_global_level" => (logging::lower_set_global_level(rendered_args), None),
+        "get_global_level" => (logging::lower_get_global_level(rendered_args), None),
         _ => return None,
     };
 
@@ -984,5 +1010,50 @@ mod tests {
         let blake2s = lower_intrinsic("blake2s", &["s".to_string()]).expect("blake2s");
         assert_eq!(blake2s.required_crate, Some("blake2"));
         assert!(render_expr(&blake2s.expr).contains("Blake2s256"));
+    }
+
+    #[test]
+    fn lowers_extended_math_intrinsics_via_registry() {
+        let remainder = lower_intrinsic("remainder", &["x".to_string(), "y".to_string()])
+            .expect("remainder");
+        assert!(render_expr(&remainder.expr).contains("__q = __x / __y"));
+
+        let dist = lower_intrinsic("dist", &["p".to_string(), "q".to_string()]).expect("dist");
+        assert!(render_expr(&dist.expr).contains("__p.len() != __q.len()"));
+
+        let fsum = lower_intrinsic("fsum", &["vals".to_string()]).expect("fsum");
+        assert!(render_expr(&fsum.expr).contains("__sum + __comp"));
+
+        let sumprod =
+            lower_intrinsic("sumprod", &["a".to_string(), "b".to_string()]).expect("sumprod");
+        assert!(render_expr(&sumprod.expr).contains("__p.len().min(__q.len())"));
+    }
+
+    #[test]
+    fn lowers_file_handle_and_logging_intrinsics_via_registry() {
+        let open = lower_intrinsic("open_file", &["path".to_string(), "mode".to_string()])
+            .expect("open_file");
+        assert!(render_expr(&open.expr).contains("__SIFR_FILE_HANDLES"));
+
+        let read = lower_intrinsic("file_read", &["hid".to_string()]).expect("file_read");
+        assert!(render_expr(&read.expr).contains("TextRead"));
+
+        let write = lower_intrinsic("file_write", &["hid".to_string(), "text".to_string()])
+            .expect("file_write");
+        assert!(render_expr(&write.expr).contains("TextWrite"));
+
+        let builtin_open = lower_intrinsic(
+            "builtin_open",
+            &["path".to_string(), "mode".to_string()],
+        )
+        .expect("builtin_open");
+        assert!(render_expr(&builtin_open.expr).contains("FileHandle"));
+
+        let set_level =
+            lower_intrinsic("set_global_level", &["n".to_string()]).expect("set_global_level");
+        assert!(render_expr(&set_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
+
+        let get_level = lower_intrinsic("get_global_level", &[]).expect("get_global_level");
+        assert!(render_expr(&get_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
     }
 }
