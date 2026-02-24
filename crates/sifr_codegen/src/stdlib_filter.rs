@@ -1,35 +1,24 @@
+use proc_macro2::{TokenStream, TokenTree};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
+use syn::{Item, ItemImpl, ItemUse, Type, UseTree};
 
-#[derive(Debug, Clone)]
-struct TopLevelItem {
-    name: String,
-    header_line: String,
-    code: String,
-}
-
-#[derive(Debug, Clone)]
-enum TopLevelChunk {
-    Item(TopLevelItem),
-    OtherLine(String),
-}
-
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct StdlibIrItem {
     name: String,
-    code: String,
+    item: Item,
     refs: HashSet<String>,
 }
 
-#[derive(Debug, Clone)]
-enum StdlibIrChunk {
-    Item(StdlibIrItem),
-    OtherLine(String),
+#[derive(Clone)]
+enum StdlibIrEntry {
+    Named(StdlibIrItem),
+    Other(Item),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct StdlibIrFile {
-    chunks: Vec<StdlibIrChunk>,
+    entries: Vec<StdlibIrEntry>,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -82,66 +71,22 @@ const GLOBAL_INFRA_TYPES: &[&str] = &[
 
 /// Strip per-module shared imports/infrastructure and return dependency flags.
 pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlibModule {
-    let chunks = parse_top_level_chunks(filtered);
-    let shared_needs = derive_shared_needs(filtered, &chunks);
-    let mut in_file_handle_block = false;
-    let mut skip_next_blank = false;
-    let mut skip_file_handle_continuation = false;
-    let mut lines_out: Vec<&str> = Vec::new();
+    let Ok(parsed) = syn::parse_file(filtered) else {
+        return PreparedStdlibModule {
+            stripped_code: filtered.to_string(),
+            shared_needs: derive_shared_needs_fallback(filtered),
+        };
+    };
 
-    for line in filtered.lines() {
-        let t = line.trim();
-        if t == "use std::collections::HashMap;" {
-            continue;
-        }
-        if t == "use std::collections::HashSet;" {
-            continue;
-        }
-        if t == "use std::collections::VecDeque;" {
-            continue;
-        }
-        if t == "use std::sync::Mutex;" {
-            continue;
-        }
-
-        // Skip file handle infrastructure block (SifrFileHandle enum)
-        if t.starts_with("enum SifrFileHandle {") {
-            in_file_handle_block = true;
-            continue;
-        }
-        if in_file_handle_block {
-            if t == "}" {
-                in_file_handle_block = false;
-                skip_next_blank = true;
-            }
-            continue;
-        }
-        // Skip __SIFR_FILE_HANDLES static declaration (multi-line)
-        if t.starts_with("static __SIFR_FILE_HANDLES:") {
-            skip_file_handle_continuation = true;
-            skip_next_blank = true;
-            continue;
-        }
-        // Skip __SIFR_GLOBAL_LOG_LEVEL static declaration (multi-line)
-        if t.starts_with("static __SIFR_GLOBAL_LOG_LEVEL:") {
-            skip_file_handle_continuation = true;
-            skip_next_blank = true;
-            continue;
-        }
-        if skip_file_handle_continuation {
-            skip_file_handle_continuation = false;
-            continue;
-        }
-        if skip_next_blank && t.is_empty() {
-            skip_next_blank = false;
-            continue;
-        }
-        skip_next_blank = false;
-        lines_out.push(line);
-    }
+    let shared_needs = derive_shared_needs(&parsed.items);
+    let kept_items: Vec<Item> = parsed
+        .items
+        .into_iter()
+        .filter(|item| !is_shared_prelude_item(item))
+        .collect();
 
     PreparedStdlibModule {
-        stripped_code: lines_out.join("\n"),
+        stripped_code: render_items(&kept_items),
         shared_needs,
     }
 }
@@ -151,7 +96,9 @@ pub(crate) fn filter_stdlib_ir_to_needed(
     rust_code: &str,
     imported_names: &HashSet<String>,
 ) -> String {
-    let ir = parse_stdlib_ir_file(rust_code);
+    let Some(ir) = parse_stdlib_ir_file(rust_code) else {
+        return rust_code.to_string();
+    };
     let deps = deps_by_item_name(&ir);
     let needed = transitive_needed_items(imported_names, &deps);
     render_needed_ir_items(&ir, &needed)
@@ -161,9 +108,9 @@ pub(crate) fn filter_stdlib_ir_to_needed(
 /// Items that survive are added to `emitted_items` so subsequent calls can deduplicate further.
 ///
 /// Uses composite keys to distinguish struct/fn definitions from impl blocks:
-/// - `struct X` / `fn X` → key = "X"
-/// - `impl X {` → key = "impl X"
-/// - `impl Trait for X {` → key = "impl Trait for X"
+/// - `struct X` / `fn X` -> key = "X"
+/// - `impl X {` -> key = "impl X"
+/// - `impl Trait for X {` -> key = "impl Trait for X"
 ///
 /// The `skip_types` set contains type names (e.g., "`IOError`") for which ALL items
 /// (struct, impl, trait impls) should be unconditionally stripped.
@@ -172,76 +119,61 @@ pub(crate) fn dedup_rust_items(
     emitted_items: &mut HashSet<String>,
     skip_types: &HashSet<String>,
 ) -> String {
-    let chunks = parse_top_level_chunks(rust_code);
-    let mut result = String::new();
+    let Ok(parsed) = syn::parse_file(rust_code) else {
+        return rust_code.to_string();
+    };
 
-    for chunk in chunks {
-        match chunk {
-            TopLevelChunk::Item(item) => {
-                if skip_types.contains(&item.name) {
-                    continue;
-                }
-
-                let trimmed = item.header_line.trim();
-                let dedup_key = if trimmed.starts_with("impl") {
-                    trimmed
-                        .split('{')
-                        .next()
-                        .unwrap_or(trimmed)
-                        .trim()
-                        .to_string()
-                } else {
-                    item.name.clone()
-                };
-
-                if emitted_items.insert(dedup_key) {
-                    result.push_str(&item.code);
-                    result.push('\n');
-                }
+    let mut kept_items: Vec<Item> = Vec::new();
+    for item in parsed.items {
+        if let Some(name) = parse_item_name(&item) {
+            if skip_types.contains(&name) {
+                continue;
             }
-            TopLevelChunk::OtherLine(line) => {
-                result.push_str(&line);
-                result.push('\n');
+
+            let dedup_key = dedup_item_key(&item);
+            if emitted_items.insert(dedup_key) {
+                kept_items.push(item);
             }
+            continue;
         }
+
+        kept_items.push(item);
     }
 
-    result
+    render_items(&kept_items)
 }
 
-fn parse_stdlib_ir_file(rust_code: &str) -> StdlibIrFile {
-    let chunks = parse_top_level_chunks(rust_code);
-    let item_names: HashSet<String> = chunks
-        .iter()
-        .filter_map(|chunk| match chunk {
-            TopLevelChunk::Item(item) => Some(item.name.clone()),
-            TopLevelChunk::OtherLine(_) => None,
-        })
-        .collect();
-    let global_types: HashSet<String> = GLOBAL_INFRA_TYPES.iter().map(|s| (*s).to_string()).collect();
+fn parse_stdlib_ir_file(rust_code: &str) -> Option<StdlibIrFile> {
+    let Ok(parsed) = syn::parse_file(rust_code) else {
+        return None;
+    };
 
-    let chunks = chunks
+    let item_names: HashSet<String> = parsed.items.iter().filter_map(parse_item_name).collect();
+    let global_types: HashSet<String> = GLOBAL_INFRA_TYPES
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
+
+    let entries = parsed
+        .items
         .into_iter()
-        .map(|chunk| match chunk {
-            TopLevelChunk::Item(item) => {
-                let refs =
-                    referenced_item_names_via_ast(&item.code, &item_names, &item.name, &global_types);
-                StdlibIrChunk::Item(StdlibIrItem {
-                    name: item.name,
-                    code: item.code,
-                    refs,
-                })
+        .map(|item| {
+            if let Some(name) = parse_item_name(&item) {
+                let refs = referenced_item_names_via_ast(&item, &item_names, &name, &global_types);
+                StdlibIrEntry::Named(StdlibIrItem { name, item, refs })
+            } else {
+                StdlibIrEntry::Other(item)
             }
-            TopLevelChunk::OtherLine(line) => StdlibIrChunk::OtherLine(line),
         })
         .collect();
-    StdlibIrFile { chunks }
+
+    Some(StdlibIrFile { entries })
 }
 
 fn deps_by_item_name(ir: &StdlibIrFile) -> HashMap<String, HashSet<String>> {
     let mut deps = HashMap::new();
-    for chunk in &ir.chunks {
-        if let StdlibIrChunk::Item(item) = chunk {
+    for entry in &ir.entries {
+        if let StdlibIrEntry::Named(item) = entry {
             // Multiple blocks with the same name (e.g., impl X + impl Display for X)
             // should contribute dependencies together.
             deps.entry(item.name.clone())
@@ -272,70 +204,162 @@ fn transitive_needed_items(
 }
 
 fn render_needed_ir_items(ir: &StdlibIrFile, needed: &HashSet<String>) -> String {
-    let mut result = String::new();
-    for chunk in &ir.chunks {
-        match chunk {
-            StdlibIrChunk::Item(item) => {
+    let mut kept_items: Vec<Item> = Vec::new();
+    for entry in &ir.entries {
+        match entry {
+            StdlibIrEntry::Named(item) => {
                 if needed.contains(&item.name) {
-                    result.push_str(&item.code);
-                    result.push('\n');
+                    kept_items.push(item.item.clone());
                 }
             }
-            StdlibIrChunk::OtherLine(line) => {
-                result.push_str(line);
-                result.push('\n');
-            }
+            StdlibIrEntry::Other(item) => kept_items.push(item.clone()),
         }
     }
-    result
+    render_items(&kept_items)
 }
 
-fn derive_shared_needs(filtered: &str, chunks: &[TopLevelChunk]) -> SharedPreludeNeeds {
+fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
     let mut shared_needs = SharedPreludeNeeds::default();
-    let tokens = tokenize_rust_like(filtered);
-    for (idx, token) in tokens.iter().enumerate() {
-        let ident = match token {
-            RustToken::Ident(ident) => ident,
-            RustToken::Sym(_) => continue,
-        };
-        match ident.as_str() {
-            "__SIFR_FILE_HANDLES" => shared_needs.file_handles.needs_file_handles = true,
-            "HashMap" if is_reference_ident(&tokens, idx) => {
-                shared_needs.collections.needs_hashmap = true;
+    for item in items {
+        match item {
+            Item::Use(item_use) => {
+                let mut imported_paths = Vec::new();
+                collect_use_paths(&item_use.tree, &mut Vec::new(), &mut imported_paths);
+                for path in &imported_paths {
+                    mark_collection_use_path(path, &mut shared_needs);
+                }
             }
-            "HashSet" if is_reference_ident(&tokens, idx) => {
-                shared_needs.collections.needs_hashset = true;
+            Item::Struct(item_struct) if item_struct.ident == "FileHandle" => {
+                shared_needs.file_handles.provides_file_handle_struct = true;
             }
-            "VecDeque" if is_reference_ident(&tokens, idx) => {
-                shared_needs.collections.needs_vecdeque = true;
+            Item::Static(item_static) if item_static.ident == "__SIFR_FILE_HANDLES" => {
+                shared_needs.file_handles.needs_file_handles = true;
             }
             _ => {}
         }
     }
-    for chunk in chunks {
-        if let TopLevelChunk::Item(item) = chunk {
-            if item.name == "FileHandle" && item.header_line.trim().starts_with("struct FileHandle")
-            {
-                shared_needs.file_handles.provides_file_handle_struct = true;
+
+    let mut collector = SharedNeedsCollector { shared_needs };
+    for item in items {
+        collector.visit_item(item);
+    }
+    collector.shared_needs
+}
+
+fn derive_shared_needs_fallback(code: &str) -> SharedPreludeNeeds {
+    SharedPreludeNeeds {
+        collections: SharedPreludeCollectionNeeds {
+            needs_hashmap: code.contains("HashMap"),
+            needs_hashset: code.contains("HashSet"),
+            needs_vecdeque: code.contains("VecDeque"),
+        },
+        file_handles: SharedPreludeFileHandleNeeds {
+            needs_file_handles: code.contains("__SIFR_FILE_HANDLES"),
+            provides_file_handle_struct: code.contains("struct FileHandle"),
+        },
+    }
+}
+
+#[derive(Debug, Default)]
+struct SharedNeedsCollector {
+    shared_needs: SharedPreludeNeeds,
+}
+
+impl<'ast> Visit<'ast> for SharedNeedsCollector {
+    fn visit_path(&mut self, path: &'ast syn::Path) {
+        if let Some(segment) = path.segments.last() {
+            let ident = segment.ident.to_string();
+            match ident.as_str() {
+                "HashMap" => self.shared_needs.collections.needs_hashmap = true,
+                "HashSet" => self.shared_needs.collections.needs_hashset = true,
+                "VecDeque" => self.shared_needs.collections.needs_vecdeque = true,
+                "__SIFR_FILE_HANDLES" => self.shared_needs.file_handles.needs_file_handles = true,
+                _ => {}
             }
         }
+        visit::visit_path(self, path);
     }
-    shared_needs
+}
+
+fn is_shared_prelude_item(item: &Item) -> bool {
+    match item {
+        Item::Use(item_use) => is_shared_prelude_use(item_use),
+        Item::Enum(item_enum) => item_enum.ident == "SifrFileHandle",
+        Item::Static(item_static) => {
+            item_static.ident == "__SIFR_FILE_HANDLES"
+                || item_static.ident == "__SIFR_GLOBAL_LOG_LEVEL"
+        }
+        _ => false,
+    }
+}
+
+fn is_shared_prelude_use(item_use: &ItemUse) -> bool {
+    let mut imported_paths = Vec::new();
+    collect_use_paths(&item_use.tree, &mut Vec::new(), &mut imported_paths);
+
+    !imported_paths.is_empty() && imported_paths.iter().all(|path| is_shared_use_path(path))
+}
+
+fn collect_use_paths(tree: &UseTree, prefix: &mut Vec<String>, out: &mut Vec<Vec<String>>) {
+    match tree {
+        UseTree::Path(path) => {
+            prefix.push(path.ident.to_string());
+            collect_use_paths(&path.tree, prefix, out);
+            prefix.pop();
+        }
+        UseTree::Name(name) => {
+            let mut path = prefix.clone();
+            path.push(name.ident.to_string());
+            out.push(path);
+        }
+        UseTree::Rename(rename) => {
+            let mut path = prefix.clone();
+            path.push(rename.ident.to_string());
+            out.push(path);
+        }
+        UseTree::Group(group) => {
+            for item in &group.items {
+                collect_use_paths(item, prefix, out);
+            }
+        }
+        UseTree::Glob(_) => {
+            out.push(prefix.clone());
+        }
+    }
+}
+
+fn is_shared_use_path(path: &[String]) -> bool {
+    matches!(
+        path,
+        [std, collections, symbol]
+            if std == "std"
+                && collections == "collections"
+                && matches!(symbol.as_str(), "HashMap" | "HashSet" | "VecDeque")
+    ) || matches!(
+        path,
+        [std, sync, symbol]
+            if std == "std"
+                && sync == "sync"
+                && symbol == "Mutex"
+    )
 }
 
 fn referenced_item_names_via_ast(
-    code: &str,
+    item: &Item,
     item_names: &HashSet<String>,
     current_name: &str,
     global_types: &HashSet<String>,
 ) -> HashSet<String> {
-    let Ok(item) = syn::parse_str::<syn::Item>(code) else {
-        return HashSet::new();
-    };
     let mut local_bindings = LocalBindingCollector::default();
-    local_bindings.visit_item(&item);
-    let mut collector = ItemRefCollector::new(item_names, current_name, global_types, local_bindings.locals);
-    collector.visit_item(&item);
+    local_bindings.visit_item(item);
+
+    let mut collector = ItemRefCollector::new(
+        item_names,
+        current_name,
+        global_types,
+        local_bindings.locals,
+    );
+    collector.visit_item(item);
     collector.refs
 }
 
@@ -387,18 +411,11 @@ impl<'a> ItemRefCollector<'a> {
         }
     }
 
-    fn collect_macro_token_refs(&mut self, macro_tokens: &str) {
-        let tokens = tokenize_rust_like(macro_tokens);
-        for token in tokens {
-            let ident = match token {
-                RustToken::Ident(ident) => ident,
-                RustToken::Sym(_) => continue,
-            };
-            if self.locals.contains(&ident) {
-                continue;
-            }
-            self.try_insert_ref(&ident);
-        }
+    fn collect_macro_token_refs(&mut self, macro_tokens: &TokenStream) {
+        let locals = self.locals.clone();
+        collect_macro_token_refs_rec(macro_tokens, &locals, |ident| {
+            self.try_insert_ref(ident);
+        });
     }
 }
 
@@ -409,10 +426,8 @@ impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
                 self.try_insert_ref(&first.ident.to_string());
             }
         }
-        if let syn::Type::Path(type_path) = node.self_ty.as_ref() {
-            if let Some(first) = type_path.path.segments.first() {
-                self.try_insert_ref(&first.ident.to_string());
-            }
+        if let Some(name) = impl_self_type_ident(node.self_ty.as_ref()) {
+            self.try_insert_ref(&name);
         }
         visit::visit_item_impl(self, node);
     }
@@ -454,404 +469,137 @@ impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
         if let Some(first) = node.path.segments.first() {
             self.try_insert_ref(&first.ident.to_string());
         }
-        self.collect_macro_token_refs(&node.tokens.to_string());
+        self.collect_macro_token_refs(&node.tokens);
         visit::visit_macro(self, node);
     }
 }
 
-fn parse_top_level_chunks(rust_code: &str) -> Vec<TopLevelChunk> {
-    let lines: Vec<&str> = rust_code.lines().collect();
-    let mut chunks = Vec::new();
-    let mut pending_attrs: Vec<String> = Vec::new();
-    let mut idx = 0usize;
-
-    while idx < lines.len() {
-        let line = lines[idx];
-        if line.trim().starts_with("#[") {
-            pending_attrs.push(line.to_string());
-            idx += 1;
-            continue;
-        }
-
-        if let Some(name) = parse_top_level_item_name(line) {
-            let mut item_lines: Vec<String> = std::mem::take(&mut pending_attrs);
-            item_lines.push(line.to_string());
-            let mut depth = brace_delta(line);
-            let header_line = line.to_string();
-            idx += 1;
-
-            if depth > 0 {
-                while idx < lines.len() {
-                    let next_line = lines[idx];
-                    item_lines.push(next_line.to_string());
-                    depth += brace_delta(next_line);
-                    idx += 1;
-                    if depth <= 0 {
-                        break;
-                    }
-                }
-            }
-
-            let mut code = item_lines.join("\n");
-            code.push('\n');
-            chunks.push(TopLevelChunk::Item(TopLevelItem {
-                name,
-                header_line,
-                code,
-            }));
-            continue;
-        }
-
-        for attr in pending_attrs.drain(..) {
-            if !attr.trim().is_empty() {
-                chunks.push(TopLevelChunk::OtherLine(attr));
-            }
-        }
-        if !line.trim().is_empty() {
-            chunks.push(TopLevelChunk::OtherLine(line.to_string()));
-        }
-        idx += 1;
-    }
-
-    for attr in pending_attrs {
-        if !attr.trim().is_empty() {
-            chunks.push(TopLevelChunk::OtherLine(attr));
-        }
-    }
-
-    chunks
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum RustToken {
-    Ident(String),
-    Sym(String),
-}
-
-fn tokenize_rust_like(code: &str) -> Vec<RustToken> {
-    let chars: Vec<char> = code.chars().collect();
-    let mut out = Vec::new();
-    let mut i = 0usize;
-    let mut in_line_comment = false;
-    let mut in_block_comment = false;
-    let mut in_string = false;
-    let mut escape = false;
-
-    while i < chars.len() {
-        let ch = chars[i];
-
-        if in_line_comment {
-            if ch == '\n' {
-                in_line_comment = false;
-            }
-            i += 1;
-            continue;
-        }
-        if in_block_comment {
-            if ch == '*' && i + 1 < chars.len() && chars[i + 1] == '/' {
-                in_block_comment = false;
-                i += 2;
-            } else {
-                i += 1;
-            }
-            continue;
-        }
-        if in_string {
-            if escape {
-                escape = false;
-                i += 1;
-                continue;
-            }
-            if ch == '\\' {
-                escape = true;
-                i += 1;
-                continue;
-            }
-            if ch == '"' {
-                in_string = false;
-            }
-            i += 1;
-            continue;
-        }
-
-        if ch == '/' && i + 1 < chars.len() && chars[i + 1] == '/' {
-            in_line_comment = true;
-            i += 2;
-            continue;
-        }
-        if ch == '/' && i + 1 < chars.len() && chars[i + 1] == '*' {
-            in_block_comment = true;
-            i += 2;
-            continue;
-        }
-        if ch == '"' {
-            in_string = true;
-            i += 1;
-            continue;
-        }
-        if is_char_literal_start(&chars, i) {
-            i += char_literal_len(&chars, i);
-            continue;
-        }
-        if ch == ':' && i + 1 < chars.len() && chars[i + 1] == ':' {
-            out.push(RustToken::Sym("::".to_string()));
-            i += 2;
-            continue;
-        }
-        if ch == '-' && i + 1 < chars.len() && chars[i + 1] == '>' {
-            out.push(RustToken::Sym("->".to_string()));
-            i += 2;
-            continue;
-        }
-        if ch == '_' || ch.is_ascii_alphabetic() {
-            let start = i;
-            i += 1;
-            while i < chars.len() && (chars[i] == '_' || chars[i].is_ascii_alphanumeric()) {
-                i += 1;
-            }
-            out.push(RustToken::Ident(chars[start..i].iter().collect()));
-            continue;
-        }
-        if !ch.is_whitespace() {
-            out.push(RustToken::Sym(ch.to_string()));
-        }
-        i += 1;
-    }
-
-    out
-}
-
-fn is_char_literal_start(chars: &[char], idx: usize) -> bool {
-    if chars[idx] != '\'' {
-        return false;
-    }
-    if idx + 2 >= chars.len() {
-        return false;
-    }
-    if chars[idx + 1] == '\\' {
-        idx + 3 < chars.len() && chars[idx + 3] == '\''
-    } else {
-        chars[idx + 2] == '\''
-    }
-}
-
-fn char_literal_len(chars: &[char], idx: usize) -> usize {
-    if chars[idx + 1] == '\\' {
-        4
-    } else {
-        3
-    }
-}
-
-fn is_reference_ident(tokens: &[RustToken], idx: usize) -> bool {
-    let ident = match &tokens[idx] {
-        RustToken::Ident(s) => s.as_str(),
-        RustToken::Sym(_) => return false,
-    };
-    let prev = previous_token(tokens, idx);
-    let next = next_token(tokens, idx);
-
-    if next_is_sym(next, "(") || next_is_sym(next, "{") || next_is_sym(next, "::") {
-        return true;
-    }
-    if prev_is_sym(prev, "->")
-        || prev_is_sym(prev, ":")
-        || prev_is_sym(prev, "::")
-        || prev_is_ident(prev, "dyn")
-        || prev_is_ident(prev, "impl")
-        || prev_is_ident(prev, "for")
+fn collect_macro_token_refs_rec<F>(tokens: &TokenStream, locals: &HashSet<String>, mut on_ident: F)
+where
+    F: FnMut(&str),
+{
+    fn visit_tree<F>(tree: TokenTree, locals: &HashSet<String>, on_ident: &mut F)
+    where
+        F: FnMut(&str),
     {
-        return true;
+        match tree {
+            TokenTree::Ident(ident) => {
+                let name = ident.to_string();
+                if !locals.contains(&name) {
+                    on_ident(&name);
+                }
+            }
+            TokenTree::Group(group) => {
+                for token in group.stream() {
+                    visit_tree(token, locals, on_ident);
+                }
+            }
+            TokenTree::Punct(_) | TokenTree::Literal(_) => {}
+        }
     }
-    if prev_is_sym(prev, "=") && starts_with_uppercase(ident) {
-        return true;
+
+    for token in tokens.clone() {
+        visit_tree(token, locals, &mut on_ident);
     }
-    if is_all_caps(ident) {
-        return true;
-    }
-    false
 }
 
-fn previous_token(tokens: &[RustToken], idx: usize) -> Option<&RustToken> {
-    if idx == 0 {
-        None
+fn mark_collection_use_path(path: &[String], shared_needs: &mut SharedPreludeNeeds) {
+    match path {
+        [std, collections, symbol] if std == "std" && collections == "collections" => {
+            match symbol.as_str() {
+                "HashMap" => shared_needs.collections.needs_hashmap = true,
+                "HashSet" => shared_needs.collections.needs_hashset = true,
+                "VecDeque" => shared_needs.collections.needs_vecdeque = true,
+                _ => {}
+            }
+        }
+        _ => {}
+    }
+}
+
+fn parse_item_name(item: &Item) -> Option<String> {
+    match item {
+        Item::Fn(item_fn) => Some(item_fn.sig.ident.to_string()),
+        Item::Const(item_const) => Some(item_const.ident.to_string()),
+        Item::Static(item_static) => Some(item_static.ident.to_string()),
+        Item::Struct(item_struct) => Some(item_struct.ident.to_string()),
+        Item::Type(item_type) => Some(item_type.ident.to_string()),
+        Item::Enum(item_enum) => Some(item_enum.ident.to_string()),
+        Item::Trait(item_trait) => Some(item_trait.ident.to_string()),
+        Item::Impl(item_impl) => impl_self_type_ident(item_impl.self_ty.as_ref()),
+        _ => None,
+    }
+}
+
+fn impl_self_type_ident(ty: &Type) -> Option<String> {
+    match ty {
+        Type::Path(type_path) => type_path
+            .path
+            .segments
+            .last()
+            .map(|segment| segment.ident.to_string()),
+        Type::Reference(reference) => impl_self_type_ident(reference.elem.as_ref()),
+        Type::Paren(paren) => impl_self_type_ident(paren.elem.as_ref()),
+        Type::Group(group) => impl_self_type_ident(group.elem.as_ref()),
+        _ => None,
+    }
+}
+
+fn dedup_item_key(item: &Item) -> String {
+    match item {
+        Item::Impl(item_impl) => dedup_impl_key(item_impl),
+        _ => parse_item_name(item).unwrap_or_else(|| "__unnamed_item__".to_string()),
+    }
+}
+
+fn dedup_impl_key(item_impl: &ItemImpl) -> String {
+    let self_ty = dedup_type_key(item_impl.self_ty.as_ref());
+    if let Some((_, trait_path, _)) = &item_impl.trait_ {
+        format!("impl {} for {}", dedup_path_key(trait_path), self_ty)
     } else {
-        Some(&tokens[idx - 1])
+        format!("impl {self_ty}")
     }
 }
 
-fn next_token(tokens: &[RustToken], idx: usize) -> Option<&RustToken> {
-    tokens.get(idx + 1)
+fn dedup_path_key(path: &syn::Path) -> String {
+    path.segments
+        .iter()
+        .map(|segment| segment.ident.to_string())
+        .collect::<Vec<String>>()
+        .join("::")
 }
 
-fn prev_is_ident(token: Option<&RustToken>, expected: &str) -> bool {
-    matches!(token, Some(RustToken::Ident(v)) if v == expected)
+fn dedup_type_key(ty: &Type) -> String {
+    match ty {
+        Type::Path(type_path) => dedup_path_key(&type_path.path),
+        Type::Reference(reference) => dedup_type_key(reference.elem.as_ref()),
+        Type::Paren(paren) => dedup_type_key(paren.elem.as_ref()),
+        Type::Group(group) => dedup_type_key(group.elem.as_ref()),
+        Type::Slice(slice) => format!("[{}]", dedup_type_key(slice.elem.as_ref())),
+        Type::Array(array) => format!("[{}]", dedup_type_key(array.elem.as_ref())),
+        Type::Tuple(tuple) => {
+            let elems = tuple
+                .elems
+                .iter()
+                .map(dedup_type_key)
+                .collect::<Vec<String>>()
+                .join(",");
+            format!("({elems})")
+        }
+        _ => "__unknown_type__".to_string(),
+    }
 }
 
-fn prev_is_sym(token: Option<&RustToken>, expected: &str) -> bool {
-    matches!(token, Some(RustToken::Sym(v)) if v == expected)
-}
+fn render_items(items: &[Item]) -> String {
+    if items.is_empty() {
+        return String::new();
+    }
 
-fn next_is_sym(token: Option<&RustToken>, expected: &str) -> bool {
-    matches!(token, Some(RustToken::Sym(v)) if v == expected)
-}
-
-fn starts_with_uppercase(s: &str) -> bool {
-    s.chars().next().is_some_and(|c| c.is_ascii_uppercase())
-}
-
-fn is_all_caps(s: &str) -> bool {
-    let mut saw_alpha = false;
-    for c in s.chars() {
-        if c.is_ascii_alphabetic() {
-            saw_alpha = true;
-            if !c.is_ascii_uppercase() {
-                return false;
-            }
-        }
-    }
-    saw_alpha
-}
-
-fn parse_top_level_item_name(line: &str) -> Option<String> {
-    let trimmed = strip_visibility_prefix(line.trim());
-    // [async|const|unsafe]* fn name( or fn name<T>(
-    let fn_candidate = strip_fn_modifiers(trimmed);
-    if let Some(rest) = fn_candidate.strip_prefix("fn ") {
-        if let Some(lt) = rest.find('<') {
-            let paren = rest.find('(');
-            if paren.is_none() || lt < paren.unwrap() {
-                return Some(rest[..lt].trim().to_string());
-            }
-        }
-        if let Some(paren) = rest.find('(') {
-            return Some(rest[..paren].trim().to_string());
-        }
-    }
-    // const NAME:
-    if let Some(rest) = trimmed.strip_prefix("const ") {
-        if let Some(colon) = rest.find(':') {
-            return Some(rest[..colon].trim().to_string());
-        }
-    }
-    // static NAME:
-    if let Some(rest) = trimmed.strip_prefix("static ") {
-        let rest = rest.strip_prefix("mut ").unwrap_or(rest);
-        if let Some(colon) = rest.find(':') {
-            return Some(rest[..colon].trim().to_string());
-        }
-    }
-    // struct Name
-    if let Some(rest) = trimmed.strip_prefix("struct ") {
-        let name = rest
-            .split(|c: char| !c.is_alphanumeric() && c != '_')
-            .next()?;
-        return Some(name.to_string());
-    }
-    // type Alias =
-    if let Some(rest) = trimmed.strip_prefix("type ") {
-        if let Some(eq) = rest.find('=') {
-            let name = rest[..eq].trim();
-            if !name.is_empty() {
-                return Some(name.to_string());
-            }
-        }
-    }
-    // enum Name
-    if let Some(rest) = trimmed.strip_prefix("enum ") {
-        let name = rest
-            .split(|c: char| !c.is_alphanumeric() && c != '_')
-            .next()?;
-        return Some(name.to_string());
-    }
-    // trait Name
-    if let Some(rest) = trimmed.strip_prefix("trait ") {
-        let name = rest
-            .split(|c: char| !c.is_alphanumeric() && c != '_')
-            .next()?;
-        return Some(name.to_string());
-    }
-    // impl Name or impl Display for Name
-    if let Some(rest) = trimmed.strip_prefix("impl") {
-        let rest = if rest.starts_with('<') {
-            let mut depth = 0i32;
-            let mut end = 0usize;
-            for (i, ch) in rest.char_indices() {
-                if ch == '<' {
-                    depth += 1;
-                }
-                if ch == '>' {
-                    depth -= 1;
-                }
-                if depth == 0 {
-                    end = i + 1;
-                    break;
-                }
-            }
-            rest[end..].trim_start()
-        } else {
-            rest.trim_start()
-        };
-        if let Some(for_idx) = rest.find(" for ") {
-            let after_for = &rest[for_idx + 5..];
-            let after_for = after_for.trim_start_matches('&');
-            let name = after_for
-                .split(|c: char| !c.is_alphanumeric() && c != '_')
-                .next()?;
-            if !name.is_empty() {
-                return Some(name.to_string());
-            }
-        }
-        let name = rest
-            .split(|c: char| !c.is_alphanumeric() && c != '_')
-            .next()?;
-        if !name.is_empty() {
-            return Some(name.to_string());
-        }
-    }
-    None
-}
-
-fn strip_visibility_prefix(s: &str) -> &str {
-    if let Some(rest) = s.strip_prefix("pub(crate) ") {
-        return rest;
-    }
-    if let Some(rest) = s.strip_prefix("pub ") {
-        return rest;
-    }
-    s
-}
-
-fn strip_fn_modifiers(mut s: &str) -> &str {
-    loop {
-        if let Some(rest) = s.strip_prefix("async ") {
-            s = rest;
-            continue;
-        }
-        if let Some(rest) = s.strip_prefix("const ") {
-            s = rest;
-            continue;
-        }
-        if let Some(rest) = s.strip_prefix("unsafe ") {
-            s = rest;
-            continue;
-        }
-        break;
-    }
-    s
-}
-
-fn brace_delta(line: &str) -> i32 {
-    let mut depth = 0i32;
-    for ch in line.chars() {
-        if ch == '{' {
-            depth += 1;
-        }
-        if ch == '}' {
-            depth -= 1;
-        }
-    }
-    depth
+    prettyplease::unparse(&syn::File {
+        shebang: None,
+        attrs: Vec::new(),
+        items: items.to_vec(),
+    })
 }
 
 #[cfg(test)]
@@ -951,7 +699,7 @@ pub fn root() -> Box<dyn Worker> {
         assert!(filtered.contains("pub trait Worker"));
         assert!(filtered.contains("pub struct Job"));
         assert!(filtered.contains("impl Worker for Job"));
-        assert!(filtered.contains("pub static JOB_COUNT: i64 = 7;"));
+        assert!(filtered.contains("pub static JOB_COUNT"));
     }
 
     #[test]
@@ -977,7 +725,7 @@ pub async fn root() -> i64 {
         assert!(filtered.contains("pub async fn root()"));
         assert!(filtered.contains("pub unsafe fn tick()"));
         assert!(filtered.contains("pub const fn seed()"));
-        assert!(filtered.contains("pub static mut COUNTER: i64 = 0;"));
+        assert!(filtered.contains("pub static mut COUNTER"));
     }
 
     #[test]
@@ -1065,7 +813,7 @@ pub fn root() -> Builder {
 
         assert!(filtered.contains("pub fn root() -> Builder"));
         assert!(filtered.contains("pub struct Builder {}"));
-        assert!(filtered.contains("impl Builder {"));
+        assert!(filtered.contains("impl Builder"));
     }
 
     #[test]
@@ -1091,8 +839,8 @@ impl std::fmt::Display for Item {
         let twice = dedup_rust_items(code, &mut emitted, &skip_types);
 
         assert!(once.contains("struct Item {}"));
-        assert!(once.contains("impl Item {"));
-        assert!(once.contains("impl std::fmt::Display for Item {"));
+        assert!(once.contains("impl Item"));
+        assert!(once.contains("impl std::fmt::Display for Item"));
         assert!(twice.trim().is_empty());
     }
 
@@ -1134,10 +882,10 @@ fn keep_me() {
         assert!(!prepared
             .stripped_code
             .contains("use std::collections::HashMap;"));
-        assert!(!prepared.stripped_code.contains("enum SifrFileHandle {"));
+        assert!(!prepared.stripped_code.contains("enum SifrFileHandle"));
         assert!(!prepared
             .stripped_code
-            .contains("static __SIFR_FILE_HANDLES:"));
+            .contains("static __SIFR_FILE_HANDLES"));
         assert!(prepared.stripped_code.contains("fn keep_me()"));
     }
 
@@ -1152,6 +900,21 @@ fn keep_me() {}
         assert!(!prepared.shared_needs.collections.needs_hashset);
         assert!(!prepared.shared_needs.collections.needs_vecdeque);
         assert!(!prepared.shared_needs.file_handles.needs_file_handles);
+        assert!(prepared.stripped_code.contains("fn keep_me()"));
+    }
+
+    #[test]
+    fn strips_combined_shared_use_groups() {
+        let input = r#"
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::Mutex;
+fn keep_me() {}
+"#;
+        let prepared = collect_and_strip_shared_prelude(input);
+        assert!(!prepared
+            .stripped_code
+            .contains("std::collections::{HashMap, HashSet, VecDeque}"));
+        assert!(!prepared.stripped_code.contains("use std::sync::Mutex;"));
         assert!(prepared.stripped_code.contains("fn keep_me()"));
     }
 }
