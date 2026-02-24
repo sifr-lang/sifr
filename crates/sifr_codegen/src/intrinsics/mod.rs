@@ -103,7 +103,7 @@ fn lower_intrinsic_rendered(
         "atanh" => (math::lower_atanh(rendered_args), None),
         "isqrt" => (math::lower_isqrt(rendered_args), None),
         "remainder" => (math::lower_remainder(args), None),
-        "dist" => (math::lower_dist(rendered_args), None),
+        "dist" => (math::lower_dist(args), None),
         "fsum" => (math::lower_fsum(rendered_args), None),
         "sumprod" => (math::lower_sumprod(args), None),
         "erf" => (math::lower_erf(rendered_args), None),
@@ -1039,6 +1039,7 @@ mod tests {
 
         let dist = lower_intrinsic("dist", &["p".to_string(), "q".to_string()]).expect("dist");
         assert!(render_expr(&dist.expr).contains("__p.len() != __q.len()"));
+        assert!(!matches!(dist.expr, RustExpr::RawCode(_)));
 
         let fsum = lower_intrinsic("fsum", &["vals".to_string()]).expect("fsum");
         assert!(render_expr(&fsum.expr).contains("__sum + __comp"));

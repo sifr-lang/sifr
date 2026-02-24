@@ -506,14 +506,202 @@ pub(super) fn lower_remainder(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_dist(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_dist(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __p = &({}); let __q = &({}); if __p.len() != __q.len() {{ f64::NAN }} else if __p.is_empty() {{ 0.0 }} else {{ let mut __scale = 0.0f64; let mut __ssq = 1.0f64; for __i in 0..__p.len() {{ let __d = (__p[__i] - __q[__i]).abs(); if __d != 0.0 {{ if __scale < __d {{ let __r = __scale / __d; __ssq = 1.0 + __ssq * __r * __r; __scale = __d; }} else {{ let __r = __d / __scale; __ssq += __r * __r; }} }} }} if __scale == 0.0 {{ 0.0 }} else {{ __scale * __ssq.sqrt() }} }} }}",
-        args[0], args[1]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__p".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(args[0].clone()),
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__q".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(args[1].clone()),
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__p".to_string())),
+                    method: "len".to_string(),
+                    args: vec![],
+                }),
+                op: "!=".to_string(),
+                right: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__q".to_string())),
+                    method: "len".to_string(),
+                    args: vec![],
+                }),
+            }),
+            then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()])),
+            else_expr: Some(Box::new(RustExpr::If {
+                cond: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__p".to_string())),
+                    method: "is_empty".to_string(),
+                    args: vec![],
+                }),
+                then_expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                else_expr: Some(Box::new(RustExpr::Block {
+                    stmts: vec![
+                        RustStmt::Let {
+                            mutable: true,
+                            name: "__scale".to_string(),
+                            ty: Some(RustType::F64),
+                            value: RustExpr::Literal(RustLiteral::Float(0.0)),
+                        },
+                        RustStmt::Let {
+                            mutable: true,
+                            name: "__ssq".to_string(),
+                            ty: Some(RustType::F64),
+                            value: RustExpr::Literal(RustLiteral::Float(1.0)),
+                        },
+                        RustStmt::For {
+                            var: "__i".to_string(),
+                            iter: RustExpr::Range {
+                                start: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                                end: Box::new(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident("__p".to_string())),
+                                    method: "len".to_string(),
+                                    args: vec![],
+                                }),
+                            },
+                            body: vec![
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__d".to_string(),
+                                    ty: Some(RustType::F64),
+                                    value: RustExpr::MethodCall {
+                                        receiver: Box::new(RustExpr::BinOp {
+                                            left: Box::new(RustExpr::Index {
+                                                expr: Box::new(RustExpr::Ident("__p".to_string())),
+                                                index: Box::new(RustExpr::Ident("__i".to_string())),
+                                            }),
+                                            op: "-".to_string(),
+                                            right: Box::new(RustExpr::Index {
+                                                expr: Box::new(RustExpr::Ident("__q".to_string())),
+                                                index: Box::new(RustExpr::Ident("__i".to_string())),
+                                            }),
+                                        }),
+                                        method: "abs".to_string(),
+                                        args: vec![],
+                                    },
+                                },
+                                RustStmt::If {
+                                    cond: RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Ident("__d".to_string())),
+                                        op: "!=".to_string(),
+                                        right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                                    },
+                                    then_body: vec![RustStmt::If {
+                                        cond: RustExpr::BinOp {
+                                            left: Box::new(RustExpr::Ident("__scale".to_string())),
+                                            op: "<".to_string(),
+                                            right: Box::new(RustExpr::Ident("__d".to_string())),
+                                        },
+                                        then_body: vec![
+                                            RustStmt::Let {
+                                                mutable: false,
+                                                name: "__r".to_string(),
+                                                ty: Some(RustType::F64),
+                                                value: RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::Ident(
+                                                        "__scale".to_string(),
+                                                    )),
+                                                    op: "/".to_string(),
+                                                    right: Box::new(RustExpr::Ident("__d".to_string())),
+                                                },
+                                            },
+                                            RustStmt::Assign {
+                                                target: RustExpr::Ident("__ssq".to_string()),
+                                                value: RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::Literal(
+                                                        RustLiteral::Float(1.0),
+                                                    )),
+                                                    op: "+".to_string(),
+                                                    right: Box::new(RustExpr::BinOp {
+                                                        left: Box::new(RustExpr::BinOp {
+                                                            left: Box::new(RustExpr::Ident(
+                                                                "__ssq".to_string(),
+                                                            )),
+                                                            op: "*".to_string(),
+                                                            right: Box::new(RustExpr::Ident(
+                                                                "__r".to_string(),
+                                                            )),
+                                                        }),
+                                                        op: "*".to_string(),
+                                                        right: Box::new(RustExpr::Ident(
+                                                            "__r".to_string(),
+                                                        )),
+                                                    }),
+                                                },
+                                            },
+                                            RustStmt::Assign {
+                                                target: RustExpr::Ident("__scale".to_string()),
+                                                value: RustExpr::Ident("__d".to_string()),
+                                            },
+                                        ],
+                                        else_body: Some(vec![
+                                            RustStmt::Let {
+                                                mutable: false,
+                                                name: "__r".to_string(),
+                                                ty: Some(RustType::F64),
+                                                value: RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::Ident("__d".to_string())),
+                                                    op: "/".to_string(),
+                                                    right: Box::new(RustExpr::Ident(
+                                                        "__scale".to_string(),
+                                                    )),
+                                                },
+                                            },
+                                            RustStmt::AugAssign {
+                                                target: RustExpr::Ident("__ssq".to_string()),
+                                                op: "+".to_string(),
+                                                value: RustExpr::BinOp {
+                                                    left: Box::new(RustExpr::Ident("__r".to_string())),
+                                                    op: "*".to_string(),
+                                                    right: Box::new(RustExpr::Ident("__r".to_string())),
+                                                },
+                                            },
+                                        ]),
+                                    }],
+                                    else_body: None,
+                                },
+                            ],
+                        },
+                    ],
+                    expr: Some(Box::new(RustExpr::If {
+                        cond: Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("__scale".to_string())),
+                            op: "==".to_string(),
+                            right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                        }),
+                        then_expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                        else_expr: Some(Box::new(RustExpr::BinOp {
+                            left: Box::new(RustExpr::Ident("__scale".to_string())),
+                            op: "*".to_string(),
+                            right: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__ssq".to_string())),
+                                method: "sqrt".to_string(),
+                                args: vec![],
+                            }),
+                        })),
+                    })),
+                })),
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_fsum(args: &[String]) -> Option<RustExpr> {

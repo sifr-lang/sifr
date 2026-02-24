@@ -85,6 +85,7 @@ status: **partially met**
 - [x] Math intrinsic `ulp` now lowers via structured IR conditional/numeric path (no monolithic `RawCode` template)
 - [x] Math intrinsic `nextafter` now lowers via structured IR branch path (no monolithic `RawCode` template)
 - [x] Math intrinsic `remainder` now lowers via structured IR branch/rounding path (no monolithic `RawCode` template)
+- [x] Math intrinsic `dist` now lowers via structured IR loop/scale accumulation path (no monolithic `RawCode` template)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes
