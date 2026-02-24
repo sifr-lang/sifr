@@ -103,6 +103,30 @@ pub(crate) fn try_lower_simple_stmt_with_scope(
     )
 }
 
+pub(crate) fn try_lower_simple_stmt_with_scope_result(
+    stmt: &HirStmt,
+    mutated_vars: &HashSet<String>,
+    borrowed_params: &HashSet<String>,
+    scope_ctx: &ScopeContext,
+) -> Result<Option<Vec<RustStmt>>, CodegenError> {
+    validate_scope_context(scope_ctx)?;
+    Ok(try_lower_simple_stmt_with_scope(
+        stmt,
+        mutated_vars,
+        borrowed_params,
+        scope_ctx,
+    ))
+}
+
+fn validate_scope_context(scope_ctx: &ScopeContext) -> Result<(), CodegenError> {
+    if scope_ctx.in_display_impl && scope_ctx.in_generator_closure {
+        return Err(CodegenError::new(
+            "invalid lowering scope: display impl and generator closure cannot both be active",
+        ));
+    }
+    Ok(())
+}
+
 pub(crate) fn try_lower_simple_stmt_with_ctx(
     stmt: &HirStmt,
     in_loop_with_else: bool,
@@ -1844,6 +1868,28 @@ mod tests {
         let stmts = try_lower_expr_stmt(&HirExpr::IntLiteral(1)).expect("leaf stmt lowered");
         assert_eq!(stmts.len(), 1);
         assert!(matches!(stmts[0], RustStmt::Expr(_)));
+    }
+
+    #[test]
+    fn scope_result_reports_invalid_scope_context() {
+        let stmt = HirStmt::Pass;
+        let scope_ctx = ScopeContext {
+            in_display_impl: true,
+            in_generator_closure: true,
+            ..ScopeContext::default()
+        };
+
+        let err = try_lower_simple_stmt_with_scope_result(
+            &stmt,
+            &HashSet::new(),
+            &HashSet::new(),
+            &scope_ctx,
+        )
+        .expect_err("expected invalid scope context to return lowering error");
+
+        assert!(err
+            .message
+            .contains("display impl and generator closure cannot both be active"));
     }
 
     #[test]

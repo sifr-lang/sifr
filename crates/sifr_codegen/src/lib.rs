@@ -129,6 +129,7 @@ pub struct CodegenResult {
 pub struct LoweringStats {
     pub stmt_total: u64,
     pub stmt_structured: u64,
+    pub stmt_lowering_errors: u64,
     pub expr_total: u64,
     pub expr_structured: u64,
     pub stmt_candidate_total: u64,
@@ -935,16 +936,24 @@ impl RustEmitter {
                 ClassScope::Outside
             },
         };
-        if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope(
+        match try_lower_simple_stmt_with_scope_result(
             stmt,
             &self.mutated_vars,
             &self.borrowed_params,
             &scope_ctx,
         ) {
-            self.lowering_stats.stmt_structured += 1;
-            self.lowering_stats.stmt_candidate_structured += 1;
-            self.emit_lowered_stmts(&lowered_stmts);
-            return;
+            Ok(Some(lowered_stmts)) => {
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                self.emit_lowered_stmts(&lowered_stmts);
+                return;
+            }
+            Ok(None) => {}
+            Err(_) => {
+                self.lowering_stats.stmt_lowering_errors += 1;
+                self.emit_stmt_fallback(stmt);
+                return;
+            }
         }
         self.emit_stmt_fallback(stmt);
     }
