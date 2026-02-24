@@ -8,13 +8,13 @@ use sifr_type_system::Type;
 impl RustEmitter {
     pub(super) fn emit_class(&mut self, class: &HirClass, module: &HirModule, module_public: bool) {
         // --- Protocol: emit trait definition ---
-        if class.is_protocol {
+        if class.is_protocol() {
             self.emit_protocol_trait(class, module_public);
             return;
         }
 
         // --- Enum: emit Rust enum with repr(i64) ---
-        if class.is_enum {
+        if class.is_enum() {
             self.emit_enum_class(class, module_public);
             return;
         }
@@ -30,7 +30,10 @@ impl RustEmitter {
         let has_custom_str = class.operator_impls.iter().any(|(n, _)| n == "__str__");
 
         // Check if any field is a Callable type (Box<dyn Fn> doesn't implement Debug/Clone/PartialEq)
-        let has_callable_field = class.fields.iter().any(|(_, t)| matches!(t, Type::Callable(..)));
+        let has_callable_field = class
+            .fields
+            .iter()
+            .any(|(_, t)| matches!(t, Type::Callable(..)));
 
         // Derive attributes
         self.write_indent();
@@ -58,7 +61,9 @@ impl RustEmitter {
         if !class.type_params.is_empty() {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
-                if i > 0 { self.write(", "); }
+                if i > 0 {
+                    self.write(", ");
+                }
                 self.write(&format!("{tp}: {class_bounds}"));
             }
             self.write(">");
@@ -92,7 +97,9 @@ impl RustEmitter {
             }
             self.write(field_name);
             self.write(": ");
-            let is_recursive = self.recursive_fields.contains(&(class.name.clone(), field_name.clone()));
+            let is_recursive = self
+                .recursive_fields
+                .contains(&(class.name.clone(), field_name.clone()));
             if is_recursive {
                 self.write(&recursive_field_rust_type(field_ty, &class.name));
             } else if class.name == "deque" && field_name == "_data" {
@@ -117,7 +124,9 @@ impl RustEmitter {
         if !class.type_params.is_empty() {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
-                if i > 0 { self.write(", "); }
+                if i > 0 {
+                    self.write(", ");
+                }
                 self.write(&format!("{tp}: {class_bounds}"));
             }
             self.write(">");
@@ -127,7 +136,9 @@ impl RustEmitter {
         if !class.type_params.is_empty() {
             self.write("<");
             for (i, tp) in class.type_params.iter().enumerate() {
-                if i > 0 { self.write(", "); }
+                if i > 0 {
+                    self.write(", ");
+                }
                 self.write(tp);
             }
             self.write(">");
@@ -150,7 +161,9 @@ impl RustEmitter {
                 }
                 self.write(field_name);
                 self.write(": ");
-                let is_recursive = self.recursive_fields.contains(&(class.name.clone(), field_name.clone()));
+                let is_recursive = self
+                    .recursive_fields
+                    .contains(&(class.name.clone(), field_name.clone()));
                 if is_recursive {
                     self.write(&recursive_field_rust_type(field_ty, &class.name));
                 } else {
@@ -231,12 +244,17 @@ impl RustEmitter {
                 self.write(" {\n");
                 self.indent += 1;
                 self.write_indent();
-                self.write("fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n");
+                self.write(
+                    "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n",
+                );
                 self.indent += 1;
                 // Emit the body of __str__ but wrap the return value in write!(f, "{}", ...)
                 // For simplicity, if the body is a single Return, emit write!(f, "{}", return_expr)
                 if str_func.body.len() == 1 {
-                    if let Some(HirStmt::Return { value: Some(ref ret_expr) }) = str_func.body.first() {
+                    if let Some(HirStmt::Return {
+                        value: Some(ref ret_expr),
+                    }) = str_func.body.first()
+                    {
                         self.write_indent();
                         self.write("write!(f, \"{}\", ");
                         self.emit_expr(ret_expr);
@@ -246,7 +264,8 @@ impl RustEmitter {
                         let saved = self.emission_ctx.in_display_impl;
                         self.emission_ctx.in_display_impl = true;
                         let saved_mutated = std::mem::take(&mut self.mutated_vars);
-                        self.mutated_vars = collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
+                        self.mutated_vars =
+                            collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
                         for stmt in &str_func.body {
                             self.emit_stmt(stmt);
                         }
@@ -261,7 +280,8 @@ impl RustEmitter {
                     self.emission_ctx.in_display_impl = true;
                     // Pre-scan for mutated variables so let mut is emitted correctly
                     let saved_mutated = std::mem::take(&mut self.mutated_vars);
-                    self.mutated_vars = collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
+                    self.mutated_vars =
+                        collect_mutated_vars_with_sigs(&str_func.body, &self.func_signatures);
                     for stmt in &str_func.body {
                         self.emit_stmt(stmt);
                     }
@@ -277,7 +297,9 @@ impl RustEmitter {
                 self.write_indent();
                 self.write("}\n");
             }
-        } else if !has_custom_str && !class.is_error_type && !class.fields.is_empty()
+        } else if !has_custom_str
+            && !class.is_error_type
+            && !class.fields.is_empty()
             && class.fields.iter().all(|(_, t)| is_auto_display_type(t))
         {
             // Auto-generate Display impl: ClassName(field1=value1, field2=value2)
@@ -288,7 +310,9 @@ impl RustEmitter {
             if !class.type_params.is_empty() {
                 self.write("<");
                 for (i, tp) in class.type_params.iter().enumerate() {
-                    if i > 0 { self.write(", "); }
+                    if i > 0 {
+                        self.write(", ");
+                    }
                     self.write(tp);
                 }
                 self.write(">");
@@ -303,7 +327,9 @@ impl RustEmitter {
             self.write(&class.name);
             self.write("(");
             for (i, (field_name, _)) in class.fields.iter().enumerate() {
-                if i > 0 { self.write(", "); }
+                if i > 0 {
+                    self.write(", ");
+                }
                 self.write(field_name);
                 self.write("={}");
             }

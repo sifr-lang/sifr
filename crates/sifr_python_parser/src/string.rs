@@ -2,8 +2,8 @@
 
 use bstr::ByteSlice;
 
-use sifr_python_ast::{self as ast, AnyStringFlags, Expr, StringFlags};
 use ruff_text_size::{Ranged, TextRange, TextSize};
+use sifr_python_ast::{self as ast, AnyStringFlags, Expr, StringFlags};
 
 use crate::lexer::{LexicalError, LexicalErrorType};
 

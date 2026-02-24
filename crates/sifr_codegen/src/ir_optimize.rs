@@ -129,10 +129,8 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
         RustExpr::Clone(inner) => {
             let mut removed = optimize_expr(inner);
             if should_remove_clone(inner.as_ref()) {
-                let replacement = *std::mem::replace(
-                    inner,
-                    Box::new(RustExpr::Literal(RustLiteral::Unit)),
-                );
+                let replacement =
+                    *std::mem::replace(inner, Box::new(RustExpr::Literal(RustLiteral::Unit)));
                 *expr = replacement;
                 removed += 1;
             }
@@ -326,9 +324,9 @@ mod tests {
             ret: None,
             body: vec![RustStmt::Expr(RustExpr::FnCall {
                 func: Box::new(RustExpr::Ident("consume".to_string())),
-                args: vec![RustExpr::Clone(Box::new(RustExpr::Literal(RustLiteral::Str(
-                    "x".to_string(),
-                ))))],
+                args: vec![RustExpr::Clone(Box::new(RustExpr::Literal(
+                    RustLiteral::Str("x".to_string()),
+                )))],
             })],
             is_async: false,
         }];

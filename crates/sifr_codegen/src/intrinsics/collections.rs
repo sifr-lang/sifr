@@ -145,9 +145,7 @@ pub(super) fn lower_set_remove(args: &[String]) -> Option<RustExpr> {
                         ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::BinOp {
-                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "x".to_string(),
-                        )))),
+                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident("x".to_string())))),
                         op: "!=".to_string(),
                         right: Box::new(RustExpr::Ident(args[1].clone())),
                     }),
@@ -183,13 +181,13 @@ pub(super) fn lower_set_union(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__left".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(args[0].clone()))),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__right".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(args[1].clone()))),
             },
             RustStmt::Let {
                 mutable: true,
@@ -241,13 +239,13 @@ pub(super) fn lower_set_intersection(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__left".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(args[0].clone()))),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__right".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: RustExpr::Clone(Box::new(RustExpr::Ident(args[1].clone()))),
             },
             RustStmt::Let {
                 mutable: false,
@@ -981,15 +979,15 @@ pub(super) fn lower_defaultdict_get(args: &[String]) -> Option<RustExpr> {
             },
         ],
         expr: Some(Box::new(RustExpr::Deref(Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("data".to_string())),
-                    method: "get".to_string(),
-                    args: vec![RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(RustExpr::Ident("__key".to_string())),
-                    }],
-                }),
-                method: "unwrap_or".to_string(),
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("data".to_string())),
+                method: "get".to_string(),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident("__key".to_string())),
+                }],
+            }),
+            method: "unwrap_or".to_string(),
             args: vec![RustExpr::Ref {
                 mutable: false,
                 expr: Box::new(RustExpr::Ident("def".to_string())),

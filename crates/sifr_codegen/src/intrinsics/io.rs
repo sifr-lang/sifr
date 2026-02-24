@@ -382,7 +382,9 @@ pub(super) fn lower_walk_dir(args: &[String]) -> Option<RustExpr> {
                                     method: "push".to_string(),
                                     args: vec![to_string_expr(RustExpr::MethodCall {
                                         receiver: Box::new(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident("__path".to_string())),
+                                            receiver: Box::new(RustExpr::Ident(
+                                                "__path".to_string(),
+                                            )),
                                             method: "display".to_string(),
                                             args: vec![],
                                         }),

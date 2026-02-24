@@ -16,7 +16,8 @@ impl RustEmitter {
     }
 
     fn try_emit_lowered_module_constant(&mut self, name: &str, ty: &Type, value: &HirExpr) -> bool {
-        let Some((item, rust_name_call)) = try_lower_simple_module_constant_item(name, ty, value) else {
+        let Some((item, rust_name_call)) = try_lower_simple_module_constant_item(name, ty, value)
+        else {
             return false;
         };
         self.output.push_str(&render_items(&[item]));

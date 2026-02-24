@@ -16,31 +16,96 @@ fn thread_rng_expr() -> RustExpr {
     }
 }
 
+fn random_f64_expr() -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "rand".to_string(),
+            "random::<f64>".to_string(),
+        ])),
+        args: vec![],
+    }
+}
+
+fn int(v: i64) -> RustExpr {
+    RustExpr::Literal(RustLiteral::Int(v))
+}
+
+fn value_error(message: RustExpr) -> RustExpr {
+    RustExpr::StructInit {
+        name: "ValueError".to_string(),
+        fields: vec![("message".to_string(), message)],
+    }
+}
+
+fn err_value_error(message: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+        args: vec![value_error(message)],
+    }
+}
+
+fn ok_expr(expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+        args: vec![expr],
+    }
+}
+
+fn gen_range_expr(start: RustExpr, end: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "rand".to_string(),
+            "Rng".to_string(),
+            "gen_range".to_string(),
+        ])),
+        args: vec![
+            RustExpr::Ref {
+                mutable: true,
+                expr: Box::new(thread_rng_expr()),
+            },
+            RustExpr::Range {
+                start: Box::new(start),
+                end: Box::new(end),
+            },
+        ],
+    }
+}
+
 pub(super) fn lower_random_int(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let start = arg_expr(args, 0);
-    let end = arg_expr(args, 1);
-    Some(RustExpr::BinOp {
-        left: Box::new(start.clone()),
-        op: "+".to_string(),
-        right: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(thread_rng_expr()),
-            method: "gen_range".to_string(),
-            args: vec![RustExpr::Range {
-                start: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                end: Box::new(RustExpr::BinOp {
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__start".to_string(),
+                ty: None,
+                value: arg_expr(args, 0),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__end".to_string(),
+                ty: None,
+                value: arg_expr(args, 1),
+            },
+        ],
+        expr: Some(Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("__start".to_string())),
+            op: "+".to_string(),
+            right: Box::new(gen_range_expr(
+                int(0),
+                RustExpr::BinOp {
                     left: Box::new(RustExpr::BinOp {
-                        left: Box::new(end),
+                        left: Box::new(RustExpr::Ident("__end".to_string())),
                         op: "-".to_string(),
-                        right: Box::new(start),
+                        right: Box::new(RustExpr::Ident("__start".to_string())),
                     }),
                     op: "+".to_string(),
-                    right: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
-                }),
-            }],
-        }),
+                    right: Box::new(int(1)),
+                },
+            )),
+        })),
     })
 }
 
@@ -48,11 +113,7 @@ pub(super) fn lower_random_float(args: &[String]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(thread_rng_expr()),
-        method: "gen::<f64>".to_string(),
-        args: vec![],
-    })
+    Some(random_f64_expr())
 }
 
 pub(super) fn lower_random_choice(args: &[String]) -> Option<RustExpr> {
@@ -60,46 +121,23 @@ pub(super) fn lower_random_choice(args: &[String]) -> Option<RustExpr> {
         return None;
     }
     Some(RustExpr::Block {
-        stmts: vec![
-            RustStmt::Let {
-                mutable: false,
-                name: "__items".to_string(),
-                ty: None,
-                value: arg_expr(args, 0),
-            },
-            RustStmt::Let {
-                mutable: false,
-                name: "__idx".to_string(),
-                ty: None,
-                value: RustExpr::Cast {
-                    expr: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::BinOp {
-                            left: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(thread_rng_expr()),
-                                method: "gen::<f64>".to_string(),
-                                args: vec![],
-                            }),
-                            op: "*".to_string(),
-                            right: Box::new(RustExpr::Cast {
-                                expr: Box::new(RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident("__items".to_string())),
-                                    method: "len".to_string(),
-                                    args: vec![],
-                                }),
-                                ty: RustType::F64,
-                            }),
-                        }),
-                        method: "floor".to_string(),
-                        args: vec![],
-                    }),
-                    ty: RustType::Named("usize".to_string()),
-                },
-            },
-        ],
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "items".to_string(),
+            ty: None,
+            value: arg_expr(args, 0),
+        }],
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Index {
-                expr: Box::new(RustExpr::Ident("__items".to_string())),
-                index: Box::new(RustExpr::Ident("__idx".to_string())),
+                expr: Box::new(RustExpr::Ident("items".to_string())),
+                index: Box::new(gen_range_expr(
+                    int(0),
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("items".to_string())),
+                        method: "len".to_string(),
+                        args: vec![],
+                    },
+                )),
             }),
             method: "clone".to_string(),
             args: vec![],
@@ -111,24 +149,34 @@ pub(super) fn lower_random_uniform(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let start = arg_expr(args, 0);
-    let end = arg_expr(args, 1);
-    Some(RustExpr::BinOp {
-        left: Box::new(start.clone()),
-        op: "+".to_string(),
-        right: Box::new(RustExpr::BinOp {
-            left: Box::new(RustExpr::BinOp {
-                left: Box::new(end),
-                op: "-".to_string(),
-                right: Box::new(start),
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__start".to_string(),
+                ty: None,
+                value: arg_expr(args, 0),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__end".to_string(),
+                ty: None,
+                value: arg_expr(args, 1),
+            },
+        ],
+        expr: Some(Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("__start".to_string())),
+            op: "+".to_string(),
+            right: Box::new(RustExpr::BinOp {
+                left: Box::new(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ident("__end".to_string())),
+                    op: "-".to_string(),
+                    right: Box::new(RustExpr::Ident("__start".to_string())),
+                }),
+                op: "*".to_string(),
+                right: Box::new(random_f64_expr()),
             }),
-            op: "*".to_string(),
-            right: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(thread_rng_expr()),
-                method: "gen::<f64>".to_string(),
-                args: vec![],
-            }),
-        }),
+        })),
     })
 }
 
@@ -142,15 +190,30 @@ pub(super) fn lower_random_shuffle(args: &[String]) -> Option<RustExpr> {
                 mutable: true,
                 name: "__v".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(arg_expr(args, 0))),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(arg_expr(args, 0)),
+                    method: "clone".to_string(),
+                    args: vec![],
+                },
             },
-            RustStmt::Expr(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__v".to_string())),
-                method: "shuffle".to_string(),
-                args: vec![RustExpr::Ref {
-                    mutable: true,
-                    expr: Box::new(thread_rng_expr()),
-                }],
+            RustStmt::Expr(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "rand".to_string(),
+                    "seq".to_string(),
+                    "SliceRandom".to_string(),
+                    "shuffle".to_string(),
+                ])),
+                args: vec![
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__v".to_string())),
+                        method: "as_mut_slice".to_string(),
+                        args: vec![],
+                    },
+                    RustExpr::Ref {
+                        mutable: true,
+                        expr: Box::new(thread_rng_expr()),
+                    },
+                ],
             }),
         ],
         expr: Some(Box::new(RustExpr::Ident("__v".to_string()))),
@@ -167,10 +230,7 @@ pub(super) fn lower_random_sample(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__items".to_string(),
                 ty: None,
-                value: RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(arg_expr(args, 0)),
-                },
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
@@ -192,49 +252,46 @@ pub(super) fn lower_random_sample(args: &[String]) -> Option<RustExpr> {
                     args: vec![],
                 }),
             }),
-            then_expr: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-                args: vec![RustExpr::StructInit {
-                    name: "ValueError".to_string(),
-                    fields: vec![(
-                        "message".to_string(),
-                        RustExpr::FormatMacro {
-                            name: "format".to_string(),
-                            format_str: "sample larger than population: {} > {}".to_string(),
-                            args: vec![
-                                RustExpr::Ident("__k".to_string()),
-                                RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident("__items".to_string())),
-                                    method: "len".to_string(),
-                                    args: vec![],
-                                },
-                            ],
-                        },
-                    )],
-                }],
-            }),
-            else_expr: Some(Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-                args: vec![RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__items".to_string())),
-                            method: "choose_multiple".to_string(),
-                            args: vec![
-                                RustExpr::Ref {
-                                    mutable: true,
-                                    expr: Box::new(thread_rng_expr()),
-                                },
-                                RustExpr::Ident("__k".to_string()),
-                            ],
-                        }),
-                        method: "cloned".to_string(),
+            then_expr: Box::new(err_value_error(RustExpr::FormatMacro {
+                name: "format".to_string(),
+                format_str: "sample larger than population: {} > {}".to_string(),
+                args: vec![
+                    RustExpr::Ident("__k".to_string()),
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__items".to_string())),
+                        method: "len".to_string(),
                         args: vec![],
-                    }),
-                    method: "collect::<Vec<_>>".to_string(),
-                    args: vec![],
-                }],
+                    },
+                ],
             })),
+            else_expr: Some(Box::new(ok_expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "rand".to_string(),
+                            "seq".to_string(),
+                            "SliceRandom".to_string(),
+                            "choose_multiple".to_string(),
+                        ])),
+                        args: vec![
+                            RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__items".to_string())),
+                                method: "as_slice".to_string(),
+                                args: vec![],
+                            },
+                            RustExpr::Ref {
+                                mutable: true,
+                                expr: Box::new(thread_rng_expr()),
+                            },
+                            RustExpr::Ident("__k".to_string()),
+                        ],
+                    }),
+                    method: "cloned".to_string(),
+                    args: vec![],
+                }),
+                method: "collect::<Vec<_>>".to_string(),
+                args: vec![],
+            }))),
         })),
     })
 }
@@ -268,20 +325,15 @@ pub(super) fn lower_random_randrange(args: &[String]) -> Option<RustExpr> {
             cond: Box::new(RustExpr::BinOp {
                 left: Box::new(RustExpr::Ident("__step".to_string())),
                 op: "==".to_string(),
-                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                right: Box::new(int(0)),
             }),
-            then_expr: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-                args: vec![RustExpr::StructInit {
-                    name: "ValueError".to_string(),
-                    fields: vec![(
-                        "message".to_string(),
-                        RustExpr::Literal(RustLiteral::Str(
-                            "randrange: step must not be zero".to_string(),
-                        )),
-                    )],
-                }],
-            }),
+            then_expr: Box::new(err_value_error(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(
+                    "\"randrange: step must not be zero\"".to_string(),
+                )),
+                method: "to_string".to_string(),
+                args: vec![],
+            })),
             else_expr: Some(Box::new(RustExpr::If {
                 cond: Box::new(RustExpr::BinOp {
                     left: Box::new(RustExpr::BinOp {
@@ -293,21 +345,14 @@ pub(super) fn lower_random_randrange(args: &[String]) -> Option<RustExpr> {
                     right: Box::new(RustExpr::BinOp {
                         left: Box::new(RustExpr::Ident("__step".to_string())),
                         op: ">".to_string(),
-                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                        right: Box::new(int(0)),
                     }),
                 }),
-                then_expr: Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-                    args: vec![RustExpr::StructInit {
-                        name: "ValueError".to_string(),
-                        fields: vec![(
-                            "message".to_string(),
-                            RustExpr::Literal(RustLiteral::Str(
-                                "randrange: empty range".to_string(),
-                            )),
-                        )],
-                    }],
-                }),
+                then_expr: Box::new(err_value_error(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("\"randrange: empty range\"".to_string())),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                })),
                 else_expr: Some(Box::new(RustExpr::Block {
                     stmts: vec![RustStmt::Let {
                         mutable: false,
@@ -325,7 +370,7 @@ pub(super) fn lower_random_randrange(args: &[String]) -> Option<RustExpr> {
                                     right: Box::new(RustExpr::BinOp {
                                         left: Box::new(RustExpr::Ident("__step".to_string())),
                                         op: "-".to_string(),
-                                        right: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                        right: Box::new(int(1)),
                                     }),
                                 }),
                                 op: "/".to_string(),
@@ -335,25 +380,18 @@ pub(super) fn lower_random_randrange(args: &[String]) -> Option<RustExpr> {
                             args: vec![],
                         },
                     }],
-                    expr: Some(Box::new(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-                        args: vec![RustExpr::BinOp {
-                            left: Box::new(RustExpr::Ident("__start".to_string())),
-                            op: "+".to_string(),
-                            right: Box::new(RustExpr::BinOp {
-                                left: Box::new(RustExpr::MethodCall {
-                                    receiver: Box::new(thread_rng_expr()),
-                                    method: "gen_range".to_string(),
-                                    args: vec![RustExpr::Range {
-                                        start: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                                        end: Box::new(RustExpr::Ident("__n".to_string())),
-                                    }],
-                                }),
-                                op: "*".to_string(),
-                                right: Box::new(RustExpr::Ident("__step".to_string())),
-                            }),
-                        }],
-                    })),
+                    expr: Some(Box::new(ok_expr(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__start".to_string())),
+                        op: "+".to_string(),
+                        right: Box::new(RustExpr::BinOp {
+                            left: Box::new(gen_range_expr(
+                                int(0),
+                                RustExpr::Ident("__n".to_string()),
+                            )),
+                            op: "*".to_string(),
+                            right: Box::new(RustExpr::Ident("__step".to_string())),
+                        }),
+                    }))),
                 })),
             })),
         })),
@@ -364,36 +402,62 @@ pub(super) fn lower_random_gauss(args: &[String]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let mu = arg_expr(args, 0);
-    let sigma = arg_expr(args, 1);
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "rand_distr".to_string(),
-                    "Normal".to_string(),
-                    "new".to_string(),
-                ])),
-                args: vec![mu.clone(), sigma],
-            }),
-            method: "map".to_string(),
-            args: vec![RustExpr::Closure {
-                params: vec![RustParam::Named {
-                    name: "d".to_string(),
-                    ty: RustType::Named("_".to_string()),
-                }],
-                body: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("d".to_string())),
-                    method: "sample".to_string(),
-                    args: vec![RustExpr::Ref {
-                        mutable: true,
-                        expr: Box::new(thread_rng_expr()),
-                    }],
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__mu".to_string(),
+                ty: None,
+                value: arg_expr(args, 0),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__sigma".to_string(),
+                ty: None,
+                value: arg_expr(args, 1),
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "rand_distr".to_string(),
+                        "Normal".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![
+                        RustExpr::Ident("__mu".to_string()),
+                        RustExpr::Ident("__sigma".to_string()),
+                    ],
                 }),
-                is_move: false,
-            }],
-        }),
-        method: "unwrap_or".to_string(),
-        args: vec![mu],
+                method: "map".to_string(),
+                args: vec![RustExpr::Closure {
+                    params: vec![RustParam::Named {
+                        name: "d".to_string(),
+                        ty: RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "rand_distr".to_string(),
+                            "Distribution".to_string(),
+                            "sample".to_string(),
+                        ])),
+                        args: vec![
+                            RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(RustExpr::Ident("d".to_string())),
+                            },
+                            RustExpr::Ref {
+                                mutable: true,
+                                expr: Box::new(thread_rng_expr()),
+                            },
+                        ],
+                    }),
+                    is_move: false,
+                }],
+            }),
+            method: "unwrap_or".to_string(),
+            args: vec![RustExpr::Ident("__mu".to_string())],
+        })),
     })
 }

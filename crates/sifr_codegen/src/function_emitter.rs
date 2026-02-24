@@ -1,9 +1,16 @@
-use crate::{body_contains_yield, collect_mutated_vars_with_sigs, type_contains_typevar, RustEmitter};
+use crate::{
+    body_contains_yield, collect_mutated_vars_with_sigs, type_contains_typevar, RustEmitter,
+};
 use sifr_hir::{HirFunction, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
-    pub(super) fn emit_function(&mut self, func: &HirFunction, module_public: bool, test_mode: bool) {
+    pub(super) fn emit_function(
+        &mut self,
+        func: &HirFunction,
+        module_public: bool,
+        test_mode: bool,
+    ) {
         // In test mode, skip the main function
         if test_mode && func.name == "main" {
             return;
@@ -34,11 +41,13 @@ impl RustEmitter {
             }
             // Register Callable-typed params for convention-aware call emission
             if let Type::Callable(ref param_types, ref conventions, _) = param.ty {
-                let conv_list: Vec<(Type, ParamConvention)> = param_types.iter()
+                let conv_list: Vec<(Type, ParamConvention)> = param_types
+                    .iter()
                     .zip(conventions.iter())
                     .map(|(t, c)| (t.clone(), *c))
                     .collect();
-                self.callable_var_conventions.insert(param.name.clone(), conv_list);
+                self.callable_var_conventions
+                    .insert(param.name.clone(), conv_list);
             }
         }
 
@@ -135,15 +144,28 @@ impl RustEmitter {
                 } else {
                     // If return type is a generic class and this function has type params,
                     // include the type params in the return type
-                    let ret_type = if let Type::Class { name: ref ret_name, .. } = func.return_type {
+                    let ret_type = if let Type::Class {
+                        name: ref ret_name, ..
+                    } = func.return_type
+                    {
                         if self.generic_classes.contains(ret_name) && !func.type_params.is_empty() {
-                            let type_params_in_ret: Vec<&String> = func.type_params.iter()
+                            let type_params_in_ret: Vec<&String> = func
+                                .type_params
+                                .iter()
                                 .filter(|tp| type_contains_typevar(&func.return_type, tp))
                                 .collect();
                             if type_params_in_ret.is_empty() {
                                 func.return_type.rust_type()
                             } else {
-                                format!("{}<{}>", ret_name, type_params_in_ret.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", "))
+                                format!(
+                                    "{}<{}>",
+                                    ret_name,
+                                    type_params_in_ret
+                                        .iter()
+                                        .map(|s| s.as_str())
+                                        .collect::<Vec<_>>()
+                                        .join(", ")
+                                )
                             }
                         } else {
                             func.return_type.rust_type()
@@ -189,19 +211,25 @@ impl RustEmitter {
 
             // Emit the lazy iterator
             self.write_indent();
-            self.write(&format!("std::iter::from_fn(move || -> Option<{yield_ty}> {{\n"));
+            self.write(&format!(
+                "std::iter::from_fn(move || -> Option<{yield_ty}> {{\n"
+            ));
             self.indent += 1;
 
-            if let Some(HirStmt::While { condition, body, .. }) = while_stmt {
+            if let Some(HirStmt::While {
+                condition, body, ..
+            }) = while_stmt
+            {
                 // Check if yield is directly in the while body or nested in an if
-                let has_conditional_yield = !body.iter().any(|s| matches!(s, HirStmt::Yield { .. }))
-                    && body.iter().any(|s| {
-                        if let HirStmt::If { then_body, .. } = s {
-                            body_contains_yield(then_body)
-                        } else {
-                            false
-                        }
-                    });
+                let has_conditional_yield =
+                    !body.iter().any(|s| matches!(s, HirStmt::Yield { .. }))
+                        && body.iter().any(|s| {
+                            if let HirStmt::If { then_body, .. } = s {
+                                body_contains_yield(then_body)
+                            } else {
+                                false
+                            }
+                        });
 
                 if has_conditional_yield {
                     // Conditional yield: while cond: if test: yield val; post_stmts
@@ -218,7 +246,12 @@ impl RustEmitter {
 
                     // Emit body with yield replaced by __yielded = Some(val)
                     for s in body {
-                        if let HirStmt::If { condition: if_cond, then_body, .. } = s {
+                        if let HirStmt::If {
+                            condition: if_cond,
+                            then_body,
+                            ..
+                        } = s
+                        {
                             if body_contains_yield(then_body) {
                                 // Emit the if with yield -> __yielded = Some(val)
                                 self.write_indent();

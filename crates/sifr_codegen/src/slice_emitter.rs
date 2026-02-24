@@ -15,7 +15,9 @@ impl RustEmitter {
                 self.emit_expr(value);
                 self.write(";\n");
             }
-            HirExpr::Compare { left, comparators, .. } => {
+            HirExpr::Compare {
+                left, comparators, ..
+            } => {
                 self.emit_walrus_hoists(left);
                 for c in comparators {
                     self.emit_walrus_hoists(c);

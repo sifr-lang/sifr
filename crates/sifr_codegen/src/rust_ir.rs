@@ -306,7 +306,12 @@ mod tests {
         };
 
         match item {
-            RustItem::Struct { name, derives, fields, .. } => {
+            RustItem::Struct {
+                name,
+                derives,
+                fields,
+                ..
+            } => {
                 assert_eq!(name, "Point");
                 assert_eq!(derives, vec!["Debug".to_string(), "Clone".to_string()]);
                 assert_eq!(fields.len(), 2);
@@ -407,17 +412,17 @@ mod tests {
                     pattern: "0".to_string(),
                     bindings: vec![],
                     guard: None,
-                    body: vec![RustStmt::Return(Some(RustExpr::Literal(
-                        RustLiteral::Str("zero".to_string()),
-                    )))],
+                    body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Str(
+                        "zero".to_string(),
+                    ))))],
                 },
                 RustMatchArm {
                     pattern: "_".to_string(),
                     bindings: vec![],
                     guard: None,
-                    body: vec![RustStmt::Return(Some(RustExpr::Literal(
-                        RustLiteral::Str("many".to_string()),
-                    )))],
+                    body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Str(
+                        "many".to_string(),
+                    ))))],
                 },
             ],
         };

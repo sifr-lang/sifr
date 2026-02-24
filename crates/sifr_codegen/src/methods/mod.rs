@@ -126,14 +126,12 @@ mod tests {
         let strip = lower_method(&Type::Str, "strip", "s", &[]).expect("strip lowers");
         assert_eq!(render_expr(&strip.expr), "s.trim().to_string()");
 
-        let starts =
-            lower_method(&Type::Str, "startswith", "s", &["prefix".to_string()])
-                .expect("startswith lowers");
+        let starts = lower_method(&Type::Str, "startswith", "s", &["prefix".to_string()])
+            .expect("startswith lowers");
         assert_eq!(render_expr(&starts.expr), "s.starts_with(&(prefix))");
 
-        let ends =
-            lower_method(&Type::Str, "endswith", "s", &["suffix".to_string()])
-                .expect("endswith lowers");
+        let ends = lower_method(&Type::Str, "endswith", "s", &["suffix".to_string()])
+            .expect("endswith lowers");
         assert_eq!(render_expr(&ends.expr), "s.ends_with(&(suffix))");
 
         let split_default = lower_method(&Type::Str, "split", "s", &[]).expect("split default");
@@ -155,9 +153,12 @@ mod tests {
         .expect("replace lowers");
         assert_eq!(render_expr(&replace.expr), "s.replace(&(old), &(new))");
 
-        let find = lower_method(&Type::Str, "find", "s", &["needle".to_string()])
-            .expect("find lowers");
-        assert_eq!(render_expr(&find.expr), "s.find(&(needle)).map(|i| i as i64)");
+        let find =
+            lower_method(&Type::Str, "find", "s", &["needle".to_string()]).expect("find lowers");
+        assert_eq!(
+            render_expr(&find.expr),
+            "s.find(&(needle)).map(|i| i as i64)"
+        );
 
         let lstrip = lower_method(&Type::Str, "lstrip", "s", &[]).expect("lstrip lowers");
         assert_eq!(render_expr(&lstrip.expr), "s.trim_start().to_string()");
@@ -165,9 +166,12 @@ mod tests {
         let rstrip = lower_method(&Type::Str, "rstrip", "s", &[]).expect("rstrip lowers");
         assert_eq!(render_expr(&rstrip.expr), "s.trim_end().to_string()");
 
-        let count = lower_method(&Type::Str, "count", "s", &["needle".to_string()])
-            .expect("count lowers");
-        assert_eq!(render_expr(&count.expr), "s.matches(&(needle)).count() as i64");
+        let count =
+            lower_method(&Type::Str, "count", "s", &["needle".to_string()]).expect("count lowers");
+        assert_eq!(
+            render_expr(&count.expr),
+            "s.matches(&(needle)).count() as i64"
+        );
 
         let join =
             lower_method(&Type::Str, "join", "sep", &["parts".to_string()]).expect("join lowers");
@@ -200,26 +204,26 @@ mod tests {
         let islower = lower_method(&Type::Str, "islower", "s", &[]).expect("islower lowers");
         assert!(render_expr(&islower.expr).contains("is_lowercase"));
 
-        let center = lower_method(&Type::Str, "center", "s", &["5".to_string()])
-            .expect("center lowers");
+        let center =
+            lower_method(&Type::Str, "center", "s", &["5".to_string()]).expect("center lowers");
         assert!(render_expr(&center.expr).contains("let _w = 5 as usize"));
 
-        let ljust = lower_method(&Type::Str, "ljust", "s", &["5".to_string()])
-            .expect("ljust lowers");
+        let ljust =
+            lower_method(&Type::Str, "ljust", "s", &["5".to_string()]).expect("ljust lowers");
         assert_eq!(
             render_expr(&ljust.expr),
             "format!(\"{:<width$}\", s, width = 5 as usize)"
         );
 
-        let rjust = lower_method(&Type::Str, "rjust", "s", &["5".to_string()])
-            .expect("rjust lowers");
+        let rjust =
+            lower_method(&Type::Str, "rjust", "s", &["5".to_string()]).expect("rjust lowers");
         assert_eq!(
             render_expr(&rjust.expr),
             "format!(\"{:>width$}\", s, width = 5 as usize)"
         );
 
-        let zfill = lower_method(&Type::Str, "zfill", "s", &["5".to_string()])
-            .expect("zfill lowers");
+        let zfill =
+            lower_method(&Type::Str, "zfill", "s", &["5".to_string()]).expect("zfill lowers");
         assert_eq!(
             render_expr(&zfill.expr),
             "format!(\"{:0>width$}\", s, width = 5 as usize)"
@@ -313,24 +317,14 @@ mod tests {
         .expect("deque appendleft lowers");
         assert_eq!(render_expr(&deque_appendleft.expr), "dq.push_front(1)");
 
-        let deque_pop = lower_method_with_context(
-            &Type::List(Box::new(Type::Int)),
-            "pop",
-            "dq",
-            &[],
-            true,
-        )
-        .expect("deque pop lowers");
+        let deque_pop =
+            lower_method_with_context(&Type::List(Box::new(Type::Int)), "pop", "dq", &[], true)
+                .expect("deque pop lowers");
         assert_eq!(render_expr(&deque_pop.expr), "dq.pop_back()");
 
-        let deque_popleft = lower_method_with_context(
-            &Type::List(Box::new(Type::Int)),
-            "popleft",
-            "dq",
-            &[],
-            true,
-        )
-        .expect("deque popleft lowers");
+        let deque_popleft =
+            lower_method_with_context(&Type::List(Box::new(Type::Int)), "popleft", "dq", &[], true)
+                .expect("deque popleft lowers");
         assert_eq!(render_expr(&deque_popleft.expr), "dq.pop_front()");
 
         let list_remove = lower_method(
@@ -341,7 +335,8 @@ mod tests {
         )
         .expect("list remove lowers");
         let list_remove_rendered = render_expr(&list_remove.expr);
-        assert!(list_remove_rendered.contains("if let Some(__pos) = xs.iter().position(|__x| *__x == 1)"));
+        assert!(list_remove_rendered
+            .contains("if let Some(__pos) = xs.iter().position(|__x| *__x == 1)"));
         assert!(list_remove_rendered.contains("xs.remove(__pos);"));
 
         let list_index = lower_method(
@@ -358,10 +353,12 @@ mod tests {
 
         let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
         let dict_keys = lower_method(&dict_ty, "keys", "d", &[]).expect("dict keys lowers");
-        assert_eq!(render_expr(&dict_keys.expr), "d.keys().cloned().collect::<Vec<_>>()");
+        assert_eq!(
+            render_expr(&dict_keys.expr),
+            "d.keys().cloned().collect::<Vec<_>>()"
+        );
 
-        let dict_values = lower_method(&dict_ty, "values", "d", &[])
-            .expect("dict values lowers");
+        let dict_values = lower_method(&dict_ty, "values", "d", &[]).expect("dict values lowers");
         assert_eq!(
             render_expr(&dict_values.expr),
             "d.values().cloned().collect::<Vec<_>>()"
@@ -385,11 +382,17 @@ mod tests {
 
         let dict_contains_lit = lower_method(&dict_ty, "contains", "d", &["\"k\"".to_string()])
             .expect("dict contains literal lowers");
-        assert_eq!(render_expr(&dict_contains_lit.expr), "d.contains_key(&(\"k\"))");
+        assert_eq!(
+            render_expr(&dict_contains_lit.expr),
+            "d.contains_key(&(\"k\"))"
+        );
 
         let dict_contains_name = lower_method(&dict_ty, "contains", "d", &["k".to_string()])
             .expect("dict contains name lowers");
-        assert_eq!(render_expr(&dict_contains_name.expr), "d.contains_key(&(k))");
+        assert_eq!(
+            render_expr(&dict_contains_name.expr),
+            "d.contains_key(&(k))"
+        );
 
         let dict_get_one = lower_method(&dict_ty, "get", "d", &["\"k\"".to_string()])
             .expect("dict get one lowers");
@@ -407,21 +410,21 @@ mod tests {
             "d.get(&(\"k\")).cloned().unwrap_or(0)"
         );
 
-        let dict_pop = lower_method(&dict_ty, "pop", "d", &["\"k\"".to_string()])
-            .expect("dict pop lowers");
+        let dict_pop =
+            lower_method(&dict_ty, "pop", "d", &["\"k\"".to_string()]).expect("dict pop lowers");
         assert_eq!(render_expr(&dict_pop.expr), "d.remove(&(\"k\"))");
 
         let set_ty = Type::Set(Box::new(Type::Int));
-        let set_add = lower_method(&set_ty, "add", "s", &["1".to_string()])
-            .expect("set add lowers");
+        let set_add =
+            lower_method(&set_ty, "add", "s", &["1".to_string()]).expect("set add lowers");
         assert_eq!(render_expr(&set_add.expr), "s.insert(1)");
 
-        let set_remove = lower_method(&set_ty, "remove", "s", &["1".to_string()])
-            .expect("set remove lowers");
+        let set_remove =
+            lower_method(&set_ty, "remove", "s", &["1".to_string()]).expect("set remove lowers");
         assert_eq!(render_expr(&set_remove.expr), "s.remove(&(1))");
 
-        let set_discard = lower_method(&set_ty, "discard", "s", &["1".to_string()])
-            .expect("set discard lowers");
+        let set_discard =
+            lower_method(&set_ty, "discard", "s", &["1".to_string()]).expect("set discard lowers");
         assert_eq!(render_expr(&set_discard.expr), "s.remove(&(1))");
 
         let set_contains = lower_method(&set_ty, "contains", "s", &["1".to_string()])
@@ -449,16 +452,15 @@ mod tests {
         let set_pop = lower_method(&set_ty, "pop", "s", &[]).expect("set pop lowers");
         assert!(render_expr(&set_pop.expr).contains("iter().next().cloned()"));
 
-        let set_union = lower_method(&set_ty, "union", "s", &["other".to_string()])
-            .expect("set union lowers");
+        let set_union =
+            lower_method(&set_ty, "union", "s", &["other".to_string()]).expect("set union lowers");
         assert_eq!(
             render_expr(&set_union.expr),
             "s.union(&(other)).cloned().collect::<std::collections::HashSet<_>>()"
         );
 
-        let set_intersection =
-            lower_method(&set_ty, "intersection", "s", &["other".to_string()])
-                .expect("set intersection lowers");
+        let set_intersection = lower_method(&set_ty, "intersection", "s", &["other".to_string()])
+            .expect("set intersection lowers");
         assert_eq!(
             render_expr(&set_intersection.expr),
             "s.intersection(&(other)).cloned().collect::<std::collections::HashSet<_>>()"

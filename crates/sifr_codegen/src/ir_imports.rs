@@ -262,7 +262,10 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
         | RustType::String_
         | RustType::Unit
         | RustType::RawCode(_) => {}
-        RustType::Vec(inner) | RustType::HashSet(inner) | RustType::VecDeque(inner) | RustType::Option(inner) => {
+        RustType::Vec(inner)
+        | RustType::HashSet(inner)
+        | RustType::VecDeque(inner)
+        | RustType::Option(inner) => {
             collect_type(inner, needs);
         }
         RustType::HashMap(k, v) | RustType::Result(k, v) => {
@@ -368,10 +371,7 @@ mod tests {
                     args: vec![],
                 }),
                 RustStmt::Expr(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "Mutex".to_string(),
-                        "new".to_string(),
-                    ])),
+                    func: Box::new(RustExpr::Path(vec!["Mutex".to_string(), "new".to_string()])),
                     args: vec![RustExpr::Literal(RustLiteral::Int(1))],
                 }),
             ],

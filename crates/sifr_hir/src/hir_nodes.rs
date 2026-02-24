@@ -1,6 +1,6 @@
 //! HIR node definitions -- typed versions of AST nodes.
 
-use sifr_type_system::{Type, ParamConvention};
+use sifr_type_system::{ParamConvention, Type};
 
 /// A complete HIR module (the top-level compilation unit).
 #[derive(Debug, Clone)]
@@ -13,7 +13,8 @@ pub struct HirModule {
     /// Generic function info: `function_name` -> `type_var_names`
     pub generic_functions: std::collections::HashMap<String, Vec<String>>,
     /// Type parameter bounds: `owner_name` (function or class) -> (`type_var_name` -> `protocol_names`)
-    pub type_param_bounds: std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
+    pub type_param_bounds:
+        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
 }
 
 /// An import statement.
@@ -29,7 +30,14 @@ pub struct HirImport {
 
 /// A class definition with resolved types.
 #[derive(Debug, Clone)]
-#[allow(clippy::struct_excessive_bools)]
+pub enum HirClassKind {
+    Regular,
+    Protocol,
+    Enum,
+}
+
+/// A class definition with resolved types.
+#[derive(Debug, Clone)]
 pub struct HirClass {
     pub name: String,
     pub fields: Vec<(String, Type)>,
@@ -38,8 +46,8 @@ pub struct HirClass {
     pub is_hashable: bool,
     /// Whether this class is an error type (class Foo(Error))
     pub is_error_type: bool,
-    /// Whether this class is a Protocol (maps to Rust trait)
-    pub is_protocol: bool,
+    /// Class category (regular class, protocol, or enum)
+    pub kind: HirClassKind,
     /// Operator overloading methods: maps dunder name to method
     /// e.g., "__add__" -> `HirFunction`, "__eq__" -> `HirFunction`
     pub operator_impls: Vec<(String, HirFunction)>,
@@ -52,12 +60,20 @@ pub struct HirClass {
     pub parent_class: Option<String>,
     /// Generic type parameters (e.g., T, K, V from PEP 695 or `TypeVar`)
     pub type_params: Vec<String>,
-    /// Whether this class is an enum type (class Color(Enum):)
-    pub is_enum: bool,
     /// Enum variants: (name, `optional_value`)
     /// e.g., RED = 1 -> ("RED", Some(1))
     /// e.g., RED -> ("RED", None)
     pub enum_variants: Vec<(String, Option<i64>)>,
+}
+
+impl HirClass {
+    pub fn is_protocol(&self) -> bool {
+        matches!(self.kind, HirClassKind::Protocol)
+    }
+
+    pub fn is_enum(&self) -> bool {
+        matches!(self.kind, HirClassKind::Enum)
+    }
 }
 
 /// Method kind: regular, classmethod, or staticmethod
@@ -105,10 +121,7 @@ pub enum HirStmt {
         is_mutable: bool,
     },
     /// Assignment to existing variable: `x = expr`
-    Assign {
-        name: String,
-        value: HirExpr,
-    },
+    Assign { name: String, value: HirExpr },
     /// Augmented assignment: `x += expr`
     AugAssign {
         name: String,
@@ -116,13 +129,9 @@ pub enum HirStmt {
         value: HirExpr,
     },
     /// Return statement
-    Return {
-        value: Option<HirExpr>,
-    },
+    Return { value: Option<HirExpr> },
     /// Expression statement (e.g., function call)
-    Expr {
-        expr: HirExpr,
-    },
+    Expr { expr: HirExpr },
     /// If/elif/else
     If {
         condition: HirExpr,
@@ -163,14 +172,9 @@ pub enum HirStmt {
     /// Pass (no-op)
     Pass,
     /// Assert statement: assert condition [, message]
-    Assert {
-        test: HirExpr,
-        msg: Option<HirExpr>,
-    },
+    Assert { test: HirExpr, msg: Option<HirExpr> },
     /// Raise statement: raise expr -> Err(expr)
-    Raise {
-        value: HirExpr,
-    },
+    Raise { value: HirExpr },
     /// Try/except: pattern matching on Result
     TryExcept {
         body: Vec<HirStmt>,
@@ -223,14 +227,9 @@ pub enum HirStmt {
         field_ty: Type,
     },
     /// Delete statement: del d[key] or del a[i]
-    Delete {
-        object: HirExpr,
-        index: HirExpr,
-    },
+    Delete { object: HirExpr, index: HirExpr },
     /// Yield statement: yield expr (in generator functions)
-    Yield {
-        value: HirExpr,
-    },
+    Yield { value: HirExpr },
     /// With statement: with expr as var: body
     /// Supports multiple context managers: with `A()` as a, `B()` as b: body
     /// Each item is (`var_name`, `context_expr`, `has_context_manager_protocol`)
@@ -239,9 +238,7 @@ pub enum HirStmt {
         body: Vec<HirStmt>,
     },
     /// Nested function definition: def inside def
-    NestedFunction {
-        func: HirFunction,
-    },
+    NestedFunction { func: HirFunction },
     /// Match/case statement (Python 3.10 structural pattern matching)
     Match {
         subject: HirExpr,
@@ -321,10 +318,7 @@ pub enum HirExpr {
     /// None literal
     NoneLiteral,
     /// Variable reference
-    Name {
-        name: String,
-        ty: Type,
-    },
+    Name { name: String, ty: Type },
     /// Binary operation (a + b, a - b, etc.)
     BinOp {
         left: Box<HirExpr>,
@@ -372,15 +366,9 @@ pub enum HirExpr {
         ty: Type,
     },
     /// List literal: [1, 2, 3]
-    ListLiteral {
-        elements: Vec<HirExpr>,
-        ty: Type,
-    },
+    ListLiteral { elements: Vec<HirExpr>, ty: Type },
     /// Set literal: {1, 2, 3}
-    SetLiteral {
-        elements: Vec<HirExpr>,
-        ty: Type,
-    },
+    SetLiteral { elements: Vec<HirExpr>, ty: Type },
     /// Dict literal: {"a": 1, "b": 2}
     DictLiteral {
         keys: Vec<HirExpr>,
@@ -388,10 +376,7 @@ pub enum HirExpr {
         ty: Type,
     },
     /// Tuple literal: (1, "hello")
-    TupleLiteral {
-        elements: Vec<HirExpr>,
-        ty: Type,
-    },
+    TupleLiteral { elements: Vec<HirExpr>, ty: Type },
     /// Indexing: `x[0]`, `d["key"]`
     Index {
         object: Box<HirExpr>,
@@ -443,20 +428,11 @@ pub enum HirExpr {
         ty: Type,
     },
     /// Question mark operator: expr? (early return on Err)
-    QuestionMark {
-        expr: Box<HirExpr>,
-        ty: Type,
-    },
+    QuestionMark { expr: Box<HirExpr>, ty: Type },
     /// Ok wrapping: Ok(expr)
-    OkWrap {
-        value: Box<HirExpr>,
-        ty: Type,
-    },
+    OkWrap { value: Box<HirExpr>, ty: Type },
     /// Err wrapping: Err(expr)
-    ErrWrap {
-        value: Box<HirExpr>,
-        ty: Type,
-    },
+    ErrWrap { value: Box<HirExpr>, ty: Type },
     /// Super call: `super().__init__(args)` -> `ParentType::new(args)`
     SuperCall {
         parent_class: String,

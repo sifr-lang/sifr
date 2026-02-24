@@ -16,7 +16,10 @@ impl RustEmitter {
             }
 
             self.used_stdlib_modules.insert(import.module.clone());
-            let names_set = self.imported_stdlib_names.entry(import.module.clone()).or_default();
+            let names_set = self
+                .imported_stdlib_names
+                .entry(import.module.clone())
+                .or_default();
             for name in &import.names {
                 names_set.insert(name.clone());
             }
@@ -63,7 +66,7 @@ impl RustEmitter {
     fn collect_display_class_metadata(&mut self, module: &HirModule) {
         for class in &module.classes {
             let has_auto_display = !class.fields.is_empty()
-                && !class.is_protocol
+                && !class.is_protocol()
                 && !class
                     .operator_impls
                     .iter()
@@ -89,7 +92,10 @@ impl RustEmitter {
     fn collect_parent_field_metadata(&mut self, module: &HirModule) {
         for class in &module.classes {
             if let Some(ref parent_name) = class.parent_class {
-                if let Some(parent_class) = module.classes.iter().find(|candidate| candidate.name == *parent_name)
+                if let Some(parent_class) = module
+                    .classes
+                    .iter()
+                    .find(|candidate| candidate.name == *parent_name)
                 {
                     let parent_field_names: HashSet<String> = parent_class
                         .fields

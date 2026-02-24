@@ -13,13 +13,13 @@ use bitflags::bitflags;
 use unicode_ident::{is_xid_continue, is_xid_start};
 use unicode_normalization::UnicodeNormalization;
 
+use ruff_python_trivia::is_python_whitespace;
+use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 use sifr_python_ast::str::Quote;
 use sifr_python_ast::str_prefix::{
     AnyStringPrefix, ByteStringPrefix, FStringPrefix, StringLiteralPrefix,
 };
 use sifr_python_ast::{AnyStringFlags, Int, IpyEscapeKind, StringFlags};
-use ruff_python_trivia::is_python_whitespace;
-use ruff_text_size::{Ranged, TextLen, TextRange, TextSize};
 
 use crate::error::FStringErrorType;
 use crate::lexer::cursor::{Cursor, EOF_CHAR};

@@ -98,9 +98,7 @@ pub(super) fn lower_gzip_compress(args: &[String]) -> Option<RustExpr> {
                         ty: RustType::Named("_".to_string()),
                     }],
                     body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                            "b".to_string(),
-                        )))),
+                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident("b".to_string())))),
                         ty: RustType::I64,
                     }),
                     is_move: false,

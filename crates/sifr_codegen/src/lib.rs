@@ -59,7 +59,7 @@ use helpers::{
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
-use sifr_hir::{HirExpr, HirModule, HirStmt};
+use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
@@ -937,6 +937,10 @@ impl RustEmitter {
             self.emit_stmt_fallback(stmt);
             return;
         }
+        if should_force_stmt_fallback(self, stmt) {
+            self.emit_stmt_fallback(stmt);
+            return;
+        }
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;
         }
@@ -974,6 +978,10 @@ impl RustEmitter {
         if is_leaf_expr_candidate(expr) {
             self.lowering_stats.expr_candidate_total += 1;
         }
+        if should_force_expr_fallback(self, expr) {
+            self.emit_expr_fallback(expr);
+            return;
+        }
         if let Some(lowered_expr) = try_lower_leaf_expr(expr) {
             self.lowering_stats.expr_structured += 1;
             self.lowering_stats.expr_candidate_structured += 1;
@@ -991,4 +999,347 @@ impl RustEmitter {
 
 pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
     helpers::body_contains_yield_inner(stmts)
+}
+
+fn should_force_expr_fallback(emitter: &RustEmitter, expr: &HirExpr) -> bool {
+    if expr_contains_force_fallback_name(emitter, expr) {
+        return true;
+    }
+    match expr {
+        HirExpr::Compare { .. } | HirExpr::BoolOp { .. } => {
+            expr_uses_borrowed_param(expr, &emitter.borrowed_params, &emitter.mut_borrowed_params)
+        }
+        _ => false,
+    }
+}
+
+fn expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExpr) -> bool {
+    match expr {
+        HirExpr::Name { name, .. } => {
+            emitter.intrinsic_functions.contains(name.as_str())
+                || emitter.is_stdlib_constant(name)
+                || emitter.module_constants.contains_key(name)
+        }
+        HirExpr::BinOp { left, right, .. } => {
+            expr_contains_force_fallback_name(emitter, left)
+                || expr_contains_force_fallback_name(emitter, right)
+        }
+        HirExpr::UnaryOp { operand, .. } => expr_contains_force_fallback_name(emitter, operand),
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            expr_contains_force_fallback_name(emitter, left)
+                || comparators
+                    .iter()
+                    .any(|expr| expr_contains_force_fallback_name(emitter, expr))
+        }
+        HirExpr::BoolOp { values, .. } => values
+            .iter()
+            .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
+        HirExpr::Call { args, .. } => args
+            .iter()
+            .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            expr_contains_force_fallback_name(emitter, condition)
+                || expr_contains_force_fallback_name(emitter, then_expr)
+                || expr_contains_force_fallback_name(emitter, else_expr)
+        }
+        HirExpr::RangeLiteral {
+            start, end, step, ..
+        } => {
+            expr_contains_force_fallback_name(emitter, start)
+                || expr_contains_force_fallback_name(emitter, end)
+                || step
+                    .as_ref()
+                    .is_some_and(|expr| expr_contains_force_fallback_name(emitter, expr))
+        }
+        HirExpr::ListLiteral { elements, .. }
+        | HirExpr::SetLiteral { elements, .. }
+        | HirExpr::TupleLiteral { elements, .. } => elements
+            .iter()
+            .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
+        HirExpr::DictLiteral { keys, values, .. } => {
+            keys.iter()
+                .any(|expr| expr_contains_force_fallback_name(emitter, expr))
+                || values
+                    .iter()
+                    .any(|expr| expr_contains_force_fallback_name(emitter, expr))
+        }
+        HirExpr::Index { object, index, .. } => {
+            expr_contains_force_fallback_name(emitter, object)
+                || expr_contains_force_fallback_name(emitter, index)
+        }
+        HirExpr::MethodCall { object, args, .. } => {
+            expr_contains_force_fallback_name(emitter, object)
+                || args
+                    .iter()
+                    .any(|expr| expr_contains_force_fallback_name(emitter, expr))
+        }
+        HirExpr::ContainsOp {
+            element,
+            collection,
+            ..
+        } => {
+            expr_contains_force_fallback_name(emitter, element)
+                || expr_contains_force_fallback_name(emitter, collection)
+        }
+        HirExpr::FString { parts, .. } => parts.iter().any(|part| {
+            matches!(
+                part,
+                HirFStringPart::Expr(expr) if expr_contains_force_fallback_name(emitter, expr)
+            )
+        }),
+        HirExpr::Slice {
+            object,
+            start,
+            stop,
+            step,
+            ..
+        } => {
+            expr_contains_force_fallback_name(emitter, object)
+                || start
+                    .as_ref()
+                    .is_some_and(|expr| expr_contains_force_fallback_name(emitter, expr))
+                || stop
+                    .as_ref()
+                    .is_some_and(|expr| expr_contains_force_fallback_name(emitter, expr))
+                || step
+                    .as_ref()
+                    .is_some_and(|expr| expr_contains_force_fallback_name(emitter, expr))
+        }
+        HirExpr::WalrusExpr { value, .. } => expr_contains_force_fallback_name(emitter, value),
+        HirExpr::FieldAccess { object, .. } => expr_contains_force_fallback_name(emitter, object),
+        HirExpr::ConstructorCall { args, .. } => args
+            .iter()
+            .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
+        HirExpr::QuestionMark { expr, .. } => expr_contains_force_fallback_name(emitter, expr),
+        HirExpr::OkWrap { value, .. } | HirExpr::ErrWrap { value, .. } => {
+            expr_contains_force_fallback_name(emitter, value)
+        }
+        HirExpr::SuperCall { args, .. } => args
+            .iter()
+            .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
+        HirExpr::Lambda { body, .. } => expr_contains_force_fallback_name(emitter, body),
+        HirExpr::ListComp {
+            expr, generators, ..
+        }
+        | HirExpr::SetComp {
+            expr, generators, ..
+        } => {
+            expr_contains_force_fallback_name(emitter, expr)
+                || generators.iter().any(|(_, iter_expr, maybe_filter)| {
+                    expr_contains_force_fallback_name(emitter, iter_expr)
+                        || maybe_filter.as_ref().is_some_and(|filter| {
+                            expr_contains_force_fallback_name(emitter, filter)
+                        })
+                })
+        }
+        HirExpr::DictComp {
+            key_expr,
+            val_expr,
+            generators,
+            ..
+        } => {
+            expr_contains_force_fallback_name(emitter, key_expr)
+                || expr_contains_force_fallback_name(emitter, val_expr)
+                || generators.iter().any(|(_, iter_expr, maybe_filter)| {
+                    expr_contains_force_fallback_name(emitter, iter_expr)
+                        || maybe_filter.as_ref().is_some_and(|filter| {
+                            expr_contains_force_fallback_name(emitter, filter)
+                        })
+                })
+        }
+        HirExpr::GeneratorExpr {
+            expr, iter, filter, ..
+        } => {
+            expr_contains_force_fallback_name(emitter, expr)
+                || expr_contains_force_fallback_name(emitter, iter)
+                || filter
+                    .as_ref()
+                    .is_some_and(|cond| expr_contains_force_fallback_name(emitter, cond))
+        }
+        HirExpr::IntLiteral(_)
+        | HirExpr::FloatLiteral(_)
+        | HirExpr::StringLiteral(_)
+        | HirExpr::BoolLiteral(_)
+        | HirExpr::NoneLiteral
+        | HirExpr::EnumVariant { .. } => false,
+    }
+}
+
+fn should_force_stmt_fallback(emitter: &RustEmitter, stmt: &HirStmt) -> bool {
+    match stmt {
+        HirStmt::Let { value, .. }
+        | HirStmt::Assign { value, .. }
+        | HirStmt::AugAssign { value, .. }
+        | HirStmt::FieldAssign { value, .. }
+        | HirStmt::Yield { value }
+        | HirStmt::Raise { value }
+        | HirStmt::TupleUnpack { value, .. }
+        | HirStmt::StarUnpack { value, .. } => expr_contains_force_fallback_name(emitter, value),
+        HirStmt::Return { value } => value
+            .as_ref()
+            .is_some_and(|expr| expr_contains_force_fallback_name(emitter, expr)),
+        HirStmt::Expr { expr } => expr_contains_force_fallback_name(emitter, expr),
+        HirStmt::If {
+            condition,
+            then_body,
+            elif_clauses,
+            else_body,
+        } => {
+            expr_contains_force_fallback_name(emitter, condition)
+                || then_body
+                    .iter()
+                    .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                || elif_clauses.iter().any(|(cond, body)| {
+                    expr_contains_force_fallback_name(emitter, cond)
+                        || body
+                            .iter()
+                            .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                })
+                || else_body.as_ref().is_some_and(|body| {
+                    body.iter()
+                        .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                })
+        }
+        HirStmt::While {
+            condition,
+            body,
+            else_body,
+        } => {
+            expr_contains_force_fallback_name(emitter, condition)
+                || body
+                    .iter()
+                    .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                || else_body.as_ref().is_some_and(|body| {
+                    body.iter()
+                        .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                })
+        }
+        HirStmt::For {
+            iter,
+            body,
+            else_body,
+            ..
+        } => {
+            expr_contains_force_fallback_name(emitter, iter)
+                || body
+                    .iter()
+                    .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                || else_body.as_ref().is_some_and(|body| {
+                    body.iter()
+                        .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                })
+        }
+        HirStmt::Assert { test, msg } => {
+            expr_contains_force_fallback_name(emitter, test)
+                || msg
+                    .as_ref()
+                    .is_some_and(|expr| expr_contains_force_fallback_name(emitter, expr))
+        }
+        HirStmt::SubscriptAssign { index, value, .. }
+        | HirStmt::SubscriptAugAssign { index, value, .. }
+        | HirStmt::AttributeSubscriptAssign { index, value, .. } => {
+            expr_contains_force_fallback_name(emitter, index)
+                || expr_contains_force_fallback_name(emitter, value)
+        }
+        HirStmt::NestedSubscriptAssign {
+            outer_index,
+            inner_index,
+            value,
+            ..
+        } => {
+            expr_contains_force_fallback_name(emitter, outer_index)
+                || expr_contains_force_fallback_name(emitter, inner_index)
+                || expr_contains_force_fallback_name(emitter, value)
+        }
+        HirStmt::AttributeAugAssign { value, .. } => {
+            expr_contains_force_fallback_name(emitter, value)
+        }
+        HirStmt::Delete { object, index } => {
+            expr_contains_force_fallback_name(emitter, object)
+                || expr_contains_force_fallback_name(emitter, index)
+        }
+        HirStmt::With { items, body } => {
+            items
+                .iter()
+                .any(|(_, expr, _)| expr_contains_force_fallback_name(emitter, expr))
+                || body
+                    .iter()
+                    .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+        }
+        HirStmt::NestedFunction { func } => func
+            .body
+            .iter()
+            .any(|stmt| should_force_stmt_fallback(emitter, stmt)),
+        HirStmt::Match { subject, arms, .. } => {
+            expr_contains_force_fallback_name(emitter, subject)
+                || arms.iter().any(|arm| {
+                    arm.guard
+                        .as_ref()
+                        .is_some_and(|expr| expr_contains_force_fallback_name(emitter, expr))
+                        || arm
+                            .body
+                            .iter()
+                            .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                })
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            body.iter()
+                .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                || handlers.iter().any(|handler| {
+                    handler
+                        .body
+                        .iter()
+                        .any(|stmt| should_force_stmt_fallback(emitter, stmt))
+                })
+        }
+        HirStmt::Pass | HirStmt::Continue | HirStmt::Break => false,
+    }
+}
+
+fn expr_uses_borrowed_param(
+    expr: &HirExpr,
+    borrowed_params: &HashSet<String>,
+    mut_borrowed_params: &HashSet<String>,
+) -> bool {
+    match expr {
+        HirExpr::Name { name, .. } => {
+            borrowed_params.contains(name) || mut_borrowed_params.contains(name)
+        }
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            expr_uses_borrowed_param(left, borrowed_params, mut_borrowed_params)
+                || comparators
+                    .iter()
+                    .any(|c| expr_uses_borrowed_param(c, borrowed_params, mut_borrowed_params))
+        }
+        HirExpr::BoolOp { values, .. } => values
+            .iter()
+            .any(|v| expr_uses_borrowed_param(v, borrowed_params, mut_borrowed_params)),
+        HirExpr::UnaryOp { operand, .. } => {
+            expr_uses_borrowed_param(operand, borrowed_params, mut_borrowed_params)
+        }
+        HirExpr::BinOp { left, right, .. } => {
+            expr_uses_borrowed_param(left, borrowed_params, mut_borrowed_params)
+                || expr_uses_borrowed_param(right, borrowed_params, mut_borrowed_params)
+        }
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            expr_uses_borrowed_param(condition, borrowed_params, mut_borrowed_params)
+                || expr_uses_borrowed_param(then_expr, borrowed_params, mut_borrowed_params)
+                || expr_uses_borrowed_param(else_expr, borrowed_params, mut_borrowed_params)
+        }
+        _ => false,
+    }
 }

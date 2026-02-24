@@ -15,12 +15,16 @@
 )]
 
 use clap::{Parser, Subcommand};
-use sifr_driver::{compile, check, build, build_project, run_tests, CompileResult};
+use sifr_driver::{build, build_project, check, compile, run_tests, CompileResult};
 use std::path::PathBuf;
 use std::process;
 
 #[derive(Parser)]
-#[command(name = "sifr", version, about = "The Sifr programming language compiler")]
+#[command(
+    name = "sifr",
+    version,
+    about = "The Sifr programming language compiler"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -105,10 +109,12 @@ fn cmd_run(file: &PathBuf) {
     let is_multi_file = file.file_stem().map_or(false, |stem| stem == "main")
         && if let Some(parent) = file.parent() {
             if let Ok(entries) = std::fs::read_dir(parent) {
-                entries.flatten()
+                entries
+                    .flatten()
                     .filter(|e| e.path().extension().map_or(false, |ext| ext == "sifr"))
                     .filter(|e| e.path() != *file)
-                    .count() > 0
+                    .count()
+                    > 0
             } else {
                 false
             }

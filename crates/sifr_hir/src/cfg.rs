@@ -30,9 +30,7 @@ pub enum FlowNode {
         false_branch: FlowNodeId,
     },
     /// A join point where multiple branches merge (after if/else, loop exit).
-    Label {
-        antecedents: Vec<FlowNodeId>,
-    },
+    Label { antecedents: Vec<FlowNodeId> },
     /// Unreachable code (after return, break, continue, or exhaustive narrowing).
     Unreachable,
 }
@@ -160,7 +158,12 @@ mod tests {
         let id = cfg.record_assignment("x".to_string(), Type::Int);
         assert_eq!(id, 1);
         assert_eq!(cfg.current(), 1);
-        if let Some(FlowNode::Assignment { var, ty, antecedent }) = cfg.get_node(1) {
+        if let Some(FlowNode::Assignment {
+            var,
+            ty,
+            antecedent,
+        }) = cfg.get_node(1)
+        {
             assert_eq!(var, "x");
             assert_eq!(*ty, Type::Int);
             assert_eq!(*antecedent, 0); // points to Start

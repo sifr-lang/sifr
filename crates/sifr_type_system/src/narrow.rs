@@ -258,7 +258,8 @@ mod tests {
     #[test]
     fn test_equality_narrowing() {
         let ty = Type::Str;
-        let cond = NarrowingCondition::Equality("x".to_string(), LiteralValue::Str("GET".to_string()));
+        let cond =
+            NarrowingCondition::Equality("x".to_string(), LiteralValue::Str("GET".to_string()));
         let result = narrow_type(&ty, &cond, true);
         assert_eq!(result, Type::LiteralStr("GET".to_string()));
     }
@@ -269,7 +270,8 @@ mod tests {
             Type::LiteralStr("GET".to_string()),
             Type::LiteralStr("POST".to_string()),
         ]);
-        let cond = NarrowingCondition::Equality("x".to_string(), LiteralValue::Str("GET".to_string()));
+        let cond =
+            NarrowingCondition::Equality("x".to_string(), LiteralValue::Str("GET".to_string()));
         let result = narrow_type(&ty, &cond, false);
         assert_eq!(result, Type::LiteralStr("POST".to_string()));
     }

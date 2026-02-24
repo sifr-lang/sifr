@@ -1,16 +1,23 @@
 //! AST to HIR lowering with type checking and name resolution.
 
-#[allow(clippy::wildcard_imports)]
-use sifr_python_ast::*;
-use sifr_type_system::{
-    Type, FunctionType, OwnershipKind, ParamConvention,
-    type_check_binary_op, type_check_unary_op, type_check_comparison, type_check_bool_op,
-    make_union, NarrowingCondition, narrow_type,
+use crate::hir_nodes::{
+    HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirImport,
+    HirMatchArm, HirModule, HirParam, HirPattern, HirStmt, MethodKind,
+};
+use crate::scope::Scope;
+use sifr_python_ast::{
+    AstParamConvention, BoolOp, CmpOp, ExceptHandler, Expr, ExprAttribute, ExprBinOp, ExprBoolOp,
+    ExprCall, ExprCompare, ExprDict, ExprDictComp, ExprFString, ExprGenerator, ExprIf, ExprLambda,
+    ExprList, ExprListComp, ExprName, ExprNamed, ExprNumberLiteral, ExprSet, ExprSetComp,
+    ExprSubscript, ExprTuple, ExprUnaryOp, FStringElement, Number, Operator, Pattern, Singleton,
+    Stmt, StmtAnnAssign, StmtAssign, StmtAugAssign, StmtClassDef, StmtFor, StmtFunctionDef, StmtIf,
+    StmtMatch, StmtReturn, StmtWhile, UnaryOp,
 };
 use sifr_type_system::infer::resolve_type_annotation;
-#[allow(clippy::wildcard_imports)]
-use crate::hir_nodes::*;
-use crate::scope::Scope;
+use sifr_type_system::{
+    make_union, narrow_type, type_check_binary_op, type_check_bool_op, type_check_comparison,
+    type_check_unary_op, FunctionType, NarrowingCondition, OwnershipKind, ParamConvention, Type,
+};
 use std::collections::HashMap;
 
 /// Errors produced during lowering.
@@ -159,9 +166,7 @@ fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
 /// Substitute type variables in a type with concrete types.
 fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
     match ty {
-        Type::TypeVar(name) => {
-            bindings.get(name).cloned().unwrap_or_else(|| ty.clone())
-        }
+        Type::TypeVar(name) => bindings.get(name).cloned().unwrap_or_else(|| ty.clone()),
         Type::List(elem) => Type::List(Box::new(substitute_type_vars(elem, bindings))),
         Type::Set(elem) => Type::Set(Box::new(substitute_type_vars(elem, bindings))),
         Type::Dict(k, v) => Type::Dict(
@@ -169,13 +174,22 @@ fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
             Box::new(substitute_type_vars(v, bindings)),
         ),
         Type::Tuple(elems) => Type::Tuple(
-            elems.iter().map(|e| substitute_type_vars(e, bindings)).collect(),
+            elems
+                .iter()
+                .map(|e| substitute_type_vars(e, bindings))
+                .collect(),
         ),
         Type::Union(members) => make_union(
-            members.iter().map(|m| substitute_type_vars(m, bindings)).collect(),
+            members
+                .iter()
+                .map(|m| substitute_type_vars(m, bindings))
+                .collect(),
         ),
         Type::Callable(params, conventions, ret) => Type::Callable(
-            params.iter().map(|p| substitute_type_vars(p, bindings)).collect(),
+            params
+                .iter()
+                .map(|p| substitute_type_vars(p, bindings))
+                .collect(),
             conventions.clone(),
             Box::new(substitute_type_vars(ret, bindings)),
         ),
@@ -221,14 +235,18 @@ fn type_satisfies_bound(ty: &Type, bound: &str) -> bool {
             ty,
             Type::Int | Type::Float | Type::Str | Type::Bool | Type::BigInt
         ),
-        "Addable" => matches!(
-            ty,
-            Type::Int | Type::Float | Type::Str | Type::BigInt
-        ),
+        "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
         "Hashable" => matches!(
             ty,
-            Type::Int | Type::Str | Type::Bool | Type::BigInt | Type::None
-                | Type::Enum { .. } | Type::LiteralStr(_) | Type::LiteralInt(_) | Type::LiteralBool(_)
+            Type::Int
+                | Type::Str
+                | Type::Bool
+                | Type::BigInt
+                | Type::None
+                | Type::Enum { .. }
+                | Type::LiteralStr(_)
+                | Type::LiteralInt(_)
+                | Type::LiteralBool(_)
         ),
         _ => true,
     }
@@ -247,7 +265,8 @@ pub struct LoweringResult {
 #[derive(Debug, Clone, Default)]
 pub struct ExternalDefs {
     /// Map of `module_name` -> (`function_name` -> `FunctionType`)
-    pub functions: std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
+    pub functions:
+        std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
     /// Map of `module_name` -> (`class_name` -> Type)
     pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
     /// Map of `module_name` -> (`constant_name` -> Type)
@@ -255,9 +274,13 @@ pub struct ExternalDefs {
     /// Set of class names that are error types (class Foo(Error)) across all modules
     pub error_types: std::collections::HashSet<String>,
     /// Map of `module_name` -> (`owner_name` -> (`type_var_name` -> bounds))
-    pub type_param_bounds: std::collections::HashMap<String, std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>>,
+    pub type_param_bounds: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
+    >,
     /// Map of `module_name` -> (`function_name` -> `type_var_names`)
-    pub generic_functions: std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
+    pub generic_functions:
+        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
 }
 
 /// Lower a parsed module AST into a typed HIR module.
@@ -273,21 +296,30 @@ pub fn lower_module_stdlib(stmts: &[Stmt]) -> Result<LoweringResult, Vec<Lowerin
 }
 
 /// Lower a stdlib .sifr module with external definitions (for inter-stdlib deps).
-pub fn lower_module_stdlib_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> Result<LoweringResult, Vec<LoweringError>> {
+pub fn lower_module_stdlib_with_externals(
+    stmts: &[Stmt],
+    externals: &ExternalDefs,
+) -> Result<LoweringResult, Vec<LoweringError>> {
     let mut ctx = LowerCtx::new();
     ctx.allow_intrinsic_imports = true;
     lower_module_impl(stmts, externals, ctx)
 }
 
 /// Lower a parsed module AST into a typed HIR module, with external module definitions.
-pub fn lower_module_with_externals(stmts: &[Stmt], externals: &ExternalDefs) -> Result<LoweringResult, Vec<LoweringError>> {
+pub fn lower_module_with_externals(
+    stmts: &[Stmt],
+    externals: &ExternalDefs,
+) -> Result<LoweringResult, Vec<LoweringError>> {
     let ctx = LowerCtx::new();
     lower_module_impl(stmts, externals, ctx)
 }
 
 /// Internal implementation of module lowering.
-fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx) -> Result<LoweringResult, Vec<LoweringError>> {
-
+fn lower_module_impl(
+    stmts: &[Stmt],
+    externals: &ExternalDefs,
+    mut ctx: LowerCtx,
+) -> Result<LoweringResult, Vec<LoweringError>> {
     // Register built-in functions
     register_builtins(&mut ctx);
 
@@ -298,12 +330,15 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
         if let Stmt::ClassDef(class_def) = stmt {
             let class_name = class_def.name.to_string();
             if !ctx.class_types.contains_key(&class_name) {
-                ctx.class_types.insert(class_name.clone(), Type::Class {
-                    name: class_name,
-                    fields: Vec::new(),
-                    methods: Vec::new(),
-                    parent_class: None,
-                });
+                ctx.class_types.insert(
+                    class_name.clone(),
+                    Type::Class {
+                        name: class_name,
+                        fields: Vec::new(),
+                        methods: Vec::new(),
+                        parent_class: None,
+                    },
+                );
             }
         }
     }
@@ -364,7 +399,8 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                 if alias_type_params.is_empty() {
                     ctx.scope.define_type_alias(name, ty);
                 } else {
-                    ctx.scope.define_generic_type_alias(name, alias_type_params.clone(), ty);
+                    ctx.scope
+                        .define_generic_type_alias(name, alias_type_params.clone(), ty);
                 }
                 for tp_name in &alias_type_params {
                     ctx.type_vars.remove(tp_name.as_str());
@@ -415,7 +451,8 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                 func_type_vars.sort();
                 func_type_vars.dedup();
                 if !func_type_vars.is_empty() {
-                    ctx.generic_functions.insert(func.name.to_string(), func_type_vars);
+                    ctx.generic_functions
+                        .insert(func.name.to_string(), func_type_vars);
                 }
 
                 // Collect default values for parameters
@@ -437,7 +474,8 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                     }
                 }
                 if !defaults.is_empty() {
-                    ctx.function_defaults.insert(func.name.to_string(), defaults);
+                    ctx.function_defaults
+                        .insert(func.name.to_string(), defaults);
                 }
                 ctx.functions.insert(func.name.to_string(), ft);
                 // Track vararg functions
@@ -454,21 +492,27 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
         if let Stmt::ImportFrom(import_from) = stmt {
             if let Some(ref module) = import_from.module {
                 let module_name = module.to_string();
-                let names: Vec<String> = import_from.names.iter()
+                let names: Vec<String> = import_from
+                    .names
+                    .iter()
                     .map(|alias| alias.name.to_string())
                     .collect();
                 // Collect aliases: (original_name, local_alias)
-                let aliases: Vec<(String, String)> = import_from.names.iter()
+                let aliases: Vec<(String, String)> = import_from
+                    .names
+                    .iter()
                     .filter_map(|alias| {
-                        alias.asname.as_ref().map(|asname| {
-                            (alias.name.to_string(), asname.to_string())
-                        })
+                        alias
+                            .asname
+                            .as_ref()
+                            .map(|asname| (alias.name.to_string(), asname.to_string()))
                     })
                     .collect();
 
                 // Build a mapping from original name -> local name (alias or original)
                 let local_name_for = |original: &str| -> String {
-                    aliases.iter()
+                    aliases
+                        .iter()
                         .find(|(orig, _)| orig == original)
                         .map(|(_, alias)| alias.clone())
                         .unwrap_or_else(|| original.to_string())
@@ -492,7 +536,9 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                         continue;
                     }
                     // Resolve intrinsic imports for stdlib .sifr files
-                    if let Some(intrinsic_module) = crate::stdlib::get_intrinsic_module(&module_name) {
+                    if let Some(intrinsic_module) =
+                        crate::stdlib::get_intrinsic_module(&module_name)
+                    {
                         for name in &names {
                             let local = local_name_for(name);
                             if let Some(ft) = intrinsic_module.functions.get(name) {
@@ -500,7 +546,9 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                             } else if let Some(const_ty) = intrinsic_module.constants.get(name) {
                                 ctx.scope.define(local, const_ty.clone());
                             } else {
-                                ctx.error(format!("intrinsic module '{module_name}' has no member '{name}'"));
+                                ctx.error(format!(
+                                    "intrinsic module '{module_name}' has no member '{name}'"
+                                ));
                             }
                         }
                         imports.push(HirImport {
@@ -535,21 +583,29 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                     ctx.functions.insert(local.clone(), ft.clone());
                                     found = true;
                                     // Import generic function info and bounds
-                                    if let Some(module_gf) = externals.generic_functions.get(&stdlib_module_key) {
+                                    if let Some(module_gf) =
+                                        externals.generic_functions.get(&stdlib_module_key)
+                                    {
                                         if let Some(type_vars) = module_gf.get(name) {
-                                            ctx.generic_functions.insert(local.clone(), type_vars.clone());
+                                            ctx.generic_functions
+                                                .insert(local.clone(), type_vars.clone());
                                         }
                                     }
-                                    if let Some(module_bounds) = externals.type_param_bounds.get(&stdlib_module_key) {
+                                    if let Some(module_bounds) =
+                                        externals.type_param_bounds.get(&stdlib_module_key)
+                                    {
                                         if let Some(owner_bounds) = module_bounds.get(name) {
-                                            ctx.type_param_bounds.insert(local.clone(), owner_bounds.clone());
+                                            ctx.type_param_bounds
+                                                .insert(local.clone(), owner_bounds.clone());
                                         }
                                     }
                                 }
                             }
                             // Check classes
                             if !found {
-                                if let Some(module_classes) = externals.classes.get(&stdlib_module_key) {
+                                if let Some(module_classes) =
+                                    externals.classes.get(&stdlib_module_key)
+                                {
                                     if let Some(class_ty) = module_classes.get(name) {
                                         ctx.class_types.insert(local.clone(), class_ty.clone());
                                         // Register as error type if flagged in external defs
@@ -557,9 +613,16 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                             ctx.error_types.insert(local.clone());
                                         }
                                         // Register constructor: prefer `new` method params if available
-                                        if let Type::Class { fields, methods, .. } = class_ty {
-                                            let ft = if let Some((_, new_ft)) = methods.iter().find(|(n, _)| n == "new") {
-                                                let params: Vec<(String, Type)> = new_ft.params.iter()
+                                        if let Type::Class {
+                                            fields, methods, ..
+                                        } = class_ty
+                                        {
+                                            let ft = if let Some((_, new_ft)) =
+                                                methods.iter().find(|(n, _)| n == "new")
+                                            {
+                                                let params: Vec<(String, Type)> = new_ft
+                                                    .params
+                                                    .iter()
                                                     .map(|(n, t, _)| (n.clone(), t.clone()))
                                                     .collect();
                                                 FunctionType::new(params, class_ty.clone())
@@ -570,9 +633,12 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                             ctx.functions.insert(local.clone(), ft);
                                         }
                                         // Import class type parameter bounds
-                                        if let Some(module_bounds) = externals.type_param_bounds.get(&stdlib_module_key) {
+                                        if let Some(module_bounds) =
+                                            externals.type_param_bounds.get(&stdlib_module_key)
+                                        {
                                             if let Some(owner_bounds) = module_bounds.get(name) {
-                                                ctx.type_param_bounds.insert(local.clone(), owner_bounds.clone());
+                                                ctx.type_param_bounds
+                                                    .insert(local.clone(), owner_bounds.clone());
                                             }
                                         }
                                         found = true;
@@ -581,7 +647,9 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                             }
                             // Check constants
                             if !found {
-                                if let Some(module_consts) = externals.constants.get(&stdlib_module_key) {
+                                if let Some(module_consts) =
+                                    externals.constants.get(&stdlib_module_key)
+                                {
                                     if let Some(const_ty) = module_consts.get(name) {
                                         ctx.scope.define(local, const_ty.clone());
                                         found = true;
@@ -618,7 +686,9 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                     let local = local_name_for(name);
                     // Check if it's a private name
                     if name.starts_with('_') {
-                        ctx.error(format!("cannot import private name '{name}' from module '{module_name}'"));
+                        ctx.error(format!(
+                            "cannot import private name '{name}' from module '{module_name}'"
+                        ));
                         continue;
                     }
 
@@ -641,10 +711,17 @@ fn lower_module_impl(stmts: &[Stmt], externals: &ExternalDefs, mut ctx: LowerCtx
                                 }
                                 // Register the constructor: prefer `new` method params if available,
                                 // otherwise fall back to field-based constructor
-                                if let Type::Class { fields, methods, .. } = class_ty {
-                                    let ft = if let Some((_, new_ft)) = methods.iter().find(|(n, _)| n == "new") {
+                                if let Type::Class {
+                                    fields, methods, ..
+                                } = class_ty
+                                {
+                                    let ft = if let Some((_, new_ft)) =
+                                        methods.iter().find(|(n, _)| n == "new")
+                                    {
                                         // Use the actual __init__ parameters
-                                        let params: Vec<(String, Type)> = new_ft.params.iter()
+                                        let params: Vec<(String, Type)> = new_ft
+                                            .params
+                                            .iter()
                                             .map(|(n, t, _)| (n.clone(), t.clone()))
                                             .collect();
                                         FunctionType::new(params, class_ty.clone())
@@ -752,18 +829,24 @@ fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut Low
         if let Stmt::ImportFrom(import_from) = stmt {
             if let Some(ref module) = import_from.module {
                 let module_name = module.to_string();
-                let names: Vec<String> = import_from.names.iter()
+                let names: Vec<String> = import_from
+                    .names
+                    .iter()
                     .map(|alias| alias.name.to_string())
                     .collect();
-                let aliases: Vec<(String, String)> = import_from.names.iter()
+                let aliases: Vec<(String, String)> = import_from
+                    .names
+                    .iter()
                     .filter_map(|alias| {
-                        alias.asname.as_ref().map(|asname| {
-                            (alias.name.to_string(), asname.to_string())
-                        })
+                        alias
+                            .asname
+                            .as_ref()
+                            .map(|asname| (alias.name.to_string(), asname.to_string()))
                     })
                     .collect();
                 let local_name_for = |original: &str| -> String {
-                    aliases.iter()
+                    aliases
+                        .iter()
                         .find(|(orig, _)| orig == original)
                         .map(|(_, alias)| alias.clone())
                         .unwrap_or_else(|| original.to_string())
@@ -782,9 +865,16 @@ fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut Low
                                     ctx.error_types.insert(local.clone());
                                 }
                                 // Register constructor
-                                if let Type::Class { fields, methods, .. } = class_ty {
-                                    let ft = if let Some((_, new_ft)) = methods.iter().find(|(n, _)| n == "new") {
-                                        let params: Vec<(String, Type)> = new_ft.params.iter()
+                                if let Type::Class {
+                                    fields, methods, ..
+                                } = class_ty
+                                {
+                                    let ft = if let Some((_, new_ft)) =
+                                        methods.iter().find(|(n, _)| n == "new")
+                                    {
+                                        let params: Vec<(String, Type)> = new_ft
+                                            .params
+                                            .iter()
                                             .map(|(n, t, _)| (n.clone(), t.clone()))
                                             .collect();
                                         FunctionType::new(params, class_ty.clone())
@@ -823,7 +913,10 @@ fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut Low
 
 /// Check if a class definition extends an error class (Error or any registered error type).
 #[allow(dead_code)]
-fn is_error_class_with_ctx(class_def: &StmtClassDef, error_types: &std::collections::HashSet<String>) -> bool {
+fn is_error_class_with_ctx(
+    class_def: &StmtClassDef,
+    error_types: &std::collections::HashSet<String>,
+) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
             let base_name = n.id.as_str();
@@ -870,7 +963,6 @@ fn format_type_name(ty: &Type) -> String {
     }
 }
 
-
 /// Collect error types from raise statements in a list of HIR statements.
 fn collect_raise_error_types(stmts: &[HirStmt], errors: &mut std::collections::HashSet<String>) {
     for stmt in stmts {
@@ -880,7 +972,12 @@ fn collect_raise_error_types(stmts: &[HirStmt], errors: &mut std::collections::H
                     errors.insert(name.clone());
                 }
             }
-            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
                 collect_raise_error_types(then_body, errors);
                 for (_, body) in elif_clauses {
                     collect_raise_error_types(body, errors);
@@ -928,10 +1025,22 @@ fn get_newtype_inner(class_def: &StmtClassDef) -> Option<Type> {
 
 /// Dunder method names that map to Rust operator trait impls.
 const OPERATOR_DUNDERS: &[&str] = &[
-    "__add__", "__sub__", "__mul__", "__truediv__", "__floordiv__", "__mod__",
-    "__eq__", "__ne__", "__lt__", "__le__", "__gt__", "__ge__",
-    "__str__", "__repr__",
-    "__neg__", "__pos__",
+    "__add__",
+    "__sub__",
+    "__mul__",
+    "__truediv__",
+    "__floordiv__",
+    "__mod__",
+    "__eq__",
+    "__ne__",
+    "__lt__",
+    "__le__",
+    "__gt__",
+    "__ge__",
+    "__str__",
+    "__repr__",
+    "__neg__",
+    "__pos__",
     "__contains__",
 ];
 
@@ -947,7 +1056,10 @@ fn get_parent_class(class_def: &StmtClassDef) -> Option<String> {
         if let Expr::Name(n) = base {
             let name = n.id.as_str();
             // Skip special base classes
-            if matches!(name, "Error" | "Protocol" | "int" | "float" | "str" | "bool" | "Enum") {
+            if matches!(
+                name,
+                "Error" | "Protocol" | "int" | "float" | "str" | "bool" | "Enum"
+            ) {
                 return None;
             }
             return Some(name.to_string());
@@ -1065,7 +1177,8 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
             }
         }
         if !declared_params.is_empty() {
-            ctx.class_declared_type_params.insert(class_name.clone(), declared_params);
+            ctx.class_declared_type_params
+                .insert(class_name.clone(), declared_params);
         }
     }
 
@@ -1075,13 +1188,11 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
             name: class_name.clone(),
             inner: Box::new(inner.clone()),
         };
-        ctx.class_types.insert(class_name.clone(), newtype_ty.clone());
+        ctx.class_types
+            .insert(class_name.clone(), newtype_ty.clone());
 
         // Register constructor: ClassName(value) -> ClassName
-        let ft = FunctionType::new(
-            vec![("value".to_string(), inner.clone())],
-            newtype_ty,
-        );
+        let ft = FunctionType::new(vec![("value".to_string(), inner.clone())], newtype_ty);
         ctx.functions.insert(class_name.clone(), ft);
         return;
     }
@@ -1091,7 +1202,8 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         let variants = collect_enum_variants(class_def);
         // Check for duplicate variant values
         {
-            let mut seen_values: std::collections::HashMap<i64, String> = std::collections::HashMap::new();
+            let mut seen_values: std::collections::HashMap<i64, String> =
+                std::collections::HashMap::new();
             for (vname, vval) in &variants {
                 let val = vval.unwrap_or(0);
                 if let Some(existing) = seen_values.get(&val) {
@@ -1122,7 +1234,9 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         for stmt in &class_def.body {
             if let Stmt::FunctionDef(func) = stmt {
                 let method_name = func.name.to_string();
-                if method_name == "__init__" { continue; }
+                if method_name == "__init__" {
+                    continue;
+                }
                 let mut params = Vec::new();
                 for param in func.parameters.args.iter().skip(1) {
                     let param_name = param.parameter.name.to_string();
@@ -1140,7 +1254,8 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 };
                 let ft = FunctionType::new(params, return_ty);
                 // Register method as ClassName.method_name for lookup
-                ctx.functions.insert(format!("{class_name}.{method_name}"), ft.clone());
+                ctx.functions
+                    .insert(format!("{class_name}.{method_name}"), ft.clone());
                 methods.push((method_name, ft));
             }
         }
@@ -1153,7 +1268,9 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         for stmt in &class_def.body {
             if let Stmt::FunctionDef(func) = stmt {
                 let method_name = func.name.to_string();
-                if method_name == "__init__" { continue; }
+                if method_name == "__init__" {
+                    continue;
+                }
                 let mut params = Vec::new();
                 for param in func.parameters.args.iter().skip(1) {
                     let param_name = param.parameter.name.to_string();
@@ -1187,7 +1304,12 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
     let parent_class_name = get_parent_class(class_def);
     if let Some(ref parent_name) = parent_class_name {
         if let Some(parent_ty) = ctx.class_types.get(parent_name).cloned() {
-            if let Type::Class { fields: parent_fields, methods: parent_methods, .. } = parent_ty {
+            if let Type::Class {
+                fields: parent_fields,
+                methods: parent_methods,
+                ..
+            } = parent_ty
+            {
                 // Inherit parent fields
                 for (fname, fty) in &parent_fields {
                     fields.push((fname.clone(), fty.clone()));
@@ -1204,12 +1326,15 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
 
     // Register a preliminary class type so self-referential annotations work
     // (e.g., `def distance(self, other: Point)` inside class Point)
-    ctx.class_types.insert(class_name.clone(), Type::Class {
-        name: class_name.clone(),
-        fields: vec![],
-        methods: vec![],
-        parent_class: None,
-    });
+    ctx.class_types.insert(
+        class_name.clone(),
+        Type::Class {
+            name: class_name.clone(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        },
+    );
 
     let mut field_defaults: Vec<(usize, HirExpr)> = Vec::new();
 
@@ -1293,7 +1418,9 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
             }
             Stmt::Pass(_) => {} // Allow pass in class body
             _ => {
-                ctx.error(format!("unsupported statement in class '{class_name}' body"));
+                ctx.error(format!(
+                    "unsupported statement in class '{class_name}' body"
+                ));
             }
         }
     }
@@ -1312,7 +1439,8 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         // No __init__ defined -- create a default constructor from fields
 
         // Validate field ordering: required fields must come before defaulted fields
-        let default_indices: std::collections::HashSet<usize> = field_defaults.iter().map(|(i, _)| *i).collect();
+        let default_indices: std::collections::HashSet<usize> =
+            field_defaults.iter().map(|(i, _)| *i).collect();
         let mut seen_default = false;
         for (i, (fname, _)) in fields.iter().enumerate() {
             if default_indices.contains(&i) {
@@ -1328,9 +1456,15 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         if parent_class_name.is_some() {
             let parent_field_count = if let Some(ref pname) = parent_class_name {
                 ctx.class_types.get(pname).map_or(0, |ty| {
-                    if let Type::Class { fields: pf, .. } = ty { pf.len() } else { 0 }
+                    if let Type::Class { fields: pf, .. } = ty {
+                        pf.len()
+                    } else {
+                        0
+                    }
                 })
-            } else { 0 };
+            } else {
+                0
+            };
             let has_own_fields = fields.len() > parent_field_count;
             if has_own_fields {
                 ctx.error(format!(
@@ -1345,7 +1479,8 @@ fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         ctx.functions.insert(class_name.clone(), ft);
         // Store field defaults for the auto-generated constructor
         if !field_defaults.is_empty() {
-            ctx.function_defaults.insert(class_name.clone(), field_defaults);
+            ctx.function_defaults
+                .insert(class_name.clone(), field_defaults);
         }
     }
 
@@ -1370,23 +1505,30 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             _ => return None,
         };
         // Protocols have no fields, no body to lower -- just method signatures
-        let hir_methods: Vec<HirFunction> = methods_sigs.iter().map(|(name, ft)| {
-            HirFunction {
-                name: name.clone(),
-                params: ft.params.iter().map(|(pn, pt, _)| HirParam {
-                    name: pn.clone(),
-                    ty: pt.clone(),
-                    default: None,
-                    keyword_only: false,
-                    convention: ParamConvention::default(),
-                }).collect(),
-                return_type: *ft.return_type.clone(),
-                body: vec![], // Protocol methods have no body
-                method_kind: MethodKind::Regular,
-                decorators: vec![],
-                type_params: Vec::new(),
-            }
-        }).collect();
+        let hir_methods: Vec<HirFunction> = methods_sigs
+            .iter()
+            .map(|(name, ft)| {
+                HirFunction {
+                    name: name.clone(),
+                    params: ft
+                        .params
+                        .iter()
+                        .map(|(pn, pt, _)| HirParam {
+                            name: pn.clone(),
+                            ty: pt.clone(),
+                            default: None,
+                            keyword_only: false,
+                            convention: ParamConvention::default(),
+                        })
+                        .collect(),
+                    return_type: *ft.return_type.clone(),
+                    body: vec![], // Protocol methods have no body
+                    method_kind: MethodKind::Regular,
+                    decorators: vec![],
+                    type_params: Vec::new(),
+                }
+            })
+            .collect();
 
         return Some(HirClass {
             name: class_name,
@@ -1394,13 +1536,12 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             methods: hir_methods,
             is_hashable: false,
             is_error_type: false,
-            is_protocol: true,
+            kind: HirClassKind::Protocol,
             operator_impls: Vec::new(),
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: None,
             type_params: Vec::new(),
-            is_enum: false,
             enum_variants: Vec::new(),
         });
     }
@@ -1443,7 +1584,10 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                 };
 
                 let method_ft = FunctionType::new(
-                    params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
+                    params
+                        .iter()
+                        .map(|p| (p.name.clone(), p.ty.clone()))
+                        .collect(),
                     return_ty.clone(),
                 );
 
@@ -1468,13 +1612,12 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             methods: hir_methods,
             is_hashable: true,
             is_error_type: false,
-            is_protocol: false,
+            kind: HirClassKind::Enum,
             operator_impls: Vec::new(),
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: None,
             type_params: Vec::new(),
-            is_enum: true,
             enum_variants: variants,
         });
     }
@@ -1486,7 +1629,9 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         for stmt in &class_def.body {
             if let Stmt::FunctionDef(func) = stmt {
                 let method_name = func.name.to_string();
-                if method_name == "__init__" { continue; } // Skip __init__ for newtypes
+                if method_name == "__init__" {
+                    continue;
+                } // Skip __init__ for newtypes
                 ctx.current_class = Some(class_name.clone());
                 ctx.scope.push();
                 ctx.scope.define("self".to_string(), class_ty.clone());
@@ -1495,21 +1640,42 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
                     let param_name = param.parameter.name.to_string();
                     let param_ty = if let Some(ref ann) = param.parameter.annotation {
                         resolve_annotation_expr(ann, ctx)
-                    } else { Type::Any };
+                    } else {
+                        Type::Any
+                    };
                     ctx.scope.define(param_name.clone(), param_ty.clone());
-                    params.push(HirParam { name: param_name, ty: param_ty, default: None, keyword_only: false, convention: ParamConvention::default() });
+                    params.push(HirParam {
+                        name: param_name,
+                        ty: param_ty,
+                        default: None,
+                        keyword_only: false,
+                        convention: ParamConvention::default(),
+                    });
                 }
                 let return_ty = if let Some(ref ret_ann) = func.returns {
                     resolve_annotation_expr(ret_ann, ctx)
-                } else { Type::None };
+                } else {
+                    Type::None
+                };
                 let method_ft = FunctionType::new(
-                    params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
+                    params
+                        .iter()
+                        .map(|p| (p.name.clone(), p.ty.clone()))
+                        .collect(),
                     return_ty.clone(),
                 );
                 let body = lower_stmts(&func.body, &method_ft, ctx);
                 ctx.scope.pop();
                 ctx.current_class = None;
-                hir_methods.push(HirFunction { name: method_name, params, return_type: return_ty, body, method_kind: MethodKind::Regular, decorators: vec![], type_params: Vec::new() });
+                hir_methods.push(HirFunction {
+                    name: method_name,
+                    params,
+                    return_type: return_ty,
+                    body,
+                    method_kind: MethodKind::Regular,
+                    decorators: vec![],
+                    type_params: Vec::new(),
+                });
             }
         }
 
@@ -1519,19 +1685,20 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             methods: hir_methods,
             is_hashable: is_hashable_type(inner),
             is_error_type: false,
-            is_protocol: false,
+            kind: HirClassKind::Regular,
             operator_impls: Vec::new(),
             newtype_inner: Some(inner.clone()),
             parent_class: None,
             implements_protocols: Vec::new(),
             type_params: Vec::new(),
-            is_enum: false,
             enum_variants: Vec::new(),
         });
     }
 
     let (all_fields, _method_types) = match &class_ty {
-        Type::Class { fields, methods, .. } => (fields.clone(), methods.clone()),
+        Type::Class {
+            fields, methods, ..
+        } => (fields.clone(), methods.clone()),
         _ => return None,
     };
 
@@ -1543,11 +1710,18 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         if let Some(parent_ty) = ctx.class_types.get(parent_name) {
             if let Type::Class { fields: pf, .. } = parent_ty {
                 pf.iter().map(|(n, _)| n.clone()).collect()
-            } else { vec![] }
-        } else { vec![] }
-    } else { vec![] };
+            } else {
+                vec![]
+            }
+        } else {
+            vec![]
+        }
+    } else {
+        vec![]
+    };
 
-    let own_fields: Vec<(String, Type)> = all_fields.iter()
+    let own_fields: Vec<(String, Type)> = all_fields
+        .iter()
         .filter(|(name, _)| !parent_field_names.contains(name))
         .cloned()
         .collect();
@@ -1619,7 +1793,10 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
 
             // Create a dummy function type for lower_stmts
             let method_ft = FunctionType::new(
-                params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect(),
+                params
+                    .iter()
+                    .map(|p| (p.name.clone(), p.ty.clone()))
+                    .collect(),
                 return_ty.clone(),
             );
 
@@ -1634,21 +1811,29 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
             ctx.current_parent_class = None;
 
             // Collect user-defined decorators (excluding classmethod/staticmethod)
-            let method_decorators: Vec<String> = func.decorator_list.iter().filter_map(|d| {
-                if let Expr::Name(n) = &d.expression {
-                    let name = n.id.to_string();
-                    if name != "classmethod" && name != "staticmethod" {
-                        Some(name)
+            let method_decorators: Vec<String> = func
+                .decorator_list
+                .iter()
+                .filter_map(|d| {
+                    if let Expr::Name(n) = &d.expression {
+                        let name = n.id.to_string();
+                        if name != "classmethod" && name != "staticmethod" {
+                            Some(name)
+                        } else {
+                            None
+                        }
                     } else {
                         None
                     }
-                } else {
-                    None
-                }
-            }).collect();
+                })
+                .collect();
 
             let hir_func = HirFunction {
-                name: if method_name == "__init__" { "new".to_string() } else { method_name.clone() },
+                name: if method_name == "__init__" {
+                    "new".to_string()
+                } else {
+                    method_name.clone()
+                },
                 params,
                 return_type: return_ty,
                 body,
@@ -1671,11 +1856,15 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
     // Check which protocols this class satisfies
     let mut implements_protocols = Vec::new();
     for (proto_name, proto_ty) in &ctx.class_types.clone() {
-        if let Type::Protocol { methods: proto_methods, .. } = proto_ty {
+        if let Type::Protocol {
+            methods: proto_methods,
+            ..
+        } = proto_ty
+        {
             // Check if class has all required methods
-            let satisfies = proto_methods.iter().all(|(pname, _pft)| {
-                _method_types.iter().any(|(mname, _)| mname == pname)
-            });
+            let satisfies = proto_methods
+                .iter()
+                .all(|(pname, _pft)| _method_types.iter().any(|(mname, _)| mname == pname));
             if satisfies {
                 implements_protocols.push(proto_name.clone());
             }
@@ -1684,13 +1873,16 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
 
     // Collect PEP 695 type params for the class
     let class_type_params: Vec<String> = if let Some(ref type_params) = class_def.type_params {
-        type_params.iter().filter_map(|tp| {
-            if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
-                Some(tv.name.to_string())
-            } else {
-                None
-            }
-        }).collect()
+        type_params
+            .iter()
+            .filter_map(|tp| {
+                if let sifr_python_ast::TypeParam::TypeVar(tv) = tp {
+                    Some(tv.name.to_string())
+                } else {
+                    None
+                }
+            })
+            .collect()
     } else {
         Vec::new()
     };
@@ -1701,13 +1893,12 @@ fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Option<HirClass>
         methods: hir_methods,
         is_hashable,
         is_error_type: is_error,
-        is_protocol: false,
+        kind: HirClassKind::Regular,
         operator_impls,
         newtype_inner: None,
         implements_protocols,
         parent_class: parent_class_name,
         type_params: class_type_params,
-        is_enum: false,
         enum_variants: Vec::new(),
     })
 }
@@ -1726,20 +1917,20 @@ fn is_hashable_type(ty: &Type) -> bool {
 
 /// Check if a method body contains any field assignments (self.field = ...).
 fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
-    stmts.iter().any(|s| matches!(s, HirStmt::FieldAssign { .. }))
+    stmts
+        .iter()
+        .any(|s| matches!(s, HirStmt::FieldAssign { .. }))
 }
 
 /// Lower a simple expression (literal values only) without requiring a full `LowerCtx`.
 /// Used for collecting default parameter values in the first pass.
 fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
     match expr {
-        Expr::NumberLiteral(num) => {
-            match &num.value {
-                Number::Int(i) => Some(HirExpr::IntLiteral(i.as_i64()?)),
-                Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
-                _ => None,
-            }
-        }
+        Expr::NumberLiteral(num) => match &num.value {
+            Number::Int(i) => Some(HirExpr::IntLiteral(i.as_i64()?)),
+            Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
+            _ => None,
+        },
         Expr::StringLiteral(s) => Some(HirExpr::StringLiteral(s.value.to_str().to_string())),
         Expr::BooleanLiteral(b) => Some(HirExpr::BoolLiteral(b.value)),
         Expr::NoneLiteral(_) => Some(HirExpr::NoneLiteral),
@@ -1780,12 +1971,13 @@ fn register_builtins(ctx: &mut LowerCtx) {
             methods: vec![],
             parent_class: None,
         };
-        ctx.class_types.insert("Error".to_string(), class_ty.clone());
+        ctx.class_types
+            .insert("Error".to_string(), class_ty.clone());
         ctx.error_types.insert("Error".to_string());
-        ctx.functions.insert("Error".to_string(), FunctionType::new(
-            vec![("message".to_string(), Type::Str)],
-            class_ty,
-        ));
+        ctx.functions.insert(
+            "Error".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
     }
 
     // --- Mid-level error classes (parent: Error) ---
@@ -1801,14 +1993,21 @@ fn register_builtins(ctx: &mut LowerCtx) {
             methods: vec![],
             parent_class: Some("Error".to_string()),
         };
-        ctx.class_types.insert("IOError".to_string(), class_ty.clone());
+        ctx.class_types
+            .insert("IOError".to_string(), class_ty.clone());
         ctx.error_types.insert("IOError".to_string());
-        ctx.functions.insert("IOError".to_string(), FunctionType::new(
-            vec![("message".to_string(), Type::Str)],
-            class_ty,
-        ));
+        ctx.functions.insert(
+            "IOError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
     }
-    let other_mid_level_errors = ["ParseError", "ValueError", "DivisionError", "KeyError", "OverflowError"];
+    let other_mid_level_errors = [
+        "ParseError",
+        "ValueError",
+        "DivisionError",
+        "KeyError",
+        "OverflowError",
+    ];
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
@@ -1817,18 +2016,23 @@ fn register_builtins(ctx: &mut LowerCtx) {
             methods: vec![],
             parent_class: Some("Error".to_string()),
         };
-        ctx.class_types.insert(error_name.to_string(), class_ty.clone());
+        ctx.class_types
+            .insert(error_name.to_string(), class_ty.clone());
         ctx.error_types.insert(error_name.to_string());
-        ctx.functions.insert(error_name.to_string(), FunctionType::new(
-            vec![("message".to_string(), Type::Str)],
-            class_ty,
-        ));
+        ctx.functions.insert(
+            error_name.to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
     }
 
     // --- IOError subclasses (parent: IOError) ---
     let io_subclasses = [
-        "FileNotFoundError", "PermissionError", "FileExistsError",
-        "IsADirectoryError", "NotADirectoryError", "DirectoryNotEmptyError",
+        "FileNotFoundError",
+        "PermissionError",
+        "FileExistsError",
+        "IsADirectoryError",
+        "NotADirectoryError",
+        "DirectoryNotEmptyError",
     ];
     for &error_name in &io_subclasses {
         let fields = vec![("message".to_string(), Type::Str)];
@@ -1838,12 +2042,13 @@ fn register_builtins(ctx: &mut LowerCtx) {
             methods: vec![],
             parent_class: Some("IOError".to_string()),
         };
-        ctx.class_types.insert(error_name.to_string(), class_ty.clone());
+        ctx.class_types
+            .insert(error_name.to_string(), class_ty.clone());
         ctx.error_types.insert(error_name.to_string());
-        ctx.functions.insert(error_name.to_string(), FunctionType::new(
-            vec![("message".to_string(), Type::Str)],
-            class_ty,
-        ));
+        ctx.functions.insert(
+            error_name.to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
     }
 
     // --- JSONDecodeError (parent: Error, extra fields: line, column) ---
@@ -1860,12 +2065,13 @@ fn register_builtins(ctx: &mut LowerCtx) {
             methods: vec![],
             parent_class: Some("Error".to_string()),
         };
-        ctx.class_types.insert("JSONDecodeError".to_string(), class_ty.clone());
+        ctx.class_types
+            .insert("JSONDecodeError".to_string(), class_ty.clone());
         ctx.error_types.insert("JSONDecodeError".to_string());
-        ctx.functions.insert("JSONDecodeError".to_string(), FunctionType::new(
-            vec![("message".to_string(), Type::Str)],
-            class_ty,
-        ));
+        ctx.functions.insert(
+            "JSONDecodeError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
     }
 
     // --- TOMLDecodeError (parent: Error, extra fields: line, column) ---
@@ -1882,12 +2088,13 @@ fn register_builtins(ctx: &mut LowerCtx) {
             methods: vec![],
             parent_class: Some("Error".to_string()),
         };
-        ctx.class_types.insert("TOMLDecodeError".to_string(), class_ty.clone());
+        ctx.class_types
+            .insert("TOMLDecodeError".to_string(), class_ty.clone());
         ctx.error_types.insert("TOMLDecodeError".to_string());
-        ctx.functions.insert("TOMLDecodeError".to_string(), FunctionType::new(
-            vec![("message".to_string(), Type::Str)],
-            class_ty,
-        ));
+        ctx.functions.insert(
+            "TOMLDecodeError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
     }
 
     // --- RegexError (parent: Error, extra field: detail) ---
@@ -1902,24 +2109,28 @@ fn register_builtins(ctx: &mut LowerCtx) {
             methods: vec![],
             parent_class: Some("Error".to_string()),
         };
-        ctx.class_types.insert("RegexError".to_string(), class_ty.clone());
+        ctx.class_types
+            .insert("RegexError".to_string(), class_ty.clone());
         ctx.error_types.insert("RegexError".to_string());
         // Constructor accepts only message; detail is populated by intrinsics
-        ctx.functions.insert("RegexError".to_string(), FunctionType::new(
-            vec![("message".to_string(), Type::Str)],
-            class_ty,
-        ));
+        ctx.functions.insert(
+            "RegexError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
     }
 
     // Build error hierarchy for exhaustiveness checking
-    ctx.error_hierarchy.insert("IOError".to_string(), vec![
-        "FileNotFoundError".to_string(),
-        "PermissionError".to_string(),
-        "FileExistsError".to_string(),
-        "IsADirectoryError".to_string(),
-        "NotADirectoryError".to_string(),
-        "DirectoryNotEmptyError".to_string(),
-    ]);
+    ctx.error_hierarchy.insert(
+        "IOError".to_string(),
+        vec![
+            "FileNotFoundError".to_string(),
+            "PermissionError".to_string(),
+            "FileExistsError".to_string(),
+            "IsADirectoryError".to_string(),
+            "NotADirectoryError".to_string(),
+            "DirectoryNotEmptyError".to_string(),
+        ],
+    );
 }
 
 fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
@@ -2030,30 +2241,24 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
             make_union(vec![left, right])
         }
         // Literal string in type position: "GET" | "POST"
-        Expr::StringLiteral(s) => {
-            Type::LiteralStr(s.value.to_str().to_string())
-        }
+        Expr::StringLiteral(s) => Type::LiteralStr(s.value.to_str().to_string()),
         // Literal int in type position: 200 | 404
-        Expr::NumberLiteral(num) => {
-            match &num.value {
-                Number::Int(i) => {
-                    if let Some(val) = i.as_i64() {
-                        Type::LiteralInt(val)
-                    } else {
-                        ctx.error("integer literal too large for type annotation".to_string());
-                        Type::Any
-                    }
-                }
-                _ => {
-                    ctx.error("only integer literals are supported in type annotations".to_string());
+        Expr::NumberLiteral(num) => match &num.value {
+            Number::Int(i) => {
+                if let Some(val) = i.as_i64() {
+                    Type::LiteralInt(val)
+                } else {
+                    ctx.error("integer literal too large for type annotation".to_string());
                     Type::Any
                 }
             }
-        }
+            _ => {
+                ctx.error("only integer literals are supported in type annotations".to_string());
+                Type::Any
+            }
+        },
         // Literal bool in type position: True | False
-        Expr::BooleanLiteral(b) => {
-            Type::LiteralBool(b.value)
-        }
+        Expr::BooleanLiteral(b) => Type::LiteralBool(b.value),
         Expr::Subscript(sub) => {
             // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
             let base_name = match sub.value.as_ref() {
@@ -2077,7 +2282,10 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     match sub.slice.as_ref() {
                         Expr::Tuple(tuple) => {
                             if tuple.elts.len() != 2 {
-                                ctx.error("dict type annotation requires exactly 2 type parameters".to_string());
+                                ctx.error(
+                                    "dict type annotation requires exactly 2 type parameters"
+                                        .to_string(),
+                                );
                                 return Type::Any;
                             }
                             let key_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
@@ -2094,7 +2302,9 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     // tuple[A, B, ...] -- the slice is a Tuple expression
                     match sub.slice.as_ref() {
                         Expr::Tuple(tuple) => {
-                            let elem_types: Vec<Type> = tuple.elts.iter()
+                            let elem_types: Vec<Type> = tuple
+                                .elts
+                                .iter()
                                 .map(|e| resolve_annotation_expr(e, ctx))
                                 .collect();
                             Type::Tuple(elem_types)
@@ -2111,7 +2321,10 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     match sub.slice.as_ref() {
                         Expr::Tuple(tuple) => {
                             if tuple.elts.len() != 2 {
-                                ctx.error("Result type annotation requires exactly 2 type parameters".to_string());
+                                ctx.error(
+                                    "Result type annotation requires exactly 2 type parameters"
+                                        .to_string(),
+                                );
                                 return Type::Any;
                             }
                             let ok_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
@@ -2157,37 +2370,49 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                             }
                             // First element should be a list of parameter types
                             let param_types = match &tuple.elts[0] {
-                                Expr::List(list) => {
-                                    list.elts.iter()
-                                        .map(|e| resolve_annotation_expr(e, ctx))
-                                        .collect::<Vec<_>>()
-                                }
+                                Expr::List(list) => list
+                                    .elts
+                                    .iter()
+                                    .map(|e| resolve_annotation_expr(e, ctx))
+                                    .collect::<Vec<_>>(),
                                 _ => {
                                     ctx.error("Callable parameter types must be a list: Callable[[int, str], bool]".to_string());
                                     return Type::Any;
                                 }
                             };
                             let return_type = resolve_annotation_expr(&tuple.elts[1], ctx);
-                            let conventions = param_types.iter().map(|ty| {
-                                if ty.ownership() == OwnershipKind::Copy {
-                                    ParamConvention::Own
-                                } else {
-                                    ParamConvention::Borrow
-                                }
-                            }).collect();
+                            let conventions = param_types
+                                .iter()
+                                .map(|ty| {
+                                    if ty.ownership() == OwnershipKind::Copy {
+                                        ParamConvention::Own
+                                    } else {
+                                        ParamConvention::Borrow
+                                    }
+                                })
+                                .collect();
                             Type::Callable(param_types, conventions, Box::new(return_type))
                         }
                         _ => {
-                            ctx.error("Callable type requires [[param_types], return_type] syntax".to_string());
+                            ctx.error(
+                                "Callable type requires [[param_types], return_type] syntax"
+                                    .to_string(),
+                            );
                             Type::Any
                         }
                     }
                 }
                 _ => {
                     // Check if it's a generic type alias (e.g., Pair[int])
-                    if let Some((alias_params, alias_body)) = ctx.scope.lookup_generic_type_alias(&base_name).cloned() {
+                    if let Some((alias_params, alias_body)) =
+                        ctx.scope.lookup_generic_type_alias(&base_name).cloned()
+                    {
                         let type_args: Vec<Type> = match sub.slice.as_ref() {
-                            Expr::Tuple(tup) => tup.elts.iter().map(|e| resolve_annotation_expr(e, ctx)).collect(),
+                            Expr::Tuple(tup) => tup
+                                .elts
+                                .iter()
+                                .map(|e| resolve_annotation_expr(e, ctx))
+                                .collect(),
                             single => vec![resolve_annotation_expr(single, ctx)],
                         };
                         let mut bindings = HashMap::new();
@@ -2202,27 +2427,45 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                     if let Some(class_ty) = ctx.class_types.get(&base_name).cloned() {
                         // Resolve type arguments and substitute into the class type
                         let type_args: Vec<Type> = match sub.slice.as_ref() {
-                            Expr::Tuple(tup) => tup.elts.iter().map(|e| resolve_annotation_expr(e, ctx)).collect(),
+                            Expr::Tuple(tup) => tup
+                                .elts
+                                .iter()
+                                .map(|e| resolve_annotation_expr(e, ctx))
+                                .collect(),
                             single => vec![resolve_annotation_expr(single, ctx)],
                         };
                         // Build substitution map from class type params to concrete args
-                        if let Type::Class { ref fields, ref methods, .. } = class_ty {
+                        if let Type::Class {
+                            ref fields,
+                            ref methods,
+                            ..
+                        } = class_ty
+                        {
                             // Use declared type parameters (from class C[T]) when available,
                             // falling back to scanning fields/methods for backward compatibility.
-                            let class_type_params: Vec<String> = ctx.class_declared_type_params
+                            let class_type_params: Vec<String> = ctx
+                                .class_declared_type_params
                                 .get(&base_name)
                                 .cloned()
                                 .unwrap_or_else(|| {
-                                    fields.iter()
-                                        .flat_map(|(_, ty)| { let mut vars = Vec::new(); collect_type_vars(ty, &mut vars); vars })
+                                    fields
+                                        .iter()
+                                        .flat_map(|(_, ty)| {
+                                            let mut vars = Vec::new();
+                                            collect_type_vars(ty, &mut vars);
+                                            vars
+                                        })
                                         .chain(methods.iter().flat_map(|(_, ft)| {
                                             let mut vars = Vec::new();
-                                            for (_, pt, _) in &ft.params { collect_type_vars(pt, &mut vars); }
+                                            for (_, pt, _) in &ft.params {
+                                                collect_type_vars(pt, &mut vars);
+                                            }
                                             collect_type_vars(&ft.return_type, &mut vars);
                                             vars
                                         }))
                                         .collect::<std::collections::HashSet<_>>()
-                                        .into_iter().collect::<Vec<_>>()
+                                        .into_iter()
+                                        .collect::<Vec<_>>()
                                 });
                             if !class_type_params.is_empty() && !type_args.is_empty() {
                                 let mut bindings = HashMap::new();
@@ -2232,16 +2475,35 @@ fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                                     }
                                 }
                                 if !bindings.is_empty() {
-                                    let subst_fields: Vec<(String, Type)> = fields.iter()
-                                        .map(|(n, t)| (n.clone(), substitute_type_vars(t, &bindings)))
+                                    let subst_fields: Vec<(String, Type)> = fields
+                                        .iter()
+                                        .map(|(n, t)| {
+                                            (n.clone(), substitute_type_vars(t, &bindings))
+                                        })
                                         .collect();
-                                    let subst_methods: Vec<(String, FunctionType)> = methods.iter()
+                                    let subst_methods: Vec<(String, FunctionType)> = methods
+                                        .iter()
                                         .map(|(n, ft)| {
-                                            let subst_params: Vec<(String, Type, ParamConvention)> = ft.params.iter()
-                                                .map(|(pn, pt, pc)| (pn.clone(), substitute_type_vars(pt, &bindings), *pc))
-                                                .collect();
-                                            let subst_ret = substitute_type_vars(&ft.return_type, &bindings);
-                                            (n.clone(), FunctionType { params: subst_params, return_type: Box::new(subst_ret) })
+                                            let subst_params: Vec<(String, Type, ParamConvention)> =
+                                                ft.params
+                                                    .iter()
+                                                    .map(|(pn, pt, pc)| {
+                                                        (
+                                                            pn.clone(),
+                                                            substitute_type_vars(pt, &bindings),
+                                                            *pc,
+                                                        )
+                                                    })
+                                                    .collect();
+                                            let subst_ret =
+                                                substitute_type_vars(&ft.return_type, &bindings);
+                                            (
+                                                n.clone(),
+                                                FunctionType {
+                                                    params: subst_params,
+                                                    return_type: Box::new(subst_ret),
+                                                },
+                                            )
                                         })
                                         .collect();
                                     return Type::Class {
@@ -2279,7 +2541,11 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     // Regular args
     for (i, param_def) in func.parameters.args.iter().enumerate() {
         let name = param_def.parameter.name.to_string();
-        let ty = ft.params.get(i).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
+        let ty = ft
+            .params
+            .get(i)
+            .map(|(_, t, _)| t.clone())
+            .unwrap_or(Type::Any);
         ctx.scope.define(name.clone(), ty.clone());
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
@@ -2299,7 +2565,11 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     if let Some(ref vararg) = func.parameters.vararg {
         let name = vararg.name.to_string();
         let regular_count = func.parameters.args.len();
-        let ty = ft.params.get(regular_count).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
+        let ty = ft
+            .params
+            .get(regular_count)
+            .map(|(_, t, _)| t.clone())
+            .unwrap_or(Type::Any);
         ctx.scope.define(name.clone(), ty.clone());
 
         let convention = ast_convention_to_param(vararg.convention, &ty);
@@ -2313,10 +2583,19 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     }
 
     // Keyword-only args (after * separator)
-    let regular_count = func.parameters.args.len() + if func.parameters.vararg.is_some() { 1 } else { 0 };
+    let regular_count = func.parameters.args.len()
+        + if func.parameters.vararg.is_some() {
+            1
+        } else {
+            0
+        };
     for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
         let name = param_def.parameter.name.to_string();
-        let ty = ft.params.get(regular_count + i).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
+        let ty = ft
+            .params
+            .get(regular_count + i)
+            .map(|(_, t, _)| t.clone())
+            .unwrap_or(Type::Any);
         ctx.scope.define(name.clone(), ty.clone());
 
         let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
@@ -2376,21 +2655,29 @@ fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunct
     };
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)
-    let decorators: Vec<String> = func.decorator_list.iter().filter_map(|d| {
-        if let Expr::Name(n) = &d.expression {
-            let name = n.id.to_string();
-            if name != "classmethod" && name != "staticmethod" {
-                Some(name)
+    let decorators: Vec<String> = func
+        .decorator_list
+        .iter()
+        .filter_map(|d| {
+            if let Expr::Name(n) = &d.expression {
+                let name = n.id.to_string();
+                if name != "classmethod" && name != "staticmethod" {
+                    Some(name)
+                } else {
+                    None
+                }
             } else {
                 None
             }
-        } else {
-            None
-        }
-    }).collect();
+        })
+        .collect();
 
     // Collect type parameters for generic functions
-    let type_params = ctx.generic_functions.get(&func.name.to_string()).cloned().unwrap_or_default();
+    let type_params = ctx
+        .generic_functions
+        .get(&func.name.to_string())
+        .cloned()
+        .unwrap_or_default();
 
     Some(HirFunction {
         name: func.name.to_string(),
@@ -2479,7 +2766,10 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                     Some(HirStmt::Delete { object, index })
                 }
                 _ => {
-                    ctx.error("del is only supported for collection items (del d[key], del a[i])".to_string());
+                    ctx.error(
+                        "del is only supported for collection items (del d[key], del a[i])"
+                            .to_string(),
+                    );
                     None
                 }
             }
@@ -2569,7 +2859,8 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 // We resolve the actual class type from ctx.class_types to get full fields/methods
                 let bound_ty = if has_context_manager {
                     if let Type::Class { methods, .. } = &val_ty {
-                        let ret_ty = methods.iter()
+                        let ret_ty = methods
+                            .iter()
                             .find(|(name, _)| name == "__enter__")
                             .map(|(_, ft)| (*ft.return_type).clone())
                             .unwrap_or(val_ty.clone());
@@ -2598,7 +2889,8 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             ctx.in_try_block = true;
             let body = lower_stmts(&try_stmt.body, func_type, ctx);
             ctx.in_try_block = prev_in_try;
-            let mut try_error_types = std::mem::replace(&mut ctx.try_block_error_types, prev_try_errors);
+            let mut try_error_types =
+                std::mem::replace(&mut ctx.try_block_error_types, prev_try_errors);
 
             // Also collect error types from raise statements in the body
             collect_raise_error_types(&body, &mut try_error_types);
@@ -2644,12 +2936,15 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                     let error_var_ty = if let Some(ref et) = error_type {
                         if et == "Error" {
                             // catch-all: bind as the base Error type
-                            ctx.class_types.get("Error").cloned().unwrap_or_else(|| Type::Class {
-                                name: "Error".to_string(),
-                                fields: vec![("message".to_string(), Type::Str)],
-                                methods: vec![],
-                                parent_class: None,
-                            })
+                            ctx.class_types
+                                .get("Error")
+                                .cloned()
+                                .unwrap_or_else(|| Type::Class {
+                                    name: "Error".to_string(),
+                                    fields: vec![("message".to_string(), Type::Str)],
+                                    methods: vec![],
+                                    parent_class: None,
+                                })
                         } else if let Some(class_ty) = ctx.class_types.get(et) {
                             class_ty.clone()
                         } else {
@@ -2663,12 +2958,15 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                         }
                     } else {
                         // Bare except — error variable is base Error type
-                        ctx.class_types.get("Error").cloned().unwrap_or_else(|| Type::Class {
-                            name: "Error".to_string(),
-                            fields: vec![("message".to_string(), Type::Str)],
-                            methods: vec![],
-                            parent_class: None,
-                        })
+                        ctx.class_types
+                            .get("Error")
+                            .cloned()
+                            .unwrap_or_else(|| Type::Class {
+                                name: "Error".to_string(),
+                                fields: vec![("message".to_string(), Type::Str)],
+                                methods: vec![],
+                                parent_class: None,
+                            })
                     };
                     ctx.scope.define(var_name.clone(), error_var_ty);
                 }
@@ -2676,9 +2974,9 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 ctx.scope.pop();
 
                 // Resolve the error type for codegen
-                let error_resolved_type = error_type.as_ref().and_then(|et| {
-                    ctx.class_types.get(et).cloned()
-                });
+                let error_resolved_type = error_type
+                    .as_ref()
+                    .and_then(|et| ctx.class_types.get(et).cloned());
                 handlers.push(HirExceptHandler {
                     error_type,
                     error_resolved_type,
@@ -2704,13 +3002,15 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
                 // If all children of a parent are covered, the parent is covered
                 for (parent, children) in &ctx.error_hierarchy {
                     if try_error_types.contains(parent) && !expanded_covered.contains(parent) {
-                        let all_children_covered = children.iter().all(|c| expanded_covered.contains(c));
+                        let all_children_covered =
+                            children.iter().all(|c| expanded_covered.contains(c));
                         if all_children_covered {
                             expanded_covered.insert(parent.clone());
                         }
                     }
                 }
-                let uncovered: Vec<String> = try_error_types.iter()
+                let uncovered: Vec<String> = try_error_types
+                    .iter()
                     .filter(|et| !expanded_covered.contains(*et))
                     .cloned()
                     .collect();
@@ -2725,7 +3025,11 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             }
 
             let body_error_types: Vec<String> = try_error_types.into_iter().collect();
-            Some(HirStmt::TryExcept { body, handlers, body_error_types })
+            Some(HirStmt::TryExcept {
+                body,
+                handlers,
+                body_error_types,
+            })
         }
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
@@ -2742,7 +3046,11 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             let mut params = Vec::new();
             for (i, param_def) in func.parameters.args.iter().enumerate() {
                 let name = param_def.parameter.name.to_string();
-                let ty = ft.params.get(i).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
+                let ty = ft
+                    .params
+                    .get(i)
+                    .map(|(_, t, _)| t.clone())
+                    .unwrap_or(Type::Any);
                 ctx.scope.define(name.clone(), ty.clone());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
@@ -2758,7 +3066,11 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             if let Some(ref vararg) = func.parameters.vararg {
                 let name = vararg.name.to_string();
                 let regular_count = func.parameters.args.len();
-                let ty = ft.params.get(regular_count).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
+                let ty = ft
+                    .params
+                    .get(regular_count)
+                    .map(|(_, t, _)| t.clone())
+                    .unwrap_or(Type::Any);
                 ctx.scope.define(name.clone(), ty.clone());
                 params.push(HirParam {
                     name,
@@ -2770,10 +3082,19 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             }
 
             // Keyword-only args
-            let regular_count = func.parameters.args.len() + if func.parameters.vararg.is_some() { 1 } else { 0 };
+            let regular_count = func.parameters.args.len()
+                + if func.parameters.vararg.is_some() {
+                    1
+                } else {
+                    0
+                };
             for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
                 let name = param_def.parameter.name.to_string();
-                let ty = ft.params.get(regular_count + i).map(|(_, t, _)| t.clone()).unwrap_or(Type::Any);
+                let ty = ft
+                    .params
+                    .get(regular_count + i)
+                    .map(|(_, t, _)| t.clone())
+                    .unwrap_or(Type::Any);
                 ctx.scope.define(name.clone(), ty.clone());
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
@@ -2810,18 +3131,22 @@ fn lower_stmt(stmt: &Stmt, func_type: &FunctionType, ctx: &mut LowerCtx) -> Opti
             };
 
             // Collect user-defined decorators
-            let decorators: Vec<String> = func.decorator_list.iter().filter_map(|d| {
-                if let Expr::Name(n) = &d.expression {
-                    let name = n.id.to_string();
-                    if name != "classmethod" && name != "staticmethod" {
-                        Some(name)
+            let decorators: Vec<String> = func
+                .decorator_list
+                .iter()
+                .filter_map(|d| {
+                    if let Expr::Name(n) = &d.expression {
+                        let name = n.id.to_string();
+                        if name != "classmethod" && name != "staticmethod" {
+                            Some(name)
+                        } else {
+                            None
+                        }
                     } else {
                         None
                     }
-                } else {
-                    None
-                }
-            }).collect();
+                })
+                .collect();
 
             Some(HirStmt::NestedFunction {
                 func: HirFunction {
@@ -2878,24 +3203,35 @@ fn lower_match(
 
         ctx.scope.pop();
 
-        arms.push(HirMatchArm { pattern, guard, body });
+        arms.push(HirMatchArm {
+            pattern,
+            guard,
+            body,
+        });
     }
 
     // Exhaustiveness check: verify all variants of the subject type are covered
-    let has_wildcard = arms.iter().any(|arm| matches!(arm.pattern, HirPattern::Wildcard));
-    let has_capture_without_guard = arms.iter().any(|arm| {
-        matches!(arm.pattern, HirPattern::Capture { .. }) && arm.guard.is_none()
-    });
+    let has_wildcard = arms
+        .iter()
+        .any(|arm| matches!(arm.pattern, HirPattern::Wildcard));
+    let has_capture_without_guard = arms
+        .iter()
+        .any(|arm| matches!(arm.pattern, HirPattern::Capture { .. }) && arm.guard.is_none());
 
     if !has_wildcard && !has_capture_without_guard {
         if let Type::Union(members) = &subject_ty {
             // Collect covered types from arms
             let mut covered_none = false;
-            let mut covered_classes: std::collections::HashSet<String> = std::collections::HashSet::new();
-            let mut covered_types: std::collections::HashSet<String> = std::collections::HashSet::new();
-            let mut covered_literal_strs: std::collections::HashSet<String> = std::collections::HashSet::new();
-            let mut covered_literal_ints: std::collections::HashSet<i64> = std::collections::HashSet::new();
-            let mut covered_literal_bools: std::collections::HashSet<bool> = std::collections::HashSet::new();
+            let mut covered_classes: std::collections::HashSet<String> =
+                std::collections::HashSet::new();
+            let mut covered_types: std::collections::HashSet<String> =
+                std::collections::HashSet::new();
+            let mut covered_literal_strs: std::collections::HashSet<String> =
+                std::collections::HashSet::new();
+            let mut covered_literal_ints: std::collections::HashSet<i64> =
+                std::collections::HashSet::new();
+            let mut covered_literal_bools: std::collections::HashSet<bool> =
+                std::collections::HashSet::new();
 
             fn collect_literal_coverage(
                 pattern: &HirPattern,
@@ -2905,9 +3241,15 @@ fn lower_match(
             ) {
                 if let HirPattern::Literal { value } = pattern {
                     match value {
-                        HirExpr::StringLiteral(s) => { covered_literal_strs.insert(s.clone()); }
-                        HirExpr::IntLiteral(n) => { covered_literal_ints.insert(*n); }
-                        HirExpr::BoolLiteral(b) => { covered_literal_bools.insert(*b); }
+                        HirExpr::StringLiteral(s) => {
+                            covered_literal_strs.insert(s.clone());
+                        }
+                        HirExpr::IntLiteral(n) => {
+                            covered_literal_ints.insert(*n);
+                        }
+                        HirExpr::BoolLiteral(b) => {
+                            covered_literal_bools.insert(*b);
+                        }
                         _ => {}
                     }
                 }
@@ -2915,21 +3257,39 @@ fn lower_match(
 
             for arm in &arms {
                 match &arm.pattern {
-                    HirPattern::None => { covered_none = true; }
-                    HirPattern::Class { class_name, .. } => { covered_classes.insert(class_name.clone()); }
+                    HirPattern::None => {
+                        covered_none = true;
+                    }
+                    HirPattern::Class { class_name, .. } => {
+                        covered_classes.insert(class_name.clone());
+                    }
                     HirPattern::Capture { ty, .. } if arm.guard.is_none() => {
                         covered_types.insert(ty.display_name());
                     }
                     HirPattern::Literal { .. } => {
-                        collect_literal_coverage(&arm.pattern, &mut covered_literal_strs, &mut covered_literal_ints, &mut covered_literal_bools);
+                        collect_literal_coverage(
+                            &arm.pattern,
+                            &mut covered_literal_strs,
+                            &mut covered_literal_ints,
+                            &mut covered_literal_bools,
+                        );
                     }
                     HirPattern::Or { patterns } => {
                         for p in patterns {
                             match p {
-                                HirPattern::None => { covered_none = true; }
-                                HirPattern::Class { class_name, .. } => { covered_classes.insert(class_name.clone()); }
+                                HirPattern::None => {
+                                    covered_none = true;
+                                }
+                                HirPattern::Class { class_name, .. } => {
+                                    covered_classes.insert(class_name.clone());
+                                }
                                 HirPattern::Literal { .. } => {
-                                    collect_literal_coverage(p, &mut covered_literal_strs, &mut covered_literal_ints, &mut covered_literal_bools);
+                                    collect_literal_coverage(
+                                        p,
+                                        &mut covered_literal_strs,
+                                        &mut covered_literal_ints,
+                                        &mut covered_literal_bools,
+                                    );
                                 }
                                 _ => {}
                             }
@@ -2944,7 +3304,9 @@ fn lower_match(
             for member in members {
                 match member {
                     Type::None => {
-                        if !covered_none { uncovered.push("None".to_string()); }
+                        if !covered_none {
+                            uncovered.push("None".to_string());
+                        }
                     }
                     Type::Class { name, .. } => {
                         if !covered_classes.contains(name) && !covered_types.contains(name) {
@@ -3000,8 +3362,13 @@ fn lower_match(
         }
 
         // Check enum exhaustiveness
-        if let Type::Enum { ref name, ref variants } = subject_ty {
-            let mut covered_variants: std::collections::HashSet<String> = std::collections::HashSet::new();
+        if let Type::Enum {
+            ref name,
+            ref variants,
+        } = subject_ty
+        {
+            let mut covered_variants: std::collections::HashSet<String> =
+                std::collections::HashSet::new();
             for arm in &arms {
                 if let HirPattern::Value { path } = &arm.pattern {
                     if path.len() == 2 {
@@ -3018,7 +3385,8 @@ fn lower_match(
                     }
                 }
             }
-            let uncovered: Vec<&String> = variants.iter()
+            let uncovered: Vec<&String> = variants
+                .iter()
                 .map(|(v, _)| v)
                 .filter(|v| !covered_variants.contains(*v))
                 .collect();
@@ -3047,14 +3415,14 @@ fn lower_match(
         }
     }
 
-    Some(HirStmt::Match { subject, subject_ty, arms })
+    Some(HirStmt::Match {
+        subject,
+        subject_ty,
+        arms,
+    })
 }
 
-fn lower_pattern(
-    pattern: &Pattern,
-    subject_ty: &Type,
-    ctx: &mut LowerCtx,
-) -> Option<HirPattern> {
+fn lower_pattern(pattern: &Pattern, subject_ty: &Type, ctx: &mut LowerCtx) -> Option<HirPattern> {
     match pattern {
         Pattern::MatchAs(pat_as) => {
             if pat_as.pattern.is_none() && pat_as.name.is_none() {
@@ -3069,10 +3437,16 @@ fn lower_pattern(
                     // For now, treat as capture with narrowed type
                     let narrowed_ty = pattern_narrowed_type(&inner, subject_ty, ctx);
                     let _ = inner; // inner pattern info embedded in capture
-                    return Some(HirPattern::Capture { name: var_name, ty: narrowed_ty });
+                    return Some(HirPattern::Capture {
+                        name: var_name,
+                        ty: narrowed_ty,
+                    });
                 } else {
                     // `case x:` — capture pattern
-                    return Some(HirPattern::Capture { name: var_name, ty: subject_ty.clone() });
+                    return Some(HirPattern::Capture {
+                        name: var_name,
+                        ty: subject_ty.clone(),
+                    });
                 }
             }
             if let Some(inner_pat) = &pat_as.pattern {
@@ -3080,17 +3454,15 @@ fn lower_pattern(
             }
             Some(HirPattern::Wildcard)
         }
-        Pattern::MatchSingleton(singleton) => {
-            match &singleton.value {
-                Singleton::None => Some(HirPattern::None),
-                Singleton::True => Some(HirPattern::Literal {
-                    value: HirExpr::BoolLiteral(true),
-                }),
-                Singleton::False => Some(HirPattern::Literal {
-                    value: HirExpr::BoolLiteral(false),
-                }),
-            }
-        }
+        Pattern::MatchSingleton(singleton) => match &singleton.value {
+            Singleton::None => Some(HirPattern::None),
+            Singleton::True => Some(HirPattern::Literal {
+                value: HirExpr::BoolLiteral(true),
+            }),
+            Singleton::False => Some(HirPattern::Literal {
+                value: HirExpr::BoolLiteral(false),
+            }),
+        },
         Pattern::MatchValue(val_pat) => {
             // Could be a literal or an attribute access like Color.RED
             match val_pat.value.as_ref() {
@@ -3103,7 +3475,9 @@ fn lower_pattern(
                         }
                     };
                     let attr_name = attr.attr.to_string();
-                    Some(HirPattern::Value { path: vec![obj_name, attr_name] })
+                    Some(HirPattern::Value {
+                        path: vec![obj_name, attr_name],
+                    })
                 }
                 _ => {
                     // Try to lower as a literal expression
@@ -3134,8 +3508,13 @@ fn lower_pattern(
             let mut fields = Vec::new();
             for kw in &class_pat.arguments.keywords {
                 let field_name = kw.attr.to_string();
-                let field_ty = if let Some(Type::Class { fields: class_fields, .. }) = &class_ty {
-                    let found = class_fields.iter()
+                let field_ty = if let Some(Type::Class {
+                    fields: class_fields,
+                    ..
+                }) = &class_ty
+                {
+                    let found = class_fields
+                        .iter()
                         .find(|(n, _)| n == &field_name)
                         .map(|(_, t)| t.clone());
                     if found.is_none() {
@@ -3143,7 +3522,11 @@ fn lower_pattern(
                             "class '{}' has no field '{}' — available fields: {}",
                             class_name,
                             field_name,
-                            class_fields.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>().join(", ")
+                            class_fields
+                                .iter()
+                                .map(|(n, _)| n.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ")
                         ));
                         return None;
                     }
@@ -3277,7 +3660,11 @@ fn lower_ann_assign(ann: &StmtAnnAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
     // Track move: if RHS is a variable name with Move ownership, mark it as moved.
     // Also check escape analysis: storing a borrowed parameter into a local variable
     // would allow it to outlive the borrow, which is not allowed.
-    if let HirExpr::Name { name: ref src_name, ref ty } = value {
+    if let HirExpr::Name {
+        name: ref src_name,
+        ref ty,
+    } = value
+    {
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
             // Escape analysis: cannot store a borrowed parameter into a new binding
             if ctx.borrowed_params.contains(src_name.as_str()) {
@@ -3411,11 +3798,15 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
             let obj_name = match inner_sub.value.as_ref() {
                 Expr::Name(n) => n.id.to_string(),
                 _ => {
-                    ctx.error("nested subscript assignment target must be a simple name".to_string());
+                    ctx.error(
+                        "nested subscript assignment target must be a simple name".to_string(),
+                    );
                     return None;
                 }
             };
-            let obj_ty = ctx.scope.lookup(&obj_name)
+            let obj_ty = ctx
+                .scope
+                .lookup(&obj_name)
                 .map(|info| info.effective_type().clone())
                 .unwrap_or(Type::Unknown);
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
@@ -3440,18 +3831,29 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
             };
             let field_name = attr.attr.to_string();
             // Look up field type from the object's class definition
-            let field_ty = ctx.scope.lookup(&obj_name)
+            let field_ty = ctx
+                .scope
+                .lookup(&obj_name)
                 .and_then(|info| {
                     let obj_ty = info.effective_type();
                     // The object may be typed as Type::Class directly (e.g. `self`)
                     // or as Type::Unknown for unresolved types.
                     if let Type::Class { fields, .. } = obj_ty {
-                        fields.iter().find(|(n, _)| n == &field_name).map(|(_, t)| t.clone())
-                    } else if let Type::Class { name: class_name, .. } = obj_ty {
+                        fields
+                            .iter()
+                            .find(|(n, _)| n == &field_name)
+                            .map(|(_, t)| t.clone())
+                    } else if let Type::Class {
+                        name: class_name, ..
+                    } = obj_ty
+                    {
                         // Class by name reference
                         ctx.class_types.get(class_name).and_then(|class_ty| {
                             if let Type::Class { fields, .. } = class_ty {
-                                fields.iter().find(|(n, _)| n == &field_name).map(|(_, t)| t.clone())
+                                fields
+                                    .iter()
+                                    .find(|(n, _)| n == &field_name)
+                                    .map(|(_, t)| t.clone())
                             } else {
                                 None
                             }
@@ -3478,7 +3880,9 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
                 return None;
             }
         };
-        let obj_ty = ctx.scope.lookup(&obj_name)
+        let obj_ty = ctx
+            .scope
+            .lookup(&obj_name)
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
         let index = lower_expr(&sub.slice, ctx)?;
@@ -3515,7 +3919,11 @@ fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     let value_ty = value.ty().clone();
 
     // Track move: if RHS is a variable name with Move ownership, mark it as moved
-    if let HirExpr::Name { name: ref src_name, ref ty } = value {
+    if let HirExpr::Name {
+        name: ref src_name,
+        ref ty,
+    } = value
+    {
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
             ctx.scope.mark_moved(src_name);
         }
@@ -3553,7 +3961,9 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         let obj_name = match attr.value.as_ref() {
             Expr::Name(n) => n.id.to_string(),
             _ => {
-                ctx.error("augmented attribute assignment target must be a simple name".to_string());
+                ctx.error(
+                    "augmented attribute assignment target must be a simple name".to_string(),
+                );
                 return None;
             }
         };
@@ -3590,11 +4000,15 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
         let obj_name = match sub.value.as_ref() {
             Expr::Name(n) => n.id.to_string(),
             _ => {
-                ctx.error("augmented subscript assignment target must be a simple name".to_string());
+                ctx.error(
+                    "augmented subscript assignment target must be a simple name".to_string(),
+                );
                 return None;
             }
         };
-        let obj_ty = ctx.scope.lookup(&obj_name)
+        let obj_ty = ctx
+            .scope
+            .lookup(&obj_name)
             .map(|info| info.effective_type().clone())
             .unwrap_or(Type::Unknown);
         let index = lower_expr(&sub.slice, ctx)?;
@@ -3665,8 +4079,8 @@ fn lower_aug_assign(aug: &StmtAugAssign, ctx: &mut LowerCtx) -> Option<HirStmt> 
 
     // Type check the operation
     let base_op = &op_str[..op_str.len() - 1]; // Remove '='
-    // For += on strings, allow str += str
-    // For += on lists, allow list += list
+                                               // For += on strings, allow str += str
+                                               // For += on lists, allow list += list
     if base_op == "+" {
         match (&var_ty, value.ty()) {
             (Type::Str, Type::Str) => {}
@@ -3698,8 +4112,7 @@ fn lower_return(ret: &StmtReturn, func_type: &FunctionType, ctx: &mut LowerCtx) 
         // Escape analysis: returning a borrowed parameter is a compile error.
         // The programmer must use `own` to transfer ownership, or call `.clone()` explicitly.
         if let HirExpr::Name { name, ty } = &expr {
-            if ctx.borrowed_params.contains(name.as_str())
-                && ty.ownership() == OwnershipKind::Move
+            if ctx.borrowed_params.contains(name.as_str()) && ty.ownership() == OwnershipKind::Move
             {
                 ctx.error(format!(
                     "cannot return borrowed parameter `{name}`: it is borrowed by default -- use `own {name}` to take ownership, or return `{name}.clone()`"
@@ -3827,19 +4240,23 @@ fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut LowerCtx) -> O
     }
 
     // For else-branch, apply negation of ALL conditions (if + all elifs)
-    let else_body = if_stmt.elif_else_clauses.iter().find(|c| c.test.is_none()).map(|clause| {
-        ctx.scope.restore_narrowing_state(&saved_state);
-        ctx.scope.restore_moved_state(&saved_moved);
-        for prev_cond in &all_conditions {
-            apply_narrowing(ctx, prev_cond, false);
-        }
-        ctx.scope.push();
-        let body = lower_stmts(&clause.body, func_type, ctx);
-        ctx.scope.pop();
-        // Record moved state from else branch
-        branch_moved_states.push(ctx.scope.save_moved_state());
-        body
-    });
+    let else_body = if_stmt
+        .elif_else_clauses
+        .iter()
+        .find(|c| c.test.is_none())
+        .map(|clause| {
+            ctx.scope.restore_narrowing_state(&saved_state);
+            ctx.scope.restore_moved_state(&saved_moved);
+            for prev_cond in &all_conditions {
+                apply_narrowing(ctx, prev_cond, false);
+            }
+            ctx.scope.push();
+            let body = lower_stmts(&clause.body, func_type, ctx);
+            ctx.scope.pop();
+            // Record moved state from else branch
+            branch_moved_states.push(ctx.scope.save_moved_state());
+            body
+        });
 
     // Restore original narrowing state after all branches
     ctx.scope.restore_narrowing_state(&saved_state);
@@ -3894,7 +4311,12 @@ fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
             HirStmt::Return { value: None } => {
                 types.push(Type::None);
             }
-            HirStmt::If { then_body, elif_clauses, else_body, .. } => {
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
                 types.extend(collect_return_types(then_body));
                 for (_, body) in elif_clauses {
                     types.extend(collect_return_types(body));
@@ -3903,7 +4325,9 @@ fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
                     types.extend(collect_return_types(body));
                 }
             }
-            HirStmt::While { body, else_body, .. } => {
+            HirStmt::While {
+                body, else_body, ..
+            } => {
                 types.extend(collect_return_types(body));
                 if let Some(eb) = else_body {
                     types.extend(collect_return_types(eb));
@@ -3937,10 +4361,14 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
                         if ctx.scope.lookup(&var_name).is_some() {
                             if let Expr::Name(type_name) = &call.arguments.args[1] {
                                 // Try built-in types first, then class types
-                                let target_ty = resolve_type_annotation(&type_name.id)
-                                    .or_else(|| ctx.class_types.get(type_name.id.as_str()).cloned());
+                                let target_ty =
+                                    resolve_type_annotation(&type_name.id).or_else(|| {
+                                        ctx.class_types.get(type_name.id.as_str()).cloned()
+                                    });
                                 if let Some(target_ty) = target_ty {
-                                    return Some(NarrowingCondition::IsInstance(var_name, target_ty));
+                                    return Some(NarrowingCondition::IsInstance(
+                                        var_name, target_ty,
+                                    ));
                                 }
                             }
                         }
@@ -3954,7 +4382,9 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
             if cmp.ops.len() == 1 && cmp.comparators.len() == 1 {
                 match &cmp.ops[0] {
                     CmpOp::Is => {
-                        if let (Expr::Name(var), Expr::NoneLiteral(_)) = (cmp.left.as_ref(), &cmp.comparators[0]) {
+                        if let (Expr::Name(var), Expr::NoneLiteral(_)) =
+                            (cmp.left.as_ref(), &cmp.comparators[0])
+                        {
                             let var_name = var.id.to_string();
                             if ctx.scope.lookup(&var_name).is_some() {
                                 return Some(NarrowingCondition::IsNone(var_name));
@@ -3962,7 +4392,9 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
                         }
                     }
                     CmpOp::IsNot => {
-                        if let (Expr::Name(var), Expr::NoneLiteral(_)) = (cmp.left.as_ref(), &cmp.comparators[0]) {
+                        if let (Expr::Name(var), Expr::NoneLiteral(_)) =
+                            (cmp.left.as_ref(), &cmp.comparators[0])
+                        {
                             let var_name = var.id.to_string();
                             if ctx.scope.lookup(&var_name).is_some() {
                                 return Some(NarrowingCondition::IsNotNone(var_name));
@@ -4001,7 +4433,9 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
         }
         // a and b -> And narrowing (both conditions must be true)
         Expr::BoolOp(boolop) if matches!(boolop.op, BoolOp::And) => {
-            let conditions: Vec<NarrowingCondition> = boolop.values.iter()
+            let conditions: Vec<NarrowingCondition> = boolop
+                .values
+                .iter()
                 .filter_map(|v| detect_narrowing_condition(v, ctx))
                 .collect();
             if conditions.is_empty() {
@@ -4019,13 +4453,13 @@ fn detect_narrowing_condition(expr: &Expr, ctx: &LowerCtx) -> Option<NarrowingCo
 /// Convert an AST expression to a `LiteralValue` (for equality narrowing).
 fn expr_to_literal_value(expr: &Expr) -> Option<sifr_type_system::LiteralValue> {
     match expr {
-        Expr::StringLiteral(s) => Some(sifr_type_system::LiteralValue::Str(s.value.to_str().to_string())),
-        Expr::NumberLiteral(num) => {
-            match &num.value {
-                Number::Int(i) => i.as_i64().map(sifr_type_system::LiteralValue::Int),
-                _ => None,
-            }
-        }
+        Expr::StringLiteral(s) => Some(sifr_type_system::LiteralValue::Str(
+            s.value.to_str().to_string(),
+        )),
+        Expr::NumberLiteral(num) => match &num.value {
+            Number::Int(i) => i.as_i64().map(sifr_type_system::LiteralValue::Int),
+            _ => None,
+        },
         Expr::BooleanLiteral(b) => Some(sifr_type_system::LiteralValue::Bool(b.value)),
         _ => None,
     }
@@ -4064,7 +4498,11 @@ fn apply_narrowing(ctx: &mut LowerCtx, condition: &NarrowingCondition, is_true: 
     }
 }
 
-fn lower_while(while_stmt: &StmtWhile, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
+fn lower_while(
+    while_stmt: &StmtWhile,
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     let condition = lower_expr(&while_stmt.test, ctx)?;
 
     // Snapshot moved state before loop to detect moves inside the body
@@ -4093,7 +4531,11 @@ fn lower_while(while_stmt: &StmtWhile, func_type: &FunctionType, ctx: &mut Lower
         None
     };
 
-    Some(HirStmt::While { condition, body, else_body })
+    Some(HirStmt::While {
+        condition,
+        body,
+        else_body,
+    })
 }
 
 fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -> Option<HirStmt> {
@@ -4115,13 +4557,17 @@ fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut LowerCtx) -
         Expr::Name(n) => n.id.to_string(),
         Expr::Tuple(tup) => {
             // Tuple unpacking: for i, v in enumerate(lst)
-            let names: Vec<String> = tup.elts.iter().filter_map(|e| {
-                if let Expr::Name(n) = e {
-                    Some(n.id.to_string())
-                } else {
-                    None
-                }
-            }).collect();
+            let names: Vec<String> = tup
+                .elts
+                .iter()
+                .filter_map(|e| {
+                    if let Expr::Name(n) = e {
+                        Some(n.id.to_string())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
             if names.len() != tup.elts.len() {
                 ctx.error("for loop tuple target must contain only simple names".to_string());
                 return None;
@@ -4243,14 +4689,9 @@ fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Option<HirExpr> {
         // Use effective type (narrowed if available)
         let ty = info.effective_type().clone();
         if is_moved {
-            ctx.error(format!(
-                "use of moved value: '{var_name}'"
-            ));
+            ctx.error(format!("use of moved value: '{var_name}'"));
         }
-        return Some(HirExpr::Name {
-            name: var_name,
-            ty,
-        });
+        return Some(HirExpr::Name { name: var_name, ty });
     }
 
     // Check if it's a known function
@@ -4642,13 +5083,19 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for abs() built-in
     if func_name == "abs" {
         if call.arguments.args.len() != 1 {
-            ctx.error(format!("abs() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            ctx.error(format!(
+                "abs() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         let ty = arg.ty().clone();
         if !ty.is_numeric() {
-            ctx.error(format!("abs() argument must be numeric, got '{}'", ty.display_name()));
+            ctx.error(format!(
+                "abs() argument must be numeric, got '{}'",
+                ty.display_name()
+            ));
             return None;
         }
         return Some(HirExpr::Call {
@@ -4661,14 +5108,20 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for hash() built-in
     if func_name == "hash" {
         if call.arguments.args.len() != 1 {
-            ctx.error(format!("hash() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            ctx.error(format!(
+                "hash() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         let ty = arg.ty().clone();
         // Check if the type is hashable
         if !is_hashable_type(&ty) {
-            ctx.error(format!("hash() argument must be hashable, got '{}'", ty.display_name()));
+            ctx.error(format!(
+                "hash() argument must be hashable, got '{}'",
+                ty.display_name()
+            ));
             return None;
         }
         return Some(HirExpr::Call {
@@ -4681,12 +5134,18 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for round() built-in
     if func_name == "round" {
         if call.arguments.args.is_empty() || call.arguments.args.len() > 2 {
-            ctx.error(format!("round() takes 1 or 2 arguments, got {}", call.arguments.args.len()));
+            ctx.error(format!(
+                "round() takes 1 or 2 arguments, got {}",
+                call.arguments.args.len()
+            ));
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         if !arg.ty().is_numeric() {
-            ctx.error(format!("round() argument must be numeric, got '{}'", arg.ty().display_name()));
+            ctx.error(format!(
+                "round() argument must be numeric, got '{}'",
+                arg.ty().display_name()
+            ));
             return None;
         }
         if call.arguments.args.len() == 2 {
@@ -4707,7 +5166,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for repr() built-in
     if func_name == "repr" {
         if call.arguments.args.len() != 1 {
-            ctx.error(format!("repr() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            ctx.error(format!(
+                "repr() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -4721,7 +5183,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for int() conversion
     if func_name == "int" {
         if call.arguments.args.len() != 1 {
-            ctx.error(format!("int() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            ctx.error(format!(
+                "int() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -4732,20 +5197,28 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         // int(bool) -> int (True=1, False=0)
         // int(bigint) -> Result[int, OverflowError] (may overflow i64)
         let result_ty = if arg_ty == Type::Str {
-            let parse_error_ty = ctx.class_types.get("ParseError").cloned().unwrap_or(Type::Class {
-                name: "ParseError".to_string(),
-                fields: vec![("message".to_string(), Type::Str)],
-                methods: vec![],
-                parent_class: None,
-            });
+            let parse_error_ty =
+                ctx.class_types
+                    .get("ParseError")
+                    .cloned()
+                    .unwrap_or(Type::Class {
+                        name: "ParseError".to_string(),
+                        fields: vec![("message".to_string(), Type::Str)],
+                        methods: vec![],
+                        parent_class: None,
+                    });
             Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
         } else if arg_ty == Type::BigInt {
-            let overflow_error_ty = ctx.class_types.get("OverflowError").cloned().unwrap_or(Type::Class {
-                name: "OverflowError".to_string(),
-                fields: vec![("message".to_string(), Type::Str)],
-                methods: vec![],
-                parent_class: None,
-            });
+            let overflow_error_ty =
+                ctx.class_types
+                    .get("OverflowError")
+                    .cloned()
+                    .unwrap_or(Type::Class {
+                        name: "OverflowError".to_string(),
+                        fields: vec![("message".to_string(), Type::Str)],
+                        methods: vec![],
+                        parent_class: None,
+                    });
             Type::Result(Box::new(Type::Int), Box::new(overflow_error_ty))
         } else {
             Type::Int
@@ -4760,13 +5233,19 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // bigint(n) — convert int to bigint (always succeeds)
     if func_name == "bigint" {
         if call.arguments.args.len() != 1 {
-            ctx.error(format!("bigint() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            ctx.error(format!(
+                "bigint() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         let arg_ty = arg.ty().clone();
         if arg_ty != Type::Int && arg_ty != Type::BigInt {
-            ctx.error(format!("bigint() requires an int argument, got '{}'", arg_ty.display_name()));
+            ctx.error(format!(
+                "bigint() requires an int argument, got '{}'",
+                arg_ty.display_name()
+            ));
             return None;
         }
         return Some(HirExpr::Call {
@@ -4779,7 +5258,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for float() conversion
     if func_name == "float" {
         if call.arguments.args.len() != 1 {
-            ctx.error(format!("float() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            ctx.error(format!(
+                "float() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -4788,12 +5270,16 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         // float(int) -> float (infallible widening)
         // float(float) -> float (identity)
         let result_ty = if arg_ty == Type::Str {
-            let parse_error_ty = ctx.class_types.get("ParseError").cloned().unwrap_or(Type::Class {
-                name: "ParseError".to_string(),
-                fields: vec![("message".to_string(), Type::Str)],
-                methods: vec![],
-                parent_class: None,
-            });
+            let parse_error_ty =
+                ctx.class_types
+                    .get("ParseError")
+                    .cloned()
+                    .unwrap_or(Type::Class {
+                        name: "ParseError".to_string(),
+                        fields: vec![("message".to_string(), Type::Str)],
+                        methods: vec![],
+                        parent_class: None,
+                    });
             Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
         } else {
             Type::Float
@@ -4808,7 +5294,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // Special handling for bool() conversion
     if func_name == "bool" {
         if call.arguments.args.len() != 1 {
-            ctx.error(format!("bool() takes exactly 1 argument, got {}", call.arguments.args.len()));
+            ctx.error(format!(
+                "bool() takes exactly 1 argument, got {}",
+                call.arguments.args.len()
+            ));
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -4838,7 +5327,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             let elem_ty = match arg.ty() {
                 Type::List(elem) => *elem.clone(),
                 _ => {
-                    ctx.error(format!("min() argument must be a list, got '{}'", arg.ty().display_name()));
+                    ctx.error(format!(
+                        "min() argument must be a list, got '{}'",
+                        arg.ty().display_name()
+                    ));
                     return None;
                 }
             };
@@ -4871,7 +5363,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             let elem_ty = match arg.ty() {
                 Type::List(elem) => *elem.clone(),
                 _ => {
-                    ctx.error(format!("max() argument must be a list, got '{}'", arg.ty().display_name()));
+                    ctx.error(format!(
+                        "max() argument must be a list, got '{}'",
+                        arg.ty().display_name()
+                    ));
                     return None;
                 }
             };
@@ -4897,7 +5392,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let elem_ty = match arg.ty() {
             Type::List(elem) => *elem.clone(),
             _ => {
-                ctx.error(format!("sum() argument must be a list, got '{}'", arg.ty().display_name()));
+                ctx.error(format!(
+                    "sum() argument must be a list, got '{}'",
+                    arg.ty().display_name()
+                ));
                 return None;
             }
         };
@@ -4918,7 +5416,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let list_ty = match arg.ty() {
             Type::List(_) => arg.ty().clone(),
             _ => {
-                ctx.error(format!("sorted() argument must be a list, got '{}'", arg.ty().display_name()));
+                ctx.error(format!(
+                    "sorted() argument must be a list, got '{}'",
+                    arg.ty().display_name()
+                ));
                 return None;
             }
         };
@@ -4939,7 +5440,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let list_ty = match arg.ty() {
             Type::List(_) => arg.ty().clone(),
             _ => {
-                ctx.error(format!("reversed() argument must be a list, got '{}'", arg.ty().display_name()));
+                ctx.error(format!(
+                    "reversed() argument must be a list, got '{}'",
+                    arg.ty().display_name()
+                ));
                 return None;
             }
         };
@@ -4960,7 +5464,10 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let elem_ty = match arg.ty() {
             Type::List(elem) => *elem.clone(),
             _ => {
-                ctx.error(format!("enumerate() argument must be a list, got '{}'", arg.ty().display_name()));
+                ctx.error(format!(
+                    "enumerate() argument must be a list, got '{}'",
+                    arg.ty().display_name()
+                ));
                 return None;
             }
         };
@@ -4984,14 +5491,20 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let elem1 = match arg1.ty() {
             Type::List(elem) => *elem.clone(),
             _ => {
-                ctx.error(format!("zip() argument 1 must be a list, got '{}'", arg1.ty().display_name()));
+                ctx.error(format!(
+                    "zip() argument 1 must be a list, got '{}'",
+                    arg1.ty().display_name()
+                ));
                 return None;
             }
         };
         let elem2 = match arg2.ty() {
             Type::List(elem) => *elem.clone(),
             _ => {
-                ctx.error(format!("zip() argument 2 must be a list, got '{}'", arg2.ty().display_name()));
+                ctx.error(format!(
+                    "zip() argument 2 must be a list, got '{}'",
+                    arg2.ty().display_name()
+                ));
                 return None;
             }
         };
@@ -5089,12 +5602,19 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let path_arg = if n_args >= 1 {
             lower_expr(&call.arguments.args[0], ctx)?
         } else {
-            ctx.error("open() requires at least 1 argument: open(path) or open(path, mode)".to_string());
+            ctx.error(
+                "open() requires at least 1 argument: open(path) or open(path, mode)".to_string(),
+            );
             return None;
         };
         let mode_arg = if n_args >= 2 {
             lower_expr(&call.arguments.args[1], ctx)?
-        } else if let Some(kw) = call.arguments.keywords.iter().find(|k| k.arg.as_deref() == Some("mode")) {
+        } else if let Some(kw) = call
+            .arguments
+            .keywords
+            .iter()
+            .find(|k| k.arg.as_deref() == Some("mode"))
+        {
             lower_expr(&kw.value, ctx)?
         } else {
             HirExpr::StringLiteral("r".to_string())
@@ -5114,28 +5634,86 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
                 ("_mode".to_string(), Type::Str),
             ],
             methods: vec![
-                ("read".to_string(), FunctionType::all_borrow(vec![], Type::Result(Box::new(Type::Str), Box::new(io_err_ty.clone())))),
-                ("write".to_string(), FunctionType::all_borrow(vec![("data".to_string(), Type::Str)], Type::Result(Box::new(Type::None), Box::new(io_err_ty.clone())))),
-                ("readline".to_string(), FunctionType::all_borrow(vec![], Type::Result(Box::new(Type::Union(vec![Type::Str, Type::None])), Box::new(io_err_ty.clone())))),
-                ("readlines".to_string(), FunctionType::all_borrow(vec![], Type::Result(Box::new(Type::List(Box::new(Type::Str))), Box::new(io_err_ty.clone())))),
-                ("close".to_string(), FunctionType::all_borrow(vec![], Type::None)),
-                ("read_bytes".to_string(), FunctionType::all_borrow(vec![], Type::Result(Box::new(Type::List(Box::new(Type::Int))), Box::new(io_err_ty.clone())))),
-                ("write_bytes".to_string(), FunctionType::all_borrow(vec![("data".to_string(), Type::List(Box::new(Type::Int)))], Type::Result(Box::new(Type::None), Box::new(io_err_ty.clone())))),
-                ("__enter__".to_string(), FunctionType::all_borrow(vec![], Type::Class {
-                    name: "FileHandle".to_string(),
-                    fields: vec![
-                        ("_handle".to_string(), Type::Int),
-                        ("_mode".to_string(), Type::Str),
-                    ],
-                    methods: vec![],
-                    parent_class: None,
-                })),
-                ("__exit__".to_string(), FunctionType::all_borrow(vec![], Type::None)),
+                (
+                    "read".to_string(),
+                    FunctionType::all_borrow(
+                        vec![],
+                        Type::Result(Box::new(Type::Str), Box::new(io_err_ty.clone())),
+                    ),
+                ),
+                (
+                    "write".to_string(),
+                    FunctionType::all_borrow(
+                        vec![("data".to_string(), Type::Str)],
+                        Type::Result(Box::new(Type::None), Box::new(io_err_ty.clone())),
+                    ),
+                ),
+                (
+                    "readline".to_string(),
+                    FunctionType::all_borrow(
+                        vec![],
+                        Type::Result(
+                            Box::new(Type::Union(vec![Type::Str, Type::None])),
+                            Box::new(io_err_ty.clone()),
+                        ),
+                    ),
+                ),
+                (
+                    "readlines".to_string(),
+                    FunctionType::all_borrow(
+                        vec![],
+                        Type::Result(
+                            Box::new(Type::List(Box::new(Type::Str))),
+                            Box::new(io_err_ty.clone()),
+                        ),
+                    ),
+                ),
+                (
+                    "close".to_string(),
+                    FunctionType::all_borrow(vec![], Type::None),
+                ),
+                (
+                    "read_bytes".to_string(),
+                    FunctionType::all_borrow(
+                        vec![],
+                        Type::Result(
+                            Box::new(Type::List(Box::new(Type::Int))),
+                            Box::new(io_err_ty.clone()),
+                        ),
+                    ),
+                ),
+                (
+                    "write_bytes".to_string(),
+                    FunctionType::all_borrow(
+                        vec![("data".to_string(), Type::List(Box::new(Type::Int)))],
+                        Type::Result(Box::new(Type::None), Box::new(io_err_ty.clone())),
+                    ),
+                ),
+                (
+                    "__enter__".to_string(),
+                    FunctionType::all_borrow(
+                        vec![],
+                        Type::Class {
+                            name: "FileHandle".to_string(),
+                            fields: vec![
+                                ("_handle".to_string(), Type::Int),
+                                ("_mode".to_string(), Type::Str),
+                            ],
+                            methods: vec![],
+                            parent_class: None,
+                        },
+                    ),
+                ),
+                (
+                    "__exit__".to_string(),
+                    FunctionType::all_borrow(vec![], Type::None),
+                ),
             ],
             parent_class: None,
         };
         // Register FileHandle in the class types so method calls work
-        ctx.class_types.insert("FileHandle".to_string(), file_handle_ty.clone());
+        ctx.class_types
+            .insert("FileHandle".to_string(), file_handle_ty.clone());
         // Register IOError as a possible exception from this call
         ctx.try_block_error_types.insert("IOError".to_string());
         return Some(HirExpr::Call {
@@ -5163,7 +5741,9 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         if args.len() != param_types.len() {
             ctx.error(format!(
                 "callable '{}' expects {} argument(s), got {}",
-                func_name, param_types.len(), args.len()
+                func_name,
+                param_types.len(),
+                args.len()
             ));
             return None;
         }
@@ -5172,11 +5752,17 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
             if !arg.ty().is_assignable_to(param_ty) {
                 ctx.error(format!(
                     "argument {} of callable '{}': expected '{}', got '{}'",
-                    i + 1, func_name, param_ty.display_name(), arg.ty().display_name()
+                    i + 1,
+                    func_name,
+                    param_ty.display_name(),
+                    arg.ty().display_name()
                 ));
             }
             // Apply move tracking based on convention
-            let convention = conventions.get(i).copied().unwrap_or(ParamConvention::Borrow);
+            let convention = conventions
+                .get(i)
+                .copied()
+                .unwrap_or(ParamConvention::Borrow);
             if convention == ParamConvention::Own {
                 // Own convention: transfer ownership, mark variable as moved
                 if let HirExpr::Name { name, ty } = arg {
@@ -5369,7 +5955,11 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         for (i, arg) in args.iter().enumerate() {
             if let HirExpr::Name { name, ty } = arg {
                 if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-                    let convention = ft.params.get(i).map(|(_, _, c)| *c).unwrap_or(ParamConvention::Borrow);
+                    let convention = ft
+                        .params
+                        .get(i)
+                        .map(|(_, _, c)| *c)
+                        .unwrap_or(ParamConvention::Borrow);
                     match convention {
                         ParamConvention::MutBorrow => {
                             if mut_borrowed.contains(name) {
@@ -5403,7 +5993,11 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     for (i, arg) in args.iter().enumerate() {
         if let HirExpr::Name { name, ty } = arg {
             if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-                let convention = ft.params.get(i).map(|(_, _, c)| *c).unwrap_or(ParamConvention::Borrow);
+                let convention = ft
+                    .params
+                    .get(i)
+                    .map(|(_, _, c)| *c)
+                    .unwrap_or(ParamConvention::Borrow);
                 if convention == ParamConvention::Own {
                     ctx.scope.mark_moved(name);
                 }
@@ -5420,7 +6014,9 @@ fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
         // Re-check argument types after TypeVar substitution so repeated type
         // parameters (e.g. assert_eq[T](a: T, b: T)) enforce consistent types.
         if func_name != "print" {
-            for (i, (arg, (param_name, param_ty, _))) in args.iter().zip(ft.params.iter()).enumerate() {
+            for (i, (arg, (param_name, param_ty, _))) in
+                args.iter().zip(ft.params.iter()).enumerate()
+            {
                 let concrete_param_ty = substitute_type_vars(param_ty, &bindings);
                 if !arg.ty().is_assignable_to(&concrete_param_ty) {
                     ctx.error(format!(
@@ -5510,7 +6106,11 @@ fn lower_fstring(fstring: &ExprFString, ctx: &mut LowerCtx) -> Option<HirExpr> {
     })
 }
 
-fn lower_tuple_unpack_assign(tuple: &ExprTuple, value: &Expr, ctx: &mut LowerCtx) -> Option<HirStmt> {
+fn lower_tuple_unpack_assign(
+    tuple: &ExprTuple,
+    value: &Expr,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     // Extract target names
     let mut target_names = Vec::new();
     for elt in &tuple.elts {
@@ -5562,7 +6162,11 @@ fn lower_tuple_unpack_assign(tuple: &ExprTuple, value: &Expr, ctx: &mut LowerCtx
     })
 }
 
-fn lower_star_unpack_assign(tuple: &ExprTuple, value: &Expr, ctx: &mut LowerCtx) -> Option<HirStmt> {
+fn lower_star_unpack_assign(
+    tuple: &ExprTuple,
+    value: &Expr,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
     let value_expr = lower_expr(value, ctx)?;
     let value_ty = value_expr.ty().clone();
 
@@ -5786,9 +6390,19 @@ fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option<HirExpr> {
             Type::Tuple(elems) => {
                 // Compile-time tuple slicing: indices must be integer literals
                 if let (Some(start_expr), Some(stop_expr)) = (&start, &stop) {
-                    if let (HirExpr::IntLiteral(s), HirExpr::IntLiteral(e)) = (start_expr.as_ref(), stop_expr.as_ref()) {
-                        let s = if *s < 0 { (elems.len() as i64 + s) as usize } else { *s as usize };
-                        let e = if *e < 0 { (elems.len() as i64 + e) as usize } else { *e as usize };
+                    if let (HirExpr::IntLiteral(s), HirExpr::IntLiteral(e)) =
+                        (start_expr.as_ref(), stop_expr.as_ref())
+                    {
+                        let s = if *s < 0 {
+                            (elems.len() as i64 + s) as usize
+                        } else {
+                            *s as usize
+                        };
+                        let e = if *e < 0 {
+                            (elems.len() as i64 + e) as usize
+                        } else {
+                            *e as usize
+                        };
                         if s <= e && e <= elems.len() {
                             Type::Tuple(elems[s..e].to_vec())
                         } else {
@@ -5796,13 +6410,33 @@ fn lower_subscript(sub: &ExprSubscript, ctx: &mut LowerCtx) -> Option<HirExpr> {
                             Type::Any
                         }
                     } else {
-                        ctx.error("tuple slicing requires compile-time constant indices".to_string());
+                        ctx.error(
+                            "tuple slicing requires compile-time constant indices".to_string(),
+                        );
                         Type::Any
                     }
                 } else {
                     // Partial slice on tuple
-                    let s = start.as_ref().and_then(|e| if let HirExpr::IntLiteral(v) = e.as_ref() { Some(*v as usize) } else { None }).unwrap_or(0);
-                    let e = stop.as_ref().and_then(|e| if let HirExpr::IntLiteral(v) = e.as_ref() { Some(*v as usize) } else { None }).unwrap_or(elems.len());
+                    let s = start
+                        .as_ref()
+                        .and_then(|e| {
+                            if let HirExpr::IntLiteral(v) = e.as_ref() {
+                                Some(*v as usize)
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or(0);
+                    let e = stop
+                        .as_ref()
+                        .and_then(|e| {
+                            if let HirExpr::IntLiteral(v) = e.as_ref() {
+                                Some(*v as usize)
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or(elems.len());
                     if s <= e && e <= elems.len() {
                         Type::Tuple(elems[s..e].to_vec())
                     } else {
@@ -5867,7 +6501,10 @@ fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> 
     let object_ty = object.ty().clone();
 
     // Check if the object is a class instance with this field
-    if let Type::Class { name: _, fields, .. } = &object_ty {
+    if let Type::Class {
+        name: _, fields, ..
+    } = &object_ty
+    {
         if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == &field_name) {
             return Some(HirExpr::FieldAccess {
                 object: Box::new(object),
@@ -5884,7 +6521,10 @@ fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> 
     }
 
     // Check if the object is an enum instance - access .name or .value
-    if let Type::Enum { name: enum_name, .. } = &object_ty {
+    if let Type::Enum {
+        name: enum_name, ..
+    } = &object_ty
+    {
         match field_name.as_str() {
             "name" => {
                 return Some(HirExpr::FieldAccess {
@@ -5901,14 +6541,18 @@ fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Option<HirExpr> 
                 });
             }
             _ => {
-                ctx.error(format!("enum '{enum_name}' has no attribute '{field_name}'"));
+                ctx.error(format!(
+                    "enum '{enum_name}' has no attribute '{field_name}'"
+                ));
                 return None;
             }
         }
     }
 
     // Not a class field access -- report unsupported
-    ctx.error(format!("attribute access '.{field_name}' is not supported as an expression; use as a method call"));
+    ctx.error(format!(
+        "attribute access '.{field_name}' is not supported as an expression; use as a method call"
+    ));
     None
 }
 
@@ -5928,7 +6572,11 @@ fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) 
 
                     return Some(HirExpr::SuperCall {
                         parent_class: parent_name,
-                        method: if method_name == "__init__" { "new".to_string() } else { method_name },
+                        method: if method_name == "__init__" {
+                            "new".to_string()
+                        } else {
+                            method_name
+                        },
                         args,
                         ty: Type::None,
                     });
@@ -5963,7 +6611,9 @@ fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) 
                     }
                 }
             }
-            ctx.error(format!("type '{class_name}' has no class/static method '{method_name}'"));
+            ctx.error(format!(
+                "type '{class_name}' has no class/static method '{method_name}'"
+            ));
             return None;
         }
     }
@@ -5991,12 +6641,20 @@ fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) 
 }
 
 /// Resolve the return type of a method call on a given type.
-fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &mut LowerCtx) -> Option<Type> {
+fn resolve_method_type(
+    object_ty: &Type,
+    method: &str,
+    args: &[HirExpr],
+    ctx: &mut LowerCtx,
+) -> Option<Type> {
     match object_ty {
         Type::List(elem_ty) => match method {
             "append" => {
                 if args.len() != 1 {
-                    ctx.error(format!("list.append() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "list.append() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 if !args[0].ty().is_assignable_to(elem_ty) {
@@ -6010,14 +6668,20 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "extend" => {
                 if args.len() != 1 {
-                    ctx.error(format!("list.extend() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "list.extend() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::None)
             }
             "insert" => {
                 if args.len() != 2 {
-                    ctx.error(format!("list.insert() takes exactly 2 arguments, got {}", args.len()));
+                    ctx.error(format!(
+                        "list.insert() takes exactly 2 arguments, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::None)
@@ -6052,14 +6716,20 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "count" => {
                 if args.len() != 1 {
-                    ctx.error(format!("list.count() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "list.count() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Int)
             }
             "contains" => {
                 if args.len() != 1 {
-                    ctx.error(format!("list.contains() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "list.contains() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Bool)
@@ -6088,21 +6758,30 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "appendleft" => {
                 if args.len() != 1 {
-                    ctx.error(format!("list.appendleft() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "list.appendleft() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::None)
             }
             "remove" => {
                 if args.len() != 1 {
-                    ctx.error(format!("list.remove() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "list.remove() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::None)
             }
             "index" => {
                 if args.len() != 1 {
-                    ctx.error(format!("list.index() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "list.index() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 // Returns Option[int] = int | None (safe: no panic if not found)
@@ -6140,11 +6819,17 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     ctx.error("dict.items() takes no arguments".to_string());
                     return None;
                 }
-                Some(Type::List(Box::new(Type::Tuple(vec![*key_ty.clone(), *val_ty.clone()]))))
+                Some(Type::List(Box::new(Type::Tuple(vec![
+                    *key_ty.clone(),
+                    *val_ty.clone(),
+                ]))))
             }
             "update" => {
                 if args.len() != 1 {
-                    ctx.error(format!("dict.update() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "dict.update() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::None)
@@ -6165,14 +6850,20 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "contains" => {
                 if args.len() != 1 {
-                    ctx.error(format!("dict.contains() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "dict.contains() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Bool)
             }
             "get" => {
                 if args.is_empty() || args.len() > 2 {
-                    ctx.error(format!("dict.get() takes 1 or 2 arguments, got {}", args.len()));
+                    ctx.error(format!(
+                        "dict.get() takes 1 or 2 arguments, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 if args.len() == 2 {
@@ -6185,7 +6876,10 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "pop" => {
                 if args.len() != 1 {
-                    ctx.error(format!("dict.pop() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "dict.pop() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 // pop() returns Option[V] = V | None
@@ -6206,21 +6900,31 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "add" => {
                 if args.len() != 1 {
-                    ctx.error(format!("set.add() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "set.add() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::None)
             }
             "remove" | "discard" => {
                 if args.len() != 1 {
-                    ctx.error(format!("set.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    ctx.error(format!(
+                        "set.{}() takes exactly 1 argument, got {}",
+                        method,
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::None)
             }
             "contains" => {
                 if args.len() != 1 {
-                    ctx.error(format!("set.contains() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "set.contains() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Bool)
@@ -6241,14 +6945,22 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "union" | "intersection" | "difference" | "symmetric_difference" => {
                 if args.len() != 1 {
-                    ctx.error(format!("set.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    ctx.error(format!(
+                        "set.{}() takes exactly 1 argument, got {}",
+                        method,
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Set(elem_ty.clone()))
             }
             "issubset" | "issuperset" | "isdisjoint" => {
                 if args.len() != 1 {
-                    ctx.error(format!("set.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    ctx.error(format!(
+                        "set.{}() takes exactly 1 argument, got {}",
+                        method,
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Bool)
@@ -6268,10 +6980,15 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
         },
         Type::Str => match method {
             "len" => Some(Type::Int),
-            "upper" | "lower" | "strip" | "lstrip" | "rstrip" | "title" | "capitalize" | "swapcase" => Some(Type::Str),
+            "upper" | "lower" | "strip" | "lstrip" | "rstrip" | "title" | "capitalize"
+            | "swapcase" => Some(Type::Str),
             "startswith" | "endswith" => {
                 if args.len() != 1 {
-                    ctx.error(format!("str.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    ctx.error(format!(
+                        "str.{}() takes exactly 1 argument, got {}",
+                        method,
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Bool)
@@ -6285,42 +7002,61 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             }
             "split" => {
                 if args.len() > 1 {
-                    ctx.error(format!("str.split() takes 0 or 1 arguments, got {}", args.len()));
+                    ctx.error(format!(
+                        "str.split() takes 0 or 1 arguments, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::List(Box::new(Type::Str)))
             }
             "replace" => {
                 if args.len() != 2 {
-                    ctx.error(format!("str.replace() takes exactly 2 arguments, got {}", args.len()));
+                    ctx.error(format!(
+                        "str.replace() takes exactly 2 arguments, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Str)
             }
             "join" => {
                 if args.len() != 1 {
-                    ctx.error(format!("str.join() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "str.join() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Str)
             }
             "count" => {
                 if args.len() != 1 {
-                    ctx.error(format!("str.count() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "str.count() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Int)
             }
             "center" | "ljust" | "rjust" | "zfill" => {
                 if args.len() != 1 {
-                    ctx.error(format!("str.{}() takes exactly 1 argument, got {}", method, args.len()));
+                    ctx.error(format!(
+                        "str.{}() takes exactly 1 argument, got {}",
+                        method,
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Str)
             }
             "find" => {
                 if args.len() != 1 {
-                    ctx.error(format!("str.find() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "str.find() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 // find() returns Option[int] = int | None
@@ -6335,7 +7071,10 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
             "len" => Some(Type::Int),
             "count" => {
                 if args.len() != 1 {
-                    ctx.error(format!("tuple.count() takes exactly 1 argument, got {}", args.len()));
+                    ctx.error(format!(
+                        "tuple.count() takes exactly 1 argument, got {}",
+                        args.len()
+                    ));
                     return None;
                 }
                 Some(Type::Int)
@@ -6345,23 +7084,37 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 None
             }
         },
-        Type::Class { name, fields, methods, .. } => {
+        Type::Class {
+            name,
+            fields,
+            methods,
+            ..
+        } => {
             if let Some((_, ft)) = methods.iter().find(|(n, _)| n == method) {
                 // Check argument count
                 if args.len() != ft.params.len() {
                     ctx.error(format!(
                         "{}.{}() takes {} argument(s), got {}",
-                        name, method, ft.params.len(), args.len()
+                        name,
+                        method,
+                        ft.params.len(),
+                        args.len()
                     ));
                     return None;
                 }
                 // Check argument types
-                for (i, (arg, (param_name, param_ty, _))) in args.iter().zip(ft.params.iter()).enumerate() {
+                for (i, (arg, (param_name, param_ty, _))) in
+                    args.iter().zip(ft.params.iter()).enumerate()
+                {
                     if !arg.ty().is_assignable_to(param_ty) {
                         ctx.error(format!(
                             "argument {} ('{}') of {}.{}(): expected '{}', got '{}'",
-                            i + 1, param_name, name, method,
-                            param_ty.display_name(), arg.ty().display_name()
+                            i + 1,
+                            param_name,
+                            name,
+                            method,
+                            param_ty.display_name(),
+                            arg.ty().display_name()
                         ));
                     }
                 }
@@ -6372,7 +7125,10 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                     if args.len() != param_types.len() {
                         ctx.error(format!(
                             "{}.{}() (callable field) takes {} argument(s), got {}",
-                            name, method, param_types.len(), args.len()
+                            name,
+                            method,
+                            param_types.len(),
+                            args.len()
                         ));
                         return None;
                     }
@@ -6380,14 +7136,22 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                         if !arg.ty().is_assignable_to(param_ty) {
                             ctx.error(format!(
                                 "argument {} of {}.{}(): expected '{}', got '{}'",
-                                i + 1, name, method,
-                                param_ty.display_name(), arg.ty().display_name()
+                                i + 1,
+                                name,
+                                method,
+                                param_ty.display_name(),
+                                arg.ty().display_name()
                             ));
                         }
                     }
                     Some(*ret_type.clone())
                 } else {
-                    ctx.error(format!("field '{}' of class '{}' is not callable (type: '{}')", method, name, field_ty.display_name()));
+                    ctx.error(format!(
+                        "field '{}' of class '{}' is not callable (type: '{}')",
+                        method,
+                        name,
+                        field_ty.display_name()
+                    ));
                     None
                 }
             } else {
@@ -6400,7 +7164,10 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 if args.len() != ft.params.len() {
                     ctx.error(format!(
                         "{}.{}() takes {} argument(s), got {}",
-                        name, method, ft.params.len(), args.len()
+                        name,
+                        method,
+                        ft.params.len(),
+                        args.len()
                     ));
                 }
                 Some(*ft.return_type.clone())
@@ -6449,21 +7216,19 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
                 }
             }
         }
-        Type::BigInt => {
-            match method {
-                "clone" => {
-                    if !args.is_empty() {
-                        ctx.error("bigint.clone() takes no arguments".to_string());
-                        return None;
-                    }
-                    Some(Type::BigInt)
+        Type::BigInt => match method {
+            "clone" => {
+                if !args.is_empty() {
+                    ctx.error("bigint.clone() takes no arguments".to_string());
+                    return None;
                 }
-                _ => {
-                    ctx.error(format!("type 'bigint' has no method '{method}'"));
-                    None
-                }
+                Some(Type::BigInt)
             }
-        }
+            _ => {
+                ctx.error(format!("type 'bigint' has no method '{method}'"));
+                None
+            }
+        },
         _ => {
             ctx.error(format!(
                 "type '{}' has no method '{}'",
@@ -6477,7 +7242,10 @@ fn resolve_method_type(object_ty: &Type, method: &str, args: &[HirExpr], ctx: &m
 
 fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if call.arguments.args.len() != 1 {
-        ctx.error(format!("len() takes exactly 1 argument, got {}", call.arguments.args.len()));
+        ctx.error(format!(
+            "len() takes exactly 1 argument, got {}",
+            call.arguments.args.len()
+        ));
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
@@ -6486,7 +7254,10 @@ fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     // len() works on str, list, dict, tuple, set
     // Also works on T|None where T is a valid len() argument (auto-unwrap)
     let effective_ty = if let Type::Union(members) = &arg_ty {
-        let non_none: Vec<&Type> = members.iter().filter(|m| !matches!(m, Type::None)).collect();
+        let non_none: Vec<&Type> = members
+            .iter()
+            .filter(|m| !matches!(m, Type::None))
+            .collect();
         if non_none.len() == 1 {
             non_none[0].clone()
         } else {
@@ -6548,7 +7319,8 @@ fn lower_reveal_type_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     let ty = arg.ty().clone();
     // Store the reveal_type diagnostic (not an error, just informational)
-    ctx.reveal_types.push(format!("reveal_type: {}", ty.display_name()));
+    ctx.reveal_types
+        .push(format!("reveal_type: {}", ty.display_name()));
     // reveal_type returns the value unchanged, so we emit a print of the type at runtime
     // For now, just return the argument expression
     Some(arg)
@@ -6650,7 +7422,11 @@ fn lower_if_expr(if_expr: &ExprIf, ctx: &mut LowerCtx) -> Option<HirExpr> {
 /// Lower a lambda or regular expression with contextual type information for parameters.
 /// If the expression is a lambda, use `context_types` for untyped parameters.
 /// If it's not a lambda, just lower it normally.
-fn lower_lambda_with_context(expr: &Expr, context_types: &[Type], ctx: &mut LowerCtx) -> Option<HirExpr> {
+fn lower_lambda_with_context(
+    expr: &Expr,
+    context_types: &[Type],
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     if let Expr::Lambda(lambda) = expr {
         ctx.scope.push();
 
@@ -6682,7 +7458,10 @@ fn lower_lambda_with_context(expr: &Expr, context_types: &[Type], ctx: &mut Lowe
 
         ctx.scope.pop();
 
-        let param_types: Vec<(String, Type)> = params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect();
+        let param_types: Vec<(String, Type)> = params
+            .iter()
+            .map(|p| (p.name.clone(), p.ty.clone()))
+            .collect();
         let fn_ty = Type::Function(FunctionType::new(param_types, body_ty));
 
         Some(HirExpr::Lambda {
@@ -6727,7 +7506,10 @@ fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
     ctx.scope.pop();
 
     // Build the function type for the lambda
-    let param_types: Vec<(String, Type)> = params.iter().map(|p| (p.name.clone(), p.ty.clone())).collect();
+    let param_types: Vec<(String, Type)> = params
+        .iter()
+        .map(|p| (p.name.clone(), p.ty.clone()))
+        .collect();
     let fn_ty = Type::Function(FunctionType::new(param_types, body_ty));
 
     Some(HirExpr::Lambda {
@@ -6751,11 +7533,21 @@ fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let var_name = match &gen.target {
             Expr::Name(n) => n.id.to_string(),
             Expr::Tuple(tup) => {
-                let names: Vec<String> = tup.elts.iter().filter_map(|e| {
-                    if let Expr::Name(n) = e { Some(n.id.to_string()) } else { None }
-                }).collect();
+                let names: Vec<String> = tup
+                    .elts
+                    .iter()
+                    .filter_map(|e| {
+                        if let Expr::Name(n) = e {
+                            Some(n.id.to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
                 if names.len() != tup.elts.len() {
-                    ctx.error("comprehension tuple target must contain only simple names".to_string());
+                    ctx.error(
+                        "comprehension tuple target must contain only simple names".to_string(),
+                    );
                     return None;
                 }
                 names.join(",")
@@ -6776,7 +7568,10 @@ fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
             Type::Dict(key, _) => *key.clone(),
             Type::Tuple(elems) if !elems.is_empty() => elems[0].clone(),
             _ => {
-                ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name()));
+                ctx.error(format!(
+                    "cannot iterate over type '{}'",
+                    iter_ty.display_name()
+                ));
                 return None;
             }
         };
@@ -6790,7 +7585,9 @@ fn lower_list_comp(comp: &ExprListComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
                     ctx.scope.define(name.to_string(), ty);
                 }
             } else {
-                for name in &names { ctx.scope.define(name.to_string(), Type::Any); }
+                for name in &names {
+                    ctx.scope.define(name.to_string(), Type::Any);
+                }
             }
         } else {
             ctx.scope.define(var_name.clone(), elem_ty.clone());
@@ -6843,7 +7640,10 @@ fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     for gen in &comp.generators {
         let var_name = match &gen.target {
             Expr::Name(n) => n.id.to_string(),
-            _ => { ctx.error("set comprehension target must be a simple name".to_string()); return None; }
+            _ => {
+                ctx.error("set comprehension target must be a simple name".to_string());
+                return None;
+            }
         };
         let iter_expr = lower_expr(&gen.iter, ctx)?;
         let iter_ty = iter_expr.ty().clone();
@@ -6851,18 +7651,34 @@ fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
             Type::List(elem) => *elem.clone(),
             Type::Set(elem) => *elem.clone(),
             Type::Range => Type::Int,
-            _ => { ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name())); return None; }
+            _ => {
+                ctx.error(format!(
+                    "cannot iterate over type '{}'",
+                    iter_ty.display_name()
+                ));
+                return None;
+            }
         };
         ctx.scope.push();
         ctx.scope.define(var_name.clone(), elem_ty);
-        let filter = if !gen.ifs.is_empty() { Some(lower_expr(&gen.ifs[0], ctx)?) } else { None };
+        let filter = if !gen.ifs.is_empty() {
+            Some(lower_expr(&gen.ifs[0], ctx)?)
+        } else {
+            None
+        };
         generators.push((var_name, iter_expr, filter));
     }
     let expr = lower_expr(&comp.elt, ctx)?;
     let expr_ty = expr.ty().clone();
-    for _ in 0..num_gens { ctx.scope.pop(); }
+    for _ in 0..num_gens {
+        ctx.scope.pop();
+    }
     let result_ty = Type::Set(Box::new(expr_ty));
-    Some(HirExpr::SetComp { expr: Box::new(expr), generators, ty: result_ty })
+    Some(HirExpr::SetComp {
+        expr: Box::new(expr),
+        generators,
+        ty: result_ty,
+    })
 }
 
 fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -6872,12 +7688,23 @@ fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
         let var_name = match &gen.target {
             Expr::Name(n) => n.id.to_string(),
             Expr::Tuple(tup) => {
-                let names: Vec<String> = tup.elts.iter().filter_map(|e| {
-                    if let Expr::Name(n) = e { Some(n.id.to_string()) } else { None }
-                }).collect();
+                let names: Vec<String> = tup
+                    .elts
+                    .iter()
+                    .filter_map(|e| {
+                        if let Expr::Name(n) = e {
+                            Some(n.id.to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
                 names.join(",")
             }
-            _ => { ctx.error("dict comprehension target must be a simple name or tuple".to_string()); return None; }
+            _ => {
+                ctx.error("dict comprehension target must be a simple name or tuple".to_string());
+                return None;
+            }
         };
         let iter_expr = lower_expr(&gen.iter, ctx)?;
         let iter_ty = iter_expr.ty().clone();
@@ -6886,7 +7713,13 @@ fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
             Type::Set(elem) => *elem.clone(),
             Type::Range => Type::Int,
             Type::Dict(key, _) => *key.clone(),
-            _ => { ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name())); return None; }
+            _ => {
+                ctx.error(format!(
+                    "cannot iterate over type '{}'",
+                    iter_ty.display_name()
+                ));
+                return None;
+            }
         };
         ctx.scope.push();
         if var_name.contains(',') {
@@ -6897,19 +7730,27 @@ fn lower_dict_comp(comp: &ExprDictComp, ctx: &mut LowerCtx) -> Option<HirExpr> {
                     ctx.scope.define(name.to_string(), ty);
                 }
             } else {
-                for name in &names { ctx.scope.define(name.to_string(), Type::Any); }
+                for name in &names {
+                    ctx.scope.define(name.to_string(), Type::Any);
+                }
             }
         } else {
             ctx.scope.define(var_name.clone(), elem_ty);
         }
-        let filter = if !gen.ifs.is_empty() { Some(lower_expr(&gen.ifs[0], ctx)?) } else { None };
+        let filter = if !gen.ifs.is_empty() {
+            Some(lower_expr(&gen.ifs[0], ctx)?)
+        } else {
+            None
+        };
         generators.push((var_name, iter_expr, filter));
     }
     let key_expr = lower_expr(&comp.key, ctx)?;
     let val_expr = lower_expr(&comp.value, ctx)?;
     let key_ty = key_expr.ty().clone();
     let val_ty = val_expr.ty().clone();
-    for _ in 0..num_gens { ctx.scope.pop(); }
+    for _ in 0..num_gens {
+        ctx.scope.pop();
+    }
     let result_ty = Type::Dict(Box::new(key_ty), Box::new(val_ty));
     Some(HirExpr::DictComp {
         key_expr: Box::new(key_expr),
@@ -6946,7 +7787,10 @@ fn lower_generator_expr(gen: &ExprGenerator, ctx: &mut LowerCtx) -> Option<HirEx
         Type::List(elem) => *elem.clone(),
         Type::Str => Type::Str,
         _ => {
-            ctx.error(format!("cannot iterate over type '{}'", iter_ty.display_name()));
+            ctx.error(format!(
+                "cannot iterate over type '{}'",
+                iter_ty.display_name()
+            ));
             return None;
         }
     };
@@ -7027,9 +7871,7 @@ mod tests {
 
     #[test]
     fn test_simple_function() {
-        let module = lower_source(
-            "def add(a: int, b: int) -> int:\n    return a + b\n"
-        ).unwrap();
+        let module = lower_source("def add(a: int, b: int) -> int:\n    return a + b\n").unwrap();
         assert_eq!(module.functions.len(), 1);
         assert_eq!(module.functions[0].name, "add");
         assert_eq!(module.functions[0].return_type, Type::Int);
@@ -7037,9 +7879,7 @@ mod tests {
 
     #[test]
     fn test_type_mismatch_error() {
-        let result = lower_source(
-            "def main():\n    x: int = \"hello\"\n"
-        );
+        let result = lower_source("def main():\n    x: int = \"hello\"\n");
         assert!(result.is_err());
         let errors = result.unwrap_err();
         assert!(errors.iter().any(|e| e.message.contains("type mismatch")));
@@ -7047,12 +7887,12 @@ mod tests {
 
     #[test]
     fn test_undefined_variable() {
-        let result = lower_source(
-            "def main():\n    print(x)\n"
-        );
+        let result = lower_source("def main():\n    print(x)\n");
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e.message.contains("undefined variable")));
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("undefined variable")));
     }
 
     #[test]
@@ -7073,22 +7913,24 @@ mod tests {
         let result = lower_source(
             "def process(s: str) -> int:\n    return len(s)\ndef main():\n    s: str = \"hello\"\n    x: int = process(s)\n    print(s)\n"
         );
-        assert!(result.is_ok(), "borrow-by-default should not cause use-after-move");
+        assert!(
+            result.is_ok(),
+            "borrow-by-default should not cause use-after-move"
+        );
     }
 
     #[test]
     fn test_copy_type_no_move() {
-        let module = lower_source(
-            "def main():\n    x: int = 42\n    print(x)\n    print(x)\n"
-        ).unwrap();
+        let module =
+            lower_source("def main():\n    x: int = 42\n    print(x)\n    print(x)\n").unwrap();
         assert_eq!(module.functions.len(), 1);
     }
 
     #[test]
     fn test_while_loop() {
-        let module = lower_source(
-            "def main():\n    i: int = 0\n    while i < 10:\n        i = i + 1\n"
-        ).unwrap();
+        let module =
+            lower_source("def main():\n    i: int = 0\n    while i < 10:\n        i = i + 1\n")
+                .unwrap();
         assert_eq!(module.functions.len(), 1);
         // Body should contain a Let and a While
         assert!(module.functions[0].body.len() >= 2);
@@ -7097,47 +7939,43 @@ mod tests {
 
     #[test]
     fn test_for_range() {
-        let module = lower_source(
-            "def main():\n    for i in range(10):\n        print(i)\n"
-        ).unwrap();
+        let module =
+            lower_source("def main():\n    for i in range(10):\n        print(i)\n").unwrap();
         assert_eq!(module.functions.len(), 1);
         assert!(matches!(module.functions[0].body[0], HirStmt::For { .. }));
     }
 
     #[test]
     fn test_for_range_start_end() {
-        let module = lower_source(
-            "def main():\n    for i in range(1, 5):\n        print(i)\n"
-        ).unwrap();
+        let module =
+            lower_source("def main():\n    for i in range(1, 5):\n        print(i)\n").unwrap();
         assert_eq!(module.functions.len(), 1);
         assert!(matches!(module.functions[0].body[0], HirStmt::For { .. }));
     }
 
     #[test]
     fn test_break_outside_loop() {
-        let result = lower_source(
-            "def main():\n    break\n"
-        );
+        let result = lower_source("def main():\n    break\n");
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e.message.contains("'break' outside of loop")));
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("'break' outside of loop")));
     }
 
     #[test]
     fn test_continue_outside_loop() {
-        let result = lower_source(
-            "def main():\n    continue\n"
-        );
+        let result = lower_source("def main():\n    continue\n");
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e.message.contains("'continue' outside of loop")));
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("'continue' outside of loop")));
     }
 
     #[test]
     fn test_break_inside_loop() {
-        let module = lower_source(
-            "def main():\n    while True:\n        break\n"
-        ).unwrap();
+        let module = lower_source("def main():\n    while True:\n        break\n").unwrap();
         assert_eq!(module.functions.len(), 1);
     }
 
@@ -7162,8 +8000,9 @@ mod tests {
     #[test]
     fn test_fstring_with_expression() {
         let module = lower_source(
-            "def main():\n    a: int = 2\n    b: int = 3\n    print(f\"{a} + {b} = {a + b}\")\n"
-        ).unwrap();
+            "def main():\n    a: int = 2\n    b: int = 3\n    print(f\"{a} + {b} = {a + b}\")\n",
+        )
+        .unwrap();
         assert_eq!(module.functions.len(), 1);
     }
 
@@ -7175,26 +8014,31 @@ mod tests {
         assert_eq!(module.functions.len(), 1);
         // Should have: let pair, tuple_unpack, print
         assert!(module.functions[0].body.len() >= 3);
-        assert!(matches!(module.functions[0].body[1], HirStmt::TupleUnpack { .. }));
+        assert!(matches!(
+            module.functions[0].body[1],
+            HirStmt::TupleUnpack { .. }
+        ));
     }
 
     #[test]
     fn test_tuple_unpack_wrong_count() {
         let result = lower_source(
-            "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y, z = pair\n"
+            "def main():\n    pair: tuple[int, str] = (1, \"hello\")\n    x, y, z = pair\n",
         );
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e.message.contains("expected 3 values, got 2")));
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("expected 3 values, got 2")));
     }
 
     #[test]
     fn test_tuple_unpack_non_tuple() {
-        let result = lower_source(
-            "def main():\n    x: int = 42\n    a, b = x\n"
-        );
+        let result = lower_source("def main():\n    x: int = 42\n    a, b = x\n");
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| e.message.contains("cannot unpack non-tuple")));
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("cannot unpack non-tuple")));
     }
 }

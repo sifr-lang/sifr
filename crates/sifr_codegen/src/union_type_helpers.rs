@@ -73,13 +73,17 @@ impl RustEmitter {
                         self.collect_union_types_in_stmts(body);
                     }
                 }
-                HirStmt::While { body, else_body, .. } => {
+                HirStmt::While {
+                    body, else_body, ..
+                } => {
                     self.collect_union_types_in_stmts(body);
                     if let Some(eb) = else_body {
                         self.collect_union_types_in_stmts(eb);
                     }
                 }
-                HirStmt::For { body, else_body, .. } => {
+                HirStmt::For {
+                    body, else_body, ..
+                } => {
                     self.collect_union_types_in_stmts(body);
                     if let Some(eb) = else_body {
                         self.collect_union_types_in_stmts(eb);
@@ -127,10 +131,7 @@ impl RustEmitter {
             self.enum_defs.push_str("}\n\n");
 
             // Generate Display impl so println!("{}", x) works
-            let _ = writeln!(
-                self.enum_defs,
-                "impl std::fmt::Display for {enum_name} {{"
-            );
+            let _ = writeln!(self.enum_defs, "impl std::fmt::Display for {enum_name} {{");
             self.enum_defs.push_str(
                 "    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {\n",
             );

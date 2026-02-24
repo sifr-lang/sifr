@@ -15,14 +15,21 @@ impl RustEmitter {
                 "__eq__" => self.emit_eq_trait_impl(class, func),
                 "__lt__" => self.emit_ord_trait_impl(class, func),
                 "__str__" | "__repr__" => {} // Handled separately in emit_class via Display
-                _ => {} // Other dunders not yet supported
+                _ => {}                      // Other dunders not yet supported
             }
         }
     }
 
     /// Emit `impl std::ops::Trait for ClassName` for binary operators.
     /// Uses reference-based impl to avoid consuming the operands.
-    fn emit_binop_trait_impl(&mut self, class: &HirClass, func: &HirFunction, trait_name: &str, method_name: &str, _op: &str) {
+    fn emit_binop_trait_impl(
+        &mut self,
+        class: &HirClass,
+        func: &HirFunction,
+        trait_name: &str,
+        method_name: &str,
+        _op: &str,
+    ) {
         let is_generic = !class.type_params.is_empty();
         let bounds = Self::generic_bounds_for_class(class);
         let generic_suffix = if is_generic {
@@ -51,13 +58,23 @@ impl RustEmitter {
         self.output.push('\n');
         self.write_indent();
         if is_generic {
-            let bounded_params: Vec<String> = class.type_params.iter()
+            let bounded_params: Vec<String> = class
+                .type_params
+                .iter()
                 .map(|p| format!("{p}: {bounds}"))
                 .collect();
-            self.write(&format!("impl<{}> std::ops::{}<{}> for &{} {{\n",
-                bounded_params.join(", "), trait_name, rhs_ty, class_with_generics));
+            self.write(&format!(
+                "impl<{}> std::ops::{}<{}> for &{} {{\n",
+                bounded_params.join(", "),
+                trait_name,
+                rhs_ty,
+                class_with_generics
+            ));
         } else {
-            self.write(&format!("impl std::ops::{}<{}> for &{} {{\n", trait_name, rhs_ty, class.name));
+            self.write(&format!(
+                "impl std::ops::{}<{}> for &{} {{\n",
+                trait_name, rhs_ty, class.name
+            ));
         }
         self.indent += 1;
         self.write_indent();
@@ -90,12 +107,21 @@ impl RustEmitter {
     }
 
     /// Emit `impl std::ops::Neg for ClassName` for unary negation.
-    fn emit_unaryop_trait_impl(&mut self, class: &HirClass, func: &HirFunction, trait_name: &str, method_name: &str) {
+    fn emit_unaryop_trait_impl(
+        &mut self,
+        class: &HirClass,
+        func: &HirFunction,
+        trait_name: &str,
+        method_name: &str,
+    ) {
         let output_ty = func.return_type.rust_type();
 
         self.output.push('\n');
         self.write_indent();
-        self.write(&format!("impl std::ops::{} for {} {{\n", trait_name, class.name));
+        self.write(&format!(
+            "impl std::ops::{} for {} {{\n",
+            trait_name, class.name
+        ));
         self.indent += 1;
         self.write_indent();
         self.write(&format!("type Output = {output_ty};\n\n"));
@@ -156,7 +182,10 @@ impl RustEmitter {
         } else {
             self.write("other");
         }
-        self.write(&format!(": &{}) -> Option<std::cmp::Ordering> {{\n", class.name));
+        self.write(&format!(
+            ": &{}) -> Option<std::cmp::Ordering> {{\n",
+            class.name
+        ));
         self.indent += 1;
 
         // For __lt__, we generate a comparison that returns Ordering
@@ -168,9 +197,16 @@ impl RustEmitter {
         self.write("Some(");
         // Use the first field for comparison as a simple heuristic
         if let Some((field_name, _)) = class.fields.first() {
-            self.write(&format!("self.{}.partial_cmp(&{}.{})?", field_name,
-                if let Some(param) = func.params.first() { &param.name } else { "other" },
-                field_name));
+            self.write(&format!(
+                "self.{}.partial_cmp(&{}.{})?",
+                field_name,
+                if let Some(param) = func.params.first() {
+                    &param.name
+                } else {
+                    "other"
+                },
+                field_name
+            ));
         } else {
             self.write("std::cmp::Ordering::Equal");
         }
@@ -188,12 +224,17 @@ impl RustEmitter {
     pub(super) fn emit_protocol_impls(&mut self, class: &HirClass, module: &HirModule) {
         for proto_name in &class.implements_protocols {
             // Find the protocol definition to get its method list
-            let proto_class = module.classes.iter().find(|c| c.name == *proto_name && c.is_protocol);
+            let proto_class = module
+                .classes
+                .iter()
+                .find(|c| c.name == *proto_name && c.is_protocol());
             let proto_method_names: Vec<String> = proto_class
                 .map(|pc| pc.methods.iter().map(|m| m.name.clone()).collect())
                 .unwrap_or_default();
 
-            if proto_method_names.is_empty() { continue; }
+            if proto_method_names.is_empty() {
+                continue;
+            }
 
             self.output.push('\n');
             self.write_indent();
@@ -202,7 +243,9 @@ impl RustEmitter {
 
             // Delegate to inherent methods instead of duplicating the body
             for method in &class.methods {
-                if !proto_method_names.contains(&method.name) { continue; }
+                if !proto_method_names.contains(&method.name) {
+                    continue;
+                }
 
                 self.write_indent();
                 self.write("fn ");

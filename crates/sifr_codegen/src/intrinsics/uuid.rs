@@ -2,17 +2,12 @@
 
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 
-fn cast(expr: RustExpr, ty: &str) -> RustExpr {
-    RustExpr::Cast {
-        expr: Box::new(expr),
-        ty: RustType::Named(ty.to_string()),
-    }
-}
-
-fn gen_call(ty: &str) -> RustExpr {
-    RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident("rng".to_string())),
-        method: format!("gen::<{ty}>"),
+fn random_expr(ty: &str) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "rand".to_string(),
+            format!("random::<{ty}>"),
+        ])),
         args: vec![],
     }
 }
@@ -24,28 +19,16 @@ pub(super) fn lower_uuid4(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
-                mutable: true,
-                name: "rng".to_string(),
-                ty: None,
-                value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "rand".to_string(),
-                        "thread_rng".to_string(),
-                    ])),
-                    args: vec![],
-                },
-            },
-            RustStmt::Let {
                 mutable: false,
                 name: "seg1".to_string(),
                 ty: None,
-                value: gen_call("u32"),
+                value: random_expr("u32"),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "seg2".to_string(),
                 ty: None,
-                value: gen_call("u16"),
+                value: random_expr("u16"),
             },
             RustStmt::Let {
                 mutable: false,
@@ -53,12 +36,12 @@ pub(super) fn lower_uuid4(args: &[String]) -> Option<RustExpr> {
                 ty: None,
                 value: RustExpr::BinOp {
                     left: Box::new(RustExpr::BinOp {
-                        left: Box::new(gen_call("u16")),
+                        left: Box::new(random_expr("u16")),
                         op: "&".to_string(),
-                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0x0fff))),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(4095))),
                     }),
                     op: "|".to_string(),
-                    right: Box::new(RustExpr::Literal(RustLiteral::Int(0x4000))),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Int(16384))),
                 },
             },
             RustStmt::Let {
@@ -67,25 +50,25 @@ pub(super) fn lower_uuid4(args: &[String]) -> Option<RustExpr> {
                 ty: None,
                 value: RustExpr::BinOp {
                     left: Box::new(RustExpr::BinOp {
-                        left: Box::new(gen_call("u16")),
+                        left: Box::new(random_expr("u16")),
                         op: "&".to_string(),
-                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0x3fff))),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(16383))),
                     }),
                     op: "|".to_string(),
-                    right: Box::new(RustExpr::Literal(RustLiteral::Int(0x8000))),
+                    right: Box::new(RustExpr::Literal(RustLiteral::Int(32768))),
                 },
             },
             RustStmt::Let {
                 mutable: false,
                 name: "seg5_hi".to_string(),
                 ty: None,
-                value: gen_call("u32"),
+                value: random_expr("u32"),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "seg5_lo".to_string(),
                 ty: None,
-                value: gen_call("u16"),
+                value: random_expr("u16"),
             },
             RustStmt::Let {
                 mutable: false,
@@ -93,12 +76,18 @@ pub(super) fn lower_uuid4(args: &[String]) -> Option<RustExpr> {
                 ty: None,
                 value: RustExpr::BinOp {
                     left: Box::new(RustExpr::BinOp {
-                        left: Box::new(cast(RustExpr::Ident("seg5_hi".to_string()), "u64")),
+                        left: Box::new(RustExpr::Cast {
+                            expr: Box::new(RustExpr::Ident("seg5_hi".to_string())),
+                            ty: RustType::Named("u64".to_string()),
+                        }),
                         op: "<<".to_string(),
                         right: Box::new(RustExpr::Literal(RustLiteral::Int(16))),
                     }),
                     op: "|".to_string(),
-                    right: Box::new(cast(RustExpr::Ident("seg5_lo".to_string()), "u64")),
+                    right: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("seg5_lo".to_string())),
+                        ty: RustType::Named("u64".to_string()),
+                    }),
                 },
             },
         ],

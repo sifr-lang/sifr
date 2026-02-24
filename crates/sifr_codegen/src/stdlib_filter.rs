@@ -223,7 +223,8 @@ fn parse_stdlib_ir_file(rust_code: &str) -> StdlibIrFile {
         .into_iter()
         .map(|chunk| match chunk {
             TopLevelChunk::Item(item) => {
-                let refs = referenced_item_names(&item.code, &item_names, &item.name, &global_types);
+                let refs =
+                    referenced_item_names(&item.code, &item_names, &item.name, &global_types);
                 StdlibIrChunk::Item(StdlibIrItem {
                     name: item.name,
                     code: item.code,
@@ -312,7 +313,8 @@ fn derive_shared_needs(filtered: &str, chunks: &[TopLevelChunk]) -> SharedPrelud
     }
     for chunk in chunks {
         if let TopLevelChunk::Item(item) = chunk {
-            if item.name == "FileHandle" && item.header_line.trim().starts_with("struct FileHandle") {
+            if item.name == "FileHandle" && item.header_line.trim().starts_with("struct FileHandle")
+            {
                 shared_needs.file_handles.provides_file_handle_struct = true;
             }
         }
@@ -520,7 +522,11 @@ fn is_char_literal_start(chars: &[char], idx: usize) -> bool {
 }
 
 fn char_literal_len(chars: &[char], idx: usize) -> usize {
-    if chars[idx + 1] == '\\' { 4 } else { 3 }
+    if chars[idx + 1] == '\\' {
+        4
+    } else {
+        3
+    }
 }
 
 fn is_reference_ident(tokens: &[RustToken], idx: usize) -> bool {
@@ -623,7 +629,9 @@ fn parse_top_level_item_name(line: &str) -> Option<String> {
     }
     // struct Name
     if let Some(rest) = trimmed.strip_prefix("struct ") {
-        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+        let name = rest
+            .split(|c: char| !c.is_alphanumeric() && c != '_')
+            .next()?;
         return Some(name.to_string());
     }
     // type Alias =
@@ -637,12 +645,16 @@ fn parse_top_level_item_name(line: &str) -> Option<String> {
     }
     // enum Name
     if let Some(rest) = trimmed.strip_prefix("enum ") {
-        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+        let name = rest
+            .split(|c: char| !c.is_alphanumeric() && c != '_')
+            .next()?;
         return Some(name.to_string());
     }
     // trait Name
     if let Some(rest) = trimmed.strip_prefix("trait ") {
-        let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+        let name = rest
+            .split(|c: char| !c.is_alphanumeric() && c != '_')
+            .next()?;
         return Some(name.to_string());
     }
     // impl Name or impl Display for Name
@@ -973,13 +985,19 @@ fn keep_me() {
         assert!(prepared.shared_needs.collections.needs_hashset);
         assert!(prepared.shared_needs.collections.needs_vecdeque);
         assert!(prepared.shared_needs.file_handles.needs_file_handles);
-        assert!(prepared
-            .shared_needs
-            .file_handles
-            .provides_file_handle_struct);
-        assert!(!prepared.stripped_code.contains("use std::collections::HashMap;"));
+        assert!(
+            prepared
+                .shared_needs
+                .file_handles
+                .provides_file_handle_struct
+        );
+        assert!(!prepared
+            .stripped_code
+            .contains("use std::collections::HashMap;"));
         assert!(!prepared.stripped_code.contains("enum SifrFileHandle {"));
-        assert!(!prepared.stripped_code.contains("static __SIFR_FILE_HANDLES:"));
+        assert!(!prepared
+            .stripped_code
+            .contains("static __SIFR_FILE_HANDLES:"));
         assert!(prepared.stripped_code.contains("fn keep_me()"));
     }
 

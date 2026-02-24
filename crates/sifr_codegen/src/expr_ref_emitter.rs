@@ -75,7 +75,9 @@ impl RustEmitter {
     /// This method emits `*name` for borrowed params so the comparison works.
     pub(super) fn emit_expr_for_compare(&mut self, expr: &HirExpr) {
         if let HirExpr::Name { name, ty } = expr {
-            if self.borrowed_params.contains(name) && (matches!(ty, Type::Str) || matches!(ty, Type::TypeVar(_))) {
+            if self.borrowed_params.contains(name)
+                && (matches!(ty, Type::Str) || matches!(ty, Type::TypeVar(_)))
+            {
                 self.write("*");
                 self.emit_expr(expr);
                 return;

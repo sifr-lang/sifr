@@ -353,7 +353,7 @@ fn push_flag_stmt(bit: i64, marker: &str) -> RustStmt {
         then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("__flag_str".to_string())),
             method: "push_str".to_string(),
-            args: vec![RustExpr::Literal(RustLiteral::Str(marker.to_string()))],
+            args: vec![RustExpr::Ident(format!("{marker:?}"))],
         })],
         else_body: None,
     }
@@ -372,7 +372,10 @@ fn build_flags_prefix_stmts(args: &[String], flag_idx: usize) -> Vec<RustStmt> {
             name: "__flag_str".to_string(),
             ty: None,
             value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["String".to_string(), "new".to_string()])),
+                func: Box::new(RustExpr::Path(vec![
+                    "String".to_string(),
+                    "new".to_string(),
+                ])),
                 args: vec![],
             },
         },

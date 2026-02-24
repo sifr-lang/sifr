@@ -125,7 +125,7 @@ pub(super) fn lower_round(args: &[String]) -> Option<RustExpr> {
 }
 
 pub(super) fn lower_trunc(args: &[String]) -> Option<RustExpr> {
-    unary_method(args, "trunc")
+    unary_method_as_i64(args, "trunc")
 }
 
 pub(super) fn lower_fract(args: &[String]) -> Option<RustExpr> {

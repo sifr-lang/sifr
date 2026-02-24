@@ -72,7 +72,9 @@ fn parse_map_err(expr: RustExpr) -> RustExpr {
                 name: "e".to_string(),
                 ty: RustType::Named("_".to_string()),
             }],
-            body: Box::new(parse_error(to_string_expr(RustExpr::Ident("e".to_string())))),
+            body: Box::new(parse_error(to_string_expr(RustExpr::Ident(
+                "e".to_string(),
+            )))),
             is_move: false,
         }],
     }
@@ -127,7 +129,10 @@ fn engine_decode(engine: RustExpr, bytes: RustExpr) -> RustExpr {
 
 fn string_from_utf8(expr: RustExpr) -> RustExpr {
     RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec!["String".to_string(), "from_utf8".to_string()])),
+        func: Box::new(RustExpr::Path(vec![
+            "String".to_string(),
+            "from_utf8".to_string(),
+        ])),
         args: vec![expr],
     }
 }
@@ -396,7 +401,10 @@ pub(super) fn lower_base64_encode_opts(args: &[String]) -> Option<RustExpr> {
                 name: "__wrapped".to_string(),
                 ty: None,
                 value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["String".to_string(), "new".to_string()])),
+                    func: Box::new(RustExpr::Path(vec![
+                        "String".to_string(),
+                        "new".to_string(),
+                    ])),
                     args: vec![],
                 },
             },
@@ -619,7 +627,10 @@ pub(super) fn lower_base64_decode_opts(args: &[String]) -> Option<RustExpr> {
                 name: "__normalized".to_string(),
                 ty: None,
                 value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["String".to_string(), "new".to_string()])),
+                    func: Box::new(RustExpr::Path(vec![
+                        "String".to_string(),
+                        "new".to_string(),
+                    ])),
                     args: vec![],
                 },
             },
@@ -720,7 +731,10 @@ pub(super) fn lower_urlsafe_b64encode(args: &[String]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(engine_encode(base64_engine_url_safe(), as_bytes(ref_arg(args, 0))))
+    Some(engine_encode(
+        base64_engine_url_safe(),
+        as_bytes(ref_arg(args, 0)),
+    ))
 }
 
 pub(super) fn lower_urlsafe_b64decode(args: &[String]) -> Option<RustExpr> {

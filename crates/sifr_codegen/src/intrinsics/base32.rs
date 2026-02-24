@@ -14,8 +14,8 @@ fn char_lit(v: char) -> RustExpr {
     RustExpr::Literal(RustLiteral::Char(v))
 }
 
-fn string_lit(v: &str) -> RustExpr {
-    RustExpr::Literal(RustLiteral::Str(v.to_string()))
+fn bytes_lit(v: &str) -> RustExpr {
+    RustExpr::Ident(format!("b{v:?}"))
 }
 
 fn ok_expr(expr: RustExpr) -> RustExpr {
@@ -56,7 +56,9 @@ fn parse_map_err(expr: RustExpr) -> RustExpr {
                 name: "e".to_string(),
                 ty: RustType::Named("_".to_string()),
             }],
-            body: Box::new(parse_error(to_string_expr(RustExpr::Ident("e".to_string())))),
+            body: Box::new(parse_error(to_string_expr(RustExpr::Ident(
+                "e".to_string(),
+            )))),
             is_move: false,
         }],
     }
@@ -76,11 +78,7 @@ fn encode_with_alphabet(input: RustExpr, alphabet: &str) -> RustExpr {
                 mutable: false,
                 name: "__b32_alpha".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(string_lit(alphabet)),
-                    method: "as_bytes".to_string(),
-                    args: vec![],
-                },
+                value: bytes_lit(alphabet),
             },
             RustStmt::Let {
                 mutable: false,
@@ -103,7 +101,10 @@ fn encode_with_alphabet(input: RustExpr, alphabet: &str) -> RustExpr {
                 name: "__out".to_string(),
                 ty: None,
                 value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["String".to_string(), "new".to_string()])),
+                    func: Box::new(RustExpr::Path(vec![
+                        "String".to_string(),
+                        "new".to_string(),
+                    ])),
                     args: vec![],
                 },
             },
@@ -363,14 +364,18 @@ fn encode_with_alphabet(input: RustExpr, alphabet: &str) -> RustExpr {
                                         index: Box::new(cast(
                                             RustExpr::BinOp {
                                                 left: Box::new(RustExpr::BinOp {
-                                                    left: Box::new(RustExpr::Ident("__buf".to_string())),
+                                                    left: Box::new(RustExpr::Ident(
+                                                        "__buf".to_string(),
+                                                    )),
                                                     op: ">>".to_string(),
                                                     right: Box::new(cast(
                                                         RustExpr::BinOp {
                                                             left: Box::new(int(35)),
                                                             op: "-".to_string(),
                                                             right: Box::new(RustExpr::BinOp {
-                                                                left: Box::new(RustExpr::Ident("__j".to_string())),
+                                                                left: Box::new(RustExpr::Ident(
+                                                                    "__j".to_string(),
+                                                                )),
                                                                 op: "*".to_string(),
                                                                 right: Box::new(int(5)),
                                                             }),
@@ -413,11 +418,7 @@ fn decode_with_alphabet(input: RustExpr, alphabet: &str, invalid_msg: &str) -> R
                 mutable: false,
                 name: "__b32_alpha".to_string(),
                 ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(string_lit(alphabet)),
-                    method: "as_bytes".to_string(),
-                    args: vec![],
-                },
+                value: bytes_lit(alphabet),
             },
             RustStmt::Let {
                 mutable: false,
@@ -572,7 +573,10 @@ fn decode_with_alphabet(input: RustExpr, alphabet: &str, invalid_msg: &str) -> R
             },
         ],
         expr: Some(Box::new(parse_map_err(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["String".to_string(), "from_utf8".to_string()])),
+            func: Box::new(RustExpr::Path(vec![
+                "String".to_string(),
+                "from_utf8".to_string(),
+            ])),
             args: vec![RustExpr::Ident("__out".to_string())],
         }))),
     }
