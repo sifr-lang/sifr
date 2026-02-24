@@ -196,7 +196,7 @@ Root cause: structural-passes DoD requires zero `RawCode` in core paths, but bri
   - [x] `DictLiteral`
   - [x] `SetLiteral`
   - [x] `ListComp`
-  - [ ] `DictComp`
+  - [x] `DictComp`
   - [ ] `SetComp`
   - [ ] `GeneratorExpr`
 - [ ] Delete `try_capture_fallback_expr_as_raw` and `try_capture_fallback_stmt_as_raw` once no callsites remain
