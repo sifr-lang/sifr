@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustStmt};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
 fn ref_expr(expr: RustExpr) -> RustExpr {
@@ -13,7 +13,7 @@ fn ref_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+fn ref_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     ref_expr(arg_expr(args, idx))
 }
 
@@ -97,7 +97,7 @@ fn output_stdout_trimmed(output_ident: &str) -> RustExpr {
     }
 }
 
-pub(super) fn lower_subprocess_run(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_subprocess_run(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -116,7 +116,7 @@ pub(super) fn lower_subprocess_run(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_subprocess_run_with_input(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_subprocess_run_with_input(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -190,7 +190,7 @@ pub(super) fn lower_subprocess_run_with_input(args: &[String]) -> Option<RustExp
     })
 }
 
-pub(super) fn lower_subprocess_run_structured(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_subprocess_run_structured(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
