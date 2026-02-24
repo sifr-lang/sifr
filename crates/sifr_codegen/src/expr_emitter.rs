@@ -1030,7 +1030,10 @@ impl RustEmitter {
                         self.emit_expr(object);
                         self.write("; let _i = ");
                         self.emit_expr(index);
-                        self.write("; let _idx = if _i < 0 { (_s.chars().count() as i64 + _i) as usize } else { _i as usize }; _s.chars().nth(_idx).map(|c| c.to_string()) }");
+                        self.write("; let _idx = if _i < 0 { ");
+                        self.write("(_s.chars().count() as i64 + _i) as usize");
+                        self.write(" } else { _i as usize }; ");
+                        self.write("_s.chars().nth(_idx).map(|c| c.to_string()) }");
                     }
                     // Union/Optional type indexing: unwrap the Option first
                     ty if is_option_type(ty) => {
@@ -1038,7 +1041,10 @@ impl RustEmitter {
                         self.emit_expr(object);
                         self.write("; let _v = __opt.as_ref().unwrap(); let _i = ");
                         self.emit_expr(index);
-                        self.write("; let _idx = if _i < 0 { (_v.len() as i64 + _i) as usize } else { _i as usize }; _v.get(_idx).cloned() }");
+                        self.write("; let _idx = if _i < 0 { ");
+                        self.write("(_v.len() as i64 + _i) as usize");
+                        self.write(" } else { _i as usize }; ");
+                        self.write("_v.get(_idx).cloned() }");
                     }
                     _ => {
                         // Safe list indexing: returns Option<T>
@@ -1047,7 +1053,10 @@ impl RustEmitter {
                         self.emit_expr(object);
                         self.write("; let _i = ");
                         self.emit_expr(index);
-                        self.write("; let _idx = if _i < 0 { (_v.len() as i64 + _i) as usize } else { _i as usize }; _v.get(_idx).cloned() }");
+                        self.write("; let _idx = if _i < 0 { ");
+                        self.write("(_v.len() as i64 + _i) as usize");
+                        self.write(" } else { _i as usize }; ");
+                        self.write("_v.get(_idx).cloned() }");
                     }
                 }
             }

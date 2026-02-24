@@ -75,8 +75,15 @@ impl RustEmitter {
 
             // Build result
             self.write("let mut _result = Vec::new(); ");
-            self.write("if _step > 0 { let mut _i = _start; while _i < _stop { if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } _i += _step as usize; } }");
-            self.write(" else { let mut _i = _start as i64; let _stop_i = _stop as i64; while _i > _stop_i { if _i >= 0 { if let Some(_el) = _v.get(_i as usize) { _result.push(_el.clone()); } } _i += _step; } }");
+            self.write("if _step > 0 { let mut _i = _start; ");
+            self.write("while _i < _stop { ");
+            self.write("if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } ");
+            self.write("_i += _step as usize; } }");
+            self.write(" else { let mut _i = _start as i64; ");
+            self.write("let _stop_i = _stop as i64; while _i > _stop_i { ");
+            self.write("if _i >= 0 { ");
+            self.write("if let Some(_el) = _v.get(_i as usize) { _result.push(_el.clone()); } ");
+            self.write("} _i += _step; } }");
             self.write("; _result }");
         } else {
             // Simple slice without step
@@ -143,8 +150,15 @@ impl RustEmitter {
             self.write("; ");
 
             self.write("let mut _result = String::new(); ");
-            self.write("if _step > 0 { let mut _i = _start; while _i < _stop { if let Some(&_ch) = _s.get(_i) { _result.push(_ch); } _i += _step as usize; } }");
-            self.write(" else { let mut _i = _start as i64; let _stop_i = _stop as i64; while _i > _stop_i { if _i >= 0 { if let Some(&_ch) = _s.get(_i as usize) { _result.push(_ch); } } _i += _step; } }");
+            self.write("if _step > 0 { let mut _i = _start; ");
+            self.write("while _i < _stop { ");
+            self.write("if let Some(&_ch) = _s.get(_i) { _result.push(_ch); } ");
+            self.write("_i += _step as usize; } }");
+            self.write(" else { let mut _i = _start as i64; ");
+            self.write("let _stop_i = _stop as i64; while _i > _stop_i { ");
+            self.write("if _i >= 0 { ");
+            self.write("if let Some(&_ch) = _s.get(_i as usize) { _result.push(_ch); } ");
+            self.write("} _i += _step; } }");
             self.write("; _result }");
         } else {
             self.write("{ let _s = &");
