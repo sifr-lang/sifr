@@ -10,6 +10,8 @@ license = { workspace = true }
 sifr_hir = { workspace = true }
 sifr_type_system = { workspace = true }
 syn = { version = "2", features = ["full", "visit"] }
+prettyplease = "0.2"
+proc-macro2 = "1"
 
 [dev-dependencies]
 sifr_python_parser = { workspace = true }

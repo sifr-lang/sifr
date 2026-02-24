@@ -81,7 +81,7 @@ status: **partially met**
 - [x] IR validation exists (`ir_validate.rs`)
 - [x] Old helper names (`filter_rust_code_to_needed`, `parse_rust_blocks`, etc.) removed
 - [x] Boolean import flags removed from primary import selection path (imports now derived from structural IR needs)
-- [ ] Stdlib DCE still text/chunk/token based (`stdlib_filter.rs`), not full `RustFile` IR DCE
+- [x] Stdlib DCE migrated to structural `syn` item traversal (`stdlib_filter.rs` no longer uses text/chunk/token parsing)
 - [ ] `RawCode`-zero gate not enforced for all core production paths (IR type still carries bridge; fallback emitters remain)
 - [ ] Structural passes not run over full user-code IR because full user-code IR assembly is not yet the production path
 
