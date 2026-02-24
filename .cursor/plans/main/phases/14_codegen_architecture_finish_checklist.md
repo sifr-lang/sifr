@@ -107,6 +107,7 @@ status: **partially met**
 - [x] `datetime` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `zipfile` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `pathlib` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
+- [x] `random` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes
