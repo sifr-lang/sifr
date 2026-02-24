@@ -310,13 +310,18 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
         HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
         HirExpr::Call { func, args, .. } => try_lower_simple_call_expr(func, args),
+        HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ..
+        } => try_lower_simple_method_call_expr(object, method, args),
         HirExpr::ConstructorCall { .. }
         | HirExpr::DictComp { .. }
         | HirExpr::DictLiteral { .. }
         | HirExpr::GeneratorExpr { .. }
         | HirExpr::Index { .. }
         | HirExpr::ListComp { .. }
-        | HirExpr::MethodCall { .. }
         | HirExpr::SetComp { .. }
         | HirExpr::SetLiteral { .. }
         | HirExpr::Slice { .. } => None,
@@ -354,6 +359,29 @@ fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> 
 
     Some(RustExpr::FnCall {
         func: Box::new(lowered_func),
+        args: lowered_args,
+    })
+}
+
+fn try_lower_simple_method_call_expr(
+    object: &HirExpr,
+    method: &str,
+    args: &[HirExpr],
+) -> Option<RustExpr> {
+    // Keep typed method calls on fallback path; they frequently need type-specific rewrites.
+    if object.ty() != &Type::Any || method == "len" {
+        return None;
+    }
+
+    let lowered_object = try_lower_leaf_or_name_expr(object)?;
+    let lowered_args = args
+        .iter()
+        .map(try_lower_leaf_or_name_expr)
+        .collect::<Option<Vec<_>>>()?;
+
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(lowered_object),
+        method: method.to_string(),
         args: lowered_args,
     })
 }
@@ -2357,6 +2385,59 @@ mod tests {
                 )],
                 ty: Type::List(Box::new(Type::Int)),
             }],
+            ty: Type::Int,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn lowers_simple_method_call_on_any_with_leaf_args() {
+        let expr = HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "obj".to_string(),
+                ty: Type::Any,
+            }),
+            method: "work".to_string(),
+            args: vec![HirExpr::IntLiteral(2)],
+            ty: Type::Any,
+        };
+
+        let lowered = try_lower_leaf_expr(&expr).expect("method call lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::MethodCall {
+                receiver,
+                method,
+                args
+            } if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "obj")
+                && method == "work"
+                && args.len() == 1
+        ));
+    }
+
+    #[test]
+    fn does_not_lower_method_call_on_typed_object() {
+        let expr = HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            method: "append".to_string(),
+            args: vec![HirExpr::IntLiteral(1)],
+            ty: Type::None,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_len_method_call_on_any_object() {
+        let expr = HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "obj".to_string(),
+                ty: Type::Any,
+            }),
+            method: "len".to_string(),
+            args: vec![],
             ty: Type::Int,
         };
         assert!(try_lower_leaf_expr(&expr).is_none());
