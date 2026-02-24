@@ -1,31 +1,31 @@
 //! Intrinsic registry and dispatch for incremental migration.
 
-mod math;
-mod json;
-mod env;
-mod os;
-mod io;
-mod pathlib;
-mod test;
-mod collections;
+mod base32;
+mod base64;
 mod bytes;
-mod time;
+mod calendar;
+mod collections;
+mod datetime;
+mod env;
+mod gzip;
+mod hash;
+mod hashlib;
+mod html;
+mod io;
+mod json;
+mod math;
+mod os;
+mod pathlib;
+mod platform;
 mod random;
 mod re;
-mod hash;
-mod platform;
-mod uuid;
-mod toml;
-mod datetime;
-mod sys;
 mod subprocess;
-mod html;
-mod calendar;
-mod gzip;
+mod sys;
+mod test;
+mod time;
+mod toml;
+mod uuid;
 mod zipfile;
-mod base64;
-mod base32;
-mod hashlib;
 
 use crate::RustExpr;
 
@@ -148,23 +148,47 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "set_len" => (collections::lower_set_len(rendered_args), None),
         "set_union" => (collections::lower_set_union(rendered_args), None),
         "set_intersection" => (collections::lower_set_intersection(rendered_args), None),
-        "counter_from_list" => (collections::lower_counter_from_list(rendered_args), Some("serde_json")),
-        "counter_get" => (collections::lower_counter_get(rendered_args), Some("serde_json")),
+        "counter_from_list" => (
+            collections::lower_counter_from_list(rendered_args),
+            Some("serde_json"),
+        ),
+        "counter_get" => (
+            collections::lower_counter_get(rendered_args),
+            Some("serde_json"),
+        ),
         "counter_most_common" => (
             collections::lower_counter_most_common(rendered_args),
             Some("serde_json"),
         ),
-        "counter_total" => (collections::lower_counter_total(rendered_args), Some("serde_json")),
-        "counter_values" => (collections::lower_counter_values(rendered_args), Some("serde_json")),
-        "counter_keys" => (collections::lower_counter_keys(rendered_args), Some("serde_json")),
-        "counter_items" => (collections::lower_counter_items(rendered_args), Some("serde_json")),
+        "counter_total" => (
+            collections::lower_counter_total(rendered_args),
+            Some("serde_json"),
+        ),
+        "counter_values" => (
+            collections::lower_counter_values(rendered_args),
+            Some("serde_json"),
+        ),
+        "counter_keys" => (
+            collections::lower_counter_keys(rendered_args),
+            Some("serde_json"),
+        ),
+        "counter_items" => (
+            collections::lower_counter_items(rendered_args),
+            Some("serde_json"),
+        ),
         "counter_increment" => (
             collections::lower_counter_increment(rendered_args),
             Some("serde_json"),
         ),
         "defaultdict_new" => (collections::lower_defaultdict_new(rendered_args), None),
-        "defaultdict_get" => (collections::lower_defaultdict_get(rendered_args), Some("serde_json")),
-        "defaultdict_set" => (collections::lower_defaultdict_set(rendered_args), Some("serde_json")),
+        "defaultdict_get" => (
+            collections::lower_defaultdict_get(rendered_args),
+            Some("serde_json"),
+        ),
+        "defaultdict_set" => (
+            collections::lower_defaultdict_set(rendered_args),
+            Some("serde_json"),
+        ),
         "encode_utf8" => (bytes::lower_encode_utf8(rendered_args), None),
         "decode_utf8" => (bytes::lower_decode_utf8(rendered_args), None),
         "bytes_to_hex" => (bytes::lower_bytes_to_hex(rendered_args), None),
@@ -180,9 +204,18 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "_strptime_intrinsic" => (time::lower_strptime(rendered_args), Some("chrono")),
         "_gmtime_intrinsic" => (time::lower_gmtime(rendered_args), Some("chrono")),
         "_localtime_intrinsic" => (time::lower_localtime(rendered_args), Some("chrono")),
-        "time_strptime" => (time::lower_time_strptime_compat(rendered_args), Some("chrono")),
-        "time_gmtime" => (time::lower_time_gmtime_compat(rendered_args), Some("chrono")),
-        "time_localtime" => (time::lower_time_localtime_compat(rendered_args), Some("chrono")),
+        "time_strptime" => (
+            time::lower_time_strptime_compat(rendered_args),
+            Some("chrono"),
+        ),
+        "time_gmtime" => (
+            time::lower_time_gmtime_compat(rendered_args),
+            Some("chrono"),
+        ),
+        "time_localtime" => (
+            time::lower_time_localtime_compat(rendered_args),
+            Some("chrono"),
+        ),
         "random_int" => (random::lower_random_int(rendered_args), Some("rand")),
         "random_float" => (random::lower_random_float(rendered_args), Some("rand")),
         "random_choice" => (random::lower_random_choice(rendered_args), Some("rand")),
@@ -214,7 +247,10 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "uuid4" => (uuid::lower_uuid4(rendered_args), Some("rand")),
         "toml_parse" => (toml::lower_toml_parse(rendered_args), Some("toml")),
         "datetime_now" => (datetime::lower_datetime_now(rendered_args), Some("chrono")),
-        "datetime_now_struct" => (datetime::lower_datetime_now_struct(rendered_args), Some("chrono")),
+        "datetime_now_struct" => (
+            datetime::lower_datetime_now_struct(rendered_args),
+            Some("chrono"),
+        ),
         "datetime_format" => (datetime::lower_datetime_format(rendered_args), None),
         "datetime_from_timestamp" => (
             datetime::lower_datetime_from_timestamp(rendered_args),
@@ -246,10 +282,22 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
         "zip_namelist" => (zipfile::lower_zip_namelist(rendered_args), Some("zip")),
         "base64_encode" => (base64::lower_base64_encode(rendered_args), Some("base64")),
         "base64_decode" => (base64::lower_base64_decode(rendered_args), Some("base64")),
-        "base64_encode_opts" => (base64::lower_base64_encode_opts(rendered_args), Some("base64")),
-        "base64_decode_opts" => (base64::lower_base64_decode_opts(rendered_args), Some("base64")),
-        "urlsafe_b64encode" => (base64::lower_urlsafe_b64encode(rendered_args), Some("base64")),
-        "urlsafe_b64decode" => (base64::lower_urlsafe_b64decode(rendered_args), Some("base64")),
+        "base64_encode_opts" => (
+            base64::lower_base64_encode_opts(rendered_args),
+            Some("base64"),
+        ),
+        "base64_decode_opts" => (
+            base64::lower_base64_decode_opts(rendered_args),
+            Some("base64"),
+        ),
+        "urlsafe_b64encode" => (
+            base64::lower_urlsafe_b64encode(rendered_args),
+            Some("base64"),
+        ),
+        "urlsafe_b64decode" => (
+            base64::lower_urlsafe_b64decode(rendered_args),
+            Some("base64"),
+        ),
         "b32encode" => (base32::lower_b32encode(rendered_args), None),
         "b32decode" => (base32::lower_b32decode(rendered_args), None),
         "b32hexencode" => (base32::lower_b32hexencode(rendered_args), None),
@@ -288,20 +336,18 @@ mod tests {
             .expect("atan2 should lower");
         assert_eq!(render_expr(&lowered.expr), "(y).atan2(x)");
 
-        let lowered = lower_intrinsic("round_val", &["n".to_string()])
-            .expect("round_val should lower");
+        let lowered =
+            lower_intrinsic("round_val", &["n".to_string()]).expect("round_val should lower");
         assert_eq!(render_expr(&lowered.expr), "(n).round() as i64");
 
-        let lowered = lower_intrinsic("floor", &["n".to_string()])
-            .expect("floor should lower");
+        let lowered = lower_intrinsic("floor", &["n".to_string()]).expect("floor should lower");
         assert_eq!(render_expr(&lowered.expr), "(n).floor() as i64");
 
-        let lowered = lower_intrinsic("ceil", &["n".to_string()])
-            .expect("ceil should lower");
+        let lowered = lower_intrinsic("ceil", &["n".to_string()]).expect("ceil should lower");
         assert_eq!(render_expr(&lowered.expr), "(n).ceil() as i64");
 
-        let lowered = lower_intrinsic("isfinite", &["f".to_string()])
-            .expect("isfinite should lower");
+        let lowered =
+            lower_intrinsic("isfinite", &["f".to_string()]).expect("isfinite should lower");
         assert_eq!(render_expr(&lowered.expr), "(f).is_finite()");
 
         let lowered = lower_intrinsic("isqrt", &["v".to_string()]).expect("isqrt should lower");
@@ -315,8 +361,8 @@ mod tests {
         assert_eq!(loads.required_crate, Some("serde_json"));
         assert!(render_expr(&loads.expr).contains("serde_json::from_str"));
 
-        let dumps = lower_intrinsic("json_dumps", &["value".to_string()])
-            .expect("json_dumps should lower");
+        let dumps =
+            lower_intrinsic("json_dumps", &["value".to_string()]).expect("json_dumps should lower");
         assert_eq!(dumps.required_crate, Some("serde_json"));
         assert_eq!(
             render_expr(&dumps.expr),
@@ -339,13 +385,16 @@ mod tests {
 
     #[test]
     fn lowers_os_intrinsics_via_registry() {
-        let run = lower_intrinsic("run_command", &["cmd".to_string()])
-            .expect("run_command should lower");
+        let run =
+            lower_intrinsic("run_command", &["cmd".to_string()]).expect("run_command should lower");
         assert!(render_expr(&run.expr).contains("std::process::Command::new(\"sh\".to_string())"));
         assert!(render_expr(&run.expr).contains(".arg(\"-c\".to_string())"));
 
         let args = lower_intrinsic("get_args", &[]).expect("get_args should lower");
-        assert_eq!(render_expr(&args.expr), "std::env::args().collect::<Vec<String>>()");
+        assert_eq!(
+            render_expr(&args.expr),
+            "std::env::args().collect::<Vec<String>>()"
+        );
 
         let pid = lower_intrinsic("getpid", &[]).expect("getpid should lower");
         assert_eq!(render_expr(&pid.expr), "std::process::id() as i64");
@@ -358,10 +407,13 @@ mod tests {
 
         let disk = lower_intrinsic("disk_usage", &["path".to_string()]).expect("disk_usage lowers");
         assert!(render_expr(&disk.expr).contains("std::process::Command::new(\"df\".to_string())"));
-        assert!(render_expr(&disk.expr).contains("collect::<Vec<&str>>()"));
+        assert!(render_expr(&disk.expr).contains("split_whitespace().collect::<Vec<&str>>()"));
 
         let sep = lower_intrinsic("os_sep", &[]).expect("os_sep lowers");
-        assert_eq!(render_expr(&sep.expr), "std::path::MAIN_SEPARATOR.to_string()");
+        assert_eq!(
+            render_expr(&sep.expr),
+            "std::path::MAIN_SEPARATOR.to_string()"
+        );
 
         let linesep = lower_intrinsic("os_linesep", &[]).expect("os_linesep lowers");
         assert!(render_expr(&linesep.expr).contains("cfg!(target_os = \"windows\")"));
@@ -401,23 +453,21 @@ mod tests {
         let touch = lower_intrinsic("touch", &["p".to_string()]).expect("touch lowers");
         assert!(render_expr(&touch.expr).contains("OpenOptions::new().create(true)"));
 
-        let resolve = lower_intrinsic("resolve_path", &["p".to_string()])
-            .expect("resolve_path lowers");
+        let resolve =
+            lower_intrinsic("resolve_path", &["p".to_string()]).expect("resolve_path lowers");
         assert!(render_expr(&resolve.expr).contains("std::fs::canonicalize"));
 
         let iterdir = lower_intrinsic("iterdir", &["p".to_string()]).expect("iterdir lowers");
         assert!(render_expr(&iterdir.expr).contains("std::fs::read_dir"));
 
-        let glob =
-            lower_intrinsic("glob_pattern", &["dir".to_string(), "pat".to_string()])
-                .expect("glob_pattern lowers");
+        let glob = lower_intrinsic("glob_pattern", &["dir".to_string(), "pat".to_string()])
+            .expect("glob_pattern lowers");
         assert_eq!(glob.required_crate, Some("regex"));
         assert!(render_expr(&glob.expr).contains("regex::Regex::new"));
         assert!(render_expr(&glob.expr).contains("__re.is_match(&__name)"));
 
-        let rglob =
-            lower_intrinsic("rglob_pattern", &["dir".to_string(), "pat".to_string()])
-                .expect("rglob_pattern lowers");
+        let rglob = lower_intrinsic("rglob_pattern", &["dir".to_string(), "pat".to_string()])
+            .expect("rglob_pattern lowers");
         assert_eq!(rglob.required_crate, Some("regex"));
         assert!(render_expr(&rglob.expr).contains("__stack.pop()"));
         assert!(render_expr(&rglob.expr).contains("__re.is_match(&__name)"));
@@ -450,9 +500,8 @@ mod tests {
             .expect("set_add lowers");
         assert!(render_expr(&add.expr).contains("s.push(v)"));
 
-        let inter =
-            lower_intrinsic("set_intersection", &["a".to_string(), "b".to_string()])
-                .expect("set_intersection lowers");
+        let inter = lower_intrinsic("set_intersection", &["a".to_string(), "b".to_string()])
+            .expect("set_intersection lowers");
         assert!(render_expr(&inter.expr).contains("collect::<Vec<i64>>()"));
     }
 
@@ -534,20 +583,20 @@ mod tests {
 
         let gmt = lower_intrinsic("gmtime", &["ts".to_string()]).expect("gmtime");
         assert_eq!(gmt.required_crate, Some("chrono"));
-        assert!(render_expr(&gmt.expr).contains("DateTime::<Utc>::from_timestamp"));
+        assert!(render_expr(&gmt.expr).contains("chrono::DateTime::<chrono::Utc>::from_timestamp"));
 
         let local = lower_intrinsic("localtime", &["ts".to_string()]).expect("localtime");
         assert_eq!(local.required_crate, Some("chrono"));
-        assert!(render_expr(&local.expr).contains("with_timezone(&Local)"));
+        assert!(render_expr(&local.expr).contains("with_timezone(&chrono::Local)"));
 
-        let parse_alias = lower_intrinsic("_strptime_intrinsic", &["s".to_string(), "f".to_string()])
-            .expect("_strptime_intrinsic");
+        let parse_alias =
+            lower_intrinsic("_strptime_intrinsic", &["s".to_string(), "f".to_string()])
+                .expect("_strptime_intrinsic");
         assert_eq!(parse_alias.required_crate, Some("chrono"));
         assert!(render_expr(&parse_alias.expr).contains("NaiveDateTime::parse_from_str"));
 
-        let compat_parse =
-            lower_intrinsic("time_strptime", &["s".to_string(), "f".to_string()])
-                .expect("time_strptime");
+        let compat_parse = lower_intrinsic("time_strptime", &["s".to_string(), "f".to_string()])
+            .expect("time_strptime");
         assert_eq!(compat_parse.required_crate, Some("chrono"));
         assert!(render_expr(&compat_parse.expr).contains("Result<Vec<i64>, ValueError>"));
 
@@ -562,25 +611,26 @@ mod tests {
 
     #[test]
     fn lowers_random_intrinsics_via_registry() {
-        let rint = lower_intrinsic("random_int", &["1".to_string(), "9".to_string()])
-            .expect("random_int");
+        let rint =
+            lower_intrinsic("random_int", &["1".to_string(), "9".to_string()]).expect("random_int");
         assert_eq!(rint.required_crate, Some("rand"));
-        assert!(render_expr(&rint.expr).contains("rand::thread_rng().gen_range(0.."));
+        assert!(render_expr(&rint.expr).contains("rand::Rng::gen_range"));
 
         let rfloat = lower_intrinsic("random_float", &[]).expect("random_float");
         assert_eq!(rfloat.required_crate, Some("rand"));
-        assert!(render_expr(&rfloat.expr).contains("gen::<f64>()"));
+        assert!(render_expr(&rfloat.expr).contains("rand::random::<f64>()"));
 
-        let choice = lower_intrinsic("random_choice", &["items".to_string()]).expect("random_choice");
+        let choice =
+            lower_intrinsic("random_choice", &["items".to_string()]).expect("random_choice");
         assert!(render_expr(&choice.expr).contains("items.len()"));
 
         let uniform = lower_intrinsic("random_uniform", &["0.0".to_string(), "1.0".to_string()])
             .expect("random_uniform");
-        assert!(render_expr(&uniform.expr).contains("gen::<f64>()"));
+        assert!(render_expr(&uniform.expr).contains("rand::random::<f64>()"));
 
         let shuffle =
             lower_intrinsic("random_shuffle", &["vals".to_string()]).expect("random_shuffle");
-        assert!(render_expr(&shuffle.expr).contains("shuffle(&mut rand::thread_rng())"));
+        assert!(render_expr(&shuffle.expr).contains("SliceRandom::shuffle"));
 
         let sample = lower_intrinsic("random_sample", &["vals".to_string(), "3".to_string()])
             .expect("random_sample");
@@ -601,11 +651,13 @@ mod tests {
 
     #[test]
     fn lowers_re_intrinsics_via_registry() {
-        let m = lower_intrinsic("re_match", &["pat".to_string(), "txt".to_string()]).expect("re_match");
+        let m =
+            lower_intrinsic("re_match", &["pat".to_string(), "txt".to_string()]).expect("re_match");
         assert_eq!(m.required_crate, Some("regex"));
         assert!(render_expr(&m.expr).contains("is_match"));
 
-        let f = lower_intrinsic("re_find", &["pat".to_string(), "txt".to_string()]).expect("re_find");
+        let f =
+            lower_intrinsic("re_find", &["pat".to_string(), "txt".to_string()]).expect("re_find");
         assert!(render_expr(&f.expr).contains("re.find"));
 
         let rep = lower_intrinsic(
@@ -615,8 +667,8 @@ mod tests {
         .expect("re_replace");
         assert!(render_expr(&rep.expr).contains("replace_all"));
 
-        let all =
-            lower_intrinsic("re_findall", &["pat".to_string(), "txt".to_string()]).expect("re_findall");
+        let all = lower_intrinsic("re_findall", &["pat".to_string(), "txt".to_string()])
+            .expect("re_findall");
         assert!(render_expr(&all.expr).contains("find_iter"));
 
         let split =
@@ -656,7 +708,7 @@ mod tests {
     fn lowers_hash_intrinsics_via_registry() {
         let sha = lower_intrinsic("sha256", &["payload".to_string()]).expect("sha256");
         assert_eq!(sha.required_crate, Some("sha2"));
-        assert!(render_expr(&sha.expr).contains("sha2::Sha256::digest"));
+        assert!(render_expr(&sha.expr).contains("<sha2::Sha256 as sha2::Digest>::digest"));
         assert!(render_expr(&sha.expr).contains(".as_bytes()"));
 
         let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
@@ -668,10 +720,16 @@ mod tests {
     #[test]
     fn lowers_platform_intrinsics_via_registry() {
         let system = lower_intrinsic("platform_system", &[]).expect("platform_system");
-        assert_eq!(render_expr(&system.expr), "std::env::consts::OS.to_string()");
+        assert_eq!(
+            render_expr(&system.expr),
+            "std::env::consts::OS.to_string()"
+        );
 
         let arch = lower_intrinsic("platform_arch", &[]).expect("platform_arch");
-        assert_eq!(render_expr(&arch.expr), "std::env::consts::ARCH.to_string()");
+        assert_eq!(
+            render_expr(&arch.expr),
+            "std::env::consts::ARCH.to_string()"
+        );
 
         let node = lower_intrinsic("platform_node", &[]).expect("platform_node");
         assert!(render_expr(&node.expr).contains("Command::new(\"hostname\")"));
@@ -683,16 +741,19 @@ mod tests {
         assert!(render_expr(&ver.expr).contains("Command::new(\"uname\").arg(\"-v\")"));
 
         let proc = lower_intrinsic("platform_processor", &[]).expect("platform_processor");
-        assert_eq!(render_expr(&proc.expr), "std::env::consts::ARCH.to_string()");
+        assert_eq!(
+            render_expr(&proc.expr),
+            "std::env::consts::ARCH.to_string()"
+        );
     }
 
     #[test]
     fn lowers_uuid_intrinsic_via_registry() {
         let uuid = lower_intrinsic("uuid4", &[]).expect("uuid4");
         assert_eq!(uuid.required_crate, Some("rand"));
-        assert!(render_expr(&uuid.expr).contains("rand::thread_rng"));
+        assert!(render_expr(&uuid.expr).contains("rand::random::<u32>()"));
         assert!(render_expr(&uuid.expr).contains("format!(\"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}\""));
-        assert!(render_expr(&uuid.expr).contains("seg3 = (rng.gen::<u16>() & 4095) | 16384"));
+        assert!(render_expr(&uuid.expr).contains("(rand::random::<u16>() & 4095)"));
     }
 
     #[test]
@@ -718,8 +779,8 @@ mod tests {
             .expect("datetime_format");
         assert!(render_expr(&fmt.expr).contains("NaiveDateTime::parse_from_str"));
 
-        let from_ts =
-            lower_intrinsic("datetime_from_timestamp", &["ts".to_string()]).expect("from_timestamp");
+        let from_ts = lower_intrinsic("datetime_from_timestamp", &["ts".to_string()])
+            .expect("from_timestamp");
         assert_eq!(from_ts.required_crate, Some("chrono"));
         assert!(render_expr(&from_ts.expr).contains("DateTime::from_timestamp"));
         assert!(render_expr(&from_ts.expr).contains("ok_or_else"));
@@ -735,7 +796,10 @@ mod tests {
         assert_eq!(render_expr(&version.expr), "\"sifr 0.1.0\".to_string()");
 
         let platform = lower_intrinsic("sys_platform", &[]).expect("sys_platform");
-        assert_eq!(render_expr(&platform.expr), "std::env::consts::OS.to_string()");
+        assert_eq!(
+            render_expr(&platform.expr),
+            "std::env::consts::OS.to_string()"
+        );
 
         let maxsize = lower_intrinsic("sys_maxsize", &[]).expect("sys_maxsize");
         assert_eq!(render_expr(&maxsize.expr), "i64::MAX");
@@ -765,18 +829,16 @@ mod tests {
     #[test]
     fn lowers_html_intrinsics_via_registry() {
         let esc = lower_intrinsic("html_escape", &["s".to_string()]).expect("html_escape");
-        // Structured IR adds .to_string() to string literals
-        assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\".to_string())"));
+        assert!(render_expr(&esc.expr).contains("replace('&', \"&amp;\")"));
 
         let unesc = lower_intrinsic("html_unescape", &["s".to_string()]).expect("html_unescape");
-        // Structured IR adds .to_string() to string literals
-        assert!(render_expr(&unesc.expr).contains("replace(\"&amp;\".to_string(), \"&\".to_string())"));
+        assert!(render_expr(&unesc.expr).contains("replace(\"&amp;\", \"&\")"));
     }
 
     #[test]
     fn lowers_calendar_intrinsics_via_registry() {
-        let leap = lower_intrinsic("calendar_isleap", &["year".to_string()])
-            .expect("calendar_isleap");
+        let leap =
+            lower_intrinsic("calendar_isleap", &["year".to_string()]).expect("calendar_isleap");
         let rendered = render_expr(&leap.expr);
         // Structured IR adds parentheses around binop comparisons
         assert!(rendered.contains("((__y % 4) == 0)"));
@@ -789,14 +851,16 @@ mod tests {
         assert!(render_expr(&weekday.expr).contains("__t = vec![0, 3, 2, 5"));
         assert!(render_expr(&weekday.expr).contains("__t[(__m0 - 1) as usize]"));
 
-        let monthrange = lower_intrinsic("calendar_monthrange", &["y".to_string(), "m".to_string()])
-            .expect("calendar_monthrange");
+        let monthrange =
+            lower_intrinsic("calendar_monthrange", &["y".to_string(), "m".to_string()])
+                .expect("calendar_monthrange");
         assert!(render_expr(&monthrange.expr).contains("vec![__wd, __days]"));
     }
 
     #[test]
     fn lowers_gzip_intrinsics_with_dependency_metadata() {
-        let compress = lower_intrinsic("gzip_compress", &["data".to_string()]).expect("gzip_compress");
+        let compress =
+            lower_intrinsic("gzip_compress", &["data".to_string()]).expect("gzip_compress");
         assert_eq!(compress.required_crate, Some("flate2"));
         assert!(render_expr(&compress.expr).contains("GzEncoder"));
 
@@ -814,14 +878,18 @@ mod tests {
 
         let add = lower_intrinsic(
             "zip_add_file",
-            &["path".to_string(), "name".to_string(), "content".to_string()],
+            &[
+                "path".to_string(),
+                "name".to_string(),
+                "content".to_string(),
+            ],
         )
         .expect("zip_add_file");
         assert_eq!(add.required_crate, Some("zip"));
         assert!(render_expr(&add.expr).contains("start_file"));
 
-        let read =
-            lower_intrinsic("zip_read_file", &["path".to_string(), "name".to_string()]).expect("zip_read_file");
+        let read = lower_intrinsic("zip_read_file", &["path".to_string(), "name".to_string()])
+            .expect("zip_read_file");
         assert_eq!(read.required_crate, Some("zip"));
         assert!(render_expr(&read.expr).contains("ZipArchive::new"));
 
@@ -895,19 +963,19 @@ mod tests {
     fn lowers_hashlib_intrinsics_with_dependency_metadata() {
         let sha1 = lower_intrinsic("sha1", &["s".to_string()]).expect("sha1");
         assert_eq!(sha1.required_crate, Some("sha1"));
-        assert!(render_expr(&sha1.expr).contains("sha1::Sha1::digest"));
+        assert!(render_expr(&sha1.expr).contains("<sha1::Sha1 as sha1::Digest>::digest"));
 
         let sha512 = lower_intrinsic("sha512", &["s".to_string()]).expect("sha512");
         assert_eq!(sha512.required_crate, Some("sha2"));
-        assert!(render_expr(&sha512.expr).contains("sha2::Sha512::digest"));
+        assert!(render_expr(&sha512.expr).contains("<sha2::Sha512 as sha2::Digest>::digest"));
 
         let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
         assert_eq!(sha224.required_crate, Some("sha2"));
-        assert!(render_expr(&sha224.expr).contains("sha2::Sha224::digest"));
+        assert!(render_expr(&sha224.expr).contains("<sha2::Sha224 as sha2::Digest>::digest"));
 
         let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
         assert_eq!(sha384.required_crate, Some("sha2"));
-        assert!(render_expr(&sha384.expr).contains("sha2::Sha384::digest"));
+        assert!(render_expr(&sha384.expr).contains("<sha2::Sha384 as sha2::Digest>::digest"));
 
         let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
         assert_eq!(blake2b.required_crate, Some("blake2"));

@@ -1,5 +1,8 @@
 //! Statement lowering scaffolds for the IR migration.
 
+use crate::helpers::{
+    codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var, detect_is_not_none_var,
+};
 use crate::{
     try_lower_leaf_expr, CodegenError, RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt,
     RustType,
@@ -7,7 +10,6 @@ use crate::{
 use sifr_hir::{HirExpr, HirPattern, HirStmt};
 use sifr_type_system::Type;
 use std::collections::HashSet;
-use std::fmt::Write as _;
 
 pub fn lower_stmt_raw(raw: &str) -> Result<Vec<RustStmt>, CodegenError> {
     Ok(vec![RustStmt::RawCode(raw.to_string())])
@@ -94,14 +96,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
     };
     match stmt {
         HirStmt::Expr { expr } => try_lower_expr_stmt(expr),
-        HirStmt::Let { name, ty, value, .. } if try_lower_simple_let_value(ty, value).is_some() => {
-            Some(vec![RustStmt::Let {
-                mutable: bindings.mutated_vars.contains(name),
-                name: name.clone(),
-                ty: Some(crate::sifr_type_to_rust_type(ty)),
-                value: try_lower_simple_let_value(ty, value)?,
-            }])
-        }
+        HirStmt::Let {
+            name, ty, value, ..
+        } if try_lower_simple_let_value(ty, value).is_some() => Some(vec![RustStmt::Let {
+            mutable: bindings.mutated_vars.contains(name),
+            name: name.clone(),
+            ty: Some(crate::sifr_type_to_rust_type(ty)),
+            value: try_lower_simple_let_value(ty, value)?,
+        }]),
         HirStmt::Assign { name, value }
             if try_lower_simple_assign_value(value, bindings.borrowed_params).is_some() =>
         {
@@ -173,7 +175,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
                 None
             };
             Some(vec![RustStmt::Assert {
-                cond: try_lower_simple_condition_test_expr(test)?,
+                cond: try_lower_simple_condition_test_expr(test, bindings.borrowed_params)?,
                 msg: lowered_msg,
             }])
         }
@@ -186,7 +188,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             then_body,
             elif_clauses,
             else_body: maybe_else_body,
-        } => Some(vec![try_lower_simple_if_stmt(
+        } => try_lower_simple_if_stmt(
             condition,
             then_body,
             elif_clauses,
@@ -194,7 +196,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             in_loop_with_else,
             bindings,
             ctx,
-        )?]),
+        ),
         HirStmt::While {
             condition,
             body,
@@ -237,7 +239,9 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             index,
             value,
             field_ty,
-        } => try_lower_simple_attribute_subscript_assign_stmt(object, field, index, value, field_ty),
+        } => {
+            try_lower_simple_attribute_subscript_assign_stmt(object, field, index, value, field_ty)
+        }
         HirStmt::SubscriptAssign {
             object,
             index,
@@ -263,9 +267,9 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::With { items, body } => {
             try_lower_simple_with_stmt(items, body, in_loop_with_else, bindings, ctx)
         }
-        HirStmt::Match {
-            subject, arms, ..
-        } => try_lower_simple_match_stmt(subject, arms, in_loop_with_else, bindings, ctx),
+        HirStmt::Match { subject, arms, .. } => {
+            try_lower_simple_match_stmt(subject, arms, in_loop_with_else, bindings, ctx)
+        }
         HirStmt::TryExcept { .. } | HirStmt::NestedFunction { .. } => None,
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
@@ -315,7 +319,10 @@ fn tuple_unpack_pattern(targets: &[(String, Type)]) -> String {
     format!("({names})")
 }
 
-fn try_lower_simple_tuple_unpack_stmt(targets: &[(String, Type)], value: &HirExpr) -> Option<Vec<RustStmt>> {
+fn try_lower_simple_tuple_unpack_stmt(
+    targets: &[(String, Type)],
+    value: &HirExpr,
+) -> Option<Vec<RustStmt>> {
     if targets.is_empty() {
         return None;
     }
@@ -332,41 +339,96 @@ fn try_lower_simple_star_unpack_stmt(
     value: &HirExpr,
 ) -> Option<Vec<RustStmt>> {
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
-    let mut raw = String::new();
-    writeln!(
-        &mut raw,
-        "let _star_tmp = {}.clone();",
-        crate::render_expr(&lowered_value)
-    )
-    .ok()?;
+    let mut lowered = vec![RustStmt::Let {
+        mutable: false,
+        name: "_star_tmp".to_string(),
+        ty: None,
+        value: RustExpr::MethodCall {
+            receiver: Box::new(lowered_value),
+            method: "clone".to_string(),
+            args: vec![],
+        },
+    }];
+
+    let tmp_ident = || RustExpr::Ident("_star_tmp".to_string());
+    let tmp_len = || RustExpr::MethodCall {
+        receiver: Box::new(tmp_ident()),
+        method: "len".to_string(),
+        args: vec![],
+    };
 
     for (idx, (name, _)) in before.iter().enumerate() {
-        writeln!(&mut raw, "let {name} = _star_tmp[{idx}].clone();").ok()?;
+        lowered.push(RustStmt::Let {
+            mutable: false,
+            name: name.clone(),
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Index {
+                    expr: Box::new(tmp_ident()),
+                    index: Box::new(RustExpr::Literal(RustLiteral::Int(
+                        i64::try_from(idx).ok()?,
+                    ))),
+                }),
+                method: "clone".to_string(),
+                args: vec![],
+            },
+        });
     }
 
     let (star_name, _) = star;
-    if after.is_empty() {
-        writeln!(&mut raw, "let {star_name} = _star_tmp[{}..].to_vec();", before.len()).ok()?;
+    let slice_end = if after.is_empty() {
+        tmp_len()
     } else {
-        writeln!(
-            &mut raw,
-            "let {star_name} = _star_tmp[{}.._star_tmp.len() - {}].to_vec();",
-            before.len(),
-            after.len()
-        )
-        .ok()?;
-    }
+        RustExpr::BinOp {
+            left: Box::new(tmp_len()),
+            op: "-".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(
+                i64::try_from(after.len()).ok()?,
+            ))),
+        }
+    };
+    lowered.push(RustStmt::Let {
+        mutable: false,
+        name: star_name.clone(),
+        ty: None,
+        value: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Index {
+                expr: Box::new(tmp_ident()),
+                index: Box::new(RustExpr::Range {
+                    start: Box::new(RustExpr::Literal(RustLiteral::Int(
+                        i64::try_from(before.len()).ok()?,
+                    ))),
+                    end: Box::new(slice_end),
+                }),
+            }),
+            method: "to_vec".to_string(),
+            args: vec![],
+        },
+    });
 
     for (idx, (name, _)) in after.iter().enumerate() {
-        writeln!(
-            &mut raw,
-            "let {name} = _star_tmp[_star_tmp.len() - {}].clone();",
-            after.len() - idx
-        )
-        .ok()?;
+        lowered.push(RustStmt::Let {
+            mutable: false,
+            name: name.clone(),
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Index {
+                    expr: Box::new(tmp_ident()),
+                    index: Box::new(RustExpr::BinOp {
+                        left: Box::new(tmp_len()),
+                        op: "-".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(
+                            i64::try_from(after.len() - idx).ok()?,
+                        ))),
+                    }),
+                }),
+                method: "clone".to_string(),
+                args: vec![],
+            },
+        });
     }
 
-    Some(vec![RustStmt::RawCode(raw)])
+    Some(lowered)
 }
 
 fn try_lower_loop_else_stmts(
@@ -435,7 +497,10 @@ fn try_lower_simple_with_stmt(
     Some(vec![RustStmt::Block(block)])
 }
 
-fn try_lower_simple_yield_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
+fn try_lower_simple_yield_stmt(
+    value: &HirExpr,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
     if ctx.in_generator_closure {
         return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -458,6 +523,15 @@ fn try_lower_simple_match_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
+    // Keep fallback emission for string literal match patterns.
+    // Fallback uses guarded matching that correctly handles `String` subjects.
+    if arms
+        .iter()
+        .any(|arm| pattern_contains_string_literal(&arm.pattern))
+    {
+        return None;
+    }
+
     let lowered_subject = try_lower_leaf_or_name_expr(subject)?;
     let lowered_arms = arms
         .iter()
@@ -488,6 +562,20 @@ fn try_lower_simple_match_stmt(
         expr: lowered_subject,
         arms: lowered_arms,
     }])
+}
+
+fn pattern_contains_string_literal(pattern: &HirPattern) -> bool {
+    match pattern {
+        HirPattern::Literal {
+            value: HirExpr::StringLiteral(_),
+        } => true,
+        HirPattern::Or { patterns } => patterns.iter().any(pattern_contains_string_literal),
+        HirPattern::Tuple { elements } => elements.iter().any(pattern_contains_string_literal),
+        HirPattern::Class { fields, .. } => fields
+            .iter()
+            .any(|(_, pat)| pattern_contains_string_literal(pat)),
+        _ => false,
+    }
 }
 
 fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, Vec<String>)> {
@@ -554,7 +642,7 @@ fn try_lower_simple_while_stmt(
     if let Some(else_body) = else_body {
         return try_lower_loop_else_stmts(
             RustStmt::While {
-                cond: try_lower_simple_condition_test_expr(condition)?,
+                cond: try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
                 body: try_lower_simple_stmt_block(
                     body,
@@ -572,7 +660,7 @@ fn try_lower_simple_while_stmt(
     }
 
     Some(vec![RustStmt::While {
-        cond: try_lower_simple_condition_test_expr(condition)?,
+        cond: try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?,
         // Entering a nested while without else resets loop-else break marker context.
         body: try_lower_simple_stmt_block(
             body,
@@ -601,7 +689,7 @@ fn try_lower_simple_for_stmt(
         return try_lower_loop_else_stmts(
             RustStmt::For {
                 var: target.to_string(),
-                iter: try_lower_leaf_or_name_expr(iter)?,
+                iter: try_lower_simple_for_iter_expr(iter)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
                 body: try_lower_simple_stmt_block(
                     body,
@@ -620,7 +708,7 @@ fn try_lower_simple_for_stmt(
 
     Some(vec![RustStmt::For {
         var: target.to_string(),
-        iter: try_lower_leaf_or_name_expr(iter)?,
+        iter: try_lower_simple_for_iter_expr(iter)?,
         // Entering a nested for without else resets loop-else break marker context.
         body: try_lower_simple_stmt_block(
             body,
@@ -632,6 +720,51 @@ fn try_lower_simple_for_stmt(
     }])
 }
 
+fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
+    let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
+    Some(match resolve_alias_type(iter.ty()) {
+        Type::List(_) => RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "iter".to_string(),
+                args: vec![],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        },
+        Type::Dict(_, _) => RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "keys".to_string(),
+                args: vec![],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        },
+        Type::Str => RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "chars".to_string(),
+                args: vec![],
+            }),
+            method: "map".to_string(),
+            args: vec![RustExpr::Closure {
+                params: vec![RustParam::Named {
+                    name: "c".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("c".to_string())),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                }),
+                is_move: false,
+            }],
+        },
+        _ => lowered_iter,
+    })
+}
+
 fn try_lower_simple_if_stmt(
     condition: &HirExpr,
     then_body: &[HirStmt],
@@ -640,7 +773,38 @@ fn try_lower_simple_if_stmt(
     in_loop_with_else: bool,
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
-) -> Option<RustStmt> {
+) -> Option<Vec<RustStmt>> {
+    if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body) {
+        if let Some(option_var) = detect_is_none_var(condition) {
+            let lowered_cond =
+                try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?;
+            let lowered_then_body = try_lower_simple_stmt_block(
+                then_body,
+                in_loop_with_else,
+                bindings.mutated_vars,
+                bindings.borrowed_params,
+                ctx,
+            )?;
+            return Some(vec![
+                RustStmt::If {
+                    cond: lowered_cond,
+                    then_body: lowered_then_body,
+                    else_body: None,
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: option_var.clone(),
+                    ty: None,
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(option_var)),
+                        method: "unwrap".to_string(),
+                        args: vec![],
+                    },
+                },
+            ]);
+        }
+    }
+
     let mut nested_else = if let Some(else_body) = maybe_else_body {
         Some(try_lower_simple_stmt_block(
             else_body,
@@ -664,14 +828,14 @@ fn try_lower_simple_if_stmt(
         )?]);
     }
 
-    try_lower_simple_if_clause(
+    Some(vec![try_lower_simple_if_clause(
         condition,
         then_body,
         nested_else,
         in_loop_with_else,
         bindings,
         ctx,
-    )
+    )?])
 }
 
 fn try_lower_simple_if_clause(
@@ -690,6 +854,19 @@ fn try_lower_simple_if_clause(
         ctx,
     )?;
 
+    if let Some(option_var) = detect_is_not_none_var(condition) {
+        return Some(RustStmt::IfLet {
+            pattern: format!("Some({option_var})"),
+            expr: RustExpr::Ident(option_var),
+            then_body: lowered_then_body,
+            else_body: nested_else,
+        });
+    }
+
+    if let Some(option_vars) = detect_and_not_none_vars(condition) {
+        return lower_if_not_none_chain(&option_vars, lowered_then_body, nested_else);
+    }
+
     if let Some(option_var) = detect_option_truthiness_alias(condition) {
         return Some(RustStmt::IfLet {
             pattern: format!("Some({option_var})"),
@@ -699,14 +876,39 @@ fn try_lower_simple_if_clause(
         });
     }
 
+    if let Some(option_var) = detect_is_none_var(condition) {
+        let lowered_cond =
+            try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?;
+        let lowered_else = nested_else.map(|else_body| {
+            vec![RustStmt::IfLet {
+                pattern: format!("Some({option_var})"),
+                expr: RustExpr::Ident(option_var.clone()),
+                then_body: else_body,
+                else_body: None,
+            }]
+        });
+        return Some(RustStmt::If {
+            cond: lowered_cond,
+            then_body: lowered_then_body,
+            else_body: lowered_else,
+        });
+    }
+
     Some(RustStmt::If {
-        cond: try_lower_leaf_expr(condition)?,
+        cond: try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?,
         then_body: lowered_then_body,
         else_body: nested_else,
     })
 }
 
-fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
+fn try_lower_simple_condition_test_expr(
+    expr: &HirExpr,
+    borrowed_params: &HashSet<String>,
+) -> Option<RustExpr> {
+    // Preserve fallback semantics for borrowed-param comparisons (e.g. `&String == String`).
+    if expr_uses_borrowed_name(expr, borrowed_params) {
+        return None;
+    }
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }
@@ -716,6 +918,29 @@ fn try_lower_simple_condition_test_expr(expr: &HirExpr) -> Option<RustExpr> {
         method: "is_some".to_string(),
         args: vec![],
     })
+}
+
+fn expr_uses_borrowed_name(expr: &HirExpr, borrowed_params: &HashSet<String>) -> bool {
+    match expr {
+        HirExpr::Name { name, .. } => borrowed_params.contains(name),
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            expr_uses_borrowed_name(left, borrowed_params)
+                || comparators
+                    .iter()
+                    .any(|c| expr_uses_borrowed_name(c, borrowed_params))
+        }
+        HirExpr::BoolOp { values, .. } => values
+            .iter()
+            .any(|v| expr_uses_borrowed_name(v, borrowed_params)),
+        HirExpr::UnaryOp { operand, .. } => expr_uses_borrowed_name(operand, borrowed_params),
+        HirExpr::BinOp { left, right, .. } => {
+            expr_uses_borrowed_name(left, borrowed_params)
+                || expr_uses_borrowed_name(right, borrowed_params)
+        }
+        _ => false,
+    }
 }
 
 fn resolve_alias_type(ty: &Type) -> &Type {
@@ -744,12 +969,42 @@ fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
     None
 }
 
+fn lower_if_not_none_chain(
+    option_vars: &[String],
+    lowered_then_body: Vec<RustStmt>,
+    nested_else: Option<Vec<RustStmt>>,
+) -> Option<RustStmt> {
+    let mut chain_then = lowered_then_body;
+    for option_var in option_vars.iter().rev() {
+        chain_then = vec![RustStmt::IfLet {
+            pattern: format!("Some({option_var})"),
+            expr: RustExpr::Ident(option_var.clone()),
+            then_body: chain_then,
+            else_body: None,
+        }];
+    }
+
+    let mut chain_root = chain_then.into_iter().next()?;
+    if let RustStmt::IfLet { else_body, .. } = &mut chain_root {
+        *else_body = nested_else;
+    }
+    Some(chain_root)
+}
+
 fn is_alias_equivalent_type(left: &Type, right: &Type) -> bool {
     left == right || resolve_alias_type(left) == resolve_alias_type(right)
 }
 
 fn is_none_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::None)
+}
+
+fn is_okwrap_none_expr(expr: &HirExpr) -> bool {
+    matches!(
+        expr,
+        HirExpr::OkWrap { value, .. }
+            if matches!(value.as_ref(), HirExpr::NoneLiteral) || is_none_type(value.ty())
+    )
 }
 
 fn try_lower_name_ident_expr(expr: &HirExpr) -> Option<RustExpr> {
@@ -1067,7 +1322,10 @@ fn build_subscript_augassign_elem_stmt(op: &str, lowered_value: RustExpr) -> Rus
     }
 }
 
-fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>) -> Option<Vec<RustStmt>> {
+fn try_lower_simple_return_stmt(
+    value: &HirExpr,
+    ctx: SimpleStmtLoweringCtx<'_>,
+) -> Option<Vec<RustStmt>> {
     if ctx.in_display_impl || ctx.in_class_scope {
         return None;
     }
@@ -1078,7 +1336,9 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
 
     if option_return {
         if is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
-            return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(value)?))]);
+            return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(
+                value,
+            )?))]);
         }
         if matches!(value, HirExpr::NoneLiteral) {
             return Some(vec![RustStmt::Return(Some(RustExpr::Literal(
@@ -1099,6 +1359,25 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
             args: vec![lowered],
         }))]);
     }
+
+    if matches!(value, HirExpr::NoneLiteral)
+        || is_none_type(value.ty())
+        || is_okwrap_none_expr(value)
+    {
+        if let Some(return_ty) = ctx.return_type {
+            match resolve_alias_type(return_ty) {
+                Type::Result(ok_ty, _) if is_none_type(ok_ty.as_ref()) => {
+                    return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                        args: vec![RustExpr::Literal(RustLiteral::Unit)],
+                    }))]);
+                }
+                Type::None => return Some(vec![RustStmt::Return(None)]),
+                _ => {}
+            }
+        }
+    }
+
     if let Some(return_ty) = ctx.return_type {
         if let Type::Union(members) = resolve_alias_type(return_ty) {
             if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
@@ -1120,23 +1399,19 @@ fn try_lower_simple_return_stmt(value: &HirExpr, ctx: SimpleStmtLoweringCtx<'_>)
             args: vec![],
         }))]);
     }
-    Some(vec![RustStmt::Return(Some(try_lower_leaf_or_name_expr(value)?))])
+    Some(vec![RustStmt::Return(Some(try_lower_leaf_or_name_expr(
+        value,
+    )?))])
 }
 
 fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     if is_option_like_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::None));
     }
-    if is_option_like_type(ty)
-        && is_option_like_type(value.ty())
-        && !is_none_type(value.ty())
-    {
+    if is_option_like_type(ty) && is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
         return try_lower_name_ident_expr(value);
     }
-    if is_option_like_type(ty)
-        && !is_option_like_type(value.ty())
-        && !is_none_type(value.ty())
-    {
+    if is_option_like_type(ty) && !is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
         return Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
             args: vec![try_lower_leaf_or_name_expr(value)?],
@@ -1163,7 +1438,10 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     try_lower_leaf_or_name_expr(value)
 }
 
-fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<String>) -> Option<RustExpr> {
+fn try_lower_simple_assign_value(
+    value: &HirExpr,
+    borrowed_params: &HashSet<String>,
+) -> Option<RustExpr> {
     // Preserve legacy behavior where TypeVar assignment from borrowed params appends `.clone()`.
     if matches!(value.ty(), Type::TypeVar(_))
         && matches!(value, HirExpr::Name { name, .. } if borrowed_params.contains(name))
@@ -1173,7 +1451,11 @@ fn try_lower_simple_assign_value(value: &HirExpr, borrowed_params: &HashSet<Stri
     try_lower_leaf_or_name_expr(value)
 }
 
-fn try_lower_simple_field_assign_stmt(object: &str, field: &str, value: &HirExpr) -> Option<Vec<RustStmt>> {
+fn try_lower_simple_field_assign_stmt(
+    object: &str,
+    field: &str,
+    value: &HirExpr,
+) -> Option<Vec<RustStmt>> {
     if object == "self" {
         return None;
     }
@@ -1200,7 +1482,11 @@ fn try_lower_simple_aug_assign_value(op: &str, value: &HirExpr) -> Option<RustEx
     try_lower_leaf_or_name_expr(value)
 }
 
-fn try_lower_simple_augassign_stmt(target: RustExpr, op: &str, value: &HirExpr) -> Option<Vec<RustStmt>> {
+fn try_lower_simple_augassign_stmt(
+    target: RustExpr,
+    op: &str,
+    value: &HirExpr,
+) -> Option<Vec<RustStmt>> {
     Some(vec![RustStmt::AugAssign {
         target,
         op: normalize_augassign_op(op),
@@ -1240,13 +1526,9 @@ mod tests {
             .expect("pass lowered");
         assert!(pass.is_empty());
 
-        let cont = try_lower_simple_stmt(
-            &HirStmt::Continue,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("continue lowered");
+        let cont =
+            try_lower_simple_stmt(&HirStmt::Continue, false, &HashSet::new(), &HashSet::new())
+                .expect("continue lowered");
         assert!(matches!(cont[0], RustStmt::Continue));
 
         let brk = try_lower_simple_stmt(&HirStmt::Break, true, &HashSet::new(), &HashSet::new())
@@ -1277,13 +1559,8 @@ mod tests {
             name: "x".to_string(),
             value: HirExpr::IntLiteral(2),
         };
-        let lowered = try_lower_simple_stmt(
-            &assign_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assign lowered");
+        let lowered = try_lower_simple_stmt(&assign_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assign lowered");
         assert!(matches!(lowered[0], RustStmt::Assign { .. }));
     }
 
@@ -1340,22 +1617,14 @@ mod tests {
     #[test]
     fn lowers_simple_tuple_unpack_stmt() {
         let tuple_unpack = HirStmt::TupleUnpack {
-            targets: vec![
-                ("a".to_string(), Type::Int),
-                ("b".to_string(), Type::Bool),
-            ],
+            targets: vec![("a".to_string(), Type::Int), ("b".to_string(), Type::Bool)],
             value: HirExpr::TupleLiteral {
                 elements: vec![HirExpr::IntLiteral(1), HirExpr::BoolLiteral(true)],
                 ty: Type::Tuple(vec![Type::Int, Type::Bool]),
             },
         };
-        let lowered = try_lower_simple_stmt(
-            &tuple_unpack,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("tuple unpack lowered");
+        let lowered = try_lower_simple_stmt(&tuple_unpack, false, &HashSet::new(), &HashSet::new())
+            .expect("tuple unpack lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -1369,10 +1638,7 @@ mod tests {
     #[test]
     fn does_not_lower_tuple_unpack_with_non_leaf_value() {
         let tuple_unpack = HirStmt::TupleUnpack {
-            targets: vec![
-                ("a".to_string(), Type::Int),
-                ("b".to_string(), Type::Bool),
-            ],
+            targets: vec![("a".to_string(), Type::Int), ("b".to_string(), Type::Bool)],
             value: HirExpr::Call {
                 func: "pair".to_string(),
                 args: vec![],
@@ -1381,13 +1647,8 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &tuple_unpack,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&tuple_unpack, false, &HashSet::new(), &HashSet::new(),)
+                .is_none()
         );
     }
 
@@ -1526,9 +1787,7 @@ mod tests {
             field_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
         };
 
-        assert!(
-            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 
     #[test]
@@ -1545,9 +1804,7 @@ mod tests {
             field_ty: Type::List(Box::new(Type::Int)),
         };
 
-        assert!(
-            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 
     #[test]
@@ -1670,9 +1927,7 @@ mod tests {
             object_ty: Type::List(Box::new(Type::Int)),
         };
 
-        assert!(
-            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 
     #[test]
@@ -1870,9 +2125,7 @@ mod tests {
             object_ty: Type::List(Box::new(Type::List(Box::new(Type::Int)))),
         };
 
-        assert!(
-            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 
     #[test]
@@ -2158,9 +2411,7 @@ mod tests {
             object_ty: Type::List(Box::new(Type::Int)),
         };
 
-        assert!(
-            try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     }
 
     #[test]
@@ -2179,13 +2430,8 @@ mod tests {
             is_mutable: false,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let not-bool name rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let not-bool name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2216,13 +2462,8 @@ mod tests {
             },
         };
 
-        let lowered = try_lower_simple_stmt(
-            &assign_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assign not-bool name rhs lowered");
+        let lowered = try_lower_simple_stmt(&assign_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assign not-bool name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2254,13 +2495,8 @@ mod tests {
             is_mutable: false,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let not-option name rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let not-option name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2293,13 +2529,8 @@ mod tests {
             },
         };
 
-        let lowered = try_lower_simple_stmt(
-            &assign_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assign not-option name rhs lowered");
+        let lowered = try_lower_simple_stmt(&assign_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assign not-option name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2328,13 +2559,8 @@ mod tests {
             },
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let name rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2356,13 +2582,8 @@ mod tests {
             value: HirExpr::IntLiteral(7),
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let alias-int literal rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let alias-int literal rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2393,13 +2614,8 @@ mod tests {
             },
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let alias-enum name rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let alias-enum name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2420,13 +2636,8 @@ mod tests {
             value: HirExpr::NoneLiteral,
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let none lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let none lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2448,13 +2659,8 @@ mod tests {
             value: HirExpr::NoneLiteral,
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let alias-none lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let alias-none lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2478,13 +2684,8 @@ mod tests {
             },
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let none-name lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let none-name lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2509,13 +2710,8 @@ mod tests {
             },
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("let alias-none-name lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("let alias-none-name lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2537,13 +2733,8 @@ mod tests {
             value: HirExpr::NoneLiteral,
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("option let none lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("option let none lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2568,13 +2759,8 @@ mod tests {
             value: HirExpr::NoneLiteral,
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("alias-option let none lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("alias-option let none lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2599,13 +2785,8 @@ mod tests {
             },
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("option let name rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("option let name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2629,13 +2810,8 @@ mod tests {
             value: HirExpr::IntLiteral(7),
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("option let leaf rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("option let leaf rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2662,13 +2838,8 @@ mod tests {
             },
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("option let option name rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("option let option name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2696,13 +2867,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &let_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -2721,13 +2886,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &let_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -2743,13 +2902,8 @@ mod tests {
             },
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("option let none-name rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("option let none-name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2775,13 +2929,8 @@ mod tests {
             },
             is_mutable: false,
         };
-        let lowered = try_lower_simple_stmt(
-            &let_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("option let alias-none-name rhs lowered");
+        let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("option let alias-none-name rhs lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2809,13 +2958,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &let_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -2828,13 +2971,8 @@ mod tests {
                 ty: Type::Int,
             },
         };
-        let lowered = try_lower_simple_stmt(
-            &assign_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("name assign lowered");
+        let lowered = try_lower_simple_stmt(&assign_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("name assign lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2855,15 +2993,13 @@ mod tests {
             },
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &assign_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::from(["param".to_string()]),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(
+            &assign_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::from(["param".to_string()]),
+        )
+        .is_none());
     }
 
     #[test]
@@ -2874,13 +3010,8 @@ mod tests {
             value: HirExpr::IntLiteral(2),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("augassign lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("augassign lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2900,15 +3031,7 @@ mod tests {
             value: HirExpr::StringLiteral("a".to_string()),
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -2919,13 +3042,8 @@ mod tests {
             value: HirExpr::IntLiteral(1),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("numeric += lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("numeric += lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2948,13 +3066,8 @@ mod tests {
             },
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("numeric name += lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("numeric name += lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -2977,13 +3090,8 @@ mod tests {
             },
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("alias numeric name += lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("alias numeric name += lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -3006,15 +3114,7 @@ mod tests {
             },
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -3025,13 +3125,8 @@ mod tests {
             value: HirExpr::IntLiteral(2),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("floor-div augassign lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("floor-div augassign lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -3054,13 +3149,8 @@ mod tests {
             },
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("alias numeric //= lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("alias numeric //= lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -3080,15 +3170,7 @@ mod tests {
             value: HirExpr::IntLiteral(3),
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -3134,15 +3216,7 @@ mod tests {
             },
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -3263,13 +3337,8 @@ mod tests {
     #[test]
     fn lowers_simple_bare_return_without_option_context() {
         let stmt = HirStmt::Return { value: None };
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("bare return lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("bare return lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(lowered[0], RustStmt::Return(None)));
     }
@@ -3287,7 +3356,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("bare return lowered for option context");
@@ -3314,7 +3383,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("bare return lowered for alias option context");
@@ -3328,21 +3397,19 @@ mod tests {
     #[test]
     fn does_not_lower_bare_return_in_display_impl_context() {
         let stmt = HirStmt::Return { value: None };
-        assert!(
-            try_lower_simple_stmt_with_ctx(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-                SimpleStmtLoweringCtx {
-                    return_type: None,
-                    in_display_impl: true,
-                    in_class_scope: false,
+        assert!(try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: None,
+                in_display_impl: true,
+                in_class_scope: false,
                 in_generator_closure: false,
-                },
-            )
-            .is_none()
-        );
+            },
+        )
+        .is_none());
     }
 
     #[test]
@@ -3350,13 +3417,8 @@ mod tests {
         let stmt = HirStmt::Return {
             value: Some(HirExpr::IntLiteral(5)),
         };
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("return with value lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("return with value lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(lowered[0], RustStmt::Return(Some(_))));
     }
@@ -3369,13 +3431,8 @@ mod tests {
                 ty: Type::Int,
             }),
         };
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("plain return name lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("plain return name lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -3398,14 +3455,16 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("option return leaf lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::Return(Some(RustExpr::FnCall { func, .. })) => {
-                assert!(matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Some".to_string()]));
+                assert!(
+                    matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Some".to_string()])
+                );
             }
             _ => panic!("expected return Some(...)"),
         }
@@ -3429,7 +3488,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("option return name lowered");
@@ -3459,7 +3518,7 @@ mod tests {
                 return_type: Some(&Type::Int),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("plain return option name lowered");
@@ -3494,7 +3553,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("option passthrough name return lowered");
@@ -3526,7 +3585,7 @@ mod tests {
                 return_type: Some(&alias_option),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("alias option passthrough name return lowered");
@@ -3547,21 +3606,19 @@ mod tests {
             }),
         };
         let option_ret = Type::Union(vec![Type::Int, Type::None]);
-        assert!(
-            try_lower_simple_stmt_with_ctx(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-                SimpleStmtLoweringCtx {
-                    return_type: Some(&option_ret),
-                    in_display_impl: false,
-                    in_class_scope: false,
+        assert!(try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
                 in_generator_closure: false,
-                },
-            )
-            .is_none()
-        );
+            },
+        )
+        .is_none());
     }
 
     #[test]
@@ -3579,7 +3636,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("return None lowered for option context");
@@ -3608,7 +3665,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("return none-typed name lowered for option context");
@@ -3638,7 +3695,7 @@ mod tests {
                 return_type: Some(&option_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("return alias-none name lowered for option context");
@@ -3659,21 +3716,19 @@ mod tests {
             }),
         };
         let option_ret = Type::Union(vec![Type::Int, Type::None]);
-        assert!(
-            try_lower_simple_stmt_with_ctx(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-                SimpleStmtLoweringCtx {
-                    return_type: Some(&option_ret),
-                    in_display_impl: false,
-                    in_class_scope: false,
+        assert!(try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
                 in_generator_closure: false,
-                },
-            )
-            .is_none()
-        );
+            },
+        )
+        .is_none());
     }
 
     #[test]
@@ -3687,21 +3742,19 @@ mod tests {
             }),
         };
         let option_ret = Type::Union(vec![Type::Int, Type::None]);
-        assert!(
-            try_lower_simple_stmt_with_ctx(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-                SimpleStmtLoweringCtx {
-                    return_type: Some(&option_ret),
-                    in_display_impl: false,
-                    in_class_scope: false,
+        assert!(try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
                 in_generator_closure: false,
-                },
-            )
-            .is_none()
-        );
+            },
+        )
+        .is_none());
     }
 
     #[test]
@@ -3719,7 +3772,7 @@ mod tests {
                 return_type: Some(&union_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("non-option union leaf return lowered");
@@ -3750,7 +3803,7 @@ mod tests {
                 return_type: Some(&union_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("non-option union name return lowered");
@@ -3782,7 +3835,7 @@ mod tests {
                 return_type: Some(&union_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("alias non-option union leaf return lowered");
@@ -3819,7 +3872,7 @@ mod tests {
                 return_type: Some(&union_ret),
                 in_display_impl: false,
                 in_class_scope: false,
-            in_generator_closure: false,
+                in_generator_closure: false,
             },
         )
         .expect("alias non-option union name return lowered");
@@ -3844,21 +3897,19 @@ mod tests {
             }),
         };
         let union_ret = Type::Union(vec![Type::Int, Type::Str]);
-        assert!(
-            try_lower_simple_stmt_with_ctx(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-                SimpleStmtLoweringCtx {
-                    return_type: Some(&union_ret),
-                    in_display_impl: false,
-                    in_class_scope: false,
+        assert!(try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&union_ret),
+                in_display_impl: false,
+                in_class_scope: false,
                 in_generator_closure: false,
-                },
-            )
-            .is_none()
-        );
+            },
+        )
+        .is_none());
     }
 
     #[test]
@@ -3866,21 +3917,19 @@ mod tests {
         let stmt = HirStmt::Return {
             value: Some(HirExpr::IntLiteral(5)),
         };
-        assert!(
-            try_lower_simple_stmt_with_ctx(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-                SimpleStmtLoweringCtx {
-                    return_type: Some(&Type::Int),
-                    in_display_impl: false,
-                    in_class_scope: true,
+        assert!(try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&Type::Int),
+                in_display_impl: false,
+                in_class_scope: true,
                 in_generator_closure: false,
-                },
-            )
-            .is_none()
-        );
+            },
+        )
+        .is_none());
     }
 
     #[test]
@@ -3893,21 +3942,19 @@ mod tests {
             }),
         };
         let option_ret = Type::Union(vec![Type::Int, Type::None]);
-        assert!(
-            try_lower_simple_stmt_with_ctx(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-                SimpleStmtLoweringCtx {
-                    return_type: Some(&option_ret),
-                    in_display_impl: false,
-                    in_class_scope: false,
+        assert!(try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
                 in_generator_closure: false,
-                },
-            )
-            .is_none()
-        );
+            },
+        )
+        .is_none());
     }
 
     #[test]
@@ -3916,18 +3963,15 @@ mod tests {
             value: HirExpr::IntLiteral(7),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("raise lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("raise lowered");
 
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::Return(Some(RustExpr::FnCall { func, .. })) => {
-                assert!(matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Err".to_string()]));
+                assert!(
+                    matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Err".to_string()])
+                );
             }
             _ => panic!("expected return Err(...)"),
         }
@@ -3943,15 +3987,7 @@ mod tests {
             },
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -3963,17 +3999,14 @@ mod tests {
             },
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("raise name lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("raise name lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::Return(Some(RustExpr::FnCall { func, args })) => {
-                assert!(matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Err".to_string()]));
+                assert!(
+                    matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Err".to_string()])
+                );
                 assert!(matches!(args.first(), Some(RustExpr::Ident(name)) if name == "e"));
             }
             _ => panic!("expected return Err(e)"),
@@ -3987,19 +4020,11 @@ mod tests {
             msg: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert lowered");
 
         assert_eq!(lowered.len(), 1);
-        assert!(matches!(
-            lowered[0],
-            RustStmt::Assert { msg: None, .. }
-        ));
+        assert!(matches!(lowered[0], RustStmt::Assert { msg: None, .. }));
     }
 
     #[test]
@@ -4009,13 +4034,8 @@ mod tests {
             msg: Some(HirExpr::StringLiteral("boom".to_string())),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert with msg lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert with msg lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4036,13 +4056,8 @@ mod tests {
             }),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert with name msg lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert with name msg lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4064,15 +4079,7 @@ mod tests {
             msg: None,
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -4085,13 +4092,8 @@ mod tests {
             msg: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert bool name test lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert bool name test lowered");
 
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
@@ -4117,13 +4119,8 @@ mod tests {
             msg: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert not-bool name test lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert not-bool name test lowered");
 
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
@@ -4152,22 +4149,18 @@ mod tests {
             msg: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert not-option truthiness name test lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert not-option truthiness name test lowered");
 
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::Assert {
-                cond: RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                },
+                cond:
+                    RustExpr::MethodCall {
+                        receiver,
+                        method,
+                        args,
+                    },
                 msg: None,
             } => {
                 assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
@@ -4188,22 +4181,18 @@ mod tests {
             msg: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert option truthiness name test lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert option truthiness name test lowered");
 
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::Assert {
-                cond: RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                },
+                cond:
+                    RustExpr::MethodCall {
+                        receiver,
+                        method,
+                        args,
+                    },
                 msg: None,
             } => {
                 assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
@@ -4229,13 +4218,8 @@ mod tests {
             msg: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert option is-none compare lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert option is-none compare lowered");
 
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
@@ -4268,13 +4252,8 @@ mod tests {
             msg: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert option is-not-none compare lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert option is-not-none compare lowered");
 
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
@@ -4307,15 +4286,7 @@ mod tests {
             msg: None,
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -4333,15 +4304,7 @@ mod tests {
             msg: None,
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -4360,15 +4323,7 @@ mod tests {
             msg: None,
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -4382,15 +4337,7 @@ mod tests {
             msg: None,
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -4403,13 +4350,8 @@ mod tests {
             }),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert with option msg lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert with option msg lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4433,13 +4375,8 @@ mod tests {
             }),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("assert with alias option msg lowered");
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("assert with alias option msg lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4461,15 +4398,7 @@ mod tests {
             }),
         };
 
-        assert!(
-            try_lower_simple_stmt(
-                &stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
-        );
+        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new(),).is_none());
     }
 
     #[test]
@@ -4485,13 +4414,8 @@ mod tests {
             }]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(lowered[0], RustStmt::If { .. }));
     }
@@ -4508,13 +4432,8 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if with name condition lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if with name condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4541,13 +4460,8 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if with not-bool name condition lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if with not-bool name condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4579,13 +4493,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &if_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -4605,21 +4513,17 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if with not-option truthiness condition lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if with not-option truthiness condition lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::If {
-                cond: RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                },
+                cond:
+                    RustExpr::MethodCall {
+                        receiver,
+                        method,
+                        args,
+                    },
                 ..
             } => {
                 assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
@@ -4647,13 +4551,8 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if with option is-none compare condition lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if with option is-none compare condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4668,6 +4567,59 @@ mod tests {
                 && method == "is_none"
                 && args.is_empty()
         ));
+    }
+
+    #[test]
+    fn lowers_option_is_none_if_with_exiting_body_and_post_unwrap_without_rawcode() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::Compare {
+                left: Box::new(HirExpr::Name {
+                    name: "maybe_x".to_string(),
+                    ty: Type::Union(vec![Type::Int, Type::None]),
+                }),
+                ops: vec!["is".to_string()],
+                comparators: vec![HirExpr::NoneLiteral],
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(0)),
+            }],
+            elif_clauses: vec![],
+            else_body: None,
+        };
+
+        let ret_ty = Type::Int;
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &if_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&ret_ty),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .expect("if with exiting body lowered");
+
+        assert_eq!(lowered.len(), 2);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::If {
+                cond: RustExpr::MethodCall { .. },
+                ..
+            }
+        ));
+        assert!(matches!(
+            lowered[1],
+            RustStmt::Let {
+                ref name,
+                value: RustExpr::MethodCall { ref method, .. },
+                ..
+            } if name == "maybe_x" && method == "unwrap"
+        ));
+        assert!(lowered.iter().all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
     }
 
     #[test]
@@ -4687,26 +4639,61 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if with option is-not-none compare condition lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if with option is-not-none compare condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
-            RustStmt::If {
-                cond: RustExpr::MethodCall {
-                    receiver: ref recv,
-                    ref method,
-                    ref args,
-                },
+            RustStmt::IfLet {
+                ref pattern,
+                expr: RustExpr::Ident(ref name),
                 ..
-            } if matches!(recv.as_ref(), RustExpr::Ident(name) if name == "maybe_x")
-                && method == "is_some"
-                && args.is_empty()
+            } if pattern == "Some(maybe_x)" && name == "maybe_x"
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_if_with_option_and_not_none_chain_condition() {
+        let if_stmt = HirStmt::If {
+            condition: HirExpr::BoolOp {
+                op: "and".to_string(),
+                values: vec![
+                    HirExpr::Compare {
+                        left: Box::new(HirExpr::Name {
+                            name: "a".to_string(),
+                            ty: Type::Union(vec![Type::Int, Type::None]),
+                        }),
+                        ops: vec!["is not".to_string()],
+                        comparators: vec![HirExpr::NoneLiteral],
+                        ty: Type::Bool,
+                    },
+                    HirExpr::Compare {
+                        left: Box::new(HirExpr::Name {
+                            name: "b".to_string(),
+                            ty: Type::Union(vec![Type::Int, Type::None]),
+                        }),
+                        ops: vec!["is not".to_string()],
+                        comparators: vec![HirExpr::NoneLiteral],
+                        ty: Type::Bool,
+                    },
+                ],
+                ty: Type::Bool,
+            },
+            then_body: vec![HirStmt::Pass],
+            elif_clauses: vec![],
+            else_body: Some(vec![HirStmt::Pass]),
+        };
+
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if with option and-not-none chain condition lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::IfLet {
+                ref pattern,
+                expr: RustExpr::Ident(ref name),
+                ..
+            } if pattern == "Some(a)" && name == "a"
         ));
     }
 
@@ -4729,13 +4716,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &if_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -4757,13 +4738,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &if_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -4779,13 +4754,8 @@ mod tests {
             else_body: Some(vec![HirStmt::Pass]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if option truthiness lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if option truthiness lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4813,13 +4783,8 @@ mod tests {
             else_body: Some(vec![HirStmt::Pass]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if alias option truthiness lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if alias option truthiness lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -4844,13 +4809,8 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if option truthiness with elif lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if option truthiness with elif lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::IfLet { else_body, .. } => {
@@ -4879,13 +4839,8 @@ mod tests {
             else_body: Some(vec![HirStmt::Pass]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if with option truthiness elif lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if with option truthiness elif lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::If { else_body, .. } => {
@@ -4925,13 +4880,8 @@ mod tests {
             }]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &if_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("if with elif lowered");
+        let lowered = try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("if with elif lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::If { else_body, .. } => {
@@ -4962,13 +4912,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &if_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&if_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -5008,13 +4952,8 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while with name condition lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with name condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -5040,13 +4979,8 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while with not-bool name condition lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with not-bool name condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -5075,21 +5009,17 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while with not-option truthiness name condition lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with not-option truthiness name condition lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::While {
-                cond: RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                },
+                cond:
+                    RustExpr::MethodCall {
+                        receiver,
+                        method,
+                        args,
+                    },
                 ..
             } => {
                 assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
@@ -5116,13 +5046,8 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while with option is-none compare condition lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with option is-none compare condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -5155,13 +5080,8 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while with option is-not-none compare condition lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with option is-not-none compare condition lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
@@ -5189,21 +5109,17 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while with option truthiness name condition lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with option truthiness name condition lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::While {
-                cond: RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                },
+                cond:
+                    RustExpr::MethodCall {
+                        receiver,
+                        method,
+                        args,
+                    },
                 ..
             } => {
                 assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
@@ -5228,21 +5144,17 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while with alias option truthiness name condition lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with alias option truthiness name condition lowered");
         assert_eq!(lowered.len(), 1);
         match &lowered[0] {
             RustStmt::While {
-                cond: RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                },
+                cond:
+                    RustExpr::MethodCall {
+                        receiver,
+                        method,
+                        args,
+                    },
                 ..
             } => {
                 assert!(matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "maybe_x"));
@@ -5266,13 +5178,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &while_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -5289,13 +5195,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &while_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -5317,13 +5217,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &while_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -5335,13 +5229,8 @@ mod tests {
             else_body: Some(vec![HirStmt::Pass]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while with else lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while with else lowered");
         assert_eq!(lowered.len(), 3);
         assert!(matches!(lowered[0], RustStmt::Let { .. }));
         assert!(matches!(lowered[1], RustStmt::While { .. }));
@@ -5393,21 +5282,72 @@ mod tests {
             else_body: None,
         };
 
-        let lowered = try_lower_simple_stmt(
-            &for_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("for with name iter lowered");
+        let lowered = try_lower_simple_stmt(&for_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("for with name iter lowered");
         assert_eq!(lowered.len(), 1);
         assert!(matches!(
             lowered[0],
             RustStmt::For {
                 var: ref var_name,
-                iter: RustExpr::Ident(ref iter_name),
+                iter: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
                 ..
-            } if var_name == "i" && iter_name == "items"
+            } if var_name == "i"
+                && matches!(
+                    recv.as_ref(),
+                    RustExpr::MethodCall {
+                        receiver: ref inner_recv,
+                        ref method,
+                        ref args,
+                    } if matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "items")
+                        && method == "iter"
+                        && args.is_empty()
+                )
+                && method == "cloned"
+                && args.is_empty()
+        ));
+    }
+
+    #[test]
+    fn lowers_simple_for_with_dict_iter_to_keys_cloned() {
+        let for_stmt = HirStmt::For {
+            target: "k".to_string(),
+            target_ty: Type::Str,
+            iter: HirExpr::Name {
+                name: "m".to_string(),
+                ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: None,
+        };
+
+        let lowered = try_lower_simple_stmt(&for_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("for with dict iter lowered");
+        assert_eq!(lowered.len(), 1);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::For {
+                iter: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
+                ..
+            } if matches!(
+                recv.as_ref(),
+                RustExpr::MethodCall {
+                    receiver: ref inner_recv,
+                    ref method,
+                    ref args,
+                } if matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "m")
+                    && method == "keys"
+                    && args.is_empty()
+            )
+                && method == "cloned"
+                && args.is_empty()
         ));
     }
 
@@ -5426,13 +5366,7 @@ mod tests {
         };
 
         assert!(
-            try_lower_simple_stmt(
-                &for_stmt,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&for_stmt, false, &HashSet::new(), &HashSet::new(),).is_none()
         );
     }
 
@@ -5450,13 +5384,9 @@ mod tests {
             body: vec![HirStmt::Pass],
             else_body: Some(vec![HirStmt::Pass]),
         };
-        let lowered = try_lower_simple_stmt(
-            &for_with_else,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("for with else lowered");
+        let lowered =
+            try_lower_simple_stmt(&for_with_else, false, &HashSet::new(), &HashSet::new())
+                .expect("for with else lowered");
         assert_eq!(lowered.len(), 3);
         assert!(matches!(lowered[0], RustStmt::Let { .. }));
         assert!(matches!(lowered[1], RustStmt::For { .. }));
@@ -5475,21 +5405,32 @@ mod tests {
             body: vec![HirStmt::Pass],
             else_body: Some(vec![HirStmt::Pass]),
         };
-        let lowered = try_lower_simple_stmt(
-            &for_with_else,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("for with else and name iter lowered");
+        let lowered =
+            try_lower_simple_stmt(&for_with_else, false, &HashSet::new(), &HashSet::new())
+                .expect("for with else and name iter lowered");
         assert_eq!(lowered.len(), 3);
         assert!(matches!(lowered[0], RustStmt::Let { .. }));
         assert!(matches!(
             lowered[1],
             RustStmt::For {
-                iter: RustExpr::Ident(ref iter_name),
+                iter: RustExpr::MethodCall {
+                    receiver: ref recv,
+                    ref method,
+                    ref args,
+                },
                 ..
-            } if iter_name == "items"
+            } if matches!(
+                recv.as_ref(),
+                RustExpr::MethodCall {
+                    receiver: ref inner_recv,
+                    ref method,
+                    ref args,
+                } if matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "items")
+                    && method == "iter"
+                    && args.is_empty()
+            )
+                && method == "cloned"
+                && args.is_empty()
         ));
         assert!(matches!(lowered[2], RustStmt::If { .. }));
     }
@@ -5508,13 +5449,8 @@ mod tests {
             else_body: Some(vec![HirStmt::Pass]),
         };
         assert!(
-            try_lower_simple_stmt(
-                &for_with_else,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&for_with_else, false, &HashSet::new(), &HashSet::new(),)
+                .is_none()
         );
     }
 
@@ -5533,13 +5469,8 @@ mod tests {
             else_body: None,
         };
         assert!(
-            try_lower_simple_stmt(
-                &for_tuple_target,
-                false,
-                &HashSet::new(),
-                &HashSet::new(),
-            )
-            .is_none()
+            try_lower_simple_stmt(&for_tuple_target, false, &HashSet::new(), &HashSet::new(),)
+                .is_none()
         );
     }
 
@@ -5560,13 +5491,8 @@ mod tests {
             }]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &for_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("for else lowered");
+        let lowered = try_lower_simple_stmt(&for_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("for else lowered");
 
         match &lowered[1] {
             RustStmt::For { body, .. } => {
@@ -5593,13 +5519,8 @@ mod tests {
             else_body: Some(vec![HirStmt::Break]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &for_stmt,
-            true,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("for else lowered");
+        let lowered = try_lower_simple_stmt(&for_stmt, true, &HashSet::new(), &HashSet::new())
+            .expect("for else lowered");
 
         match &lowered[2] {
             RustStmt::If { then_body, .. } => {
@@ -5621,13 +5542,8 @@ mod tests {
             }]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            false,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while else lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("while else lowered");
 
         match &lowered[1] {
             RustStmt::While { body, .. } => {
@@ -5647,13 +5563,8 @@ mod tests {
             else_body: Some(vec![HirStmt::Break]),
         };
 
-        let lowered = try_lower_simple_stmt(
-            &while_stmt,
-            true,
-            &HashSet::new(),
-            &HashSet::new(),
-        )
-        .expect("while else lowered");
+        let lowered = try_lower_simple_stmt(&while_stmt, true, &HashSet::new(), &HashSet::new())
+            .expect("while else lowered");
 
         match &lowered[2] {
             RustStmt::If { then_body, .. } => {
@@ -5723,17 +5634,18 @@ mod tests {
         };
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
             .expect("star unpack lowered");
-        assert!(matches!(lowered[0], RustStmt::RawCode(_)));
+        assert_eq!(lowered.len(), 4);
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Let { ref name, .. } if name == "_star_tmp"
+        ));
+        assert!(lowered.iter().all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
     }
 
     #[test]
     fn lowers_simple_with_without_context_manager_protocol() {
         let stmt = HirStmt::With {
-            items: vec![(
-                "x".to_string(),
-                HirExpr::IntLiteral(1),
-                false,
-            )],
+            items: vec![("x".to_string(), HirExpr::IntLiteral(1), false)],
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Name {
                     name: "x".to_string(),
