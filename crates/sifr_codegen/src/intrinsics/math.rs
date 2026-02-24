@@ -2,27 +2,28 @@
 
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 
-fn unary_method(args: &[String], method: &str) -> Option<RustExpr> {
+fn parenthesized(expr: &RustExpr) -> RustExpr {
+    RustExpr::RawCode(format!("({})", crate::render_expr(expr)))
+}
+
+fn unary_method(args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    // Wrap the argument in parentheses to ensure proper precedence
-    let arg = format!("({})", args[0]);
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(arg)),
+        receiver: Box::new(parenthesized(&args[0])),
         method: method.to_string(),
         args: vec![],
     })
 }
 
-fn unary_method_as_i64(args: &[String], method: &str) -> Option<RustExpr> {
+fn unary_method_as_i64(args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    let arg = format!("({})", args[0]);
     Some(RustExpr::Cast {
         expr: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(arg)),
+            receiver: Box::new(parenthesized(&args[0])),
             method: method.to_string(),
             args: vec![],
         }),
@@ -30,245 +31,231 @@ fn unary_method_as_i64(args: &[String], method: &str) -> Option<RustExpr> {
     })
 }
 
-fn binary_method(args: &[String], method: &str) -> Option<RustExpr> {
+fn binary_method(args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    // Wrap the first arg in parentheses, but pass second arg as-is for clean output
-    let arg0 = format!("({})", args[0]);
-    let arg1 = args[1].clone();
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(arg0)),
+        receiver: Box::new(parenthesized(&args[0])),
         method: method.to_string(),
-        args: vec![RustExpr::Ident(arg1)],
+        args: vec![args[1].clone()],
     })
 }
 
-pub(super) fn lower_sqrt(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_sqrt(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "sqrt")
 }
 
-pub(super) fn lower_abs_val(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_abs_val(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "abs")
 }
 
-pub(super) fn lower_log(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_log(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "ln")
 }
 
-pub(super) fn lower_cbrt(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_cbrt(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "cbrt")
 }
 
-pub(super) fn lower_exp2(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_exp2(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "exp2")
 }
 
-pub(super) fn lower_sin(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_sin(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "sin")
 }
 
-pub(super) fn lower_cos(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_cos(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "cos")
 }
 
-pub(super) fn lower_tan(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_tan(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "tan")
 }
 
-pub(super) fn lower_asin(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_asin(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "asin")
 }
 
-pub(super) fn lower_acos(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_acos(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "acos")
 }
 
-pub(super) fn lower_atan(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_atan(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "atan")
 }
 
-pub(super) fn lower_sinh(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_sinh(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "sinh")
 }
 
-pub(super) fn lower_cosh(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_cosh(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "cosh")
 }
 
-pub(super) fn lower_tanh(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_tanh(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "tanh")
 }
 
-pub(super) fn lower_asinh(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_asinh(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "asinh")
 }
 
-pub(super) fn lower_acosh(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_acosh(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "acosh")
 }
 
-pub(super) fn lower_atanh(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_atanh(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "atanh")
 }
 
-pub(super) fn lower_floor(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_floor(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method_as_i64(args, "floor")
 }
 
-pub(super) fn lower_ceil(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_ceil(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method_as_i64(args, "ceil")
 }
 
-pub(super) fn lower_round(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_round(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "round")
 }
 
-pub(super) fn lower_trunc(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_trunc(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method_as_i64(args, "trunc")
 }
 
-pub(super) fn lower_fract(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_fract(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "fract")
 }
 
-pub(super) fn lower_exp(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_exp(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "exp")
 }
 
-pub(super) fn lower_ln(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_ln(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "ln")
 }
 
-pub(super) fn lower_log10(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_log10(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "log10")
 }
 
-pub(super) fn lower_log2(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_log2(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "log2")
 }
 
-pub(super) fn lower_degrees(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_degrees(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "to_degrees")
 }
 
-pub(super) fn lower_radians(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_radians(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "to_radians")
 }
 
-pub(super) fn lower_isnan(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isnan(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "is_nan")
 }
 
-pub(super) fn lower_isinf(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isinf(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "is_infinite")
 }
 
-pub(super) fn lower_copysign(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_copysign(args: &[RustExpr]) -> Option<RustExpr> {
     binary_method(args, "copysign")
 }
 
-pub(super) fn lower_signbit(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_signbit(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "is_sign_negative")
 }
 
-pub(super) fn lower_fmod(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_fmod(args: &[RustExpr]) -> Option<RustExpr> {
     binary_method(args, "rem_euclid")
 }
 
-pub(super) fn lower_hypot(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_hypot(args: &[RustExpr]) -> Option<RustExpr> {
     binary_method(args, "hypot")
 }
 
-pub(super) fn lower_fma(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_fma(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
-    // fused_multiply_add(a, b, c) => (a * b) + c
-    let a = format!("({})", args[0]);
-    let b = format!("({})", args[1]);
-    let c = format!("({})", args[2]);
     Some(RustExpr::BinOp {
         left: Box::new(RustExpr::BinOp {
-            left: Box::new(RustExpr::Ident(a)),
+            left: Box::new(parenthesized(&args[0])),
             op: "*".to_string(),
-            right: Box::new(RustExpr::Ident(b)),
+            right: Box::new(parenthesized(&args[1])),
         }),
         op: "+".to_string(),
-        right: Box::new(RustExpr::Ident(c)),
+        right: Box::new(parenthesized(&args[2])),
     })
 }
 
-pub(super) fn lower_pow_val(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_pow_val(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    // Wrap the base in parentheses, but pass exponent as-is for clean output
-    let base = format!("({})", args[0]);
-    let exp = args[1].clone();
-    // pow takes (base, exponent) - we need to use powf for floats
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(base)),
+        receiver: Box::new(parenthesized(&args[0])),
         method: "powf".to_string(),
-        args: vec![RustExpr::Ident(exp)],
+        args: vec![args[1].clone()],
     })
 }
 
-pub(super) fn lower_min_val(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_min_val(args: &[RustExpr]) -> Option<RustExpr> {
     binary_method(args, "min")
 }
 
-pub(super) fn lower_max_val(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_max_val(args: &[RustExpr]) -> Option<RustExpr> {
     binary_method(args, "max")
 }
 
-pub(super) fn lower_fmax(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_fmax(args: &[RustExpr]) -> Option<RustExpr> {
     binary_method(args, "max")
 }
 
-pub(super) fn lower_fmin(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_fmin(args: &[RustExpr]) -> Option<RustExpr> {
     binary_method(args, "min")
 }
 
-pub(super) fn lower_expm1(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_expm1(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "exp_m1")
 }
 
-pub(super) fn lower_round_val(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_round_val(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method_as_i64(args, "round")
 }
 
-pub(super) fn lower_atan2(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_atan2(args: &[RustExpr]) -> Option<RustExpr> {
     binary_method(args, "atan2")
 }
 
-pub(super) fn lower_log1p(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_log1p(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "ln_1p")
 }
 
-pub(super) fn lower_fabs(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_fabs(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "abs")
 }
 
-pub(super) fn lower_isfinite(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isfinite(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "is_finite")
 }
 
-pub(super) fn lower_isnormal(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isnormal(args: &[RustExpr]) -> Option<RustExpr> {
     unary_method(args, "is_normal")
 }
 
-pub(super) fn lower_issubnormal(args: &[String]) -> Option<RustExpr> {
-    // is_subnormal is not directly available, check using classification
-    // A number is subnormal if it is finite but not normal
+pub(super) fn lower_issubnormal(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    let arg = format!("({})", args[0]);
-    // Use is_finite && !is_normal
+    let arg = parenthesized(&args[0]);
     Some(RustExpr::BinOp {
         left: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(arg.clone())),
+            receiver: Box::new(arg.clone()),
             method: "is_finite".to_string(),
             args: vec![],
         }),
@@ -276,7 +263,7 @@ pub(super) fn lower_issubnormal(args: &[String]) -> Option<RustExpr> {
         right: Box::new(RustExpr::UnaryOp {
             op: "!".to_string(),
             operand: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(arg)),
+                receiver: Box::new(arg),
                 method: "is_normal".to_string(),
                 args: vec![],
             }),
@@ -284,16 +271,14 @@ pub(super) fn lower_issubnormal(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_isqrt(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_isqrt(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    let arg = format!("({})", args[0]);
-    // Integer square root: (n as f64).sqrt() as i64
     Some(RustExpr::Cast {
         expr: Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Cast {
-                expr: Box::new(RustExpr::Ident(arg)),
+                expr: Box::new(parenthesized(&args[0])),
                 ty: RustType::F64,
             }),
             method: "sqrt".to_string(),
