@@ -924,17 +924,22 @@ impl RustEmitter {
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;
         }
-        if let Some(lowered_stmts) = try_lower_simple_stmt_with_ctx(
+        let scope_ctx = ScopeContext {
+            function_return_type: self.current_return_type.clone(),
+            in_generator_closure: self.emission_ctx.in_generator_closure,
+            in_display_impl: self.emission_ctx.in_display_impl,
+            in_loop_with_else: self.current_loop_has_else(),
+            class_scope: if self.current_class_name.is_some() {
+                ClassScope::Inside
+            } else {
+                ClassScope::Outside
+            },
+        };
+        if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope(
             stmt,
-            self.current_loop_has_else(),
             &self.mutated_vars,
             &self.borrowed_params,
-            SimpleStmtLoweringCtx {
-                return_type: self.current_return_type.as_ref(),
-                in_display_impl: self.emission_ctx.in_display_impl,
-                in_class_scope: self.current_class_name.is_some(),
-                in_generator_closure: self.emission_ctx.in_generator_closure,
-            },
+            &scope_ctx,
         ) {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
