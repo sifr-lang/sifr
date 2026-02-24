@@ -482,14 +482,97 @@ pub(super) fn lower_ldexp(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_modf(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_modf(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::RawCode(format!(
-        "{{ let __x: f64 = ({}); if __x.is_nan() {{ vec![f64::NAN, f64::NAN] }} else if __x.is_infinite() {{ vec![0.0f64.copysign(__x), __x] }} else {{ let __int = __x.trunc(); let mut __frac = __x - __int; if __frac == 0.0 {{ __frac = 0.0f64.copysign(__x); }} vec![__frac, __int] }} }}",
-        args[0]
-    )))
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__x".to_string(),
+            ty: Some(RustType::F64),
+            value: RustExpr::Cast {
+                expr: Box::new(args[0].clone()),
+                ty: RustType::F64,
+            },
+        }],
+        expr: Some(Box::new(RustExpr::If {
+            cond: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                method: "is_nan".to_string(),
+                args: vec![],
+            }),
+            then_expr: Box::new(RustExpr::Vec(vec![
+                RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()]),
+                RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()]),
+            ])),
+            else_expr: Some(Box::new(RustExpr::If {
+                cond: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                    method: "is_infinite".to_string(),
+                    args: vec![],
+                }),
+                then_expr: Box::new(RustExpr::Vec(vec![
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Cast {
+                            expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                            ty: RustType::F64,
+                        }),
+                        method: "copysign".to_string(),
+                        args: vec![RustExpr::Ident("__x".to_string())],
+                    },
+                    RustExpr::Ident("__x".to_string()),
+                ])),
+                else_expr: Some(Box::new(RustExpr::Block {
+                    stmts: vec![
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__int".to_string(),
+                            ty: None,
+                            value: RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__x".to_string())),
+                                method: "trunc".to_string(),
+                                args: vec![],
+                            },
+                        },
+                        RustStmt::Let {
+                            mutable: true,
+                            name: "__frac".to_string(),
+                            ty: None,
+                            value: RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__x".to_string())),
+                                op: "-".to_string(),
+                                right: Box::new(RustExpr::Ident("__int".to_string())),
+                            },
+                        },
+                        RustStmt::If {
+                            cond: RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__frac".to_string())),
+                                op: "==".to_string(),
+                                right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                            },
+                            then_body: vec![RustStmt::Assign {
+                                target: RustExpr::Ident("__frac".to_string()),
+                                value: RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                                        ty: RustType::F64,
+                                    }),
+                                    method: "copysign".to_string(),
+                                    args: vec![RustExpr::Ident("__x".to_string())],
+                                },
+                            }],
+                            else_body: None,
+                        },
+                    ],
+                    expr: Some(Box::new(RustExpr::Vec(vec![
+                        RustExpr::Ident("__frac".to_string()),
+                        RustExpr::Ident("__int".to_string()),
+                    ]))),
+                })),
+            })),
+        })),
+    })
 }
 
 pub(super) fn lower_nextafter(args: &[String]) -> Option<RustExpr> {

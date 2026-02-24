@@ -112,7 +112,7 @@ fn lower_intrinsic_rendered(
         "lgamma" => (math::lower_lgamma(rendered_args), None),
         "frexp" => (math::lower_frexp(rendered_args), None),
         "ldexp" => (math::lower_ldexp(args), None),
-        "modf" => (math::lower_modf(rendered_args), None),
+        "modf" => (math::lower_modf(args), None),
         "nextafter" => (math::lower_nextafter(rendered_args), None),
         "ulp" => (math::lower_ulp(rendered_args), None),
         "env_get" => (env::lower_env_get(rendered_args), None),
@@ -1050,6 +1050,10 @@ mod tests {
         let ldexp = lower_intrinsic("ldexp", &["m".to_string(), "e".to_string()]).expect("ldexp");
         assert!(render_expr(&ldexp.expr).contains("(2.0 as f64).powi"));
         assert!(!matches!(ldexp.expr, RustExpr::RawCode(_)));
+
+        let modf = lower_intrinsic("modf", &["x".to_string()]).expect("modf");
+        assert!(render_expr(&modf.expr).contains("__x.is_nan()"));
+        assert!(!matches!(modf.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
