@@ -8,6 +8,7 @@ pub struct RustFile {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RustItem {
     Use(Vec<String>),
+    UseAlias { path: Vec<String>, alias: String },
     Struct {
         name: String,
         visibility: Visibility,

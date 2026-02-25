@@ -510,32 +510,29 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         emitter.collect_union_types(module);
         emitter.generate_enum_definitions();
         emitter.emit_module(module, module_public, false);
-        let mut module_import_prelude = String::new();
+        let mut module_import_items: Vec<RustItem> = Vec::new();
 
         // For non-main modules, add imports as `use` statements
         for import in &module.imports {
             for name in &import.names {
                 // Check if this name has an alias
                 if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
-                    let _ = writeln!(
-                        module_import_prelude,
-                        "use crate::{}::{} as {};",
-                        import.module, name, alias
-                    );
+                    module_import_items.push(RustItem::UseAlias {
+                        path: vec!["crate".to_string(), import.module.clone(), name.clone()],
+                        alias: alias.clone(),
+                    });
                 } else {
-                    let _ = writeln!(
-                        module_import_prelude,
-                        "use crate::{}::{};",
-                        import.module, name
-                    );
+                    module_import_items.push(RustItem::Use(vec![
+                        "crate".to_string(),
+                        import.module.clone(),
+                        name.clone(),
+                    ]));
                 }
             }
         }
 
         let mut assembled_items: Vec<RustItem> = Vec::new();
-        if !module_import_prelude.is_empty() {
-            assembled_items.push(RustItem::RawCode(module_import_prelude));
-        }
+        assembled_items.extend(module_import_items);
         if !emitter.enum_items.is_empty() {
             assembled_items.extend(emitter.enum_items.clone());
         }
