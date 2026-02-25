@@ -77,7 +77,7 @@ status: **partially met**
 - [x] Production module-constant item lowering `Result` path now propagates leaf-lowering errors (not `None`-collapse)
 - [x] Production module-constant emission now routes through explicit `Result` helper (`try_emit_lowered_module_constant_result`) before fallback
 - [x] Production statement lowering now enters through `ScopeContext` (`try_lower_simple_stmt_with_scope` in `emit_stmt`)
-- [x] Union enums still emitted as raw `enum_defs` strings, not `RustItem::Enum` nodes
+- [x] Union enums emit as structured `RustItem::Enum` nodes through `enum_items` assembly (legacy raw `enum_defs` string path removed)
 
 ### milestone_codegen_intrinsic_migration
 

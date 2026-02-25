@@ -1581,6 +1581,16 @@ fn test_union_display_impl_uses_structured_ir() {
 }
 
 #[test]
+fn test_union_enum_definitions_emit_structured_items() {
+    let union_src = include_str!("union_type_helpers.rs");
+    let lib_src = include_str!("lib.rs");
+
+    assert!(union_src.contains("self.enum_items.push(RustItem::Enum {"));
+    assert!(!union_src.contains("enum_defs"));
+    assert!(!lib_src.contains("enum_defs"));
+}
+
+#[test]
 fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     let lib_src = include_str!("lib.rs");
     let start = lib_src
