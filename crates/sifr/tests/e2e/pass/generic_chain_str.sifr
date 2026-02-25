@@ -4,10 +4,4 @@ def main():
     a: list[str] = ["hello", "world"]
     b: list[str] = ["foo", "bar"]
     result: list[str] = chain(a, b)
-    for s in result:
-        print(s)
-
-# expect-stdout: hello
-# expect-stdout: world
-# expect-stdout: foo
-# expect-stdout: bar
+    assert result == ["hello", "world", "foo", "bar"]

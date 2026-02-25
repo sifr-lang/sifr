@@ -1,8 +1,13 @@
 # Test Logger class
+from sifr.io import write_text, read_text
 from sifr.logging import getLogger, Logger
 
 def main():
+    path: str = "/tmp/sifr_logging_class_test.log"
+    _clear: None = write_text(path, "")
+
     log: Logger = getLogger("myapp")
+    log.set_file(path)
     log.info("starting up")
     log.warning("low memory")
     log.error("disk full")
@@ -12,7 +17,9 @@ def main():
     log.set_level(10)
     log.debug("now visible")
 
-# expect-stdout: [INFO] myapp: starting up
-# expect-stdout: [WARNING] myapp: low memory
-# expect-stdout: [ERROR] myapp: disk full
-# expect-stdout: [DEBUG] myapp: now visible
+    output: str = read_text(path)
+    assert output == "[INFO] myapp: starting up
+[WARNING] myapp: low memory
+[ERROR] myapp: disk full
+[DEBUG] myapp: now visible
+"

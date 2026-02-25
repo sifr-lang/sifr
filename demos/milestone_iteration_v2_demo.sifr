@@ -1,19 +1,18 @@
 # milestone_iteration_v2 Demo
-# expect-stdout: h
-# expect-stdout: e
-# expect-stdout: l
-# expect-stdout: l
-# expect-stdout: o
-# expect-stdout: a
-# expect-stdout: b
+
+from typing import Dict
 
 def main():
+    output: list[str] = []
+
     # String iteration
     s: str = "hello"
     for c in s:
-        print(c)
+        output.append(c)
 
     # Dict iteration (keys)
     d: dict[str, int] = {"a": 1, "b": 2}
     for k in d:
-        print(k)
+        output.append(k)
+
+    assert output == ["h", "e", "l", "l", "o", "a", "b"]

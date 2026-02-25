@@ -7,11 +7,7 @@ def evens(limit: int) -> list[int]:
         i = i + 1
 
 def main():
+    output: list[int] = []
     for e in evens(10):
-        print(e)
-
-# expect-stdout: 0
-# expect-stdout: 2
-# expect-stdout: 4
-# expect-stdout: 6
-# expect-stdout: 8
+        output.append(e)
+    assert output == [0, 2, 4, 6, 8]

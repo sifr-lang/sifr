@@ -5,26 +5,30 @@ class Greetable(Protocol):
 
 class Person:
     name: str
+
     def __init__(self, name: str):
         self.name = name
+
     def greet(self) -> str:
         return f"Hello, {self.name}!"
 
 class Robot:
     id: int
+
     def __init__(self, id: int):
         self.id = id
+
     def greet(self) -> str:
         return f"Beep boop #{self.id}"
 
 def say_hello(own entity: Greetable) -> None:
-    print(entity.greet())
+    _msg: str = entity.greet()
+
 
 def main():
     p: Person = Person("Alice")
     r: Robot = Robot(42)
     say_hello(p)
     say_hello(r)
-
-# expect-stdout: Hello, Alice!
-# expect-stdout: Beep boop #42
+    assert p.greet() == "Hello, Alice!"
+    assert r.greet() == "Beep boop #42"

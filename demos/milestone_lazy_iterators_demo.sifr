@@ -2,10 +2,6 @@
 # Demonstrates lazy iterator support for generator functions
 # Generators now use std::iter::from_fn instead of eager Vec collection
 
-# ============================================================
-# Part 1: Lazy generator consumed by for loop (fibonacci)
-# ============================================================
-
 def fibonacci(n: int) -> list[int]:
     a: int = 0
     b: int = 1
@@ -48,50 +44,55 @@ def count_up(n: int) -> list[int]:
         yield i
         i = i + 1
 
+
 def main():
+    output: list[str] = []
+
     # Part 1: Lazy iteration — for loop consumes one value at a time
-    print("=== Fibonacci (lazy for loop) ===")
+    output.append("=== Fibonacci (lazy for loop) ===")
     for fib in fibonacci(8):
-        print(fib)
+        output.append(str(fib))
 
     # Part 2: Collect into a list
-    print("=== Squares (collected) ===")
+    output.append("=== Squares (collected) ===")
     sq: list[int] = squares(5)
-    print(sq)
+    output.append(str(sq))
 
     # Part 3: Conditional yield — only even numbers
-    print("=== Evens (conditional yield) ===")
+    output.append("=== Evens (conditional yield) ===")
     for e in evens(10):
-        print(e)
+        output.append(str(e))
 
     # Part 4: Simple count — both lazy and collected
-    print("=== Count (lazy) ===")
+    output.append("=== Count (lazy) ===")
     for c in count_up(3):
-        print(c)
-    print("=== Count (collected) ===")
+        output.append(str(c))
+    output.append("=== Count (collected) ===")
     nums: list[int] = count_up(5)
-    print(nums)
+    output.append(str(nums))
 
-# expect-stdout: === Fibonacci (lazy for loop) ===
-# expect-stdout: 0
-# expect-stdout: 1
-# expect-stdout: 1
-# expect-stdout: 2
-# expect-stdout: 3
-# expect-stdout: 5
-# expect-stdout: 8
-# expect-stdout: 13
-# expect-stdout: === Squares (collected) ===
-# expect-stdout: [0, 1, 4, 9, 16]
-# expect-stdout: === Evens (conditional yield) ===
-# expect-stdout: 0
-# expect-stdout: 2
-# expect-stdout: 4
-# expect-stdout: 6
-# expect-stdout: 8
-# expect-stdout: === Count (lazy) ===
-# expect-stdout: 0
-# expect-stdout: 1
-# expect-stdout: 2
-# expect-stdout: === Count (collected) ===
-# expect-stdout: [0, 1, 2, 3, 4]
+    assert output == [
+        "=== Fibonacci (lazy for loop) ===",
+        "0",
+        "1",
+        "1",
+        "2",
+        "3",
+        "5",
+        "8",
+        "13",
+        "=== Squares (collected) ===",
+        "[0, 1, 4, 9, 16]",
+        "=== Evens (conditional yield) ===",
+        "0",
+        "2",
+        "4",
+        "6",
+        "8",
+        "=== Count (lazy) ===",
+        "0",
+        "1",
+        "2",
+        "=== Count (collected) ===",
+        "[0, 1, 2, 3, 4]",
+    ]

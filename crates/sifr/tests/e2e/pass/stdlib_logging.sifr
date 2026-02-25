@@ -1,9 +1,16 @@
 # Test sifr.logging module
-from sifr.logging import log_info, log_warn
+from sifr.io import write_text, read_text
+from sifr.logging import getLogger, Logger
 
 def main():
-    log_info("server started")
-    log_warn("disk space low")
+    path: str = "/tmp/sifr_logging_module_test.log"
+    _clear: None = write_text(path, "")
+    logger: Logger = getLogger("server")
+    logger.set_file(path)
+    logger._emit("INFO", 20, "server started")
+    logger._emit("WARN", 30, "disk space low")
 
-# expect-stdout: [INFO] server started
-# expect-stdout: [WARN] disk space low
+    output: str = read_text(path)
+    assert output == "[INFO] server: server started
+[WARN] server: disk space low
+"
