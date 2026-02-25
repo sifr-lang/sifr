@@ -31,6 +31,7 @@ pub(crate) fn collect_import_needs_from_items(items: &[RustItem]) -> IrImportNee
 fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
     match item {
         RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => {}
+        RustItem::SynItem(code) => collect_from_syn_item_code(code, needs),
         RustItem::RawCode(code) => collect_from_raw_item_code(code, needs),
         RustItem::Struct { fields, .. } => {
             for (_, ty) in fields {
@@ -314,6 +315,14 @@ fn collect_from_raw_item_code(code: &str, needs: &mut IrImportNeeds) {
     scan_named_text_fallback(code, needs);
 }
 
+fn collect_from_syn_item_code(code: &str, needs: &mut IrImportNeeds) {
+    if let Ok(item) = syn::parse_str::<syn::Item>(code) {
+        collect_from_syn_item(&item, needs);
+        return;
+    }
+    scan_named_text_fallback(code, needs);
+}
+
 fn collect_from_raw_stmt_code(code: &str, needs: &mut IrImportNeeds) {
     if let Ok(stmt) = syn::parse_str::<syn::Stmt>(code) {
         collect_from_syn_stmt(&stmt, needs);
@@ -349,6 +358,11 @@ fn collect_from_type_text(text: &str, needs: &mut IrImportNeeds) {
 fn collect_from_syn_file(file: &syn::File, needs: &mut IrImportNeeds) {
     let mut collector = SynImportNeedsCollector { needs };
     collector.visit_file(file);
+}
+
+fn collect_from_syn_item(item: &syn::Item, needs: &mut IrImportNeeds) {
+    let mut collector = SynImportNeedsCollector { needs };
+    collector.visit_item(item);
 }
 
 fn collect_from_syn_stmt(stmt: &syn::Stmt, needs: &mut IrImportNeeds) {
