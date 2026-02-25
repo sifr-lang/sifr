@@ -510,8 +510,7 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         emitter.collect_union_types(module);
         emitter.generate_enum_definitions();
         emitter.emit_module(module, module_public, false);
-
-        let mut result = String::new();
+        let mut module_import_prelude = String::new();
 
         // For non-main modules, add imports as `use` statements
         for import in &module.imports {
@@ -519,17 +518,24 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
                 // Check if this name has an alias
                 if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
                     let _ = writeln!(
-                        result,
+                        module_import_prelude,
                         "use crate::{}::{} as {};",
                         import.module, name, alias
                     );
                 } else {
-                    let _ = writeln!(result, "use crate::{}::{};", import.module, name);
+                    let _ = writeln!(
+                        module_import_prelude,
+                        "use crate::{}::{};",
+                        import.module, name
+                    );
                 }
             }
         }
 
         let mut assembled_items: Vec<RustItem> = Vec::new();
+        if !module_import_prelude.is_empty() {
+            assembled_items.push(RustItem::RawCode(module_import_prelude));
+        }
         if !emitter.enum_items.is_empty() {
             assembled_items.extend(emitter.enum_items.clone());
         }
@@ -538,27 +544,52 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         }
         let import_needs = collect_import_needs_from_items(&assembled_items);
 
+        let mut import_items: Vec<RustItem> = Vec::new();
         if import_needs.collections.needs_hashmap {
-            result.push_str("use std::collections::HashMap;\n");
+            import_items.push(RustItem::Use(vec![
+                "std".to_string(),
+                "collections".to_string(),
+                "HashMap".to_string(),
+            ]));
         }
         if import_needs.collections.needs_hashset {
-            result.push_str("use std::collections::HashSet;\n");
+            import_items.push(RustItem::Use(vec![
+                "std".to_string(),
+                "collections".to_string(),
+                "HashSet".to_string(),
+            ]));
         }
         if import_needs.collections.needs_vecdeque {
-            result.push_str("use std::collections::VecDeque;\n");
+            import_items.push(RustItem::Use(vec![
+                "std".to_string(),
+                "collections".to_string(),
+                "VecDeque".to_string(),
+            ]));
         }
         if import_needs.runtime.needs_bigint {
-            result.push_str("use num_bigint::BigInt;\n");
-        }
-        if !result.is_empty() {
-            result.push('\n');
-        }
-        if !emitter.enum_items.is_empty() {
-            result.push_str(&render_items(&emitter.enum_items));
-            result.push('\n');
+            import_items.push(RustItem::Use(vec![
+                "num_bigint".to_string(),
+                "BigInt".to_string(),
+            ]));
         }
 
-        result.push_str(&emitter.output);
+        let mut file_items: Vec<RustItem> = Vec::new();
+        file_items.extend(import_items);
+        file_items.extend(assembled_items);
+        remove_trivial_clones_in_items(&mut file_items);
+        let file_issues = validate_items(&file_items);
+        assert!(
+            file_issues.is_empty(),
+            "codegen IR validation failed (multi module file `{}`): {}",
+            module_name,
+            file_issues
+                .iter()
+                .map(|issue| issue.message.as_str())
+                .collect::<Vec<_>>()
+                .join(" | ")
+        );
+        let rust_file = RustFile { items: file_items };
+        let result = Renderer::new().render_file(&rust_file);
 
         files.insert((*module_name).to_string(), result);
     }

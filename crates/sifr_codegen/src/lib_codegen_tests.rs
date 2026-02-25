@@ -1518,3 +1518,20 @@ fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
     assert!(!generate_block.contains("result.push_str(&emitter.output)"));
 }
+
+#[test]
+fn test_generate_rust_multi_assembles_single_rust_file() {
+    let lib_src = include_str!("lib.rs");
+    let start = lib_src
+        .find("pub fn generate_rust_multi")
+        .expect("generate_rust_multi should exist");
+    let end = lib_src
+        .find("/// Generate a complete Rust project (Cargo.toml + main.rs content).")
+        .expect("generate_project docs should exist");
+    let generate_block = &lib_src[start..end];
+
+    assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
+    assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
+    assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(!generate_block.contains("result.push_str(&emitter.output)"));
+}
