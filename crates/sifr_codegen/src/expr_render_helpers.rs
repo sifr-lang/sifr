@@ -51,7 +51,7 @@ impl RustEmitter {
 
     fn rewrite_stdlib_constant_idents_in_expr(&self, expr: crate::RustExpr) -> crate::RustExpr {
         match expr {
-            crate::RustExpr::Ident(name) => self.rewrite_stdlib_constant_ident(name),
+            crate::RustExpr::Ident(name) => self.rewrite_special_ident(name),
             crate::RustExpr::MethodCall {
                 receiver,
                 method,
@@ -347,42 +347,47 @@ impl RustEmitter {
         }
     }
 
-    fn rewrite_stdlib_constant_ident(&self, name: String) -> crate::RustExpr {
-        if !self.is_stdlib_constant(&name) {
-            return crate::RustExpr::Ident(name);
+    fn rewrite_special_ident(&self, name: String) -> crate::RustExpr {
+        if self.is_stdlib_constant(&name) {
+            return match name.as_str() {
+                "pi" => crate::RustExpr::Path(vec![
+                    "std".to_string(),
+                    "f64".to_string(),
+                    "consts".to_string(),
+                    "PI".to_string(),
+                ]),
+                "e" => crate::RustExpr::Path(vec![
+                    "std".to_string(),
+                    "f64".to_string(),
+                    "consts".to_string(),
+                    "E".to_string(),
+                ]),
+                "tau" => crate::RustExpr::Path(vec![
+                    "std".to_string(),
+                    "f64".to_string(),
+                    "consts".to_string(),
+                    "TAU".to_string(),
+                ]),
+                "inf" => crate::RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()]),
+                "nan" => crate::RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()]),
+                _ => crate::RustExpr::Ident(name),
+            };
         }
-        match name.as_str() {
-            "pi" => crate::RustExpr::Path(vec![
-                "std".to_string(),
-                "f64".to_string(),
-                "consts".to_string(),
-                "PI".to_string(),
-            ]),
-            "e" => crate::RustExpr::Path(vec![
-                "std".to_string(),
-                "f64".to_string(),
-                "consts".to_string(),
-                "E".to_string(),
-            ]),
-            "tau" => crate::RustExpr::Path(vec![
-                "std".to_string(),
-                "f64".to_string(),
-                "consts".to_string(),
-                "TAU".to_string(),
-            ]),
-            "inf" => crate::RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()]),
-            "nan" => crate::RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()]),
-            _ => crate::RustExpr::Ident(name),
+
+        if let Some((_ty, rust_name)) = self.module_constants.get(&name) {
+            if let Some(mapped) = parse_module_constant_expr(rust_name) {
+                return mapped;
+            }
         }
+
+        crate::RustExpr::Ident(name)
     }
 }
 
 fn render_expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExpr) -> bool {
     match expr {
         HirExpr::Name { name, .. } => {
-            (emitter.intrinsic_functions.contains(name.as_str())
-                && !is_stdlib_math_constant(name))
-                || emitter.module_constants.contains_key(name)
+            emitter.intrinsic_functions.contains(name.as_str()) && !is_stdlib_math_constant(name)
         }
         HirExpr::BinOp { left, right, .. } => {
             render_expr_contains_force_fallback_name(emitter, left)
@@ -547,6 +552,42 @@ fn render_expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExp
 
 fn is_stdlib_math_constant(name: &str) -> bool {
     matches!(name, "pi" | "e" | "tau" | "inf" | "nan")
+}
+
+fn parse_module_constant_expr(rust_name: &str) -> Option<crate::RustExpr> {
+    if let Some(func) = rust_name.strip_suffix("()") {
+        let func_expr = parse_identifier_path_expr(func)?;
+        return Some(crate::RustExpr::FnCall {
+            func: Box::new(func_expr),
+            args: vec![],
+        });
+    }
+    parse_identifier_path_expr(rust_name)
+}
+
+fn parse_identifier_path_expr(name: &str) -> Option<crate::RustExpr> {
+    let segments = name
+        .split("::")
+        .filter(|segment| !segment.is_empty())
+        .collect::<Vec<_>>();
+    if segments.is_empty() || !segments.iter().all(|segment| is_ident(segment)) {
+        return None;
+    }
+    if segments.len() == 1 {
+        return Some(crate::RustExpr::Ident(segments[0].to_string()));
+    }
+    Some(crate::RustExpr::Path(
+        segments.into_iter().map(ToString::to_string).collect(),
+    ))
+}
+
+fn is_ident(name: &str) -> bool {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(ch) if ch == '_' || ch.is_ascii_alphabetic() => {}
+        _ => return false,
+    }
+    chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
 }
 
 impl RustEmitter {

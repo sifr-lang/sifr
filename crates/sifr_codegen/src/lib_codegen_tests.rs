@@ -535,6 +535,43 @@ fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
 }
 
 #[test]
+fn test_render_expr_lowering_rewrites_module_constant_ident() {
+    let mut emitter = RustEmitter::new();
+    emitter.module_constants.insert(
+        "limit".to_string(),
+        (Type::Int, "LIMIT".to_string()),
+    );
+    let expr = HirExpr::BinOp {
+        left: Box::new(HirExpr::Name {
+            name: "limit".to_string(),
+            ty: Type::Int,
+        }),
+        op: "+".to_string(),
+        right: Box::new(HirExpr::IntLiteral(1)),
+        ty: Type::Int,
+    };
+
+    let code = emitter.render_expr_with_lowered_fallback(&expr);
+    assert!(code.contains("LIMIT +"));
+}
+
+#[test]
+fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
+    let mut emitter = RustEmitter::new();
+    emitter.module_constants.insert(
+        "greeting".to_string(),
+        (Type::Str, "__const_greeting()".to_string()),
+    );
+    let expr = HirExpr::Name {
+        name: "greeting".to_string(),
+        ty: Type::Str,
+    };
+
+    let code = emitter.render_expr_with_lowered_fallback(&expr);
+    assert_eq!(code, "__const_greeting()");
+}
+
+#[test]
 fn test_match_int_literal_pattern_avoids_cast_expression() {
     let module = HirModule {
         functions: vec![HirFunction {
