@@ -227,7 +227,7 @@ fn append_file_expr(path_expr: RustExpr) -> RustExpr {
     }
 }
 
-fn invalid_mode_error_expr(with_return: bool) -> RustStmt {
+fn invalid_mode_error_expr() -> RustStmt {
     let err_expr = RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
         args: vec![RustExpr::StructInit {
@@ -248,7 +248,6 @@ fn invalid_mode_error_expr(with_return: bool) -> RustStmt {
             ],
         }],
     };
-    let _ = with_return;
     RustStmt::Return(Some(err_expr))
 }
 
@@ -257,7 +256,6 @@ fn open_arm(
     open_expr: RustExpr,
     variant: &str,
     success_expr: &RustExpr,
-    return_success: bool,
 ) -> RustMatchArm {
     let (buffer_ctor, buffer_var) = if variant.ends_with("Read") {
         (
@@ -280,11 +278,7 @@ fn open_arm(
             "__writer",
         )
     };
-    let success_stmt = if return_success {
-        RustStmt::Return(Some(success_expr.clone()))
-    } else {
-        RustStmt::RawCode(crate::render_expr(success_expr))
-    };
+    let success_stmt = RustStmt::Return(Some(success_expr.clone()));
     RustMatchArm {
         pattern: pattern.to_string(),
         bindings: vec![],
@@ -328,11 +322,7 @@ fn open_arm(
     }
 }
 
-fn build_open_match(
-    success_expr: &RustExpr,
-    invalid_stmt: RustStmt,
-    return_success: bool,
-) -> RustStmt {
+fn build_open_match(success_expr: &RustExpr, invalid_stmt: RustStmt) -> RustStmt {
     let path_ref = path_as_str_expr();
     RustStmt::Match {
         expr: mode_as_str_expr(),
@@ -342,42 +332,36 @@ fn build_open_match(
                 open_file_expr(path_ref.clone()),
                 "TextRead",
                 success_expr,
-                return_success,
             ),
             open_arm(
                 "\"w\" | \"wt\"",
                 create_file_expr(path_ref.clone()),
                 "TextWrite",
                 success_expr,
-                return_success,
             ),
             open_arm(
                 "\"a\" | \"at\"",
                 append_file_expr(path_ref.clone()),
                 "TextWrite",
                 success_expr,
-                return_success,
             ),
             open_arm(
                 "\"rb\"",
                 open_file_expr(path_ref.clone()),
                 "BinaryRead",
                 success_expr,
-                return_success,
             ),
             open_arm(
                 "\"wb\"",
                 create_file_expr(path_ref.clone()),
                 "BinaryWrite",
                 success_expr,
-                return_success,
             ),
             open_arm(
                 "\"ab\"",
                 append_file_expr(path_ref),
                 "BinaryWrite",
                 success_expr,
-                return_success,
             ),
             RustMatchArm {
                 pattern: "_".to_string(),
@@ -393,7 +377,7 @@ pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let success_expr = RustExpr::StructInit {
+    let success_value = RustExpr::StructInit {
         name: "FileHandle".to_string(),
         fields: vec![
             (
@@ -410,30 +394,35 @@ pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
             ),
         ],
     };
-    Some(RustExpr::Block {
-        stmts: vec![
-            RustStmt::Let {
-                mutable: false,
-                name: "__path".to_string(),
-                ty: None,
-                value: owned_str(&args[0]),
-            },
-            RustStmt::Let {
-                mutable: false,
-                name: "__mode".to_string(),
-                ty: None,
-                value: owned_str(&args[1]),
-            },
-            RustStmt::Let {
-                mutable: false,
-                name: "__handle_id".to_string(),
-                ty: None,
-                value: next_handle_id_expr("__NEXT_FH_ID"),
-            },
-            build_open_match(&success_expr, invalid_mode_error_expr(true), false),
-        ],
-        expr: None,
-    })
+    let success_expr = ok_expr(success_value);
+    Some(RustExpr::Try(Box::new(RustExpr::FnCall {
+        func: Box::new(RustExpr::ClosureBlock {
+            params: vec![],
+            body: vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__path".to_string(),
+                    ty: None,
+                    value: owned_str(&args[0]),
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__mode".to_string(),
+                    ty: None,
+                    value: owned_str(&args[1]),
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__handle_id".to_string(),
+                    ty: None,
+                    value: next_handle_id_expr("__NEXT_FH_ID"),
+                },
+                build_open_match(&success_expr, invalid_mode_error_expr()),
+            ],
+            is_move: false,
+        }),
+        args: vec![],
+    })))
 }
 
 pub(super) fn lower_open_file(args: &[RustExpr]) -> Option<RustExpr> {
@@ -466,7 +455,7 @@ pub(super) fn lower_open_file(args: &[RustExpr]) -> Option<RustExpr> {
                     ty: None,
                     value: next_handle_id_expr("__NEXT_ID"),
                 },
-                build_open_match(&success_expr, invalid_mode_error_expr(false), true),
+                build_open_match(&success_expr, invalid_mode_error_expr()),
             ],
             is_move: false,
         }),
