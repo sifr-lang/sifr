@@ -67,6 +67,7 @@ status: **partially met**
 - [x] Legacy recursive force-fallback gating helpers were removed from core wrappers (`should_force_*_fallback`, `expr_contains_force_fallback_name`), keeping fallback as a pure post-structured sink
 - [x] Structured stmt emission now bridges non-leaf expression statements through `try_emit_structured_expr` before full stmt fallback (with proper `;`/newline sink)
 - [x] Structured stmt emission now bridges copy-typed `Assign` RHS expressions through `try_emit_structured_expr` before full stmt fallback
+- [x] Structured stmt emission now bridges copy-typed `Let` RHS expressions through `try_emit_structured_expr` before full stmt fallback
 - [x] Expression fallback no longer enforces subtree-wide legacy-only recursion (`fallback_depth` removed), allowing nested fallback subexpressions to still attempt structured lowering
 - [x] Production helper rendering paths now consume expr `Result` contract (`expr_render_helpers`, `intrinsic_method_emitters`)
 - [x] Registry arg lowering and lowered-fallback rendering now share one explicit expr `Result` helper path (`try_lower_registry_expr_result`)

@@ -304,9 +304,15 @@ fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), CodegenError> {
         }
         HirExpr::BoolOp { values, .. }
         | HirExpr::Call { args: values, .. }
-        | HirExpr::ListLiteral { elements: values, .. }
-        | HirExpr::SetLiteral { elements: values, .. }
-        | HirExpr::TupleLiteral { elements: values, .. } => {
+        | HirExpr::ListLiteral {
+            elements: values, ..
+        }
+        | HirExpr::SetLiteral {
+            elements: values, ..
+        }
+        | HirExpr::TupleLiteral {
+            elements: values, ..
+        } => {
             for value in values {
                 validate_expr_lowering_shape(value)?;
             }

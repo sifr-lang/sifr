@@ -271,10 +271,10 @@ fn collect_expr_error_refs(
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
         | HirExpr::ErrWrap { value: operand, .. }
-        | HirExpr::WalrusExpr {
-            value: operand, ..
-        }
-        | HirExpr::FieldAccess { object: operand, .. } => {
+        | HirExpr::WalrusExpr { value: operand, .. }
+        | HirExpr::FieldAccess {
+            object: operand, ..
+        } => {
             collect_expr_error_refs(operand, referenced, builtin_error_classes);
         }
         HirExpr::Compare {
@@ -286,9 +286,15 @@ fn collect_expr_error_refs(
             }
         }
         HirExpr::BoolOp { values, .. }
-        | HirExpr::ListLiteral { elements: values, .. }
-        | HirExpr::SetLiteral { elements: values, .. }
-        | HirExpr::TupleLiteral { elements: values, .. } => {
+        | HirExpr::ListLiteral {
+            elements: values, ..
+        }
+        | HirExpr::SetLiteral {
+            elements: values, ..
+        }
+        | HirExpr::TupleLiteral {
+            elements: values, ..
+        } => {
             for value in values {
                 collect_expr_error_refs(value, referenced, builtin_error_classes);
             }
@@ -320,7 +326,8 @@ fn collect_expr_error_refs(
                 collect_expr_error_refs(value, referenced, builtin_error_classes);
             }
         }
-        HirExpr::Index { object, index, .. } | HirExpr::ContainsOp {
+        HirExpr::Index { object, index, .. }
+        | HirExpr::ContainsOp {
             element: index,
             collection: object,
             ..
