@@ -1234,6 +1234,56 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
 }
 
 #[test]
+fn test_structured_expr_path_handles_plain_signature_call_expression() {
+    let module = HirModule {
+        functions: vec![
+            HirFunction {
+                name: "helper".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::StringLiteral("inner".to_string())],
+                        ty: Type::None,
+                    },
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+            HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "helper".to_string(),
+                        args: vec![],
+                        ty: Type::None,
+                    },
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        ],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("helper();"));
+    assert!(
+        generated.lowering_stats.expr_structured > 0,
+        "plain calls with by-value signatures should use structured expr path"
+    );
+}
+
+#[test]
 fn test_structured_expr_path_handles_registry_method_call_expression() {
     let list_ty = Type::List(Box::new(Type::Int));
     let module = HirModule {
@@ -1400,7 +1450,9 @@ fn test_structured_stmt_bridge_handles_copy_typed_return_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("return (9.0 as f64).sqrt();"));
+    assert!(generated
+        .rust_source
+        .contains("return (9.0 as f64).sqrt();"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed return should be emitted through structured stmt bridge"

@@ -63,6 +63,7 @@ status: **partially met**
 - [x] Production emit wrappers now route through explicit `Result`-based structured-attempt helpers (`try_emit_structured_stmt`, `try_emit_structured_expr`) before fallback
 - [x] Core structured stmt/expr emission now rewrites lowered special-name idents (stdlib math constants + module constants) before render, so these names no longer force fallback in main emit-path gating
 - [x] Core structured expr emission now attempts intrinsic and registry-method call lowering before fallback (`HirExpr::Call` via `try_emit_intrinsic_via_registry`, `HirExpr::MethodCall` via `try_emit_method_via_registry`)
+- [x] Core structured expr emission now attempts signature-safe plain function-call lowering before fallback (`HirExpr::Call` via `try_emit_structured_plain_call_with_signature` for by-value, type-matching args)
 - [x] Core stmt/expr wrappers now attempt structured lowering before force-fallback gating; borrowed-param compare/bool expressions remain explicitly guarded to fallback semantics
 - [x] Legacy recursive force-fallback gating helpers were removed from core wrappers (`should_force_*_fallback`, `expr_contains_force_fallback_name`), keeping fallback as a pure post-structured sink
 - [x] Structured stmt emission now bridges non-leaf expression statements through `try_emit_structured_expr` before full stmt fallback (with proper `;`/newline sink)
