@@ -914,6 +914,45 @@ impl RustEmitter {
         self.emit_module_body(module, module_public, test_mode);
     }
 
+    fn try_emit_structured_stmt(&mut self, stmt: &HirStmt) -> Result<bool, crate::CodegenError> {
+        let scope_ctx = ScopeContext {
+            function_return_type: self.current_return_type.clone(),
+            in_generator_closure: self.emission_ctx.in_generator_closure,
+            in_display_impl: self.emission_ctx.in_display_impl,
+            in_loop_with_else: self.current_loop_has_else(),
+            class_scope: if self.current_class_name.is_some() {
+                ClassScope::Inside
+            } else {
+                ClassScope::Outside
+            },
+        };
+
+        if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result(
+            stmt,
+            &self.mutated_vars,
+            &self.borrowed_params,
+            &scope_ctx,
+        )? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            self.emit_lowered_stmts(&lowered_stmts);
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    fn try_emit_structured_expr(&mut self, expr: &HirExpr) -> Result<bool, crate::CodegenError> {
+        if let Some(lowered_expr) = try_lower_leaf_expr_result(expr)? {
+            self.lowering_stats.expr_structured += 1;
+            self.lowering_stats.expr_candidate_structured += 1;
+            self.write(&crate::render_expr(&lowered_expr));
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         self.lowering_stats.stmt_total += 1;
         if self.fallback_depth > 0 {
@@ -927,30 +966,9 @@ impl RustEmitter {
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;
         }
-        let scope_ctx = ScopeContext {
-            function_return_type: self.current_return_type.clone(),
-            in_generator_closure: self.emission_ctx.in_generator_closure,
-            in_display_impl: self.emission_ctx.in_display_impl,
-            in_loop_with_else: self.current_loop_has_else(),
-            class_scope: if self.current_class_name.is_some() {
-                ClassScope::Inside
-            } else {
-                ClassScope::Outside
-            },
-        };
-        match try_lower_simple_stmt_with_scope_result(
-            stmt,
-            &self.mutated_vars,
-            &self.borrowed_params,
-            &scope_ctx,
-        ) {
-            Ok(Some(lowered_stmts)) => {
-                self.lowering_stats.stmt_structured += 1;
-                self.lowering_stats.stmt_candidate_structured += 1;
-                self.emit_lowered_stmts(&lowered_stmts);
-                return;
-            }
-            Ok(None) => {}
+        match self.try_emit_structured_stmt(stmt) {
+            Ok(true) => return,
+            Ok(false) => {}
             Err(_) => {
                 self.lowering_stats.stmt_lowering_errors += 1;
                 self.emit_stmt_fallback(stmt);
@@ -973,14 +991,9 @@ impl RustEmitter {
             self.emit_expr_fallback(expr);
             return;
         }
-        match try_lower_leaf_expr_result(expr) {
-            Ok(Some(lowered_expr)) => {
-                self.lowering_stats.expr_structured += 1;
-                self.lowering_stats.expr_candidate_structured += 1;
-                self.write(&crate::render_expr(&lowered_expr));
-                return;
-            }
-            Ok(None) => {}
+        match self.try_emit_structured_expr(expr) {
+            Ok(true) => return,
+            Ok(false) => {}
             Err(_) => {
                 self.lowering_stats.expr_lowering_errors += 1;
                 self.emit_expr_fallback(expr);
