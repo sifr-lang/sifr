@@ -2,8 +2,8 @@
 
 use crate::{RustExpr, RustLiteral, RustMatchArm, RustStmt};
 
-fn owned_str(arg: &str) -> String {
-    format!("({arg}).to_string()")
+fn owned_str(arg: &RustExpr) -> String {
+    format!("({}).to_string()", crate::render_expr(arg))
 }
 
 fn io_other_error_expr(message: &str) -> String {
@@ -152,7 +152,7 @@ fn build_open_match(path_ref: &str, success_expr: &str, invalid_expr: &str) -> S
     format!("match __mode.as_str() {{ {}, _ => {invalid_expr} }}", arms.join(", "))
 }
 
-pub(super) fn lower_builtin_open(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -178,7 +178,7 @@ pub(super) fn lower_builtin_open(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::RawCode(code))
 }
 
-pub(super) fn lower_open_file(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_open_file(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -205,7 +205,7 @@ pub(super) fn lower_open_file(args: &[String]) -> Option<RustExpr> {
     Some(RustExpr::RawCode(code))
 }
 
-pub(super) fn lower_file_read(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_file_read(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -213,8 +213,9 @@ pub(super) fn lower_file_read(args: &[String]) -> Option<RustExpr> {
     read_body.push_str("let mut __s = String::new(); ");
     read_body.push_str("__r.read_to_string(&mut __s).map_err(__io_err)?; ");
     read_body.push_str("Ok(__s)");
+    let hid_expr = crate::render_expr(&args[0]);
     Some(wrap_handle_result(
-        &args[0],
+        &hid_expr,
         "String",
         "use std::io::Read;",
         "TextRead(ref mut __r)",
@@ -223,18 +224,20 @@ pub(super) fn lower_file_read(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_file_write(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_file_write(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
+    let hid_expr = crate::render_expr(&args[0]);
+    let data_expr = crate::render_expr(&args[1]);
     let mut write_body = String::new();
     write_body.push_str("let __data: &str = (");
-    write_body.push_str(&args[1]);
+    write_body.push_str(&data_expr);
     write_body.push_str(").as_ref(); ");
     write_body.push_str("__w.write_all(__data.as_bytes()).map_err(__io_err)?; ");
     write_body.push_str("Ok(())");
     Some(wrap_handle_result(
-        &args[0],
+        &hid_expr,
         "()",
         "use std::io::Write;",
         "TextWrite(ref mut __w)",
@@ -243,7 +246,7 @@ pub(super) fn lower_file_write(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_file_readline(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_file_readline(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -254,8 +257,9 @@ pub(super) fn lower_file_readline(args: &[String]) -> Option<RustExpr> {
     readline_body.push_str("if __line.ends_with('\\n') { __line.pop(); ");
     readline_body.push_str("if __line.ends_with('\\r') { __line.pop(); } } ");
     readline_body.push_str("Ok(Some(__line)) }");
+    let hid_expr = crate::render_expr(&args[0]);
     Some(wrap_handle_result(
-        &args[0],
+        &hid_expr,
         "Option<String>",
         "use std::io::BufRead;",
         "TextRead(ref mut __r)",
@@ -264,7 +268,7 @@ pub(super) fn lower_file_readline(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_file_readlines(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_file_readlines(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -276,8 +280,9 @@ pub(super) fn lower_file_readlines(args: &[String]) -> Option<RustExpr> {
     readlines_body.push_str("if __l.ends_with('\\n') { __l.pop(); ");
     readlines_body.push_str("if __l.ends_with('\\r') { __l.pop(); } } ");
     readlines_body.push_str("__lines.push(__l); } Ok(__lines)");
+    let hid_expr = crate::render_expr(&args[0]);
     Some(wrap_handle_result(
-        &args[0],
+        &hid_expr,
         "Vec<String>",
         "use std::io::BufRead;",
         "TextRead(ref mut __r)",
@@ -311,7 +316,7 @@ pub(super) fn lower_file_close(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_file_read_bytes(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_file_read_bytes(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -319,8 +324,9 @@ pub(super) fn lower_file_read_bytes(args: &[String]) -> Option<RustExpr> {
     read_bytes_body.push_str("let mut __buf = Vec::new(); ");
     read_bytes_body.push_str("__r.read_to_end(&mut __buf).map_err(__io_err)?; ");
     read_bytes_body.push_str("Ok(__buf.iter().map(|&b| b as i64).collect())");
+    let hid_expr = crate::render_expr(&args[0]);
     Some(wrap_handle_result(
-        &args[0],
+        &hid_expr,
         "Vec<i64>",
         "use std::io::Read;",
         "BinaryRead(ref mut __r)",
@@ -329,18 +335,20 @@ pub(super) fn lower_file_read_bytes(args: &[String]) -> Option<RustExpr> {
     ))
 }
 
-pub(super) fn lower_file_write_bytes(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_file_write_bytes(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
+    let hid_expr = crate::render_expr(&args[0]);
+    let data_expr = crate::render_expr(&args[1]);
     let mut write_bytes_body = String::new();
     write_bytes_body.push_str("let __data: Vec<u8> = (");
-    write_bytes_body.push_str(&args[1]);
+    write_bytes_body.push_str(&data_expr);
     write_bytes_body.push_str(").iter().map(|&b| b as u8).collect(); ");
     write_bytes_body.push_str("__w.write_all(&__data).map_err(__io_err)?; ");
     write_bytes_body.push_str("Ok(())");
     Some(wrap_handle_result(
-        &args[0],
+        &hid_expr,
         "()",
         "use std::io::Write;",
         "BinaryWrite(ref mut __w)",
