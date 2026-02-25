@@ -2,11 +2,11 @@
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-fn arg_expr(args: &[String], idx: usize) -> RustExpr {
-    RustExpr::Ident(args[idx].clone())
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
 }
 
-fn ref_arg(args: &[String], idx: usize) -> RustExpr {
+fn ref_arg(args: &[RustExpr], idx: usize) -> RustExpr {
     RustExpr::Ref {
         mutable: false,
         expr: Box::new(arg_expr(args, idx)),
@@ -63,7 +63,7 @@ fn map_to_unit(expr: RustExpr) -> RustExpr {
     }
 }
 
-pub(super) fn lower_read_text(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_read_text(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -77,7 +77,7 @@ pub(super) fn lower_read_text(args: &[String]) -> Option<RustExpr> {
     }))
 }
 
-pub(super) fn lower_write_text(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_write_text(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -98,7 +98,7 @@ pub(super) fn lower_write_text(args: &[String]) -> Option<RustExpr> {
     })))
 }
 
-pub(super) fn lower_exists(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_exists(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -109,7 +109,7 @@ pub(super) fn lower_exists(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_read_lines(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_read_lines(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -153,7 +153,7 @@ pub(super) fn lower_read_lines(args: &[String]) -> Option<RustExpr> {
     }))
 }
 
-pub(super) fn lower_append_text(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_append_text(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -214,7 +214,7 @@ pub(super) fn lower_append_text(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_getcwd(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_getcwd(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -243,7 +243,7 @@ pub(super) fn lower_getcwd(args: &[String]) -> Option<RustExpr> {
     }))
 }
 
-pub(super) fn lower_listdir(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_listdir(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -306,7 +306,7 @@ pub(super) fn lower_listdir(args: &[String]) -> Option<RustExpr> {
     }))
 }
 
-pub(super) fn lower_walk_dir(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_walk_dir(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -419,7 +419,7 @@ pub(super) fn lower_walk_dir(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_mkdir(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_mkdir(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -433,7 +433,7 @@ pub(super) fn lower_mkdir(args: &[String]) -> Option<RustExpr> {
     })))
 }
 
-pub(super) fn lower_rmdir(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_rmdir(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -447,7 +447,7 @@ pub(super) fn lower_rmdir(args: &[String]) -> Option<RustExpr> {
     })))
 }
 
-pub(super) fn lower_remove_file(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_remove_file(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -461,7 +461,7 @@ pub(super) fn lower_remove_file(args: &[String]) -> Option<RustExpr> {
     })))
 }
 
-pub(super) fn lower_rename(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_rename(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -475,7 +475,7 @@ pub(super) fn lower_rename(args: &[String]) -> Option<RustExpr> {
     })))
 }
 
-pub(super) fn lower_is_file(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_is_file(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -486,7 +486,7 @@ pub(super) fn lower_is_file(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_is_dir(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_is_dir(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -497,7 +497,7 @@ pub(super) fn lower_is_dir(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_copy_file(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_copy_file(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -511,7 +511,7 @@ pub(super) fn lower_copy_file(args: &[String]) -> Option<RustExpr> {
     })))
 }
 
-pub(super) fn lower_rmdir_all(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_rmdir_all(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -525,7 +525,7 @@ pub(super) fn lower_rmdir_all(args: &[String]) -> Option<RustExpr> {
     })))
 }
 
-pub(super) fn lower_gettempdir(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_gettempdir(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -547,7 +547,7 @@ pub(super) fn lower_gettempdir(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_makedirs(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_makedirs(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
