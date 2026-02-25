@@ -1324,6 +1324,8 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     assert!(!lib_src.contains("CodegenLoweringMode"));
     assert!(!lib_src.contains("LegacyOnly"));
     assert!(!lib_src.contains("StructuredPreferred"));
+    assert!(!lib_src.contains("should_force_stmt_fallback"));
+    assert!(!lib_src.contains("should_force_expr_fallback"));
 
     let emit_stmt_start = lib_src
         .find("fn emit_stmt(&mut self, stmt: &HirStmt) {")
