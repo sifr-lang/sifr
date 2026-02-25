@@ -241,11 +241,11 @@ impl RustEmitter {
                             | Type::Str
                     );
                     if is_collection {
-                        self.emit_expr(operand);
+                        self.emit_parenthesized_expr(operand);
                         self.write(".is_empty()");
                     } else if matches!(operand.ty(), Type::Union(_)) {
                         // Optional truthiness: `not x` where x is T|None -> `x.is_none()`
-                        self.emit_expr(operand);
+                        self.emit_parenthesized_expr(operand);
                         self.write(".is_none()");
                     } else {
                         self.write("!");
@@ -469,7 +469,7 @@ impl RustEmitter {
                     }
                 } else if func == "round" {
                     if args.len() == 1 {
-                        self.emit_expr(&args[0]);
+                        self.emit_parenthesized_expr(&args[0]);
                         self.write(".round() as i64");
                     } else if args.len() == 2 {
                         // round(x, n) -> (x * 10^n).round() / 10^n
@@ -497,7 +497,7 @@ impl RustEmitter {
                             }
                             Type::Str => {
                                 // int(str) -> Result<i64, ParseError>
-                                self.emit_expr(&args[0]);
+                                self.emit_parenthesized_expr(&args[0]);
                                 self.write(".parse::<i64>().map_err(|e| ParseError { message: e.to_string() })");
                             }
                             Type::Bool => {
@@ -533,7 +533,7 @@ impl RustEmitter {
                             }
                             Type::Str => {
                                 // float(str) -> Result<f64, ParseError>
-                                self.emit_expr(&args[0]);
+                                self.emit_parenthesized_expr(&args[0]);
                                 self.write(".parse::<f64>().map_err(|e| ParseError { message: e.to_string() })");
                             }
                             _ => {
@@ -554,7 +554,7 @@ impl RustEmitter {
                             }
                             Type::Str | Type::List(_) | Type::Dict(_, _) => {
                                 self.write("!");
-                                self.emit_expr(&args[0]);
+                                self.emit_parenthesized_expr(&args[0]);
                                 self.write(".is_empty()");
                             }
                             Type::Tuple(elems) => {
@@ -580,7 +580,7 @@ impl RustEmitter {
                     if args.len() == 2 {
                         // min(a, b) -> std::cmp::min(a, b) or a.min(b) for floats
                         if matches!(args[0].ty(), Type::Float) {
-                            self.emit_expr(&args[0]);
+                            self.emit_parenthesized_expr(&args[0]);
                             self.write(".min(");
                             self.emit_expr(&args[1]);
                             self.write(")");
@@ -594,18 +594,18 @@ impl RustEmitter {
                     } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float))
                     {
                         // min(list[float]) -> Option[float] (safe: None on empty)
-                        self.emit_expr(&args[0]);
+                        self.emit_parenthesized_expr(&args[0]);
                         self.write(".iter().cloned().reduce(f64::min)");
                     } else {
                         // min(list[T]) -> Option[T] (safe: None on empty)
-                        self.emit_expr(&args[0]);
+                        self.emit_parenthesized_expr(&args[0]);
                         self.write(".iter().min().cloned()");
                     }
                 } else if func == "max" {
                     if args.len() == 2 {
                         // max(a, b) -> std::cmp::max(a, b) or a.max(b) for floats
                         if matches!(args[0].ty(), Type::Float) {
-                            self.emit_expr(&args[0]);
+                            self.emit_parenthesized_expr(&args[0]);
                             self.write(".max(");
                             self.emit_expr(&args[1]);
                             self.write(")");
@@ -619,16 +619,16 @@ impl RustEmitter {
                     } else if matches!(args[0].ty(), Type::List(ref e) if matches!(e.as_ref(), Type::Float))
                     {
                         // max(list[float]) -> Option[float] (safe: None on empty)
-                        self.emit_expr(&args[0]);
+                        self.emit_parenthesized_expr(&args[0]);
                         self.write(".iter().cloned().reduce(f64::max)");
                     } else {
                         // max(list[T]) -> Option[T] (safe: None on empty)
-                        self.emit_expr(&args[0]);
+                        self.emit_parenthesized_expr(&args[0]);
                         self.write(".iter().max().cloned()");
                     }
                 } else if func == "sum" {
                     // sum(list) -> list.iter().sum()
-                    self.emit_expr(&args[0]);
+                    self.emit_parenthesized_expr(&args[0]);
                     self.write(".iter().sum::<");
                     if let Type::List(ref elem) = args[0].ty() {
                         self.write(&elem.rust_type());
@@ -651,29 +651,29 @@ impl RustEmitter {
                 } else if func == "reversed" {
                     // reversed(list) -> { let mut v = list.clone(); v.reverse(); v }
                     self.write("{ let mut _rev = ");
-                    self.emit_expr(&args[0]);
+                    self.emit_parenthesized_expr(&args[0]);
                     self.write(".clone(); _rev.reverse(); _rev }");
                 } else if func == "enumerate" {
                     // enumerate(list) -> list.iter().enumerate().map(|(i, v)| (i as i64, v.clone())).collect()
-                    self.emit_expr(&args[0]);
+                    self.emit_parenthesized_expr(&args[0]);
                     self.write(".iter().enumerate().map(|(i, v)| (i as i64, v.clone())).collect::<Vec<_>>()");
                 } else if func == "zip" {
                     // zip(a, b) -> a.iter().zip(b.iter()).map(|(a, b)| (a.clone(), b.clone())).collect()
-                    self.emit_expr(&args[0]);
+                    self.emit_parenthesized_expr(&args[0]);
                     self.write(".iter().zip(");
-                    self.emit_expr(&args[1]);
+                    self.emit_parenthesized_expr(&args[1]);
                     self.write(".iter()).map(|(a, b)| (a.clone(), b.clone())).collect::<Vec<_>>()");
                 } else if func == "any" {
                     // any(list) -> list.iter().any(|x| *x)
-                    self.emit_expr(&args[0]);
+                    self.emit_parenthesized_expr(&args[0]);
                     self.write(".iter().any(|x| *x)");
                 } else if func == "all" {
                     // all(list) -> list.iter().all(|x| *x)
-                    self.emit_expr(&args[0]);
+                    self.emit_parenthesized_expr(&args[0]);
                     self.write(".iter().all(|x| *x)");
                 } else if func == "map" {
                     // map(func, list) -> list.clone().into_iter().map(func).collect()
-                    self.emit_expr(&args[1]);
+                    self.emit_parenthesized_expr(&args[1]);
                     self.write(".clone().into_iter().map(");
                     self.emit_lambda_untyped(&args[0]);
                     self.write(").collect::<Vec<_>>()");
@@ -1077,20 +1077,20 @@ impl RustEmitter {
                 let coll_ty = collection.ty();
                 match coll_ty {
                     Type::Dict(_, _) => {
-                        self.emit_expr(collection);
+                        self.emit_parenthesized_expr(collection);
                         self.write(".contains_key(");
                         self.emit_key_ref_expr(element);
                         self.write(")");
                     }
                     Type::Str => {
-                        self.emit_expr(collection);
+                        self.emit_parenthesized_expr(collection);
                         self.write(".contains(");
                         self.emit_str_ref_expr(element);
                         self.write(")");
                     }
                     _ => {
                         // List: collection.contains(&element)
-                        self.emit_expr(collection);
+                        self.emit_parenthesized_expr(collection);
                         self.write(".contains(&");
                         self.emit_expr(element);
                         self.write(")");
@@ -1242,7 +1242,7 @@ impl RustEmitter {
                     if args.is_empty() {
                         self.write("String::new()");
                     } else {
-                        self.emit_expr(&args[0]);
+                        self.emit_parenthesized_expr(&args[0]);
                         self.write(".to_string()");
                     }
                     self.write(&format!(", kind: \"{kind}\".to_string() }}"));
