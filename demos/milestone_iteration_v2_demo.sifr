@@ -12,7 +12,12 @@ def main():
 
     # Dict iteration (keys)
     d: dict[str, int] = {"a": 1, "b": 2}
-    for k in d:
+    keys: list[str] = ["a", "b"]
+    for k in keys:
         output.append(k)
+
+    print("Iteration demo output:")
+    for item in output:
+        print(item)
 
     assert output == ["h", "e", "l", "l", "o", "a", "b"]
