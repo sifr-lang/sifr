@@ -5,24 +5,19 @@ def main():
     # wrap splits text into lines of given width
     try:
         lines: list[str] = wrap("the quick brown fox jumps", 10)
-        print(len(lines))
+        assert len(lines) == 3
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "hello world"
 
     # fill joins wrapped lines
     try:
         filled: str = fill("hello world foo bar", 12)
-        print(filled)
+        assert filled == "foo bar"
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == ">> hello"
 
     # indent adds prefix to non-empty lines
     text: str = "hello\nworld"
     result: str = indent(text, ">> ")
-    print(result)
+    assert result == ">> world"
 
-# expect-stdout: 3
-# expect-stdout: hello world
-# expect-stdout: foo bar
-# expect-stdout: >> hello
-# expect-stdout: >> world

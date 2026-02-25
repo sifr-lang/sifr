@@ -22,9 +22,7 @@ def findMaxLength(nums: list[int]) -> int:
     return res
 
 def main():
-    print(findMaxLength([0,1]))
-    print(findMaxLength([0,1,0]))
+    assert findMaxLength([0,1]) == 2
+    assert findMaxLength([0,1,0]) == 2
 
-# expect-stdout: 2
-# expect-stdout: 2
 

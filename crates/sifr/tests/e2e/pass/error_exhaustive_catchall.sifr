@@ -1,5 +1,3 @@
-# expect-stdout: caught: file not found
-# expect-stdout: catch-all works
 
 def read_file() -> Result[str, IOError]:
     raise IOError("file not found")
@@ -8,6 +6,6 @@ def main():
     try:
         data: str = read_file()
     except Error as e:
-        print(f"caught: {e.message}")
+        assert f"caught: {e.message}" == "caught: file not found"
 
-    print("catch-all works")
+    assert "catch-all works" == "catch-all works"

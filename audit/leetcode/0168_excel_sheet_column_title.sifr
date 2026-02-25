@@ -11,11 +11,8 @@ def convertToTitle(columnNumber: int) -> str:
     return res[::-1] # reverse output
 
 def main():
-    print(convertToTitle(1))
-    print(convertToTitle(28))
-    print(convertToTitle(701))
+    assert convertToTitle(1) == A
+    assert convertToTitle(28) == AB
+    assert convertToTitle(701) == ZY
 
-# expect-stdout: A
-# expect-stdout: AB
-# expect-stdout: ZY
 

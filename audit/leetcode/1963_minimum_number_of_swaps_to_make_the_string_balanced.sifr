@@ -14,9 +14,7 @@ def minSwaps(s: str) -> int:
     return (maxClose + 1) // 2  # Or math.ceil(maxClose / 2)
 
 def main():
-    print(minSwaps("][]["))
-    print(minSwaps("[][][]"))
+    assert minSwaps("][][") == 1
+    assert minSwaps("[][][]") == 0
 
-# expect-stdout: 1
-# expect-stdout: 0
 

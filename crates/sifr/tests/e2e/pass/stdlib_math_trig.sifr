@@ -2,16 +2,10 @@
 from sifr.math import log, sin, cos, tan, abs_val, pow_val, round_val
 
 def main():
-    print(log(1.0))
-    print(sin(0.0))
-    print(cos(0.0))
-    print(abs_val(-5.0))
-    print(pow_val(2.0, 3.0))
-    print(round_val(3.7))
+    assert log(1.0) == 0
+    assert sin(0.0) == 0
+    assert cos(0.0) == 1
+    assert abs_val(-5.0) == 5
+    assert pow_val(2.0, 3.0) == 8
+    assert round_val(3.7) == 4
 
-# expect-stdout: 0
-# expect-stdout: 0
-# expect-stdout: 1
-# expect-stdout: 5
-# expect-stdout: 8
-# expect-stdout: 4

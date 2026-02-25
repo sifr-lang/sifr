@@ -32,9 +32,7 @@ def strStr(haystack: str, needle: str) -> int:
     return -1
 
 def main():
-    print(strStr("sadbutsad", "sad"))
-    print(strStr("leetcode", "leeto"))
+    assert strStr("sadbutsad", "sad") == 0
+    assert strStr("leetcode", "leeto") == -1
 
-# expect-stdout: 0
-# expect-stdout: -1
 

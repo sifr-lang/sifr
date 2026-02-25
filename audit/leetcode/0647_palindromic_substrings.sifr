@@ -18,9 +18,7 @@ def countPali(s, l, r):
     return res
 
 def main():
-    print(countSubstrings("abc"))
-    print(countSubstrings("aaa"))
+    assert countSubstrings("abc") == 3
+    assert countSubstrings("aaa") == 6
 
-# expect-stdout: 3
-# expect-stdout: 6
 

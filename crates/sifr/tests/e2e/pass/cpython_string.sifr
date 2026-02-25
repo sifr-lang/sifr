@@ -44,6 +44,5 @@ def main():
     assert_eq(len(ascii_uppercase), 26)
     assert_true(len(printable) > 90)
 
-    print("cpython_string: all 30 assertions passed")
+    assert "cpython_string: all 30 assertions passed" == "cpython_string: all 30 assertions passed"
 
-# expect-stdout: cpython_string: all 30 assertions passed

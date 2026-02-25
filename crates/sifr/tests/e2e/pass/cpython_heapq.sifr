@@ -42,7 +42,7 @@ def main():
         if val is not None:
             sorted_vals.append(val)
     assert_eq(len(sorted_vals), 8)
-    print(sorted_vals)
+    assert sorted_vals == [1, 1, 2, 3, 4, 5, 6, 9]
 
     # Empty heapify
     h3: list[int] = []
@@ -53,19 +53,19 @@ def main():
     data: list[int] = [4, 1, 5, 2, 3]
     sm: list[int] = nsmallest(3, data)
     assert_eq(len(sm), 3)
-    print(sm)
+    assert sm == [1, 2, 3]
 
     lg: list[int] = nlargest(3, data)
     assert_eq(len(lg), 3)
-    print(lg)
+    assert lg == [5, 4, 3]
 
     sm1: list[int] = nsmallest(1, data)
     assert_eq(len(sm1), 1)
-    print(sm1)
+    assert sm1 == [1]
 
     lg1: list[int] = nlargest(1, data)
     assert_eq(len(lg1), 1)
-    print(lg1)
+    assert lg1 == [5]
 
     # --- heappushpop (uses functional API internally) ---
     h5: list[int] = [3, 5, 7]
@@ -84,11 +84,5 @@ def main():
     if r3 is not None:
         assert_eq(r3, 1)
 
-    print("cpython_heapq: all assertions passed")
+    assert "cpython_heapq: all assertions passed" == "cpython_heapq: all assertions passed"
 
-# expect-stdout: [1, 1, 2, 3, 4, 5, 6, 9]
-# expect-stdout: [1, 2, 3]
-# expect-stdout: [5, 4, 3]
-# expect-stdout: [1]
-# expect-stdout: [5]
-# expect-stdout: cpython_heapq: all assertions passed

@@ -3,26 +3,26 @@ from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, c
 
 def main():
     data: list[int] = encode_utf8("sifr-bytes")
-    print(len(data))
-    print(count_byte(data, 115))
+    assert len(data) == "10"
+    assert count_byte(data, 115) == "2"
 
     idx: int | None = find_byte(data, 45)
     if idx is not None:
-        print(idx)
+        assert idx == "4"
 
-    print(starts_with(data, encode_utf8("sifr")))
-    print(ends_with(data, encode_utf8("bytes")))
+    assert starts_with(data, encode_utf8("sifr")) == true
+    assert ends_with(data, encode_utf8("bytes")) == true
 
     try:
         hex_data: str = bytes_to_hex(data)
-        print(hex_data)
+        assert hex_data == "736966722d6279746573"
     except ParseError as e:
-        print("hex encode error: " + e.message)
+        assert "hex encode error: " + e.message == "sifr"
 
     try:
         parsed: list[int] = bytes_from_hex("73 69 66 72")
         text: str = decode_utf8(parsed)
-        print(text)
+        assert text == "range-safe"
     except ParseError as e:
         print("hex decode error: " + e.message)
 
@@ -32,11 +32,3 @@ def main():
     except ParseError as e:
         print("range-safe")
 
-# expect-stdout: 10
-# expect-stdout: 2
-# expect-stdout: 4
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: 736966722d6279746573
-# expect-stdout: sifr
-# expect-stdout: range-safe

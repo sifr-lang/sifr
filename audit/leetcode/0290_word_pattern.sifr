@@ -17,9 +17,7 @@ def wordPattern(pattern: str, s: str) -> bool:
     return True
 
 def main():
-    print(wordPattern("abba", "dog cat cat dog"))
-    print(wordPattern("abba", "dog cat cat fish"))
+    assert wordPattern("abba", "dog cat cat dog") == True
+    assert wordPattern("abba", "dog cat cat fish") == False
 
-# expect-stdout: true
-# expect-stdout: false
 

@@ -5,31 +5,31 @@ from sifr.io import write_text
 def main():
     h = sha256_obj("si")
     h.update("fr")
-    print(h.hexdigest() == sha256("sifr"))
-    print(h.name)
-    print(h.digest_size)
-    print(h.block_size)
+    assert h.hexdigest() == sha256("sifr") == true
+    assert h.name == "sha256"
+    assert h.digest_size == "32"
+    assert h.block_size == "64"
 
     c = copy_hash(h)
     c.update("-copy")
-    print(h.hexdigest() == sha256("sifr"))
-    print(c.hexdigest() == sha256("sifr-copy"))
+    assert h.hexdigest() == sha256("sifr") == true
+    assert c.hexdigest() == sha256("sifr-copy") == true
 
     m = md5_obj("demo")
-    print(m.hexdigest())
-    print(m.digest_size == 16)
+    assert m.hexdigest() == "fe01ce2a7fbac8fafaed7c982a04e229"
+    assert m.digest_size == 16 == true
 
-    print(len(algorithms_guaranteed()) >= 8)
+    assert len(algorithms_guaranteed()) >= 8 == true
     try:
         h2: HashObject = new("sha256", "api")
-        print(h2.hexdigest() == sha256("api"))
+        assert h2.hexdigest() == sha256("api") == true
     except ValueError as e:
-        print(False)
+        assert False == true
 
     _ = write_text("tmp_m5_hashlib_demo.txt", "digest-me")
     try:
         fd: str = file_digest("tmp_m5_hashlib_demo.txt", "sha256")
-        print(fd == sha256("digest-me"))
+        assert fd == sha256("digest-me") == true
     except HashlibError as e:
         print(False)
 
@@ -39,15 +39,3 @@ def main():
     except HashlibError as e:
         print(True)
 
-# expect-stdout: true
-# expect-stdout: sha256
-# expect-stdout: 32
-# expect-stdout: 64
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: fe01ce2a7fbac8fafaed7c982a04e229
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true

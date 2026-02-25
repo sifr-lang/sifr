@@ -7,18 +7,12 @@ class HttpStatus(Enum):
 
 def main():
     s: HttpStatus = HttpStatus.OK
-    print(s.value())
-    print(s.name())
+    assert s.value() == 200
+    assert s.name() == OK
     s2: HttpStatus = HttpStatus.NOT_FOUND
-    print(s2.value())
-    print(s2.name())
+    assert s2.value() == 404
+    assert s2.name() == NOT_FOUND
     s3: HttpStatus = HttpStatus.INTERNAL_ERROR
-    print(s3.value())
-    print(s3.name())
+    assert s3.value() == 500
+    assert s3.name() == INTERNAL_ERROR
 
-# expect-stdout: 200
-# expect-stdout: OK
-# expect-stdout: 404
-# expect-stdout: NOT_FOUND
-# expect-stdout: 500
-# expect-stdout: INTERNAL_ERROR

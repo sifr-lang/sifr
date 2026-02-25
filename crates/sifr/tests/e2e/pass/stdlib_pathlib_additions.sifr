@@ -1,24 +1,19 @@
-# expect-stdout: with_name = /tmp/newname.txt
-# expect-stdout: with_suffix = /tmp/myfile.csv
-# expect-stdout: touch ok = true
-# expect-stdout: exists after touch = true
-# expect-stdout: unlink ok = true
 
 from sifr.pathlib import Path
 
 def main():
     p: Path = Path("/tmp/myfile.txt")
-    print("with_name = " + p.with_name("newname.txt"))
-    print("with_suffix = " + p.with_suffix(".csv"))
+    assert "with_name = " + p.with_name("newname.txt") == "with_name = /tmp/newname.txt"
+    assert "with_suffix = " + p.with_suffix(".csv") == "with_suffix = /tmp/myfile.csv"
 
     tmp: Path = Path("/tmp/sifr_pathlib_test.txt")
     try:
         _t: None = tmp.touch()
-        print("touch ok = true")
+        assert "touch ok = true" == "touch ok = true"
     except IOError as e:
-        print("touch error: " + e.message)
+        assert "touch error: " + e.message == "exists after touch = true"
 
-    print("exists after touch = " + str(tmp.exists()))
+    assert "exists after touch = " + str(tmp.exists()) == "unlink ok = true"
 
     try:
         _u: None = tmp.unlink()

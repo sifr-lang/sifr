@@ -16,9 +16,7 @@ def isInterleave(s1: str, s2: str, s3: str) -> bool:
     return dp[0][0]
 
 def main():
-    print(isInterleave("aabcc", "dbbca", "aadbbcbcac"))
-    print(isInterleave("aabcc", "dbbca", "aadbbbaccc"))
+    assert isInterleave("aabcc", "dbbca", "aadbbcbcac") == True
+    assert isInterleave("aabcc", "dbbca", "aadbbbaccc") == False
 
-# expect-stdout: true
-# expect-stdout: false
 

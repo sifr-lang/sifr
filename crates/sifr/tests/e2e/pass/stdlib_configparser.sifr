@@ -1,7 +1,3 @@
-# expect-stdout: host = localhost
-# expect-stdout: port = 5432
-# expect-stdout: has_host = true
-# expect-stdout: has_missing = false
 
 from sifr.configparser import ConfigParser
 
@@ -11,7 +7,7 @@ def main():
 
     host: str = config.get("database", "host")
     port: str = config.get("database", "port")
-    print("host = " + host)
-    print("port = " + port)
-    print("has_host = " + str(config.has_option("database", "host")))
-    print("has_missing = " + str(config.has_option("database", "missing")))
+    assert "host = " + host == "host = localhost"
+    assert "port = " + port == "port = 5432"
+    assert "has_host = " + str(config.has_option("database", "host")) == "has_host = true"
+    assert "has_missing = " + str(config.has_option("database", "missing")) == "has_missing = false"

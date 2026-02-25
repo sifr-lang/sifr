@@ -2,42 +2,6 @@
 # Demonstrates all new modules added in milestone_new_modules:
 # operator, calendar, html, sys, subprocess, configparser, gzip, zipfile
 
-# expect-stdout: === operator ===
-# expect-stdout: add(10, 5) = 15
-# expect-stdout: sub(10, 5) = 5
-# expect-stdout: mul(3, 4) = 12
-# expect-stdout: floordiv(7, 2) = 3
-# expect-stdout: mod_val(7, 2) = 1
-# expect-stdout: neg(42) = -42
-# expect-stdout: lt(3, 5) = true
-# expect-stdout: eq(5, 5) = true
-# expect-stdout: itemgetter([1,2,3], 1) = 2
-# expect-stdout: === calendar ===
-# expect-stdout: isleap(2000) = true
-# expect-stdout: isleap(1900) = false
-# expect-stdout: isleap(2024) = true
-# expect-stdout: weekday(2024,1,1) = 0
-# expect-stdout: monthrange(2024,2)[1] = 29
-# expect-stdout: === html ===
-# expect-stdout: escape(<b>Hi & Bye</b>) = &lt;b&gt;Hi &amp; Bye&lt;/b&gt;
-# expect-stdout: unescape(&lt;b&gt;Hi &amp; Bye&lt;/b&gt;) = <b>Hi & Bye</b>
-# expect-stdout: === sys ===
-# expect-stdout: version = sifr 0.1.0
-# expect-stdout: maxsize > 0 = true
-# expect-stdout: === subprocess ===
-# expect-stdout: echo hello = hello
-# expect-stdout: === configparser ===
-# expect-stdout: host = db.example.com
-# expect-stdout: port = 5432
-# expect-stdout: has_host = true
-# expect-stdout: has_missing = false
-# expect-stdout: === gzip ===
-# expect-stdout: compressed len > 0 = true
-# expect-stdout: decompressed = Sifr stdlib gzip compression!
-# expect-stdout: === zipfile ===
-# expect-stdout: zip created = true
-# expect-stdout: zip content = Hello from ZipFile!
-# expect-stdout: zip namelist len = 1
 
 from sifr.operator import add, sub, mul, floordiv, mod_val, neg, lt, eq, itemgetter
 from sifr.calendar import isleap, weekday, monthrange
@@ -50,76 +14,76 @@ from sifr.zipfile import ZipFile
 from sifr.os import remove_file
 
 def demo_operator() -> None:
-    print("=== operator ===")
-    print("add(10, 5) = " + str(add(10, 5)))
-    print("sub(10, 5) = " + str(sub(10, 5)))
-    print("mul(3, 4) = " + str(mul(3, 4)))
-    print("floordiv(7, 2) = " + str(floordiv(7, 2)))
-    print("mod_val(7, 2) = " + str(mod_val(7, 2)))
-    print("neg(42) = " + str(neg(42)))
-    print("lt(3, 5) = " + str(lt(3, 5)))
-    print("eq(5, 5) = " + str(eq(5, 5)))
+    assert "=== operator ===" == "=== operator ==="
+    assert "add(10, 5) = " + str(add(10, 5)) == "add(10, 5) = 15"
+    assert "sub(10, 5) = " + str(sub(10, 5)) == "sub(10, 5) = 5"
+    assert "mul(3, 4) = " + str(mul(3, 4)) == "mul(3, 4) = 12"
+    assert "floordiv(7, 2) = " + str(floordiv(7, 2)) == "floordiv(7, 2) = 3"
+    assert "mod_val(7, 2) = " + str(mod_val(7, 2)) == "mod_val(7, 2) = 1"
+    assert "neg(42) = " + str(neg(42)) == "neg(42) = -42"
+    assert "lt(3, 5) = " + str(lt(3, 5)) == "lt(3, 5) = true"
+    assert "eq(5, 5) = " + str(eq(5, 5)) == "eq(5, 5) = true"
     items: list[int] = [1, 2, 3]
-    print("itemgetter([1,2,3], 1) = " + str(itemgetter(items, 1)))
+    assert "itemgetter([1,2,3], 1) = " + str(itemgetter(items, 1)) == "itemgetter([1,2,3], 1) = 2"
 
 def demo_calendar() -> None:
-    print("=== calendar ===")
-    print("isleap(2000) = " + str(isleap(2000)))
-    print("isleap(1900) = " + str(isleap(1900)))
-    print("isleap(2024) = " + str(isleap(2024)))
+    assert "=== calendar ===" == "=== calendar ==="
+    assert "isleap(2000) = " + str(isleap(2000)) == "isleap(2000) = true"
+    assert "isleap(1900) = " + str(isleap(1900)) == "isleap(1900) = false"
+    assert "isleap(2024) = " + str(isleap(2024)) == "isleap(2024) = true"
     wd: int = weekday(2024, 1, 1)
-    print("weekday(2024,1,1) = " + str(wd))
+    assert "weekday(2024,1,1) = " + str(wd) == "weekday(2024,1,1) = 0"
     mr: list[int] = monthrange(2024, 2)
-    print("monthrange(2024,2)[1] = " + str(mr[1]))
+    assert "monthrange(2024,2)[1] = " + str(mr[1]) == "monthrange(2024,2)[1] = 29"
 
 def demo_html() -> None:
-    print("=== html ===")
+    assert "=== html ===" == "=== html ==="
     s: str = "<b>Hi & Bye</b>"
     esc: str = escape(s)
-    print("escape(<b>Hi & Bye</b>) = " + esc)
+    assert "escape(<b>Hi & Bye</b>) = " + esc == "escape(<b>Hi & Bye</b>) = &lt;b&gt;Hi &amp; Bye&lt;/b&gt;"
     unesc: str = unescape(esc)
-    print("unescape(&lt;b&gt;Hi &amp; Bye&lt;/b&gt;) = " + unesc)
+    assert "unescape(&lt;b&gt;Hi &amp; Bye&lt;/b&gt;) = " + unesc == "unescape(&lt;b&gt;Hi &amp; Bye&lt;/b&gt;) = <b>Hi & Bye</b>"
 
 def demo_sys() -> None:
-    print("=== sys ===")
-    print("version = " + version())
+    assert "=== sys ===" == "=== sys ==="
+    assert "version = " + version() == "version = sifr 0.1.0"
     ms: int = maxsize()
-    print("maxsize > 0 = " + str(ms > 0))
+    assert "maxsize > 0 = " + str(ms > 0) == "maxsize > 0 = true"
 
 def demo_subprocess() -> None:
-    print("=== subprocess ===")
+    assert "=== subprocess ===" == "=== subprocess ==="
     try:
         result: str = run("echo hello")
-        print("echo hello = " + result)
+        assert "echo hello = " + result == "echo hello = hello"
     except IOError as e:
-        print("error: " + e.message)
+        assert "error: " + e.message == "=== configparser ==="
 
 def demo_configparser() -> None:
-    print("=== configparser ===")
+    assert "=== configparser ===" == "host = db.example.com"
     config: ConfigParser = ConfigParser()
     config.read_string("[database]\nhost = db.example.com\nport = 5432\n")
-    print("host = " + config.get("database", "host"))
-    print("port = " + config.get("database", "port"))
-    print("has_host = " + str(config.has_option("database", "host")))
-    print("has_missing = " + str(config.has_option("database", "missing")))
+    assert "host = " + config.get("database", "host") == "port = 5432"
+    assert "port = " + config.get("database", "port") == "has_host = true"
+    assert "has_host = " + str(config.has_option("database", "host")) == "has_missing = false"
+    assert "has_missing = " + str(config.has_option("database", "missing")) == "=== gzip ==="
 
 def demo_gzip() -> None:
-    print("=== gzip ===")
+    assert "=== gzip ===" == "compressed len > 0 = true"
     data: str = "Sifr stdlib gzip compression!"
     compressed: list[int] = compress(data)
-    print("compressed len > 0 = " + str(len(compressed) > 0))
+    assert "compressed len > 0 = " + str(len(compressed) > 0) == "decompressed = Sifr stdlib gzip compression!"
     try:
         decompressed: str = decompress(compressed)
-        print("decompressed = " + decompressed)
+        assert "decompressed = " + decompressed == "=== zipfile ==="
     except IOError as e:
-        print("error: " + e.message)
+        assert "error: " + e.message == "zip created = true"
 
 def demo_zipfile() -> None:
-    print("=== zipfile ===")
+    assert "=== zipfile ===" == "zip content = Hello from ZipFile!"
     zf: ZipFile = ZipFile("/tmp/sifr_demo_zipfile.zip")
     try:
         _c: None = zf.create()
-        print("zip created = true")
+        assert "zip created = true" == "zip namelist len = 1"
     except IOError as e:
         print("create error: " + e.message)
     try:

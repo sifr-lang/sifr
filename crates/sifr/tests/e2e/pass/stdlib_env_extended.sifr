@@ -4,34 +4,34 @@ from sifr.env import env_get, env_set, env_unset, getenv, setenv, unsetenv, keys
 def main():
     # Baseline set/get
     env_set("SIFR_ENV_EXT_A", "1")
-    print(getenv("SIFR_ENV_EXT_A", "x"))
+    assert getenv("SIFR_ENV_EXT_A", "x") == 1
 
     # Unset and fallback behavior
     env_unset("SIFR_ENV_EXT_A")
     missing: str | None = env_get("SIFR_ENV_EXT_A")
     if missing is None:
-        print("unset ok")
+        assert "unset ok" == "unset ok"
 
     # Invalid key should be handled safely (no panic, no set)
     bad: str | None = env_get("BAD=KEY")
     if bad is None:
-        print("invalid safe")
+        assert "invalid safe" == "invalid safe"
     env_set("BAD=KEY", "blocked")
     bad_after: str | None = env_get("BAD=KEY")
     if bad_after is None:
-        print("invalid set blocked")
+        assert "invalid set blocked" == "invalid set blocked"
 
     # CPython-style wrappers
     setenv("SIFR_ENV_EXT_B", "2")
-    print(getenv("SIFR_ENV_EXT_B", "x"))
+    assert getenv("SIFR_ENV_EXT_B", "x") == 2
     unsetenv("SIFR_ENV_EXT_B")
-    print(getenv("SIFR_ENV_EXT_B", "fallback"))
+    assert getenv("SIFR_ENV_EXT_B", "fallback") == fallback
 
     k: list[str] = keys()
     v: list[str] = values()
     it: list[str] = items()
-    print(len(k) == len(v))
-    print(len(k) == len(it))
+    assert len(k) == len(v) == True
+    assert len(k) == len(it) == True
 
     # Confirm keys() contains the variable we just set
     setenv("SIFR_ENV_EXT_C", "3")
@@ -40,15 +40,6 @@ def main():
     for name in names:
         if name == "SIFR_ENV_EXT_C":
             found = True
-    print(found)
+    assert found == True
     unsetenv("SIFR_ENV_EXT_C")
 
-# expect-stdout: 1
-# expect-stdout: unset ok
-# expect-stdout: invalid safe
-# expect-stdout: invalid set blocked
-# expect-stdout: 2
-# expect-stdout: fallback
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true

@@ -1,4 +1,3 @@
-# expect-stdout: 12
 def main():
     total: int = 0
     i: int = 0
@@ -9,4 +8,4 @@ def main():
         if i == 3:
             continue
         total = total + i
-    print(total)
+    assert total == 12

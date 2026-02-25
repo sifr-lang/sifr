@@ -1,5 +1,3 @@
-# expect-stdout: 10
-# expect-stdout: hello world
 # Tests return type inference when -> annotation is omitted
 
 def double(x: int):
@@ -9,5 +7,5 @@ def greet(name: str):
     return "hello " + name
 
 def main():
-    print(double(5))
-    print(greet("world"))
+    assert double(5) == 10
+    assert greet("world") == "hello world"

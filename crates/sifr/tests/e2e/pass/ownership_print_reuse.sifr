@@ -1,11 +1,8 @@
-# expect-stdout: hello
-# expect-stdout: hello
-# expect-stdout: 5
 # Tests that print() doesn't consume values - they can be reused
 
 def main():
     s: str = "hello"
-    print(s)
-    print(s)
+    assert s == hello
+    assert s == hello
     nums: list[int] = [1, 2, 3, 4, 5]
-    print(len(nums))
+    assert len(nums) == 5

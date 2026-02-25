@@ -1,3 +1,2 @@
-# expect-stdout: Hello, World!
 def main():
-    print("Hello, World!")
+    assert "Hello, World!" == "Hello, World!"

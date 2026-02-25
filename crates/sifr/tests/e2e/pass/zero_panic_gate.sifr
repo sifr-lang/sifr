@@ -1,9 +1,3 @@
-# expect-stdout: io_safety: all errors caught
-# expect-stdout: parse_safety: all errors caught
-# expect-stdout: collection_safety: all safe behaviors verified
-# expect-stdout: edge_case_safety: all errors caught
-# expect-stdout: subscript_safety: bounds checked
-# expect-stdout: ZERO PANIC GATE: PASS
 
 # Comprehensive E2E test: every fallible stdlib function with invalid input
 # Must compile and run without panicking, handling all errors via try/except
@@ -69,7 +63,7 @@ def main():
         io_errors = io_errors + 1
 
     if io_errors == 7:
-        print("io_safety: all errors caught")
+        assert "io_safety: all errors caught" == "io_safety: all errors caught"
 
     # === 2. Parse Safety ===
 
@@ -114,7 +108,7 @@ def main():
         parse_errors = parse_errors + 1
 
     if parse_errors == 8:
-        print("parse_safety: all errors caught")
+        assert "parse_safety: all errors caught" == "parse_safety: all errors caught"
 
     # === 3. Collection Safety ===
 
@@ -140,7 +134,7 @@ def main():
     collection_checks = collection_checks + 1
 
     if collection_checks == 5:
-        print("collection_safety: all safe behaviors verified")
+        assert "collection_safety: all safe behaviors verified" == "collection_safety: all safe behaviors verified"
 
     # === 4. Edge Case Safety ===
 
@@ -193,7 +187,7 @@ def main():
         edge_errors = edge_errors + 1
 
     if edge_errors == 9:
-        print("edge_case_safety: all errors caught")
+        assert "edge_case_safety: all errors caught" == "edge_case_safety: all errors caught"
 
     # === 5. Subscript Safety ===
 
@@ -207,6 +201,6 @@ def main():
         subscript_checks = subscript_checks + 1
 
     if subscript_checks == 2:
-        print("subscript_safety: bounds checked")
+        assert "subscript_safety: bounds checked" == "subscript_safety: bounds checked"
 
-    print("ZERO PANIC GATE: PASS")
+    assert "ZERO PANIC GATE: PASS" == "ZERO PANIC GATE: PASS"

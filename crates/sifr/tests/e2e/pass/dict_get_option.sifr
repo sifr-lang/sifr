@@ -1,15 +1,13 @@
-# expect-stdout: found: 25
-# expect-stdout: not found
 
 def main():
     ages: dict[str, int] = {"alice": 25, "bob": 30}
 
     val: int | None = ages.get("alice")
     if val is not None:
-        print(f"found: {val}")
+        assert f"found: {val}" == "found: 25"
 
     missing: int | None = ages.get("charlie")
     if missing is not None:
-        print(f"found: {missing}")
+        assert f"found: {missing}" == "not found"
     else:
         print("not found")

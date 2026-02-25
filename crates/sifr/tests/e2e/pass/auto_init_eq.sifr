@@ -7,8 +7,6 @@ def main():
     p1: Point = Point(1, 2)
     p2: Point = Point(1, 2)
     p3: Point = Point(3, 4)
-    print(p1 == p2)
-    print(p1 == p3)
+    assert p1 == p2 == True
+    assert p1 == p3 == False
 
-# expect-stdout: true
-# expect-stdout: false

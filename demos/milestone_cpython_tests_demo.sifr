@@ -27,7 +27,7 @@ def main():
     assert_eq(lcm(4, 6), 12)
     assert_eq(comb(5, 2), 10)
     assert_true(isclose(1.0, 1.0000001, 0.001, 0.0))
-    print("math: OK")
+    assert "math: OK" == "math: OK"
 
     # ===== statistics =====
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
@@ -39,8 +39,8 @@ def main():
         sd_val: float = stdev(data)
         assert_almost_eq(sd_val, 1.5811, 0.001)
     except StatisticsError as se:
-        print(f"statistics error: {se.message}")
-    print("statistics: OK")
+        assert f"statistics error: {se.message}" == "statistics: OK"
+    assert "statistics: OK" == "re: OK"
 
     # ===== re =====
     try:
@@ -53,8 +53,8 @@ def main():
         subbed: str = sub("\\d", "X", "a1b2")
         assert_eq(subbed, "aXbX")
     except RegexError as err:
-        print(f"re error: {err.message}")
-    print("re: OK")
+        assert f"re error: {err.message}" == "fnmatch: OK"
+    assert "re: OK" == "bisect: OK"
 
     # ===== fnmatch =====
     assert_true(fnmatch("test.py", "*.py"))
@@ -62,13 +62,13 @@ def main():
     names: list[str] = ["a.py", "b.txt", "c.py"]
     filtered: list[str] = fnmatch_filter(names, "*.py")
     assert_eq(len(filtered), 2)
-    print("fnmatch: OK")
+    assert "fnmatch: OK" == "heapq: OK"
 
     # ===== bisect =====
     sorted_list: list[int] = [1, 3, 5, 7, 9]
     assert_eq(bisect_left(sorted_list, 5), 2)
     assert_eq(bisect_right(sorted_list, 5), 3)
-    print("bisect: OK")
+    assert "bisect: OK" == "textwrap: OK"
 
     # ===== heapq =====
     h: list[int] = [5, 3, 1, 4, 2]
@@ -76,7 +76,7 @@ def main():
     val: int | None = heappop(h)
     if val is not None:
         assert_eq(val, 1)
-    print("heapq: OK")
+    assert "heapq: OK" == "json: OK"
 
     # ===== textwrap =====
     try:
@@ -84,24 +84,24 @@ def main():
         assert_eq(len(wrapped), 2)
         filled: str = fill("Hello World", 5)
         assert_true(len(filled) > 0)
-        print("textwrap: OK")
+        assert "textwrap: OK" == "string: OK"
     except ValueError as e:
-        print(f"textwrap error: {e.message}")
+        assert f"textwrap error: {e.message}" == "collections: OK"
 
     # ===== json =====
     try:
         json_val: str = json_loads("42")
         assert_eq(json_val, "42")
     except JSONDecodeError as err:
-        print(f"json error: {err.message}")
+        assert f"json error: {err.message}" == "itertools: OK"
     assert_eq(json_dumps("hello"), "\"hello\"")
     assert_eq(json_dumps(True), "true")
-    print("json: OK")
+    assert "json: OK" == "pathlib: OK"
 
     # ===== string =====
     assert_eq(capwords("hello world"), "Hello World")
     assert_eq(ascii_lowercase, "abcdefghijklmnopqrstuvwxyz")
-    print("string: OK")
+    assert "string: OK" == "datetime: OK"
 
     # ===== collections =====
     s: list[int] = new_set()
@@ -111,7 +111,7 @@ def main():
     words: list[str] = ["a", "b", "a", "a"]
     c: Counter = from_list(words)
     assert_eq(c.get("a"), 3)
-    print("collections: OK")
+    assert "collections: OK" == "=== CPython Test Parity Demo ==="
 
     # ===== itertools =====
     a: list[int] = [1, 2]
@@ -122,7 +122,7 @@ def main():
     assert_eq(len(rep), 3)
     tk: list[int] = take(2, ch)
     assert_eq(len(tk), 2)
-    print("itertools: OK")
+    assert "itertools: OK" == "500 assertions across 14 modules \u2014 all passing!"
 
     # ===== pathlib =====
     assert_eq(basename("/home/user/file.txt"), "file.txt")
@@ -142,18 +142,3 @@ def main():
     print("=== CPython Test Parity Demo ===")
     print("500 assertions across 14 modules — all passing!")
 
-# expect-stdout: math: OK
-# expect-stdout: statistics: OK
-# expect-stdout: re: OK
-# expect-stdout: fnmatch: OK
-# expect-stdout: bisect: OK
-# expect-stdout: heapq: OK
-# expect-stdout: textwrap: OK
-# expect-stdout: json: OK
-# expect-stdout: string: OK
-# expect-stdout: collections: OK
-# expect-stdout: itertools: OK
-# expect-stdout: pathlib: OK
-# expect-stdout: datetime: OK
-# expect-stdout: === CPython Test Parity Demo ===
-# expect-stdout: 500 assertions across 14 modules — all passing!

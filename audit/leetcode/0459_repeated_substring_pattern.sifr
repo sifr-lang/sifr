@@ -4,9 +4,7 @@ def repeatedSubstringPattern(s: str) -> bool:
     return s in (s + s)[1:-1]
 
 def main():
-    print(repeatedSubstringPattern("abab"))
-    print(repeatedSubstringPattern("aba"))
+    assert repeatedSubstringPattern("abab") == True
+    assert repeatedSubstringPattern("aba") == False
 
-# expect-stdout: true
-# expect-stdout: false
 

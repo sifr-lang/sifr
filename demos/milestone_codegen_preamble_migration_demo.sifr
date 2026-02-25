@@ -13,14 +13,12 @@ def main():
         f = open(path, "r")
         text: str = f.read()
         f.close()
-        print("file = " + text)
+        assert "file = " + text == "file = m14 preamble"
     except IOError as e:
-        print("ioerror = " + e.message)
+        assert "ioerror = " + e.message == "preamble demo complete"
 
     log: Logger = getLogger("m14")
     log.set_level(20)
     log.info("preamble logging alive")
     print("preamble demo complete")
 
-# expect-stdout: file = m14 preamble
-# expect-stdout: preamble demo complete

@@ -12,18 +12,11 @@ def main():
     angle: float = atan2(1.0, 1.0)
     finite: bool = isfinite(powered)
 
-    print(f"root = {root}")
-    print(f"rounded_down = {rounded_down}")
-    print(f"rounded_up = {rounded_up}")
-    print(f"powered = {powered}")
-    print(f"rounded = {rounded}")
-    print(f"angle_positive = {angle > 0.0}")
-    print(f"finite = {finite}")
+    assert f"root = {root}" == "root = 3"
+    assert f"rounded_down = {rounded_down}" == "rounded_down = 3"
+    assert f"rounded_up = {rounded_up}" == "rounded_up = 4"
+    assert f"powered = {powered}" == "powered = 8"
+    assert f"rounded = {rounded}" == "rounded = 4"
+    assert f"angle_positive = {angle > 0.0}" == "angle_positive = true"
+    assert f"finite = {finite}" == "finite = true"
 
-# expect-stdout: root = 3
-# expect-stdout: rounded_down = 3
-# expect-stdout: rounded_up = 4
-# expect-stdout: powered = 8
-# expect-stdout: rounded = 4
-# expect-stdout: angle_positive = true
-# expect-stdout: finite = true

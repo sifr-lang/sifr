@@ -2,39 +2,39 @@
 from sifr.base64 import b64encode, b64decode, b64encode_opts, b64decode_opts, standard_b64encode, standard_b64decode, b32hexencode, b32hexdecode, b16encode, b16decode
 
 def main():
-    print(b64encode("sifr"))
+    assert b64encode("sifr") == "c2lmcg=="
     try:
         dec1: str = b64decode("c2lmcg==")
-        print(dec1)
+        assert dec1 == "sifr"
     except ParseError as e:
-        print("decode error: " + e.message)
+        assert "decode error: " + e.message == "ZGVtbw=="
 
-    print(standard_b64encode("demo"))
+    assert standard_b64encode("demo") == "demo"
     try:
         dec2: str = standard_b64decode("ZGVtbw==")
-        print(dec2)
+        assert dec2 == "4869"
     except ParseError as e:
-        print("decode error: " + e.message)
+        assert "decode error: " + e.message == "Hi"
 
     try:
         hx: str = b16encode("Hi")
-        print(hx)
+        assert hx == "D1IMOR3F"
         dec3: str = b16decode(hx)
-        print(dec3)
+        assert dec3 == "hello"
     except ParseError as e:
-        print("hex error: " + e.message)
+        assert "hex error: " + e.message == "invalid-safe"
 
     b32h: str = b32hexencode("hello")
-    print(b32h)
+    assert b32h == "d3d3LnB5"
     try:
         b32d: str = b32hexdecode(b32h)
-        print(b32d)
+        assert b32d == "dGhvbi5v"
     except ParseError as e:
-        print("b32hex error: " + e.message)
+        assert "b32hex error: " + e.message == "cmc="
 
     try:
         _bad: str = b64decode("###")
-        print("unexpected")
+        assert "unexpected" == "strict-safe"
     except ParseError as e:
         print("invalid-safe")
 
@@ -50,16 +50,3 @@ def main():
     except ParseError as e:
         print("strict-safe")
 
-# expect-stdout: c2lmcg==
-# expect-stdout: sifr
-# expect-stdout: ZGVtbw==
-# expect-stdout: demo
-# expect-stdout: 4869
-# expect-stdout: Hi
-# expect-stdout: D1IMOR3F
-# expect-stdout: hello
-# expect-stdout: invalid-safe
-# expect-stdout: d3d3LnB5
-# expect-stdout: dGhvbi5v
-# expect-stdout: cmc=
-# expect-stdout: strict-safe

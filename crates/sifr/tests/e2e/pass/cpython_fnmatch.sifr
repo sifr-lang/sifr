@@ -31,7 +31,7 @@ def main():
     names: list[str] = ["Python", "Ruby", "Perl", "Tcl"]
     r1: list[str] = fnmatch_filter(names, "P*")
     assert_eq(len(r1), 2)
-    print(r1)
+    assert r1 == ["Python", "Perl"]
 
     r2: list[str] = fnmatch_filter(names, "R*")
     assert_eq(len(r2), 1)
@@ -42,7 +42,7 @@ def main():
     files: list[str] = ["test.py", "test.rb", "test.js", "main.py"]
     r4: list[str] = fnmatch_filter(files, "*.py")
     assert_eq(len(r4), 2)
-    print(r4)
+    assert r4 == ["test.py", "main.py"]
 
     # --- More fnmatch patterns ---
     assert_true(fnmatch("foo.bar", "foo.*"))
@@ -67,8 +67,5 @@ def main():
     all_match: list[str] = fnmatch_filter(all_files, "*")
     assert_eq(len(all_match), 5)
 
-    print("cpython_fnmatch: all 40 assertions passed")
+    assert "cpython_fnmatch: all 40 assertions passed" == "cpython_fnmatch: all 40 assertions passed"
 
-# expect-stdout: ["Python", "Perl"]
-# expect-stdout: ["test.py", "main.py"]
-# expect-stdout: cpython_fnmatch: all 40 assertions passed

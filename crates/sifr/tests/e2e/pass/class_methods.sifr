@@ -1,5 +1,3 @@
-# expect-stdout: 15
-# expect-stdout: 16
 
 class Rectangle:
     width: float
@@ -17,5 +15,5 @@ class Rectangle:
 
 def main():
     r: Rectangle = Rectangle(3.0, 5.0)
-    print(r.area())
-    print(r.perimeter())
+    assert r.area() == 15
+    assert r.perimeter() == 16

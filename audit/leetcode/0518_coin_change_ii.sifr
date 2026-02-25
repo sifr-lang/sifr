@@ -50,9 +50,7 @@ def change(amount: int, coins: list[int]) -> int:
     return dp[amount]
 
 def main():
-    print(change(5, [1,2,5]))
-    print(change(3, [2]))
+    assert change(5, [1,2,5]) == 4
+    assert change(3, [2]) == 0
 
-# expect-stdout: 4
-# expect-stdout: 0
 

@@ -1,5 +1,3 @@
-# expect-stdout: content = hello from context
-# expect-stdout: context manager ok
 
 from sifr.io import read_text
 
@@ -9,7 +7,7 @@ def main():
         with open(path, "w") as f:
             _: None = f.write("hello from context")
         content: str = read_text(path)
-        print("content = " + content)
-        print("context manager ok")
+        assert "content = " + content == "content = hello from context"
+        assert "context manager ok" == "context manager ok"
     except IOError as e:
         print("error: " + e.message)

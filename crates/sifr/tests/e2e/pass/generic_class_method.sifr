@@ -13,8 +13,6 @@ class Pair[T]:
 def main():
     p: Pair[int] = Pair(1, 2)
     p2: Pair[int] = p.swap()
-    print(p2.first)
-    print(p2.second)
+    assert p2.first == 2
+    assert p2.second == 1
 
-# expect-stdout: 2
-# expect-stdout: 1

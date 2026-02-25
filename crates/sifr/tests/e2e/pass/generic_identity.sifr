@@ -1,6 +1,4 @@
 # Test: generic identity function with TypeVar
-# expect-stdout: 42
-# expect-stdout: hello
 
 from typing import TypeVar
 
@@ -11,6 +9,6 @@ def identity(x: T) -> T:
 
 def main():
     a: int = identity(42)
-    print(a)
+    assert a == 42
     b: str = identity("hello")
-    print(b)
+    assert b == hello

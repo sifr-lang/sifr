@@ -26,6 +26,5 @@ def main():
     assert_eq(t[0], 10)
     assert_eq(t[2], 30)
 
-    print("generic_type_alias: all tests passed")
+    assert "generic_type_alias: all tests passed" == "generic_type_alias: all tests passed"
 
-# expect-stdout: generic_type_alias: all tests passed

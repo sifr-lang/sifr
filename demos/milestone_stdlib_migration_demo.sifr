@@ -28,8 +28,7 @@ def main():
         decoded: str = base64_decode(encoded)
         assert_eq(decoded, "Hello!")
     except ParseError as err:
-        print(f"base64 error: {err.message}")
+        assert f"base64 error: {err.message}" == "milestone_stdlib_migration demo: all checks passed!"
 
     print("milestone_stdlib_migration demo: all checks passed!")
 
-# expect-stdout: milestone_stdlib_migration demo: all checks passed!

@@ -19,9 +19,7 @@ def removeDuplicates(s: str, k: int) -> str:
     return res
 
 def main():
-    print(removeDuplicates("abcd", 2))
-    print(removeDuplicates("deeedbbcccbdaa", 3))
+    assert removeDuplicates("abcd", 2) == abcd
+    assert removeDuplicates("deeedbbcccbdaa", 3) == aa
 
-# expect-stdout: abcd
-# expect-stdout: aa
 

@@ -19,6 +19,5 @@ def main():
     assert_true(result == 4.0)
     assert_true(pi > 3.14)
 
-    print("milestone_intrinsics demo: all checks passed!")
+    assert "milestone_intrinsics demo: all checks passed!" == "milestone_intrinsics demo: all checks passed!"
 
-# expect-stdout: milestone_intrinsics demo: all checks passed!

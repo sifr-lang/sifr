@@ -6,24 +6,17 @@ def main():
     c: Counter = from_list(["x", "y", "x"])
 
     # Check initial counts
-    print(c.get("x"))
-    print(c.get("y"))
-    print(c.total())
+    assert c.get("x") == 2
+    assert c.get("y") == 1
+    assert c.total() == 3
 
     # Increment existing key
     c.increment("x")
-    print(c.get("x"))
-    print(c.total())
+    assert c.get("x") == 3
+    assert c.total() == 4
 
     # Increment new key
     c.increment("z")
-    print(c.get("z"))
-    print(c.total())
+    assert c.get("z") == 1
+    assert c.total() == 5
 
-# expect-stdout: 2
-# expect-stdout: 1
-# expect-stdout: 3
-# expect-stdout: 3
-# expect-stdout: 4
-# expect-stdout: 1
-# expect-stdout: 5

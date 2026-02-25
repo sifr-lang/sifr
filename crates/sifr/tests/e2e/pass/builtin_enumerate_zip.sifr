@@ -1,6 +1,5 @@
-# expect-stdout: [(0, "a"), (1, "b"), (2, "c")]
 # Tests: enumerate built-in function
 
 def main():
     letters: list[str] = ["a", "b", "c"]
-    print(enumerate(letters))
+    assert enumerate(letters) == [(0, "a"), (1, "b"), (2, "c")]

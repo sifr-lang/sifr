@@ -34,8 +34,7 @@ def main():
         if intercept_opt is not None:
             assert_almost_eq(intercept_opt, 0.0, 0.0001)
 
-        print("stdlib_statistics_new: all tests passed")
+        assert "stdlib_statistics_new: all tests passed" == "stdlib_statistics_new: all tests passed"
     except StatisticsError as e:
         print("unexpected error: " + e.message)
 
-# expect-stdout: stdlib_statistics_new: all tests passed

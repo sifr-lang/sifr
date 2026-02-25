@@ -1,10 +1,8 @@
-# expect-stdout: [2, 4, 6]
-# expect-stdout: [2, 3]
 # Tests: lambda with map and filter
 
 def main():
     nums: list[int] = [1, 2, 3]
     doubled: list[int] = map(lambda x: x * 2, nums)
-    print(doubled)
+    assert doubled == [2, 4, 6]
     big: list[int] = filter(lambda x: x > 1, nums)
-    print(big)
+    assert big == [2, 3]

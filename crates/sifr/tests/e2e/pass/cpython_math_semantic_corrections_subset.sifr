@@ -52,6 +52,5 @@ def main():
     assert_true(modf_fractional(0.0 - inf) == 0.0)
     assert_true(isinf(modf_integral(0.0 - inf)))
 
-    print("cpython_math_semantic_corrections_subset: pass")
+    assert "cpython_math_semantic_corrections_subset: pass" == "cpython_math_semantic_corrections_subset: pass"
 
-# expect-stdout: cpython_math_semantic_corrections_subset: pass

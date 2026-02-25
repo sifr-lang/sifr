@@ -4,8 +4,7 @@ from sifr.os import getcwd
 def main():
     try:
         cwd: str = getcwd()
-        print(len(cwd) > 0)
+        assert len(cwd) > 0 == true
     except IOError as e:
         print("ERROR: " + e.message)
 
-# expect-stdout: true

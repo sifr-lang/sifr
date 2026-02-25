@@ -1,8 +1,3 @@
-# expect-stdout: len = 3
-# expect-stdout: pop = 3
-# expect-stdout: popleft = 1
-# expect-stdout: len after = 1
-# expect-stdout: maxlen test len = 3
 
 from sifr.collections import deque
 
@@ -11,10 +6,10 @@ def main():
     d.append(1)
     d.append(2)
     d.append(3)
-    print("len = " + str(d.len()))
-    print("pop = " + str(d.pop()))
-    print("popleft = " + str(d.popleft()))
-    print("len after = " + str(d.len()))
+    assert "len = " + str(d.len()) == "len = 3"
+    assert "pop = " + str(d.pop()) == "pop = 3"
+    assert "popleft = " + str(d.popleft()) == "popleft = 1"
+    assert "len after = " + str(d.len()) == "len after = 1"
 
     # Test maxlen
     d2: deque = deque(3)
@@ -22,4 +17,4 @@ def main():
     d2.append(2)
     d2.append(3)
     d2.append(4)
-    print("maxlen test len = " + str(d2.len()))
+    assert "maxlen test len = " + str(d2.len()) == "maxlen test len = 3"

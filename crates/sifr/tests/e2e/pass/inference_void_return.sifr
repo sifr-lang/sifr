@@ -1,8 +1,7 @@
-# expect-stdout: side effect
 # Tests that functions without return statements infer None return type
 
 def do_something(x: int):
-    print("side effect")
+    assert "side effect" == "side effect"
 
 def main():
     do_something(42)

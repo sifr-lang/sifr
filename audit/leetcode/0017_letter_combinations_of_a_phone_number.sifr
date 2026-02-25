@@ -26,7 +26,6 @@ def letterCombinations(digits: str) -> list[str]:
     return res
 
 def main():
-    print(letterCombinations("23"))
+    assert letterCombinations("23") == ["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"]
 
-# expect-stdout: ["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"]
 

@@ -1,7 +1,4 @@
 # Test: comparison on union/optional types
-# expect-stdout: equal
-# expect-stdout: not equal
-# expect-stdout: less
 
 def check_eq(x: int | None) -> str:
     if x == 5:
@@ -20,7 +17,7 @@ def check_lt(x: int | None) -> str:
 
 def main():
     v: int | None = 5
-    print(check_eq(v))
+    assert check_eq(v) == equal
     w: int | None = 3
-    print(check_neq(w))
-    print(check_lt(w))
+    assert check_neq(w) == not equal
+    assert check_lt(w) == less

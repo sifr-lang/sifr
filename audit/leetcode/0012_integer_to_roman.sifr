@@ -25,11 +25,8 @@ def intToRoman(num: int) -> str:
     return res
 
 def main():
-    print(intToRoman(3749))
-    print(intToRoman(58))
-    print(intToRoman(1994))
+    assert intToRoman(3749) == MMMDCCXLIX
+    assert intToRoman(58) == LVIII
+    assert intToRoman(1994) == MCMXCIV
 
-# expect-stdout: MMMDCCXLIX
-# expect-stdout: LVIII
-# expect-stdout: MCMXCIV
 

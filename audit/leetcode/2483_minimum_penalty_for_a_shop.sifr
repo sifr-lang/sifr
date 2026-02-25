@@ -16,9 +16,7 @@ def bestClosingTime(customers: str) -> int:
     return res
 
 def main():
-    print(bestClosingTime("YYNY"))
-    print(bestClosingTime("NNNNN"))
+    assert bestClosingTime("YYNY") == 2
+    assert bestClosingTime("NNNNN") == 0
 
-# expect-stdout: 2
-# expect-stdout: 0
 

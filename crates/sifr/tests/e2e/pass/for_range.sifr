@@ -1,6 +1,5 @@
-# expect-stdout: 45
 def main():
     total: int = 0
     for i in range(10):
         total = total + i
-    print(total)
+    assert total == 45

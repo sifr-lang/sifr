@@ -9,6 +9,5 @@ def main():
     assert_eq(c.get(2), 2)
     assert_eq(c.get(3), 3)
     assert_eq(c.total(), 6)
-    print("generic_counter_int: passed")
+    assert "generic_counter_int: passed" == "generic_counter_int: passed"
 
-# expect-stdout: generic_counter_int: passed

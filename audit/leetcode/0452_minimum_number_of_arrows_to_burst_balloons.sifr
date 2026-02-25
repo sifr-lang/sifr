@@ -16,7 +16,6 @@ def findMinArrowShots(points: list[list[int]]) -> int:
     return res
 
 def main():
-    print(findMinArrowShots([[10,16],[2,8],[1,6],[7,12]]))
+    assert findMinArrowShots([[10,16],[2,8],[1,6],[7,12]]) == 2
 
-# expect-stdout: 2
 

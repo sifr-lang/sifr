@@ -12,10 +12,8 @@ def main():
     # heappop in-place: extracts minimum
     min_val: int | None = heappop(data)
     if min_val is not None:
-        print(min_val)
+        assert min_val == 0
 
     # Verify callers retain ownership of data list
-    print(len(data))
+    assert len(data) == 7
 
-# expect-stdout: 0
-# expect-stdout: 7

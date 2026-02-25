@@ -1,8 +1,6 @@
 # Tuple unpacking
-# expect-stdout: 1
-# expect-stdout: hello
 def main():
     pair: tuple[int, str] = (1, "hello")
     x, y = pair
-    print(x)
-    print(y)
+    assert x == 1
+    assert y == hello

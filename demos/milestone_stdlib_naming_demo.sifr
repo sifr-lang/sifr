@@ -15,60 +15,60 @@ from sifr.string import capwords
 
 def main():
     # --- sifr.math: pow and fabs ---
-    print(pow(2.0, 10.0))
-    print(fabs(-42.5))
+    assert pow(2.0, 10.0) == "1024"
+    assert fabs(-42.5) == "42.5"
 
     # --- sifr.base64: b64encode / b64decode ---
     encoded: str = b64encode("Hello, Sifr!")
-    print(encoded)
+    assert encoded == "SGVsbG8sIFNpZnIh"
     try:
         decoded: str = b64decode(encoded)
-        print(decoded)
+        assert decoded == "Hello, Sifr!"
     except ParseError as err:
-        print(f"base64 error: {err.message}")
+        assert f"base64 error: {err.message}" == true
 
     # --- sifr.random: randint, random, uniform ---
     try:
         r: int = randint(1, 100)
-        print(r >= 1)
-        print(r <= 100)
+        assert r >= 1 == true
+        assert r <= 100 == true
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == true
     f: float = random()
-    print(f >= 0.0)
-    print(f < 1.0)
+    assert f >= 0.0 == true
+    assert f < 1.0 == true
     u: float = uniform(10.0, 20.0)
-    print(u >= 10.0)
-    print(u <= 20.0)
+    assert u >= 10.0 == true
+    assert u <= 20.0 == true
 
     # --- sifr.platform: system, machine ---
     s: str = system()
-    print(len(s) > 0)
+    assert len(s) > 0 == true
     m: str = machine()
-    print(len(m) > 0)
+    assert len(m) > 0 == "2"
 
     # --- sifr.time: time ---
     t: float = time()
-    print(t > 0.0)
+    assert t > 0.0 == "42"
 
     # --- sifr.fnmatch: fnmatch_filter (filter alias conflicts with builtin) ---
     names: list[str] = ["foo.py", "bar.txt", "baz.py", "qux.rs"]
     matched: list[str] = fnmatch_filter(names, "*.py")
-    print(len(matched))
+    assert len(matched) == "3"
 
     # --- sifr.re: search, findall, split, sub ---
     try:
         found: str | None = search("[0-9]+", "hello 42 world")
         if found is not None:
-            print(found)
+            assert found == "4"
         all_nums: list[str] = findall("[0-9]+", "abc123def456ghi789")
-        print(len(all_nums))
+        assert len(all_nums) == "item NUM and item NUM"
         parts: list[str] = split(",", "a,b,c,d")
-        print(len(parts))
+        assert len(parts) == "{\"key\":\"value\"}"
         replaced: str = sub("[0-9]+", "NUM", "item1 and item2")
-        print(replaced)
+        assert replaced == "\"hello\""
     except RegexError as err:
-        print(f"regex error: {err.message}")
+        assert f"regex error: {err.message}" == "Hello World From Sifr"
 
     # --- sifr.json: loads (CPython alias), json_dumps (Any-typed, inline only) ---
     try:
@@ -82,24 +82,3 @@ def main():
     # --- sifr.string: capwords ---
     print(capwords("hello world from sifr"))
 
-# expect-stdout: 1024
-# expect-stdout: 42.5
-# expect-stdout: SGVsbG8sIFNpZnIh
-# expect-stdout: Hello, Sifr!
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: 2
-# expect-stdout: 42
-# expect-stdout: 3
-# expect-stdout: 4
-# expect-stdout: item NUM and item NUM
-# expect-stdout: {"key":"value"}
-# expect-stdout: "hello"
-# expect-stdout: Hello World From Sifr

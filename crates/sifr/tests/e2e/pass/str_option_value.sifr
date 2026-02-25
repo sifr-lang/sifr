@@ -1,12 +1,10 @@
 # Test: str() conversion of Option values
 # Ensures str(list[i]) works when the index result is Option<T>.
 
-# expect-stdout: 42
-# expect-stdout: None
 
 def main():
     nums: list[int] = [42, 99]
     val_str: str = str(nums[0])
-    print(val_str)
+    assert val_str == 42
     missing_str: str = str(nums[10])
-    print(missing_str)
+    assert missing_str == None

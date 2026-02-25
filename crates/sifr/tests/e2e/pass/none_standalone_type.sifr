@@ -1,5 +1,3 @@
-# expect-stdout: got none
-# expect-stdout: got 42
 
 def process(x: int | None) -> str:
     if x is None:
@@ -7,5 +5,5 @@ def process(x: int | None) -> str:
     return "got " + str(x)
 
 def main():
-    print(process(None))
-    print(process(42))
+    assert process(None) == "got none"
+    assert process(42) == "got 42"

@@ -1,6 +1,4 @@
 # Test: @classmethod cls() constructor call
-# expect-stdout: 100
-# expect-stdout: 100
 
 class Temperature:
     celsius: float
@@ -14,6 +12,6 @@ class Temperature:
 
 def main():
     t: Temperature = Temperature(100.0)
-    print(t.celsius)
+    assert t.celsius == 100
     t2: Temperature = Temperature.from_fahrenheit(212.0)
-    print(t2.celsius)
+    assert t2.celsius == 100

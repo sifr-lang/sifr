@@ -61,6 +61,5 @@ def main():
     three_hours: timedelta = two_hours + hour
     assert_eq(three_hours.total_seconds(), 10800)
 
-    print("cpython_datetime: all 28 assertions passed")
+    assert "cpython_datetime: all 28 assertions passed" == "cpython_datetime: all 28 assertions passed"
 
-# expect-stdout: cpython_datetime: all 28 assertions passed

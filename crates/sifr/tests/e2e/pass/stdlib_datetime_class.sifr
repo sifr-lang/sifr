@@ -1,20 +1,14 @@
-# expect-stdout: isoformat = 2024-01-15T10:30:00
-# expect-stdout: year = 2024
-# expect-stdout: month = 1
-# expect-stdout: day = 15
-# expect-stdout: timestamp > 0 = true
-# expect-stdout: date isoformat = 2024-01-15
 
 from sifr.datetime import datetime, date
 
 def main():
     dt: datetime = datetime(2024, 1, 15, 10, 30, 0)
-    print("isoformat = " + dt.isoformat())
-    print("year = " + str(dt.year))
-    print("month = " + str(dt.month))
-    print("day = " + str(dt.day))
+    assert "isoformat = " + dt.isoformat() == "isoformat = 2024-01-15T10:30:00"
+    assert "year = " + str(dt.year) == "year = 2024"
+    assert "month = " + str(dt.month) == "month = 1"
+    assert "day = " + str(dt.day) == "day = 15"
     ts: int = dt.timestamp()
-    print("timestamp > 0 = " + str(ts > 0))
+    assert "timestamp > 0 = " + str(ts > 0) == "timestamp > 0 = true"
 
     d: date = date(2024, 1, 15)
-    print("date isoformat = " + d.isoformat())
+    assert "date isoformat = " + d.isoformat() == "date isoformat = 2024-01-15"

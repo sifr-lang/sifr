@@ -10,6 +10,5 @@ class Wrapper[T]:
 
 def main():
     w = Wrapper(99)
-    print(w.get())
+    assert w.get() == 99
 
-# expect-stdout: 99

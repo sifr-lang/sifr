@@ -1,38 +1,29 @@
-# expect-stdout: erf(0) near 0 = true
-# expect-stdout: erfc(0) near 1 = true
-# expect-stdout: gamma(5) > 23.0 = true
-# expect-stdout: lgamma(5) > 3.0 = true
-# expect-stdout: frexp len = 2
-# expect-stdout: ldexp result > 0 = true
-# expect-stdout: modf len = 2
-# expect-stdout: nextafter > 1.0 = true
-# expect-stdout: ulp > 0 = true
 
 from sifr.math import erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp
 
 def main():
     e0: float = erf(0.0)
-    print("erf(0) near 0 = " + str(e0 < 0.001 and e0 > -0.001))
+    assert "erf(0) near 0 = " + str(e0 < 0.001 and e0 > -0.001) == "erf(0) near 0 = true"
     ec0: float = erfc(0.0)
-    print("erfc(0) near 1 = " + str(ec0 > 0.999 and ec0 < 1.001))
+    assert "erfc(0) near 1 = " + str(ec0 > 0.999 and ec0 < 1.001) == "erfc(0) near 1 = true"
 
     g: float = gamma(5.0)
-    print("gamma(5) > 23.0 = " + str(g > 23.0))
+    assert "gamma(5) > 23.0 = " + str(g > 23.0) == "gamma(5) > 23.0 = true"
 
     lg: float = lgamma(5.0)
-    print("lgamma(5) > 3.0 = " + str(lg > 3.0))
+    assert "lgamma(5) > 3.0 = " + str(lg > 3.0) == "lgamma(5) > 3.0 = true"
 
     fp: list[float] = frexp(8.0)
-    print("frexp len = " + str(len(fp)))
+    assert "frexp len = " + str(len(fp)) == "frexp len = 2"
 
     ld: float = ldexp(0.5, 4)
-    print("ldexp result > 0 = " + str(ld > 0.0))
+    assert "ldexp result > 0 = " + str(ld > 0.0) == "ldexp result > 0 = true"
 
     md: list[float] = modf(3.7)
-    print("modf len = " + str(len(md)))
+    assert "modf len = " + str(len(md)) == "modf len = 2"
 
     na: float = nextafter(1.0, 2.0)
-    print("nextafter > 1.0 = " + str(na > 1.0))
+    assert "nextafter > 1.0 = " + str(na > 1.0) == "nextafter > 1.0 = true"
 
     u: float = ulp(1.0)
-    print("ulp > 0 = " + str(u > 0.0))
+    assert "ulp > 0 = " + str(u > 0.0) == "ulp > 0 = true"

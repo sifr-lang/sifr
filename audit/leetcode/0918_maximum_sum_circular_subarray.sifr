@@ -15,11 +15,8 @@ def maxSubarraySumCircular(nums: list[int]) -> int:
     return max(globMax, total - globMin) if globMax > 0 else globMax
 
 def main():
-    print(maxSubarraySumCircular([1,-2,3,-2]))
-    print(maxSubarraySumCircular([5,-3,5]))
-    print(maxSubarraySumCircular([-3,-2,-3]))
+    assert maxSubarraySumCircular([1,-2,3,-2]) == 3
+    assert maxSubarraySumCircular([5,-3,5]) == 10
+    assert maxSubarraySumCircular([-3,-2,-3]) == -2
 
-# expect-stdout: 3
-# expect-stdout: 10
-# expect-stdout: -2
 

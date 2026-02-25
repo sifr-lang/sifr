@@ -19,9 +19,7 @@ def canPartition(nums: list[int]) -> bool:
     return False
 
 def main():
-    print(canPartition([1,5,11,5]))
-    print(canPartition([1,2,3,5]))
+    assert canPartition([1,5,11,5]) == True
+    assert canPartition([1,2,3,5]) == False
 
-# expect-stdout: true
-# expect-stdout: false
 

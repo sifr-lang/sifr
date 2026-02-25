@@ -6,16 +6,13 @@ def main():
 
     # bisect_left: find insertion point for 5 (returns index of 5)
     pos: int = bisect_left(data, 5)
-    print(pos)
+    assert pos == 2
 
     # bisect_right: find insertion point after 5
     pos2: int = bisect_right(data, 5)
-    print(pos2)
+    assert pos2 == 3
 
     # bisect_left for value not in list
     pos3: int = bisect_left(data, 4)
-    print(pos3)
+    assert pos3 == 2
 
-# expect-stdout: 2
-# expect-stdout: 3
-# expect-stdout: 2

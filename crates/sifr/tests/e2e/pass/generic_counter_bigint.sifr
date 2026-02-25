@@ -8,6 +8,5 @@ def main():
     assert_eq(c.get(bigint(1)), 1)
     assert_eq(c.get(bigint(2)), 2)
     assert_eq(c.total(), 4)
-    print("generic_counter_bigint: passed")
+    assert "generic_counter_bigint: passed" == "generic_counter_bigint: passed"
 
-# expect-stdout: generic_counter_bigint: passed

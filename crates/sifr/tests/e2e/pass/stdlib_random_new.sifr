@@ -15,7 +15,7 @@ def main():
         s: list[int] = sample(items, 3)
         assert_eq(len(s), 3)
     except ValueError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "stdlib_random_new: all tests passed"
 
     # randrange
     try:
@@ -32,4 +32,3 @@ def main():
 
     print("stdlib_random_new: all tests passed")
 
-# expect-stdout: stdlib_random_new: all tests passed

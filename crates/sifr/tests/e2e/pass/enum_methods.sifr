@@ -14,12 +14,8 @@ class Direction(Enum):
                 return False
 
 def main():
-    print(Direction.NORTH.is_vertical())
-    print(Direction.EAST.is_vertical())
-    print(Direction.SOUTH.is_vertical())
-    print(Direction.WEST.is_vertical())
+    assert Direction.NORTH.is_vertical() == True
+    assert Direction.EAST.is_vertical() == False
+    assert Direction.SOUTH.is_vertical() == True
+    assert Direction.WEST.is_vertical() == False
 
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: false

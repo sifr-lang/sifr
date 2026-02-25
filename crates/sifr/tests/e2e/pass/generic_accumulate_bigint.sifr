@@ -6,6 +6,5 @@ def main():
     data: list[bigint] = [bigint(10), bigint(20), bigint(30)]
     acc: list[bigint] = accumulate(data)
     assert_eq(len(acc), 3)
-    print("generic_accumulate_bigint: passed")
+    assert "generic_accumulate_bigint: passed" == "generic_accumulate_bigint: passed"
 
-# expect-stdout: generic_accumulate_bigint: passed

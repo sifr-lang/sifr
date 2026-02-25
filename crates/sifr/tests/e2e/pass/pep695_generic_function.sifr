@@ -6,11 +6,8 @@ def first[T](items: list[T]) -> T:
     return items[0]
 
 def main():
-    print(identity(42))
-    print(identity("hello"))
+    assert identity(42) == 42
+    assert identity("hello") == hello
     nums: list[int] = [10, 20, 30]
-    print(first(nums))
+    assert first(nums) == 10
 
-# expect-stdout: 42
-# expect-stdout: hello
-# expect-stdout: 10

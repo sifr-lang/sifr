@@ -26,6 +26,5 @@ def main():
     data: list[float] = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
     assert_almost_eq(fsum(data), 1.0, 0.0001)
 
-    print("stdlib_math_pure_expansion: all tests passed")
+    assert "stdlib_math_pure_expansion: all tests passed" == "stdlib_math_pure_expansion: all tests passed"
 
-# expect-stdout: stdlib_math_pure_expansion: all tests passed

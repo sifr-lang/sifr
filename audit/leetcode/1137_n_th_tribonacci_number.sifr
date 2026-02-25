@@ -18,9 +18,7 @@ def tribonacci(n: int):
     return Memo[n]
 
 def main():
-    print(tribonacci(4))
-    print(tribonacci(25))
+    assert tribonacci(4) == 4
+    assert tribonacci(25) == 1389537
 
-# expect-stdout: 4
-# expect-stdout: 1389537
 

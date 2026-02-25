@@ -1,5 +1,4 @@
 # Optional type with is not None narrowing
-# expect-stdout: ALICE
 
 def greet(name: str | None) -> str:
     if name is not None:
@@ -9,4 +8,4 @@ def greet(name: str | None) -> str:
 
 def main():
     result: str = greet("alice")
-    print(result)
+    assert result == ALICE

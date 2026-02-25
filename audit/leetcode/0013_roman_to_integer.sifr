@@ -11,11 +11,8 @@ def romanToInt(s: str) -> int:
     return res
 
 def main():
-    print(romanToInt("III"))
-    print(romanToInt("LVIII"))
-    print(romanToInt("MCMXCIV"))
+    assert romanToInt("III") == 3
+    assert romanToInt("LVIII") == 58
+    assert romanToInt("MCMXCIV") == 1994
 
-# expect-stdout: 3
-# expect-stdout: 58
-# expect-stdout: 1994
 

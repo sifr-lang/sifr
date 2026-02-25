@@ -23,11 +23,8 @@ def validPalindromeUtil(s, i, j):
     return True
 
 def main():
-    print(validPalindrome("aba"))
-    print(validPalindrome("abca"))
-    print(validPalindrome("abc"))
+    assert validPalindrome("aba") == True
+    assert validPalindrome("abca") == True
+    assert validPalindrome("abc") == False
 
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: false
 

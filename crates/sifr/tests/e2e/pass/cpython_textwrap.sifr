@@ -7,15 +7,15 @@ def main():
     try:
         w1: list[str] = wrap("Hello there, how are you this fine day?", 12)
         assert_eq(len(w1), 4)
-        print(w1)
+        assert w1 == "[\"Hello there,\", \"how are you\", \"this fine\", \"day?\"]"
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "[\"Hello\", \"there\"]"
 
     try:
         w2: list[str] = wrap("", 6)
         assert_eq(len(w2), 0)
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "cpython_textwrap: all 20 assertions passed"
 
     try:
         w3: list[str] = wrap("Short", 80)
@@ -60,6 +60,3 @@ def main():
 
     print("cpython_textwrap: all 20 assertions passed")
 
-# expect-stdout: ["Hello there,", "how are you", "this fine", "day?"]
-# expect-stdout: ["Hello", "there"]
-# expect-stdout: cpython_textwrap: all 20 assertions passed

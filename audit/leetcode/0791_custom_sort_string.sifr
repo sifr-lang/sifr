@@ -17,7 +17,6 @@ def customSortString(order: str, s: str) -> str:
     return satisfied_string
 
 def main():
-    print(customSortString("cba", "abcd"))
+    assert customSortString("cba", "abcd") == cbad
 
-# expect-stdout: cbad
 

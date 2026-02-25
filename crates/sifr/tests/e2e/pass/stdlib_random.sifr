@@ -4,15 +4,11 @@ from sifr.random import random_int, random_float
 def main():
     # Random int in range
     r: int = random_int(1, 10)
-    print(r >= 1)
-    print(r <= 10)
+    assert r >= 1 == True
+    assert r <= 10 == True
 
     # Random float between 0 and 1
     f: float = random_float()
-    print(f >= 0.0)
-    print(f < 1.0)
+    assert f >= 0.0 == True
+    assert f < 1.0 == True
 
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true

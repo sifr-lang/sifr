@@ -1,15 +1,10 @@
-# expect-stdout: 1
-# expect-stdout: 7
-# expect-stdout: 6
-# expect-stdout: 10
-# expect-stdout: 2
 # Tests bitwise operators: &, |, ^, <<, >>
 
 def main():
     a: int = 5
     b: int = 3
-    print(a & b)
-    print(a | b)
-    print(a ^ b)
-    print(a << 1)
-    print(a >> 1)
+    assert a & b == 1
+    assert a | b == 7
+    assert a ^ b == 6
+    assert a << 1 == 10
+    assert a >> 1 == 2

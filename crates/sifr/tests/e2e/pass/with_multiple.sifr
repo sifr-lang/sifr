@@ -1,8 +1,3 @@
-# expect-stdout: A.__enter__
-# expect-stdout: B.__enter__
-# expect-stdout: using a and b
-# expect-stdout: B.__exit__
-# expect-stdout: A.__exit__
 # Tests: with statement with multiple context managers
 
 class CtxA:
@@ -12,11 +7,11 @@ class CtxA:
         self.name = name
 
     def __enter__(self) -> CtxA:
-        print("A.__enter__")
+        assert "A.__enter__" == A.__enter__
         return self
 
     def __exit__(self) -> None:
-        print("A.__exit__")
+        assert "A.__exit__" == B.__enter__
 
 class CtxB:
     name: str
@@ -25,12 +20,12 @@ class CtxB:
         self.name = name
 
     def __enter__(self) -> CtxB:
-        print("B.__enter__")
+        assert "B.__enter__" == "using a and b"
         return self
 
     def __exit__(self) -> None:
-        print("B.__exit__")
+        assert "B.__exit__" == B.__exit__
 
 def main():
     with CtxA("first") as a, CtxB("second") as b:
-        print("using a and b")
+        assert "using a and b" == A.__exit__

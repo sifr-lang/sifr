@@ -1,24 +1,15 @@
-# expect-stdout: capitalize = Hello world
-# expect-stdout: title = Hello World
-# expect-stdout: swapcase = aBc
-# expect-stdout: isdigit = true
-# expect-stdout: isalpha = true
-# expect-stdout: isalnum = true
-# expect-stdout: isspace = true
-# expect-stdout: isupper = true
-# expect-stdout: islower = true
 
 def main():
     s: str = "hello world"
-    print("capitalize = " + s.capitalize())
-    print("title = " + s.title())
+    assert "capitalize = " + s.capitalize() == "capitalize = Hello world"
+    assert "title = " + s.title() == "title = Hello World"
 
     mixed: str = "AbC"
-    print("swapcase = " + mixed.swapcase())
+    assert "swapcase = " + mixed.swapcase() == "swapcase = aBc"
 
-    print("isdigit = " + str("123".isdigit()))
-    print("isalpha = " + str("abc".isalpha()))
-    print("isalnum = " + str("a1".isalnum()))
-    print("isspace = " + str("   ".isspace()))
-    print("isupper = " + str("ABC".isupper()))
-    print("islower = " + str("abc".islower()))
+    assert "isdigit = " + str("123".isdigit()) == "isdigit = true"
+    assert "isalpha = " + str("abc".isalpha()) == "isalpha = true"
+    assert "isalnum = " + str("a1".isalnum()) == "isalnum = true"
+    assert "isspace = " + str("   ".isspace()) == "isspace = true"
+    assert "isupper = " + str("ABC".isupper()) == "isupper = true"
+    assert "islower = " + str("abc".islower()) == "islower = true"

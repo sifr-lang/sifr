@@ -1,24 +1,15 @@
-# expect-stdout: add = 7
-# expect-stdout: sub = 3
-# expect-stdout: mul = 10
-# expect-stdout: floordiv = 2
-# expect-stdout: mod_val = 1
-# expect-stdout: neg = -5
-# expect-stdout: lt = true
-# expect-stdout: eq = false
-# expect-stdout: itemgetter = 30
 
 from sifr.operator import add, sub, mul, floordiv, mod_val, neg, lt, eq, itemgetter
 
 def main():
-    print("add = " + str(add(3, 4)))
-    print("sub = " + str(sub(7, 4)))
-    print("mul = " + str(mul(2, 5)))
-    print("floordiv = " + str(floordiv(5, 2)))
-    print("mod_val = " + str(mod_val(5, 2)))
-    print("neg = " + str(neg(5)))
-    print("lt = " + str(lt(3, 5)))
-    print("eq = " + str(eq(3, 5)))
+    assert "add = " + str(add(3, 4)) == "add = 7"
+    assert "sub = " + str(sub(7, 4)) == "sub = 3"
+    assert "mul = " + str(mul(2, 5)) == "mul = 10"
+    assert "floordiv = " + str(floordiv(5, 2)) == "floordiv = 2"
+    assert "mod_val = " + str(mod_val(5, 2)) == "mod_val = 1"
+    assert "neg = " + str(neg(5)) == "neg = -5"
+    assert "lt = " + str(lt(3, 5)) == "lt = true"
+    assert "eq = " + str(eq(3, 5)) == "eq = false"
 
     items: list[int] = [10, 20, 30, 40]
-    print("itemgetter = " + str(itemgetter(items, 2)))
+    assert "itemgetter = " + str(itemgetter(items, 2)) == "itemgetter = 30"

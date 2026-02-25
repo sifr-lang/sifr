@@ -1,23 +1,17 @@
-# expect-stdout: contains a = true
-# expect-stdout: get a default = 1
-# expect-stdout: get z default = 9
-# expect-stdout: get b opt = 2
-# expect-stdout: pop a = 1
-# expect-stdout: len after pop = 1
 
 def main():
     d: dict[str, int] = {"a": 1, "b": 2}
 
-    print("contains a = " + str(d.contains("a")))
-    print("get a default = " + str(d.get("a", 0)))
-    print("get z default = " + str(d.get("z", 9)))
+    assert "contains a = " + str(d.contains("a")) == "contains a = true"
+    assert "get a default = " + str(d.get("a", 0)) == "get a default = 1"
+    assert "get z default = " + str(d.get("z", 9)) == "get z default = 9"
 
     b_val: int | None = d.get("b")
     if b_val is not None:
-        print("get b opt = " + str(b_val))
+        assert "get b opt = " + str(b_val) == "get b opt = 2"
 
     a_val: int | None = d.pop("a")
     if a_val is not None:
-        print("pop a = " + str(a_val))
+        assert "pop a = " + str(a_val) == "pop a = 1"
 
-    print("len after pop = " + str(len(d)))
+    assert "len after pop = " + str(len(d)) == "len after pop = 1"

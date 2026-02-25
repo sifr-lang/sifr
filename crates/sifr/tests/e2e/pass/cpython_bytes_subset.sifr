@@ -3,29 +3,29 @@ from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, c
 
 def main():
     data: list[int] = encode_utf8("mississippi")
-    print(count_byte(data, 115))
+    assert count_byte(data, 115) == "4"
 
     first_p: int | None = find_byte(data, 112)
     if first_p is not None:
-        print(first_p)
+        assert first_p == "8"
 
     not_found: int | None = find_byte(data, 120)
     if not_found is None:
-        print("not found")
+        assert "not found" == "not found"
 
-    print(starts_with(data, encode_utf8("miss")))
-    print(ends_with(data, encode_utf8("ippi")))
+    assert starts_with(data, encode_utf8("miss")) == true
+    assert ends_with(data, encode_utf8("ippi")) == true
 
     try:
         hx: str = bytes_to_hex(encode_utf8("Hi"))
-        print(hx)
+        assert hx == "4869"
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "Hi"
 
     try:
         parsed: list[int] = bytes_from_hex("48 69")
         txt: str = decode_utf8(parsed)
-        print(txt)
+        assert txt == "odd digits safe"
     except ParseError as e:
         print("unexpected: " + e.message)
 
@@ -35,11 +35,3 @@ def main():
     except ParseError as e:
         print("odd digits safe")
 
-# expect-stdout: 4
-# expect-stdout: 8
-# expect-stdout: not found
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: 4869
-# expect-stdout: Hi
-# expect-stdout: odd digits safe

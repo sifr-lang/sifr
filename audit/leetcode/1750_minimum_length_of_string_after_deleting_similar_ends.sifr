@@ -12,9 +12,7 @@ def minimumLength(s: str) -> int:
     return (r - l + 1)
 
 def main():
-    print(minimumLength("ca"))
-    print(minimumLength("cabaabac"))
+    assert minimumLength("ca") == 2
+    assert minimumLength("cabaabac") == 0
 
-# expect-stdout: 2
-# expect-stdout: 0
 

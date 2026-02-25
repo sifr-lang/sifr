@@ -3,18 +3,11 @@ from sifr.pathlib import Path
 
 def main():
     p: Path = Path("/home/user/docs/file.txt")
-    print(p.name())
-    print(p.parent())
-    print(p.suffix())
-    print(p.stem())
-    print(p.is_absolute())
-    print(p.to_str())
-    print(p.joinpath("sub"))
+    assert p.name() == file.txt
+    assert p.parent() == "/home/user/docs"
+    assert p.suffix() == ".txt"
+    assert p.stem() == file
+    assert p.is_absolute() == True
+    assert p.to_str() == "/home/user/docs/file.txt"
+    assert p.joinpath("sub") == "/home/user/docs/file.txt/sub"
 
-# expect-stdout: file.txt
-# expect-stdout: /home/user/docs
-# expect-stdout: .txt
-# expect-stdout: file
-# expect-stdout: true
-# expect-stdout: /home/user/docs/file.txt
-# expect-stdout: /home/user/docs/file.txt/sub

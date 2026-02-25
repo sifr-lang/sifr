@@ -2,10 +2,8 @@
 # Showcases narrowing fixes in this milestone
 
 # --- Fix 1: Early-return narrowing ---
-# expect-stdout: Early return: 11
 
 # --- Fix 2: And-based compound narrowing ---
-# expect-stdout: And narrowing: 42
 
 def safe_increment(x: int | None) -> int:
     if x is None:
@@ -21,7 +19,7 @@ def safe_multiply(a: int | None, b: int | None) -> int:
 
 def main():
     result1: int = safe_increment(10)
-    print(f"Early return: {result1}")
+    assert f"Early return: {result1}" == "Early return: 11"
 
     result2: int = safe_multiply(6, 7)
-    print(f"And narrowing: {result2}")
+    assert f"And narrowing: {result2}" == "And narrowing: 42"

@@ -14,12 +14,8 @@ def main():
     t2: tuple[int, int] = (3, 0)
     t3: tuple[int, int] = (0, 4)
     t4: tuple[int, int] = (3, 4)
-    print(classify_pair(t1))
-    print(classify_pair(t2))
-    print(classify_pair(t3))
-    print(classify_pair(t4))
+    assert classify_pair(t1) == origin
+    assert classify_pair(t2) == x-axis
+    assert classify_pair(t3) == y-axis
+    assert classify_pair(t4) == general
 
-# expect-stdout: origin
-# expect-stdout: x-axis
-# expect-stdout: y-axis
-# expect-stdout: general

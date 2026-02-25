@@ -1,10 +1,8 @@
-# expect-stdout: [2, 4, 6, 8, 10]
-# expect-stdout: [4, 5]
 # Tests: list comprehension with and without filter
 
 def main():
     nums: list[int] = [1, 2, 3, 4, 5]
     doubled: list[int] = [x * 2 for x in nums]
-    print(doubled)
+    assert doubled == [2, 4, 6, 8, 10]
     big: list[int] = [x for x in nums if x > 3]
-    print(big)
+    assert big == [4, 5]

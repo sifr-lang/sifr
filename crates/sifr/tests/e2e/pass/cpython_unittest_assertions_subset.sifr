@@ -1,5 +1,4 @@
 # Portable subset inspired by CPython Lib/test/test_unittest/test_assertions.py
-# expect-stdout: cpython unittest assertion subset ok
 from sifr.math import inf
 from sifr.test import (
     assert_eq, assert_ne, assert_true, assert_false,
@@ -41,4 +40,4 @@ def main():
     assert_some(maybe_a)
     assert_none(maybe_b)
 
-    print("cpython unittest assertion subset ok")
+    assert "cpython unittest assertion subset ok" == "cpython unittest assertion subset ok"

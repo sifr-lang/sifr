@@ -8,12 +8,8 @@ def classify(x: int) -> str:
             return "large"
 
 def main():
-    print(classify(1))
-    print(classify(3))
-    print(classify(5))
-    print(classify(10))
+    assert classify(1) == small
+    assert classify(3) == small
+    assert classify(5) == medium
+    assert classify(10) == large
 
-# expect-stdout: small
-# expect-stdout: small
-# expect-stdout: medium
-# expect-stdout: large

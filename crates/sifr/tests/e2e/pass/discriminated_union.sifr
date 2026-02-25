@@ -1,5 +1,3 @@
-# expect-stdout: 78.5
-# expect-stdout: 25
 
 class Circle:
     radius: float
@@ -24,5 +22,5 @@ def compute_area(shape: Shape) -> float:
 def main():
     c: Circle = Circle(5.0)
     s: Square = Square(5.0)
-    print(compute_area(c))
-    print(compute_area(s))
+    assert compute_area(c) == 78.5
+    assert compute_area(s) == 25

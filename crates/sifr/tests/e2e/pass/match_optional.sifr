@@ -6,8 +6,6 @@ def describe_optional(x: int | None) -> str:
             return "something"
 
 def main():
-    print(describe_optional(None))
-    print(describe_optional(42))
+    assert describe_optional(None) == nothing
+    assert describe_optional(42) == something
 
-# expect-stdout: nothing
-# expect-stdout: something

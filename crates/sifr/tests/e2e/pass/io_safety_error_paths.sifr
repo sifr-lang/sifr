@@ -6,35 +6,35 @@ def main():
     # 1. read_text on non-existent file returns IOError
     try:
         content: str = read_text("/tmp/sifr_io_safety_nonexistent_file.txt")
-        print("should not reach here")
+        assert "should not reach here" == "caught read_text IOError"
     except IOError as e:
-        print("caught read_text IOError")
+        assert "caught read_text IOError" == "caught read_lines IOError"
 
     # 2. read_lines on non-existent file returns IOError
     try:
         lines: list[str] = read_lines("/tmp/sifr_io_safety_nonexistent_file.txt")
-        print("should not reach here")
+        assert "should not reach here" == "caught listdir IOError"
     except IOError as e:
-        print("caught read_lines IOError")
+        assert "caught read_lines IOError" == "caught rmdir IOError"
 
     # 3. listdir on non-existent directory returns IOError
     try:
         entries: list[str] = listdir("/tmp/sifr_io_safety_nonexistent_dir")
-        print("should not reach here")
+        assert "should not reach here" == "caught remove_file IOError"
     except IOError as e:
-        print("caught listdir IOError")
+        assert "caught listdir IOError" == "caught rename IOError"
 
     # 4. rmdir on non-existent directory returns IOError
     try:
         r: None = rmdir("/tmp/sifr_io_safety_nonexistent_dir")
-        print("should not reach here")
+        assert "should not reach here" == "safety works"
     except IOError as e:
-        print("caught rmdir IOError")
+        assert "caught rmdir IOError" == "getcwd ok"
 
     # 5. remove_file on non-existent file returns IOError
     try:
         r2: None = remove_file("/tmp/sifr_io_safety_nonexistent_file.txt")
-        print("should not reach here")
+        assert "should not reach here" == "all io safety tests passed"
     except IOError as e:
         print("caught remove_file IOError")
 
@@ -63,12 +63,3 @@ def main():
 
     print("all io safety tests passed")
 
-# expect-stdout: caught read_text IOError
-# expect-stdout: caught read_lines IOError
-# expect-stdout: caught listdir IOError
-# expect-stdout: caught rmdir IOError
-# expect-stdout: caught remove_file IOError
-# expect-stdout: caught rename IOError
-# expect-stdout: safety works
-# expect-stdout: getcwd ok
-# expect-stdout: all io safety tests passed

@@ -7,7 +7,6 @@ def minCostClimbingStairs(cost: list[int]) -> int:
     return min(cost[0], cost[1])
 
 def main():
-    print(minCostClimbingStairs([10,15,20]))
+    assert minCostClimbingStairs([10,15,20]) == 15
 
-# expect-stdout: 15
 

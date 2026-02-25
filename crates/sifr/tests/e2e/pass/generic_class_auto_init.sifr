@@ -1,5 +1,3 @@
-# expect-stdout: 1
-# expect-stdout: 2
 
 class Pair[T]:
     first: T
@@ -7,5 +5,5 @@ class Pair[T]:
 
 def main():
     p: Pair[int] = Pair(1, 2)
-    print(p.first)
-    print(p.second)
+    assert p.first == 1
+    assert p.second == 2

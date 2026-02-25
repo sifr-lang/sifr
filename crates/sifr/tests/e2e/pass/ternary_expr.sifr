@@ -1,10 +1,8 @@
-# expect-stdout: positive
-# expect-stdout: non-positive
 def main():
     n: int = 5
     result: str = "positive" if n > 0 else "non-positive"
-    print(result)
+    assert result == positive
 
     m: int = -3
     result2: str = "positive" if m > 0 else "non-positive"
-    print(result2)
+    assert result2 == non-positive

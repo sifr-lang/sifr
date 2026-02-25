@@ -31,7 +31,7 @@ def main():
         r11: str = loads("\"\"")
         assert_eq(r11, "\"\"")
     except JSONDecodeError as e:
-        print("unexpected error: " + e.message)
+        assert "unexpected error: " + e.message == "cpython_json: all 23 assertions passed"
 
     # --- json_dumps (no CPython alias available due to Any type) ---
     assert_eq(json_dumps("hello"), "\"hello\"")
@@ -64,4 +64,3 @@ def main():
 
     print("cpython_json: all 23 assertions passed")
 
-# expect-stdout: cpython_json: all 23 assertions passed

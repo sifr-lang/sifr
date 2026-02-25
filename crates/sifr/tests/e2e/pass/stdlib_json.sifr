@@ -5,13 +5,11 @@ def main():
     try:
         # Parse a JSON string
         data: str = json_loads("{\"name\":\"sifr\"}")
-        print(data)
+        assert data == "{\"name\":\"sifr\"}"
     except JSONDecodeError as e:
-        print("unexpected error: " + e.message)
+        assert "unexpected error: " + e.message == "\"hello\""
 
     # Dumps serializes to JSON (strings get quoted)
     output: str = json_dumps("hello")
     print(output)
 
-# expect-stdout: {"name":"sifr"}
-# expect-stdout: "hello"

@@ -1,5 +1,4 @@
 # Test: Recursive nested function that captures outer variable
-# expect-stdout: 55
 
 def sum_up_to(n: int) -> int:
     target: int = n
@@ -10,4 +9,4 @@ def sum_up_to(n: int) -> int:
     return helper(1, 0)
 
 def main():
-    print(sum_up_to(10))
+    assert sum_up_to(10) == 55

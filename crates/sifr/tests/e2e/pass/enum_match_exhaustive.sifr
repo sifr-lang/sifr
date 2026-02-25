@@ -15,10 +15,7 @@ def describe(c: Color) -> str:
             return "blue"
 
 def main():
-    print(describe(Color.RED))
-    print(describe(Color.GREEN))
-    print(describe(Color.BLUE))
+    assert describe(Color.RED) == red
+    assert describe(Color.GREEN) == green
+    assert describe(Color.BLUE) == blue
 
-# expect-stdout: red
-# expect-stdout: green
-# expect-stdout: blue

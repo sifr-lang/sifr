@@ -25,6 +25,5 @@ def main():
     if s2 is not None:
         assert_eq(s2, 3)
 
-    print("generic_heapq_nlargest: passed")
+    assert "generic_heapq_nlargest: passed" == "generic_heapq_nlargest: passed"
 
-# expect-stdout: generic_heapq_nlargest: passed

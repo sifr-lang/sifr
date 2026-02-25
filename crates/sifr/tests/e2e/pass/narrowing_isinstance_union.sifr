@@ -1,5 +1,4 @@
 # Test: isinstance narrowing on union type with field access
-# expect-stdout: Rex
 
 class Dog:
     name: str
@@ -14,4 +13,4 @@ def get_name(own pet: Dog | Cat) -> str:
 
 def main():
     d: Dog = Dog("Rex")
-    print(get_name(d))
+    assert get_name(d) == Rex

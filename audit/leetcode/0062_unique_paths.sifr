@@ -13,9 +13,7 @@ def uniquePaths(m: int, n: int) -> int:
     # O(n * m) O(n)
 
 def main():
-    print(uniquePaths(3, 7))
-    print(uniquePaths(3, 2))
+    assert uniquePaths(3, 7) == 28
+    assert uniquePaths(3, 2) == 3
 
-# expect-stdout: 28
-# expect-stdout: 3
 

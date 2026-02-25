@@ -1,17 +1,15 @@
 # milestone_subscript_mutation Demo
-# expect-stdout: [10, 2, 30]
-# expect-stdout: 2
 
 def main():
     # List subscript assignment
     nums: list[int] = [1, 2, 3]
     nums[0] = 10
     nums[2] = 30
-    print(nums)
+    assert nums == [10, 2, 30]
 
     # Dict subscript assignment
     d: dict[str, int] = {"a": 1}
     d["b"] = 2
     val: int | None = d["b"]
     if val is not None:
-        print(val)
+        assert val == 2

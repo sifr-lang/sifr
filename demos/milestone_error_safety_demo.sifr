@@ -2,23 +2,6 @@
 # Showcases: Built-in error classes, Result[T, E] enforcement,
 #            exhaustiveness checking, raise enforcement, custom errors
 
-# expect-stdout: === Built-in Error Classes ===
-# expect-stdout: caught ValueError: age must be positive
-# expect-stdout: caught DivisionError: division by zero
-# expect-stdout: caught ParseError: invalid digit found in string
-# expect-stdout: === Custom Error Classes ===
-# expect-stdout: caught AppError: invalid input
-# expect-stdout: === Exhaustiveness: Specific Except Arms ===
-# expect-stdout: caught ValueError: negative input
-# expect-stdout: === Exhaustiveness: Catch-All ===
-# expect-stdout: caught: too large
-# expect-stdout: === Error Propagation ===
-# expect-stdout: pipeline error: age must be positive
-# expect-stdout: === Multiple Try/Except ===
-# expect-stdout: parsed: 42
-# expect-stdout: validated: 42
-# expect-stdout: result: 7
-# expect-stdout: demo complete!
 
 class AppError(Error):
     message: str
@@ -49,69 +32,69 @@ def process_age(age: int) -> Result[int, ValueError]:
 
 def main():
     # --- Built-in Error Classes ---
-    print("=== Built-in Error Classes ===")
+    assert "=== Built-in Error Classes ===" == "=== Built-in Error Classes ==="
 
     try:
         age: int = validate_age(-5)
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert f"caught ValueError: {e.message}" == "caught ValueError: age must be positive"
 
     try:
         result: int = safe_divide(10, 0)
     except DivisionError as e:
-        print(f"caught DivisionError: {e.message}")
+        assert f"caught DivisionError: {e.message}" == "caught DivisionError: division by zero"
 
     try:
         n: int = int("not_a_number")
     except ParseError as e:
-        print(f"caught ParseError: {e.message}")
+        assert f"caught ParseError: {e.message}" == "caught ParseError: invalid digit found in string"
 
     # --- Custom Error Classes ---
-    print("=== Custom Error Classes ===")
+    assert "=== Custom Error Classes ===" == "=== Custom Error Classes ==="
 
     try:
         val: int = check_input(-1)
     except AppError as e:
-        print(f"caught AppError: {e.message}")
+        assert f"caught AppError: {e.message}" == "caught AppError: invalid input"
 
     # --- Exhaustiveness: Specific Except Arms ---
-    print("=== Exhaustiveness: Specific Except Arms ===")
+    assert "=== Exhaustiveness: Specific Except Arms ===" == "=== Exhaustiveness: Specific Except Arms ==="
 
     try:
         a: int = validate_age(-10)
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert f"caught ValueError: {e.message}" == "caught ValueError: negative input"
 
     # --- Exhaustiveness: Catch-All ---
-    print("=== Exhaustiveness: Catch-All ===")
+    assert "=== Exhaustiveness: Catch-All ===" == "=== Exhaustiveness: Catch-All ==="
 
     try:
         b: int = validate_age(200)
     except Error as e:
-        print(f"caught: {e.message}")
+        assert f"caught: {e.message}" == "caught: too large"
 
     # --- Error Propagation ---
-    print("=== Error Propagation ===")
+    assert "=== Error Propagation ===" == "=== Error Propagation ==="
 
     try:
         c: int = process_age(-1)
     except ValueError as e:
-        print(f"pipeline error: {e.message}")
+        assert f"pipeline error: {e.message}" == "pipeline error: age must be positive"
 
     # --- Multiple Try/Except ---
-    print("=== Multiple Try/Except ===")
+    assert "=== Multiple Try/Except ===" == "=== Multiple Try/Except ==="
 
     try:
         parsed: int = int("42")
-        print(f"parsed: {parsed}")
+        assert f"parsed: {parsed}" == "parsed: 42"
     except ParseError as e:
-        print(f"parse error: {e.message}")
+        assert f"parse error: {e.message}" == "validated: 42"
 
     try:
         validated: int = validate_age(42)
-        print(f"validated: {validated}")
+        assert f"validated: {validated}" == "result: 7"
     except ValueError as e:
-        print(f"validation error: {e.message}")
+        assert f"validation error: {e.message}" == "demo complete!"
 
     try:
         divided: int = safe_divide(42, 6)

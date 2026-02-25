@@ -1,6 +1,3 @@
-# expect-stdout: none
-# expect-stdout: true
-# expect-stdout: false
 
 def maybe_value(x: int) -> int | None:
     if x > 0:
@@ -10,7 +7,7 @@ def maybe_value(x: int) -> int | None:
 def main():
     result: int | None = maybe_value(0)
     if result is None:
-        print("none")
+        assert "none" == none
     result2: int | None = maybe_value(5)
-    print(result2 is not None)
-    print(result2 is None)
+    assert result2 is not None == True
+    assert result2 is None == False

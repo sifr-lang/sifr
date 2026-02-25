@@ -26,9 +26,7 @@ def findAnagrams(s: str, p: str) -> list[int]:
     return res
 
 def main():
-    print(findAnagrams("cbaebabacd", "abc"))
-    print(findAnagrams("abab", "ab"))
+    assert findAnagrams("cbaebabacd", "abc") == [0, 6]
+    assert findAnagrams("abab", "ab") == [0, 1, 2]
 
-# expect-stdout: [0, 6]
-# expect-stdout: [0, 1, 2]
 

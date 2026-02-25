@@ -10,10 +10,7 @@ def classify(x: int) -> str:
             return "unknown"
 
 def main():
-    print(classify(-5))
-    print(classify(0))
-    print(classify(7))
+    assert classify(-5) == negative
+    assert classify(0) == zero
+    assert classify(7) == positive
 
-# expect-stdout: negative
-# expect-stdout: zero
-# expect-stdout: positive

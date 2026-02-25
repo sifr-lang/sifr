@@ -1,6 +1,4 @@
 # Test: generic function operating on list[T]
-# expect-stdout: 10
-# expect-stdout: hello
 
 from typing import TypeVar
 
@@ -11,6 +9,6 @@ def first(items: list[T]) -> T:
 
 def main():
     nums: list[int] = [10, 20, 30]
-    print(first(nums))
+    assert first(nums) == 10
     words: list[str] = ["hello", "world"]
-    print(first(words))
+    assert first(words) == hello

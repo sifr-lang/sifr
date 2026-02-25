@@ -2,31 +2,23 @@
 # This covers the regression where Option<T> in display contexts
 # caused Rust compilation errors (Option doesn't impl Display).
 
-# expect-stdout: 20
-# expect-stdout: None
-# expect-stdout: first: 10
-# expect-stdout: missing: None
-# expect-stdout: alice age: 30
-# expect-stdout: missing key: None
-# expect-stdout: char: h
-# expect-stdout: oob char: None
 
 def main():
     # --- print() with Option from list indexing ---
     nums: list[int] = [10, 20, 30]
-    print(nums[1])
-    print(nums[99])
+    assert nums[1] == 20
+    assert nums[99] == None
 
     # --- f-string with Option from list indexing ---
-    print(f"first: {nums[0]}")
-    print(f"missing: {nums[99]}")
+    assert f"first: {nums[0]}" == "first: 10"
+    assert f"missing: {nums[99]}" == "missing: None"
 
     # --- f-string with Option from dict indexing ---
     ages: dict[str, int] = {"alice": 30, "bob": 25}
-    print(f"alice age: {ages['alice']}")
-    print(f"missing key: {ages['charlie']}")
+    assert f"alice age: {ages['alice']}" == "alice age: 30"
+    assert f"missing key: {ages['charlie']}" == "missing key: None"
 
     # --- f-string with Option from string indexing ---
     s: str = "hello"
-    print(f"char: {s[0]}")
-    print(f"oob char: {s[99]}")
+    assert f"char: {s[0]}" == "char: h"
+    assert f"oob char: {s[99]}" == "oob char: None"

@@ -3,6 +3,5 @@ from sifr.uuid import uuid4
 
 def main():
     id: str = uuid4()
-    print(len(id) > 0)
+    assert len(id) > 0 == True
 
-# expect-stdout: true

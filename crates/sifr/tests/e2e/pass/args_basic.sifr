@@ -1,4 +1,3 @@
-# expect-stdout: 15
 # Tests: *args variadic arguments
 
 def sum_all(*nums: int) -> int:
@@ -9,4 +8,4 @@ def sum_all(*nums: int) -> int:
 
 def main():
     result: int = sum_all(1, 2, 3, 4, 5)
-    print(result)
+    assert result == 15

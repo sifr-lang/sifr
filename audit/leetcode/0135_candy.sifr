@@ -22,9 +22,7 @@ def candy(ratings: list[int]) -> int:
     return sum(candies)
 
 def main():
-    print(candy([1,0,2]))
-    print(candy([1,2,2]))
+    assert candy([1,0,2]) == 5
+    assert candy([1,2,2]) == 4
 
-# expect-stdout: 5
-# expect-stdout: 4
 

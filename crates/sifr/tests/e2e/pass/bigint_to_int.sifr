@@ -2,8 +2,7 @@ def main():
     b: bigint = bigint(42)
     try:
         n: int = int(b)
-        print(n)
+        assert n == "42"
     except OverflowError as e:
         print("overflow")
 
-# expect-stdout: 42

@@ -1,10 +1,8 @@
 # Test: dict.get with default value
-# expect-stdout: 1
-# expect-stdout: 0
 
 def main():
     d: dict[str, int] = {"a": 1, "b": 2}
     v1: int = d.get("a", 0)
-    print(v1)
+    assert v1 == 1
     v2: int = d.get("c", 0)
-    print(v2)
+    assert v2 == 0

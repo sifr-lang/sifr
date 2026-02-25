@@ -4,21 +4,21 @@ from sifr.bytes import decode_utf8, bytes_to_hex, bytes_from_hex
 def main():
     try:
         bad_hi: str = decode_utf8([256])
-        print("should not reach")
+        assert "should not reach" == "caught decode range high"
     except ParseError as e:
-        print("caught decode range high")
+        assert "caught decode range high" == "caught decode range low"
 
     try:
         bad_lo: str = decode_utf8([-1])
-        print("should not reach")
+        assert "should not reach" == "caught hex range high"
     except ParseError as e:
-        print("caught decode range low")
+        assert "caught decode range low" == "caught hex range low"
 
     try:
         h1: str = bytes_to_hex([256])
-        print(h1)
+        assert h1 == "caught unicode hex parse"
     except ParseError as e:
-        print("caught hex range high")
+        assert "caught hex range high" == "Hello"
 
     try:
         h2: str = bytes_to_hex([-2])
@@ -41,9 +41,3 @@ def main():
     except ParseError as e:
         print("unexpected: " + e.message)
 
-# expect-stdout: caught decode range high
-# expect-stdout: caught decode range low
-# expect-stdout: caught hex range high
-# expect-stdout: caught hex range low
-# expect-stdout: caught unicode hex parse
-# expect-stdout: Hello

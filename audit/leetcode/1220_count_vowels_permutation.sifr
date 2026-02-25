@@ -41,11 +41,8 @@ def countVowelPermutation(n, c = '') -> int:
             return Tot % 1000000007         
 
 def main():
-    print(countVowelPermutation(1))
-    print(countVowelPermutation(2))
-    print(countVowelPermutation(5))
+    assert countVowelPermutation(1) == 5
+    assert countVowelPermutation(2) == 10
+    assert countVowelPermutation(5) == 68
 
-# expect-stdout: 5
-# expect-stdout: 10
-# expect-stdout: 68
 

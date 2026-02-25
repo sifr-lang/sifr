@@ -6,10 +6,7 @@ def describe(x: int) -> str:
             return "something else"
 
 def main():
-    print(describe(42))
-    print(describe(0))
-    print(describe(100))
+    assert describe(42) == "the answer"
+    assert describe(0) == "something else"
+    assert describe(100) == "something else"
 
-# expect-stdout: the answer
-# expect-stdout: something else
-# expect-stdout: something else

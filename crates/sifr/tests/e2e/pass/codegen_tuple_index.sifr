@@ -1,10 +1,8 @@
-# expect-stdout: 1
-# expect-stdout: 2
 # Tests that tuple indexing emits .0, .1 instead of .0_i64
 
 def main():
     pair: tuple[int, int] = (1, 2)
     x: int = pair[0]
     y: int = pair[1]
-    print(x)
-    print(y)
+    assert x == 1
+    assert y == 2

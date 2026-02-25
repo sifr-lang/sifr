@@ -1,5 +1,4 @@
-# expect-stdout: 4
 def main():
     nums: list[int] = [1, 2, 3]
     nums.append(4)
-    print(len(nums))
+    assert len(nums) == 4

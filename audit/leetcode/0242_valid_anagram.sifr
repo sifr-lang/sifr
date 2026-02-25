@@ -16,9 +16,7 @@ def isAnagram(s: str, t: str) -> bool:
 #return True if sorted(s) == sorted(t) else False
 
 def main():
-    print(isAnagram("anagram", "nagaram"))
-    print(isAnagram("rat", "car"))
+    assert isAnagram("anagram", "nagaram") == True
+    assert isAnagram("rat", "car") == False
 
-# expect-stdout: true
-# expect-stdout: false
 

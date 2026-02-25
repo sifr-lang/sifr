@@ -1,18 +1,15 @@
 # Test new sifr.itertools functions
-# expect-stdout: pairwise = [[1, 2], [2, 3], [3, 4]]
-# expect-stdout: batched = [[1, 2], [3, 4], [5]]
-# expect-stdout: islice = [10, 20, 30]
 
 from sifr.itertools import pairwise, batched, islice
 
 def main():
     data: list[int] = [1, 2, 3, 4]
-    print("pairwise = " + str(pairwise(data)))
+    assert "pairwise = " + str(pairwise(data)) == "pairwise = [[1, 2], [2, 3], [3, 4]]"
     data2: list[int] = [1, 2, 3, 4, 5]
     try:
         bat: list[list[int]] = batched(data2, 2)
-        print("batched = " + str(bat))
+        assert "batched = " + str(bat) == "batched = [[1, 2], [3, 4], [5]]"
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "islice = [10, 20, 30]"
     data3: list[int] = [10, 20, 30, 40, 50]
     print("islice = " + str(islice(data3, 3)))

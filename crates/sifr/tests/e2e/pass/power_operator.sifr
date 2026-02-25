@@ -1,7 +1,5 @@
-# expect-stdout: 8
-# expect-stdout: 100
 def main():
     x: int = 2 ** 3
-    print(x)
+    assert x == 8
     y: int = 10 ** 2
-    print(y)
+    assert y == 100

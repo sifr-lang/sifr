@@ -18,9 +18,7 @@ def deleteAndEarn(nums):
     return dp[-1]
 
 def main():
-    print(deleteAndEarn([3,4,2]))
-    print(deleteAndEarn([2,2,3,3,3,4]))
+    assert deleteAndEarn([3,4,2]) == 6
+    assert deleteAndEarn([2,2,3,3,3,4]) == 9
 
-# expect-stdout: 6
-# expect-stdout: 9
 

@@ -38,6 +38,5 @@ def main():
     assert_eq(cf.get("a"), 1)
     assert_eq(cf.get("b"), 1)
 
-    print("stdlib_collections_counter_new: all tests passed")
+    assert "stdlib_collections_counter_new: all tests passed" == "stdlib_collections_counter_new: all tests passed"
 
-# expect-stdout: stdlib_collections_counter_new: all tests passed

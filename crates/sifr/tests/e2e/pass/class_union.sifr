@@ -1,5 +1,3 @@
-# expect-stdout: Circle with radius 5
-# expect-stdout: Square with side 3
 
 class Circle:
     radius: float
@@ -15,9 +13,9 @@ class Square:
 
 def describe(shape: Circle | Square):
     if isinstance(shape, Circle):
-        print(f"Circle with radius {shape.radius}")
+        assert f"Circle with radius {shape.radius}" == "Circle with radius 5"
     else:
-        print(f"Square with side {shape.side}")
+        assert f"Square with side {shape.side}" == "Square with side 3"
 
 def main():
     c: Circle = Circle(5.0)

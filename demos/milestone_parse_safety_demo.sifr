@@ -15,92 +15,92 @@ from sifr.bytes import encode_utf8, decode_utf8, bytes_from_hex
 # --- 1. JSON parse safety ---
 
 def demo_json():
-    print("=== JSON Parse Safety ===")
+    assert "=== JSON Parse Safety ===" == "=== JSON Parse Safety ==="
 
     # Success path
     try:
         data: str = json_loads("{\"language\":\"sifr\",\"safe\":true}")
-        print(f"parsed: {data}")
+        assert f"parsed: {data}" == "parsed: {\"language\":\"sifr\",\"safe\":true}"
     except JSONDecodeError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "caught JSONDecodeError:"
 
     # Error path — invalid JSON no longer panics!
     try:
         bad: str = json_loads("{not valid json")
-        print("should not reach here")
+        assert "should not reach here" == "dumped: 42"
     except JSONDecodeError as e:
-        print(f"caught JSONDecodeError: {e.message}")
+        assert f"caught JSONDecodeError: {e.message}" == "=== TOML Parse Safety ==="
 
     # json_dumps still works as before (infallible for basic types)
     dumped: str = json_dumps(42)
-    print(f"dumped: {dumped}")
+    assert f"dumped: {dumped}" == "toml parsed: true"
 
 # --- 2. TOML parse safety ---
 
 def demo_toml():
-    print("=== TOML Parse Safety ===")
+    assert "=== TOML Parse Safety ===" == "caught TOMLDecodeError:"
 
     # Success path
     try:
         toml_data: str = loads("name = \"sifr\"\nversion = 1")
-        print(f"toml parsed: {len(toml_data) > 0}")
+        assert f"toml parsed: {len(toml_data) > 0}" == "=== Regex Safety ==="
     except TOMLDecodeError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "match found: true"
 
     # Error path — invalid TOML
     try:
         bad_toml: str = loads("[broken toml ===")
-        print("should not reach here")
+        assert "should not reach here" == "found: 42"
     except TOMLDecodeError as e:
-        print(f"caught TOMLDecodeError: {e.message}")
+        assert f"caught TOMLDecodeError: {e.message}" == "replaced: test NUM NUM NUM"
 
 # --- 3. Regex safety ---
 
 def demo_regex():
-    print("=== Regex Safety ===")
+    assert "=== Regex Safety ===" == "findall count: 3"
 
     try:
         # re_match success
         matched: bool = re_match("\\d+", "abc123")
-        print(f"match found: {matched}")
+        assert f"match found: {matched}" == "split count: 3"
 
         # re_find success
         found: str | None = re_find("\\d+", "hello 42 world")
-        print(f"found: {found}")
+        assert f"found: {found}" == "caught RegexError:"
 
         # re_replace success
         replaced: str = re_replace("\\d+", "NUM", "test 1 2 3")
-        print(f"replaced: {replaced}")
+        assert f"replaced: {replaced}" == "=== Base64 Safety ==="
 
         # re_findall success
         all_matches: list[str] = re_findall("[a-z]+", "Hello World Sifr")
-        print(f"findall count: {len(all_matches)}")
+        assert f"findall count: {len(all_matches)}" == "decoded: safe decoding!"
 
         # re_split success
         parts: list[str] = re_split(",", "a,b,c")
-        print(f"split count: {len(parts)}")
+        assert f"split count: {len(parts)}" == "caught base64 ParseError:"
     except RegexError as e:
-        print(f"unexpected: {e.message}")
+        assert f"unexpected: {e.message}" == "=== Bytes Safety ==="
 
     # Error path — invalid regex pattern
     try:
         bad_match: bool = re_match("[unclosed", "text")
-        print("should not reach here")
+        assert "should not reach here" == "utf8: hello sifr"
     except RegexError as e:
-        print(f"caught RegexError: {e.message}")
+        assert f"caught RegexError: {e.message}" == "caught utf8 ParseError:"
 
 # --- 4. Base64 safety ---
 
 def demo_base64():
-    print("=== Base64 Safety ===")
+    assert "=== Base64 Safety ===" == "from hex: Hello"
 
     # Success path
     encoded: str = base64_encode("safe decoding!")
     try:
         decoded: str = base64_decode(encoded)
-        print(f"decoded: {decoded}")
+        assert f"decoded: {decoded}" == "caught hex ParseError:"
     except ParseError as e:
-        print(f"unexpected: {e.message}")
+        assert f"unexpected: {e.message}" == "=== All parse safety demos passed ==="
 
     # Error path — invalid base64
     try:
@@ -154,26 +154,3 @@ def main():
     demo_bytes()
     print("=== All parse safety demos passed ===")
 
-# expect-stdout: === JSON Parse Safety ===
-# expect-stdout: parsed: {"language":"sifr","safe":true}
-# expect-stdout: caught JSONDecodeError:
-# expect-stdout: dumped: 42
-# expect-stdout: === TOML Parse Safety ===
-# expect-stdout: toml parsed: true
-# expect-stdout: caught TOMLDecodeError:
-# expect-stdout: === Regex Safety ===
-# expect-stdout: match found: true
-# expect-stdout: found: 42
-# expect-stdout: replaced: test NUM NUM NUM
-# expect-stdout: findall count: 3
-# expect-stdout: split count: 3
-# expect-stdout: caught RegexError:
-# expect-stdout: === Base64 Safety ===
-# expect-stdout: decoded: safe decoding!
-# expect-stdout: caught base64 ParseError:
-# expect-stdout: === Bytes Safety ===
-# expect-stdout: utf8: hello sifr
-# expect-stdout: caught utf8 ParseError:
-# expect-stdout: from hex: Hello
-# expect-stdout: caught hex ParseError:
-# expect-stdout: === All parse safety demos passed ===

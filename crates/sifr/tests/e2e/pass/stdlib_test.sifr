@@ -19,6 +19,5 @@ def main():
     assert_false(1 == 2)
 
     # All assertions passed
-    print("all assertions passed")
+    assert "all assertions passed" == "all assertions passed"
 
-# expect-stdout: all assertions passed

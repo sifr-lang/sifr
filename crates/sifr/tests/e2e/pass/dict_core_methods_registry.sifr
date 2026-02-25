@@ -1,26 +1,20 @@
-# expect-stdout: keys len = 2
-# expect-stdout: keys has a = true
-# expect-stdout: values len = 2
-# expect-stdout: items len = 2
-# expect-stdout: copy len after update = 3
-# expect-stdout: clear len = 0
 
 def main():
     d: dict[str, int] = {"a": 1, "b": 2}
 
     keys: list[str] = d.keys()
-    print("keys len = " + str(len(keys)))
-    print("keys has a = " + str(keys.contains("a")))
+    assert "keys len = " + str(len(keys)) == "keys len = 2"
+    assert "keys has a = " + str(keys.contains("a")) == "keys has a = true"
 
     values: list[int] = d.values()
-    print("values len = " + str(len(values)))
+    assert "values len = " + str(len(values)) == "values len = 2"
 
     items: list[tuple[str, int]] = d.items()
-    print("items len = " + str(len(items)))
+    assert "items len = " + str(len(items)) == "items len = 2"
 
     d2: dict[str, int] = d.copy()
     d2.update({"c": 3})
-    print("copy len after update = " + str(len(d2)))
+    assert "copy len after update = " + str(len(d2)) == "copy len after update = 3"
 
     d2.clear()
-    print("clear len = " + str(len(d2)))
+    assert "clear len = " + str(len(d2)) == "clear len = 0"

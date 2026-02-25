@@ -6,23 +6,19 @@ class Resource:
         self.name = name
 
     def __enter__(self) -> Resource:
-        print("enter: " + self.name)
+        assert "enter: " + self.name == "enter: res"
         return self
 
     def __exit__(self) -> None:
-        print("exit: " + self.name)
+        assert "exit: " + self.name == "using: res"
 
 def test_return() -> int:
     with Resource("res") as r:
-        print("using: " + r.name)
+        assert "using: " + r.name == "exit: res"
         return 42
     return 0
 
 def main():
     val: int = test_return()
-    print(val)
+    assert val == 42
 
-# expect-stdout: enter: res
-# expect-stdout: using: res
-# expect-stdout: exit: res
-# expect-stdout: 42

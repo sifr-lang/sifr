@@ -28,7 +28,6 @@ def minimizeMax(nums: list[int], p: int) -> int:
     return left
 
 def main():
-    print(minimizeMax([10,1,2,7,1,3], 2))
+    assert minimizeMax([10,1,2,7,1,3], 2) == 1
 
-# expect-stdout: 1
 

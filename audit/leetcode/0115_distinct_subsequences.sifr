@@ -17,9 +17,7 @@ def numDistinct(s: str, t: str) -> int:
     return cache[(0, 0)]
 
 def main():
-    print(numDistinct("rabbbit", "rabbit"))
-    print(numDistinct("babgbag", "bag"))
+    assert numDistinct("rabbbit", "rabbit") == 3
+    assert numDistinct("babgbag", "bag") == 5
 
-# expect-stdout: 3
-# expect-stdout: 5
 

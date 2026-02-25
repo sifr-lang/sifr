@@ -1,8 +1,3 @@
-# expect-stdout: match = true
-# expect-stdout: search result len > 0 = true
-# expect-stdout: findall len = 2
-# expect-stdout: fullmatch = true
-# expect-stdout: pattern = \d+
 
 from sifr.re import compile, fullmatch, Pattern
 
@@ -10,18 +5,18 @@ def main():
     p: Pattern = compile("\\d+")
     try:
         m: bool = p.is_match("123abc")
-        print("match = " + str(m))
+        assert "match = " + str(m) == "match = true"
     except RegexError as e:
-        print("match error: " + e.message)
+        assert "match error: " + e.message == "search result len > 0 = true"
 
     try:
         s: str | None = p.search("hello 42 world")
         if s is not None:
-            print("search result len > 0 = " + str(len(s) > 0))
+            assert "search result len > 0 = " + str(len(s) > 0) == "findall len = 2"
         else:
-            print("search result len > 0 = false")
+            assert "search result len > 0 = false" == "fullmatch = true"
     except RegexError as e:
-        print("search error: " + e.message)
+        assert "search error: " + e.message == "pattern = \\d+"
 
     try:
         all_nums: list[str] = p.findall("hello 42 world 99")

@@ -1,5 +1,4 @@
 # Truthiness-based narrowing
-# expect-stdout: has value
 
 def check(x: str | None) -> str:
     if x:
@@ -9,4 +8,4 @@ def check(x: str | None) -> str:
 
 def main():
     result: str = check("hello")
-    print(result)
+    assert result == "has value"

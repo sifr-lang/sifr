@@ -1,13 +1,10 @@
 # Test generic bisect with float list
-# expect-stdout: bisect_left = 2
-# expect-stdout: bisect_right = 3
-# expect-stdout: [1.0, 2.0, 2.5, 3.0, 4.0, 5.0]
 
 from sifr.bisect import bisect_left, bisect_right, insort_left
 
 def main():
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
-    print("bisect_left = " + str(bisect_left(data, 2.5)))
-    print("bisect_right = " + str(bisect_right(data, 3.0)))
+    assert "bisect_left = " + str(bisect_left(data, 2.5)) == "bisect_left = 2"
+    assert "bisect_right = " + str(bisect_right(data, 3.0)) == "bisect_right = 3"
     insort_left(data, 2.5)
-    print(data)
+    assert data == [1.0, 2.0, 2.5, 3.0, 4.0, 5.0]

@@ -3,17 +3,11 @@ from sifr.re import Match
 
 def main():
     m: Match = Match("hello", 2, 7)
-    print(m.group())
-    print(m.start())
-    print(m.end())
+    assert m.group() == hello
+    assert m.start() == 2
+    assert m.end() == 7
     sp: list[int] = m.span()
-    print(sp[0])
-    print(sp[1])
-    print(m.to_str())
+    assert sp[0] == 2
+    assert sp[1] == 7
+    assert m.to_str() == hello
 
-# expect-stdout: hello
-# expect-stdout: 2
-# expect-stdout: 7
-# expect-stdout: 2
-# expect-stdout: 7
-# expect-stdout: hello

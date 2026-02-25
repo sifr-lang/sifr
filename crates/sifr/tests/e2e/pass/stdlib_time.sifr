@@ -4,13 +4,11 @@ from sifr.time import time_now, sleep
 def main():
     # Get current time (should be a positive number)
     t: float = time_now()
-    print(t > 0.0)
+    assert t > 0.0 == True
 
     # Sleep briefly and check time advanced
     t1: float = time_now()
     sleep(0.01)
     t2: float = time_now()
-    print(t2 > t1)
+    assert t2 > t1 == True
 
-# expect-stdout: true
-# expect-stdout: true

@@ -1,11 +1,9 @@
 def main():
     # 10^20 is larger than i64::MAX (9.2 * 10^18)
     x: bigint = bigint(10) ** 20
-    print(x)
+    assert x == 100000000000000000000
     
     # 2^100
     y: bigint = bigint(2) ** 100
-    print(y)
+    assert y == 1267650600228229401496703205376
 
-# expect-stdout: 100000000000000000000
-# expect-stdout: 1267650600228229401496703205376

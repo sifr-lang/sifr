@@ -11,8 +11,6 @@ def main():
             total += i * 2
 
     verdict: str = "high" if total > 10 else "low"
-    print(f"total = {total}")
-    print(f"verdict = {verdict}")
+    assert f"total = {total}" == "total = 24"
+    assert f"verdict = {verdict}" == "verdict = high"
 
-# expect-stdout: total = 24
-# expect-stdout: verdict = high

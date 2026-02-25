@@ -9,49 +9,49 @@ def main():
     # 1. JSON: invalid input returns JSONDecodeError
     try:
         val: str = json_loads("invalid json")
-        print("should not reach here")
+        assert "should not reach here" == "caught JSONDecodeError"
     except JSONDecodeError as e:
-        print("caught JSONDecodeError")
+        assert "caught JSONDecodeError" == "json ok: {\"ok\":true}"
 
     # 2. JSON: valid input succeeds
     try:
         data: str = json_loads("{\"ok\":true}")
-        print(f"json ok: {data}")
+        assert f"json ok: {data}" == "caught TOMLDecodeError"
     except JSONDecodeError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "true"
 
     # 3. TOML: invalid input returns TOMLDecodeError
     try:
         tval: str = loads("invalid [toml")
-        print("should not reach here")
+        assert "should not reach here" == "caught RegexError"
     except TOMLDecodeError as e:
-        print("caught TOMLDecodeError")
+        assert "caught TOMLDecodeError" == "regex ok: true"
 
     # 4. TOML: valid input succeeds
     try:
         tdata: str = loads("key = \"value\"")
-        print(len(tdata) > 0)
+        assert len(tdata) > 0 == "caught base64 ParseError"
     except TOMLDecodeError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "base64 ok: hello"
 
     # 5. Regex: invalid pattern returns RegexError
     try:
         matched: bool = re_match("[invalid", "text")
-        print("should not reach here")
+        assert "should not reach here" == "caught utf8 ParseError"
     except RegexError as e:
-        print("caught RegexError")
+        assert "caught RegexError" == "utf8 ok: hi"
 
     # 6. Regex: valid pattern succeeds
     try:
         matched2: bool = re_match("[a-z]+", "hello")
-        print(f"regex ok: {matched2}")
+        assert f"regex ok: {matched2}" == "caught hex ParseError"
     except RegexError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "hex ok: 72"
 
     # 7. Base64: invalid input returns ParseError
     try:
         decoded: str = base64_decode("not valid base64!!!")
-        print("should not reach here")
+        assert "should not reach here" == "all parse safety error paths passed"
     except ParseError as e:
         print("caught base64 ParseError")
 
@@ -94,16 +94,3 @@ def main():
 
     print("all parse safety error paths passed")
 
-# expect-stdout: caught JSONDecodeError
-# expect-stdout: json ok: {"ok":true}
-# expect-stdout: caught TOMLDecodeError
-# expect-stdout: true
-# expect-stdout: caught RegexError
-# expect-stdout: regex ok: true
-# expect-stdout: caught base64 ParseError
-# expect-stdout: base64 ok: hello
-# expect-stdout: caught utf8 ParseError
-# expect-stdout: utf8 ok: hi
-# expect-stdout: caught hex ParseError
-# expect-stdout: hex ok: 72
-# expect-stdout: all parse safety error paths passed

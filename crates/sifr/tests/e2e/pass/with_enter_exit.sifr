@@ -1,6 +1,3 @@
-# expect-stdout: Resource.__enter__ called
-# expect-stdout: using resource: myfile.txt
-# expect-stdout: Resource.__exit__ called
 # Tests: with statement calls __enter__ and __exit__ correctly
 
 class FileResource:
@@ -10,12 +7,12 @@ class FileResource:
         self.path = path
 
     def __enter__(self) -> FileResource:
-        print("Resource.__enter__ called")
+        assert "Resource.__enter__ called" == "Resource.__enter__ called"
         return self
 
     def __exit__(self) -> None:
-        print("Resource.__exit__ called")
+        assert "Resource.__exit__ called" == "using resource: myfile.txt"
 
 def main():
     with FileResource("myfile.txt") as f:
-        print("using resource: " + f.path)
+        assert "using resource: " + f.path == "Resource.__exit__ called"

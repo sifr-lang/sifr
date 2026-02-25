@@ -9,7 +9,6 @@ def hIndex(citations: list[int]) -> int:
     return 0
 
 def main():
-    print(hIndex([3,0,6,1,5]))
+    assert hIndex([3,0,6,1,5]) == 3
 
-# expect-stdout: 3
 

@@ -19,9 +19,7 @@ def convert(s: str, numRows: int) -> str:
     return "".join(res)
 
 def main():
-    print(convert("PAYPALISHIRING", 3))
-    print(convert("A", 1))
+    assert convert("PAYPALISHIRING", 3) == PAHNAPLSIIGYIR
+    assert convert("A", 1) == A
 
-# expect-stdout: PAHNAPLSIIGYIR
-# expect-stdout: A
 

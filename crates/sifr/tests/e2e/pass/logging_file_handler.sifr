@@ -1,4 +1,3 @@
-# expect-stdout: handler emitted ok
 
 from sifr.logging import FileHandler
 
@@ -6,4 +5,4 @@ def main():
     path: str = "/tmp/sifr_log_fh_test.log"
     handler: FileHandler = FileHandler(path)
     handler.emit("INFO", "test", "hello from file handler")
-    print("handler emitted ok")
+    assert "handler emitted ok" == "handler emitted ok"

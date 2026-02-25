@@ -5,8 +5,7 @@ def main():
     try:
         toml_text: str = "name = \"test\"\nversion = 42"
         result: str = loads(toml_text)
-        print(len(result) > 0)
+        assert len(result) > 0 == true
     except TOMLDecodeError as e:
         print("unexpected error: " + e.message)
 
-# expect-stdout: true

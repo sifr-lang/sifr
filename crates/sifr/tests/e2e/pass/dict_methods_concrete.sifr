@@ -1,6 +1,4 @@
-# expect-stdout: true
-# expect-stdout: 2
 def main():
     d: dict[str, int] = {"a": 1, "b": 2}
-    print(d.contains("a"))
-    print(len(d))
+    assert d.contains("a") == True
+    assert len(d) == 2

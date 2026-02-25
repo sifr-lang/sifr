@@ -44,7 +44,7 @@ def main():
         avg: float = mean(data2)
         assert_true(avg == 4.0)
     except StatisticsError as se:
-        print("statistics error: " + se.message)
+        assert "statistics error: " + se.message == "milestone_stdlib_expansion demo: all checks passed!"
 
     # sifr.heapq — heap operations (in-place mut params)
     heap: list[int] = []
@@ -89,4 +89,3 @@ def main():
 
     print("milestone_stdlib_expansion demo: all checks passed!")
 
-# expect-stdout: milestone_stdlib_expansion demo: all checks passed!

@@ -1,9 +1,7 @@
-# expect-stdout: parts_len = 2
-# expect-stdout: words_len = 3
 
 def main():
     parts: list[str] = "a,b".split(",")
-    print("parts_len = " + str(len(parts)))
+    assert "parts_len = " + str(len(parts)) == "parts_len = 2"
 
     words: list[str] = "one two three".split()
-    print("words_len = " + str(len(words)))
+    assert "words_len = " + str(len(words)) == "words_len = 3"

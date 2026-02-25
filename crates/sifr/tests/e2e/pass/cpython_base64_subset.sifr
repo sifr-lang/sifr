@@ -10,43 +10,43 @@ from sifr.base64 import (
 )
 
 def main():
-    print(b64encode("foo"))
+    assert b64encode("foo") == "Zm9v"
     try:
         d1: str = b64decode("Zm9v")
-        print(d1)
+        assert d1 == "foo"
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "Zm9v"
 
-    print(standard_b64encode("foo"))
+    assert standard_b64encode("foo") == "foo"
     try:
         d2: str = standard_b64decode("Zm9v")
-        print(d2)
+        assert d2 == true
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "hello"
 
     u: str = urlsafe_b64encode("hello")
-    print(len(u) > 0)
+    assert len(u) > 0 == true
     try:
         ud: str = urlsafe_b64decode(u)
-        print(ud)
+        assert ud == "hello"
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "true"
 
     b32: str = b32encode("hello")
-    print(len(b32) > 0)
+    assert len(b32) > 0 == "hello"
     try:
         b32d: str = b32decode(b32)
-        print(b32d)
+        assert b32d == "4869"
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "Hi"
 
     b32h: str = b32hexencode("hello")
-    print(len(b32h) > 0)
+    assert len(b32h) > 0 == "YmFy"
     try:
         b32hd: str = b32hexdecode(b32h)
-        print(b32hd)
+        assert b32hd == "bar"
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert "unexpected: " + e.message == "invalid-safe"
 
     try:
         h: str = b16encode("Hi")
@@ -69,18 +69,3 @@ def main():
     except ParseError as e:
         print("invalid-safe")
 
-# expect-stdout: Zm9v
-# expect-stdout: foo
-# expect-stdout: Zm9v
-# expect-stdout: foo
-# expect-stdout: true
-# expect-stdout: hello
-# expect-stdout: true
-# expect-stdout: hello
-# expect-stdout: true
-# expect-stdout: hello
-# expect-stdout: 4869
-# expect-stdout: Hi
-# expect-stdout: YmFy
-# expect-stdout: bar
-# expect-stdout: invalid-safe

@@ -5,13 +5,11 @@ def main():
     try:
         # Run a simple command
         result: str = run_command("echo hello_from_shell")
-        print(result)
+        assert result == "hello_from_shell"
     except IOError as e:
-        print("ERROR: " + e.message)
+        assert "ERROR: " + e.message == "true"
 
     # Get args (will just be the binary name)
     args: list[str] = get_args()
     print(len(args) > 0)
 
-# expect-stdout: hello_from_shell
-# expect-stdout: true

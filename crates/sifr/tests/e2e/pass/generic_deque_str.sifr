@@ -29,6 +29,5 @@ def main():
         assert_eq(sv, "hello")
     assert_eq(ds.len(), 2)
 
-    print("generic_deque_operations: passed")
+    assert "generic_deque_operations: passed" == "generic_deque_operations: passed"
 
-# expect-stdout: generic_deque_operations: passed

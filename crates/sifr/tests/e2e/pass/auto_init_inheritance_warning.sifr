@@ -12,8 +12,6 @@ class Dog(Animal):
 
 def main():
     d: Dog = Dog("Rex", 5, "Labrador")
-    print(d.name)
-    print(d.breed)
+    assert d.name == Rex
+    assert d.breed == Labrador
 
-# expect-stdout: Rex
-# expect-stdout: Labrador

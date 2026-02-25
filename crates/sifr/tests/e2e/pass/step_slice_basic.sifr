@@ -1,9 +1,7 @@
-# expect-stdout: 5
-# expect-stdout: 5
 def main():
     items: list[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     evens: list[int] = items[::2]
-    print(len(evens))
+    assert len(evens) == 5
 
     odds: list[int] = items[1::2]
-    print(len(odds))
+    assert len(odds) == 5

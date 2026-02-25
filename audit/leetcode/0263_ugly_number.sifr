@@ -10,11 +10,8 @@ def isUgly(n: int) -> bool:
     return n == 1
 
 def main():
-    print(isUgly(6))
-    print(isUgly(1))
-    print(isUgly(14))
+    assert isUgly(6) == True
+    assert isUgly(1) == True
+    assert isUgly(14) == False
 
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: false
 

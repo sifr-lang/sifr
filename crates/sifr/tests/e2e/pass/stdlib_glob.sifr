@@ -13,21 +13,18 @@ def main():
 
         # Glob for .txt files
         matches: list[str] = glob("/tmp/sifr_test_glob", "*.txt")
-        print(len(matches))
+        assert len(matches) == "2"
 
         # Glob for .csv files
         csv_matches: list[str] = glob("/tmp/sifr_test_glob", "*.csv")
-        print(len(csv_matches))
+        assert len(csv_matches) == "1"
 
         # Glob for nonexistent pattern
         none_matches: list[str] = glob("/tmp/sifr_test_glob", "*.xyz")
-        print(len(none_matches))
+        assert len(none_matches) == "0"
 
         # Cleanup
         r4: str = run_command("rm -rf /tmp/sifr_test_glob")
     except IOError as e:
         print("ERROR: " + e.message)
 
-# expect-stdout: 2
-# expect-stdout: 1
-# expect-stdout: 0

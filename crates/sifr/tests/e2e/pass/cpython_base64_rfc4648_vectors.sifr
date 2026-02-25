@@ -15,7 +15,7 @@ def assert_b16_vector(input_text: str, expected_hex: str):
         out: str = b16encode(input_text)
         assert_eq(out, expected_hex)
     except ParseError as e:
-        print("unexpected parse error: " + e.message)
+        assert "unexpected parse error: " + e.message == "rfc4648 vectors: pass"
         assert False
 
 def check_roundtrip(payload: str):
@@ -24,7 +24,7 @@ def check_roundtrip(payload: str):
         d1: str = b64decode(e1)
         assert_eq(d1, payload)
     except ParseError as e:
-        print("unexpected parse error: " + e.message)
+        assert "unexpected parse error: " + e.message == "roundtrip matrix: pass"
         assert False
 
     e2: str = standard_b64encode(payload)
@@ -130,5 +130,3 @@ def main():
 
     print("roundtrip matrix: pass")
 
-# expect-stdout: rfc4648 vectors: pass
-# expect-stdout: roundtrip matrix: pass

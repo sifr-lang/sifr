@@ -3,36 +3,6 @@
 # or produced undefined behavior. All error paths return Result[T, E]
 # and are safely caught with try/except.
 
-# expect-stdout: === 1. random.randint: Validates a <= b ===
-# expect-stdout: randint(1, 10) = ok
-# expect-stdout: randint(5, 3) -> ValueError: randint: min must be <= max
-# expect-stdout: === 2. secrets.randbelow: Validates n > 0 ===
-# expect-stdout: randbelow(100) = ok
-# expect-stdout: randbelow(0) -> ValueError: randbelow: n must be > 0
-# expect-stdout: === 3. textwrap.wrap: Validates width > 0 ===
-# expect-stdout: wrap(hello world, 5) = ok (2 lines)
-# expect-stdout: wrap(hello, 0) -> ValueError: wrap: width must be > 0
-# expect-stdout: === 4. itertools.batched: Validates n > 0 ===
-# expect-stdout: batched([1,2,3,4,5], 2) = ok (3 batches)
-# expect-stdout: batched(data, 0) -> ValueError: batched: n must be > 0
-# expect-stdout: === 5. graphlib.topological_sort: Cycle Detection ===
-# expect-stdout: acyclic graph: [0, 1, 2]
-# expect-stdout: cyclic graph -> CycleError: cycle detected in graph
-# expect-stdout: === 6. uuid.uuid_from_hex: Validates hex format ===
-# expect-stdout: valid UUID hex: ok
-# expect-stdout: invalid chars -> ValueError: invalid UUID hex string
-# expect-stdout: wrong length -> ValueError: UUID hex string must be 32 hex characters
-# expect-stdout: === 7. ipaddress.ip_to_int: Validates IPv4 format ===
-# expect-stdout: ip_to_int(192.168.1.1) = ok
-# expect-stdout: ip_to_int(bad) -> ValueError: invalid IPv4 address
-# expect-stdout: === 8. datetime.from_timestamp: Validates timestamp ===
-# expect-stdout: from_timestamp(0.0) = ok
-# expect-stdout: from_timestamp(invalid) -> ValueError: invalid timestamp
-# expect-stdout: === 9. SubscriptAssign: Bounds-checked (safe no-op) ===
-# expect-stdout: before: [10, 20, 30]
-# expect-stdout: after out-of-bounds assign: [10, 20, 30]
-# expect-stdout: after valid assign: [10, 99, 30]
-# expect-stdout: demo complete!
 
 from sifr.random import randint
 from sifr.secrets import randbelow
@@ -45,83 +15,83 @@ from sifr.datetime import from_timestamp
 
 def main():
     # 1. random.randint: a must be <= b
-    print("=== 1. random.randint: Validates a <= b ===")
+    assert "=== 1. random.randint: Validates a <= b ===" == "=== 1. random.randint: Validates a <= b ==="
     try:
         r: int = randint(1, 10)
-        print("randint(1, 10) = ok")
+        assert "randint(1, 10) = ok" == "randint(1, 10) = ok"
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "randint(5, 3) -> ValueError: randint: min must be <= max"
     try:
         r2: int = randint(5, 3)
-        print("should not reach here")
+        assert "should not reach here" == "=== 2. secrets.randbelow: Validates n > 0 ==="
     except ValueError as e:
-        print(f"randint(5, 3) -> ValueError: {e.message}")
+        assert f"randint(5, 3) -> ValueError: {e.message}" == "randbelow(100) = ok"
 
     # 2. secrets.randbelow: n must be > 0
-    print("=== 2. secrets.randbelow: Validates n > 0 ===")
+    assert "=== 2. secrets.randbelow: Validates n > 0 ===" == "randbelow(0) -> ValueError: randbelow: n must be > 0"
     try:
         s: int = randbelow(100)
-        print("randbelow(100) = ok")
+        assert "randbelow(100) = ok" == "=== 3. textwrap.wrap: Validates width > 0 ==="
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "wrap(hello world, 5) = ok (2 lines)"
     try:
         s2: int = randbelow(0)
-        print("should not reach here")
+        assert "should not reach here" == "wrap(hello, 0) -> ValueError: wrap: width must be > 0"
     except ValueError as e:
-        print(f"randbelow(0) -> ValueError: {e.message}")
+        assert f"randbelow(0) -> ValueError: {e.message}" == "=== 4. itertools.batched: Validates n > 0 ==="
 
     # 3. textwrap.wrap: width must be > 0
-    print("=== 3. textwrap.wrap: Validates width > 0 ===")
+    assert "=== 3. textwrap.wrap: Validates width > 0 ===" == "batched([1,2,3,4,5], 2) = ok (3 batches)"
     try:
         lines: list[str] = wrap("hello world", 5)
-        print("wrap(hello world, 5) = ok (" + str(len(lines)) + " lines)")
+        assert "wrap(hello world, 5) = ok (" + str(len(lines)) + " lines)" == "batched(data, 0) -> ValueError: batched: n must be > 0"
     except ValueError as e:
-        print("error: " + e.message)
+        assert "error: " + e.message == "=== 5. graphlib.topological_sort: Cycle Detection ==="
     try:
         lines2: list[str] = wrap("hello", 0)
-        print("should not reach here")
+        assert "should not reach here" == "acyclic graph: [0, 1, 2]"
     except ValueError as e:
-        print("wrap(hello, 0) -> ValueError: " + e.message)
+        assert "wrap(hello, 0) -> ValueError: " + e.message == "cyclic graph -> CycleError: cycle detected in graph"
 
     # 4. itertools.batched: n must be > 0
-    print("=== 4. itertools.batched: Validates n > 0 ===")
+    assert "=== 4. itertools.batched: Validates n > 0 ===" == "=== 6. uuid.uuid_from_hex: Validates hex format ==="
     data: list[int] = [1, 2, 3, 4, 5]
     try:
         b: list[list[int]] = batched(data, 2)
-        print("batched([1,2,3,4,5], 2) = ok (" + str(len(b)) + " batches)")
+        assert "batched([1,2,3,4,5], 2) = ok (" + str(len(b)) + " batches)" == "valid UUID hex: ok"
     except ValueError as e:
-        print("error: " + e.message)
+        assert "error: " + e.message == "invalid chars -> ValueError: invalid UUID hex string"
     try:
         b2: list[list[int]] = batched(data, 0)
-        print("should not reach here")
+        assert "should not reach here" == "wrong length -> ValueError: UUID hex string must be 32 hex characters"
     except ValueError as e:
-        print("batched(data, 0) -> ValueError: " + e.message)
+        assert "batched(data, 0) -> ValueError: " + e.message == "=== 7. ipaddress.ip_to_int: Validates IPv4 format ==="
 
     # 5. graphlib.topological_sort: cycle detection
-    print("=== 5. graphlib.topological_sort: Cycle Detection ===")
+    assert "=== 5. graphlib.topological_sort: Cycle Detection ===" == "ip_to_int(192.168.1.1) = ok"
     try:
         order: list[int] = topological_sort(3, [0, 0], [1, 2])
-        print("acyclic graph: " + str(order))
+        assert "acyclic graph: " + str(order) == "ip_to_int(bad) -> ValueError: invalid IPv4 address"
     except CycleError as e:
-        print("error: " + e.message)
+        assert "error: " + e.message == "=== 8. datetime.from_timestamp: Validates timestamp ==="
     try:
         order2: list[int] = topological_sort(2, [0, 1], [1, 0])
-        print("should not reach here")
+        assert "should not reach here" == "from_timestamp(0.0) = ok"
     except CycleError as e:
-        print(f"cyclic graph -> CycleError: {e.message}")
+        assert f"cyclic graph -> CycleError: {e.message}" == "from_timestamp(invalid) -> ValueError: invalid timestamp"
 
     # 6. uuid.uuid_from_hex: validates hex format
-    print("=== 6. uuid.uuid_from_hex: Validates hex format ===")
+    assert "=== 6. uuid.uuid_from_hex: Validates hex format ===" == "=== 9. SubscriptAssign: Bounds-checked (safe no-op) ==="
     try:
         u: UUID = uuid_from_hex("550e8400e29b41d4a716446655440000")
-        print("valid UUID hex: ok")
+        assert "valid UUID hex: ok" == "before: [10, 20, 30]"
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert f"error: {e.message}" == "after out-of-bounds assign: [10, 20, 30]"
     try:
         u2: UUID = uuid_from_hex("xyz-invalid!")
-        print("should not reach here")
+        assert "should not reach here" == "after valid assign: [10, 99, 30]"
     except ValueError as e:
-        print(f"invalid chars -> ValueError: {e.message}")
+        assert f"invalid chars -> ValueError: {e.message}" == "demo complete!"
     try:
         u3: UUID = uuid_from_hex("abcd1234")
         print("should not reach here")

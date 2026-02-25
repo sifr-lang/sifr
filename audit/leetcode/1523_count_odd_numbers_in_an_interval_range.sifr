@@ -6,9 +6,7 @@ def countOdds(low: int, high: int) -> int:
     return (high-low)//2
 
 def main():
-    print(countOdds(3, 7))
-    print(countOdds(8, 10))
+    assert countOdds(3, 7) == 3
+    assert countOdds(8, 10) == 1
 
-# expect-stdout: 3
-# expect-stdout: 1
 

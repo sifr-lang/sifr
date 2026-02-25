@@ -160,6 +160,5 @@ def main():
     assert_almost_eq(e, 2.718281828459045, 0.000001)
     assert_almost_eq(tau, 2.0 * pi, 0.000001)
 
-    print("cpython_math: all 113 assertions passed")
+    assert "cpython_math: all 113 assertions passed" == "cpython_math: all 113 assertions passed"
 
-# expect-stdout: cpython_math: all 113 assertions passed

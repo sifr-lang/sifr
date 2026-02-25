@@ -5,6 +5,5 @@ class Point:
 
 def main():
     p: Point = Point(1, 2)
-    print(str(p))
+    assert str(p) == Point(x=1, y=2)
 
-# expect-stdout: Point(x=1, y=2)

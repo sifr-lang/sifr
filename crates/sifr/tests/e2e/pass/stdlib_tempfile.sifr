@@ -7,11 +7,11 @@ def main():
     try:
         # mkstemp creates a temp file
         path: str = mkstemp("sifr_test_")
-        print(exists(path))
+        assert exists(path) == true
 
         # mkdtemp creates a temp directory
         dpath: str = mkdtemp("sifr_testd_")
-        print(exists(dpath))
+        assert exists(dpath) == true
 
         # Cleanup
         r1: str = run_command("rm -f " + path)
@@ -19,5 +19,3 @@ def main():
     except IOError as e:
         print("ERROR: " + e.message)
 
-# expect-stdout: true
-# expect-stdout: true

@@ -1,30 +1,6 @@
 # milestone_stdlib_functions demo
 # Demonstrates new pure-Sifr functions, intrinsics, and generic stdlib
 
-# expect-stdout: === Math Functions ===
-# expect-stdout: factorial(10) = 3628800
-# expect-stdout: gcd(48, 18) = 6
-# expect-stdout: lcm(4, 6) = 12
-# expect-stdout: comb(10, 3) = 120
-# expect-stdout: perm(5, 3) = 60
-# expect-stdout: prod([1,2,3,4,5]) = 120
-# expect-stdout: exp(1.0) = 2.718281828459045
-# expect-stdout: isfinite(1.0) = true
-# expect-stdout: === Statistics Functions ===
-# expect-stdout: harmonic_mean = 2.18978102189781
-# expect-stdout: median_low = 2
-# expect-stdout: median_high = 3
-# expect-stdout: === String Functions ===
-# expect-stdout: capwords = Hello World Test
-# expect-stdout: === Path Functions ===
-# expect-stdout: stem = report
-# expect-stdout: is_absolute = true
-# expect-stdout: === Generic Bisect ===
-# expect-stdout: bisect_left(floats, 2.5) = 2
-# expect-stdout: === Itertools ===
-# expect-stdout: pairwise = [[1, 2], [2, 3], [3, 4]]
-# expect-stdout: batched = [[1, 2, 3], [4, 5, 6], [7, 8]]
-# expect-stdout: Done!
 
 from sifr.math import factorial, gcd, lcm, comb, perm, prod, exp, isfinite
 from sifr.statistics import harmonic_mean, median_low, median_high, StatisticsError
@@ -34,48 +10,48 @@ from sifr.bisect import bisect_left
 from sifr.itertools import pairwise, batched
 
 def main():
-    print("=== Math Functions ===")
-    print("factorial(10) = " + str(factorial(10)))
-    print("gcd(48, 18) = " + str(gcd(48, 18)))
-    print("lcm(4, 6) = " + str(lcm(4, 6)))
-    print("comb(10, 3) = " + str(comb(10, 3)))
-    print("perm(5, 3) = " + str(perm(5, 3)))
+    assert "=== Math Functions ===" == "=== Math Functions ==="
+    assert "factorial(10) = " + str(factorial(10)) == "factorial(10) = 3628800"
+    assert "gcd(48, 18) = " + str(gcd(48, 18)) == "gcd(48, 18) = 6"
+    assert "lcm(4, 6) = " + str(lcm(4, 6)) == "lcm(4, 6) = 12"
+    assert "comb(10, 3) = " + str(comb(10, 3)) == "comb(10, 3) = 120"
+    assert "perm(5, 3) = " + str(perm(5, 3)) == "perm(5, 3) = 60"
     nums: list[int] = [1, 2, 3, 4, 5]
-    print("prod([1,2,3,4,5]) = " + str(prod(nums)))
-    print("exp(1.0) = " + str(exp(1.0)))
-    print("isfinite(1.0) = " + str(isfinite(1.0)))
+    assert "prod([1,2,3,4,5]) = " + str(prod(nums)) == "prod([1,2,3,4,5]) = 120"
+    assert "exp(1.0) = " + str(exp(1.0)) == "exp(1.0) = 2.718281828459045"
+    assert "isfinite(1.0) = " + str(isfinite(1.0)) == "isfinite(1.0) = true"
 
-    print("=== Statistics Functions ===")
+    assert "=== Statistics Functions ===" == "=== Statistics Functions ==="
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
     even: list[float] = [1.0, 2.0, 3.0, 4.0]
     try:
         hm: float = harmonic_mean(data)
         ml: float = median_low(even)
         mh: float = median_high(even)
-        print("harmonic_mean = " + str(hm))
-        print("median_low = " + str(ml))
-        print("median_high = " + str(mh))
+        assert "harmonic_mean = " + str(hm) == "harmonic_mean = 2.18978102189781"
+        assert "median_low = " + str(ml) == "median_low = 2"
+        assert "median_high = " + str(mh) == "median_high = 3"
     except StatisticsError as se:
-        print("statistics error: " + se.message)
+        assert "statistics error: " + se.message == "=== String Functions ==="
 
-    print("=== String Functions ===")
-    print("capwords = " + capwords("hello world test"))
+    assert "=== String Functions ===" == "capwords = Hello World Test"
+    assert "capwords = " + capwords("hello world test") == "=== Path Functions ==="
 
-    print("=== Path Functions ===")
-    print("stem = " + stem("/docs/report.pdf"))
-    print("is_absolute = " + str(is_absolute("/usr/bin")))
+    assert "=== Path Functions ===" == "stem = report"
+    assert "stem = " + stem("/docs/report.pdf") == "is_absolute = true"
+    assert "is_absolute = " + str(is_absolute("/usr/bin")) == "=== Generic Bisect ==="
 
-    print("=== Generic Bisect ===")
+    assert "=== Generic Bisect ===" == "bisect_left(floats, 2.5) = 2"
     floats: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
-    print("bisect_left(floats, 2.5) = " + str(bisect_left(floats, 2.5)))
+    assert "bisect_left(floats, 2.5) = " + str(bisect_left(floats, 2.5)) == "=== Itertools ==="
 
-    print("=== Itertools ===")
+    assert "=== Itertools ===" == "pairwise = [[1, 2], [2, 3], [3, 4]]"
     items: list[int] = [1, 2, 3, 4]
-    print("pairwise = " + str(pairwise(items)))
+    assert "pairwise = " + str(pairwise(items)) == "batched = [[1, 2, 3], [4, 5, 6], [7, 8]]"
     items2: list[int] = [1, 2, 3, 4, 5, 6, 7, 8]
     try:
         bat: list[list[int]] = batched(items2, 3)
-        print("batched = " + str(bat))
+        assert "batched = " + str(bat) == "Done!"
     except ValueError as e:
         print(f"error: {e.message}")
 

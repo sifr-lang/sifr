@@ -5,13 +5,9 @@ class Config:
 
 def main():
     c1: Config = Config()
-    print(c1.debug)
-    print(c1.timeout)
+    assert c1.debug == False
+    assert c1.timeout == 30
     c2: Config = Config(True, 60)
-    print(c2.debug)
-    print(c2.timeout)
+    assert c2.debug == True
+    assert c2.timeout == 60
 
-# expect-stdout: false
-# expect-stdout: 30
-# expect-stdout: true
-# expect-stdout: 60

@@ -1,11 +1,9 @@
-# expect-stdout: 42
-# expect-stdout: hello
 
 class Wrapper[T]:
     value: T
 
 def main():
     w1 = Wrapper(42)
-    print(w1.value)
+    assert w1.value == 42
     w2 = Wrapper("hello")
-    print(w2.value)
+    assert w2.value == hello

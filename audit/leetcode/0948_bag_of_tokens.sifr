@@ -20,9 +20,7 @@ def bagOfTokensScore(tokens: list[int], power: int) -> int:
     return res
 
 def main():
-    print(bagOfTokensScore([100], 50))
-    print(bagOfTokensScore([200,100], 150))
+    assert bagOfTokensScore([100], 50) == 0
+    assert bagOfTokensScore([200,100], 150) == 1
 
-# expect-stdout: 0
-# expect-stdout: 1
 

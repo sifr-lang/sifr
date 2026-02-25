@@ -22,7 +22,6 @@ def subsetsWithDup(nums: list[int]) -> list[list[int]]:
     return res
 
 def main():
-    print(subsetsWithDup([1,2,2]))
+    assert subsetsWithDup([1,2,2]) == [[], [1], [1, 2], [1, 2, 2], [2], [2, 2]]
 
-# expect-stdout: [[], [1], [1, 2], [1, 2, 2], [2], [2, 2]]
 

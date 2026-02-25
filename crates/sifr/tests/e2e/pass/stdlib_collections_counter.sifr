@@ -6,35 +6,26 @@ def main():
     c: Counter = from_list(["apple", "banana", "apple", "cherry", "banana", "apple"])
 
     # Get count for a specific key
-    print(c.get("apple"))
-    print(c.get("banana"))
-    print(c.get("cherry"))
-    print(c.get("missing"))
+    assert c.get("apple") == 3
+    assert c.get("banana") == 2
+    assert c.get("cherry") == 1
+    assert c.get("missing") == 0
 
     # Total count
-    print(c.total())
+    assert c.total() == 6
 
     # Most common (top 2) -- returns list of keys sorted by count descending
     top2: list[str] = c.most_common(2)
-    print(top2)
+    assert top2 == ["apple", "banana"]
 
     # Keys and values
     keys: list[str] = c.keys()
-    print(len(keys))
+    assert len(keys) == 3
     vals: list[int] = c.values()
-    print(len(vals))
+    assert len(vals) == 3
 
     # Increment
     c.increment("cherry")
     c.increment("cherry")
-    print(c.get("cherry"))
+    assert c.get("cherry") == 3
 
-# expect-stdout: 3
-# expect-stdout: 2
-# expect-stdout: 1
-# expect-stdout: 0
-# expect-stdout: 6
-# expect-stdout: ["apple", "banana"]
-# expect-stdout: 3
-# expect-stdout: 3
-# expect-stdout: 3

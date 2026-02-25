@@ -20,10 +20,7 @@ def describe(d: Direction) -> str:
             return "unknown"
 
 def main():
-    print(describe(Direction.NORTH))
-    print(describe(Direction.EAST))
-    print(describe(Direction.WEST))
+    assert describe(Direction.NORTH) == north
+    assert describe(Direction.EAST) == east
+    assert describe(Direction.WEST) == west
 
-# expect-stdout: north
-# expect-stdout: east
-# expect-stdout: west

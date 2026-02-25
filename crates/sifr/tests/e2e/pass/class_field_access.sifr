@@ -1,5 +1,3 @@
-# expect-stdout: Alice
-# expect-stdout: 30
 
 class Person:
     name: str
@@ -11,5 +9,5 @@ class Person:
 
 def main():
     p: Person = Person("Alice", 30)
-    print(p.name)
-    print(p.age)
+    assert p.name == Alice
+    assert p.age == 30
