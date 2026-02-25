@@ -1,8 +1,8 @@
-# expect-stdout: h
-# expect-stdout: i
 # Tests string iteration: for c in s
 
 def main():
     s: str = "hi"
+    output: list[str] = []
     for c in s:
-        print(c)
+        output.append(c)
+    assert output == ["h", "i"]

@@ -6,11 +6,13 @@ class Resource:
         self.name = name
 
     def __enter__(self) -> Resource:
-        print("enter")
+        events.append("enter")
         return self
 
     def __exit__(self) -> None:
-        print("exit")
+        events.append("exit")
+
+events: list[str] = []
 
 def main():
     i: int = 0
@@ -18,13 +20,7 @@ def main():
         with Resource("r") as r:
             if i == 1:
                 break
-            print("body")
+            events.append("body")
         i = i + 1
-    print("done")
-
-# expect-stdout: enter
-# expect-stdout: body
-# expect-stdout: exit
-# expect-stdout: enter
-# expect-stdout: exit
-# expect-stdout: done
+    events.append("done")
+    assert events == ["enter", "body", "exit", "enter", "exit", "done"]

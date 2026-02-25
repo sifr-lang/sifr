@@ -1,11 +1,18 @@
-# expect-stdout: [WARNING] root: important warning
-# expect-stdout: [ERROR] root: critical error
-
+# Test Logger class
+from sifr.io import write_text, read_text
 from sifr.logging import basicConfig, WARNING, Logger
 
 def main():
+    path: str = "/tmp/sifr_logging_basic_config_test.log"
+    log_path_written: None = write_text(path, "")
     logger: Logger = basicConfig(WARNING)
+    logger.set_file(path)
     logger.info("should not print")
     logger.debug("should not print either")
     logger.warning("important warning")
     logger.error("critical error")
+
+    output: str = read_text(path)
+    assert output == "[WARNING] root: important warning
+[ERROR] root: critical error
+"

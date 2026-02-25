@@ -1,13 +1,6 @@
 # Test: comprehension over range
-# expect-stdout: 5
-# expect-stdout: 0
-# expect-stdout: 1
-# expect-stdout: 4
-# expect-stdout: 9
-# expect-stdout: 16
 
 def main():
     squares: list[int] = [x * x for x in range(5)]
-    print(len(squares))
-    for s in squares:
-        print(s)
+    assert len(squares) == 5
+    assert squares == [0, 1, 4, 9, 16]

@@ -1,10 +1,7 @@
-# expect-stdout: 0
-# expect-stdout: 2
-# expect-stdout: 4
-# expect-stdout: 6
-# expect-stdout: 8
 # Tests range(start, stop, step) with 3 arguments
 
 def main():
+    evens: list[int] = []
     for i in range(0, 10, 2):
-        print(i)
+        evens.append(i)
+    assert evens == [0, 2, 4, 6, 8]

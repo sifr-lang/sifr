@@ -1,16 +1,23 @@
-# expect-stdout: [INFO] myapp: hello world
-# expect-stdout: [WARNING] myapp: watch out
-# expect-stdout: [ERROR] myapp: something failed
-# expect-stdout: level constants ok = true
-
+# Test Logger class helper
 from sifr.logging import getLogger, DEBUG, INFO, WARNING, ERROR, CRITICAL, Logger
+from sifr.io import write_text, read_text
 
 def main():
+    path: str = "/tmp/sifr_logging_enhanced_test.log"
+    _clear: None = write_text(path, "")
+
     logger: Logger = getLogger("myapp")
+    logger.set_file(path)
     logger.set_level(INFO)
     logger.info("hello world")
     logger.warning("watch out")
     logger.error("something failed")
     logger.debug("this should not print")
 
-    print("level constants ok = " + str(DEBUG == 10 and INFO == 20 and WARNING == 30 and ERROR == 40 and CRITICAL == 50))
+    assert logger._emit("DEBUG", 10, "noop") is None
+    output: str = read_text(path)
+    assert output == "[INFO] myapp: hello world
+[WARNING] myapp: watch out
+[ERROR] myapp: something failed
+"
+    assert DEBUG == 10 and INFO == 20 and WARNING == 30 and ERROR == 40 and CRITICAL == 50

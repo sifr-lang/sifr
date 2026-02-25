@@ -13,11 +13,11 @@ class FileResource:
         self.path = path
 
     def __enter__(self) -> FileResource:
-        print("Opening: " + self.path)
+        events.append("Opening: " + self.path)
         return self
 
     def __exit__(self) -> None:
-        print("Closing: " + self.path)
+        events.append("Closing: " + self.path)
 
 class DBConnection:
     name: str
@@ -26,11 +26,11 @@ class DBConnection:
         self.name = name
 
     def __enter__(self) -> DBConnection:
-        print("Connecting: " + self.name)
+        events.append("Connecting: " + self.name)
         return self
 
     def __exit__(self) -> None:
-        print("Disconnecting: " + self.name)
+        events.append("Disconnecting: " + self.name)
 
 # ===== 2. Callable-as-struct-field =====
 # Callable fields emit Box<dyn Fn(...)> for struct fields
@@ -43,6 +43,7 @@ class Config:
         self.value = value
         self.callback = callback
 
+
 def double(x: int) -> int:
     return x * 2
 
@@ -50,63 +51,69 @@ def double(x: int) -> int:
 
 def demo_early_return() -> int:
     with FileResource("data.csv") as f:
-        print("Reading: " + f.path)
+        events.append("Reading: " + f.path)
         return 42
 
+
 def main():
-    print("=== Context Manager: Normal Exit ===")
+    events.append("=== Context Manager: Normal Exit ===")
     with FileResource("config.json") as f:
-        print("Using: " + f.path)
+        events.append("Using: " + f.path)
 
-    print("")
-    print("=== Context Manager: Early Return ===")
+    events.append("")
+    events.append("=== Context Manager: Early Return ===")
     result: int = demo_early_return()
-    print(result)
+    events.append(str(result))
 
-    print("")
-    print("=== Context Manager: Break in Loop ===")
+    events.append("")
+    events.append("=== Context Manager: Break in Loop ===")
     i: int = 0
     while i < 3:
         with DBConnection("db") as conn:
             if i == 1:
                 break
-            print("Query on: " + conn.name)
+            events.append("Query on: " + conn.name)
         i = i + 1
 
-    print("")
-    print("=== Multiple Context Managers ===")
+    events.append("")
+    events.append("=== Multiple Context Managers ===")
     with FileResource("input.txt") as fin, DBConnection("postgres") as db:
-        print("Processing with: " + fin.path + " and " + db.name)
+        events.append("Processing with: " + fin.path + " and " + db.name)
 
-    print("")
-    print("=== Callable Struct Field ===")
+    events.append("")
+    events.append("=== Callable Struct Field ===")
     c: Config = Config(21, double)
-    print(c.value)
+    events.append(str(c.value))
 
-    print("")
-    print("=== Compiler Hardening Demo Complete ===")
+    events.append("")
+    events.append("=== Compiler Hardening Demo Complete ===")
 
-# expect-stdout: === Context Manager: Normal Exit ===
-# expect-stdout: Opening: config.json
-# expect-stdout: Using: config.json
-# expect-stdout: Closing: config.json
-# expect-stdout: === Context Manager: Early Return ===
-# expect-stdout: Opening: data.csv
-# expect-stdout: Reading: data.csv
-# expect-stdout: Closing: data.csv
-# expect-stdout: 42
-# expect-stdout: === Context Manager: Break in Loop ===
-# expect-stdout: Connecting: db
-# expect-stdout: Query on: db
-# expect-stdout: Disconnecting: db
-# expect-stdout: Connecting: db
-# expect-stdout: Disconnecting: db
-# expect-stdout: === Multiple Context Managers ===
-# expect-stdout: Opening: input.txt
-# expect-stdout: Connecting: postgres
-# expect-stdout: Processing with: input.txt and postgres
-# expect-stdout: Disconnecting: postgres
-# expect-stdout: Closing: input.txt
-# expect-stdout: === Callable Struct Field ===
-# expect-stdout: 21
-# expect-stdout: === Compiler Hardening Demo Complete ===
+    assert events == [
+        "=== Context Manager: Normal Exit ===",
+        "Opening: config.json",
+        "Using: config.json",
+        "Closing: config.json",
+        "=== Context Manager: Early Return ===",
+        "Opening: data.csv",
+        "Reading: data.csv",
+        "Closing: data.csv",
+        "42",
+        "=== Context Manager: Break in Loop ===",
+        "Connecting: db",
+        "Query on: db",
+        "Disconnecting: db",
+        "Connecting: db",
+        "Disconnecting: db",
+        "=== Multiple Context Managers ===",
+        "Opening: input.txt",
+        "Connecting: postgres",
+        "Processing with: input.txt and postgres",
+        "Disconnecting: postgres",
+        "Closing: input.txt",
+        "=== Callable Struct Field ===",
+        "21",
+        "=== Compiler Hardening Demo Complete ===",
+    ]
+
+
+events: list[str] = []
