@@ -3,6 +3,16 @@ use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    /// Emit an expression wrapped in parentheses.
+    ///
+    /// This is used before method chaining to avoid Rust precedence bugs such as
+    /// `x as f64.round()` where the cast must be grouped first.
+    pub(super) fn emit_parenthesized_expr(&mut self, expr: &HirExpr) {
+        self.write("(");
+        self.emit_expr(expr);
+        self.write(")");
+    }
+
     /// Emit an expression as a `HashMap` key reference.
     /// String literals are emitted directly (e.g., `"key"`) since `HashMap::get` accepts &str via Borrow.
     /// Other expressions are emitted with `&` prefix (e.g., `&var`).
@@ -42,7 +52,7 @@ impl RustEmitter {
         if let HirExpr::StringLiteral(val) = expr {
             self.write(&format!("{val:?}"));
         } else {
-            self.emit_expr(expr);
+            self.emit_parenthesized_expr(expr);
             self.write(".as_str()");
         }
     }
@@ -108,7 +118,7 @@ impl RustEmitter {
         if let HirExpr::StringLiteral(val) = expr {
             self.write(&format!("{val:?}.as_bytes()"));
         } else {
-            self.emit_expr(expr);
+            self.emit_parenthesized_expr(expr);
             self.write(".as_bytes()");
         }
     }

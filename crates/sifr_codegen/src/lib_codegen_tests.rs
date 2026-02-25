@@ -1819,3 +1819,115 @@ fn test_module_body_flows_through_assembled_body_items() {
     assert!(!module_body_src.contains("self.output.push('\\n');"));
     assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
 }
+
+#[test]
+fn test_round_parenthesizes_cast_receiver() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "print".to_string(),
+                    args: vec![HirExpr::Call {
+                        func: "round".to_string(),
+                        args: vec![HirExpr::Call {
+                            func: "float".to_string(),
+                            args: vec![HirExpr::IntLiteral(3)],
+                            ty: Type::Float,
+                        }],
+                        ty: Type::Int,
+                    }],
+                    ty: Type::None,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+    assert!(
+        rust_code.contains("((3 as i64) as f64).round() as i64"),
+        "expected round receiver to be parenthesized; got: {rust_code}"
+    );
+    assert!(
+        !rust_code.contains("as f64.round()"),
+        "invalid Rust precedence should not be emitted"
+    );
+}
+
+#[test]
+fn test_float_min_max_parenthesize_cast_receivers() {
+    let float_one = HirExpr::Call {
+        func: "float".to_string(),
+        args: vec![HirExpr::IntLiteral(1)],
+        ty: Type::Float,
+    };
+    let float_two = HirExpr::Call {
+        func: "float".to_string(),
+        args: vec![HirExpr::IntLiteral(2)],
+        ty: Type::Float,
+    };
+
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::Call {
+                            func: "min".to_string(),
+                            args: vec![float_one.clone(), float_two.clone()],
+                            ty: Type::Float,
+                        }],
+                        ty: Type::None,
+                    },
+                },
+                HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::Call {
+                            func: "max".to_string(),
+                            args: vec![float_one, float_two],
+                            ty: Type::Float,
+                        }],
+                        ty: Type::None,
+                    },
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+    assert!(
+        rust_code.contains("((1 as i64) as f64).min((2 as i64) as f64)"),
+        "expected min receiver to be parenthesized; got: {rust_code}"
+    );
+    assert!(
+        rust_code.contains("((1 as i64) as f64).max((2 as i64) as f64)"),
+        "expected max receiver to be parenthesized; got: {rust_code}"
+    );
+    assert!(
+        !rust_code.contains("as f64.min(") && !rust_code.contains("as f64.max("),
+        "invalid Rust precedence should not be emitted"
+    );
+}
