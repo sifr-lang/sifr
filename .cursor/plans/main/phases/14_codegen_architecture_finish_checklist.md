@@ -72,7 +72,7 @@ status: **partially met**
 - [x] Structured stmt emission now bridges copy-typed `Return` RHS expressions through `try_emit_structured_expr` before full stmt fallback (outside display/generator contexts)
 - [x] Expression fallback no longer enforces subtree-wide legacy-only recursion (`fallback_depth` removed), allowing nested fallback subexpressions to still attempt structured lowering
 - [x] Production helper rendering paths now consume expr `Result` contract (`expr_render_helpers`, `intrinsic_method_emitters`)
-- [x] Registry arg lowering and lowered-fallback rendering now share one explicit expr `Result` helper path (`try_lower_registry_expr_result`)
+- [x] Registry arg/object lowering now shares one explicit expr `Result` helper path (`try_lower_registry_expr_result`) with strict no-inline-`RawCode` fallback shims in registry emit paths
 - [x] Production module-constant item lowering entry now has explicit `Result` contract (`try_lower_simple_module_constant_item_result`) with name-shape validation
 - [x] Production module-constant item lowering `Result` path now propagates leaf-lowering errors (not `None`-collapse)
 - [x] Production module-constant emission now routes through explicit `Result` helper (`try_emit_lowered_module_constant_result`) before fallback

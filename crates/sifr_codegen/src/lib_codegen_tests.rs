@@ -1082,7 +1082,10 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
     assert!(!rust_code.contains("self.items.clone().push(x)"));
     assert!(rust_code.contains("return self.table.get(\"k\").cloned();"));
     assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
-    assert!(rust_code.contains("return self.label.clone();"));
+    assert!(
+        rust_code.contains("return self.label.clone();"),
+        "{rust_code}"
+    );
 }
 
 #[test]
@@ -1234,6 +1237,99 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
 }
 
 #[test]
+fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
+    let list_ty = Type::List(Box::new(Type::Int));
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "set_len".to_string(),
+                    args: vec![HirExpr::Call {
+                        func: "set_from_list".to_string(),
+                        args: vec![HirExpr::ListLiteral {
+                            elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+                            ty: list_ty.clone(),
+                        }],
+                        ty: list_ty,
+                    }],
+                    ty: Type::Int,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.collections".to_string(),
+            names: vec!["set_len".to_string(), "set_from_list".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(
+        generated.rust_source.contains(".len() as i64"),
+        "nested intrinsic call argument should lower through registry"
+    );
+    assert!(
+        !generated.rust_source.contains("set_len("),
+        "set_len should not be emitted as unresolved function call"
+    );
+}
+
+#[test]
+fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "isnan".to_string(),
+                    args: vec![HirExpr::MethodCall {
+                        object: Box::new(HirExpr::FloatLiteral(1.0)),
+                        method: "max".to_string(),
+                        args: vec![HirExpr::FloatLiteral(2.0)],
+                        ty: Type::Float,
+                    }],
+                    ty: Type::Bool,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["isnan".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(
+        generated.rust_source.contains(".is_nan()"),
+        "intrinsic arg with typed method call should lower through registry"
+    );
+    assert!(
+        !generated.rust_source.contains("isnan("),
+        "isnan should not be emitted as unresolved function call"
+    );
+}
+
+#[test]
 fn test_structured_expr_path_handles_plain_signature_call_expression() {
     let module = HirModule {
         functions: vec![
@@ -1329,6 +1425,63 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
     assert!(
         generated.lowering_stats.expr_structured > 0,
         "registry-backed method call should be emitted through structured expr path"
+    );
+}
+
+#[test]
+fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
+    let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Let {
+                    name: "d2".to_string(),
+                    ty: dict_ty.clone(),
+                    value: HirExpr::DictLiteral {
+                        keys: vec![HirExpr::StringLiteral("a".to_string())],
+                        values: vec![HirExpr::IntLiteral(1)],
+                        ty: dict_ty.clone(),
+                    },
+                    is_mutable: true,
+                },
+                HirStmt::Expr {
+                    expr: HirExpr::MethodCall {
+                        object: Box::new(HirExpr::Name {
+                            name: "d2".to_string(),
+                            ty: dict_ty.clone(),
+                        }),
+                        method: "update".to_string(),
+                        args: vec![HirExpr::DictLiteral {
+                            keys: vec![HirExpr::StringLiteral("c".to_string())],
+                            values: vec![HirExpr::IntLiteral(3)],
+                            ty: dict_ty.clone(),
+                        }],
+                        ty: Type::None,
+                    },
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(
+        generated.rust_source.contains("d2.extend("),
+        "dict update should lower via registry to HashMap::extend"
+    );
+    assert!(
+        !generated.rust_source.contains("d2.update("),
+        "dict update fallback method call should not be emitted"
     );
 }
 
@@ -1606,7 +1759,8 @@ fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
     assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
     assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
-    assert!(generate_block.contains("assert_output_drained(&emitter.output, \"generate_rust_with_stdlib\")"));
+    assert!(generate_block
+        .contains("assert_output_drained(&emitter.output, \"generate_rust_with_stdlib\")"));
     assert!(!generate_block.contains("if !emitter.output.is_empty() {"));
     assert!(!generate_block.contains("result.push_str(&emitter.output)"));
 }
@@ -1626,7 +1780,9 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
     assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
     assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
     assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
-    assert!(generate_block.contains("assert_output_drained(&emitter.output, \"generate_rust_multi\")"));
+    assert!(
+        generate_block.contains("assert_output_drained(&emitter.output, \"generate_rust_multi\")")
+    );
     assert!(!generate_block.contains("if !emitter.output.is_empty() {"));
     assert!(!generate_block.contains("module_import_prelude"));
     assert!(!generate_block.contains("result.push_str(&emitter.output)"));
@@ -1646,7 +1802,9 @@ fn test_module_constants_flow_through_assembled_body_items() {
 
     assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
     assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
-    assert!(entrypoints_src.contains("assert_output_drained(&emitter.output, \"generate_rust_test\")"));
+    assert!(
+        entrypoints_src.contains("assert_output_drained(&emitter.output, \"generate_rust_test\")")
+    );
     assert!(!entrypoints_src.contains("if !emitter.output.is_empty() {"));
     assert!(!lib_src.contains("if !emitter.output.is_empty() {"));
 }

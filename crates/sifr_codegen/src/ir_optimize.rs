@@ -14,7 +14,9 @@ pub(crate) fn remove_trivial_clones_in_items(items: &mut [RustItem]) -> usize {
 
 fn optimize_item(item: &mut RustItem) -> usize {
     match item {
-        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) | RustItem::RawCode(_) => 0,
+        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) | RustItem::RawCode(_) => {
+            0
+        }
         RustItem::Struct { .. } | RustItem::TupleStruct { .. } => 0,
         RustItem::Enum { variants, .. } => {
             let mut removed = 0usize;

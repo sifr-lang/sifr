@@ -1000,7 +1000,11 @@ mod tests {
     #[test]
     fn renders_use_alias_item() {
         let rendered = render_items(&[RustItem::UseAlias {
-            path: vec!["crate".to_string(), "utils".to_string(), "helper".to_string()],
+            path: vec![
+                "crate".to_string(),
+                "utils".to_string(),
+                "helper".to_string(),
+            ],
             alias: "h".to_string(),
         }]);
         assert_eq!(rendered, "use crate::utils::helper as h;\n");
