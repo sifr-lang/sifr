@@ -14,11 +14,27 @@ impl RustEmitter {
                 self.write(": ");
                 self.write(&ty.rust_type());
                 self.write(" = ");
-                self.emit_expr(value);
+                match self.try_emit_structured_expr(value) {
+                    Ok(true) => {}
+                    Ok(false) | Err(_) => {
+                        assert!(
+                            self.try_emit_expr_legacy_bridge(value),
+                            "structured generator-init expression emission missing for production path: {value:?}"
+                        );
+                    }
+                }
                 self.write(";\n");
             }
             _ => {
-                self.emit_stmt(stmt);
+                match self.try_emit_structured_stmt(stmt) {
+                    Ok(true) => {}
+                    Ok(false) | Err(_) => {
+                        assert!(
+                            self.try_emit_stmt_legacy_bridge(stmt),
+                            "structured generator-init statement emission missing for production path: {stmt:?}"
+                        );
+                    }
+                }
             }
         }
     }

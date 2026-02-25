@@ -49,6 +49,7 @@ mod stdlib_filter;
 mod stmt_support_emitter;
 mod type_emitters;
 mod union_type_helpers;
+mod legacy_bridge_emitters;
 
 #[cfg(test)]
 mod lib_codegen_tests;
@@ -955,7 +956,10 @@ impl RustEmitter {
         self.emit_module_body(module, module_public, test_mode);
     }
 
-    fn try_emit_structured_stmt(&mut self, stmt: &HirStmt) -> Result<bool, crate::CodegenError> {
+    pub(crate) fn try_emit_structured_stmt(
+        &mut self,
+        stmt: &HirStmt,
+    ) -> Result<bool, crate::CodegenError> {
         let scope_ctx = ScopeContext {
             function_return_type: self.current_return_type.clone(),
             in_generator_closure: self.emission_ctx.in_generator_closure,
@@ -1060,7 +1064,10 @@ impl RustEmitter {
         Ok(false)
     }
 
-    fn try_emit_structured_expr(&mut self, expr: &HirExpr) -> Result<bool, crate::CodegenError> {
+    pub(crate) fn try_emit_structured_expr(
+        &mut self,
+        expr: &HirExpr,
+    ) -> Result<bool, crate::CodegenError> {
         if matches!(expr, HirExpr::Compare { .. } | HirExpr::BoolOp { .. })
             && expr_uses_borrowed_param(expr, &self.borrowed_params, &self.mut_borrowed_params)
         {
@@ -1159,11 +1166,16 @@ impl RustEmitter {
             Ok(false) => {}
             Err(_) => {
                 self.lowering_stats.stmt_lowering_errors += 1;
-                self.emit_stmt_fallback(stmt);
-                return;
+                if self.try_emit_stmt_legacy_bridge(stmt) {
+                    return;
+                }
+                panic!("structured statement lowering failed for production path: {stmt:?}");
             }
         }
-        self.emit_stmt_fallback(stmt);
+        if self.try_emit_stmt_legacy_bridge(stmt) {
+            return;
+        }
+        panic!("structured statement emission missing for production path: {stmt:?}");
     }
 
     fn emit_expr(&mut self, expr: &HirExpr) {
@@ -1176,11 +1188,16 @@ impl RustEmitter {
             Ok(false) => {}
             Err(_) => {
                 self.lowering_stats.expr_lowering_errors += 1;
-                self.emit_expr_fallback(expr);
-                return;
+                if self.try_emit_expr_legacy_bridge(expr) {
+                    return;
+                }
+                panic!("structured expression lowering failed for production path: {expr:?}");
             }
         }
-        self.emit_expr_fallback(expr);
+        if self.try_emit_expr_legacy_bridge(expr) {
+            return;
+        }
+        panic!("structured expression emission missing for production path: {expr:?}");
     }
 }
 
