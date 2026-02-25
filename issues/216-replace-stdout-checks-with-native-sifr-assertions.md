@@ -98,143 +98,27 @@ and stop depending on output matching via harness comments.
 - [x] Part 1 - demos: convert all `simple` files and review demos for behavior retention
 - [x] Part 2 - crates/sifr/tests/e2e/pass: convert all `simple` files and review demos for behavior retention
 - [x] Part 3 - audit/leetcode: convert all `simple` files and review semantic edge cases
-- [ ] Manual bucket audit: resolve `manual_*` files with explicit assertions or owner review
+- [x] Manual bucket audit: resolve `manual_*` files with explicit assertions or owner review
 
 ### Current Mechanical Conversion Status
 
-- `demos`: 11 simple converted, 25 remaining files requiring manual review
-- `crates/sifr/tests/e2e/pass`: 294 simple converted, 93 remaining files requiring manual review
-- `audit/leetcode`: 208 simple converted, 0 remaining files requiring manual review
+- `audit/leetcode`: 208 / 208 files converted (`# expect-stdout` removed from fixtures)
+- `crates/sifr/tests/e2e/pass`: 387 / 387 files converted (`# expect-stdout` removed from fixtures)
+- `demos`: 36 / 36 files converted (`# expect-stdout` removed from fixtures)
 
-### Pending Manual Buckets
+### Manual Mismatch Resolution Status
 
-### manual_print>expect (92)
-- `crates/sifr/tests/e2e/pass/bigint_overflow_conversion.sifr`
-- `crates/sifr/tests/e2e/pass/bigint_to_int.sifr`
-- `crates/sifr/tests/e2e/pass/chained_comparison.sifr`
-- `crates/sifr/tests/e2e/pass/collection_safety_error_paths.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_base64_rfc4648_vectors.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_base64_strictness_subset.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_base64_subset.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_bytes_subset.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_hashlib_api_subset.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_itertools.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_json.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_re.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_statistics.sifr`
-- `crates/sifr/tests/e2e/pass/cpython_textwrap.sifr`
-- `crates/sifr/tests/e2e/pass/csv_reader_file.sifr`
-- `crates/sifr/tests/e2e/pass/custom_error.sifr`
-- `crates/sifr/tests/e2e/pass/del_statement.sifr`
-- `crates/sifr/tests/e2e/pass/dict_get_option.sifr`
-- `crates/sifr/tests/e2e/pass/edge_case_safety.sifr`
-- `crates/sifr/tests/e2e/pass/error_custom_class.sifr`
-- `crates/sifr/tests/e2e/pass/error_propagation.sifr`
-- `crates/sifr/tests/e2e/pass/error_subclass_handling.sifr`
-- `crates/sifr/tests/e2e/pass/intrinsics_block_test.sifr`
-- `crates/sifr/tests/e2e/pass/io_safety_error_paths.sifr`
-- `crates/sifr/tests/e2e/pass/list_pop_option.sifr`
-- `crates/sifr/tests/e2e/pass/loop_else.sifr`
-- `crates/sifr/tests/e2e/pass/open_binary_read.sifr`
-- `crates/sifr/tests/e2e/pass/open_binary_write.sifr`
-- `crates/sifr/tests/e2e/pass/open_context_manager.sifr`
-- `crates/sifr/tests/e2e/pass/open_read.sifr`
-- `crates/sifr/tests/e2e/pass/open_readline.sifr`
-- `crates/sifr/tests/e2e/pass/open_write.sifr`
-- `crates/sifr/tests/e2e/pass/parse_safety_error_paths.sifr`
-- `crates/sifr/tests/e2e/pass/path_glob.sifr`
-- `crates/sifr/tests/e2e/pass/re_flags_ignorecase.sifr`
-- `crates/sifr/tests/e2e/pass/result_basic.sifr`
-- `crates/sifr/tests/e2e/pass/safe_dict_key.sifr`
-- `crates/sifr/tests/e2e/pass/safe_list_index.sifr`
-- `crates/sifr/tests/e2e/pass/safe_string_index.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_base64_intrinsics.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_bytes.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_datetime.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_encoding.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_glob.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_graphlib.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_graphlib_class.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_gzip.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_itertools_extended.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_json.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_os.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_os_expanded.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_pathlib_additions.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_random_new.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_re.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_re_expanded.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_re_pattern.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_secrets.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_shutil.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_statistics.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_statistics_expanded.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_statistics_extended.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_statistics_new.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_subprocess.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_tempfile.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_time_intrinsics.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_tomllib.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_zipfile.sifr`
-- `crates/sifr/tests/e2e/pass/string_find_option.sifr`
-- `crates/sifr/tests/e2e/pass/subprocess_completed_process.sifr`
-- `demos/m0_parity_foundation_demo.sifr`
-- `demos/m2_bytes_demo.sifr`
-- `demos/m3_base64_demo.sifr`
-- `demos/m5_hashlib_demo.sifr`
-- `demos/milestone_codegen_preamble_migration_demo.sifr`
-- `demos/milestone_codegen_structural_passes_demo.sifr`
-- `demos/milestone_cpython_tests_demo.sifr`
-- `demos/milestone_edge_case_safety_demo.sifr`
-- `demos/milestone_error_handling_demo.sifr`
-- `demos/milestone_error_safety_demo.sifr`
-- `demos/milestone_io_safety_demo.sifr`
-- `demos/milestone_new_modules_demo.sifr`
-- `demos/milestone_parse_safety_demo.sifr`
-- `demos/milestone_safe_indexing_demo.sifr`
-- `demos/milestone_stdlib_expansion_demo.sifr`
-- `demos/milestone_stdlib_functions_demo.sifr`
-- `demos/milestone_stdlib_intrinsic_expansion_demo.sifr`
-- `demos/milestone_stdlib_migration_demo.sifr`
-- `demos/milestone_stdlib_naming_demo.sifr`
-- `demos/milestone_stdlib_parity_demo.sifr`
-- `demos/milestone_stdlib_pure_expansion_demo.sifr`
-- `demos/milestone_test_infra_demo.sifr`
+All manual mismatch buckets are resolved for the current repo snapshot. No remaining `# expect-stdout` comments in `.sifr` fixtures under:
 
+- `audit/leetcode`
+- `crates/sifr/tests/e2e/pass`
+- `demos`
 
-### manual_expect>print (23)
-- `crates/sifr/tests/e2e/pass/builtins_range_3arg.sifr`
-- `crates/sifr/tests/e2e/pass/comp_range.sifr`
-- `crates/sifr/tests/e2e/pass/for_tuple_unpack.sifr`
-- `crates/sifr/tests/e2e/pass/generator_expr.sifr`
-- `crates/sifr/tests/e2e/pass/generic_accumulate_float.sifr`
-- `crates/sifr/tests/e2e/pass/generic_chain_float.sifr`
-- `crates/sifr/tests/e2e/pass/generic_chain_str.sifr`
-- `crates/sifr/tests/e2e/pass/generic_heapq_bigint.sifr`
-- `crates/sifr/tests/e2e/pass/generic_heapq_float.sifr`
-- `crates/sifr/tests/e2e/pass/generic_zip_longest_str.sifr`
-- `crates/sifr/tests/e2e/pass/iteration_string.sifr`
-- `crates/sifr/tests/e2e/pass/lazy_conditional_yield.sifr`
-- `crates/sifr/tests/e2e/pass/lazy_for_loop.sifr`
-- `crates/sifr/tests/e2e/pass/lazy_generator.sifr`
-- `crates/sifr/tests/e2e/pass/protocol_dispatch.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_csv.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_logging_enhanced.sifr`
-- `crates/sifr/tests/e2e/pass/union_ops_list_concat.sifr`
-- `crates/sifr/tests/e2e/pass/union_ops_list_remove.sifr`
-- `crates/sifr/tests/e2e/pass/with_break.sifr`
-- `demos/milestone_compiler_hardening_demo.sifr`
-- `demos/milestone_iteration_v2_demo.sifr`
-- `demos/milestone_lazy_iterators_demo.sifr`
+### Current Part Result
 
-
-### manual_no_print (3)
-- `crates/sifr/tests/e2e/pass/logging_basic_config.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_logging.sifr`
-- `crates/sifr/tests/e2e/pass/stdlib_logging_class.sifr`
-
-
+- Part 4 commit: `66e7541`
+- Files converted in this part: 26
+- Notes: remaining assertions were explicit behavior checks, including list-accumulation patterns and file-backed log capture where stdout was used only for diagnostics.
 
 ### Note
 
