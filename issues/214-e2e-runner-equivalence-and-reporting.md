@@ -38,3 +38,16 @@
 
 #### Dependencies
 - Depends on Task 213.
+
+### Implemented
+
+- Added explicit mode contract in `crates/sifr/tests/e2e.rs`:
+  - `SIFR_E2E_RUNNER_MODE=legacy|new|compare`
+  - Back-compat booleans (`SIFR_E2E_NEW_RUNNER`, `SIFR_E2E_LEGACY_RUNNER`) with conflict detection.
+- Added full runner dispatcher in `test_e2e_pass` for legacy/new/compare.
+- Added compare mode assertion in `compare_pass_reports(...)` to enforce exact pass/fail set equality.
+- Preserved legacy failure and reporting semantics while adding grouped-run diagnostics:
+  - per-fixture failures and statuses
+  - group context in grouped build failures
+  - deterministic sorted reporting.
+- Added contract tests in `test_runner_mode_resolution`.

@@ -43,3 +43,19 @@
 
 #### Dependencies
 - Depends on Task 212.
+
+### Implemented
+
+- Added cache root and manifest schema to `crates/sifr/tests/e2e.rs`:
+  - `target/sifr_e2e_cache/manifest.json`
+  - `CacheManifest` / `CacheEntry` with `schema_version`, toolchain/env fingerprint fields, fixture hashes, generated rust hash, artifact path, and timing/build metadata.
+- Added `SIFR_E2E_DISABLE_CACHE=1` opt-out handling in `runner_config()`.
+- Cache key now includes schema, group fingerprint, generated rust, ordered fixture hashes, and toolchain/env signature.
+- Added robust manifest read path (`read_cache_manifest`) that drops broken manifests and continues safely.
+- Added invalidation checks in `cache_entry_valid(...)` for:
+  - schema mismatch
+  - toolchain/os/arch/env signature changes
+  - fixture/hash order changes
+  - generated rust fingerprint changes
+  - missing artifact path
+- Added unit test `test_cache_entry_invalidation_rules` covering strict invalidation for changed schema/env/signature/hash/artifact.

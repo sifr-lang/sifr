@@ -38,3 +38,17 @@
 
 #### Dependencies
 - Depends on Task 208.
+
+### Implemented
+
+- Added the full data model and helper types in `crates/sifr/tests/e2e.rs`:
+  - `FixtureCase`, `CompiledCase`, `DependencyFingerprint`, `BatchGroup`
+  - deterministic `dependency fingerprint` creation and hashing
+- Added normalized dependency handling via `normalize_dependency_set` (`BTreeSet`) and `DependencyFingerprint::signature()`.
+- Added inferred dependency enrichment in `infer_dependencies(...)` for:
+  - bigint (`num_bigint`/`num-traits`)
+  - regex/regex-like modules
+  - rand/rand_distr
+  - sha family crates
+- Planner now groups by fingerprint in `plan_batches(...)` and sorts group output deterministically.
+- Added tests in `test_dependency_fingerprint_and_cache_key_determinism`.

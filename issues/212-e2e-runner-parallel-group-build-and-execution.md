@@ -34,3 +34,19 @@
 
 #### Dependencies
 - Depends on Task 210 and Task 211.
+
+### Implemented
+
+- Added parallel bounded build + run stages in `crates/sifr/tests/e2e.rs`:
+  - `SIFR_E2E_RUST_JOBS` drives parallel group builds in `build_batch_suite(...)`.
+  - `SIFR_E2E_RUN_JOBS` drives parallel group execution in `run_batch_suite(...)`.
+- Introduced deterministic merge + sorting of fixture-level outcomes in `run_batch_suite(...)`.
+- Added run/build timing instrumentation:
+  - suite-level timing in `run_new_pass_suite(...)`
+  - top slow build/run group reporting for triage.
+- Group build failures now emit actionable diagnostics in `run_batch_outcomes(...)`:
+  - group fingerprint
+  - group id / cache key context
+  - crate path
+  - build log path
+  - fixture list for the failed group.

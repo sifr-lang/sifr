@@ -27,3 +27,12 @@
 
 #### Dependencies
 - Depends on Task 209.
+
+### Implemented
+
+- Added bounded parallel compile stage in `crates/sifr/tests/e2e.rs`:
+  - `compile_suite_parallel(...)` calls `run_in_parallel(...)` with `SIFR_E2E_SIFR_JOBS`.
+  - Worker defaults to available logical CPU count and clamps to at least 1.
+- Kept failure aggregation semantics by collecting compile results as `(FixtureCase, Result<CompiledCase, String>)`.
+- Preserved deterministic result ordering by sorting outputs by fixture index and by name where needed.
+- Timed and logged compile phase duration in new suite pipeline.

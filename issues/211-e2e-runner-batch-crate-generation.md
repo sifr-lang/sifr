@@ -32,3 +32,13 @@
 
 #### Dependencies
 - Depends on Task 209.
+
+### Implemented
+
+- Implemented per-group source generation in `crates/sifr/tests/e2e.rs`:
+  - `build_group_sources(...)` builds one `BatchGroup` source payload per dependency cluster.
+  - `build_rust_source_from_module(...)` rewrites each generated fixture `fn main(...)` into a namespaced callable.
+  - Stable fixture/module naming via `fixture_module_name(...)` and `sanitize_identifier(...)`.
+  - Group `main` dispatches fixtures by `--case <fixture_name>`.
+- Added union crate manifest generation via `generate_cargo_toml(...)` from all group dependency inputs.
+- Kept per-fixture output comparison by invoking each fixture entry and mapping stdout back to fixture identity in `run_batch_outcomes(...)`.

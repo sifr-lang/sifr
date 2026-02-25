@@ -537,10 +537,9 @@ fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
 #[test]
 fn test_render_expr_lowering_rewrites_module_constant_ident() {
     let mut emitter = RustEmitter::new();
-    emitter.module_constants.insert(
-        "limit".to_string(),
-        (Type::Int, "LIMIT".to_string()),
-    );
+    emitter
+        .module_constants
+        .insert("limit".to_string(), (Type::Int, "LIMIT".to_string()));
     let expr = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "limit".to_string(),
@@ -636,7 +635,9 @@ fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
     };
 
     let result = generate_rust_with_metadata(&module);
-    assert!(result.rust_source.contains("let x: f64 = std::f64::consts::PI;"));
+    assert!(result
+        .rust_source
+        .contains("let x: f64 = std::f64::consts::PI;"));
     assert!(!result.rust_source.contains("let x: f64 = pi;"));
     assert!(result.lowering_stats.stmt_structured >= 1);
 }
@@ -1360,7 +1361,9 @@ fn test_structured_stmt_bridge_handles_copy_typed_let_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("let x: f64 = (9.0 as f64).sqrt();"));
+    assert!(generated
+        .rust_source
+        .contains("let x: f64 = (9.0 as f64).sqrt();"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed let should be emitted through structured stmt bridge"

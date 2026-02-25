@@ -39,3 +39,31 @@
 
 #### Dependencies
 - Depends on Task 214.
+
+### Implemented
+
+#### CI Changes
+
+- Added workflow: `.github/workflows/e2e-throughput-rollout.yml`
+  - matrix job: `legacy`, `new`, `compare` with `SIFR_E2E_RUNNER_MODE`
+  - runner class pinned to `ubuntu-24.04`
+  - worker tuning envs:
+    - `SIFR_E2E_SIFR_JOBS`
+    - `SIFR_E2E_RUST_JOBS`
+    - `SIFR_E2E_RUN_JOBS`
+- Added script `scripts/ci_e2e_throughput.sh` implementing warm+7-sample throughput protocol:
+  - warmup run discarded
+  - 7 timed `test_e2e_pass` runs
+  - compute `p50`, `p95`, and coefficient of variation
+  - fail on:
+    - `p50 > 90000ms`
+    - `p95 > 110000ms`
+    - `cv > 0.15`
+
+#### Rollout and Reversibility
+
+- Default remains `legacy` in `runner_config()` until gates pass and explicit cutover decision is made.
+- Diff mode (`SIFR_E2E_RUNNER_MODE=compare`) is required for correctness parity evidence.
+- Reversal command remains available:
+  - set `SIFR_E2E_RUNNER_MODE=legacy` (or `SIFR_E2E_LEGACY_RUNNER=1`).
+- Legacy path still present in `test_e2e_pass` behind `RunnerMode::Legacy`, allowing staged rollout.
