@@ -150,6 +150,7 @@ status: **partially met**
 - [x] Boolean import flags removed from primary import selection path (imports now derived from structural IR needs)
 - [x] Stdlib DCE migrated to structural `syn` item traversal (`stdlib_filter.rs` no longer uses text/chunk/token parsing)
 - [x] `ir_imports` now uses structural `syn` traversal for `RawCode` payloads (text-token scan only as parse-failure fallback)
+- [x] Production and test codegen entrypoints now run `validate_items` on assembled `file_items` (including `RawCode` wrappers) before render
 - [ ] `RawCode`-zero gate not enforced for all core production paths (IR type still carries bridge; fallback emitters remain)
 - [ ] Structural passes not run over full user-code IR because full user-code IR assembly is not yet the production path
 

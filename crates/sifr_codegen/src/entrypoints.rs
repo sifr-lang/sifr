@@ -66,15 +66,10 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     file_items.extend(import_items);
     file_items.extend(emitted_items);
     remove_trivial_clones_in_items(&mut file_items);
-    let typed_items: Vec<RustItem> = file_items
-        .iter()
-        .filter(|item| !matches!(item, RustItem::RawCode(_)))
-        .cloned()
-        .collect();
-    let file_issues = validate_items(&typed_items);
+    let file_issues = validate_items(&file_items);
     assert!(
         file_issues.is_empty(),
-        "codegen IR validation failed (typed test file): {}",
+        "codegen IR validation failed (test file): {}",
         file_issues
             .iter()
             .map(|issue| issue.message.as_str())
