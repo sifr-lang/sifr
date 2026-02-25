@@ -49,10 +49,7 @@ pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIn
     lower_intrinsic_rendered(name, args)
 }
 
-fn lower_intrinsic_rendered(
-    name: &str,
-    args: &[RustExpr],
-) -> Option<LoweredIntrinsic> {
+fn lower_intrinsic_rendered(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
     let (expr, required_crate) = match name {
         "sqrt" => (math::lower_sqrt(args), None),
         "floor" => (math::lower_floor(args), None),
@@ -179,14 +176,23 @@ fn lower_intrinsic_rendered(
         "set_len" => (collections::lower_set_len(args), None),
         "set_union" => (collections::lower_set_union(args), None),
         "set_intersection" => (collections::lower_set_intersection(args), None),
-        "counter_from_list" => (collections::lower_counter_from_list(args), Some("serde_json")),
+        "counter_from_list" => (
+            collections::lower_counter_from_list(args),
+            Some("serde_json"),
+        ),
         "counter_get" => (collections::lower_counter_get(args), Some("serde_json")),
-        "counter_most_common" => (collections::lower_counter_most_common(args), Some("serde_json")),
+        "counter_most_common" => (
+            collections::lower_counter_most_common(args),
+            Some("serde_json"),
+        ),
         "counter_total" => (collections::lower_counter_total(args), Some("serde_json")),
         "counter_values" => (collections::lower_counter_values(args), Some("serde_json")),
         "counter_keys" => (collections::lower_counter_keys(args), Some("serde_json")),
         "counter_items" => (collections::lower_counter_items(args), Some("serde_json")),
-        "counter_increment" => (collections::lower_counter_increment(args), Some("serde_json")),
+        "counter_increment" => (
+            collections::lower_counter_increment(args),
+            Some("serde_json"),
+        ),
         "defaultdict_new" => (collections::lower_defaultdict_new(args), None),
         "defaultdict_get" => (collections::lower_defaultdict_get(args), Some("serde_json")),
         "defaultdict_set" => (collections::lower_defaultdict_set(args), Some("serde_json")),
@@ -241,7 +247,10 @@ fn lower_intrinsic_rendered(
         "datetime_now" => (datetime::lower_datetime_now(args), Some("chrono")),
         "datetime_now_struct" => (datetime::lower_datetime_now_struct(args), Some("chrono")),
         "datetime_format" => (datetime::lower_datetime_format(args), None),
-        "datetime_from_timestamp" => (datetime::lower_datetime_from_timestamp(args), Some("chrono")),
+        "datetime_from_timestamp" => (
+            datetime::lower_datetime_from_timestamp(args),
+            Some("chrono"),
+        ),
         "sys_exit" => (sys::lower_sys_exit(args), None),
         "sys_version" => (sys::lower_sys_version(args), None),
         "sys_platform" => (sys::lower_sys_platform(args), None),
@@ -689,11 +698,13 @@ mod tests {
         assert_eq!(sha.required_crate, Some("sha2"));
         assert!(render_expr(&sha.expr).contains("<sha2::Sha256 as sha2::Digest>::digest"));
         assert!(render_expr(&sha.expr).contains(".as_bytes()"));
+        assert!(!matches!(sha.expr, RustExpr::RawCode(_)));
 
         let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
         assert_eq!(md5.required_crate, Some("md5"));
         assert!(render_expr(&md5.expr).contains("md5::compute"));
         assert!(render_expr(&md5.expr).contains(".as_bytes()"));
+        assert!(!matches!(md5.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
@@ -771,6 +782,7 @@ mod tests {
         let exit = lower_intrinsic("sys_exit", &["code".to_string()]).expect("sys_exit");
         assert!(render_expr(&exit.expr).contains("std::process::exit("));
         assert!(render_expr(&exit.expr).contains("as i32"));
+        assert!(!matches!(exit.expr, RustExpr::RawCode(_)));
 
         let version = lower_intrinsic("sys_version", &[]).expect("sys_version");
         assert_eq!(render_expr(&version.expr), "\"sifr 0.1.0\".to_string()");
@@ -944,26 +956,32 @@ mod tests {
         let sha1 = lower_intrinsic("sha1", &["s".to_string()]).expect("sha1");
         assert_eq!(sha1.required_crate, Some("sha1"));
         assert!(render_expr(&sha1.expr).contains("<sha1::Sha1 as sha1::Digest>::digest"));
+        assert!(!matches!(sha1.expr, RustExpr::RawCode(_)));
 
         let sha512 = lower_intrinsic("sha512", &["s".to_string()]).expect("sha512");
         assert_eq!(sha512.required_crate, Some("sha2"));
         assert!(render_expr(&sha512.expr).contains("<sha2::Sha512 as sha2::Digest>::digest"));
+        assert!(!matches!(sha512.expr, RustExpr::RawCode(_)));
 
         let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
         assert_eq!(sha224.required_crate, Some("sha2"));
         assert!(render_expr(&sha224.expr).contains("<sha2::Sha224 as sha2::Digest>::digest"));
+        assert!(!matches!(sha224.expr, RustExpr::RawCode(_)));
 
         let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
         assert_eq!(sha384.required_crate, Some("sha2"));
         assert!(render_expr(&sha384.expr).contains("<sha2::Sha384 as sha2::Digest>::digest"));
+        assert!(!matches!(sha384.expr, RustExpr::RawCode(_)));
 
         let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
         assert_eq!(blake2b.required_crate, Some("blake2"));
         assert!(render_expr(&blake2b.expr).contains("Blake2b512"));
+        assert!(!matches!(blake2b.expr, RustExpr::RawCode(_)));
 
         let blake2s = lower_intrinsic("blake2s", &["s".to_string()]).expect("blake2s");
         assert_eq!(blake2s.required_crate, Some("blake2"));
         assert!(render_expr(&blake2s.expr).contains("Blake2s256"));
+        assert!(!matches!(blake2s.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
@@ -998,8 +1016,8 @@ mod tests {
         assert!(render_expr(&ulp.expr).contains("__x.is_infinite()"));
         assert!(!matches!(ulp.expr, RustExpr::RawCode(_)));
 
-        let nextafter = lower_intrinsic("nextafter", &["x".to_string(), "y".to_string()])
-            .expect("nextafter");
+        let nextafter =
+            lower_intrinsic("nextafter", &["x".to_string(), "y".to_string()]).expect("nextafter");
         assert!(render_expr(&nextafter.expr).contains("__x == __y"));
         assert!(!matches!(nextafter.expr, RustExpr::RawCode(_)));
 

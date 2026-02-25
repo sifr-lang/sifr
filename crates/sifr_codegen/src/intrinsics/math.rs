@@ -3,7 +3,7 @@
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 
 fn parenthesized(expr: &RustExpr) -> RustExpr {
-    RustExpr::RawCode(format!("({})", crate::render_expr(expr)))
+    RustExpr::Paren(Box::new(expr.clone()))
 }
 
 fn unary_method(args: &[RustExpr], method: &str) -> Option<RustExpr> {
@@ -405,15 +405,21 @@ pub(super) fn lower_remainder(args: &[RustExpr]) -> Option<RustExpr> {
                                     then_expr: Box::new(RustExpr::Ident("__n0".to_string())),
                                     else_expr: Some(Box::new(RustExpr::If {
                                         cond: Box::new(RustExpr::BinOp {
-                                            left: Box::new(RustExpr::Ident("__abs_frac".to_string())),
+                                            left: Box::new(RustExpr::Ident(
+                                                "__abs_frac".to_string(),
+                                            )),
                                             op: ">".to_string(),
-                                            right: Box::new(RustExpr::Literal(RustLiteral::Float(0.5))),
+                                            right: Box::new(RustExpr::Literal(RustLiteral::Float(
+                                                0.5,
+                                            ))),
                                         }),
                                         then_expr: Box::new(RustExpr::BinOp {
                                             left: Box::new(RustExpr::Ident("__n0".to_string())),
                                             op: "+".to_string(),
                                             right: Box::new(RustExpr::MethodCall {
-                                                receiver: Box::new(RustExpr::Ident("__q".to_string())),
+                                                receiver: Box::new(RustExpr::Ident(
+                                                    "__q".to_string(),
+                                                )),
                                                 method: "signum".to_string(),
                                                 args: vec![],
                                             }),
@@ -437,7 +443,9 @@ pub(super) fn lower_remainder(args: &[RustExpr]) -> Option<RustExpr> {
                                                     RustLiteral::Int(0),
                                                 )),
                                             }),
-                                            then_expr: Box::new(RustExpr::Ident("__n0".to_string())),
+                                            then_expr: Box::new(RustExpr::Ident(
+                                                "__n0".to_string(),
+                                            )),
                                             else_expr: Some(Box::new(RustExpr::BinOp {
                                                 left: Box::new(RustExpr::Ident("__n0".to_string())),
                                                 op: "+".to_string(),
@@ -605,7 +613,9 @@ pub(super) fn lower_dist(args: &[RustExpr]) -> Option<RustExpr> {
                                                         "__scale".to_string(),
                                                     )),
                                                     op: "/".to_string(),
-                                                    right: Box::new(RustExpr::Ident("__d".to_string())),
+                                                    right: Box::new(RustExpr::Ident(
+                                                        "__d".to_string(),
+                                                    )),
                                                 },
                                             },
                                             RustStmt::Assign {
@@ -643,7 +653,9 @@ pub(super) fn lower_dist(args: &[RustExpr]) -> Option<RustExpr> {
                                                 name: "__r".to_string(),
                                                 ty: Some(RustType::F64),
                                                 value: RustExpr::BinOp {
-                                                    left: Box::new(RustExpr::Ident("__d".to_string())),
+                                                    left: Box::new(RustExpr::Ident(
+                                                        "__d".to_string(),
+                                                    )),
                                                     op: "/".to_string(),
                                                     right: Box::new(RustExpr::Ident(
                                                         "__scale".to_string(),
@@ -654,9 +666,13 @@ pub(super) fn lower_dist(args: &[RustExpr]) -> Option<RustExpr> {
                                                 target: RustExpr::Ident("__ssq".to_string()),
                                                 op: "+".to_string(),
                                                 value: RustExpr::BinOp {
-                                                    left: Box::new(RustExpr::Ident("__r".to_string())),
+                                                    left: Box::new(RustExpr::Ident(
+                                                        "__r".to_string(),
+                                                    )),
                                                     op: "*".to_string(),
-                                                    right: Box::new(RustExpr::Ident("__r".to_string())),
+                                                    right: Box::new(RustExpr::Ident(
+                                                        "__r".to_string(),
+                                                    )),
                                                 },
                                             },
                                         ]),
@@ -860,7 +876,10 @@ pub(super) fn lower_fsum(args: &[RustExpr]) -> Option<RustExpr> {
             then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()])),
             else_expr: Some(Box::new(RustExpr::If {
                 cond: Box::new(RustExpr::Ident("__pos_inf".to_string())),
-                then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()])),
+                then_expr: Box::new(RustExpr::Path(vec![
+                    "f64".to_string(),
+                    "INFINITY".to_string(),
+                ])),
                 else_expr: Some(Box::new(RustExpr::If {
                     cond: Box::new(RustExpr::Ident("__neg_inf".to_string())),
                     then_expr: Box::new(RustExpr::Path(vec![
@@ -1269,7 +1288,10 @@ pub(super) fn lower_gamma(args: &[RustExpr]) -> Option<RustExpr> {
                     }),
                 }),
             }),
-            then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()])),
+            then_expr: Box::new(RustExpr::Path(vec![
+                "f64".to_string(),
+                "INFINITY".to_string(),
+            ])),
             else_expr: Some(Box::new(RustExpr::If {
                 cond: Box::new(RustExpr::BinOp {
                     left: Box::new(RustExpr::Ident("__x".to_string())),
@@ -1357,9 +1379,9 @@ pub(super) fn lower_gamma(args: &[RustExpr]) -> Option<RustExpr> {
                                     left: Box::new(RustExpr::BinOp {
                                         left: Box::new(RustExpr::MethodCall {
                                             receiver: Box::new(RustExpr::BinOp {
-                                                left: Box::new(RustExpr::Literal(RustLiteral::Float(
-                                                    2.0,
-                                                ))),
+                                                left: Box::new(RustExpr::Literal(
+                                                    RustLiteral::Float(2.0),
+                                                )),
                                                 op: "*".to_string(),
                                                 right: Box::new(RustExpr::Path(vec![
                                                     "std".to_string(),
@@ -1387,7 +1409,9 @@ pub(super) fn lower_gamma(args: &[RustExpr]) -> Option<RustExpr> {
                                     op: "*".to_string(),
                                     right: Box::new(RustExpr::MethodCall {
                                         receiver: Box::new(RustExpr::BinOp {
-                                            left: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
+                                            left: Box::new(RustExpr::Literal(RustLiteral::Float(
+                                                0.0,
+                                            ))),
                                             op: "-".to_string(),
                                             right: Box::new(RustExpr::Ident("__t2".to_string())),
                                         }),
@@ -1601,7 +1625,10 @@ pub(super) fn lower_lgamma(args: &[RustExpr]) -> Option<RustExpr> {
                     }),
                 }),
             }),
-            then_expr: Box::new(RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()])),
+            then_expr: Box::new(RustExpr::Path(vec![
+                "f64".to_string(),
+                "INFINITY".to_string(),
+            ])),
             else_expr: Some(Box::new(RustExpr::Block {
                 stmts: vec![
                     RustStmt::Let {
@@ -1930,9 +1957,9 @@ pub(super) fn lower_frexp(args: &[RustExpr]) -> Option<RustExpr> {
                                         op: "*".to_string(),
                                         right: Box::new(RustExpr::MethodCall {
                                             receiver: Box::new(RustExpr::Cast {
-                                                expr: Box::new(RustExpr::Literal(RustLiteral::Float(
-                                                    2.0,
-                                                ))),
+                                                expr: Box::new(RustExpr::Literal(
+                                                    RustLiteral::Float(2.0),
+                                                )),
                                                 ty: RustType::F64,
                                             }),
                                             method: "powi".to_string(),
@@ -1957,7 +1984,9 @@ pub(super) fn lower_frexp(args: &[RustExpr]) -> Option<RustExpr> {
                                     value: RustExpr::Cast {
                                         expr: Box::new(RustExpr::BinOp {
                                             left: Box::new(RustExpr::BinOp {
-                                                left: Box::new(RustExpr::Ident("__sbits".to_string())),
+                                                left: Box::new(RustExpr::Ident(
+                                                    "__sbits".to_string(),
+                                                )),
                                                 op: ">>".to_string(),
                                                 right: Box::new(RustExpr::Literal(
                                                     RustLiteral::Int(52),
@@ -1965,9 +1994,9 @@ pub(super) fn lower_frexp(args: &[RustExpr]) -> Option<RustExpr> {
                                             }),
                                             op: "&".to_string(),
                                             right: Box::new(RustExpr::Cast {
-                                                expr: Box::new(RustExpr::Literal(RustLiteral::Int(
-                                                    2047,
-                                                ))),
+                                                expr: Box::new(RustExpr::Literal(
+                                                    RustLiteral::Int(2047),
+                                                )),
                                                 ty: RustType::Named("u64".to_string()),
                                             }),
                                         }),
@@ -1995,7 +2024,9 @@ pub(super) fn lower_frexp(args: &[RustExpr]) -> Option<RustExpr> {
                                         ])),
                                         args: vec![RustExpr::BinOp {
                                             left: Box::new(RustExpr::BinOp {
-                                                left: Box::new(RustExpr::Ident("__sign".to_string())),
+                                                left: Box::new(RustExpr::Ident(
+                                                    "__sign".to_string(),
+                                                )),
                                                 op: "|".to_string(),
                                                 right: Box::new(RustExpr::BinOp {
                                                     left: Box::new(RustExpr::Cast {
@@ -2023,7 +2054,9 @@ pub(super) fn lower_frexp(args: &[RustExpr]) -> Option<RustExpr> {
                                         left: Box::new(RustExpr::BinOp {
                                             left: Box::new(RustExpr::Ident("__sexp".to_string())),
                                             op: "-".to_string(),
-                                            right: Box::new(RustExpr::Literal(RustLiteral::Int(1022))),
+                                            right: Box::new(RustExpr::Literal(RustLiteral::Int(
+                                                1022,
+                                            ))),
                                         }),
                                         op: "-".to_string(),
                                         right: Box::new(RustExpr::Literal(RustLiteral::Int(54))),
@@ -2051,7 +2084,9 @@ pub(super) fn lower_frexp(args: &[RustExpr]) -> Option<RustExpr> {
                                         ])),
                                         args: vec![RustExpr::BinOp {
                                             left: Box::new(RustExpr::BinOp {
-                                                left: Box::new(RustExpr::Ident("__sign".to_string())),
+                                                left: Box::new(RustExpr::Ident(
+                                                    "__sign".to_string(),
+                                                )),
                                                 op: "|".to_string(),
                                                 right: Box::new(RustExpr::BinOp {
                                                     left: Box::new(RustExpr::Cast {

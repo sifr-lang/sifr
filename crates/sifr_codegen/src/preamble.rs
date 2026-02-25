@@ -1391,6 +1391,7 @@ mod tests {
             | RustExpr::Deref(operand)
             | RustExpr::Clone(operand)
             | RustExpr::Try(operand)
+            | RustExpr::Paren(operand)
             | RustExpr::Await(operand) => count_raw_in_expr(operand),
             RustExpr::Field { expr, .. } => count_raw_in_expr(expr),
             RustExpr::Index { expr, index } => count_raw_in_expr(expr) + count_raw_in_expr(index),
