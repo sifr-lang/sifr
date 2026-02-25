@@ -981,6 +981,27 @@ impl RustEmitter {
             }
         }
 
+        if let HirStmt::Return { value: Some(value) } = stmt {
+            if !self.emission_ctx.in_display_impl
+                && !self.emission_ctx.in_generator_closure
+                && self
+                    .current_return_type
+                    .as_ref()
+                    .is_some_and(is_copyish_structured_stmt_expr_type)
+                && is_copyish_structured_stmt_expr_type(value.ty())
+            {
+                let output_len = self.output.len();
+                self.write("return ");
+                if self.try_emit_structured_expr(value)? {
+                    self.lowering_stats.stmt_structured += 1;
+                    self.lowering_stats.stmt_candidate_structured += 1;
+                    self.write(";\n");
+                    return Ok(true);
+                }
+                self.output.truncate(output_len);
+            }
+        }
+
         if let HirStmt::Expr { expr } = stmt {
             let output_len = self.output.len();
             if self.try_emit_structured_expr(expr)? {
