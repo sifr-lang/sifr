@@ -20,9 +20,7 @@ def multiply(num1: str, num2: str) -> str:
     return "".join(res)
 
 def main():
-    print(multiply("2", "3"))
-    print(multiply("123", "456"))
+    assert str(multiply("2", "3")) == '6'
+    assert str(multiply("123", "456")) == '56088'
 
-# expect-stdout: 6
-# expect-stdout: 56088
 

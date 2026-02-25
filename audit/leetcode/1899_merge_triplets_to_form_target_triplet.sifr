@@ -12,7 +12,6 @@ def mergeTriplets(triplets: list[list[int]], target: list[int]) -> bool:
     return len(good) == 3
 
 def main():
-    print(mergeTriplets([[2,5,3],[1,8,4],[1,7,5]], [2,7,5]))
+    assert str(mergeTriplets([[2,5,3],[1,8,4],[1,7,5]], [2,7,5])) == 'true'
 
-# expect-stdout: true
 

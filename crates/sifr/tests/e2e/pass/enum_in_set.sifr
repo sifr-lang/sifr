@@ -7,6 +7,5 @@ class Color(Enum):
 
 def main():
     colors: set[Color] = {Color.RED, Color.GREEN, Color.BLUE}
-    print(len(colors))
+    assert str(len(colors)) == '3'
 
-# expect-stdout: 3

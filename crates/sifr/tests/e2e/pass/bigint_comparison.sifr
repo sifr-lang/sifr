@@ -1,19 +1,12 @@
 def main():
     a: bigint = bigint(100)
     b: bigint = bigint(200)
-    print(a == b)
-    print(a != b)
-    print(a < b)
-    print(a > b)
-    print(a <= b)
-    print(a >= b)
+    assert str(a == b) == 'false'
+    assert str(a != b) == 'true'
+    assert str(a < b) == 'true'
+    assert str(a > b) == 'false'
+    assert str(a <= b) == 'true'
+    assert str(a >= b) == 'false'
     c: bigint = bigint(100)
-    print(a == c)
+    assert str(a == c) == 'true'
 
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: true

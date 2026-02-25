@@ -11,14 +11,9 @@ def isPalindrome(x: int) -> bool:
     return original == rev
 
 def main():
-    print(isPalindrome(121))
-    print(isPalindrome(-121))
-    print(isPalindrome(10))
-    print(isPalindrome(0))
-    print(isPalindrome(12321))
+    assert str(isPalindrome(121)) == 'true'
+    assert str(isPalindrome(-121)) == 'false'
+    assert str(isPalindrome(10)) == 'false'
+    assert str(isPalindrome(0)) == 'true'
+    assert str(isPalindrome(12321)) == 'true'
 
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: true

@@ -1,8 +1,4 @@
 # Test new sifr.statistics functions
-# expect-stdout: fmean = 3
-# expect-stdout: harmonic_mean = 2.18978102189781
-# expect-stdout: median_low = 2
-# expect-stdout: median_high = 3
 
 from sifr.statistics import fmean, harmonic_mean, median_low, median_high, StatisticsError
 
@@ -10,13 +6,13 @@ def main():
     try:
         data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
         fm: float = fmean(data)
-        print("fmean = " + str(fm))
+        assert str("fmean = " + str(fm)) == 'fmean = 3'
         hm: float = harmonic_mean(data)
-        print("harmonic_mean = " + str(hm))
+        assert str("harmonic_mean = " + str(hm)) == 'harmonic_mean = 2.18978102189781'
         even: list[float] = [1.0, 2.0, 3.0, 4.0]
         ml: float = median_low(even)
-        print("median_low = " + str(ml))
+        assert str("median_low = " + str(ml)) == 'median_low = 2'
         mh: float = median_high(even)
-        print("median_high = " + str(mh))
+        assert str("median_high = " + str(mh)) == 'median_high = 3'
     except StatisticsError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

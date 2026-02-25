@@ -21,16 +21,10 @@ def describe_code(code: int) -> str:
             return "unknown"
 
 def main():
-    print(describe_method("GET"))
-    print(describe_method("POST"))
-    print(describe_method("DELETE"))
-    print(describe_code(200))
-    print(describe_code(404))
-    print(describe_code(999))
+    assert str(describe_method("GET")) == 'read'
+    assert str(describe_method("POST")) == 'create'
+    assert str(describe_method("DELETE")) == 'other'
+    assert str(describe_code(200)) == 'ok'
+    assert str(describe_code(404)) == 'not found'
+    assert str(describe_code(999)) == 'unknown'
 
-# expect-stdout: read
-# expect-stdout: create
-# expect-stdout: other
-# expect-stdout: ok
-# expect-stdout: not found
-# expect-stdout: unknown

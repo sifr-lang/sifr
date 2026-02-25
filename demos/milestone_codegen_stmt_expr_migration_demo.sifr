@@ -12,7 +12,7 @@ def main():
 
     verdict: str = "high" if total > 10 else "low"
     print(f"total = {total}")
+    assert str(f"total = {total}") == "total = 24"
     print(f"verdict = {verdict}")
+    assert str(f"verdict = {verdict}") == "verdict = high"
 
-# expect-stdout: total = 24
-# expect-stdout: verdict = high

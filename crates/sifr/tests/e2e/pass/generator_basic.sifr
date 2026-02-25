@@ -1,4 +1,3 @@
-# expect-stdout: [0, 1, 2, 3, 4]
 # Tests: basic generator function with yield
 
 def count_up(n: int) -> list[int]:
@@ -9,4 +8,4 @@ def count_up(n: int) -> list[int]:
 
 def main():
     nums: list[int] = count_up(5)
-    print(nums)
+    assert str(nums) == '[0, 1, 2, 3, 4]'

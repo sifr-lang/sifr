@@ -1,4 +1,3 @@
-# expect-stdout: 120
 def factorial(n: int) -> int:
     if n <= 1:
         return 1
@@ -6,4 +5,4 @@ def factorial(n: int) -> int:
 
 def main():
     x: int = factorial(5)
-    print(x)
+    assert str(x) == '120'

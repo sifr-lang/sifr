@@ -12,6 +12,5 @@ def main():
     first: int | None = result[0]
     if first is not None:
         assert_eq(first, 7)
-    print("generic_dropwhile_predicate: passed")
+    assert str("generic_dropwhile_predicate: passed") == 'generic_dropwhile_predicate: passed'
 
-# expect-stdout: generic_dropwhile_predicate: passed

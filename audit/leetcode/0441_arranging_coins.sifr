@@ -14,9 +14,7 @@ def arrangeCoins(n: int) -> int:
     return res
 
 def main():
-    print(arrangeCoins(5))
-    print(arrangeCoins(8))
+    assert str(arrangeCoins(5)) == '2'
+    assert str(arrangeCoins(8)) == '3'
 
-# expect-stdout: 2
-# expect-stdout: 3
 

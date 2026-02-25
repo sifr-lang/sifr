@@ -23,9 +23,7 @@ def isPerfectSquare_2(num: int) -> bool:
     return False
 
 def main():
-    print(isPerfectSquare(16))
-    print(isPerfectSquare(14))
+    assert str(isPerfectSquare(16)) == 'true'
+    assert str(isPerfectSquare(14)) == 'false'
 
-# expect-stdout: true
-# expect-stdout: false
 

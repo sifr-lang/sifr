@@ -12,11 +12,9 @@ def main():
 
     # reduce with add
     total: int = reduce(add, data, 0)
-    print(total)
+    assert str(total) == '15'
 
     # reduce with multiply
     product: int = reduce(mul, data, 1)
-    print(product)
+    assert str(product) == '120'
 
-# expect-stdout: 15
-# expect-stdout: 120

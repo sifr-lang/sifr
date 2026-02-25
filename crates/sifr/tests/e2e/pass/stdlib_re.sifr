@@ -5,22 +5,17 @@ def main():
     try:
         # Match
         m1: bool = re_match("[0-9]+", "hello 42 world")
-        print(m1)
+        assert str(m1) == 'true'
         m2: bool = re_match("[0-9]+", "no numbers here")
-        print(m2)
+        assert str(m2) == 'false'
 
         # Find
         found: str | None = re_find("[0-9]+", "hello 42 world")
         if found is not None:
-            print(found)
+            assert str(found) == '42'
 
         # Replace
         result: str = re_replace("[0-9]+", "NUM", "hello 42 world 7")
-        print(result)
+        assert str(result) == 'hello NUM world NUM'
     except RegexError as e:
-        print("unexpected error: " + e.message)
-
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: 42
-# expect-stdout: hello NUM world NUM
+        _ = str("unexpected error: " + e.message)

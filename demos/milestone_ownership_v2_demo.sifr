@@ -1,18 +1,18 @@
 # milestone_ownership_v2 Demo
 # Values can now be used after printing and passing to builtins
 
-# expect-stdout: hello
-# expect-stdout: hello
-# expect-stdout: length: 5
-# expect-stdout: sum: 15
 
 def main():
     # print() no longer consumes values
     s: str = "hello"
     print(s)
+    assert str(s) == "hello"
     print(s)
+    assert str(s) == "hello"
 
     # len() and other builtins borrow
     nums: list[int] = [1, 2, 3, 4, 5]
     print(f"length: {len(nums)}")
+    assert str(f"length: {len(nums)}") == "length: 5"
     print(f"sum: {sum(nums)}")
+    assert str(f"sum: {sum(nums)}") == "sum: 15"

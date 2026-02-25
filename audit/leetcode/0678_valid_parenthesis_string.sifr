@@ -41,11 +41,8 @@ def checkValidString(s: str) -> bool:
     return leftMin == 0
 
 def main():
-    print(checkValidString("()"))
-    print(checkValidString("(*)"))
-    print(checkValidString("(*))"))
+    assert str(checkValidString("()")) == 'true'
+    assert str(checkValidString("(*)")) == 'true'
+    assert str(checkValidString("(*))")) == 'true'
 
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
 

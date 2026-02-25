@@ -1,14 +1,9 @@
 def main():
     x: bigint = bigint(42)
     y: bigint = bigint(100)
-    print(x)
-    print(y)
-    print(x + y)
-    print(y - x)
-    print(x * y)
+    assert str(x) == '42'
+    assert str(y) == '100'
+    assert str(x + y) == '142'
+    assert str(y - x) == '58'
+    assert str(x * y) == '4200'
 
-# expect-stdout: 42
-# expect-stdout: 100
-# expect-stdout: 142
-# expect-stdout: 58
-# expect-stdout: 4200

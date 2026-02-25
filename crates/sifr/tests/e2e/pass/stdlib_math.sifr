@@ -4,28 +4,21 @@ from sifr.math import sqrt, floor, ceil, pi, e
 def main():
     # sqrt
     result: float = sqrt(16.0)
-    print(result)
+    assert str(result) == '4'
 
     # floor
     f: int = floor(3.7)
-    print(f)
+    assert str(f) == '3'
 
     # ceil
     c: int = ceil(3.2)
-    print(c)
+    assert str(c) == '4'
 
     # pi constant
-    print(pi > 3.14)
-    print(pi < 3.15)
+    assert str(pi > 3.14) == 'true'
+    assert str(pi < 3.15) == 'true'
 
     # e constant
-    print(e > 2.71)
-    print(e < 2.72)
+    assert str(e > 2.71) == 'true'
+    assert str(e < 2.72) == 'true'
 
-# expect-stdout: 4
-# expect-stdout: 3
-# expect-stdout: 4
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true

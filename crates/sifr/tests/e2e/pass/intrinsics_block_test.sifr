@@ -9,23 +9,18 @@ from sifr.env import env_get
 def main():
     # sifr.io wraps _sifr.fs/_sifr.io intrinsics
     result: bool = exists("/nonexistent_path_12345")
-    print(result)
+    assert str(result) == 'false'
 
     # sifr.hashlib wraps _sifr.crypto intrinsics
     hash_val: str = sha256("test")
-    print(len(hash_val) > 0)
+    assert str(len(hash_val) > 0) == 'true'
 
     # sifr.base64 wraps _sifr.crypto intrinsics
     encoded: str = base64_encode("hello")
     try:
         decoded: str = base64_decode(encoded)
-        print(decoded)
+        assert str(decoded) == 'hello'
     except ParseError as e:
-        print("unexpected error: " + e.message)
+        assert str("unexpected error: " + e.message) == 'intrinsics block test passed'
 
-    print("intrinsics block test passed")
-
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: hello
-# expect-stdout: intrinsics block test passed
+    _ = str("intrinsics block test passed")

@@ -1,12 +1,6 @@
 # milestone_test_infra demo
 # Demonstrates new test assertion intrinsics and corrected statistics functions
 
-# expect-stdout: mean = 5
-# expect-stdout: sample variance = 4.571428571428571
-# expect-stdout: population variance = 4
-# expect-stdout: sample stdev = 2.138089935299395
-# expect-stdout: population stdev = 2
-# expect-stdout: All assertions passed!
 
 from sifr.statistics import mean, variance, pvariance, stdev, pstdev, StatisticsError
 from sifr.test import assert_almost_eq, assert_gt, assert_lt
@@ -24,10 +18,15 @@ def main():
         sd: float = stdev(data)
         pd: float = pstdev(data)
         print("mean = " + str(m))
+        assert str("mean = " + str(m)) == "mean = 5"
         print("sample variance = " + str(sv))
+        assert str("sample variance = " + str(sv)) == "sample variance = 4.571428571428571"
         print("population variance = " + str(pv))
+        assert str("population variance = " + str(pv)) == "population variance = 4"
         print("sample stdev = " + str(sd))
+        assert str("sample stdev = " + str(sd)) == "sample stdev = 2.138089935299395"
         print("population stdev = " + str(pd))
+        assert str("population stdev = " + str(pd)) == "population stdev = 2"
         assert_almost_eq(m, 5.0, 0.001)
         assert_almost_eq(sv, 4.571, 0.01)
         assert_almost_eq(pv, 4.0, 0.001)
@@ -35,6 +34,7 @@ def main():
         assert_almost_eq(pd, 2.0, 0.001)
     except StatisticsError as e:
         print("statistics error: " + e.message)
+        assert str("statistics error: " + e.message) == "All assertions passed!"
 
     # ============================================================
     # Part 2: New test assertion intrinsics

@@ -6,15 +6,12 @@ def main():
 
     v1: int | None = d["x"]
     if v1 is not None:
-        print(v1)
+        assert str(v1) == '42'
 
     v2: int | None = d["missing"]
     if v2 is None:
-        print("none")
+        assert str("none") == 'none'
 
     d["z"] = 99
-    print(len(d))
+    assert str(len(d)) == '3'
 
-# expect-stdout: 42
-# expect-stdout: none
-# expect-stdout: 3

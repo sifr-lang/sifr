@@ -19,9 +19,7 @@ def splitString(s: str) -> bool:
     return False
 
 def main():
-    print(splitString("1234"))
-    print(splitString("050043"))
+    assert str(splitString("1234")) == 'false'
+    assert str(splitString("050043")) == 'true'
 
-# expect-stdout: false
-# expect-stdout: true
 

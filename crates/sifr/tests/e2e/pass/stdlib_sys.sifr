@@ -1,9 +1,7 @@
-# expect-stdout: version = sifr 0.1.0
-# expect-stdout: maxsize > 0 = true
 
 from sifr.sys import version, maxsize
 
 def main():
-    print("version = " + version())
+    assert str("version = " + version()) == 'version = sifr 0.1.0'
     ms: int = maxsize()
-    print("maxsize > 0 = " + str(ms > 0))
+    assert str("maxsize > 0 = " + str(ms > 0)) == 'maxsize > 0 = true'

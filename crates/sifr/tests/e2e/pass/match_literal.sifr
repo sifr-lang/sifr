@@ -10,12 +10,8 @@ def describe(x: int) -> str:
             return "other"
 
 def main():
-    print(describe(1))
-    print(describe(2))
-    print(describe(3))
-    print(describe(99))
+    assert str(describe(1)) == 'one'
+    assert str(describe(2)) == 'two'
+    assert str(describe(3)) == 'three'
+    assert str(describe(99)) == 'other'
 
-# expect-stdout: one
-# expect-stdout: two
-# expect-stdout: three
-# expect-stdout: other

@@ -1,30 +1,21 @@
-# expect-stdout: union len = 3
-# expect-stdout: union has 3 = true
-# expect-stdout: intersection len = 1
-# expect-stdout: intersection has 2 = true
-# expect-stdout: difference len = 1
-# expect-stdout: difference has 1 = true
-# expect-stdout: symdiff len = 2
-# expect-stdout: symdiff has 1 = true
-# expect-stdout: symdiff has 3 = true
 
 def main():
     a: set[int] = {1, 2}
     b: set[int] = {2, 3}
 
     u: set[int] = a.union(b)
-    print("union len = " + str(u.len()))
-    print("union has 3 = " + str(u.contains(3)))
+    assert str("union len = " + str(u.len())) == 'union len = 3'
+    assert str("union has 3 = " + str(u.contains(3))) == 'union has 3 = true'
 
     i: set[int] = a.intersection(b)
-    print("intersection len = " + str(i.len()))
-    print("intersection has 2 = " + str(i.contains(2)))
+    assert str("intersection len = " + str(i.len())) == 'intersection len = 1'
+    assert str("intersection has 2 = " + str(i.contains(2))) == 'intersection has 2 = true'
 
     d: set[int] = a.difference(b)
-    print("difference len = " + str(d.len()))
-    print("difference has 1 = " + str(d.contains(1)))
+    assert str("difference len = " + str(d.len())) == 'difference len = 1'
+    assert str("difference has 1 = " + str(d.contains(1))) == 'difference has 1 = true'
 
     s: set[int] = a.symmetric_difference(b)
-    print("symdiff len = " + str(s.len()))
-    print("symdiff has 1 = " + str(s.contains(1)))
-    print("symdiff has 3 = " + str(s.contains(3)))
+    assert str("symdiff len = " + str(s.len())) == 'symdiff len = 2'
+    assert str("symdiff has 1 = " + str(s.contains(1))) == 'symdiff has 1 = true'
+    assert str("symdiff has 3 = " + str(s.contains(3))) == 'symdiff has 3 = true'

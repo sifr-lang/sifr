@@ -1,14 +1,9 @@
 def main():
     a: bigint = bigint(100)
     b: bigint = bigint(200)
-    print(a + b)
-    print(b - a)
-    print(a * b)
-    print(b // a)
-    print(b % bigint(3))
+    assert str(a + b) == '300'
+    assert str(b - a) == '100'
+    assert str(a * b) == '20000'
+    assert str(b // a) == '2'
+    assert str(b % bigint(3)) == '2'
 
-# expect-stdout: 300
-# expect-stdout: 100
-# expect-stdout: 20000
-# expect-stdout: 2
-# expect-stdout: 2

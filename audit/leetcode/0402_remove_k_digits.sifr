@@ -13,11 +13,8 @@ def removeKdigits(num: str, k: int) -> str:
     return ''.join(stack) or '0'
 
 def main():
-    print(removeKdigits("1432219", 3))
-    print(removeKdigits("10200", 1))
-    print(removeKdigits("10", 2))
+    assert str(removeKdigits("1432219", 3)) == '1219'
+    assert str(removeKdigits("10200", 1)) == '200'
+    assert str(removeKdigits("10", 2)) == '0'
 
-# expect-stdout: 1219
-# expect-stdout: 200
-# expect-stdout: 0
 

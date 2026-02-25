@@ -28,12 +28,8 @@ def lengthOfLastWord(s: str) -> int:
     return length
 
 def main():
-    print(lengthOfLastWord("Hello World"))
-    print(lengthOfLastWord("   fly me   to   the moon  "))
-    print(lengthOfLastWord("luffy is still joyboy"))
-    print(lengthOfLastWord("a"))
+    assert str(lengthOfLastWord("Hello World")) == '5'
+    assert str(lengthOfLastWord("   fly me   to   the moon  ")) == '4'
+    assert str(lengthOfLastWord("luffy is still joyboy")) == '6'
+    assert str(lengthOfLastWord("a")) == '1'
 
-# expect-stdout: 5
-# expect-stdout: 4
-# expect-stdout: 6
-# expect-stdout: 1

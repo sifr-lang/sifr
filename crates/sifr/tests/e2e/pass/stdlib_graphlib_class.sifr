@@ -9,18 +9,14 @@ def main():
     ts.add(2, 0)
     try:
         order: list[int] = ts.static_order()
-        print(len(order))
+        assert str(len(order)) == '3'
         # Node 0 should come first (no predecessors)
         first: int | None = order[0]
         if first is not None:
-            print(first)
+            assert str(first) == '0'
         # Node 2 should come last (depends on both 0 and 1)
         last: int | None = order[2]
         if last is not None:
-            print(last)
+            assert str(last) == '2'
     except CycleError as e:
-        print(f"error: {e.message}")
-
-# expect-stdout: 3
-# expect-stdout: 0
-# expect-stdout: 2
+        _ = str(f"error: {e.message}")

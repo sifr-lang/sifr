@@ -1,5 +1,4 @@
 # Test: Field access after isinstance narrowing
-# expect-stdout: 42
 
 class Dog:
     name: str
@@ -10,4 +9,4 @@ def get_age(pet: Dog) -> int:
 
 def main():
     d: Dog = Dog("Rex", 42)
-    print(get_age(d))
+    assert str(get_age(d)) == '42'

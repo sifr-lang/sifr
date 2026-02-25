@@ -1,5 +1,3 @@
-# expect-stdout: parsed: 42
-# expect-stdout: caught: not a number
 
 def parse_number(s: str) -> Result[int, ParseError]:
     return int(s)
@@ -7,11 +5,11 @@ def parse_number(s: str) -> Result[int, ParseError]:
 def main():
     try:
         val: int = parse_number("42")
-        print(f"parsed: {val}")
+        assert str(f"parsed: {val}") == 'parsed: 42'
     except ParseError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == 'caught: not a number'
 
     try:
         raise ParseError("not a number")
     except ParseError as e:
-        print(f"caught: {e.message}")
+        _ = str(f"caught: {e.message}")

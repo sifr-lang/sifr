@@ -12,9 +12,7 @@ def pivotIndex(nums: list[int]) -> int:
     return -1
 
 def main():
-    print(pivotIndex([1,7,3,6,5,6]))
-    print(pivotIndex([1,2,3]))
+    assert str(pivotIndex([1,7,3,6,5,6])) == '3'
+    assert str(pivotIndex([1,2,3])) == '-1'
 
-# expect-stdout: 3
-# expect-stdout: -1
 

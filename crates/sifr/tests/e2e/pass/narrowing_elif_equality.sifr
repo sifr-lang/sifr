@@ -1,8 +1,4 @@
 # Test: elif equality chain narrowing (no Never)
-# expect-stdout: one
-# expect-stdout: two
-# expect-stdout: three
-# expect-stdout: other
 
 def classify(x: int) -> str:
     if x == 1:
@@ -14,7 +10,7 @@ def classify(x: int) -> str:
     return "other"
 
 def main():
-    print(classify(1))
-    print(classify(2))
-    print(classify(3))
-    print(classify(99))
+    assert str(classify(1)) == 'one'
+    assert str(classify(2)) == 'two'
+    assert str(classify(3)) == 'three'
+    assert str(classify(99)) == 'other'

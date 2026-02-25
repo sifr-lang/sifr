@@ -1,14 +1,12 @@
-# expect-stdout: b32encode len > 0 = true
-# expect-stdout: b32decode = hello
 
 from sifr.base64 import b32encode, b32decode
 
 def main():
     encoded: str = b32encode("hello")
-    print("b32encode len > 0 = " + str(len(encoded) > 0))
+    assert str("b32encode len > 0 = " + str(len(encoded) > 0)) == 'b32encode len > 0 = true'
 
     try:
         decoded: str = b32decode(encoded)
-        print("b32decode = " + decoded)
+        assert str("b32decode = " + decoded) == 'b32decode = hello'
     except ParseError as e:
-        print("b32decode error: " + e.message)
+        _ = str("b32decode error: " + e.message)

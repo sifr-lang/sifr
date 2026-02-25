@@ -1,16 +1,13 @@
-# expect-stdout: before: 3
-# expect-stdout: after del: 2
-# expect-stdout: bob not found
 
 def main():
     # Del from dict
     ages: dict[str, int] = {"alice": 25, "bob": 30, "charlie": 35}
-    print(f"before: {len(ages)}")
+    assert str(f"before: {len(ages)}") == 'before: 3'
     del ages["bob"]
-    print(f"after del: {len(ages)}")
+    assert str(f"after del: {len(ages)}") == 'after del: 2'
 
     missing: int | None = ages["bob"]
     if missing is not None:
-        print(f"bob is {missing}")
+        assert str(f"bob is {missing}") == 'bob not found'
     else:
-        print("bob not found")
+        _ = str("bob not found")

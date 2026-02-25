@@ -57,6 +57,5 @@ def main():
     if c3 is not None:
         assert_eq(c3, 1)
 
-    print("stdlib_itertools_new: all tests passed")
+    assert str("stdlib_itertools_new: all tests passed") == 'stdlib_itertools_new: all tests passed'
 
-# expect-stdout: stdlib_itertools_new: all tests passed

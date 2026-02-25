@@ -1,21 +1,17 @@
-# expect-stdout: 3
-# expect-stdout: 42
-# expect-stdout: hello
-# expect-stdout: true
 
 def main():
     # int(float) -> int (truncation)
     x: int = int(3.7)
-    print(x)
+    assert str(x) == '3'
 
     # float(int) -> float
     y: float = float(42)
-    print(y)
+    assert str(y) == '42'
 
     # str(x) for any type
     s: str = str(42)
-    print("hello")
+    assert str("hello") == 'hello'
 
     # bool(x) for any type
     b: bool = bool(1)
-    print(b)
+    assert str(b) == 'true'

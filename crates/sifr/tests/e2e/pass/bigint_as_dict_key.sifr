@@ -1,9 +1,6 @@
 def main():
     d: dict[bigint, str] = {bigint(1): "one", bigint(2): "two", bigint(3): "three"}
-    print(len(d))
-    print(d[bigint(1)])
-    print(d[bigint(3)])
+    assert str(len(d)) == '3'
+    assert str(d[bigint(1)]) == 'one'
+    assert str(d[bigint(3)]) == 'three'
 
-# expect-stdout: 3
-# expect-stdout: one
-# expect-stdout: three

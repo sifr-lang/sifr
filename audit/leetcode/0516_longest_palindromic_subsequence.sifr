@@ -61,9 +61,7 @@ def longestCommonSubsequence(s1: str, s2: str) -> int:
     return dp[N][M]
 
 def main():
-    print(longestPalindromeSubseq("bbbab"))
-    print(longestPalindromeSubseq("cbbd"))
+    assert str(longestPalindromeSubseq("bbbab")) == '4'
+    assert str(longestPalindromeSubseq("cbbd")) == '2'
 
-# expect-stdout: 4
-# expect-stdout: 2
 

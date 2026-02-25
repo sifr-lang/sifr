@@ -1,5 +1,3 @@
-# expect-stdout: write ok
-# expect-stdout: verify ok
 
 from sifr.io import read_text
 
@@ -11,9 +9,9 @@ def main():
         f.close()
         content: str = read_text(path)
         if content == "test content":
-            print("write ok")
+            assert str("write ok") == 'write ok'
         else:
-            print("write mismatch: " + content)
-        print("verify ok")
+            assert str("write mismatch: " + content) == 'verify ok'
+        _ = str("verify ok")
     except IOError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

@@ -16,9 +16,7 @@ def characterReplacement(s: str, k: int) -> int:
     return (r - l + 1)
 
 def main():
-    print(characterReplacement("ABAB", 2))
-    print(characterReplacement("AABABBA", 1))
+    assert str(characterReplacement("ABAB", 2)) == '4'
+    assert str(characterReplacement("AABABBA", 1)) == '4'
 
-# expect-stdout: 4
-# expect-stdout: 4
 

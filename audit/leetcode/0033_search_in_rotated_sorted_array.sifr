@@ -23,11 +23,8 @@ def search(nums: list[int], target: int) -> int:
     return -1
 
 def main():
-    print(search([4,5,6,7,0,1,2], 0))
-    print(search([4,5,6,7,0,1,2], 3))
-    print(search([1], 0))
+    assert str(search([4,5,6,7,0,1,2], 0)) == '4'
+    assert str(search([4,5,6,7,0,1,2], 3)) == '-1'
+    assert str(search([1], 0)) == '-1'
 
-# expect-stdout: 4
-# expect-stdout: -1
-# expect-stdout: -1
 

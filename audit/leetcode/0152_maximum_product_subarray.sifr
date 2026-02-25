@@ -24,12 +24,8 @@ def maxProduct(nums: list[int]) -> int:
     return result
 
 def main():
-    print(maxProduct([2, 3, -2, 4]))
-    print(maxProduct([-2, 0, -1]))
-    print(maxProduct([-2, 3, -4]))
-    print(maxProduct([2, -5, -2, -4, 3]))
+    assert str(maxProduct([2, 3, -2, 4])) == '6'
+    assert str(maxProduct([-2, 0, -1])) == '0'
+    assert str(maxProduct([-2, 3, -4])) == '24'
+    assert str(maxProduct([2, -5, -2, -4, 3])) == '24'
 
-# expect-stdout: 6
-# expect-stdout: 0
-# expect-stdout: 24
-# expect-stdout: 24

@@ -1,11 +1,9 @@
-# expect-stdout: pid > 0 = true
-# expect-stdout: cpu_count >= 1 = true
 
 from sifr.os import getpid, cpu_count
 
 def main():
     pid: int = getpid()
-    print("pid > 0 = " + str(pid > 0))
+    assert str("pid > 0 = " + str(pid > 0)) == 'pid > 0 = true'
 
     cpus: int = cpu_count()
-    print("cpu_count >= 1 = " + str(cpus >= 1))
+    assert str("cpu_count >= 1 = " + str(cpus >= 1)) == 'cpu_count >= 1 = true'

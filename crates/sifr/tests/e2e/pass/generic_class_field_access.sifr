@@ -1,5 +1,3 @@
-# expect-stdout: 42
-# expect-stdout: hello
 
 class Box[T]:
     value: T
@@ -9,6 +7,6 @@ class Box[T]:
 
 def main():
     b1: Box[int] = Box(42)
-    print(b1.value)
+    assert str(b1.value) == '42'
     b2: Box[str] = Box("hello")
-    print(b2.value)
+    assert str(b2.value) == 'hello'

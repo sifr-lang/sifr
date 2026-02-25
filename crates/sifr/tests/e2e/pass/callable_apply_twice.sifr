@@ -1,6 +1,4 @@
 # Test: Callable used in apply_twice pattern
-# expect-stdout: 7
-# expect-stdout: 81
 
 from typing import Callable
 
@@ -14,5 +12,5 @@ def square(x: int) -> int:
     return x * x
 
 def main():
-    print(apply_twice(add_one, 5))
-    print(apply_twice(square, 3))
+    assert str(apply_twice(add_one, 5)) == '7'
+    assert str(apply_twice(square, 3)) == '81'

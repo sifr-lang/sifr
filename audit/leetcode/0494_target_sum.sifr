@@ -17,7 +17,6 @@ def findTargetSumWays(nums: list[int], target: int) -> int:
     return backtrack(0, 0)
 
 def main():
-    print(findTargetSumWays([1,1,1,1,1], 3))
+    assert str(findTargetSumWays([1,1,1,1,1], 3)) == '5'
 
-# expect-stdout: 5
 

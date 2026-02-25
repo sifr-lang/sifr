@@ -1,4 +1,3 @@
-# expect-stdout: 1
 # Tests self-referential TreeNode class with Box<T>
 
 class TreeNode:
@@ -15,4 +14,4 @@ def main():
     left: TreeNode = TreeNode(2, None, None)
     right: TreeNode = TreeNode(3, None, None)
     root: TreeNode = TreeNode(1, left, right)
-    print(root.val)
+    assert str(root.val) == '1'

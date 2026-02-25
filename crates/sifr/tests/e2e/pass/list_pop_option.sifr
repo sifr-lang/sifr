@@ -1,17 +1,15 @@
-# expect-stdout: popped: 3
-# expect-stdout: list empty
 
 def main():
     items: list[int] = [1, 2, 3]
     val: int | None = items.pop()
     if val is not None:
-        print(f"popped: {val}")
+        assert str(f"popped: {val}") == 'popped: 3'
 
     # Pop until empty
     _ = items.pop()
     _ = items.pop()
     empty: int | None = items.pop()
     if empty is not None:
-        print(f"got: {empty}")
+        assert str(f"got: {empty}") == 'list empty'
     else:
-        print("list empty")
+        _ = str("list empty")

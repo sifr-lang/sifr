@@ -9,6 +9,5 @@ def main():
     parts: list[str] = ["hello", " ", "world"]
     result: str = reduce(concat, parts, "")
     assert_eq(result, "hello world")
-    print("generic_reduce_str: passed")
+    assert str("generic_reduce_str: passed") == 'generic_reduce_str: passed'
 
-# expect-stdout: generic_reduce_str: passed

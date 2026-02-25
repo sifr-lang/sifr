@@ -1,6 +1,5 @@
 # F-string with expressions
-# expect-stdout: 2 + 3 = 5
 def main():
     a: int = 2
     b: int = 3
-    print(f"{a} + {b} = {a + b}")
+    assert str(f"{a} + {b} = {a + b}") == '2 + 3 = 5'

@@ -19,9 +19,7 @@ def plusOne(digits: list[int]) -> list[int]:
     return digits[::-1]
 
 def main():
-    print(plusOne([1,2,3]))
-    print(plusOne([9]))
+    assert str(plusOne([1,2,3])) == '[1, 2, 4]'
+    assert str(plusOne([9])) == '[1, 0]'
 
-# expect-stdout: [1, 2, 4]
-# expect-stdout: [1, 0]
 

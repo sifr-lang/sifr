@@ -1,6 +1,5 @@
-# expect-stdout: 20
 def main():
     nums: list[int] = [10, 20, 30]
     val: int | None = nums[1]
     if val is not None:
-        print(val)
+        assert str(val) == '20'

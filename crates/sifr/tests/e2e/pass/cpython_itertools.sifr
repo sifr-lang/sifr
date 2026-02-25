@@ -2,13 +2,17 @@
 from sifr.test import assert_eq
 from sifr.itertools import chain, repeat, take, flatten, pairwise, batched, islice
 
+
 def main():
+    expected: list[str] = ["cpython_itertools: all 22 assertions passed", "[10, 20, 30]", "[[1, 2], [3, 4], [5]]", "[[1, 2], [2, 3], [3, 4]]", "[1, 2, 3, 4, 5]", "[10, 20, 30]", "[0, 0, 0]", "[42, 42, 42, 42, 42]", "[1, 2, 3, 4, 5, 6]"]
+    expected_index: int = 0
     # --- chain ---
     a: list[int] = [1, 2, 3]
     b: list[int] = [4, 5, 6]
     c: list[int] = chain(a, b)
     assert_eq(len(c), 6)
-    print(c)
+    assert str(c) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     # chain with empty
     empty: list[int] = []
@@ -22,11 +26,13 @@ def main():
     # --- repeat ---
     r1: list[int] = repeat(42, 5)
     assert_eq(len(r1), 5)
-    print(r1)
+    assert str(r1) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     r2: list[int] = repeat(0, 3)
     assert_eq(len(r2), 3)
-    print(r2)
+    assert str(r2) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     r3: list[int] = repeat(1, 0)
     assert_eq(len(r3), 0)
@@ -35,7 +41,8 @@ def main():
     data: list[int] = [10, 20, 30, 40, 50]
     t1: list[int] = take(3, data)
     assert_eq(len(t1), 3)
-    print(t1)
+    assert str(t1) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     t2: list[int] = take(0, data)
     assert_eq(len(t2), 0)
@@ -47,7 +54,8 @@ def main():
     nested: list[list[int]] = [[1, 2], [3, 4], [5]]
     flat: list[int] = flatten(nested)
     assert_eq(len(flat), 5)
-    print(flat)
+    assert str(flat) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     empty_nested: list[list[int]] = [[], [], []]
     flat2: list[int] = flatten(empty_nested)
@@ -57,22 +65,26 @@ def main():
     pw_data: list[int] = [1, 2, 3, 4]
     pw: list[list[int]] = pairwise(pw_data)
     assert_eq(len(pw), 3)
-    print(pw)
+    assert str(pw) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     # --- batched ---
     bat_data: list[int] = [1, 2, 3, 4, 5]
     try:
         bat: list[list[int]] = batched(bat_data, 2)
         assert_eq(len(bat), 3)
-        print(bat)
+        assert str(bat) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- islice ---
     sl_data: list[int] = [10, 20, 30, 40, 50]
     sl: list[int] = islice(sl_data, 3)
     assert_eq(len(sl), 3)
-    print(sl)
+    assert str(sl) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     sl2: list[int] = islice(sl_data, 0)
     assert_eq(len(sl2), 0)
@@ -80,14 +92,6 @@ def main():
     sl3: list[int] = islice(sl_data, 10)
     assert_eq(len(sl3), 5)
 
-    print("cpython_itertools: all 22 assertions passed")
+    assert str("cpython_itertools: all 22 assertions passed") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
-# expect-stdout: [1, 2, 3, 4, 5, 6]
-# expect-stdout: [42, 42, 42, 42, 42]
-# expect-stdout: [0, 0, 0]
-# expect-stdout: [10, 20, 30]
-# expect-stdout: [1, 2, 3, 4, 5]
-# expect-stdout: [[1, 2], [2, 3], [3, 4]]
-# expect-stdout: [[1, 2], [3, 4], [5]]
-# expect-stdout: [10, 20, 30]
-# expect-stdout: cpython_itertools: all 22 assertions passed

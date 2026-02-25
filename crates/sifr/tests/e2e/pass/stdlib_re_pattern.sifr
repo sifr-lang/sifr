@@ -1,38 +1,46 @@
-# expect-stdout: match = true
-# expect-stdout: search result len > 0 = true
-# expect-stdout: findall len = 2
-# expect-stdout: fullmatch = true
-# expect-stdout: pattern = \d+
 
 from sifr.re import compile, fullmatch, Pattern
 
+
 def main():
+    expected: list[str] = ["pattern = \\d+", "fullmatch = true", "findall len = 2", "search result len > 0 = true", "match = true"]
+    expected_index: int = 0
     p: Pattern = compile("\\d+")
     try:
         m: bool = p.is_match("123abc")
-        print("match = " + str(m))
+        assert str("match = " + str(m)) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except RegexError as e:
-        print("match error: " + e.message)
+        assert str("match error: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         s: str | None = p.search("hello 42 world")
         if s is not None:
-            print("search result len > 0 = " + str(len(s) > 0))
+            assert str("search result len > 0 = " + str(len(s) > 0)) == expected[len(expected) - expected_index - 1]
+            expected_index = expected_index + 1
         else:
-            print("search result len > 0 = false")
+            assert str("search result len > 0 = false") == expected[len(expected) - expected_index - 1]
+            expected_index = expected_index + 1
     except RegexError as e:
-        print("search error: " + e.message)
+        assert str("search error: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         all_nums: list[str] = p.findall("hello 42 world 99")
-        print("findall len = " + str(len(all_nums)))
+        assert str("findall len = " + str(len(all_nums))) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except RegexError as e:
-        print("findall error: " + e.message)
+        assert str("findall error: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         fm: bool = fullmatch("\\d+", "12345")
-        print("fullmatch = " + str(fm))
+        assert str("fullmatch = " + str(fm)) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except RegexError as e:
-        print("fullmatch error: " + e.message)
+        assert str("fullmatch error: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
-    print("pattern = " + p.pattern())
+    assert str("pattern = " + p.pattern()) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1

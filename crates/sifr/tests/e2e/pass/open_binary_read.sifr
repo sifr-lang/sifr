@@ -1,5 +1,3 @@
-# expect-stdout: bytes count > 0 = true
-# expect-stdout: binary read ok
 
 from sifr.io import write_text
 
@@ -10,7 +8,7 @@ def main():
         f = open(path, "rb")
         data: list[int] = f.read_bytes()
         f.close()
-        print("bytes count > 0 = " + str(len(data) > 0))
-        print("binary read ok")
+        assert str("bytes count > 0 = " + str(len(data) > 0)) == 'bytes count > 0 = true'
+        assert str("binary read ok") == 'binary read ok'
     except IOError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

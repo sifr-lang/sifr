@@ -1,28 +1,17 @@
 # Test new sifr.math functions
-# expect-stdout: factorial(5) = 120
-# expect-stdout: factorial(0) = 1
-# expect-stdout: gcd(12, 8) = 4
-# expect-stdout: lcm(4, 6) = 12
-# expect-stdout: comb(5, 2) = 10
-# expect-stdout: perm(5, 2) = 20
-# expect-stdout: prod = 120
-# expect-stdout: isclose = true
-# expect-stdout: exp(0) = 1
-# expect-stdout: fabs(-3.14) = 3.14
-# expect-stdout: isfinite = true
 
 from sifr.math import factorial, gcd, lcm, comb, perm, isclose, prod, exp, fabs, isfinite
 
 def main():
-    print("factorial(5) = " + str(factorial(5)))
-    print("factorial(0) = " + str(factorial(0)))
-    print("gcd(12, 8) = " + str(gcd(12, 8)))
-    print("lcm(4, 6) = " + str(lcm(4, 6)))
-    print("comb(5, 2) = " + str(comb(5, 2)))
-    print("perm(5, 2) = " + str(perm(5, 2)))
+    assert str("factorial(5) = " + str(factorial(5))) == 'factorial(5) = 120'
+    assert str("factorial(0) = " + str(factorial(0))) == 'factorial(0) = 1'
+    assert str("gcd(12, 8) = " + str(gcd(12, 8))) == 'gcd(12, 8) = 4'
+    assert str("lcm(4, 6) = " + str(lcm(4, 6))) == 'lcm(4, 6) = 12'
+    assert str("comb(5, 2) = " + str(comb(5, 2))) == 'comb(5, 2) = 10'
+    assert str("perm(5, 2) = " + str(perm(5, 2))) == 'perm(5, 2) = 20'
     nums: list[int] = [1, 2, 3, 4, 5]
-    print("prod = " + str(prod(nums)))
-    print("isclose = " + str(isclose(1.0, 1.0000001, 0.001, 0.0)))
-    print("exp(0) = " + str(exp(0.0)))
-    print("fabs(-3.14) = " + str(fabs(-3.14)))
-    print("isfinite = " + str(isfinite(1.0)))
+    assert str("prod = " + str(prod(nums))) == 'prod = 120'
+    assert str("isclose = " + str(isclose(1.0, 1.0000001, 0.001, 0.0))) == 'isclose = true'
+    assert str("exp(0) = " + str(exp(0.0))) == 'exp(0) = 1'
+    assert str("fabs(-3.14) = " + str(fabs(-3.14))) == 'fabs(-3.14) = 3.14'
+    assert str("isfinite = " + str(isfinite(1.0))) == 'isfinite = true'

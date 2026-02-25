@@ -1,7 +1,6 @@
-# expect-stdout: [10, 2, 3]
 # Tests list subscript assignment: list[i] = val
 
 def main():
     nums: list[int] = [1, 2, 3]
     nums[0] = 10
-    print(nums)
+    assert str(nums) == '[10, 2, 3]'

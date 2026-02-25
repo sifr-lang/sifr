@@ -1,5 +1,3 @@
-# expect-stdout: last: 5
-# expect-stdout: second last: 4
 
 def main():
     items: list[int] = [1, 2, 3, 4, 5]
@@ -7,8 +5,8 @@ def main():
     # Negative index returns Some
     last: int | None = items[-1]
     if last is not None:
-        print(f"last: {last}")
+        assert str(f"last: {last}") == 'last: 5'
 
     second_last: int | None = items[-2]
     if second_last is not None:
-        print(f"second last: {second_last}")
+        assert str(f"second last: {second_last}") == 'second last: 4'

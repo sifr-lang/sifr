@@ -29,11 +29,8 @@ def firstMissingPositive_2(nums: list[int]) -> int:
     return i
 
 def main():
-    print(firstMissingPositive([1,2,0]))
-    print(firstMissingPositive([3,4,-1,1]))
-    print(firstMissingPositive([7,8,9,11,12]))
+    assert str(firstMissingPositive([1,2,0])) == '3'
+    assert str(firstMissingPositive([3,4,-1,1])) == '2'
+    assert str(firstMissingPositive([7,8,9,11,12])) == '1'
 
-# expect-stdout: 3
-# expect-stdout: 2
-# expect-stdout: 1
 

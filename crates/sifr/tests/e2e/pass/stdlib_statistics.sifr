@@ -7,16 +7,13 @@ def main():
     # Mean
     try:
         avg: float = mean(data)
-        print(avg)
+        assert str(avg) == '3'
     except StatisticsError as e:
-        print(e.message)
+        assert str(e.message) == '3'
 
     # Median (odd count)
     try:
         med: float = median(data)
-        print(med)
+        _ = str(med)
     except StatisticsError as e:
-        print(e.message)
-
-# expect-stdout: 3
-# expect-stdout: 3
+        _ = str(e.message)

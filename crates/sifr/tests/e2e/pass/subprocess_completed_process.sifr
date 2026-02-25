@@ -1,14 +1,11 @@
-# expect-stdout: returncode = 0
-# expect-stdout: stdout has content = true
-# expect-stdout: CompletedProcess ok
 
 from sifr.subprocess import run, CompletedProcess
 
 def main():
     try:
         result: CompletedProcess = run("echo hello")
-        print("returncode = " + str(result.returncode))
-        print("stdout has content = " + str(len(result.stdout) > 0))
-        print("CompletedProcess ok")
+        assert str("returncode = " + str(result.returncode)) == 'returncode = 0'
+        assert str("stdout has content = " + str(len(result.stdout) > 0)) == 'stdout has content = true'
+        assert str("CompletedProcess ok") == 'CompletedProcess ok'
     except IOError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

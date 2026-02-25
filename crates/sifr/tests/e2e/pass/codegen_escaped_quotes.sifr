@@ -1,6 +1,5 @@
-# expect-stdout: She said "hello"
 # Tests that escaped quotes in strings work correctly
 
 def main():
     msg: str = "She said \"hello\""
-    print(msg)
+    assert str(msg) == 'She said "hello"'

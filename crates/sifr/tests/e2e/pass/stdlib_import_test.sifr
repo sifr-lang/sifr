@@ -16,6 +16,5 @@ def main():
     # Verify sifr.string resolves with module-level constants
     assert_eq(len(ascii_lowercase), 26)
 
-    print("stdlib imports resolved successfully")
+    assert str("stdlib imports resolved successfully") == 'stdlib imports resolved successfully'
 
-# expect-stdout: stdlib imports resolved successfully

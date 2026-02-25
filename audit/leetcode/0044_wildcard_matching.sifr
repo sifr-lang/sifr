@@ -12,11 +12,8 @@ def isMatch(s, p):
     return dp[0][0]
 
 def main():
-    print(isMatch("aa", "a"))
-    print(isMatch("aa", "*"))
-    print(isMatch("cb", "?a"))
+    assert str(isMatch("aa", "a")) == 'false'
+    assert str(isMatch("aa", "*")) == 'true'
+    assert str(isMatch("cb", "?a")) == 'false'
 
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: false
 

@@ -1,4 +1,3 @@
-# expect-stdout: 1
 # Tests self-referential ListNode class with Box<T>
 
 class ListNode:
@@ -12,4 +11,4 @@ class ListNode:
 def main():
     node2: ListNode = ListNode(2, None)
     node1: ListNode = ListNode(1, node2)
-    print(node1.val)
+    assert str(node1.val) == '1'

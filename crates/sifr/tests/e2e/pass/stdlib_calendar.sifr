@@ -1,20 +1,15 @@
-# expect-stdout: 2000 is leap = true
-# expect-stdout: 1900 is leap = false
-# expect-stdout: 2024 is leap = true
-# expect-stdout: weekday 2024-1-1 = 0
-# expect-stdout: monthrange 2024-2 days = 29
 
 from sifr.calendar import isleap, weekday, monthrange
 
 def main():
-    print("2000 is leap = " + str(isleap(2000)))
-    print("1900 is leap = " + str(isleap(1900)))
-    print("2024 is leap = " + str(isleap(2024)))
+    assert str("2000 is leap = " + str(isleap(2000))) == '2000 is leap = true'
+    assert str("1900 is leap = " + str(isleap(1900))) == '1900 is leap = false'
+    assert str("2024 is leap = " + str(isleap(2024))) == '2024 is leap = true'
 
     # 2024-01-01 is a Monday (0)
     wd: int = weekday(2024, 1, 1)
-    print("weekday 2024-1-1 = " + str(wd))
+    assert str("weekday 2024-1-1 = " + str(wd)) == 'weekday 2024-1-1 = 0'
 
     # February 2024 has 29 days (leap year)
     mr: list[int] = monthrange(2024, 2)
-    print("monthrange 2024-2 days = " + str(mr[1]))
+    assert str("monthrange 2024-2 days = " + str(mr[1])) == 'monthrange 2024-2 days = 29'

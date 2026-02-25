@@ -1,6 +1,5 @@
 # Test: set comprehension
-# expect-stdout: 5
 
 def main():
     s: set[int] = {x * x for x in range(5)}
-    print(len(s))
+    assert str(len(s)) == '5'

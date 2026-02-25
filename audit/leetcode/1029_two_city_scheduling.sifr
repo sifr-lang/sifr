@@ -14,7 +14,6 @@ def twoCitySchedCost(costs: list[list[int]]) -> int:
     return res
 
 def main():
-    print(twoCitySchedCost([[10,20],[30,200],[400,50],[30,20]]))
+    assert str(twoCitySchedCost([[10,20],[30,200],[400,50],[30,20]])) == '110'
 
-# expect-stdout: 110
 

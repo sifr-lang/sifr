@@ -1,6 +1,5 @@
-# expect-stdout: 25
 def main():
     ages: dict[str, int] = {"alice": 25, "bob": 30}
     val: int | None = ages["alice"]
     if val is not None:
-        print(val)
+        assert str(val) == '25'

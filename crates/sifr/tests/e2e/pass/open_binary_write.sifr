@@ -1,5 +1,3 @@
-# expect-stdout: bytes verified
-# expect-stdout: binary write ok
 
 from sifr.io import read_text
 
@@ -12,9 +10,9 @@ def main():
         f.close()
         content: str = read_text(path)
         if content == "hello":
-            print("bytes verified")
+            assert str("bytes verified") == 'bytes verified'
         else:
-            print("mismatch: " + content)
-        print("binary write ok")
+            assert str("mismatch: " + content) == 'binary write ok'
+        _ = str("binary write ok")
     except IOError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

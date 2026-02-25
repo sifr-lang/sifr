@@ -12,9 +12,7 @@ def isIsomorphic(s: str, t: str) -> bool:
     return True
 
 def main():
-    print(isIsomorphic("egg", "add"))
-    print(isIsomorphic("foo", "bar"))
+    assert str(isIsomorphic("egg", "add")) == 'true'
+    assert str(isIsomorphic("foo", "bar")) == 'false'
 
-# expect-stdout: true
-# expect-stdout: false
 

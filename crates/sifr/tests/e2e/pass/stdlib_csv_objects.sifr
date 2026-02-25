@@ -1,8 +1,3 @@
-# expect-stdout: rows len = 2
-# expect-stdout: row0[0] = alice
-# expect-stdout: writer output = alice,30
-# expect-stdout: dict reader headers = name
-# expect-stdout: dict writer output = name,age
 
 from sifr.csv import reader, writer, DictReader, DictWriter
 
@@ -11,7 +6,7 @@ def main():
     text: str = "alice,30\nbob,25"
     r: reader = reader(text)
     all_rows: list[list[str]] = r.rows()
-    print("rows len = " + str(len(all_rows)))
+    assert str("rows len = " + str(len(all_rows))) == 'rows len = 2'
     first_row: list[str] = []
     for i, row in enumerate(all_rows):
         if i == 0:
@@ -20,14 +15,14 @@ def main():
     for i, v in enumerate(first_row):
         if i == 0:
             first_val = v
-    print("row0[0] = " + first_val)
+    assert str("row0[0] = " + first_val) == 'row0[0] = alice'
 
     # Test writer
     w: writer = writer()
     row1: list[str] = ["alice", "30"]
     w.writerow(row1)
     output: str = w.getvalue()
-    print("writer output = " + output)
+    assert str("writer output = " + output) == 'writer output = alice,30'
 
     # Test DictReader
     dict_text: str = "name,age\nalice,30\nbob,25"
@@ -37,10 +32,10 @@ def main():
     for i, h in enumerate(headers):
         if i == 0:
             first_header = h
-    print("dict reader headers = " + first_header)
+    assert str("dict reader headers = " + first_header) == 'dict reader headers = name'
 
     # Test DictWriter
     dw: DictWriter = DictWriter(["name", "age"])
     dw.writeheader()
     dw_output: str = dw.getvalue()
-    print("dict writer output = " + dw_output)
+    assert str("dict writer output = " + dw_output) == 'dict writer output = name,age'

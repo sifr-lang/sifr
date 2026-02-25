@@ -1,10 +1,8 @@
-# expect-stdout: Alice
-# expect-stdout: Name: Bob
 def display(own name: str, *, verbose: bool = False) -> str:
     if verbose:
         return f"Name: {name}"
     return name
 
 def main():
-    print(display("Alice"))
-    print(display("Bob", verbose=True))
+    assert str(display("Alice")) == 'Alice'
+    assert str(display("Bob", verbose=True)) == 'Name: Bob'

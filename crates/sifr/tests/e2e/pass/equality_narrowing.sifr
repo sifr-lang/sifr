@@ -1,5 +1,4 @@
 # Equality-based narrowing for literal types
-# expect-stdout: circle area
 
 def describe_shape(own shape: str) -> str:
     if shape == "circle":
@@ -9,4 +8,4 @@ def describe_shape(own shape: str) -> str:
 
 def main():
     result: str = describe_shape("circle")
-    print(result)
+    assert str(result) == 'circle area'

@@ -1,5 +1,3 @@
-# expect-stdout: glob found files = true
-# expect-stdout: rglob found files = true
 
 from sifr.pathlib import Path
 from sifr.os import mkdir
@@ -13,8 +11,8 @@ def main():
         _3: None = write_text(dir_path + "/test2.txt", "b")
         p: Path = Path(dir_path)
         files: list[str] = p.glob("*.txt")
-        print("glob found files = " + str(len(files) > 0))
+        assert str("glob found files = " + str(len(files) > 0)) == 'glob found files = true'
         all_files: list[str] = p.rglob("*.txt")
-        print("rglob found files = " + str(len(all_files) > 0))
+        assert str("rglob found files = " + str(len(all_files) > 0)) == 'rglob found files = true'
     except IOError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

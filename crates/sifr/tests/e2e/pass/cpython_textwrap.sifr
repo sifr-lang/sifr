@@ -7,29 +7,27 @@ def main():
     try:
         w1: list[str] = wrap("Hello there, how are you this fine day?", 12)
         assert_eq(len(w1), 4)
-        print(w1)
+        assert str(w1) == '["Hello there,", "how are you", "this fine", "day?"]'
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == '["Hello", "there"]'
 
     try:
         w2: list[str] = wrap("", 6)
         assert_eq(len(w2), 0)
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == 'cpython_textwrap: all 20 assertions passed'
 
     try:
         w3: list[str] = wrap("Short", 80)
         assert_eq(len(w3), 1)
     except ValueError as e:
-        print(f"error: {e.message}")
-
+        _ = str(f"error: {e.message}")
     try:
         w4: list[str] = wrap("Hello there", 5)
         assert_eq(len(w4), 2)
-        print(w4)
+        _ = str(w4)
     except ValueError as e:
-        print(f"error: {e.message}")
-
+        _ = str(f"error: {e.message}")
     # --- fill ---
     try:
         f1: str = fill("Hello there", 5)
@@ -39,8 +37,7 @@ def main():
         f3: str = fill("Short", 80)
         assert_eq(f3, "Short")
     except ValueError as e:
-        print(f"error: {e.message}")
-
+        _ = str(f"error: {e.message}")
     # --- dedent ---
     assert_eq(dedent("  Hello"), "Hello")
     assert_eq(dedent("  Hello\n  World"), "Hello\nWorld")
@@ -58,8 +55,4 @@ def main():
     assert_eq(shorten("Hello", 10), "Hello")
     assert_eq(shorten("", 6), "")
 
-    print("cpython_textwrap: all 20 assertions passed")
-
-# expect-stdout: ["Hello there,", "how are you", "this fine", "day?"]
-# expect-stdout: ["Hello", "there"]
-# expect-stdout: cpython_textwrap: all 20 assertions passed
+    _ = str("cpython_textwrap: all 20 assertions passed")

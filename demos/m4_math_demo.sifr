@@ -3,38 +3,38 @@ from sifr.math import cbrt, exp2, fma, log_base, isclose, sumprod, isnormal, iss
 
 def main():
     print(trunc(cbrt(27.0)))
+    assert str(trunc(cbrt(27.0))) == "3"
     print(trunc(exp2(3.0)))
+    assert str(trunc(exp2(3.0))) == "8"
     print(trunc(fma(2.0, 3.0, 4.0)))
+    assert str(trunc(fma(2.0, 3.0, 4.0))) == "10"
     print(trunc(log_base(32.0, 2.0)))
+    assert str(trunc(log_base(32.0, 2.0))) == "5"
     print(isclose(1e-9, 0.0, 0.9, 1e-8))
+    assert str(isclose(1e-9, 0.0, 0.9, 1e-8)) == "true"
 
     p: list[float] = [1.0, 2.0, 3.0]
     q: list[float] = [4.0, 5.0, 6.0]
     print(trunc(sumprod(p, q)))
+    assert str(trunc(sumprod(p, q))) == "32"
 
     tiny_subnormal: float = 2.2250738585072014e-308 / 2.0
     print(isnormal(1.0))
+    assert str(isnormal(1.0)) == "true"
     print(issubnormal(tiny_subnormal))
+    assert str(issubnormal(tiny_subnormal)) == "true"
     print(remainder(5.5, 2.0) < 0.0)
+    assert str(remainder(5.5, 2.0) < 0.0) == "true"
     print(isnan(dist([1.0, 2.0], [1.0])))
+    assert str(isnan(dist([1.0, 2.0], [1.0]))) == "true"
     print(trunc(fsum([1e100, 1.0, -1e100])))
+    assert str(trunc(fsum([1e100, 1.0, -1e100]))) == "1"
     print(nextafter(1.0, inf) > 1.0)
+    assert str(nextafter(1.0, inf) > 1.0) == "true"
     print(ulp(1.0) > 0.0)
+    assert str(ulp(1.0) > 0.0) == "true"
     print(frexp_exponent(8.0))
+    assert str(frexp_exponent(8.0)) == "4"
     print(modf_fractional(3.7) > 0.69)
+    assert str(modf_fractional(3.7) > 0.69) == "true"
 
-# expect-stdout: 3
-# expect-stdout: 8
-# expect-stdout: 10
-# expect-stdout: 5
-# expect-stdout: true
-# expect-stdout: 32
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: 1
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: 4
-# expect-stdout: true

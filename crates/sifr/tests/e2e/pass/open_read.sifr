@@ -1,5 +1,3 @@
-# expect-stdout: content = hello world
-# expect-stdout: read ok
 
 from sifr.io import write_text
 
@@ -10,7 +8,7 @@ def main():
         f = open(path, "r")
         content: str = f.read()
         f.close()
-        print("content = " + content)
-        print("read ok")
+        assert str("content = " + content) == 'content = hello world'
+        assert str("read ok") == 'read ok'
     except IOError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

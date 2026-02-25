@@ -33,7 +33,6 @@ def sortArray(nums: list[int]) -> list[int]:
     return mergeSort(nums, 0, len(nums) - 1)
 
 def main():
-    print(sortArray([5,2,3,1]))
+    assert str(sortArray([5,2,3,1])) == '[1, 2, 3, 5]'
 
-# expect-stdout: [1, 2, 3, 5]
 

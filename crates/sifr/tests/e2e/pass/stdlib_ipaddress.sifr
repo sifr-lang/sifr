@@ -3,22 +3,15 @@ from sifr.ipaddress import is_valid_ipv4, is_private, is_loopback
 
 def main():
     # valid IPv4
-    print(is_valid_ipv4("192.168.1.1"))
-    print(is_valid_ipv4("256.1.1.1"))
-    print(is_valid_ipv4("not.an.ip"))
+    assert str(is_valid_ipv4("192.168.1.1")) == 'true'
+    assert str(is_valid_ipv4("256.1.1.1")) == 'false'
+    assert str(is_valid_ipv4("not.an.ip")) == 'false'
 
     # private addresses
-    print(is_private("192.168.1.1"))
-    print(is_private("8.8.8.8"))
+    assert str(is_private("192.168.1.1")) == 'true'
+    assert str(is_private("8.8.8.8")) == 'false'
 
     # loopback
-    print(is_loopback("127.0.0.1"))
-    print(is_loopback("192.168.1.1"))
+    assert str(is_loopback("127.0.0.1")) == 'true'
+    assert str(is_loopback("192.168.1.1")) == 'false'
 
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: false

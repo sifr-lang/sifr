@@ -18,7 +18,6 @@ def permute(nums: list[int]) -> list[list[int]]:
     return res
 
 def main():
-    print(permute([1,2,3]))
+    assert str(permute([1,2,3])) == '[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]'
 
-# expect-stdout: [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]
 

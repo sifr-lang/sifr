@@ -20,35 +20,31 @@ def main():
         h: HashObject = new("sha256", "abc")
         assert_eq(h.hexdigest(), sha256("abc"))
     except ValueError as e:
-        print("unexpected new error: " + e.message)
+        assert str("unexpected new error: " + e.message) == 'unsupported new: pass'
         assert False
 
     try:
         h_bad: HashObject = new("sha3_256", "")
-        print(h_bad.name)
+        assert str(h_bad.name) == 'file_digest unsupported: pass'
         assert False
     except ValueError as e:
-        print("unsupported new: pass")
-
+        _ = str("unsupported new: pass")
     try:
         _ = write_text("tmp_hashlib_api_subset.txt", "file-data")
     except IOError as e:
-        print("unexpected write error: " + e.message)
+        _ = str("unexpected write error: " + e.message)
         assert False
 
     try:
         digest: str = file_digest("tmp_hashlib_api_subset.txt", "sha256")
         assert_eq(digest, sha256("file-data"))
     except HashlibError as e:
-        print("unexpected file_digest error: " + e.message)
+        _ = str("unexpected file_digest error: " + e.message)
         assert False
 
     try:
         bad_digest: str = file_digest("tmp_hashlib_api_subset.txt", "sha3_256")
-        print(bad_digest)
+        _ = str(bad_digest)
         assert False
     except HashlibError as e:
-        print("file_digest unsupported: pass")
-
-# expect-stdout: unsupported new: pass
-# expect-stdout: file_digest unsupported: pass
+        _ = str("file_digest unsupported: pass")

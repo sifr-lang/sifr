@@ -14,11 +14,8 @@ def lengthOfLongestSubstring(s: str) -> int:
     return res
 
 def main():
-    print(lengthOfLongestSubstring("abcabcbb"))
-    print(lengthOfLongestSubstring("bbbbb"))
-    print(lengthOfLongestSubstring("pwwkew"))
+    assert str(lengthOfLongestSubstring("abcabcbb")) == '3'
+    assert str(lengthOfLongestSubstring("bbbbb")) == '1'
+    assert str(lengthOfLongestSubstring("pwwkew")) == '3'
 
-# expect-stdout: 3
-# expect-stdout: 1
-# expect-stdout: 3
 

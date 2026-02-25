@@ -12,8 +12,6 @@ class Rectangle:
 
 def main():
     r: Rectangle = Rectangle(3, 4)
-    print(r.area())
-    print(r.width)
+    assert str(r.area()) == '12'
+    assert str(r.width) == '3'
 
-# expect-stdout: 12
-# expect-stdout: 3

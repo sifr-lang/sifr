@@ -1,61 +1,68 @@
 # Collection safety: all error paths return Option/Result instead of panicking
-# expect-stdout: remove missing: ok
-# expect-stdout: index found: 1
-# expect-stdout: index missing: none
-# expect-stdout: min empty: none
-# expect-stdout: max empty: none
-# expect-stdout: min ok: 1
-# expect-stdout: max ok: 5
-# expect-stdout: [1.1, 2.2, 3.3]
-# expect-stdout: list pop empty: none
+
 
 def main():
+    expected: list[str] = ["list pop empty: none", "[1.1, 2.2, 3.3]", "max ok: 5", "min ok: 1", "max empty: none", "min empty: none", "index missing: none", "index found: 1", "remove missing: ok"]
+    expected_index: int = 0
     # --- list.remove on missing element: no-op, no panic ---
     items: list[int] = [1, 2, 3]
     items.remove(99)
-    print("remove missing: ok")
+    assert str("remove missing: ok") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     # --- list.index returns Option[int] ---
     idx_found: int | None = items.index(2)
     if idx_found is not None:
-        print(f"index found: {idx_found}")
+        assert str(f"index found: {idx_found}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     idx_missing: int | None = items.index(99)
     if idx_missing is not None:
-        print(f"index missing: {idx_missing}")
+        assert str(f"index missing: {idx_missing}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     else:
-        print("index missing: none")
+        assert str("index missing: none") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- min/max on empty list returns None ---
     empty: list[int] = []
     lo: int | None = min(empty)
     hi: int | None = max(empty)
     if lo is not None:
-        print(f"min empty: {lo}")
+        assert str(f"min empty: {lo}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     else:
-        print("min empty: none")
+        assert str("min empty: none") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     if hi is not None:
-        print(f"max empty: {hi}")
+        assert str(f"max empty: {hi}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     else:
-        print("max empty: none")
+        assert str("max empty: none") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- min/max on non-empty list returns Some ---
     nums: list[int] = [3, 1, 4, 1, 5]
     lo2: int | None = min(nums)
     hi2: int | None = max(nums)
     if lo2 is not None:
-        print(f"min ok: {lo2}")
+        assert str(f"min ok: {lo2}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     if hi2 is not None:
-        print(f"max ok: {hi2}")
+        assert str(f"max ok: {hi2}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- sorted with floats uses total_cmp (no panic on NaN) ---
     floats: list[float] = [3.3, 1.1, 2.2]
-    print(sorted(floats))
+    assert str(sorted(floats)) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     # --- list.pop on empty returns None ---
     empty2: list[int] = []
     val: int | None = empty2.pop()
     if val is not None:
-        print(f"list pop empty: {val}")
+        assert str(f"list pop empty: {val}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     else:
-        print("list pop empty: none")
+        assert str("list pop empty: none") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1

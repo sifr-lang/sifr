@@ -25,7 +25,6 @@ def combinationSum2(candidates: list[int], target: int) -> list[list[int]]:
     return res
 
 def main():
-    print(combinationSum2([10,1,2,7,6,1,5], 8))
+    assert str(combinationSum2([10,1,2,7,6,1,5], 8)) == '[[1, 1, 6], [1, 2, 5], [1, 7], [2, 6]]'
 
-# expect-stdout: [[1, 1, 6], [1, 2, 5], [1, 7], [2, 6]]
 

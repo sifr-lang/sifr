@@ -5,29 +5,19 @@ def main():
     h = sha256_obj("")
     h.update("a")
     h.update("bc")
-    print(h.hexdigest() == sha256("abc"))
-    print(h.digest() == h.hexdigest())
-    print(h.name == "sha256")
-    print(h.digest_size == 32)
-    print(h.block_size == 64)
+    assert str(h.hexdigest() == sha256("abc")) == 'true'
+    assert str(h.digest() == h.hexdigest()) == 'true'
+    assert str(h.name == "sha256") == 'true'
+    assert str(h.digest_size == 32) == 'true'
+    assert str(h.block_size == 64) == 'true'
 
     c = copy_hash(h)
     c.update("x")
-    print(h.hexdigest() == sha256("abc"))
-    print(c.hexdigest() == sha256("abcx"))
+    assert str(h.hexdigest() == sha256("abc")) == 'true'
+    assert str(c.hexdigest() == sha256("abcx")) == 'true'
 
     m = md5_obj("hello")
-    print(m.hexdigest() == md5("hello"))
-    print(m.digest_size == 16)
-    print(m.block_size == 64)
+    assert str(m.hexdigest() == md5("hello")) == 'true'
+    assert str(m.digest_size == 16) == 'true'
+    assert str(m.block_size == 64) == 'true'
 
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: true

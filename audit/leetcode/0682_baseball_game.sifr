@@ -25,7 +25,6 @@ def calPoints(operations: list[str]) -> int:
     return sum(score_stack)
 
 def main():
-    print(calPoints(["5","2","C","D","+"]))
+    assert str(calPoints(["5","2","C","D","+"])) == '30'
 
-# expect-stdout: 30
 

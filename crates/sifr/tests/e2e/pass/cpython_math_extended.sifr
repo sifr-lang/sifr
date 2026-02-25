@@ -102,6 +102,5 @@ def main():
     nums4: list[int] = [10, 10]
     assert_eq(prod(nums4), 100)
 
-    print("cpython_math_extended: all 73 assertions passed")
+    assert str("cpython_math_extended: all 73 assertions passed") == 'cpython_math_extended: all 73 assertions passed'
 
-# expect-stdout: cpython_math_extended: all 73 assertions passed

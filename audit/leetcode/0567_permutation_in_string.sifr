@@ -35,9 +35,7 @@ def checkInclusion(s1: str, s2: str) -> bool:
     return matches == 26
 
 def main():
-    print(checkInclusion("ab", "eidbaooo"))
-    print(checkInclusion("ab", "eidboaoo"))
+    assert str(checkInclusion("ab", "eidbaooo")) == 'true'
+    assert str(checkInclusion("ab", "eidboaoo")) == 'false'
 
-# expect-stdout: true
-# expect-stdout: false
 

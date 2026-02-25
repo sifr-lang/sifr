@@ -6,24 +6,19 @@ def main():
 
     # parse_flag
     verbose: bool = parse_flag(args, "--output")
-    print(verbose)
+    assert str(verbose) == 'true'
 
     quiet: bool = parse_flag(args, "--quiet")
-    print(quiet)
+    assert str(quiet) == 'false'
 
     # parse_option
     output: str = parse_option(args, "--output", "default.txt")
-    print(output)
+    assert str(output) == 'file.txt'
 
     missing: str = parse_option(args, "--format", "json")
-    print(missing)
+    assert str(missing) == 'json'
 
     # parse_positional (skips --option value pairs)
     pos0: str = parse_positional(args, 0, "none")
-    print(pos0)
+    assert str(pos0) == 'input.sifr'
 
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: file.txt
-# expect-stdout: json
-# expect-stdout: input.sifr

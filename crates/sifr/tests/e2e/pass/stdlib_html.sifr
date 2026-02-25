@@ -1,12 +1,10 @@
-# expect-stdout: escaped = &lt;b&gt;Hello &amp; World&lt;/b&gt;
-# expect-stdout: unescaped = <b>Hello & World</b>
 
 from sifr.html import escape, unescape
 
 def main():
     s: str = "<b>Hello & World</b>"
     esc: str = escape(s)
-    print("escaped = " + esc)
+    assert str("escaped = " + esc) == 'escaped = &lt;b&gt;Hello &amp; World&lt;/b&gt;'
 
     unesc: str = unescape(esc)
-    print("unescaped = " + unesc)
+    assert str("unescaped = " + unesc) == 'unescaped = <b>Hello & World</b>'

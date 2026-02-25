@@ -14,9 +14,7 @@ def maxArea(height: list[int]) -> int:
     return res
 
 def main():
-    print(maxArea([1,8,6,2,5,4,8,3,7]))
-    print(maxArea([1,1]))
+    assert str(maxArea([1,8,6,2,5,4,8,3,7])) == '49'
+    assert str(maxArea([1,1])) == '1'
 
-# expect-stdout: 49
-# expect-stdout: 1
 

@@ -24,9 +24,7 @@ def largestPerimeter(nums: list[int]) -> int:
     return curSum if len(nums) > 2 else -1
 
 def main():
-    print(largestPerimeter([5,5,5]))
-    print(largestPerimeter([1,12,1,2,5,50,3]))
+    assert str(largestPerimeter([5,5,5])) == '15'
+    assert str(largestPerimeter([1,12,1,2,5,50,3])) == '12'
 
-# expect-stdout: 15
-# expect-stdout: 12
 

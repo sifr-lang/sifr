@@ -1,6 +1,3 @@
-# expect-stdout: 1
-# expect-stdout: 5
-# expect-stdout: 14
 # Tests: min, max, sum built-in functions
 # min/max on lists return Option[T] (None on empty)
 
@@ -9,7 +6,7 @@ def main():
     lo: int | None = min(nums)
     hi: int | None = max(nums)
     if lo is not None:
-        print(lo)
+        assert str(lo) == '1'
     if hi is not None:
-        print(hi)
-    print(sum(nums))
+        assert str(hi) == '5'
+    assert str(sum(nums)) == '14'

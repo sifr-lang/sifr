@@ -1,15 +1,13 @@
-# expect-stdout: found at: 7
-# expect-stdout: not found
 
 def main():
     s: str = "hello, world!"
 
     pos: int | None = s.find("world")
     if pos is not None:
-        print(f"found at: {pos}")
+        assert str(f"found at: {pos}") == 'found at: 7'
 
     missing: int | None = s.find("xyz")
     if missing is not None:
-        print(f"found at: {missing}")
+        assert str(f"found at: {missing}") == 'not found'
     else:
-        print("not found")
+        _ = str("not found")

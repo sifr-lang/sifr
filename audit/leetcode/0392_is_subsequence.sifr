@@ -10,12 +10,8 @@ def isSubsequence(s: str, t: str) -> bool:
     return si == len(s)
 
 def main():
-    print(isSubsequence("abc", "ahbgdc"))
-    print(isSubsequence("axc", "ahbgdc"))
-    print(isSubsequence("", "ahbgdc"))
-    print(isSubsequence("ace", "abcde"))
+    assert str(isSubsequence("abc", "ahbgdc")) == 'true'
+    assert str(isSubsequence("axc", "ahbgdc")) == 'false'
+    assert str(isSubsequence("", "ahbgdc")) == 'true'
+    assert str(isSubsequence("ace", "abcde")) == 'true'
 
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: true

@@ -19,9 +19,7 @@ def helper(s, left, right):
         return res
 
 def main():
-    print(longestPalindrome("babad"))
-    print(longestPalindrome("cbbd"))
+    assert str(longestPalindrome("babad")) == 'bab'
+    assert str(longestPalindrome("cbbd")) == 'bb'
 
-# expect-stdout: bab
-# expect-stdout: bb
 

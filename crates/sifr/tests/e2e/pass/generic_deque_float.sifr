@@ -12,6 +12,5 @@ def main():
     if val is not None:
         assert_eq(val, 1.1)
     assert_eq(d.len(), 2)
-    print("generic_deque_float: passed")
+    assert str("generic_deque_float: passed") == 'generic_deque_float: passed'
 
-# expect-stdout: generic_deque_float: passed

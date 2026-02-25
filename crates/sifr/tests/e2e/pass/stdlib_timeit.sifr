@@ -12,11 +12,9 @@ def do_work():
 def main():
     # default_timer returns a monotonic float >= 0.0
     t: float = default_timer()
-    print(t >= 0.0)
+    assert str(t >= 0.0) == 'true'
     # timeit runs a callable N times and returns elapsed seconds
     elapsed: float = timeit(do_work, 10)
     # elapsed should be non-negative (>= 0 includes 0.0 for very fast ops)
-    print(elapsed > -1.0)
+    assert str(elapsed > -1.0) == 'true'
 
-# expect-stdout: true
-# expect-stdout: true

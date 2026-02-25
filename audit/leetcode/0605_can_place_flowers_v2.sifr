@@ -25,12 +25,8 @@ def canPlaceFlowers(flowerbed: list[int], n: int) -> bool:
     return count >= n
 
 def main():
-    print(canPlaceFlowers([1, 0, 0, 0, 1], 1))
-    print(canPlaceFlowers([1, 0, 0, 0, 1], 2))
-    print(canPlaceFlowers([0, 0, 1, 0, 0], 1))
-    print(canPlaceFlowers([0], 1))
+    assert str(canPlaceFlowers([1, 0, 0, 0, 1], 1)) == 'true'
+    assert str(canPlaceFlowers([1, 0, 0, 0, 1], 2)) == 'false'
+    assert str(canPlaceFlowers([0, 0, 1, 0, 0], 1)) == 'true'
+    assert str(canPlaceFlowers([0], 1)) == 'true'
 
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: true

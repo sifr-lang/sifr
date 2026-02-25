@@ -15,7 +15,6 @@ def removeCoveredIntervals(intervals: list[list[int]]) -> int:
     return len(intervals) - covered
 
 def main():
-    print(removeCoveredIntervals([[1,4],[3,6],[2,8]]))
+    assert str(removeCoveredIntervals([[1,4],[3,6],[2,8]])) == '2'
 
-# expect-stdout: 2
 

@@ -13,11 +13,8 @@ def mySqrt(x: int) -> int:
     return r
 
 def main():
-    print(mySqrt(4))
-    print(mySqrt(8))
-    print(mySqrt(0))
+    assert str(mySqrt(4)) == '2'
+    assert str(mySqrt(8)) == '2'
+    assert str(mySqrt(0)) == '0'
 
-# expect-stdout: 2
-# expect-stdout: 2
-# expect-stdout: 0
 

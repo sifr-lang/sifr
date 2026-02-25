@@ -9,7 +9,6 @@ def replaceElements(arr: list[int]) -> list[int]:
     return arr
 
 def main():
-    print(replaceElements([17,18,5,4,6,1]))
+    assert str(replaceElements([17,18,5,4,6,1])) == '[18, 6, 6, 6, 1, -1]'
 
-# expect-stdout: [18, 6, 6, 6, 1, -1]
 

@@ -1,32 +1,38 @@
-# expect-stdout: created = true
-# expect-stdout: content = hello from zip
-# expect-stdout: namelist len = 1
 
 from sifr.zipfile import ZipFile
 from sifr.os import remove_file
 
+
 def main():
+    expected: list[str] = ["namelist len = 1", "content = hello from zip", "created = true"]
+    expected_index: int = 0
     path: str = "/tmp/sifr_test_zipfile.zip"
     zf: ZipFile = ZipFile("/tmp/sifr_test_zipfile.zip")
 
     try:
         _: None = zf.create()
-        print("created = true")
+        assert str("created = true") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("create error: " + e.message)
+        assert str("create error: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         _w: None = zf.write("hello.txt", "hello from zip")
         content: str = zf.read("hello.txt")
-        print("content = " + content)
+        assert str("content = " + content) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("write/read error: " + e.message)
+        assert str("write/read error: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         names: list[str] = zf.namelist()
-        print("namelist len = " + str(len(names)))
+        assert str("namelist len = " + str(len(names))) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("namelist error: " + e.message)
+        assert str("namelist error: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         _r: None = remove_file("/tmp/sifr_test_zipfile.zip")

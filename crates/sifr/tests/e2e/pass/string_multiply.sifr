@@ -1,7 +1,5 @@
-# expect-stdout: ----------
-# expect-stdout: abcabcabc
 def main():
     line: str = "-" * 10
-    print(line)
+    assert str(line) == '----------'
     repeated: str = "abc" * 3
-    print(repeated)
+    assert str(repeated) == 'abcabcabc'

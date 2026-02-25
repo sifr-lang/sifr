@@ -1,15 +1,12 @@
-# expect-stdout: system len > 0 = true
-# expect-stdout: machine len > 0 = true
-# expect-stdout: processor len > 0 = true
 
 from sifr.platform import system, machine, processor
 
 def main():
     sys: str = system()
-    print("system len > 0 = " + str(len(sys) > 0))
+    assert str("system len > 0 = " + str(len(sys) > 0)) == 'system len > 0 = true'
 
     mach: str = machine()
-    print("machine len > 0 = " + str(len(mach) > 0))
+    assert str("machine len > 0 = " + str(len(mach) > 0)) == 'machine len > 0 = true'
 
     proc: str = processor()
-    print("processor len > 0 = " + str(len(proc) > 0))
+    assert str("processor len > 0 = " + str(len(proc) > 0)) == 'processor len > 0 = true'

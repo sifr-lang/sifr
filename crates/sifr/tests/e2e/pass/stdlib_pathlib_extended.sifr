@@ -1,11 +1,8 @@
 # Test new sifr.pathlib functions
-# expect-stdout: stem = hello
-# expect-stdout: is_absolute = true
-# expect-stdout: not_absolute = false
 
 from sifr.pathlib import stem, is_absolute
 
 def main():
-    print("stem = " + stem("/path/to/hello.txt"))
-    print("is_absolute = " + str(is_absolute("/usr/bin")))
-    print("not_absolute = " + str(is_absolute("relative/path")))
+    assert str("stem = " + stem("/path/to/hello.txt")) == 'stem = hello'
+    assert str("is_absolute = " + str(is_absolute("/usr/bin"))) == 'is_absolute = true'
+    assert str("not_absolute = " + str(is_absolute("relative/path"))) == 'not_absolute = false'

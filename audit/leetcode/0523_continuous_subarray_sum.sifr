@@ -15,7 +15,6 @@ def checkSubarraySum(nums: list[int], k: int) -> bool:
     return False
 
 def main():
-    print(checkSubarraySum([23,2,4,6,7], 6))
+    assert str(checkSubarraySum([23,2,4,6,7], 6)) == 'true'
 
-# expect-stdout: true
 

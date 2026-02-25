@@ -8,12 +8,10 @@ def main():
     # Get it back
     val: str | None = env_get("SIFR_TEST_VAR")
     if val is not None:
-        print(val)
+        assert str(val) == 'hello_sifr'
 
     # Get a non-existent var
     missing: str | None = env_get("SIFR_NONEXISTENT_VAR_XYZ")
     if missing is None:
-        print("not found")
+        assert str("not found") == 'not found'
 
-# expect-stdout: hello_sifr
-# expect-stdout: not found

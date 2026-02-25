@@ -22,7 +22,6 @@ def generateParenthesis(n: int) -> list[str]:
     return res
 
 def main():
-    print(generateParenthesis(3))
+    assert str(generateParenthesis(3)) == '["((()))", "(()())", "(())()", "()(())", "()()()"]'
 
-# expect-stdout: ["((()))", "(()())", "(())()", "()(())", "()()()"]
 

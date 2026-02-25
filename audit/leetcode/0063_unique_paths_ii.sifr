@@ -29,7 +29,6 @@ def uniquePathsWithObstacles(grid: list[list[int]]) -> int:
     return dfs(0, 0)
 
 def main():
-    print(uniquePathsWithObstacles([[0,0,0],[0,1,0],[0,0,0]]))
+    assert str(uniquePathsWithObstacles([[0,0,0],[0,1,0],[0,0,0]])) == '2'
 
-# expect-stdout: 2
 

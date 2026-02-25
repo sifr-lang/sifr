@@ -7,13 +7,9 @@ class Color(Enum):
 
 def main():
     c: Color = Color.RED
-    print(c)
+    assert str(c) == 'RED'
     c2: Color = Color.GREEN
-    print(c2)
-    print(c == Color.RED)
-    print(c == Color.GREEN)
+    assert str(c2) == 'GREEN'
+    assert str(c == Color.RED) == 'true'
+    assert str(c == Color.GREEN) == 'false'
 
-# expect-stdout: RED
-# expect-stdout: GREEN
-# expect-stdout: true
-# expect-stdout: false

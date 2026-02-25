@@ -872,7 +872,7 @@ crates/sifr_python_parser/
 
 **Inspired by:** Mojo's Lit + FileCheck pattern, adapted for Rust.
 
-These tests compile `.sifr` files to binaries, run them, and check stdout/stderr.
+These tests compile `.sifr` files to binaries and run them. Runtime validation in pass fixtures is now assertion-first (`assert ...`), using no `# expect-stdout` directives.
 
 **Directory structure:**
 
@@ -885,17 +885,16 @@ tests/
   e2e.rs            # test runner
 ```
 
-**Test file format (pass tests):**
+**Test file format (pass tests, assertion-first):**
 
 ```python
-# expect-stdout: 120
 def factorial(n: int) -> int:
     if n <= 1:
         return 1
     return n * factorial(n - 1)
 
 def main():
-    print(factorial(5))
+    assert factorial(5) == 120
 ```
 
 **Test file format (fail tests):**
@@ -931,6 +930,7 @@ The parser snapshot tests currently use `.py` fixtures inherited from ruff. Thes
 ### Test Infrastructure Crate: `sifr_test_utils`
 
 A shared crate providing test helpers: `extract_expect_stdout`, `extract_expect_errors`, `compile_to_rust`, `compile_and_run`, `parse_mdtest`.
+Note: `extract_expect_stdout` is retained for legacy runner compatibility only. New runtime checks in pass fixtures should use `assert` statements and avoid `# expect-stdout`.
 
 ### Test Commands
 

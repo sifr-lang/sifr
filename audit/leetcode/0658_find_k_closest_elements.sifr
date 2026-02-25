@@ -44,7 +44,6 @@ def findClosestElements(arr: list[int], k: int, x: int) -> list[int]:
     return arr[l : l + k]
 
 def main():
-    print(findClosestElements([1,2,3,4,5], 4, 3))
+    assert str(findClosestElements([1,2,3,4,5], 4, 3)) == '[1, 2, 3, 4]'
 
-# expect-stdout: [1, 2, 3, 4]
 

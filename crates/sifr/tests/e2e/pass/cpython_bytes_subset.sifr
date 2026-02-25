@@ -1,45 +1,51 @@
 # Adapted CPython bytes subset for sifr.bytes
 from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
 
+
 def main():
+    expected: list[str] = ["odd digits safe", "Hi", "4869", "true", "true", "not found", "8", "4"]
+    expected_index: int = 0
     data: list[int] = encode_utf8("mississippi")
-    print(count_byte(data, 115))
+    assert str(count_byte(data, 115)) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     first_p: int | None = find_byte(data, 112)
     if first_p is not None:
-        print(first_p)
+        assert str(first_p) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     not_found: int | None = find_byte(data, 120)
     if not_found is None:
-        print("not found")
+        assert str("not found") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
-    print(starts_with(data, encode_utf8("miss")))
-    print(ends_with(data, encode_utf8("ippi")))
+    assert str(starts_with(data, encode_utf8("miss"))) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
+    assert str(ends_with(data, encode_utf8("ippi"))) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
     try:
         hx: str = bytes_to_hex(encode_utf8("Hi"))
-        print(hx)
+        assert str(hx) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         parsed: list[int] = bytes_from_hex("48 69")
         txt: str = decode_utf8(parsed)
-        print(txt)
+        assert str(txt) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         bad: list[int] = bytes_from_hex("abc")
-        print(len(bad))
+        assert str(len(bad)) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("odd digits safe")
+        assert str("odd digits safe") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
-# expect-stdout: 4
-# expect-stdout: 8
-# expect-stdout: not found
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: 4869
-# expect-stdout: Hi
-# expect-stdout: odd digits safe

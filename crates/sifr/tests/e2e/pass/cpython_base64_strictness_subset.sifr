@@ -1,74 +1,87 @@
 # Adapted CPython strictness subset for sifr.base64 options
 from sifr.base64 import b64encode_opts, b64decode_opts
 
+
 def main():
+    expected: list[str] = ["invalid-wrap-safe", "invalid-altchars-safe", "abc", "strict-invalid-safe", "abc", "???", "Pz8$", "~~~", "fn5*", "cmc=", "dGhvbi5v", "d3d3LnB5"]
+    expected_index: int = 0
     # wrapcol behavior (8)
     try:
         wrapped: str = b64encode_opts("www.python.org", "", 8)
-        print(wrapped)
+        wrapped_lines: list[str] = wrapped.split("\n")
+        assert wrapped_lines[0] == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
+        assert wrapped_lines[1] == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
+        assert wrapped_lines[2] == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # altchars translation for '+' and '/'.
     try:
         e1: str = b64encode_opts("~~~", "*$", 0)
-        print(e1)
+        assert str(e1) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
         d1: str = b64decode_opts(e1, "*$", False, "")
-        print(d1)
+        assert str(d1) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         e2: str = b64encode_opts("???", "*$", 0)
-        print(e2)
+        assert str(e2) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
         d2: str = b64decode_opts(e2, "*$", False, "")
-        print(d2)
+        assert str(d2) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # validate=False should discard invalid chars.
     try:
         loose: str = b64decode_opts("YWJj!", "", False, "")
-        print(loose)
+        assert str(loose) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # validate=True should reject invalid chars.
     try:
         strict_fail: str = b64decode_opts("YWJj!", "", True, "")
-        print(strict_fail)
+        assert str(strict_fail) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("strict-invalid-safe")
+        assert str("strict-invalid-safe") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # ignorechars should permit strict decoding with known ignored chars.
     try:
         with_ignore: str = b64decode_opts("YW\nJj", "", True, "\n")
-        print(with_ignore)
+        assert str(with_ignore) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # invalid option values are safe errors.
     try:
         bad_alt: str = b64encode_opts("x", "+", 0)
-        print(bad_alt)
+        assert str(bad_alt) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("invalid-altchars-safe")
+        assert str("invalid-altchars-safe") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         bad_wrap: str = b64encode_opts("x", "", -1)
-        print(bad_wrap)
+        assert str(bad_wrap) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("invalid-wrap-safe")
-
-# expect-stdout: d3d3LnB5
-# expect-stdout: dGhvbi5v
-# expect-stdout: cmc=
-# expect-stdout: fn5*
-# expect-stdout: ~~~
-# expect-stdout: Pz8$
-# expect-stdout: ???
-# expect-stdout: abc
-# expect-stdout: strict-invalid-safe
-# expect-stdout: abc
-# expect-stdout: invalid-altchars-safe
-# expect-stdout: invalid-wrap-safe
+        assert str("invalid-wrap-safe") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1

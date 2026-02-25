@@ -1,9 +1,7 @@
-# expect-stdout: 3
-# expect-stdout: 6
 def main():
     items: list[int] = [1, 2, 3]
     total: int = 0
     for x in items:
         total += x
-    print(len(items))
-    print(total)
+    assert str(len(items)) == '3'
+    assert str(total) == '6'

@@ -1,10 +1,8 @@
-# expect-stdout: 8080
-# expect-stdout: 8080
 
 class Port(int):
     pass
 
 def main():
     p: Port = Port(8080)
-    print(p)
-    print(p.value())
+    assert str(p) == '8080'
+    assert str(p.value()) == '8080'

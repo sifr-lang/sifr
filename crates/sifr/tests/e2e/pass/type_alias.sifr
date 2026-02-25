@@ -1,5 +1,4 @@
 # Type alias with type statement
-# expect-stdout: 42
 
 type UserId = int
 
@@ -8,4 +7,4 @@ def get_user_id() -> UserId:
 
 def main():
     uid: UserId = get_user_id()
-    print(uid)
+    assert str(uid) == '42'

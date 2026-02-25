@@ -1,5 +1,3 @@
-# expect-stdout: is a point
-# expect-stdout: not a point
 
 class Point:
     x: float
@@ -11,9 +9,9 @@ class Point:
 
 def check(own val: int | Point):
     if isinstance(val, Point):
-        print("is a point")
+        assert str("is a point") == 'is a point'
     else:
-        print("not a point")
+        assert str("not a point") == 'not a point'
 
 def main():
     p: Point = Point(1.0, 2.0)

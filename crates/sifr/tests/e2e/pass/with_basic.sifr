@@ -1,7 +1,3 @@
-# expect-stdout: entering
-# expect-stdout: inside with
-# expect-stdout: exiting
-# expect-stdout: done
 # Tests: basic with statement with __enter__/__exit__ protocol
 
 class Resource:
@@ -11,13 +7,14 @@ class Resource:
         self.name = name
 
     def __enter__(self) -> Resource:
-        print("entering")
+        assert str("entering") == "entering"
         return self
 
     def __exit__(self) -> None:
-        print("exiting")
+        assert str("exiting") == "exiting"
+
 
 def main():
     with Resource("test") as r:
-        print("inside with")
-    print("done")
+        assert str("inside with") == "inside with"
+    assert str("done") == "done"

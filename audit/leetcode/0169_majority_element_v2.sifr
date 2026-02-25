@@ -19,12 +19,8 @@ def majorityElement(nums: list[int]) -> int:
     return candidate
 
 def main():
-    print(majorityElement([3, 2, 3]))
-    print(majorityElement([2, 2, 1, 1, 1, 2, 2]))
-    print(majorityElement([1]))
-    print(majorityElement([6, 5, 5]))
+    assert str(majorityElement([3, 2, 3])) == '3'
+    assert str(majorityElement([2, 2, 1, 1, 1, 2, 2])) == '2'
+    assert str(majorityElement([1])) == '1'
+    assert str(majorityElement([6, 5, 5])) == '5'
 
-# expect-stdout: 3
-# expect-stdout: 2
-# expect-stdout: 1
-# expect-stdout: 5

@@ -56,6 +56,5 @@ def main():
     q: list[float] = [4.0, 5.0, 6.0]
     assert_almost_eq(sumprod(p, q), 32.0, 0.0000001)
 
-    print("cpython_math_missing_surface_subset: pass")
+    assert str("cpython_math_missing_surface_subset: pass") == 'cpython_math_missing_surface_subset: pass'
 
-# expect-stdout: cpython_math_missing_surface_subset: pass

@@ -17,9 +17,7 @@ def largestRectangleArea(heights: list[int]) -> int:
     return maxArea
 
 def main():
-    print(largestRectangleArea([2,1,5,6,2,3]))
-    print(largestRectangleArea([2,4]))
+    assert str(largestRectangleArea([2,1,5,6,2,3])) == '10'
+    assert str(largestRectangleArea([2,4])) == '4'
 
-# expect-stdout: 10
-# expect-stdout: 4
 

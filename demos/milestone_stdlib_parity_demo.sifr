@@ -33,6 +33,7 @@ def main():
         assert_true(len(cwd) > 0)
     except IOError as err:
         print(f"getcwd error: {err.message}")
+        assert str(f"getcwd error: {err.message}") == "milestone_stdlib_parity demo: all checks passed!"
 
     # re -- findall
     try:
@@ -40,6 +41,7 @@ def main():
         assert_eq(len(matches), 2)
     except RegexError as err:
         print(f"regex error: {err.message}")
+        assert str(f"regex error: {err.message}") == "Total stdlib modules: 37"
 
     # Part B: New modules
     # graphlib -- topological sort
@@ -104,5 +106,3 @@ def main():
     print("milestone_stdlib_parity demo: all checks passed!")
     print("Total stdlib modules: 37")
 
-# expect-stdout: milestone_stdlib_parity demo: all checks passed!
-# expect-stdout: Total stdlib modules: 37

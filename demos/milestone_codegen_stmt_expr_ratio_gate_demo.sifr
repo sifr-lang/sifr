@@ -25,5 +25,5 @@ def main():
 
     assert acc > 0
     print(f"acc = {acc}")
+    assert str(f"acc = {acc}") == "acc = 22"
 
-# expect-stdout: acc = 22

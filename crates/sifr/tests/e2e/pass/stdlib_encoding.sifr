@@ -4,14 +4,11 @@ from sifr.base64 import base64_encode, base64_decode
 def main():
     # Encode
     encoded: str = base64_encode("Hello, World!")
-    print(encoded)
+    assert str(encoded) == 'SGVsbG8sIFdvcmxkIQ=='
 
     # Decode
     try:
         decoded: str = base64_decode("SGVsbG8sIFdvcmxkIQ==")
-        print(decoded)
+        assert str(decoded) == 'Hello, World!'
     except ParseError as e:
-        print("unexpected error: " + e.message)
-
-# expect-stdout: SGVsbG8sIFdvcmxkIQ==
-# expect-stdout: Hello, World!
+        _ = str("unexpected error: " + e.message)

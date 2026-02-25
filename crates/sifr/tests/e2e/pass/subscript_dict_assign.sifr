@@ -1,4 +1,3 @@
-# expect-stdout: 2
 # Tests dict subscript assignment: dict[key] = val
 
 def main():
@@ -6,4 +5,4 @@ def main():
     d["b"] = 2
     val: int | None = d["b"]
     if val is not None:
-        print(val)
+        assert str(val) == '2'

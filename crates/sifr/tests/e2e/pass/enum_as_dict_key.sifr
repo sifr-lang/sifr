@@ -13,11 +13,9 @@ def main():
     
     v: int | None = counts[Status.ACTIVE]
     if v is not None:
-        print(v)
+        assert str(v) == '3'
     
     v2: int | None = counts[Status.DONE]
     if v2 is not None:
-        print(v2)
+        assert str(v2) == '10'
 
-# expect-stdout: 3
-# expect-stdout: 10

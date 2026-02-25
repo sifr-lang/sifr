@@ -1,5 +1,4 @@
 # Test: Forward reference - function uses class defined later
-# expect-stdout: 42
 
 def get_value(node: Node) -> int:
     return node.value
@@ -9,4 +8,4 @@ class Node:
 
 def main():
     n: Node = Node(42)
-    print(get_value(n))
+    assert str(get_value(n)) == '42'

@@ -1,8 +1,3 @@
-# expect-stdout: caught ValueError: out of range
-# expect-stdout: caught DivisionError: division by zero
-# expect-stdout: caught IOError: file not found
-# expect-stdout: caught ParseError: invalid format
-# expect-stdout: all built-in errors work
 
 def validate(x: int) -> Result[int, ValueError]:
     if x < 0:
@@ -28,21 +23,21 @@ def main():
     try:
         val: int = validate(-1)
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == 'caught ValueError: out of range'
 
     try:
         val2: int = divide(10, 0)
     except DivisionError as e:
-        print(f"caught DivisionError: {e.message}")
+        assert str(f"caught DivisionError: {e.message}") == 'caught DivisionError: division by zero'
 
     try:
         data: str = read_file("missing.txt")
     except IOError as e:
-        print(f"caught IOError: {e.message}")
+        assert str(f"caught IOError: {e.message}") == 'caught IOError: file not found'
 
     try:
         num: int = parse_data("bad")
     except ParseError as e:
-        print(f"caught ParseError: {e.message}")
+        assert str(f"caught ParseError: {e.message}") == 'caught ParseError: invalid format'
 
-    print("all built-in errors work")
+    assert str("all built-in errors work") == 'all built-in errors work'

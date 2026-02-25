@@ -1,8 +1,6 @@
-# expect-stdout: Hello, Alice!
-# expect-stdout: Hi, Bob!
 def greet(name: str, greeting: str) -> str:
     return f"{greeting}, {name}!"
 
 def main():
-    print(greet("Alice", "Hello"))
-    print(greet(greeting="Hi", name="Bob"))
+    assert str(greet("Alice", "Hello")) == 'Hello, Alice!'
+    assert str(greet(greeting="Hi", name="Bob")) == 'Hi, Bob!'

@@ -1,5 +1,4 @@
 # Test: Basic nested function definition and call
-# expect-stdout: 15
 
 def outer() -> int:
     x: int = 10
@@ -8,4 +7,4 @@ def outer() -> int:
     return x + inner()
 
 def main():
-    print(outer())
+    assert str(outer()) == '15'

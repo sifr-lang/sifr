@@ -25,9 +25,7 @@ def maxProfit(prices: list[int]) -> int:
     return dfs(0, True)
 
 def main():
-    print(maxProfit([1,2,3,0,2]))
-    print(maxProfit([1]))
+    assert str(maxProfit([1,2,3,0,2])) == '3'
+    assert str(maxProfit([1])) == '0'
 
-# expect-stdout: 3
-# expect-stdout: 0
 

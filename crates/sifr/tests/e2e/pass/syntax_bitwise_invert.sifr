@@ -1,8 +1,6 @@
-# expect-stdout: -6
-# expect-stdout: -1
 # Tests bitwise invert (~) operator
 
 def main():
     x: int = 5
-    print(~x)
-    print(~0)
+    assert str(~x) == '-6'
+    assert str(~0) == '-1'

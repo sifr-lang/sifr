@@ -14,9 +14,7 @@ def twoSum(numbers: list[int], target: int) -> list[int]:
             return [l + 1, r + 1]
 
 def main():
-    print(twoSum([2,7,11,15], 9))
-    print(twoSum([2,3,4], 6))
+    assert str(twoSum([2,7,11,15], 9)) == '[1, 2]'
+    assert str(twoSum([2,3,4], 6)) == '[1, 3]'
 
-# expect-stdout: [1, 2]
-# expect-stdout: [1, 3]
 

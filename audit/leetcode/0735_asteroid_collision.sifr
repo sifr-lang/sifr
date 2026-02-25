@@ -19,11 +19,8 @@ def asteroidCollision(asteroids: list[int]) -> list[int]:
     return stack
 
 def main():
-    print(asteroidCollision([5,10,-5]))
-    print(asteroidCollision([8,-8]))
-    print(asteroidCollision([10,2,-5]))
+    assert str(asteroidCollision([5,10,-5])) == '[5, 10]'
+    assert str(asteroidCollision([8,-8])) == '[]'
+    assert str(asteroidCollision([10,2,-5])) == '[10]'
 
-# expect-stdout: [5, 10]
-# expect-stdout: []
-# expect-stdout: [10]
 

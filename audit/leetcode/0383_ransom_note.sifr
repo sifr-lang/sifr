@@ -10,9 +10,7 @@ def canConstruct(ransomNote: str, magazine: str) -> bool:
     return True
 
 def main():
-    print(canConstruct("a", "b"))
-    print(canConstruct("aa", "aab"))
+    assert str(canConstruct("a", "b")) == 'false'
+    assert str(canConstruct("aa", "aab")) == 'true'
 
-# expect-stdout: false
-# expect-stdout: true
 

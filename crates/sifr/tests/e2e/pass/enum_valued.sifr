@@ -7,13 +7,9 @@ class HttpStatus(Enum):
 
 def main():
     s: HttpStatus = HttpStatus.OK
-    print(s)
-    print(s.value())
-    print(s.name())
+    assert str(s) == 'OK'
+    assert str(s.value()) == '200'
+    assert str(s.name()) == 'OK'
     s2: HttpStatus = HttpStatus.NOT_FOUND
-    print(s2.value())
+    assert str(s2.value()) == '404'
 
-# expect-stdout: OK
-# expect-stdout: 200
-# expect-stdout: OK
-# expect-stdout: 404

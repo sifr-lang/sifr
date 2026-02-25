@@ -35,11 +35,8 @@ def numDecodings(s: str) -> int:
     return dp[0]
 
 def main():
-    print(numDecodings("12"))
-    print(numDecodings("226"))
-    print(numDecodings("06"))
+    assert str(numDecodings("12")) == '2'
+    assert str(numDecodings("226")) == '3'
+    assert str(numDecodings("06")) == '0'
 
-# expect-stdout: 2
-# expect-stdout: 3
-# expect-stdout: 0
 

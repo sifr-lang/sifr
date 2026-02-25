@@ -18,12 +18,8 @@ def main():
     p2: Point = Point(3, 0)
     p3: Point = Point(0, 4)
     p4: Point = Point(3, 4)
-    print(describe_point(p1))
-    print(describe_point(p2))
-    print(describe_point(p3))
-    print(describe_point(p4))
+    assert str(describe_point(p1)) == 'origin'
+    assert str(describe_point(p2)) == 'on x-axis'
+    assert str(describe_point(p3)) == 'on y-axis'
+    assert str(describe_point(p4)) == 'general'
 
-# expect-stdout: origin
-# expect-stdout: on x-axis
-# expect-stdout: on y-axis
-# expect-stdout: general

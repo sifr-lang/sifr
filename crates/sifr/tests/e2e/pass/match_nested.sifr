@@ -14,12 +14,8 @@ def classify(p: Point) -> str:
             return "other"
 
 def main():
-    print(classify(Point(0, 0)))
-    print(classify(Point(3, 4)))
-    print(classify(Point(-2, 5)))
-    print(classify(Point(-1, -1)))
+    assert str(classify(Point(0, 0))) == 'origin'
+    assert str(classify(Point(3, 4))) == 'first quadrant'
+    assert str(classify(Point(-2, 5))) == 'second quadrant'
+    assert str(classify(Point(-1, -1))) == 'other'
 
-# expect-stdout: origin
-# expect-stdout: first quadrant
-# expect-stdout: second quadrant
-# expect-stdout: other

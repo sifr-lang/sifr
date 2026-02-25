@@ -13,7 +13,6 @@ def diffWaysToCompute(s: str) -> list[int]:
     return f(s)
 
 def main():
-    print(diffWaysToCompute("2-1-1"))
+    assert str(diffWaysToCompute("2-1-1")) == '[0, 2]'
 
-# expect-stdout: [0, 2]
 

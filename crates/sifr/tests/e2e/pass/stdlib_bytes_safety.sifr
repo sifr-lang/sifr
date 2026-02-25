@@ -1,49 +1,58 @@
 # Safety-focused checks for sifr.bytes
 from sifr.bytes import decode_utf8, bytes_to_hex, bytes_from_hex
 
+
 def main():
+    expected: list[str] = ["Hello", "caught unicode hex parse", "caught hex range low", "caught hex range high", "caught decode range low", "caught decode range high"]
+    expected_index: int = 0
     try:
         bad_hi: str = decode_utf8([256])
-        print("should not reach")
+        assert str("should not reach") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("caught decode range high")
+        assert str("caught decode range high") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         bad_lo: str = decode_utf8([-1])
-        print("should not reach")
+        assert str("should not reach") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("caught decode range low")
+        assert str("caught decode range low") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         h1: str = bytes_to_hex([256])
-        print(h1)
+        assert str(h1) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("caught hex range high")
+        assert str("caught hex range high") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     try:
         h2: str = bytes_to_hex([-2])
-        print(h2)
+        assert str(h2) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("caught hex range low")
+        assert str("caught hex range low") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # Previously this path could panic due to byte-index slicing on UTF-8.
     try:
         bad_hex: list[int] = bytes_from_hex("€")
-        print(len(bad_hex))
+        assert str(len(bad_hex)) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("caught unicode hex parse")
+        assert str("caught unicode hex parse") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # Whitespace-tolerant hex parsing remains supported.
     try:
         ok_hex: list[int] = bytes_from_hex("48 65 6c 6c 6f")
         ok_text: str = decode_utf8(ok_hex)
-        print(ok_text)
+        assert str(ok_text) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
-# expect-stdout: caught decode range high
-# expect-stdout: caught decode range low
-# expect-stdout: caught hex range high
-# expect-stdout: caught hex range low
-# expect-stdout: caught unicode hex parse
-# expect-stdout: Hello

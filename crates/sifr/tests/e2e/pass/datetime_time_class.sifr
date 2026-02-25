@@ -1,13 +1,10 @@
-# expect-stdout: time isoformat = 10:30:45
-# expect-stdout: time eq = true
-# expect-stdout: timezone str = UTC
 
 from sifr.datetime import time, timezone
 
 def main():
     t: time = time(10, 30, 45)
-    print("time isoformat = " + t.isoformat())
+    assert str("time isoformat = " + t.isoformat()) == 'time isoformat = 10:30:45'
     t2: time = time(10, 30, 45)
-    print("time eq = " + str(t == t2))
+    assert str("time eq = " + str(t == t2)) == 'time eq = true'
     tz: timezone = timezone(0)
-    print("timezone str = " + str(tz))
+    assert str("timezone str = " + str(tz)) == 'timezone str = UTC'

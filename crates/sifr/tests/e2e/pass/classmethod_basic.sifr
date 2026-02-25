@@ -1,5 +1,3 @@
-# expect-stdout: 0
-# expect-stdout: 0
 # Tests: @classmethod as associated function
 
 class Point:
@@ -16,5 +14,5 @@ class Point:
 
 def main():
     p: Point = Point.origin()
-    print(p.x)
-    print(p.y)
+    assert str(p.x) == '0'
+    assert str(p.y) == '0'

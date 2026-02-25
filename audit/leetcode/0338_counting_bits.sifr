@@ -25,9 +25,7 @@ def countBits(n: int) -> list[int]:
 # This is my full solution, covering the details: https://leetcode.com/problems/counting-bits/solutions/4411054/odd-and-even-numbers-a-easier-to-understanding-way-of-dp/
 
 def main():
-    print(countBits(2))
-    print(countBits(5))
+    assert str(countBits(2)) == '[0, 1, 1]'
+    assert str(countBits(5)) == '[0, 1, 1, 2, 1, 2]'
 
-# expect-stdout: [0, 1, 1]
-# expect-stdout: [0, 1, 1, 2, 1, 2]
 

@@ -7,8 +7,6 @@ def main():
     to_nodes: list[int] = [1, 2, 3, 3]
     try:
         result: list[int] = topological_sort(4, from_nodes, to_nodes)
-        print(result)
+        assert str(result) == '[0, 1, 2, 3]'
     except CycleError as e:
-        print(f"error: {e.message}")
-
-# expect-stdout: [0, 1, 2, 3]
+        _ = str(f"error: {e.message}")

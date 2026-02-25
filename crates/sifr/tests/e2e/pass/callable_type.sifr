@@ -1,6 +1,4 @@
 # Test: Callable type for higher-order functions
-# expect-stdout: 10
-# expect-stdout: 7
 
 from typing import Callable
 
@@ -14,5 +12,5 @@ def add_one(x: int) -> int:
     return x + 1
 
 def main():
-    print(apply(double, 5))
-    print(apply(add_one, 6))
+    assert str(apply(double, 5)) == '10'
+    assert str(apply(add_one, 6)) == '7'

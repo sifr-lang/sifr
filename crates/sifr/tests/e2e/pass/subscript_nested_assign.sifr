@@ -1,7 +1,6 @@
 # Test: nested subscript assignment
-# expect-stdout: 99
 
 def main():
     matrix: list[list[int]] = [[1, 2], [3, 4]]
     matrix[0][1] = 99
-    print(matrix[0][1])
+    assert str(matrix[0][1]) == '99'

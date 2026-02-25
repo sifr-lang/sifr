@@ -1,5 +1,3 @@
-# expect-stdout: caught CycleError: cycle detected
-# expect-stdout: stdlib error types work
 
 from sifr.graphlib import CycleError
 
@@ -12,6 +10,6 @@ def main():
     try:
         result: int = check_graph(True)
     except CycleError as e:
-        print(f"caught CycleError: {e.message}")
+        assert str(f"caught CycleError: {e.message}") == 'caught CycleError: cycle detected'
 
-    print("stdlib error types work")
+    assert str("stdlib error types work") == 'stdlib error types work'

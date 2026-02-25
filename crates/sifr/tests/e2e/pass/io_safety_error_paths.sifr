@@ -2,73 +2,84 @@
 from sifr.io import read_text, write_text, read_lines
 from sifr.os import listdir, mkdir, rmdir, remove_file, rename, getcwd
 
+
 def main():
+    expected: list[str] = ["all io safety tests passed", "getcwd ok", "safety works", "caught rename IOError", "caught remove_file IOError", "caught rmdir IOError", "caught listdir IOError", "caught read_lines IOError", "caught read_text IOError"]
+    expected_index: int = 0
     # 1. read_text on non-existent file returns IOError
     try:
         content: str = read_text("/tmp/sifr_io_safety_nonexistent_file.txt")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("caught read_text IOError")
+        assert str("caught read_text IOError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 2. read_lines on non-existent file returns IOError
     try:
         lines: list[str] = read_lines("/tmp/sifr_io_safety_nonexistent_file.txt")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("caught read_lines IOError")
+        assert str("caught read_lines IOError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 3. listdir on non-existent directory returns IOError
     try:
         entries: list[str] = listdir("/tmp/sifr_io_safety_nonexistent_dir")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("caught listdir IOError")
+        assert str("caught listdir IOError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 4. rmdir on non-existent directory returns IOError
     try:
         r: None = rmdir("/tmp/sifr_io_safety_nonexistent_dir")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("caught rmdir IOError")
+        assert str("caught rmdir IOError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 5. remove_file on non-existent file returns IOError
     try:
         r2: None = remove_file("/tmp/sifr_io_safety_nonexistent_file.txt")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("caught remove_file IOError")
+        assert str("caught remove_file IOError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 6. rename non-existent file returns IOError
     try:
         r3: None = rename("/tmp/sifr_io_safety_nonexistent.txt", "/tmp/sifr_io_safety_dest.txt")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("caught rename IOError")
+        assert str("caught rename IOError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 7. Success path: write then read
     try:
         w: None = write_text("/tmp/sifr_io_safety_test.txt", "safety works")
         data: str = read_text("/tmp/sifr_io_safety_test.txt")
-        print(data)
+        assert str(data) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
         cleanup: None = remove_file("/tmp/sifr_io_safety_test.txt")
     except IOError as e:
-        print("unexpected error: " + e.message)
+        assert str("unexpected error: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 8. getcwd succeeds
     try:
         cwd: str = getcwd()
-        print("getcwd ok")
+        assert str("getcwd ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except IOError as e:
-        print("getcwd failed: " + e.message)
+        assert str("getcwd failed: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
-    print("all io safety tests passed")
+    assert str("all io safety tests passed") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
-# expect-stdout: caught read_text IOError
-# expect-stdout: caught read_lines IOError
-# expect-stdout: caught listdir IOError
-# expect-stdout: caught rmdir IOError
-# expect-stdout: caught remove_file IOError
-# expect-stdout: caught rename IOError
-# expect-stdout: safety works
-# expect-stdout: getcwd ok
-# expect-stdout: all io safety tests passed

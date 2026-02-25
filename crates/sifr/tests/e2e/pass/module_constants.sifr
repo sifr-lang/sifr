@@ -1,6 +1,4 @@
 # Test: module-level constants accessible from functions
-# expect-stdout: 78.53975
-# expect-stdout: 3
 
 PI: float = 3.14159
 MAX_RETRIES: int = 3
@@ -9,5 +7,5 @@ def circle_area(r: float) -> float:
     return PI * r * r
 
 def main():
-    print(circle_area(5.0))
-    print(MAX_RETRIES)
+    assert str(circle_area(5.0)) == '78.53975'
+    assert str(MAX_RETRIES) == '3'

@@ -1,10 +1,9 @@
-# expect-stdout: echo ok = ok
 
 from sifr.subprocess import run, CompletedProcess
 
 def main():
     try:
         result: CompletedProcess = run("echo ok")
-        print("echo ok = " + result.stdout.strip())
+        assert str("echo ok = " + result.stdout.strip()) == 'echo ok = ok'
     except IOError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

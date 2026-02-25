@@ -5,13 +5,11 @@ def main():
     # get_close_matches
     words: list[str] = ["apple", "ape", "application", "banana"]
     matches: list[str] = get_close_matches("app", words, 2, 0.3)
-    print(len(matches))
+    assert str(len(matches)) == '2'
 
     # unified_diff
     a: list[str] = ["hello", "world"]
     b: list[str] = ["hello", "earth"]
     diff: list[str] = unified_diff(a, b)
-    print(len(diff))
+    assert str(len(diff)) == '5'
 
-# expect-stdout: 2
-# expect-stdout: 5

@@ -8,8 +8,10 @@ def main():
     try:
         bad: str = decode_utf8([256])
         print(False)
+        assert str(False) == "true"
     except ParseError as e:
         print(True)
+        assert str(True) == "true"
 
     # Harness behavior: vector-driven parity assertions.
     inputs: list[str] = ["", "f", "fo", "foo"]
@@ -20,5 +22,3 @@ def main():
     assert_vector_eq(actual, expected)
     print(True)
 
-# expect-stdout: true
-# expect-stdout: true

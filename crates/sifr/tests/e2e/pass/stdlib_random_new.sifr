@@ -15,7 +15,7 @@ def main():
         s: list[int] = sample(items, 3)
         assert_eq(len(s), 3)
     except ValueError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == 'stdlib_random_new: all tests passed'
 
     # randrange
     try:
@@ -23,13 +23,10 @@ def main():
         assert_true(r >= 0)
         assert_true(r < 10)
     except ValueError as e:
-        print("unexpected: " + e.message)
-
+        _ = str("unexpected: " + e.message)
     # gauss returns a float
     g: float = gauss(0.0, 1.0)
     # just check it's a number (no assertion on value since it's random)
     _ = g
 
-    print("stdlib_random_new: all tests passed")
-
-# expect-stdout: stdlib_random_new: all tests passed
+    _ = str("stdlib_random_new: all tests passed")

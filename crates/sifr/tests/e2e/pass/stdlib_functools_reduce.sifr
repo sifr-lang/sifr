@@ -11,16 +11,13 @@ def main():
     data: list[int] = [1, 2, 3, 4, 5]
 
     total: int = reduce(add, data, 0)
-    print(total)
+    assert str(total) == '15'
 
     product: int = reduce(mul, data, 1)
-    print(product)
+    assert str(product) == '120'
 
     # empty list with initial value
     empty: list[int] = []
     result: int = reduce(add, empty, 42)
-    print(result)
+    assert str(result) == '42'
 
-# expect-stdout: 15
-# expect-stdout: 120
-# expect-stdout: 42

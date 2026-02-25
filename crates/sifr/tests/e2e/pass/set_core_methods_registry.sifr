@@ -1,36 +1,27 @@
-# expect-stdout: contains 3 = true
-# expect-stdout: contains 1 after remove = false
-# expect-stdout: contains 999 after discard = false
-# expect-stdout: copy contains 3 = true
-# expect-stdout: subset = true
-# expect-stdout: superset = true
-# expect-stdout: disjoint = true
-# expect-stdout: len after pop = 2
-# expect-stdout: len after clear = 0
 
 def main():
     s: set[int] = {1, 2}
     s.add(3)
-    print("contains 3 = " + str(s.contains(3)))
+    assert str("contains 3 = " + str(s.contains(3))) == 'contains 3 = true'
 
     s.remove(1)
-    print("contains 1 after remove = " + str(s.contains(1)))
+    assert str("contains 1 after remove = " + str(s.contains(1))) == 'contains 1 after remove = false'
 
     s.discard(999)
-    print("contains 999 after discard = " + str(s.contains(999)))
+    assert str("contains 999 after discard = " + str(s.contains(999))) == 'contains 999 after discard = false'
 
     t: set[int] = s.copy()
-    print("copy contains 3 = " + str(t.contains(3)))
+    assert str("copy contains 3 = " + str(t.contains(3))) == 'copy contains 3 = true'
 
     a: set[int] = {1, 2}
     b: set[int] = {1, 2, 3}
     c: set[int] = {8, 9}
-    print("subset = " + str(a.issubset(b)))
-    print("superset = " + str(b.issuperset(a)))
-    print("disjoint = " + str(a.isdisjoint(c)))
+    assert str("subset = " + str(a.issubset(b))) == 'subset = true'
+    assert str("superset = " + str(b.issuperset(a))) == 'superset = true'
+    assert str("disjoint = " + str(a.isdisjoint(c))) == 'disjoint = true'
 
     u: set[int] = {4, 5, 6}
     u.pop()
-    print("len after pop = " + str(u.len()))
+    assert str("len after pop = " + str(u.len())) == 'len after pop = 2'
     u.clear()
-    print("len after clear = " + str(u.len()))
+    assert str("len after clear = " + str(u.len())) == 'len after clear = 0'

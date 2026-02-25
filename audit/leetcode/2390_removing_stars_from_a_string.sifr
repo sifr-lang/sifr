@@ -10,7 +10,6 @@ def removeStars(s) :
     return ''.join(res)
 
 def main():
-    print(removeStars("leet**cod*e"))
+    assert str(removeStars("leet**cod*e")) == 'lecoe'
 
-# expect-stdout: lecoe
 

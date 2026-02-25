@@ -31,9 +31,7 @@ def totalNQueens(n: int) -> int:
     return answer
 
 def main():
-    print(totalNQueens(4))
-    print(totalNQueens(1))
+    assert str(totalNQueens(4)) == '2'
+    assert str(totalNQueens(1)) == '1'
 
-# expect-stdout: 2
-# expect-stdout: 1
 

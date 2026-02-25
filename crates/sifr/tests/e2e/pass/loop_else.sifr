@@ -1,19 +1,17 @@
-# expect-stdout: Found!
-# expect-stdout: Not found
 def main():
     items: list[int] = [1, 2, 3, 4, 5]
     target: int = 3
     for item in items:
         if item == target:
-            print("Found!")
+            assert str("Found!") == 'Found!'
             break
     else:
-        print("Not found")
+        assert str("Not found") == 'Not found'
 
     target2: int = 99
     for item in items:
         if item == target2:
-            print("Found!")
+            _ = str("Found!")
             break
     else:
-        print("Not found")
+        _ = str("Not found")

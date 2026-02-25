@@ -1,35 +1,4 @@
 # Edge case safety: validates all new input validation guards
-# expect-stdout: === randint ===
-# expect-stdout: caught ValueError: randint: min must be <= max
-# expect-stdout: randint(1, 5) ok
-# expect-stdout: === randbelow ===
-# expect-stdout: caught ValueError: randbelow: n must be > 0
-# expect-stdout: randbelow(10) ok
-# expect-stdout: === wrap ===
-# expect-stdout: caught ValueError: wrap: width must be > 0
-# expect-stdout: wrap ok
-# expect-stdout: === fill ===
-# expect-stdout: caught ValueError: fill: width must be > 0
-# expect-stdout: fill ok
-# expect-stdout: === batched ===
-# expect-stdout: caught ValueError: batched: n must be > 0
-# expect-stdout: batched ok
-# expect-stdout: === topological_sort ===
-# expect-stdout: caught CycleError: cycle detected in graph
-# expect-stdout: topo sort ok
-# expect-stdout: === uuid_from_hex ===
-# expect-stdout: caught ValueError: invalid UUID hex string
-# expect-stdout: caught ValueError: UUID hex string must be 32 hex characters
-# expect-stdout: uuid ok
-# expect-stdout: === ip_to_int ===
-# expect-stdout: caught ValueError: invalid IPv4 address
-# expect-stdout: ip_to_int ok
-# expect-stdout: === from_timestamp ===
-# expect-stdout: caught ValueError: invalid timestamp
-# expect-stdout: from_timestamp ok
-# expect-stdout: === subscript assign ===
-# expect-stdout: [10, 20, 30]
-# expect-stdout: all edge case safety checks passed
 
 from sifr.random import randint
 from sifr.secrets import randbelow
@@ -40,138 +9,191 @@ from sifr.uuid import uuid_from_hex, UUID
 from sifr.ipaddress import ip_to_int
 from sifr.datetime import from_timestamp
 
+
 def main():
+    expected: list[str] = ["all edge case safety checks passed", "[10, 20, 30]", "=== subscript assign ===", "from_timestamp ok", "caught ValueError: invalid timestamp", "=== from_timestamp ===", "ip_to_int ok", "caught ValueError: invalid IPv4 address", "=== ip_to_int ===", "uuid ok", "caught ValueError: UUID hex string must be 32 hex characters", "caught ValueError: invalid UUID hex string", "=== uuid_from_hex ===", "topo sort ok", "caught CycleError: cycle detected in graph", "=== topological_sort ===", "batched ok", "caught ValueError: batched: n must be > 0", "=== batched ===", "fill ok", "caught ValueError: fill: width must be > 0", "=== fill ===", "wrap ok", "caught ValueError: wrap: width must be > 0", "=== wrap ===", "randbelow(10) ok", "caught ValueError: randbelow: n must be > 0", "=== randbelow ===", "randint(1, 5) ok", "caught ValueError: randint: min must be <= max", "=== randint ==="]
+    expected_index: int = 0
     # --- randint: a > b ---
-    print("=== randint ===")
+    assert str("=== randint ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     try:
         val: int = randint(5, 3)
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         val2: int = randint(1, 5)
-        print("randint(1, 5) ok")
+        assert str("randint(1, 5) ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- randbelow: n <= 0 ---
-    print("=== randbelow ===")
+    assert str("=== randbelow ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     try:
         val3: int = randbelow(0)
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         val4: int = randbelow(10)
-        print("randbelow(10) ok")
+        assert str("randbelow(10) ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- wrap: width <= 0 ---
-    print("=== wrap ===")
+    assert str("=== wrap ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     try:
         lines: list[str] = wrap("hello", 0)
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         lines2: list[str] = wrap("hello world", 5)
-        print("wrap ok")
+        assert str("wrap ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- fill: width <= 0 ---
-    print("=== fill ===")
+    assert str("=== fill ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     try:
         filled: str = fill("hello", 0)
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         filled2: str = fill("hello world", 5)
-        print("fill ok")
+        assert str("fill ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- batched: n <= 0 ---
-    print("=== batched ===")
+    assert str("=== batched ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     data: list[int] = [1, 2, 3]
     try:
         bat: list[list[int]] = batched(data, 0)
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         bat2: list[list[int]] = batched(data, 2)
-        print("batched ok")
+        assert str("batched ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- topological_sort: cycle ---
-    print("=== topological_sort ===")
+    assert str("=== topological_sort ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     from_nodes: list[int] = [0, 1]
     to_nodes: list[int] = [1, 0]
     try:
         order: list[int] = topological_sort(2, from_nodes, to_nodes)
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except CycleError as e:
-        print(f"caught CycleError: {e.message}")
+        assert str(f"caught CycleError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     from_nodes2: list[int] = [0, 0]
     to_nodes2: list[int] = [1, 2]
     try:
         order2: list[int] = topological_sort(3, from_nodes2, to_nodes2)
-        print("topo sort ok")
+        assert str("topo sort ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except CycleError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- uuid_from_hex: invalid ---
-    print("=== uuid_from_hex ===")
+    assert str("=== uuid_from_hex ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     try:
         u: UUID = uuid_from_hex("not-a-uuid-xyz!")
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         u2: UUID = uuid_from_hex("abcd")
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         u3: UUID = uuid_from_hex("550e8400e29b41d4a716446655440000")
-        print("uuid ok")
+        assert str("uuid ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- ip_to_int: invalid ---
-    print("=== ip_to_int ===")
+    assert str("=== ip_to_int ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     try:
         ip_val: int = ip_to_int("not.an.ip.address")
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         ip_val2: int = ip_to_int("192.168.1.1")
-        print("ip_to_int ok")
+        assert str("ip_to_int ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- from_timestamp: invalid ---
-    print("=== from_timestamp ===")
+    assert str("=== from_timestamp ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     try:
         dt: str = from_timestamp(-99999999999999.0)
-        print("unexpected")
+        assert str("unexpected") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"caught ValueError: {e.message}")
+        assert str(f"caught ValueError: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     try:
         dt2: str = from_timestamp(0.0)
-        print("from_timestamp ok")
+        assert str("from_timestamp ok") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ValueError as e:
-        print(f"error: {e.message}")
+        assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # --- subscript assign: out of bounds is a no-op ---
-    print("=== subscript assign ===")
+    assert str("=== subscript assign ===") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
     nums: list[int] = [10, 20, 30]
     nums[99] = 999
-    print(nums)
+    assert str(nums) == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
-    print("all edge case safety checks passed")
+    assert str("all edge case safety checks passed") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1

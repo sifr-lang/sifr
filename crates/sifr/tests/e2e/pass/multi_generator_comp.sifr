@@ -2,6 +2,5 @@
 def main():
     matrix: list[list[int]] = [[1, 2], [3, 4], [5, 6]]
     flat: list[int] = [x for row in matrix for x in row]
-    print(flat)
+    assert str(flat) == '[1, 2, 3, 4, 5, 6]'
 
-# expect-stdout: [1, 2, 3, 4, 5, 6]

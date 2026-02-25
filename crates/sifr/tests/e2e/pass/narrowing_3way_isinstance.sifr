@@ -1,7 +1,4 @@
 # Test: 3-way isinstance narrowing with field access
-# expect-stdout: A: 1
-# expect-stdout: B: hi
-# expect-stdout: C: 3.14
 
 class A:
     x: int
@@ -21,6 +18,6 @@ def check(val: A | B | C) -> str:
         return f"C: {val.z}"
 
 def main():
-    print(check(A(1)))
-    print(check(B("hi")))
-    print(check(C(3.14)))
+    assert str(check(A(1))) == 'A: 1'
+    assert str(check(B("hi"))) == 'B: hi'
+    assert str(check(C(3.14))) == 'C: 3.14'

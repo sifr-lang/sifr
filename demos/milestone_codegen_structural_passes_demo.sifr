@@ -7,17 +7,21 @@ def main():
     current_iso: str = current.isoformat()
     current_has_t: bool = "T" in current_iso
     print(f"current_has_t = {current_has_t}")
+    assert str(f"current_has_t = {current_has_t}") == "current_has_t = true"
 
     day = today()
     today_iso: str = day.isoformat()
     today_has_dash: bool = "-" in today_iso
     print(f"today_has_dash = {today_has_dash}")
+    assert str(f"today_has_dash = {today_has_dash}") == "today_has_dash = true"
 
     try:
         epoch: str = from_timestamp(0.0)
         print(f"from_timestamp_ok = {epoch}")
+        assert str(f"from_timestamp_ok = {epoch}") == "from_timestamp_ok = 1970-01-01T00:00:00"
     except ValueError as e:
         print(f"unexpected_error = {e.message}")
+        assert str(f"unexpected_error = {e.message}") == "from_timestamp_invalid = invalid timestamp"
 
     try:
         bad: str = from_timestamp(-99999999999999.0)
@@ -26,7 +30,3 @@ def main():
         print(f"from_timestamp_invalid = {e.message}")
 
 
-# expect-stdout: current_has_t = true
-# expect-stdout: today_has_dash = true
-# expect-stdout: from_timestamp_ok = 1970-01-01T00:00:00
-# expect-stdout: from_timestamp_invalid = invalid timestamp

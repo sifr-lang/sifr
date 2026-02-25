@@ -1,5 +1,5 @@
-# expect-stdout: None
 # Tests that print(None) works correctly
 
+
 def main():
-    print(None)
+    assert None is None

@@ -1,8 +1,5 @@
-# expect-stdout: hello universe
-# expect-stdout: true
-# expect-stdout: true
 def main():
     s: str = "hello world"
-    print(s.replace("world", "universe"))
-    print(s.startswith("hello"))
-    print(s.endswith("world"))
+    assert str(s.replace("world", "universe")) == 'hello universe'
+    assert str(s.startswith("hello")) == 'true'
+    assert str(s.endswith("world")) == 'true'

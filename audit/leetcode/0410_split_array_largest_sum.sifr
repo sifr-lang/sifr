@@ -23,7 +23,6 @@ def splitArray(nums: list[int], m: int) -> int:
     return res
 
 def main():
-    print(splitArray([7,2,5,10,8], 2))
+    assert str(splitArray([7,2,5,10,8], 2)) == '18'
 
-# expect-stdout: 18
 

@@ -1,5 +1,4 @@
 # isinstance-based type narrowing
-# expect-stdout: number: 43
 
 def describe(own x: int | str) -> str:
     if isinstance(x, int):
@@ -9,4 +8,4 @@ def describe(own x: int | str) -> str:
 
 def main():
     result: str = describe(42)
-    print(result)
+    assert str(result) == 'number: 43'

@@ -8,26 +8,19 @@ def main():
     c: Counter = from_list(words)
 
     # Get counts
-    print(c.get("hello"))
-    print(c.get("world"))
-    print(c.get("sifr"))
-    print(c.get("missing"))
+    assert str(c.get("hello")) == '3'
+    assert str(c.get("world")) == '2'
+    assert str(c.get("sifr")) == '1'
+    assert str(c.get("missing")) == '0'
 
     # Total
-    print(c.total())
+    assert str(c.total()) == '6'
 
     # In-place increment (uses self.counts[key] = val + 1 via AttributeSubscriptAssign)
     c.increment("sifr")
-    print(c.get("sifr"))
+    assert str(c.get("sifr")) == '2'
 
     # Most common top-1 (clear winner: hello with 3)
     top: list[str] = c.most_common(1)
-    print(top)
+    assert str(top) == '["hello"]'
 
-# expect-stdout: 3
-# expect-stdout: 2
-# expect-stdout: 1
-# expect-stdout: 0
-# expect-stdout: 6
-# expect-stdout: 2
-# expect-stdout: ["hello"]

@@ -18,12 +18,8 @@ def longestCommonPrefix(strs: list[str]) -> str:
     return prefix
 
 def main():
-    print(longestCommonPrefix(["flower", "flow", "flight"]))
-    print(longestCommonPrefix(["dog", "racecar", "car"]))
-    print(longestCommonPrefix(["interspecies", "interstellar", "interstate"]))
-    print(longestCommonPrefix(["a"]))
+    assert str(longestCommonPrefix(["flower", "flow", "flight"])) == 'fl'
+    assert str(longestCommonPrefix(["dog", "racecar", "car"])) == ''
+    assert str(longestCommonPrefix(["interspecies", "interstellar", "interstate"])) == 'inters'
+    assert str(longestCommonPrefix(["a"])) == 'a'
 
-# expect-stdout: fl
-# expect-stdout: 
-# expect-stdout: inters
-# expect-stdout: a

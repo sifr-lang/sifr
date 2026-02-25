@@ -15,9 +15,7 @@ def increasingTriplet(nums: list[int]) -> bool:
     return False  # No triplet exists
 
 def main():
-    print(increasingTriplet([1,2,3,4,5]))
-    print(increasingTriplet([5,4,3,2,1]))
+    assert str(increasingTriplet([1,2,3,4,5])) == 'true'
+    assert str(increasingTriplet([5,4,3,2,1])) == 'false'
 
-# expect-stdout: true
-# expect-stdout: false
 

@@ -1,9 +1,5 @@
 # Test: Callable-typed parameters correctly borrow Move-type arguments
 # When calling a Callable with Move-type args, the caller retains ownership.
-# expect-stdout: 3
-# expect-stdout: [1, 2, 3]
-# expect-stdout: 6
-# expect-stdout: hello
 
 from typing import Callable
 
@@ -29,10 +25,10 @@ def main():
     nums: list[int] = [1, 2, 3]
     # Call Callable with list -- ownership should be borrowed, not moved
     length: int = apply_to_list(get_len, nums)
-    print(length)    # 3
-    print(nums)      # [1, 2, 3] -- still usable after call!
+    assert str(length) == '3'
+    assert str(nums) == '[1, 2, 3]'
     total: int = apply_to_list(get_sum, nums)
-    print(total)     # 6
+    assert str(total) == '6'
     # Call Callable with str
     greeting: str = apply_to_str(greet, "world")
-    print(greeting)  # hello
+    assert str(greeting) == 'hello'

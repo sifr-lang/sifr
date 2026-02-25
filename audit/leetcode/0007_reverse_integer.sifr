@@ -21,13 +21,9 @@ def reverse(x: int) -> int:
     return res
 
 def main():
-    print(reverse(123))
-    print(reverse(-123))
-    print(reverse(120))
-    print(reverse(0))
+    assert str(reverse(123)) == '321'
+    assert str(reverse(-123)) == '-321'
+    assert str(reverse(120)) == '21'
+    assert str(reverse(0)) == '0'
 
-# expect-stdout: 321
-# expect-stdout: -321
-# expect-stdout: 21
-# expect-stdout: 0
 

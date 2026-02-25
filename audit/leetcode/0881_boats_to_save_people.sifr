@@ -12,9 +12,7 @@ def numRescueBoats(people: list[int], limit: int) -> int:
     return res
 
 def main():
-    print(numRescueBoats([1,2], 3))
-    print(numRescueBoats([3,2,2,1], 3))
+    assert str(numRescueBoats([1,2], 3)) == '1'
+    assert str(numRescueBoats([3,2,2,1], 3)) == '3'
 
-# expect-stdout: 1
-# expect-stdout: 3
 

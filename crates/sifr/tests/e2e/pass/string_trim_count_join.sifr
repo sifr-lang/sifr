@@ -1,16 +1,12 @@
-# expect-stdout: lstrip len = 4
-# expect-stdout: rstrip len = 4
-# expect-stdout: count an = 2
-# expect-stdout: join = a-b-c
 
 def main():
     s: str = "  hi  "
-    print("lstrip len = " + str(len(s.lstrip())))
-    print("rstrip len = " + str(len(s.rstrip())))
+    assert str("lstrip len = " + str(len(s.lstrip()))) == 'lstrip len = 4'
+    assert str("rstrip len = " + str(len(s.rstrip()))) == 'rstrip len = 4'
 
     w: str = "banana"
-    print("count an = " + str(w.count("an")))
+    assert str("count an = " + str(w.count("an"))) == 'count an = 2'
 
     sep: str = "-"
     parts: list[str] = ["a", "b", "c"]
-    print("join = " + sep.join(parts))
+    assert str("join = " + sep.join(parts)) == 'join = a-b-c'

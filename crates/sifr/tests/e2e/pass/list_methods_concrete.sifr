@@ -1,10 +1,7 @@
-# expect-stdout: 4
-# expect-stdout: true
-# expect-stdout: 1
 def main():
     items: list[int] = [3, 1, 2]
     items.append(4)
-    print(len(items))
+    assert str(len(items)) == '4'
 
-    print(items.contains(3))
-    print(items.count(1))
+    assert str(items.contains(3)) == 'true'
+    assert str(items.count(1)) == '1'

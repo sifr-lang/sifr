@@ -15,11 +15,8 @@ def isValid(s: str) -> bool:
     return not stack
 
 def main():
-    print(isValid("()"))
-    print(isValid("()[]{}"))
-    print(isValid("(]"))
+    assert str(isValid("()")) == 'true'
+    assert str(isValid("()[]{}")) == 'true'
+    assert str(isValid("(]")) == 'false'
 
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: false
 

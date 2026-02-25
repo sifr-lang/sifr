@@ -61,6 +61,5 @@ def main():
     combined: str = reduce(concat_strs, parts, "")
     assert_eq(combined, "hello world")
 
-    print("generic_callable_typevar: all tests passed")
+    assert str("generic_callable_typevar: all tests passed") == 'generic_callable_typevar: all tests passed'
 
-# expect-stdout: generic_callable_typevar: all tests passed

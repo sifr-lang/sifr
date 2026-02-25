@@ -1,9 +1,7 @@
-# expect-stdout: 3
-# expect-stdout: 2
 def divmod(a: int, b: int) -> tuple[int, int]:
     return a // b, a % b
 
 def main():
     q, r = divmod(17, 5)
-    print(q)
-    print(r)
+    assert str(q) == '3'
+    assert str(r) == '2'

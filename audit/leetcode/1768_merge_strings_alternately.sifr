@@ -18,10 +18,7 @@ def mergeAlternately(word1: str, word2: str) -> str:
     return result
 
 def main():
-    print(mergeAlternately("abc", "pqr"))
-    print(mergeAlternately("ab", "pqrs"))
-    print(mergeAlternately("abcd", "pq"))
+    assert str(mergeAlternately("abc", "pqr")) == 'apbqcr'
+    assert str(mergeAlternately("ab", "pqrs")) == 'apbqrs'
+    assert str(mergeAlternately("abcd", "pq")) == 'apbqcd'
 
-# expect-stdout: apbqcr
-# expect-stdout: apbqrs
-# expect-stdout: apbqcd

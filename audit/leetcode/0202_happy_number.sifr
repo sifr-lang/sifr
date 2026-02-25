@@ -19,9 +19,7 @@ def sumSquareDigits(n):
     return output
 
 def main():
-    print(isHappy(19))
-    print(isHappy(2))
+    assert str(isHappy(19)) == 'true'
+    assert str(isHappy(2)) == 'false'
 
-# expect-stdout: true
-# expect-stdout: false
 

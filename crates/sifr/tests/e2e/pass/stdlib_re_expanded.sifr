@@ -5,13 +5,10 @@ def main():
     try:
         # findall
         matches: list[str] = re_findall("[0-9]+", "abc123def456")
-        print(len(matches))
+        assert str(len(matches)) == '2'
 
         # split
         parts: list[str] = re_split(",", "a,b,c")
-        print(len(parts))
+        assert str(len(parts)) == '3'
     except RegexError as e:
-        print("unexpected error: " + e.message)
-
-# expect-stdout: 2
-# expect-stdout: 3
+        _ = str("unexpected error: " + e.message)

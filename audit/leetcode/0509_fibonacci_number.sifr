@@ -12,18 +12,11 @@ def fib(n: int) -> int:
     return b
 
 def main():
-    print(fib(0))
-    print(fib(1))
-    print(fib(2))
-    print(fib(3))
-    print(fib(4))
-    print(fib(10))
-    print(fib(20))
+    assert str(fib(0)) == '0'
+    assert str(fib(1)) == '1'
+    assert str(fib(2)) == '1'
+    assert str(fib(3)) == '2'
+    assert str(fib(4)) == '3'
+    assert str(fib(10)) == '55'
+    assert str(fib(20)) == '6765'
 
-# expect-stdout: 0
-# expect-stdout: 1
-# expect-stdout: 1
-# expect-stdout: 2
-# expect-stdout: 3
-# expect-stdout: 55
-# expect-stdout: 6765

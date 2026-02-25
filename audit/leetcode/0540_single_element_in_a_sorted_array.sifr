@@ -27,7 +27,6 @@ def singleNonDuplicate(nums: list[int]) -> int:
                 l = mid + 1
 
 def main():
-    print(singleNonDuplicate([1,1,2,3,3,4,4,8,8]))
+    assert str(singleNonDuplicate([1,1,2,3,3,4,4,8,8])) == '2'
 
-# expect-stdout: 2
 

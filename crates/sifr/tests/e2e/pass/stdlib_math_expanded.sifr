@@ -3,28 +3,20 @@ from sifr.math import asin, acos, atan, sinh, cosh, tanh, log10, log2, degrees, 
 
 def main():
     # Trig inverses
-    print(trunc(degrees(asin(1.0))))
-    print(trunc(degrees(acos(0.0))))
+    assert str(trunc(degrees(asin(1.0)))) == '90'
+    assert str(trunc(degrees(acos(0.0)))) == '90'
     
     # Hyperbolic
-    print(trunc(sinh(0.0)))
+    assert str(trunc(sinh(0.0))) == '0'
     
     # Log variants
-    print(trunc(log10(100.0)))
+    assert str(trunc(log10(100.0))) == '2'
     
     # Constants
-    print(isnan(nan))
-    print(isinf(inf))
+    assert str(isnan(nan)) == 'true'
+    assert str(isinf(inf)) == 'true'
     
     # Utility
-    print(trunc(3.7))
-    print(trunc(hypot(3.0, 4.0)))
+    assert str(trunc(3.7)) == '3'
+    assert str(trunc(hypot(3.0, 4.0))) == '5'
 
-# expect-stdout: 90
-# expect-stdout: 90
-# expect-stdout: 0
-# expect-stdout: 2
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: 3
-# expect-stdout: 5

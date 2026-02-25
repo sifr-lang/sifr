@@ -1,19 +1,14 @@
-# expect-stdout: 1
-# expect-stdout: 7
-# expect-stdout: 4
-# expect-stdout: 8
-# expect-stdout: 2
 # Tests bitwise augmented assignment operators
 
 def main():
     x: int = 5
     x &= 3
-    print(x)
+    assert str(x) == '1'
     x |= 6
-    print(x)
+    assert str(x) == '7'
     x ^= 3
-    print(x)
+    assert str(x) == '4'
     x <<= 1
-    print(x)
+    assert str(x) == '8'
     x >>= 2
-    print(x)
+    assert str(x) == '2'

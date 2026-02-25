@@ -1,7 +1,4 @@
 # Test: collection truthiness with not
-# expect-stdout: empty
-# expect-stdout: not empty
-# expect-stdout: empty dict
 
 def check_list(items: list[int]) -> str:
     if not items:
@@ -15,8 +12,8 @@ def check_dict(d: dict[str, int]) -> str:
 
 def main():
     empty: list[int] = []
-    print(check_list(empty))
+    assert str(check_list(empty)) == 'empty'
     full: list[int] = [1, 2, 3]
-    print(check_list(full))
+    assert str(check_list(full)) == 'not empty'
     d: dict[str, int] = {}
-    print(check_dict(d))
+    assert str(check_dict(d)) == 'empty dict'

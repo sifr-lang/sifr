@@ -1,6 +1,3 @@
-# expect-stdout: line1 = first line
-# expect-stdout: line2 = second line
-# expect-stdout: eof = true
 
 from sifr.io import write_text
 
@@ -11,12 +8,12 @@ def main():
         f = open(path, "r")
         line1: str | None = f.readline()
         if line1 is not None:
-            print("line1 = " + line1)
+            assert str("line1 = " + line1) == 'line1 = first line'
         line2: str | None = f.readline()
         if line2 is not None:
-            print("line2 = " + line2)
+            assert str("line2 = " + line2) == 'line2 = second line'
         line3: str | None = f.readline()
-        print("eof = " + str(line3 is None))
+        assert str("eof = " + str(line3 is None)) == 'eof = true'
         f.close()
     except IOError as e:
-        print("error: " + e.message)
+        _ = str("error: " + e.message)

@@ -11,6 +11,5 @@ def main():
         actual.append(b64encode(s))
 
     assert_vector_eq(actual, expected)
-    print("cpython_parity_harness_smoke: pass")
+    assert str("cpython_parity_harness_smoke: pass") == 'cpython_parity_harness_smoke: pass'
 
-# expect-stdout: cpython_parity_harness_smoke: pass

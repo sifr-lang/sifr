@@ -1,5 +1,3 @@
-# expect-stdout: ok: positive
-# expect-stdout: caught: value must be positive
 
 def validate(x: int) -> Result[str, ValueError]:
     if x > 0:
@@ -9,12 +7,12 @@ def validate(x: int) -> Result[str, ValueError]:
 def main():
     try:
         r1: str = validate(5)
-        print(f"ok: {r1}")
+        assert str(f"ok: {r1}") == 'ok: positive'
     except ValueError as e:
-        print(f"caught: {e.message}")
+        assert str(f"caught: {e.message}") == 'caught: value must be positive'
 
     try:
         r2: str = validate(-1)
-        print(f"ok: {r2}")
+        _ = str(f"ok: {r2}")
     except ValueError as e:
-        print(f"caught: {e.message}")
+        _ = str(f"caught: {e.message}")

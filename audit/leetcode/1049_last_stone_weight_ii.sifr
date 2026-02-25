@@ -19,7 +19,6 @@ def lastStoneWeightII(stones: list[int]) -> int:
     return dfs(0, 0)
 
 def main():
-    print(lastStoneWeightII([2,7,4,1,8,1]))
+    assert str(lastStoneWeightII([2,7,4,1,8,1])) == '1'
 
-# expect-stdout: 1
 

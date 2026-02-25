@@ -8,9 +8,7 @@ def missingNumber(nums: list[int]) -> int:
     return res
 
 def main():
-    print(missingNumber([3,0,1]))
-    print(missingNumber([0,1]))
+    assert str(missingNumber([3,0,1])) == '2'
+    assert str(missingNumber([0,1])) == '2'
 
-# expect-stdout: 2
-# expect-stdout: 2
 

@@ -59,7 +59,7 @@ def main():
 
     # most_common returns list of keys sorted by count descending
     mc: list[str] = c.most_common(2)
-    print(mc)
+    assert str(mc) == '["apple", "banana"]'
 
     # keys and values
     keys: list[str] = c.keys()
@@ -72,7 +72,5 @@ def main():
     c.increment("banana")
     assert_eq(c.get("banana"), 3)
 
-    print("cpython_collections: all 26 assertions passed")
+    assert str("cpython_collections: all 26 assertions passed") == 'cpython_collections: all 26 assertions passed'
 
-# expect-stdout: ["apple", "banana"]
-# expect-stdout: cpython_collections: all 26 assertions passed

@@ -4,8 +4,6 @@ from sifr.platform import platform_system, platform_arch
 def main():
     os_name: str = platform_system()
     arch: str = platform_arch()
-    print(len(os_name) > 0)
-    print(len(arch) > 0)
+    assert str(len(os_name) > 0) == 'true'
+    assert str(len(arch) > 0) == 'true'
 
-# expect-stdout: true
-# expect-stdout: true

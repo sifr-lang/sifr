@@ -1,7 +1,4 @@
 # Test: Multiple nested functions and nested calls
-# expect-stdout: 15
-# expect-stdout: 20
-# expect-stdout: 6
 
 def compute() -> int:
     base: int = 5
@@ -25,7 +22,7 @@ def with_helper(n: int) -> int:
     return step(n)
 
 def main():
-    print(compute())
+    assert str(compute()) == '15'
     nums: list[int] = [2, 4, 6, 8]
-    print(sum_list(nums))
-    print(with_helper(3))
+    assert str(sum_list(nums)) == '20'
+    assert str(with_helper(3)) == '6'

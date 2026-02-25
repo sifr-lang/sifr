@@ -5,24 +5,19 @@ def main():
     try:
         # Encode string to bytes
         data: list[int] = encode_utf8("hello")
-        print(len(data))
+        assert str(len(data)) == '5'
 
         # Decode bytes back to string
         text: str = decode_utf8(encode_utf8("hello"))
-        print(text)
+        assert str(text) == 'hello'
 
         # Hex encoding
         hex_str: str = bytes_to_hex(encode_utf8("hello"))
-        print(hex_str)
+        assert str(hex_str) == '68656c6c6f'
 
         # Hex decoding
         hex_bytes: list[int] = bytes_from_hex("68656c6c6f")
         result: str = decode_utf8(hex_bytes)
-        print(result)
+        assert str(result) == 'hello'
     except ParseError as e:
-        print("unexpected error: " + e.message)
-
-# expect-stdout: 5
-# expect-stdout: hello
-# expect-stdout: 68656c6c6f
-# expect-stdout: hello
+        _ = str("unexpected error: " + e.message)

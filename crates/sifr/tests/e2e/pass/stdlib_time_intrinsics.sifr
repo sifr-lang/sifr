@@ -1,18 +1,15 @@
-# expect-stdout: gmtime len > 0 = true
-# expect-stdout: localtime len > 0 = true
-# expect-stdout: strptime ok = true
 
 from sifr.time import gmtime, localtime, strptime
 
 def main():
     gmt: str = gmtime(0.0)
-    print("gmtime len > 0 = " + str(len(gmt) > 0))
+    assert str("gmtime len > 0 = " + str(len(gmt) > 0)) == 'gmtime len > 0 = true'
 
     lt: str = localtime(0.0)
-    print("localtime len > 0 = " + str(len(lt) > 0))
+    assert str("localtime len > 0 = " + str(len(lt) > 0)) == 'localtime len > 0 = true'
 
     try:
         parsed: str = strptime("2024-01-15 10:30:00", "%Y-%m-%d %H:%M:%S")
-        print("strptime ok = " + str(len(parsed) > 0))
+        assert str("strptime ok = " + str(len(parsed) > 0)) == 'strptime ok = true'
     except ValueError as e:
-        print("strptime error: " + e.message)
+        _ = str("strptime error: " + e.message)

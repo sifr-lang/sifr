@@ -1,5 +1,3 @@
-# expect-stdout: true
-# expect-stdout: true
 
 class Color:
     r: int
@@ -17,8 +15,8 @@ def main():
     h1: int = hash(c1)
     h2: int = hash(c2)
     # Same values should produce same hash
-    print(h1 == h2)
+    assert str(h1 == h2) == 'true'
     # Hash of an int should be consistent
     a: int = hash(42)
     b: int = hash(42)
-    print(a == b)
+    assert str(a == b) == 'true'

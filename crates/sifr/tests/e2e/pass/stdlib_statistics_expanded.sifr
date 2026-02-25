@@ -5,8 +5,6 @@ def main():
     try:
         data: list[int] = [1, 2, 2, 3, 3, 3, 4]
         m: int = mode(data)
-        print(m)
+        assert str(m) == '3'
     except StatisticsError as e:
-        print(e.message)
-
-# expect-stdout: 3
+        _ = str(e.message)

@@ -2,12 +2,8 @@
 from sifr.pathlib import join_path, basename, dirname, extension
 
 def main():
-    print(join_path("/home", "user"))
-    print(basename("/home/user/file.txt"))
-    print(dirname("/home/user/file.txt"))
-    print(extension("/home/user/file.txt"))
+    assert str(join_path("/home", "user")) == '/home/user'
+    assert str(basename("/home/user/file.txt")) == 'file.txt'
+    assert str(dirname("/home/user/file.txt")) == '/home/user'
+    assert str(extension("/home/user/file.txt")) == '.txt'
 
-# expect-stdout: /home/user
-# expect-stdout: file.txt
-# expect-stdout: /home/user
-# expect-stdout: .txt

@@ -6,6 +6,5 @@ def main():
     data: list[float] = [1.0, 2.5, 3.5]
     acc: list[float] = accumulate(data)
     assert_eq(len(acc), 3)
-    print("generic_accumulate_float: passed")
+    assert str("generic_accumulate_float: passed") == 'generic_accumulate_float: passed'
 
-# expect-stdout: generic_accumulate_float: passed

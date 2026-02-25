@@ -82,6 +82,5 @@ def main():
     assert_false(issubnormal(1.25))
     assert_false(isnormal(0.0))
 
-    print("cpython_math_parity_expanded_matrix: pass")
+    assert str("cpython_math_parity_expanded_matrix: pass") == 'cpython_math_parity_expanded_matrix: pass'
 
-# expect-stdout: cpython_math_parity_expanded_matrix: pass

@@ -16,7 +16,6 @@ def removeDuplicates(nums: list[int]) -> int:
     return l
 
 def main():
-    print(removeDuplicates([1,1,1,2,2,3]))
+    assert str(removeDuplicates([1,1,1,2,2,3])) == '5'
 
-# expect-stdout: 5
 

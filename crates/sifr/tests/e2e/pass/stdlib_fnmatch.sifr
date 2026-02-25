@@ -3,32 +3,24 @@ from sifr.fnmatch import fnmatch, fnmatch_filter
 
 def main():
     # exact match
-    print(fnmatch("hello.txt", "hello.txt"))
+    assert str(fnmatch("hello.txt", "hello.txt")) == 'true'
 
     # wildcard *
-    print(fnmatch("hello.txt", "*.txt"))
-    print(fnmatch("hello.py", "*.txt"))
+    assert str(fnmatch("hello.txt", "*.txt")) == 'true'
+    assert str(fnmatch("hello.py", "*.txt")) == 'false'
 
     # wildcard ?
-    print(fnmatch("cat", "c?t"))
-    print(fnmatch("cart", "c?t"))
+    assert str(fnmatch("cat", "c?t")) == 'true'
+    assert str(fnmatch("cart", "c?t")) == 'false'
 
     # filter
     names: list[str] = ["a.txt", "b.py", "c.txt", "d.rs"]
     matched: list[str] = fnmatch_filter(names, "*.txt")
-    print(len(matched))
+    assert str(len(matched)) == '2'
     first: str | None = matched[0]
     if first is not None:
-        print(first)
+        assert str(first) == 'a.txt'
     second: str | None = matched[1]
     if second is not None:
-        print(second)
+        assert str(second) == 'c.txt'
 
-# expect-stdout: true
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: true
-# expect-stdout: false
-# expect-stdout: 2
-# expect-stdout: a.txt
-# expect-stdout: c.txt

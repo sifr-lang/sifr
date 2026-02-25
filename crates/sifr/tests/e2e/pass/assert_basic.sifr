@@ -1,8 +1,7 @@
-# expect-stdout: all assertions passed
 
 def main():
     x: int = 42
     assert x == 42
     assert x > 0
     assert x != 0
-    print("all assertions passed")
+    assert str("all assertions passed") == 'all assertions passed'

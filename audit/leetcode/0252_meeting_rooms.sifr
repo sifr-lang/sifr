@@ -12,9 +12,7 @@ def canAttendMeetings(intervals):
     return True
 
 def main():
-    print(canAttendMeetings([[0,30],[5,10],[15,20]]))
-    print(canAttendMeetings([[7,10],[2,4]]))
+    assert str(canAttendMeetings([[0,30],[5,10],[15,20]])) == 'false'
+    assert str(canAttendMeetings([[7,10],[2,4]])) == 'true'
 
-# expect-stdout: false
-# expect-stdout: true
 

@@ -2,26 +2,18 @@
 # Showcases all codegen bug fixes in this milestone
 
 # --- Fix 1: Tuple indexing (pair.0 instead of pair.0_i64) ---
-# expect-stdout: Tuple index: 10, 20
 
 # --- Fix 2: int/int true division (float result) ---
-# expect-stdout: Division 10/3: 3.3333333333333335
 
 # --- Fix 3: print(None) ---
-# expect-stdout: None value: None
 
 # --- Fix 4: bool() on collections ---
-# expect-stdout: bool([1,2,3]): true
-# expect-stdout: bool([]): false
 
 # --- Fix 5: **= power assignment on int ---
-# expect-stdout: 2**3 = 8
 
 # --- Fix 6: Mixed int/float arithmetic ---
-# expect-stdout: 10 + 3.5 = 13.5
 
 # --- Fix 7: Escaped quotes in strings ---
-# expect-stdout: She said "hello"
 
 def main():
     # Fix 1: Tuple indexing
@@ -29,34 +21,42 @@ def main():
     a: int = pair[0]
     b: int = pair[1]
     print(f"Tuple index: {a}, {b}")
+    assert str(f"Tuple index: {a}, {b}") == "Tuple index: 10, 20"
 
     # Fix 2: int/int true division
     x: int = 10
     y: int = 3
     result: float = x / y
     print(f"Division 10/3: {result}")
+    assert str(f"Division 10/3: {result}") == "Division 10/3: 3.3333333333333335"
 
     # Fix 3: print(None)
     val: int | None = None
     print(f"None value: {val}")
+    assert str(f"None value: {val}") == "None value: None"
 
     # Fix 4: bool() on collections
     nums: list[int] = [1, 2, 3]
     empty: list[int] = []
     print(f"bool([1,2,3]): {bool(nums)}")
+    assert str(f"bool([1,2,3]): {bool(nums)}") == "bool([1,2,3]): true"
     print(f"bool([]): {bool(empty)}")
+    assert str(f"bool([]): {bool(empty)}") == "bool([]): false"
 
     # Fix 5: **= power assignment on int
     base: int = 2
     base **= 3
     print(f"2**3 = {base}")
+    assert str(f"2**3 = {base}") == "2**3 = 8"
 
     # Fix 6: Mixed int/float arithmetic
     i: int = 10
     f: float = 3.5
     mixed: float = i + f
     print(f"10 + 3.5 = {mixed}")
+    assert str(f"10 + 3.5 = {mixed}") == "10 + 3.5 = 13.5"
 
     # Fix 7: Escaped quotes
     msg: str = "She said \"hello\""
     print(msg)
+    assert str(msg) == "She said \"hello\""

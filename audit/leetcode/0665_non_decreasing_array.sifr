@@ -17,9 +17,7 @@ def checkPossibility(nums):
     return True
 
 def main():
-    print(checkPossibility([4,2,3]))
-    print(checkPossibility([4,2,1]))
+    assert str(checkPossibility([4,2,3])) == 'true'
+    assert str(checkPossibility([4,2,1])) == 'false'
 
-# expect-stdout: true
-# expect-stdout: false
 

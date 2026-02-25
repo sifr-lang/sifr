@@ -6,11 +6,8 @@ def main():
     a: list[int] = [1, 2, 3]
     b: list[int] = [4, 5, 6]
     result: list[int] = chain(a, b)
-    print(result)
+    assert str(result) == '[1, 2, 3, 4, 5, 6]'
     # a and b are still usable after chain (borrow semantics)
-    print(len(a))
-    print(len(b))
+    assert str(len(a)) == '3'
+    assert str(len(b)) == '3'
 
-# expect-stdout: [1, 2, 3, 4, 5, 6]
-# expect-stdout: 3
-# expect-stdout: 3

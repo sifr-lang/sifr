@@ -11,7 +11,6 @@ def partitionString(s: str) -> int:
     return c+1
 
 def main():
-    print(minPartitions("abacbc"))
+    assert str(minPartitions("abacbc")) == '3'
 
-# expect-stdout: 3
 

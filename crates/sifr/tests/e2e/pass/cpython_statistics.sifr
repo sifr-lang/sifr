@@ -127,8 +127,6 @@ def main():
         s_uni: float = stdev(uniform)
         assert_almost_eq(s_uni, 0.0, 0.0001)
 
-        print("cpython_statistics: all 42 assertions passed")
+        assert str("cpython_statistics: all 42 assertions passed") == 'cpython_statistics: all 42 assertions passed'
     except StatisticsError as e:
-        print("unexpected error: " + e.message)
-
-# expect-stdout: cpython_statistics: all 42 assertions passed
+        _ = str("unexpected error: " + e.message)

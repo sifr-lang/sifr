@@ -1,5 +1,4 @@
 # Test: &mut self for methods that mutate fields
-# expect-stdout: 2
 
 class Counter:
     count: int
@@ -10,4 +9,4 @@ def main():
     c: Counter = Counter(0)
     c.increment()
     c.increment()
-    print(c.count)
+    assert str(c.count) == '2'

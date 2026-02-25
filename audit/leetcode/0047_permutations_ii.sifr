@@ -22,7 +22,6 @@ def permuteUnique(nums: list[int]) -> list[list[int]]:
     return result
 
 def main():
-    print(permuteUnique([1,1,2]))
+    assert str(permuteUnique([1,1,2])) == '[[1, 1, 2], [1, 2, 1], [2, 1, 1]]'
 
-# expect-stdout: [[1, 1, 2], [1, 2, 1], [2, 1, 1]]
 

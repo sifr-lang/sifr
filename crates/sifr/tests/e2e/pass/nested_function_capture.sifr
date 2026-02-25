@@ -1,5 +1,4 @@
 # Test: Nested function capturing outer variable
-# expect-stdout: 15
 
 def outer() -> int:
     x: int = 10
@@ -8,4 +7,4 @@ def outer() -> int:
     return inner()
 
 def main():
-    print(outer())
+    assert str(outer()) == '15'

@@ -16,7 +16,6 @@ def reverseWords(s: str) -> str:
     return reversed_str
 
 def main():
-    print(reverseWords("the sky is blue"))
+    assert str(reverseWords("the sky is blue")) == 'blue is sky the'
 
-# expect-stdout: blue is sky the
 

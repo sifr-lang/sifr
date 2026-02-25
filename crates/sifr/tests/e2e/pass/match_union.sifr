@@ -14,8 +14,6 @@ def make_str() -> int | str:
 def main():
     a: int | str = make_int()
     b: int | str = make_str()
-    print(describe_union(a))
-    print(describe_union(b))
+    assert str(describe_union(a)) == 'integer'
+    assert str(describe_union(b)) == 'string'
 
-# expect-stdout: integer
-# expect-stdout: string

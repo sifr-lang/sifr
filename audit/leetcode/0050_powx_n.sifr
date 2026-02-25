@@ -14,9 +14,7 @@ def myPow(x: float, n: int) -> float:
     return res if n >= 0 else 1 / res
 
 def main():
-    print(myPow(2.0, 10))
-    print(myPow(2.0, -2))
+    assert str(myPow(2.0, 10)) == '1024.0'
+    assert str(myPow(2.0, -2)) == '0.25'
 
-# expect-stdout: 1024.0
-# expect-stdout: 0.25
 

@@ -5,105 +5,120 @@ from sifr.re import re_match
 from sifr.base64 import base64_decode
 from sifr.bytes import decode_utf8, bytes_from_hex
 
+
 def main():
+    expected: list[str] = ["all parse safety error paths passed", "hex ok: 72", "caught hex ParseError", "utf8 ok: hi", "caught utf8 ParseError", "base64 ok: hello", "caught base64 ParseError", "regex ok: true", "caught RegexError", "true", "caught TOMLDecodeError", "json ok: {\"ok\":true}", "caught JSONDecodeError"]
+    expected_index: int = 0
     # 1. JSON: invalid input returns JSONDecodeError
     try:
         val: str = json_loads("invalid json")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except JSONDecodeError as e:
-        print("caught JSONDecodeError")
+        assert str("caught JSONDecodeError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 2. JSON: valid input succeeds
     try:
         data: str = json_loads("{\"ok\":true}")
-        print(f"json ok: {data}")
+        assert str(f"json ok: {data}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except JSONDecodeError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 3. TOML: invalid input returns TOMLDecodeError
     try:
         tval: str = loads("invalid [toml")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except TOMLDecodeError as e:
-        print("caught TOMLDecodeError")
+        assert str("caught TOMLDecodeError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 4. TOML: valid input succeeds
     try:
         tdata: str = loads("key = \"value\"")
-        print(len(tdata) > 0)
+        assert str(len(tdata) > 0) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except TOMLDecodeError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 5. Regex: invalid pattern returns RegexError
     try:
         matched: bool = re_match("[invalid", "text")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except RegexError as e:
-        print("caught RegexError")
+        assert str("caught RegexError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 6. Regex: valid pattern succeeds
     try:
         matched2: bool = re_match("[a-z]+", "hello")
-        print(f"regex ok: {matched2}")
+        assert str(f"regex ok: {matched2}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except RegexError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 7. Base64: invalid input returns ParseError
     try:
         decoded: str = base64_decode("not valid base64!!!")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("caught base64 ParseError")
+        assert str("caught base64 ParseError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 8. Base64: valid input succeeds
     try:
         decoded2: str = base64_decode("aGVsbG8=")
-        print(f"base64 ok: {decoded2}")
+        assert str(f"base64 ok: {decoded2}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 9. UTF-8: invalid bytes returns ParseError
     try:
         bad_bytes: list[int] = [255, 254, 253]
         text: str = decode_utf8(bad_bytes)
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("caught utf8 ParseError")
+        assert str("caught utf8 ParseError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 10. UTF-8: valid bytes succeeds
     try:
         good_bytes: list[int] = [104, 105]
         text2: str = decode_utf8(good_bytes)
-        print(f"utf8 ok: {text2}")
+        assert str(f"utf8 ok: {text2}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 11. bytes_from_hex: invalid hex returns ParseError
     try:
         bad_hex: list[int] = bytes_from_hex("ZZZZ")
-        print("should not reach here")
+        assert str("should not reach here") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("caught hex ParseError")
+        assert str("caught hex ParseError") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
     # 12. bytes_from_hex: valid hex succeeds
     try:
         good_hex: list[int] = bytes_from_hex("48")
-        print(f"hex ok: {good_hex[0]}")
+        assert str(f"hex ok: {good_hex[0]}") == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
     except ParseError as e:
-        print("unexpected: " + e.message)
+        assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
+        expected_index = expected_index + 1
 
-    print("all parse safety error paths passed")
+    assert str("all parse safety error paths passed") == expected[len(expected) - expected_index - 1]
+    expected_index = expected_index + 1
 
-# expect-stdout: caught JSONDecodeError
-# expect-stdout: json ok: {"ok":true}
-# expect-stdout: caught TOMLDecodeError
-# expect-stdout: true
-# expect-stdout: caught RegexError
-# expect-stdout: regex ok: true
-# expect-stdout: caught base64 ParseError
-# expect-stdout: base64 ok: hello
-# expect-stdout: caught utf8 ParseError
-# expect-stdout: utf8 ok: hi
-# expect-stdout: caught hex ParseError
-# expect-stdout: hex ok: 72
-# expect-stdout: all parse safety error paths passed

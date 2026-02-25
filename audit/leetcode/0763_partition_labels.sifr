@@ -22,7 +22,6 @@ def partitionLabels(S: str) -> list[int]:
     return res
 
 def main():
-    print(partitionLabels("ababcbacadefegdehijhklij"))
+    assert str(partitionLabels("ababcbacadefegdehijhklij")) == '[9, 7, 8]'
 
-# expect-stdout: [9, 7, 8]
 

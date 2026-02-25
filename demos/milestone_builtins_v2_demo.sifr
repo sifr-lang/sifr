@@ -1,13 +1,12 @@
 # milestone_builtins_v2 Demo
-# expect-stdout: max(3, 7) = 7
-# expect-stdout: min(3, 7) = 3
-# expect-stdout: pow(2, 10) = 1024
-# expect-stdout: 0 2 4 6 8
 
 def main():
     print(f"max(3, 7) = {max(3, 7)}")
+    assert str(f"max(3, 7) = {max(3, 7)}") == "max(3, 7) = 7"
     print(f"min(3, 7) = {min(3, 7)}")
+    assert str(f"min(3, 7) = {min(3, 7)}") == "min(3, 7) = 3"
     print(f"pow(2, 10) = {pow(2, 10)}")
+    assert str(f"pow(2, 10) = {pow(2, 10)}") == "pow(2, 10) = 1024"
 
     result: str = ""
     for i in range(0, 10, 2):
@@ -15,3 +14,4 @@ def main():
             result = result + " "
         result = result + str(i)
     print(result)
+    assert str(result) == "0 2 4 6 8"
