@@ -179,7 +179,9 @@ impl RustEmitter {
                             name: "f".to_string(),
                             ty: RustType::Ref {
                                 mutable: true,
-                                inner: Box::new(RustType::Named("std::fmt::Formatter<'_>".to_string())),
+                                inner: Box::new(RustType::Named(
+                                    "std::fmt::Formatter<'_>".to_string(),
+                                )),
                             },
                         },
                     ],

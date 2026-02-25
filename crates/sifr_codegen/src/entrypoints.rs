@@ -1,8 +1,8 @@
 use super::{CodegenResult, HirModule, Renderer, RustEmitter, RustFile, RustItem, StdlibCode};
+use crate::assert_output_drained;
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::ir_optimize::remove_trivial_clones_in_items;
 use crate::ir_validate::validate_items;
-use crate::assert_output_drained;
 
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
