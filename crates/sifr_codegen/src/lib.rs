@@ -944,6 +944,11 @@ impl RustEmitter {
     }
 
     fn try_emit_structured_expr(&mut self, expr: &HirExpr) -> Result<bool, crate::CodegenError> {
+        if matches!(expr, HirExpr::Compare { .. } | HirExpr::BoolOp { .. })
+            && expr_uses_borrowed_param(expr, &self.borrowed_params, &self.mut_borrowed_params)
+        {
+            return Ok(false);
+        }
         if let HirExpr::Call { func, args, .. } = expr {
             if (self.intrinsic_functions.contains(func.as_str()) || func == "builtin_open")
                 && self.try_emit_intrinsic_via_registry(func, args)
@@ -979,10 +984,6 @@ impl RustEmitter {
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         self.lowering_stats.stmt_total += 1;
-        if should_force_stmt_fallback(self, stmt) {
-            self.emit_stmt_fallback(stmt);
-            return;
-        }
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;
         }
@@ -995,6 +996,10 @@ impl RustEmitter {
                 return;
             }
         }
+        if should_force_stmt_fallback(self, stmt) {
+            self.emit_stmt_fallback(stmt);
+            return;
+        }
         self.emit_stmt_fallback(stmt);
     }
 
@@ -1002,10 +1007,6 @@ impl RustEmitter {
         self.lowering_stats.expr_total += 1;
         if is_leaf_expr_candidate(expr) {
             self.lowering_stats.expr_candidate_total += 1;
-        }
-        if should_force_expr_fallback(self, expr) {
-            self.emit_expr_fallback(expr);
-            return;
         }
         match self.try_emit_structured_expr(expr) {
             Ok(true) => return,
@@ -1015,6 +1016,10 @@ impl RustEmitter {
                 self.emit_expr_fallback(expr);
                 return;
             }
+        }
+        if should_force_expr_fallback(self, expr) {
+            self.emit_expr_fallback(expr);
+            return;
         }
         self.emit_expr_fallback(expr);
     }
