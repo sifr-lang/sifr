@@ -65,6 +65,7 @@ status: **partially met**
 - [x] Registry arg lowering and lowered-fallback rendering now share one explicit expr `Result` helper path (`try_lower_registry_expr_result`)
 - [x] Production module-constant item lowering entry now has explicit `Result` contract (`try_lower_simple_module_constant_item_result`) with name-shape validation
 - [x] Production module-constant item lowering `Result` path now propagates leaf-lowering errors (not `None`-collapse)
+- [x] Production module-constant emission now routes through explicit `Result` helper (`try_emit_lowered_module_constant_result`) before fallback
 - [x] Production statement lowering now enters through `ScopeContext` (`try_lower_simple_stmt_with_scope` in `emit_stmt`)
 - [x] Union enums still emitted as raw `enum_defs` strings, not `RustItem::Enum` nodes
 

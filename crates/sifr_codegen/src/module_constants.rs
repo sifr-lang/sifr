@@ -5,8 +5,12 @@ use sifr_type_system::Type;
 impl RustEmitter {
     pub(super) fn emit_module_constants(&mut self, module: &HirModule) {
         for (name, ty, value) in &module.constants {
-            if self.try_emit_lowered_module_constant(name, ty, value) {
-                continue;
+            match self.try_emit_lowered_module_constant_result(name, ty, value) {
+                Ok(true) => continue,
+                Ok(false) => {}
+                Err(_) => {
+                    self.lowering_stats.item_lowering_errors += 1;
+                }
             }
             self.emit_module_constant_fallback(name, ty, value);
         }
@@ -15,18 +19,21 @@ impl RustEmitter {
         }
     }
 
-    fn try_emit_lowered_module_constant(&mut self, name: &str, ty: &Type, value: &HirExpr) -> bool {
-        let Ok(lowered) = try_lower_simple_module_constant_item_result(name, ty, value) else {
-            self.lowering_stats.item_lowering_errors += 1;
-            return false;
-        };
-        let Some((item, rust_name_call)) = lowered else {
-            return false;
+    fn try_emit_lowered_module_constant_result(
+        &mut self,
+        name: &str,
+        ty: &Type,
+        value: &HirExpr,
+    ) -> Result<bool, crate::CodegenError> {
+        let Some((item, rust_name_call)) =
+            try_lower_simple_module_constant_item_result(name, ty, value)?
+        else {
+            return Ok(false);
         };
         self.output.push_str(&render_items(&[item]));
         self.module_constants
             .insert(name.to_string(), (ty.clone(), rust_name_call));
-        true
+        Ok(true)
     }
 
     fn emit_module_constant_fallback(&mut self, name: &str, ty: &Type, value: &HirExpr) {
