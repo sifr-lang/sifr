@@ -1631,3 +1631,14 @@ fn test_module_constants_flow_through_assembled_body_items() {
     assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
     assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
 }
+
+#[test]
+fn test_module_body_flows_through_assembled_body_items() {
+    let module_body_src = include_str!("module_body.rs");
+    let lib_src = include_str!("lib.rs");
+
+    assert!(module_body_src.contains("self.drain_emitted_output_item(output_len);"));
+    assert!(module_body_src.contains("self.body_items.push(RustItem::RawCode(emitted));"));
+    assert!(!module_body_src.contains("self.output.push('\\n');"));
+    assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
+}
