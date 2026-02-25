@@ -20,10 +20,8 @@ impl RustEmitter {
         if self.should_force_render_fallback(expr) {
             return Ok(None);
         }
-        Ok(
-            crate::try_lower_leaf_expr_result(expr)?
-                .map(|lowered| self.rewrite_stdlib_constant_idents_in_expr(lowered)),
-        )
+        Ok(crate::try_lower_leaf_expr_result(expr)?
+            .map(|lowered| self.rewrite_stdlib_constant_idents_in_expr(lowered)))
     }
 
     pub(super) fn render_expr_with_lowered_fallback(&mut self, expr: &HirExpr) -> String {
@@ -120,12 +118,12 @@ impl RustEmitter {
                 mutable,
                 expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
             },
-            crate::RustExpr::Deref(expr) => crate::RustExpr::Deref(Box::new(
-                self.rewrite_stdlib_constant_idents_in_expr(*expr),
-            )),
-            crate::RustExpr::Clone(expr) => crate::RustExpr::Clone(Box::new(
-                self.rewrite_stdlib_constant_idents_in_expr(*expr),
-            )),
+            crate::RustExpr::Deref(expr) => {
+                crate::RustExpr::Deref(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))
+            }
+            crate::RustExpr::Clone(expr) => {
+                crate::RustExpr::Clone(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))
+            }
             crate::RustExpr::Cast { expr, ty } => crate::RustExpr::Cast {
                 expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
                 ty,
@@ -135,9 +133,8 @@ impl RustEmitter {
                     .into_iter()
                     .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
                     .collect(),
-                expr: expr.map(|inner| {
-                    Box::new(self.rewrite_stdlib_constant_idents_in_expr(*inner))
-                }),
+                expr: expr
+                    .map(|inner| Box::new(self.rewrite_stdlib_constant_idents_in_expr(*inner))),
             },
             crate::RustExpr::If {
                 cond,
@@ -146,9 +143,8 @@ impl RustEmitter {
             } => crate::RustExpr::If {
                 cond: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*cond)),
                 then_expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*then_expr)),
-                else_expr: else_expr.map(|inner| {
-                    Box::new(self.rewrite_stdlib_constant_idents_in_expr(*inner))
-                }),
+                else_expr: else_expr
+                    .map(|inner| Box::new(self.rewrite_stdlib_constant_idents_in_expr(*inner))),
             },
             crate::RustExpr::Match { expr, arms } => crate::RustExpr::Match {
                 expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
@@ -213,12 +209,12 @@ impl RustEmitter {
             crate::RustExpr::Try(expr) => {
                 crate::RustExpr::Try(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))
             }
-            crate::RustExpr::Await(expr) => crate::RustExpr::Await(Box::new(
-                self.rewrite_stdlib_constant_idents_in_expr(*expr),
-            )),
-            crate::RustExpr::Paren(expr) => crate::RustExpr::Paren(Box::new(
-                self.rewrite_stdlib_constant_idents_in_expr(*expr),
-            )),
+            crate::RustExpr::Await(expr) => {
+                crate::RustExpr::Await(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))
+            }
+            crate::RustExpr::Paren(expr) => {
+                crate::RustExpr::Paren(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))
+            }
             crate::RustExpr::Range { start, end } => crate::RustExpr::Range {
                 start: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*start)),
                 end: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*end)),
@@ -347,9 +343,9 @@ impl RustEmitter {
                     .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
                     .collect(),
             ),
-            crate::RustStmt::Break
-            | crate::RustStmt::Continue
-            | crate::RustStmt::RawCode(_) => stmt,
+            crate::RustStmt::Break | crate::RustStmt::Continue | crate::RustStmt::RawCode(_) => {
+                stmt
+            }
         }
     }
 
