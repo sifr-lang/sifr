@@ -61,6 +61,7 @@ status: **partially met**
 - [x] Production stmt lowering `Result` entry now validates nested stmt/expr shapes before fallback routing
 - [x] Production expr lowering entry now has explicit `Result` contract (`try_lower_leaf_expr_result`) with shape validation
 - [x] Production emit wrappers now route through explicit `Result`-based structured-attempt helpers (`try_emit_structured_stmt`, `try_emit_structured_expr`) before fallback
+- [x] Expression fallback no longer enforces subtree-wide legacy-only recursion (`fallback_depth` removed), allowing nested fallback subexpressions to still attempt structured lowering
 - [x] Production helper rendering paths now consume expr `Result` contract (`expr_render_helpers`, `intrinsic_method_emitters`)
 - [x] Registry arg lowering and lowered-fallback rendering now share one explicit expr `Result` helper path (`try_lower_registry_expr_result`)
 - [x] Production module-constant item lowering entry now has explicit `Result` contract (`try_lower_simple_module_constant_item_result`) with name-shape validation

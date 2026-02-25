@@ -463,8 +463,9 @@ impl RustEmitter {
                     // hash(x) -> { use std::hash::{Hash, Hasher}; let mut h = std::collections::hash_map::DefaultHasher::new(); x.hash(&mut h); h.finish() as i64 }
                     if !args.is_empty() {
                         self.write("{ use std::hash::{Hash, Hasher}; let mut _h = std::collections::hash_map::DefaultHasher::new(); ");
+                        self.write("(");
                         self.emit_expr(&args[0]);
-                        self.write(".hash(&mut _h); _h.finish() as i64 }");
+                        self.write(").hash(&mut _h); _h.finish() as i64 }");
                     }
                 } else if func == "round" {
                     if args.len() == 1 {
