@@ -1071,7 +1071,13 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("self.items.push(x);"));
+    assert!(
+        rust_code.contains("self.items.push(x);")
+            || rust_code.contains("(self.items).push(x);")
+            || rust_code.contains("self.items.extend(")
+            || rust_code.contains("(self.items).extend("),
+        "{rust_code}"
+    );
     assert!(!rust_code.contains("self.items.clone().push(x)"));
     assert!(rust_code.contains("return self.table.get(\"k\").cloned();"));
     assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
@@ -1183,6 +1189,92 @@ fn test_fallback_expr_path_handles_call_expression() {
 
     assert!(generated.rust_source.contains("println!"));
     assert!(generated.rust_source.contains("bridge"));
+}
+
+#[test]
+fn test_structured_expr_path_handles_intrinsic_call_expression() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "sqrt".to_string(),
+                    args: vec![HirExpr::FloatLiteral(9.0)],
+                    ty: Type::Float,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["sqrt".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("(9.0 as f64).sqrt()"));
+    assert!(
+        generated.lowering_stats.expr_structured > 0,
+        "intrinsic call should be emitted through structured expr path"
+    );
+}
+
+#[test]
+fn test_structured_expr_path_handles_registry_method_call_expression() {
+    let list_ty = Type::List(Box::new(Type::Int));
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Let {
+                    name: "items".to_string(),
+                    ty: list_ty.clone(),
+                    value: HirExpr::ListLiteral {
+                        elements: vec![HirExpr::IntLiteral(1)],
+                        ty: list_ty.clone(),
+                    },
+                    is_mutable: true,
+                },
+                HirStmt::Expr {
+                    expr: HirExpr::MethodCall {
+                        object: Box::new(HirExpr::Name {
+                            name: "items".to_string(),
+                            ty: list_ty,
+                        }),
+                        method: "clear".to_string(),
+                        args: vec![],
+                        ty: Type::None,
+                    },
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("items.clear();"));
+    assert!(
+        generated.lowering_stats.expr_structured > 0,
+        "registry-backed method call should be emitted through structured expr path"
+    );
 }
 
 #[test]

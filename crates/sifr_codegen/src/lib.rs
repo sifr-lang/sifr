@@ -944,6 +944,28 @@ impl RustEmitter {
     }
 
     fn try_emit_structured_expr(&mut self, expr: &HirExpr) -> Result<bool, crate::CodegenError> {
+        if let HirExpr::Call { func, args, .. } = expr {
+            if (self.intrinsic_functions.contains(func.as_str()) || func == "builtin_open")
+                && self.try_emit_intrinsic_via_registry(func, args)
+            {
+                self.lowering_stats.expr_structured += 1;
+                return Ok(true);
+            }
+        }
+        if let HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ..
+        } = expr
+        {
+            if !is_self_field_access_expr(object)
+                && self.try_emit_method_via_registry(object.ty(), object, method, args)
+            {
+                self.lowering_stats.expr_structured += 1;
+                return Ok(true);
+            }
+        }
         if let Some(lowered_expr) = try_lower_leaf_expr_result(expr)? {
             let rewritten_expr = self.rewrite_stdlib_constant_idents_in_expr(lowered_expr);
             self.lowering_stats.expr_structured += 1;
@@ -1035,15 +1057,9 @@ fn expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExpr) -> b
         HirExpr::BoolOp { values, .. } => values
             .iter()
             .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
-        HirExpr::Call { func, args, .. } => {
-            emitter.intrinsic_functions.contains(func.as_str())
-                || func == "builtin_open"
-                || emitter.func_signatures.contains_key(func)
-                || emitter.callable_var_conventions.contains_key(func)
-                || args
-                    .iter()
-                    .any(|expr| expr_contains_force_fallback_name(emitter, expr))
-        }
+        HirExpr::Call { args, .. } => args
+            .iter()
+            .any(|expr| expr_contains_force_fallback_name(emitter, expr)),
         HirExpr::IfExpr {
             condition,
             then_expr,
@@ -1179,6 +1195,13 @@ fn expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExpr) -> b
 
 fn is_stdlib_math_constant(name: &str) -> bool {
     matches!(name, "pi" | "e" | "tau" | "inf" | "nan")
+}
+
+fn is_self_field_access_expr(expr: &HirExpr) -> bool {
+    if let HirExpr::FieldAccess { object, .. } = expr {
+        return matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
+    }
+    false
 }
 
 fn should_force_stmt_fallback(emitter: &RustEmitter, stmt: &HirStmt) -> bool {
