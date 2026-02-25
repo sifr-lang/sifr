@@ -1,0 +1,50 @@
+name: e2e-throughput-rollout
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e-runner-modes:
+    name: e2e-pass-mode-${{ matrix.mode }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: true
+      matrix:
+        mode: [legacy, new, compare]
+    env:
+      SIFR_E2E_RUNNER_MODE: ${{ matrix.mode }}
+      SIFR_E2E_SIFR_JOBS: 4
+      SIFR_E2E_RUST_JOBS: 2
+      SIFR_E2E_RUN_JOBS: 2
+      SIFR_E2E_CARGO_BUILD_JOBS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run pass corpus in mode
+        run: cargo test -p sifr test_e2e_pass -- --nocapture
+
+  e2e-throughput-benchmark:
+    name: e2e-pass-throughput-gate
+    runs-on: ubuntu-24.04
+    needs: e2e-runner-modes
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    env:
+      SIFR_E2E_RUNNER_MODE: new
+      SIFR_E2E_SIFR_JOBS: 6
+      SIFR_E2E_RUST_JOBS: 4
+      SIFR_E2E_RUN_JOBS: 4
+      SIFR_E2E_CARGO_BUILD_JOBS: 1
+      SIFR_E2E_BENCH_RUNS: 7
+      SIFR_E2E_BENCH_P50_MS: 90000
+      SIFR_E2E_BENCH_P95_MS: 110000
+      SIFR_E2E_BENCH_CV_MAX: 0.15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Benchmark warm-cache protocol
+        run: |
+          bash scripts/ci_e2e_throughput.sh
