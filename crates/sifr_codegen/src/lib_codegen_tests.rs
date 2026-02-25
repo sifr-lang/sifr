@@ -1669,7 +1669,11 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         .find("fn emit_expr(&mut self, expr: &HirExpr) {")
         .expect("emit_expr wrapper should exist");
     let emit_stmt_wrapper = &lib_src[emit_stmt_start..emit_expr_start];
-    assert!(emit_stmt_wrapper.contains("self.emit_stmt_fallback(stmt);"));
+    assert!(!emit_stmt_wrapper.contains("self.emit_stmt_fallback(stmt);"));
+    assert!(emit_stmt_wrapper.contains(
+        "structured statement emission missing for production path"
+    ));
+    assert!(emit_stmt_wrapper.contains("self.try_emit_stmt_legacy_bridge(stmt)"));
     assert!(
         !emit_stmt_wrapper.contains("match stmt"),
         "emit_stmt should stay orchestration-only"
@@ -1679,7 +1683,11 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         .find("pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {")
         .expect("body_contains_yield should exist");
     let emit_expr_wrapper = &lib_src[emit_expr_start..body_contains_yield_start];
-    assert!(emit_expr_wrapper.contains("self.emit_expr_fallback(expr);"));
+    assert!(!emit_expr_wrapper.contains("self.emit_expr_fallback(expr);"));
+    assert!(emit_expr_wrapper.contains(
+        "structured expression emission missing for production path"
+    ));
+    assert!(emit_expr_wrapper.contains("self.try_emit_expr_legacy_bridge(expr)"));
     assert!(
         !emit_expr_wrapper.contains("match expr"),
         "emit_expr should stay orchestration-only"
@@ -1818,6 +1826,17 @@ fn test_module_body_flows_through_assembled_body_items() {
     assert!(module_body_src.contains("self.body_items.push(RustItem::RawCode(emitted));"));
     assert!(!module_body_src.contains("self.output.push('\\n');"));
     assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
+}
+
+#[test]
+fn test_generator_init_emission_is_structured_only() {
+    let stmt_support_src = include_str!("stmt_support_emitter.rs");
+    assert!(stmt_support_src.contains("match self.try_emit_structured_expr(value)"));
+    assert!(stmt_support_src.contains("match self.try_emit_structured_stmt(stmt)"));
+    assert!(stmt_support_src.contains("self.try_emit_expr_legacy_bridge(value)"));
+    assert!(stmt_support_src.contains("self.try_emit_stmt_legacy_bridge(stmt)"));
+    assert!(!stmt_support_src.contains("self.emit_expr(value);"));
+    assert!(!stmt_support_src.contains("self.emit_stmt(stmt);"));
 }
 
 #[test]
