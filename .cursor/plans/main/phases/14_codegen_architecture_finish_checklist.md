@@ -64,6 +64,7 @@ status: **partially met**
 - [x] Core structured stmt/expr emission now rewrites lowered special-name idents (stdlib math constants + module constants) before render, so these names no longer force fallback in main emit-path gating
 - [x] Core structured expr emission now attempts intrinsic and registry-method call lowering before fallback (`HirExpr::Call` via `try_emit_intrinsic_via_registry`, `HirExpr::MethodCall` via `try_emit_method_via_registry`)
 - [x] Core stmt/expr wrappers now attempt structured lowering before force-fallback gating; borrowed-param compare/bool expressions remain explicitly guarded to fallback semantics
+- [x] Legacy recursive force-fallback gating helpers were removed from core wrappers (`should_force_*_fallback`, `expr_contains_force_fallback_name`), keeping fallback as a pure post-structured sink
 - [x] Expression fallback no longer enforces subtree-wide legacy-only recursion (`fallback_depth` removed), allowing nested fallback subexpressions to still attempt structured lowering
 - [x] Production helper rendering paths now consume expr `Result` contract (`expr_render_helpers`, `intrinsic_method_emitters`)
 - [x] Registry arg lowering and lowered-fallback rendering now share one explicit expr `Result` helper path (`try_lower_registry_expr_result`)
