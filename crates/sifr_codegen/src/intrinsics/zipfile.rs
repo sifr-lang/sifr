@@ -129,7 +129,7 @@ pub(super) fn lower_zip_add_file(args: &[RustExpr]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__path".to_string(),
                 ty: None,
-                value: arg_expr(args, 0),
+                value: RustExpr::Clone(Box::new(arg_expr(args, 0))),
             },
             RustStmt::Let {
                 mutable: false,

@@ -1,4 +1,5 @@
 use super::{CodegenResult, HirModule, Renderer, RustEmitter, RustFile, RustItem, StdlibCode};
+use crate::assert_output_drained;
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::ir_optimize::remove_trivial_clones_in_items;
 use crate::ir_validate::validate_items;
@@ -28,9 +29,10 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if !emitter.enum_items.is_empty() {
         emitted_items.extend(emitter.enum_items.clone());
     }
-    if !emitter.output.is_empty() {
-        emitted_items.push(RustItem::RawCode(emitter.output.clone()));
+    if !emitter.body_items.is_empty() {
+        emitted_items.extend(emitter.body_items.clone());
     }
+    assert_output_drained(&emitter.output, "generate_rust_test");
     let import_needs = collect_import_needs_from_items(&emitted_items);
 
     let mut import_items = Vec::new();
@@ -66,15 +68,10 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     file_items.extend(import_items);
     file_items.extend(emitted_items);
     remove_trivial_clones_in_items(&mut file_items);
-    let typed_items: Vec<RustItem> = file_items
-        .iter()
-        .filter(|item| !matches!(item, RustItem::RawCode(_)))
-        .cloned()
-        .collect();
-    let file_issues = validate_items(&typed_items);
+    let file_issues = validate_items(&file_items);
     assert!(
         file_issues.is_empty(),
-        "codegen IR validation failed (typed test file): {}",
+        "codegen IR validation failed (test file): {}",
         file_issues
             .iter()
             .map(|issue| issue.message.as_str())

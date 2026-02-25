@@ -1082,7 +1082,10 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
     assert!(!rust_code.contains("self.items.clone().push(x)"));
     assert!(rust_code.contains("return self.table.get(\"k\").cloned();"));
     assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
-    assert!(rust_code.contains("return self.label.clone();"));
+    assert!(
+        rust_code.contains("return self.label.clone();"),
+        "{rust_code}"
+    );
 }
 
 #[test]
@@ -1234,6 +1237,149 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
 }
 
 #[test]
+fn test_structured_expr_path_handles_nested_intrinsic_call_argument() {
+    let list_ty = Type::List(Box::new(Type::Int));
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "set_len".to_string(),
+                    args: vec![HirExpr::Call {
+                        func: "set_from_list".to_string(),
+                        args: vec![HirExpr::ListLiteral {
+                            elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+                            ty: list_ty.clone(),
+                        }],
+                        ty: list_ty,
+                    }],
+                    ty: Type::Int,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.collections".to_string(),
+            names: vec!["set_len".to_string(), "set_from_list".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(
+        generated.rust_source.contains(".len() as i64"),
+        "nested intrinsic call argument should lower through registry"
+    );
+    assert!(
+        !generated.rust_source.contains("set_len("),
+        "set_len should not be emitted as unresolved function call"
+    );
+}
+
+#[test]
+fn test_structured_expr_path_handles_intrinsic_arg_with_typed_method_call() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "isnan".to_string(),
+                    args: vec![HirExpr::MethodCall {
+                        object: Box::new(HirExpr::FloatLiteral(1.0)),
+                        method: "max".to_string(),
+                        args: vec![HirExpr::FloatLiteral(2.0)],
+                        ty: Type::Float,
+                    }],
+                    ty: Type::Bool,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["isnan".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(
+        generated.rust_source.contains(".is_nan()"),
+        "intrinsic arg with typed method call should lower through registry"
+    );
+    assert!(
+        !generated.rust_source.contains("isnan("),
+        "isnan should not be emitted as unresolved function call"
+    );
+}
+
+#[test]
+fn test_structured_expr_path_handles_plain_signature_call_expression() {
+    let module = HirModule {
+        functions: vec![
+            HirFunction {
+                name: "helper".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "print".to_string(),
+                        args: vec![HirExpr::StringLiteral("inner".to_string())],
+                        ty: Type::None,
+                    },
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+            HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "helper".to_string(),
+                        args: vec![],
+                        ty: Type::None,
+                    },
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        ],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("helper();"));
+    assert!(
+        generated.lowering_stats.expr_structured > 0,
+        "plain calls with by-value signatures should use structured expr path"
+    );
+}
+
+#[test]
 fn test_structured_expr_path_handles_registry_method_call_expression() {
     let list_ty = Type::List(Box::new(Type::Int));
     let module = HirModule {
@@ -1279,6 +1425,63 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
     assert!(
         generated.lowering_stats.expr_structured > 0,
         "registry-backed method call should be emitted through structured expr path"
+    );
+}
+
+#[test]
+fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
+    let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Let {
+                    name: "d2".to_string(),
+                    ty: dict_ty.clone(),
+                    value: HirExpr::DictLiteral {
+                        keys: vec![HirExpr::StringLiteral("a".to_string())],
+                        values: vec![HirExpr::IntLiteral(1)],
+                        ty: dict_ty.clone(),
+                    },
+                    is_mutable: true,
+                },
+                HirStmt::Expr {
+                    expr: HirExpr::MethodCall {
+                        object: Box::new(HirExpr::Name {
+                            name: "d2".to_string(),
+                            ty: dict_ty.clone(),
+                        }),
+                        method: "update".to_string(),
+                        args: vec![HirExpr::DictLiteral {
+                            keys: vec![HirExpr::StringLiteral("c".to_string())],
+                            values: vec![HirExpr::IntLiteral(3)],
+                            ty: dict_ty.clone(),
+                        }],
+                        ty: Type::None,
+                    },
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(
+        generated.rust_source.contains("d2.extend("),
+        "dict update should lower via registry to HashMap::extend"
+    );
+    assert!(
+        !generated.rust_source.contains("d2.update("),
+        "dict update fallback method call should not be emitted"
     );
 }
 
@@ -1367,6 +1570,45 @@ fn test_structured_stmt_bridge_handles_copy_typed_let_expr() {
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed let should be emitted through structured stmt bridge"
+    );
+}
+
+#[test]
+fn test_structured_stmt_bridge_handles_copy_typed_return_expr() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "value".to_string(),
+            params: vec![],
+            return_type: Type::Float,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Call {
+                    func: "sqrt".to_string(),
+                    args: vec![HirExpr::FloatLiteral(9.0)],
+                    ty: Type::Float,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["sqrt".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated
+        .rust_source
+        .contains("return (9.0 as f64).sqrt();"));
+    assert!(
+        generated.lowering_stats.stmt_structured >= 1,
+        "copy-typed return should be emitted through structured stmt bridge"
     );
 }
 
@@ -1466,6 +1708,44 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
 }
 
 #[test]
+fn test_production_lowering_contract_uses_result_helpers_only() {
+    let lib_src = include_str!("lib.rs");
+    let module_constants_src = include_str!("module_constants.rs");
+    let expr_render_helpers_src = include_str!("expr_render_helpers.rs");
+
+    assert!(lib_src.contains("try_lower_simple_stmt_with_scope_result("));
+    assert!(lib_src.contains("try_lower_leaf_expr_result("));
+    assert!(module_constants_src.contains("try_lower_simple_module_constant_item_result("));
+    assert!(expr_render_helpers_src.contains("try_lower_registry_expr_result("));
+
+    assert!(!lib_src.contains("try_lower_simple_stmt_with_scope("));
+    assert!(!lib_src.contains("try_lower_leaf_expr("));
+    assert!(!module_constants_src.contains("try_lower_simple_module_constant_item("));
+}
+
+#[test]
+fn test_union_display_impl_uses_structured_ir() {
+    let union_src = include_str!("union_type_helpers.rs");
+    assert!(!union_src.contains("RustType::RawCode(\"&mut std::fmt::Formatter<'_>\""));
+    assert!(!union_src.contains("RustType::RawCode(\"std::fmt::Result\""));
+    assert!(!union_src.contains("RustStmt::RawCode(match_lines)"));
+    assert!(!union_src.contains("RustExpr::RawCode(format!(\"\\\"{fmt_spec}\\\"\"))"));
+    assert!(union_src.contains("RustType::Ref {"));
+    assert!(union_src.contains("RustStmt::Match {"));
+    assert!(union_src.contains("RustExpr::Literal(RustLiteral::Str(fmt_spec.to_string()))"));
+}
+
+#[test]
+fn test_union_enum_definitions_emit_structured_items() {
+    let union_src = include_str!("union_type_helpers.rs");
+    let lib_src = include_str!("lib.rs");
+
+    assert!(union_src.contains("self.enum_items.push(RustItem::Enum {"));
+    assert!(!union_src.contains("enum_defs"));
+    assert!(!lib_src.contains("enum_defs"));
+}
+
+#[test]
 fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     let lib_src = include_str!("lib.rs");
     let start = lib_src
@@ -1476,7 +1756,66 @@ fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
         .expect("generate_rust_multi docs should exist");
     let generate_block = &lib_src[start..end];
 
+    assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
     assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
     assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(generate_block
+        .contains("assert_output_drained(&emitter.output, \"generate_rust_with_stdlib\")"));
+    assert!(!generate_block.contains("if !emitter.output.is_empty() {"));
     assert!(!generate_block.contains("result.push_str(&emitter.output)"));
+}
+
+#[test]
+fn test_generate_rust_multi_assembles_single_rust_file() {
+    let lib_src = include_str!("lib.rs");
+    let start = lib_src
+        .find("pub fn generate_rust_multi")
+        .expect("generate_rust_multi should exist");
+    let end = lib_src
+        .find("/// Generate a complete Rust project (Cargo.toml + main.rs content).")
+        .expect("generate_project docs should exist");
+    let generate_block = &lib_src[start..end];
+
+    assert!(generate_block.contains("RustItem::UseAlias"));
+    assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
+    assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
+    assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(
+        generate_block.contains("assert_output_drained(&emitter.output, \"generate_rust_multi\")")
+    );
+    assert!(!generate_block.contains("if !emitter.output.is_empty() {"));
+    assert!(!generate_block.contains("module_import_prelude"));
+    assert!(!generate_block.contains("result.push_str(&emitter.output)"));
+}
+
+#[test]
+fn test_module_constants_flow_through_assembled_body_items() {
+    let module_constants_src = include_str!("module_constants.rs");
+    let entrypoints_src = include_str!("entrypoints.rs");
+    let lib_src = include_str!("lib.rs");
+
+    assert!(module_constants_src.contains("self.body_items.push(item);"));
+    assert!(
+        module_constants_src.contains("self.body_items.push(RustItem::RawCode(fallback_item));")
+    );
+    assert!(!module_constants_src.contains("self.output.push_str(&render_items(&[item]))"));
+
+    assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
+    assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
+    assert!(
+        entrypoints_src.contains("assert_output_drained(&emitter.output, \"generate_rust_test\")")
+    );
+    assert!(!entrypoints_src.contains("if !emitter.output.is_empty() {"));
+    assert!(!lib_src.contains("if !emitter.output.is_empty() {"));
+}
+
+#[test]
+fn test_module_body_flows_through_assembled_body_items() {
+    let module_body_src = include_str!("module_body.rs");
+    let lib_src = include_str!("lib.rs");
+
+    assert!(module_body_src.contains("self.drain_emitted_output_item(output_len);"));
+    assert!(module_body_src.contains("self.body_items.push(RustItem::RawCode(emitted));"));
+    assert!(!module_body_src.contains("self.output.push('\\n');"));
+    assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
 }

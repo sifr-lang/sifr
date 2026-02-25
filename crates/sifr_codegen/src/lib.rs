@@ -60,6 +60,7 @@ use helpers::{
 };
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
+use ir_validate::validate_items;
 use sifr_hir::{HirExpr, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -409,9 +410,10 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if !stdlib_preamble.is_empty() {
         assembled_body_items.push(RustItem::RawCode(stdlib_preamble.clone()));
     }
-    if !emitter.output.is_empty() {
-        assembled_body_items.push(RustItem::RawCode(emitter.output.clone()));
+    if !emitter.body_items.is_empty() {
+        assembled_body_items.extend(emitter.body_items.clone());
     }
+    assert_output_drained(&emitter.output, "generate_rust_with_stdlib");
 
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
     let needs_hashmap = body_import_needs.collections.needs_hashmap;
@@ -460,6 +462,16 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     file_items.extend(import_items);
     file_items.extend(assembled_body_items);
     remove_trivial_clones_in_items(&mut file_items);
+    let file_issues = validate_items(&file_items);
+    assert!(
+        file_issues.is_empty(),
+        "codegen IR validation failed (assembled file): {}",
+        file_issues
+            .iter()
+            .map(|issue| issue.message.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ")
+    );
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
 
@@ -499,55 +511,84 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         emitter.collect_union_types(module);
         emitter.generate_enum_definitions();
         emitter.emit_module(module, module_public, false);
-
-        let mut result = String::new();
+        let mut module_import_items: Vec<RustItem> = Vec::new();
 
         // For non-main modules, add imports as `use` statements
         for import in &module.imports {
             for name in &import.names {
                 // Check if this name has an alias
                 if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
-                    let _ = writeln!(
-                        result,
-                        "use crate::{}::{} as {};",
-                        import.module, name, alias
-                    );
+                    module_import_items.push(RustItem::UseAlias {
+                        path: vec!["crate".to_string(), import.module.clone(), name.clone()],
+                        alias: alias.clone(),
+                    });
                 } else {
-                    let _ = writeln!(result, "use crate::{}::{};", import.module, name);
+                    module_import_items.push(RustItem::Use(vec![
+                        "crate".to_string(),
+                        import.module.clone(),
+                        name.clone(),
+                    ]));
                 }
             }
         }
 
         let mut assembled_items: Vec<RustItem> = Vec::new();
+        assembled_items.extend(module_import_items);
         if !emitter.enum_items.is_empty() {
             assembled_items.extend(emitter.enum_items.clone());
         }
-        if !emitter.output.is_empty() {
-            assembled_items.push(RustItem::RawCode(emitter.output.clone()));
+        if !emitter.body_items.is_empty() {
+            assembled_items.extend(emitter.body_items.clone());
         }
+        assert_output_drained(&emitter.output, "generate_rust_multi");
         let import_needs = collect_import_needs_from_items(&assembled_items);
 
+        let mut import_items: Vec<RustItem> = Vec::new();
         if import_needs.collections.needs_hashmap {
-            result.push_str("use std::collections::HashMap;\n");
+            import_items.push(RustItem::Use(vec![
+                "std".to_string(),
+                "collections".to_string(),
+                "HashMap".to_string(),
+            ]));
         }
         if import_needs.collections.needs_hashset {
-            result.push_str("use std::collections::HashSet;\n");
+            import_items.push(RustItem::Use(vec![
+                "std".to_string(),
+                "collections".to_string(),
+                "HashSet".to_string(),
+            ]));
         }
         if import_needs.collections.needs_vecdeque {
-            result.push_str("use std::collections::VecDeque;\n");
+            import_items.push(RustItem::Use(vec![
+                "std".to_string(),
+                "collections".to_string(),
+                "VecDeque".to_string(),
+            ]));
         }
         if import_needs.runtime.needs_bigint {
-            result.push_str("use num_bigint::BigInt;\n");
-        }
-        if !result.is_empty() {
-            result.push('\n');
-        }
-        if !emitter.enum_items.is_empty() {
-            result.push_str(&render_items(&emitter.enum_items));
-            result.push('\n');
+            import_items.push(RustItem::Use(vec![
+                "num_bigint".to_string(),
+                "BigInt".to_string(),
+            ]));
         }
 
-        result.push_str(&emitter.output);
+        let mut file_items: Vec<RustItem> = Vec::new();
+        file_items.extend(import_items);
+        file_items.extend(assembled_items);
+        remove_trivial_clones_in_items(&mut file_items);
+        let file_issues = validate_items(&file_items);
+        assert!(
+            file_issues.is_empty(),
+            "codegen IR validation failed (multi module file `{}`): {}",
+            module_name,
+            file_issues
+                .iter()
+                .map(|issue| issue.message.as_str())
+                .collect::<Vec<_>>()
+                .join(" | ")
+        );
+        let rust_file = RustFile { items: file_items };
+        let result = Renderer::new().render_file(&rust_file);
 
         files.insert((*module_name).to_string(), result);
     }
@@ -767,6 +808,8 @@ struct RustEmitter {
     union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated union enum items to prepend
     enum_items: Vec<RustItem>,
+    /// Accumulated non-enum body items to assemble before raw fallback output.
+    body_items: Vec<RustItem>,
     /// The return type of the function currently being emitted
     current_return_type: Option<Type>,
     /// Set of variable names currently narrowed via `if let Some(...)` unwrap
@@ -868,6 +911,7 @@ impl RustEmitter {
             runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),
             enum_items: Vec::new(),
+            body_items: Vec::new(),
             current_return_type: None,
             option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
@@ -981,6 +1025,27 @@ impl RustEmitter {
             }
         }
 
+        if let HirStmt::Return { value: Some(value) } = stmt {
+            if !self.emission_ctx.in_display_impl
+                && !self.emission_ctx.in_generator_closure
+                && self
+                    .current_return_type
+                    .as_ref()
+                    .is_some_and(is_copyish_structured_stmt_expr_type)
+                && is_copyish_structured_stmt_expr_type(value.ty())
+            {
+                let output_len = self.output.len();
+                self.write("return ");
+                if self.try_emit_structured_expr(value)? {
+                    self.lowering_stats.stmt_structured += 1;
+                    self.lowering_stats.stmt_candidate_structured += 1;
+                    self.write(";\n");
+                    return Ok(true);
+                }
+                self.output.truncate(output_len);
+            }
+        }
+
         if let HirStmt::Expr { expr } = stmt {
             let output_len = self.output.len();
             if self.try_emit_structured_expr(expr)? {
@@ -1008,6 +1073,10 @@ impl RustEmitter {
                 self.lowering_stats.expr_structured += 1;
                 return Ok(true);
             }
+            if self.try_emit_structured_plain_call_with_signature(func, args)? {
+                self.lowering_stats.expr_structured += 1;
+                return Ok(true);
+            }
         }
         if let HirExpr::MethodCall {
             object,
@@ -1032,6 +1101,52 @@ impl RustEmitter {
         }
 
         Ok(false)
+    }
+
+    fn try_emit_structured_plain_call_with_signature(
+        &mut self,
+        func: &str,
+        args: &[HirExpr],
+    ) -> Result<bool, crate::CodegenError> {
+        if func.contains("::")
+            || is_fallback_special_plain_call(func)
+            || self.nested_fn_captures.contains_key(func)
+        {
+            return Ok(false);
+        }
+
+        let Some((param_types, _)) = self.func_signatures.get(func) else {
+            return Ok(false);
+        };
+        if param_types.len() != args.len() {
+            return Ok(false);
+        }
+
+        let mut lowered_args = Vec::with_capacity(args.len());
+        for ((param_ty, convention), arg) in param_types.iter().zip(args.iter()) {
+            if *convention != ParamConvention::Own {
+                return Ok(false);
+            }
+            if type_has_typevar(param_ty) || type_has_typevar(arg.ty()) {
+                return Ok(false);
+            }
+            if resolve_alias_type_for_plain_call(param_ty)
+                != resolve_alias_type_for_plain_call(arg.ty())
+            {
+                return Ok(false);
+            }
+            let Some(lowered_arg) = try_lower_leaf_or_name_expr_result(arg)? else {
+                return Ok(false);
+            };
+            lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
+        }
+
+        let lowered_call = RustExpr::FnCall {
+            func: Box::new(RustExpr::Ident(func.to_string())),
+            args: lowered_args,
+        };
+        self.write(&crate::render_expr(&lowered_call));
+        Ok(true)
     }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
@@ -1073,6 +1188,13 @@ pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
     helpers::body_contains_yield_inner(stmts)
 }
 
+pub(crate) fn assert_output_drained(output: &str, context: &str) {
+    assert!(
+        output.trim().is_empty(),
+        "codegen output contract violation in {context}: residual top-level output detected"
+    );
+}
+
 fn is_self_field_access_expr(expr: &HirExpr) -> bool {
     if let HirExpr::FieldAccess { object, .. } = expr {
         return matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
@@ -1086,6 +1208,74 @@ fn is_copyish_structured_stmt_expr_type(ty: &Type) -> bool {
         Type::Int | Type::Float | Type::Bool | Type::Enum { .. } => true,
         _ => false,
     }
+}
+
+fn resolve_alias_type_for_plain_call(ty: &Type) -> &Type {
+    match ty {
+        Type::Alias(_, inner) => resolve_alias_type_for_plain_call(inner),
+        _ => ty,
+    }
+}
+
+fn type_has_typevar(ty: &Type) -> bool {
+    match ty {
+        Type::Alias(_, inner) => type_has_typevar(inner),
+        Type::TypeVar(_) => true,
+        Type::List(inner) | Type::Set(inner) => type_has_typevar(inner),
+        Type::Dict(key, val) => type_has_typevar(key) || type_has_typevar(val),
+        Type::Tuple(elems) | Type::Union(elems) => elems.iter().any(type_has_typevar),
+        Type::Result(ok, err) => type_has_typevar(ok) || type_has_typevar(err),
+        Type::Class {
+            fields, methods, ..
+        } => {
+            fields.iter().any(|(_, t)| type_has_typevar(t))
+                || methods.iter().any(|(_, ft)| {
+                    ft.params.iter().any(|(_, t, _)| type_has_typevar(t))
+                        || type_has_typevar(&ft.return_type)
+                })
+        }
+        _ => false,
+    }
+}
+
+fn try_lower_leaf_or_name_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
+    if let Some(lowered) = try_lower_leaf_expr_result(expr)? {
+        return Ok(Some(lowered));
+    }
+    if let HirExpr::Name { name, .. } = expr {
+        return Ok(Some(RustExpr::Ident(name.clone())));
+    }
+    Ok(None)
+}
+
+fn is_fallback_special_plain_call(func: &str) -> bool {
+    matches!(
+        func,
+        "print"
+            | "isinstance"
+            | "str"
+            | "pow"
+            | "abs"
+            | "hash"
+            | "round"
+            | "repr"
+            | "int"
+            | "bigint"
+            | "float"
+            | "bool"
+            | "min"
+            | "max"
+            | "sum"
+            | "sorted"
+            | "reversed"
+            | "enumerate"
+            | "zip"
+            | "any"
+            | "all"
+            | "map"
+            | "filter"
+            | "builtin_open"
+    )
 }
 
 fn expr_uses_borrowed_param(

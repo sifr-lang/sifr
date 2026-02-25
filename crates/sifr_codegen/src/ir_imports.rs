@@ -30,7 +30,7 @@ pub(crate) fn collect_import_needs_from_items(items: &[RustItem]) -> IrImportNee
 
 fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
     match item {
-        RustItem::Use(_) | RustItem::Attr(_) => {}
+        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => {}
         RustItem::RawCode(code) => collect_from_raw_item_code(code, needs),
         RustItem::Struct { fields, .. } => {
             for (_, ty) in fields {

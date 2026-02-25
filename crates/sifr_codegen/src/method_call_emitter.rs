@@ -18,12 +18,14 @@ impl RustEmitter {
         // to the actual field, not a temporary clone.
         let is_self_field = matches!(object, HirExpr::FieldAccess { object: inner, .. }
             if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
-        if is_self_field && MUTATING_METHODS.contains(&method) {
-            self.pending_self_field_clone_suppression += 1;
-        }
+        let needs_self_field_clone_suppression =
+            is_self_field && MUTATING_METHODS.contains(&method);
         let obj_ty = object.ty();
         if self.try_emit_method_via_registry(obj_ty, object, method, args) {
             return;
+        }
+        if needs_self_field_clone_suppression {
+            self.pending_self_field_clone_suppression += 1;
         }
         if let Type::Class {
             name: class_name,

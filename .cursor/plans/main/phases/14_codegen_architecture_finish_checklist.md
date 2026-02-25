@@ -56,26 +56,28 @@ status: **partially met**
 - [x] `expr_to_string` helper removed from production path
 - [ ] Core pipeline still fallback-emitter first-class (`emit_*_fallback` remains active)
 - [x] `emit_module` still string-emitter orchestration, not full `RustFile` assembly + single render
-- [ ] `lower_*` contract is not full `Result<_, CodegenError>` end-to-end for production path
+- [x] Production `lower_*` contract is `Result<_, CodegenError>` end-to-end across production call sites (guarded by decomposition test against non-result helper regressions)
 - [x] Production stmt lowering entry now has explicit `Result` contract (`try_lower_simple_stmt_with_scope_result`) with context validation
 - [x] Production stmt lowering `Result` entry now validates nested stmt/expr shapes before fallback routing
 - [x] Production expr lowering entry now has explicit `Result` contract (`try_lower_leaf_expr_result`) with shape validation
 - [x] Production emit wrappers now route through explicit `Result`-based structured-attempt helpers (`try_emit_structured_stmt`, `try_emit_structured_expr`) before fallback
 - [x] Core structured stmt/expr emission now rewrites lowered special-name idents (stdlib math constants + module constants) before render, so these names no longer force fallback in main emit-path gating
 - [x] Core structured expr emission now attempts intrinsic and registry-method call lowering before fallback (`HirExpr::Call` via `try_emit_intrinsic_via_registry`, `HirExpr::MethodCall` via `try_emit_method_via_registry`)
+- [x] Core structured expr emission now attempts signature-safe plain function-call lowering before fallback (`HirExpr::Call` via `try_emit_structured_plain_call_with_signature` for by-value, type-matching args)
 - [x] Core stmt/expr wrappers now attempt structured lowering before force-fallback gating; borrowed-param compare/bool expressions remain explicitly guarded to fallback semantics
 - [x] Legacy recursive force-fallback gating helpers were removed from core wrappers (`should_force_*_fallback`, `expr_contains_force_fallback_name`), keeping fallback as a pure post-structured sink
 - [x] Structured stmt emission now bridges non-leaf expression statements through `try_emit_structured_expr` before full stmt fallback (with proper `;`/newline sink)
 - [x] Structured stmt emission now bridges copy-typed `Assign` RHS expressions through `try_emit_structured_expr` before full stmt fallback
 - [x] Structured stmt emission now bridges copy-typed `Let` RHS expressions through `try_emit_structured_expr` before full stmt fallback
+- [x] Structured stmt emission now bridges copy-typed `Return` RHS expressions through `try_emit_structured_expr` before full stmt fallback (outside display/generator contexts)
 - [x] Expression fallback no longer enforces subtree-wide legacy-only recursion (`fallback_depth` removed), allowing nested fallback subexpressions to still attempt structured lowering
 - [x] Production helper rendering paths now consume expr `Result` contract (`expr_render_helpers`, `intrinsic_method_emitters`)
-- [x] Registry arg lowering and lowered-fallback rendering now share one explicit expr `Result` helper path (`try_lower_registry_expr_result`)
+- [x] Registry arg/object lowering now shares one explicit expr `Result` helper path (`try_lower_registry_expr_result`) with strict no-inline-`RawCode` fallback shims in registry emit paths
 - [x] Production module-constant item lowering entry now has explicit `Result` contract (`try_lower_simple_module_constant_item_result`) with name-shape validation
 - [x] Production module-constant item lowering `Result` path now propagates leaf-lowering errors (not `None`-collapse)
 - [x] Production module-constant emission now routes through explicit `Result` helper (`try_emit_lowered_module_constant_result`) before fallback
 - [x] Production statement lowering now enters through `ScopeContext` (`try_lower_simple_stmt_with_scope` in `emit_stmt`)
-- [x] Union enums still emitted as raw `enum_defs` strings, not `RustItem::Enum` nodes
+- [x] Union enums emit as structured `RustItem::Enum` nodes through `enum_items` assembly (legacy raw `enum_defs` string path removed)
 
 ### milestone_codegen_intrinsic_migration
 
@@ -149,6 +151,14 @@ status: **partially met**
 - [x] Boolean import flags removed from primary import selection path (imports now derived from structural IR needs)
 - [x] Stdlib DCE migrated to structural `syn` item traversal (`stdlib_filter.rs` no longer uses text/chunk/token parsing)
 - [x] `ir_imports` now uses structural `syn` traversal for `RawCode` payloads (text-token scan only as parse-failure fallback)
+- [x] Production and test codegen entrypoints now run `validate_items` on assembled `file_items` (including `RawCode` wrappers) before render
+- [x] `generate_rust_multi` now uses assembled `RustFile` + `validate_items` + single renderer sink instead of manual string assembly
+- [x] `generate_rust_multi` module-import prelude now lowers as structured `RustItem::Use`/`RustItem::UseAlias` items (no raw import-string prelude block)
+- [x] Module constant emission now routes into assembled body-item lists (`RustItem`/`RawCode` entries) instead of writing constant definitions directly into `emitter.output` strings
+- [x] Module class/function body emission now drains per-item raw chunks into assembled body-item lists (`RustItem::RawCode`) instead of retaining monolithic `emitter.output` accumulation
+- [x] Top-level assembly path now enforces drained output contract (`assert_output_drained`) and no longer appends residual `emitter.output` as fallback `RawCode` in `generate_rust_with_stdlib`/`generate_rust_multi`/`generate_rust_test`
+- [x] Union-enum `Display` impl generation now uses structured IR (`RustType::Ref` + `RustStmt::Match` + `write!` macro call) instead of `RawCode` type/stmt shims
+- [x] Union-enum `Display` format argument now lowers as `RustLiteral::Str` (no `RustExpr::RawCode` shim for format spec literals)
 - [ ] `RawCode`-zero gate not enforced for all core production paths (IR type still carries bridge; fallback emitters remain)
 - [ ] Structural passes not run over full user-code IR because full user-code IR assembly is not yet the production path
 

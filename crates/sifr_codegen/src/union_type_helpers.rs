@@ -1,11 +1,10 @@
 use crate::{
-    sifr_type_to_rust_type, RustEmitter, RustEnumVariant, RustItem, RustParam, RustStmt, RustType,
-    Visibility,
+    sifr_type_to_rust_type, RustEmitter, RustEnumVariant, RustExpr, RustItem, RustLiteral,
+    RustMatchArm, RustParam, RustStmt, RustType, Visibility,
 };
 use sifr_hir::{HirModule, HirStmt};
 use sifr_type_system::ParamConvention;
 use sifr_type_system::Type;
-use std::fmt::Write as _;
 
 impl RustEmitter {
     /// Collect all union types from the module that need enum definitions,
@@ -141,20 +140,30 @@ impl RustEmitter {
                 variants,
             });
 
-            let mut match_lines = String::from("match self {\n");
-            for member in &members {
-                let variant = member.union_variant_name();
-                let fmt_spec = if matches!(member, Type::Class { .. }) {
-                    "{:?}"
-                } else {
-                    "{}"
-                };
-                let _ = writeln!(
-                    match_lines,
-                    "    {enum_name}::{variant}(v) => write!(f, \"{fmt_spec}\", v),"
-                );
-            }
-            match_lines.push('}');
+            let arms: Vec<RustMatchArm> = members
+                .iter()
+                .map(|member| {
+                    let variant = member.union_variant_name();
+                    let fmt_spec = if matches!(member, Type::Class { .. }) {
+                        "{:?}"
+                    } else {
+                        "{}"
+                    };
+                    RustMatchArm {
+                        pattern: format!("{enum_name}::{variant}(v)"),
+                        bindings: Vec::new(),
+                        guard: None,
+                        body: vec![RustStmt::Return(Some(RustExpr::MacroCall {
+                            name: "write".to_string(),
+                            args: vec![
+                                RustExpr::Ident("f".to_string()),
+                                RustExpr::Literal(RustLiteral::Str(fmt_spec.to_string())),
+                                RustExpr::Ident("v".to_string()),
+                            ],
+                        }))],
+                    }
+                })
+                .collect();
 
             self.enum_items.push(RustItem::Impl {
                 target: enum_name,
@@ -168,11 +177,19 @@ impl RustEmitter {
                         RustParam::SelfParam { mutable: false },
                         RustParam::Named {
                             name: "f".to_string(),
-                            ty: RustType::RawCode("&mut std::fmt::Formatter<'_>".to_string()),
+                            ty: RustType::Ref {
+                                mutable: true,
+                                inner: Box::new(RustType::Named(
+                                    "std::fmt::Formatter<'_>".to_string(),
+                                )),
+                            },
                         },
                     ],
-                    ret: Some(RustType::RawCode("std::fmt::Result".to_string())),
-                    body: vec![RustStmt::RawCode(match_lines)],
+                    ret: Some(RustType::Named("std::fmt::Result".to_string())),
+                    body: vec![RustStmt::Match {
+                        expr: RustExpr::Ident("self".to_string()),
+                        arms,
+                    }],
                     is_async: false,
                 }],
             });
