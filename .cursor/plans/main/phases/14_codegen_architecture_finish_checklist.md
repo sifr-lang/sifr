@@ -87,6 +87,7 @@ status: **partially met**
 - [x] File-handle `readline`/`readlines` now lower via structured IR loops/conditionals/trait-call paths (`std::io::BufRead::*`) without raw body templates/import stubs
 - [x] `open_file` now emits structured success returns and uses fully qualified `std::io::BufReader/BufWriter` constructors (no raw open-path import stubs)
 - [x] `builtin_open` now routes through closure-`Result` + `?` with structured success returns (removing raw open-arm success emission)
+- [x] File-handle `owned_str` and wrapper plumbing now use structured IR only (`to_string` method call + no dead raw-import shim in handle wrappers)
 - [x] Method registry borrowed-arg helpers now avoid `RawCode` variant handling; tuple helpers use structured literals/casts
 - [x] Math intrinsic `ldexp` now lowers via typed structured IR (`f64` cast + `2.0.powi(i32)`), removing its monolithic `RawCode` template
 - [x] Math intrinsic `sumprod` now lowers via structured IR block/for-loop accumulation (no monolithic `RawCode` template)

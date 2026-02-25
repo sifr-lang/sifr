@@ -3,7 +3,11 @@
 use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 
 fn owned_str(arg: &RustExpr) -> RustExpr {
-    RustExpr::RawCode(format!("({}).to_string()", crate::render_expr(arg)))
+    RustExpr::MethodCall {
+        receiver: Box::new(arg.clone()),
+        method: "to_string".to_string(),
+        args: vec![],
+    }
 }
 
 fn io_other_error_expr(message: &str) -> RustExpr {
@@ -90,7 +94,6 @@ fn next_handle_id_expr(static_name: &str) -> RustExpr {
 
 fn wrap_handle_result(
     hid_expr: RustExpr,
-    imports: &[&str],
     arm_pattern: &str,
     arm_body: Vec<RustStmt>,
     err_message: &str,
@@ -100,11 +103,6 @@ fn wrap_handle_result(
         args: vec![io_other_error_expr(err_message)],
     };
     let mut body = Vec::new();
-    for import in imports {
-        if !import.trim().is_empty() {
-            body.push(RustStmt::RawCode((*import).to_string()));
-        }
-    }
     body.push(RustStmt::Let {
         mutable: false,
         name: "__hid".to_string(),
@@ -495,7 +493,6 @@ pub(super) fn lower_file_read(args: &[RustExpr]) -> Option<RustExpr> {
     ];
     Some(wrap_handle_result(
         args[0].clone(),
-        &[],
         "TextRead(ref mut __r)",
         read_body,
         "file not open for reading",
@@ -533,7 +530,6 @@ pub(super) fn lower_file_write(args: &[RustExpr]) -> Option<RustExpr> {
     ];
     Some(wrap_handle_result(
         args[0].clone(),
-        &[],
         "TextWrite(ref mut __w)",
         write_body,
         "file not open for writing",
@@ -592,7 +588,6 @@ pub(super) fn lower_file_readline(args: &[RustExpr]) -> Option<RustExpr> {
     ];
     Some(wrap_handle_result(
         args[0].clone(),
-        &[],
         "TextRead(ref mut __r)",
         readline_body,
         "file not open for reading",
@@ -679,7 +674,6 @@ pub(super) fn lower_file_readlines(args: &[RustExpr]) -> Option<RustExpr> {
     ];
     Some(wrap_handle_result(
         args[0].clone(),
-        &[],
         "TextRead(ref mut __r)",
         readlines_body,
         "file not open for reading",
@@ -762,7 +756,6 @@ pub(super) fn lower_file_read_bytes(args: &[RustExpr]) -> Option<RustExpr> {
     ];
     Some(wrap_handle_result(
         args[0].clone(),
-        &[],
         "BinaryRead(ref mut __r)",
         read_bytes_body,
         "file not open for binary reading",
@@ -821,7 +814,6 @@ pub(super) fn lower_file_write_bytes(args: &[RustExpr]) -> Option<RustExpr> {
     ];
     Some(wrap_handle_result(
         args[0].clone(),
-        &[],
         "BinaryWrite(ref mut __w)",
         write_bytes_body,
         "file not open for binary writing",
