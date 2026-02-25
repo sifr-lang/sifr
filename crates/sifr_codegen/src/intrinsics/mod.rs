@@ -46,14 +46,12 @@ fn additional_required_crates(name: &str) -> &'static [&'static str] {
 }
 
 pub(crate) fn lower_intrinsic(name: &str, args: &[RustExpr]) -> Option<LoweredIntrinsic> {
-    let rendered_args = args.iter().map(crate::render_expr).collect::<Vec<_>>();
-    lower_intrinsic_rendered(name, args, &rendered_args)
+    lower_intrinsic_rendered(name, args)
 }
 
 fn lower_intrinsic_rendered(
     name: &str,
     args: &[RustExpr],
-    rendered_args: &[String],
 ) -> Option<LoweredIntrinsic> {
     let (expr, required_crate) = match name {
         "sqrt" => (math::lower_sqrt(args), None),
@@ -155,15 +153,15 @@ fn lower_intrinsic_rendered(
         "rmdir_all" => (io::lower_rmdir_all(args), None),
         "gettempdir" => (io::lower_gettempdir(args), None),
         "makedirs" => (io::lower_makedirs(args), None),
-        "builtin_open" => (file_handles::lower_builtin_open(rendered_args), None),
-        "open_file" => (file_handles::lower_open_file(rendered_args), None),
-        "file_read" => (file_handles::lower_file_read(rendered_args), None),
-        "file_write" => (file_handles::lower_file_write(rendered_args), None),
-        "file_readline" => (file_handles::lower_file_readline(rendered_args), None),
-        "file_readlines" => (file_handles::lower_file_readlines(rendered_args), None),
+        "builtin_open" => (file_handles::lower_builtin_open(args), None),
+        "open_file" => (file_handles::lower_open_file(args), None),
+        "file_read" => (file_handles::lower_file_read(args), None),
+        "file_write" => (file_handles::lower_file_write(args), None),
+        "file_readline" => (file_handles::lower_file_readline(args), None),
+        "file_readlines" => (file_handles::lower_file_readlines(args), None),
         "file_close" => (file_handles::lower_file_close(args), None),
-        "file_read_bytes" => (file_handles::lower_file_read_bytes(rendered_args), None),
-        "file_write_bytes" => (file_handles::lower_file_write_bytes(rendered_args), None),
+        "file_read_bytes" => (file_handles::lower_file_read_bytes(args), None),
+        "file_write_bytes" => (file_handles::lower_file_write_bytes(args), None),
         "json_loads" => (json::lower_json_loads(args), Some("serde_json")),
         "json_dumps" => (json::lower_json_dumps(args), Some("serde_json")),
         "assert_eq" => (test::lower_assert_eq(args), None),
