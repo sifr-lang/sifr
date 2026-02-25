@@ -433,7 +433,7 @@ fn has_balanced_braces(code: &str) -> bool {
             continue;
         }
 
-        if ch == '\'' {
+        if ch == '\'' && starts_char_literal(&chars, i) {
             in_char = true;
             i += 1;
             continue;
@@ -452,6 +452,18 @@ fn has_balanced_braces(code: &str) -> bool {
     }
 
     depth == 0 && !in_string && !in_char && block_comment_depth == 0
+}
+
+fn starts_char_literal(chars: &[char], i: usize) -> bool {
+    // Simple one-char literal: 'x'
+    if i + 2 < chars.len() && chars[i + 2] == '\'' {
+        return true;
+    }
+    // Common escaped literal: '\n', '\t', '\\', '\''
+    if i + 3 < chars.len() && chars[i + 1] == '\\' && chars[i + 3] == '\'' {
+        return true;
+    }
+    false
 }
 
 #[cfg(test)]
@@ -529,6 +541,15 @@ mod tests {
     fn ignores_braces_inside_strings_and_comments() {
         let items = vec![RustItem::RawCode(
             "fn ok() { let _s = \"}\"; /* { */ // }\n}".to_string(),
+        )];
+        let issues = validate_items(&items);
+        assert!(issues.is_empty());
+    }
+
+    #[test]
+    fn ignores_lifetime_apostrophes_in_raw_code() {
+        let items = vec![RustItem::RawCode(
+            "fn ok<'a>(s: &'a str) -> std::fmt::Result { let _x = s; Ok(()) }".to_string(),
         )];
         let issues = validate_items(&items);
         assert!(issues.is_empty());
