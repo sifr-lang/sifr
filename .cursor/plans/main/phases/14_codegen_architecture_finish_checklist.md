@@ -111,6 +111,7 @@ status: **partially met**
 - [x] `time` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `os` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `re` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
+- [x] `io` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
 
 ### milestone_codegen_structural_passes
