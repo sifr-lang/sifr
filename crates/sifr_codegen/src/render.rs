@@ -568,7 +568,8 @@ impl Renderer {
             RustExpr::MacroCall { name, args } => format!(
                 "{name}!({})",
                 args.iter()
-                    .map(Self::render_expr_string)
+                    .enumerate()
+                    .map(|(idx, arg)| Self::render_macro_arg(name, idx, arg))
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
@@ -749,6 +750,17 @@ impl Renderer {
             RustLiteral::Unit => "()".to_string(),
             RustLiteral::None => "None".to_string(),
         }
+    }
+
+    fn render_macro_arg(name: &str, idx: usize, arg: &RustExpr) -> String {
+        // `write!` / `writeln!` require the format string as a literal token
+        // (second argument after the destination writer), not a `String`.
+        if matches!(name, "write" | "writeln") && idx == 1 {
+            if let RustExpr::Literal(RustLiteral::Str(value)) = arg {
+                return format!("\"{}\"", value.escape_default());
+            }
+        }
+        Self::render_expr_string(arg)
     }
 
     fn wrap_expr(expr: &RustExpr) -> String {
@@ -1172,6 +1184,21 @@ mod tests {
 
         let rendered = render_expr(&expr);
         assert_eq!(rendered, "values[1..3]");
+    }
+
+    #[test]
+    fn renders_write_macro_format_arg_as_literal() {
+        let expr = RustExpr::MacroCall {
+            name: "write".to_string(),
+            args: vec![
+                RustExpr::Ident("f".to_string()),
+                RustExpr::Literal(RustLiteral::Str("{}".to_string())),
+                RustExpr::Ident("v".to_string()),
+            ],
+        };
+
+        let rendered = render_expr(&expr);
+        assert_eq!(rendered, "write!(f, \"{}\", v)");
     }
 
     #[test]

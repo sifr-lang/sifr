@@ -1,6 +1,6 @@
 use crate::{
-    sifr_type_to_rust_type, RustEmitter, RustEnumVariant, RustExpr, RustItem, RustMatchArm,
-    RustParam, RustStmt, RustType, Visibility,
+    sifr_type_to_rust_type, RustEmitter, RustEnumVariant, RustExpr, RustItem, RustLiteral,
+    RustMatchArm, RustParam, RustStmt, RustType, Visibility,
 };
 use sifr_hir::{HirModule, HirStmt};
 use sifr_type_system::ParamConvention;
@@ -157,7 +157,7 @@ impl RustEmitter {
                             name: "write".to_string(),
                             args: vec![
                                 RustExpr::Ident("f".to_string()),
-                                RustExpr::RawCode(format!("\"{fmt_spec}\"")),
+                                RustExpr::Literal(RustLiteral::Str(fmt_spec.to_string())),
                                 RustExpr::Ident("v".to_string()),
                             ],
                         }))],
