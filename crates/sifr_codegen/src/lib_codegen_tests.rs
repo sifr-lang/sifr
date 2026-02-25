@@ -516,6 +516,25 @@ fn test_expr_to_string_leaf_rendering() {
 }
 
 #[test]
+fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
+    let mut emitter = RustEmitter::new();
+    emitter.intrinsic_functions.insert("pi".to_string());
+    let expr = HirExpr::BinOp {
+        left: Box::new(HirExpr::Name {
+            name: "pi".to_string(),
+            ty: Type::Float,
+        }),
+        op: "+".to_string(),
+        right: Box::new(HirExpr::FloatLiteral(1.0)),
+        ty: Type::Float,
+    };
+
+    let code = emitter.render_expr_with_lowered_fallback(&expr);
+    assert!(code.contains("std::f64::consts::PI"));
+    assert!(!code.contains("pi +"));
+}
+
+#[test]
 fn test_match_int_literal_pattern_avoids_cast_expression() {
     let module = HirModule {
         functions: vec![HirFunction {

@@ -20,7 +20,10 @@ impl RustEmitter {
         if self.should_force_render_fallback(expr) {
             return Ok(None);
         }
-        crate::try_lower_leaf_expr_result(expr)
+        Ok(
+            crate::try_lower_leaf_expr_result(expr)?
+                .map(|lowered| self.rewrite_stdlib_constant_idents_in_expr(lowered)),
+        )
     }
 
     pub(super) fn render_expr_with_lowered_fallback(&mut self, expr: &HirExpr) -> String {
@@ -45,13 +48,340 @@ impl RustEmitter {
                 &self.mut_borrowed_params,
             )
     }
+
+    fn rewrite_stdlib_constant_idents_in_expr(&self, expr: crate::RustExpr) -> crate::RustExpr {
+        match expr {
+            crate::RustExpr::Ident(name) => self.rewrite_stdlib_constant_ident(name),
+            crate::RustExpr::MethodCall {
+                receiver,
+                method,
+                args,
+            } => crate::RustExpr::MethodCall {
+                receiver: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*receiver)),
+                method,
+                args: args
+                    .into_iter()
+                    .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
+                    .collect(),
+            },
+            crate::RustExpr::FnCall { func, args } => crate::RustExpr::FnCall {
+                func: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*func)),
+                args: args
+                    .into_iter()
+                    .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
+                    .collect(),
+            },
+            crate::RustExpr::MacroCall { name, args } => crate::RustExpr::MacroCall {
+                name,
+                args: args
+                    .into_iter()
+                    .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
+                    .collect(),
+            },
+            crate::RustExpr::FormatMacro {
+                name,
+                format_str,
+                args,
+            } => crate::RustExpr::FormatMacro {
+                name,
+                format_str,
+                args: args
+                    .into_iter()
+                    .map(|arg| self.rewrite_stdlib_constant_idents_in_expr(arg))
+                    .collect(),
+            },
+            crate::RustExpr::BinOp { left, op, right } => crate::RustExpr::BinOp {
+                left: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*left)),
+                op,
+                right: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*right)),
+            },
+            crate::RustExpr::UnaryOp { op, operand } => crate::RustExpr::UnaryOp {
+                op,
+                operand: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*operand)),
+            },
+            crate::RustExpr::Field { expr, field } => crate::RustExpr::Field {
+                expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
+                field,
+            },
+            crate::RustExpr::Index { expr, index } => crate::RustExpr::Index {
+                expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
+                index: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*index)),
+            },
+            crate::RustExpr::Slice { expr, start, stop } => crate::RustExpr::Slice {
+                expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
+                start: start
+                    .map(|part| Box::new(self.rewrite_stdlib_constant_idents_in_expr(*part))),
+                stop: stop.map(|part| Box::new(self.rewrite_stdlib_constant_idents_in_expr(*part))),
+            },
+            crate::RustExpr::Ref { mutable, expr } => crate::RustExpr::Ref {
+                mutable,
+                expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
+            },
+            crate::RustExpr::Deref(expr) => crate::RustExpr::Deref(Box::new(
+                self.rewrite_stdlib_constant_idents_in_expr(*expr),
+            )),
+            crate::RustExpr::Clone(expr) => crate::RustExpr::Clone(Box::new(
+                self.rewrite_stdlib_constant_idents_in_expr(*expr),
+            )),
+            crate::RustExpr::Cast { expr, ty } => crate::RustExpr::Cast {
+                expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
+                ty,
+            },
+            crate::RustExpr::Block { stmts, expr } => crate::RustExpr::Block {
+                stmts: stmts
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+                expr: expr.map(|inner| {
+                    Box::new(self.rewrite_stdlib_constant_idents_in_expr(*inner))
+                }),
+            },
+            crate::RustExpr::If {
+                cond,
+                then_expr,
+                else_expr,
+            } => crate::RustExpr::If {
+                cond: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*cond)),
+                then_expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*then_expr)),
+                else_expr: else_expr.map(|inner| {
+                    Box::new(self.rewrite_stdlib_constant_idents_in_expr(*inner))
+                }),
+            },
+            crate::RustExpr::Match { expr, arms } => crate::RustExpr::Match {
+                expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
+                arms: arms
+                    .into_iter()
+                    .map(|arm| crate::RustMatchArm {
+                        pattern: arm.pattern,
+                        bindings: arm.bindings,
+                        guard: arm
+                            .guard
+                            .map(|guard| self.rewrite_stdlib_constant_idents_in_expr(guard)),
+                        body: arm
+                            .body
+                            .into_iter()
+                            .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                            .collect(),
+                    })
+                    .collect(),
+            },
+            crate::RustExpr::Closure {
+                params,
+                body,
+                is_move,
+            } => crate::RustExpr::Closure {
+                params,
+                body: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*body)),
+                is_move,
+            },
+            crate::RustExpr::ClosureBlock {
+                params,
+                body,
+                is_move,
+            } => crate::RustExpr::ClosureBlock {
+                params,
+                body: body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+                is_move,
+            },
+            crate::RustExpr::StructInit { name, fields } => crate::RustExpr::StructInit {
+                name,
+                fields: fields
+                    .into_iter()
+                    .map(|(field, value)| {
+                        (field, self.rewrite_stdlib_constant_idents_in_expr(value))
+                    })
+                    .collect(),
+            },
+            crate::RustExpr::Tuple(items) => crate::RustExpr::Tuple(
+                items
+                    .into_iter()
+                    .map(|item| self.rewrite_stdlib_constant_idents_in_expr(item))
+                    .collect(),
+            ),
+            crate::RustExpr::Vec(items) => crate::RustExpr::Vec(
+                items
+                    .into_iter()
+                    .map(|item| self.rewrite_stdlib_constant_idents_in_expr(item))
+                    .collect(),
+            ),
+            crate::RustExpr::Try(expr) => {
+                crate::RustExpr::Try(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))
+            }
+            crate::RustExpr::Await(expr) => crate::RustExpr::Await(Box::new(
+                self.rewrite_stdlib_constant_idents_in_expr(*expr),
+            )),
+            crate::RustExpr::Paren(expr) => crate::RustExpr::Paren(Box::new(
+                self.rewrite_stdlib_constant_idents_in_expr(*expr),
+            )),
+            crate::RustExpr::Range { start, end } => crate::RustExpr::Range {
+                start: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*start)),
+                end: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*end)),
+            },
+            crate::RustExpr::Literal(lit) => crate::RustExpr::Literal(lit),
+            crate::RustExpr::Path(path) => crate::RustExpr::Path(path),
+            crate::RustExpr::RawCode(code) => crate::RustExpr::RawCode(code),
+        }
+    }
+
+    fn rewrite_stdlib_constant_idents_in_stmt(&self, stmt: crate::RustStmt) -> crate::RustStmt {
+        match stmt {
+            crate::RustStmt::Let {
+                mutable,
+                name,
+                ty,
+                value,
+            } => crate::RustStmt::Let {
+                mutable,
+                name,
+                ty,
+                value: self.rewrite_stdlib_constant_idents_in_expr(value),
+            },
+            crate::RustStmt::LetPattern { pattern, value } => crate::RustStmt::LetPattern {
+                pattern,
+                value: self.rewrite_stdlib_constant_idents_in_expr(value),
+            },
+            crate::RustStmt::Assign { target, value } => crate::RustStmt::Assign {
+                target: self.rewrite_stdlib_constant_idents_in_expr(target),
+                value: self.rewrite_stdlib_constant_idents_in_expr(value),
+            },
+            crate::RustStmt::AugAssign { target, op, value } => crate::RustStmt::AugAssign {
+                target: self.rewrite_stdlib_constant_idents_in_expr(target),
+                op,
+                value: self.rewrite_stdlib_constant_idents_in_expr(value),
+            },
+            crate::RustStmt::Expr(expr) => {
+                crate::RustStmt::Expr(self.rewrite_stdlib_constant_idents_in_expr(expr))
+            }
+            crate::RustStmt::Assert { cond, msg } => crate::RustStmt::Assert {
+                cond: self.rewrite_stdlib_constant_idents_in_expr(cond),
+                msg: msg.map(|msg| self.rewrite_stdlib_constant_idents_in_expr(msg)),
+            },
+            crate::RustStmt::Return(expr) => crate::RustStmt::Return(
+                expr.map(|ret| self.rewrite_stdlib_constant_idents_in_expr(ret)),
+            ),
+            crate::RustStmt::If {
+                cond,
+                then_body,
+                else_body,
+            } => crate::RustStmt::If {
+                cond: self.rewrite_stdlib_constant_idents_in_expr(cond),
+                then_body: then_body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+                else_body: else_body.map(|body| {
+                    body.into_iter()
+                        .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                        .collect()
+                }),
+            },
+            crate::RustStmt::IfLet {
+                pattern,
+                expr,
+                then_body,
+                else_body,
+            } => crate::RustStmt::IfLet {
+                pattern,
+                expr: self.rewrite_stdlib_constant_idents_in_expr(expr),
+                then_body: then_body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+                else_body: else_body.map(|body| {
+                    body.into_iter()
+                        .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                        .collect()
+                }),
+            },
+            crate::RustStmt::Match { expr, arms } => crate::RustStmt::Match {
+                expr: self.rewrite_stdlib_constant_idents_in_expr(expr),
+                arms: arms
+                    .into_iter()
+                    .map(|arm| crate::RustMatchArm {
+                        pattern: arm.pattern,
+                        bindings: arm.bindings,
+                        guard: arm
+                            .guard
+                            .map(|guard| self.rewrite_stdlib_constant_idents_in_expr(guard)),
+                        body: arm
+                            .body
+                            .into_iter()
+                            .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                            .collect(),
+                    })
+                    .collect(),
+            },
+            crate::RustStmt::For { var, iter, body } => crate::RustStmt::For {
+                var,
+                iter: self.rewrite_stdlib_constant_idents_in_expr(iter),
+                body: body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+            },
+            crate::RustStmt::While { cond, body } => crate::RustStmt::While {
+                cond: self.rewrite_stdlib_constant_idents_in_expr(cond),
+                body: body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+            },
+            crate::RustStmt::Loop { body } => crate::RustStmt::Loop {
+                body: body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+            },
+            crate::RustStmt::Block(stmts) => crate::RustStmt::Block(
+                stmts
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+            ),
+            crate::RustStmt::Break
+            | crate::RustStmt::Continue
+            | crate::RustStmt::RawCode(_) => stmt,
+        }
+    }
+
+    fn rewrite_stdlib_constant_ident(&self, name: String) -> crate::RustExpr {
+        if !self.is_stdlib_constant(&name) {
+            return crate::RustExpr::Ident(name);
+        }
+        match name.as_str() {
+            "pi" => crate::RustExpr::Path(vec![
+                "std".to_string(),
+                "f64".to_string(),
+                "consts".to_string(),
+                "PI".to_string(),
+            ]),
+            "e" => crate::RustExpr::Path(vec![
+                "std".to_string(),
+                "f64".to_string(),
+                "consts".to_string(),
+                "E".to_string(),
+            ]),
+            "tau" => crate::RustExpr::Path(vec![
+                "std".to_string(),
+                "f64".to_string(),
+                "consts".to_string(),
+                "TAU".to_string(),
+            ]),
+            "inf" => crate::RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()]),
+            "nan" => crate::RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()]),
+            _ => crate::RustExpr::Ident(name),
+        }
+    }
 }
 
 fn render_expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExpr) -> bool {
     match expr {
         HirExpr::Name { name, .. } => {
-            emitter.intrinsic_functions.contains(name.as_str())
-                || emitter.is_stdlib_constant(name)
+            (emitter.intrinsic_functions.contains(name.as_str())
+                && !is_stdlib_math_constant(name))
                 || emitter.module_constants.contains_key(name)
         }
         HirExpr::BinOp { left, right, .. } => {
@@ -213,6 +543,10 @@ fn render_expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExp
         | HirExpr::NoneLiteral
         | HirExpr::EnumVariant { .. } => false,
     }
+}
+
+fn is_stdlib_math_constant(name: &str) -> bool {
+    matches!(name, "pi" | "e" | "tau" | "inf" | "nan")
 }
 
 impl RustEmitter {
