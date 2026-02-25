@@ -572,6 +572,76 @@ fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
 }
 
 #[test]
+fn test_structured_stmt_path_rewrites_module_constant_name() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Let {
+                name: "x".to_string(),
+                ty: Type::Int,
+                value: HirExpr::Name {
+                    name: "limit".to_string(),
+                    ty: Type::Int,
+                },
+                is_mutable: false,
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![("limit".to_string(), Type::Int, HirExpr::IntLiteral(7))],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let result = generate_rust_with_metadata(&module);
+    assert!(result.rust_source.contains("const LIMIT: i64 = 7 as i64;"));
+    assert!(result.rust_source.contains("let x: i64 = LIMIT;"));
+    assert!(result.lowering_stats.stmt_structured >= 1);
+}
+
+#[test]
+fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Let {
+                name: "x".to_string(),
+                ty: Type::Float,
+                value: HirExpr::Name {
+                    name: "pi".to_string(),
+                    ty: Type::Float,
+                },
+                is_mutable: false,
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["pi".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let result = generate_rust_with_metadata(&module);
+    assert!(result.rust_source.contains("let x: f64 = std::f64::consts::PI;"));
+    assert!(!result.rust_source.contains("let x: f64 = pi;"));
+    assert!(result.lowering_stats.stmt_structured >= 1);
+}
+
+#[test]
 fn test_match_int_literal_pattern_avoids_cast_expression() {
     let module = HirModule {
         functions: vec![HirFunction {
