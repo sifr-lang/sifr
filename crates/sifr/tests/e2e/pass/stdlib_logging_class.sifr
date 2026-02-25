@@ -4,22 +4,21 @@ from sifr.logging import getLogger, Logger
 
 def main():
     path: str = "/tmp/sifr_logging_class_test.log"
-    _clear: None = write_text(path, "")
+    try:
+        _: None = write_text(path, "")
 
-    log: Logger = getLogger("myapp")
-    log.set_file(path)
-    log.info("starting up")
-    log.warning("low memory")
-    log.error("disk full")
-    # debug should not print (default level is INFO=20)
-    log.debug("trace info")
-    # Set level to DEBUG
-    log.set_level(10)
-    log.debug("now visible")
+        log: Logger = getLogger("myapp")
+        log.set_file(path)
+        log.info("starting up")
+        log.warning("low memory")
+        log.error("disk full")
+        # debug should not print (default level is INFO=20)
+        log.debug("trace info")
+        # Set level to DEBUG
+        log.set_level(10)
+        log.debug("now visible")
 
-    output: str = read_text(path)
-    assert output == "[INFO] myapp: starting up
-[WARNING] myapp: low memory
-[ERROR] myapp: disk full
-[DEBUG] myapp: now visible
-"
+        output: str = read_text(path)
+        assert output == "[INFO] myapp: starting up\n[WARNING] myapp: low memory\n[ERROR] myapp: disk full\n[DEBUG] myapp: now visible\n"
+    except IOError as e:
+        assert False

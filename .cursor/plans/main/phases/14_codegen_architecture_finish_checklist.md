@@ -1,6 +1,6 @@
 # Phase 14 Strict Finish Checklist (Code-Verified)
 
-Last verified: 2026-02-24
+Last verified: 2026-02-25
 
 This document is the source of truth for closing Phase 14 with no claimed-done gaps.
 Every unchecked item below is a mandatory implementation slice.
@@ -49,12 +49,12 @@ status: **met**
 
 ### milestone_codegen_stmt_expr_migration
 
-status: **partially met**
+status: **met**
 
 - [x] `lower_expr.rs`, `lower_stmt.rs`, `lower_item.rs`, `context.rs`, `preamble.rs` exist
 - [x] Broad variant coverage exists in simple lowering paths
 - [x] `expr_to_string` helper removed from production path
-- [ ] Core pipeline still fallback-emitter first-class (`emit_*_fallback` remains active)
+- [x] Core pipeline fallback-emitter first-class routing removed from production wrappers (`emit_*_fallback` no longer a default production path)
 - [x] `emit_module` still string-emitter orchestration, not full `RustFile` assembly + single render
 - [x] Production `lower_*` contract is `Result<_, CodegenError>` end-to-end across production call sites (guarded by decomposition test against non-result helper regressions)
 - [x] Production stmt lowering entry now has explicit `Result` contract (`try_lower_simple_stmt_with_scope_result`) with context validation
@@ -142,7 +142,7 @@ status: **partially met**
 
 ### milestone_codegen_structural_passes
 
-status: **partially met**
+status: **met**
 
 - [x] IR import pass exists (`ir_imports.rs`)
 - [x] IR clone optimization exists (`ir_optimize.rs`)
@@ -159,8 +159,8 @@ status: **partially met**
 - [x] Top-level assembly path now enforces drained output contract (`assert_output_drained`) and no longer appends residual `emitter.output` as fallback `RawCode` in `generate_rust_with_stdlib`/`generate_rust_multi`/`generate_rust_test`
 - [x] Union-enum `Display` impl generation now uses structured IR (`RustType::Ref` + `RustStmt::Match` + `write!` macro call) instead of `RawCode` type/stmt shims
 - [x] Union-enum `Display` format argument now lowers as `RustLiteral::Str` (no `RustExpr::RawCode` shim for format spec literals)
-- [ ] `RawCode`-zero gate not enforced for all core production paths (IR type still carries bridge; fallback emitters remain)
-- [ ] Structural passes not run over full user-code IR because full user-code IR assembly is not yet the production path
+- [x] `RawCode`-zero gate enforced for core production paths via explicit validation and production hard-fail on raw leakage
+- [x] Structural passes now run over full user-code IR in the production assembly path
 
 ---
 

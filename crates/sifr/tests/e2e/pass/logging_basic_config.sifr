@@ -4,15 +4,17 @@ from sifr.logging import basicConfig, WARNING, Logger
 
 def main():
     path: str = "/tmp/sifr_logging_basic_config_test.log"
-    log_path_written: None = write_text(path, "")
-    logger: Logger = basicConfig(WARNING)
-    logger.set_file(path)
-    logger.info("should not print")
-    logger.debug("should not print either")
-    logger.warning("important warning")
-    logger.error("critical error")
+    try:
+        _: None = write_text(path, "")
 
-    output: str = read_text(path)
-    assert output == "[WARNING] root: important warning
-[ERROR] root: critical error
-"
+        logger: Logger = basicConfig(WARNING)
+        logger.set_file(path)
+        logger.info("should not print")
+        logger.debug("should not print either")
+        logger.warning("important warning")
+        logger.error("critical error")
+
+        output: str = read_text(path)
+        assert output == "[WARNING] root: important warning\n[ERROR] root: critical error\n"
+    except IOError as e:
+        assert False

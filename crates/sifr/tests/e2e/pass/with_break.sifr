@@ -1,3 +1,10 @@
+# expect-stdout: enter
+# expect-stdout: body
+# expect-stdout: exit
+# expect-stdout: enter
+# expect-stdout: exit
+# expect-stdout: done
+
 # Tests: with statement calls __exit__ on break (Drop semantics)
 class Resource:
     name: str
@@ -6,13 +13,11 @@ class Resource:
         self.name = name
 
     def __enter__(self) -> Resource:
-        events.append("enter")
+        print("enter")
         return self
 
     def __exit__(self) -> None:
-        events.append("exit")
-
-events: list[str] = []
+        print("exit")
 
 def main():
     i: int = 0
@@ -20,7 +25,6 @@ def main():
         with Resource("r") as r:
             if i == 1:
                 break
-            events.append("body")
+            print("body")
         i = i + 1
-    events.append("done")
-    assert events == ["enter", "body", "exit", "enter", "exit", "done"]
+    print("done")
