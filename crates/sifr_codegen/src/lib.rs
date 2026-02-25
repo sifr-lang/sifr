@@ -1068,6 +1068,10 @@ impl RustEmitter {
                 self.lowering_stats.expr_structured += 1;
                 return Ok(true);
             }
+            if self.try_emit_structured_plain_call_with_signature(func, args)? {
+                self.lowering_stats.expr_structured += 1;
+                return Ok(true);
+            }
         }
         if let HirExpr::MethodCall {
             object,
@@ -1092,6 +1096,52 @@ impl RustEmitter {
         }
 
         Ok(false)
+    }
+
+    fn try_emit_structured_plain_call_with_signature(
+        &mut self,
+        func: &str,
+        args: &[HirExpr],
+    ) -> Result<bool, crate::CodegenError> {
+        if func.contains("::")
+            || is_fallback_special_plain_call(func)
+            || self.nested_fn_captures.contains_key(func)
+        {
+            return Ok(false);
+        }
+
+        let Some((param_types, _)) = self.func_signatures.get(func) else {
+            return Ok(false);
+        };
+        if param_types.len() != args.len() {
+            return Ok(false);
+        }
+
+        let mut lowered_args = Vec::with_capacity(args.len());
+        for ((param_ty, convention), arg) in param_types.iter().zip(args.iter()) {
+            if *convention != ParamConvention::Own {
+                return Ok(false);
+            }
+            if type_has_typevar(param_ty) || type_has_typevar(arg.ty()) {
+                return Ok(false);
+            }
+            if resolve_alias_type_for_plain_call(param_ty)
+                != resolve_alias_type_for_plain_call(arg.ty())
+            {
+                return Ok(false);
+            }
+            let Some(lowered_arg) = try_lower_leaf_or_name_expr_result(arg)? else {
+                return Ok(false);
+            };
+            lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
+        }
+
+        let lowered_call = RustExpr::FnCall {
+            func: Box::new(RustExpr::Ident(func.to_string())),
+            args: lowered_args,
+        };
+        self.write(&crate::render_expr(&lowered_call));
+        Ok(true)
     }
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
@@ -1146,6 +1196,74 @@ fn is_copyish_structured_stmt_expr_type(ty: &Type) -> bool {
         Type::Int | Type::Float | Type::Bool | Type::Enum { .. } => true,
         _ => false,
     }
+}
+
+fn resolve_alias_type_for_plain_call(ty: &Type) -> &Type {
+    match ty {
+        Type::Alias(_, inner) => resolve_alias_type_for_plain_call(inner),
+        _ => ty,
+    }
+}
+
+fn type_has_typevar(ty: &Type) -> bool {
+    match ty {
+        Type::Alias(_, inner) => type_has_typevar(inner),
+        Type::TypeVar(_) => true,
+        Type::List(inner) | Type::Set(inner) => type_has_typevar(inner),
+        Type::Dict(key, val) => type_has_typevar(key) || type_has_typevar(val),
+        Type::Tuple(elems) | Type::Union(elems) => elems.iter().any(type_has_typevar),
+        Type::Result(ok, err) => type_has_typevar(ok) || type_has_typevar(err),
+        Type::Class {
+            fields, methods, ..
+        } => {
+            fields.iter().any(|(_, t)| type_has_typevar(t))
+                || methods.iter().any(|(_, ft)| {
+                    ft.params.iter().any(|(_, t, _)| type_has_typevar(t))
+                        || type_has_typevar(&ft.return_type)
+                })
+        }
+        _ => false,
+    }
+}
+
+fn try_lower_leaf_or_name_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
+    if let Some(lowered) = try_lower_leaf_expr_result(expr)? {
+        return Ok(Some(lowered));
+    }
+    if let HirExpr::Name { name, .. } = expr {
+        return Ok(Some(RustExpr::Ident(name.clone())));
+    }
+    Ok(None)
+}
+
+fn is_fallback_special_plain_call(func: &str) -> bool {
+    matches!(
+        func,
+        "print"
+            | "isinstance"
+            | "str"
+            | "pow"
+            | "abs"
+            | "hash"
+            | "round"
+            | "repr"
+            | "int"
+            | "bigint"
+            | "float"
+            | "bool"
+            | "min"
+            | "max"
+            | "sum"
+            | "sorted"
+            | "reversed"
+            | "enumerate"
+            | "zip"
+            | "any"
+            | "all"
+            | "map"
+            | "filter"
+            | "builtin_open"
+    )
 }
 
 fn expr_uses_borrowed_param(
