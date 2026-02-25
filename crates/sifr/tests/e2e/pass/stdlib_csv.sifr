@@ -17,5 +17,4 @@ def main():
     # format_csv joins rows with newline
     rows: list[list[str]] = [["1", "2"], ["3", "4"]]
     csv_text: str = format_csv(rows)
-    assert csv_text == "1,2
-3,4"
+    assert csv_text == "1,2\n3,4"

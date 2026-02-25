@@ -1,7 +1,7 @@
 # Phase 14 Closeout Epic: Eliminate Remaining Legacy Bridges in Codegen
 
 Date: 2026-02-25  
-Status: Open  
+Status: Done  
 Phase: 14 `codegen_architecture`
 
 ---
@@ -102,3 +102,21 @@ And these conditions are true:
 4. Self-review against acceptance criteria.
 5. Merge.
 6. Update phase docs/checklists in same PR or immediate follow-up PR.
+
+---
+
+## Completion Summary
+
+Child issues merged in required order:
+- 217 via `#784`
+- 218 via `#785`
+- 219 via `#786`
+- 220 via `#787`
+
+Completion gate validated on 2026-02-25:
+- `cargo test -p sifr_codegen`
+- `cargo clippy -p sifr_codegen -- -D warnings`
+- `scripts/run_e2e_pass.sh` (defaults)
+- `cargo test -p sifr --test e2e test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus -- --nocapture`
+- `cargo test --workspace`
+- `cargo clippy --workspace -- -D warnings`

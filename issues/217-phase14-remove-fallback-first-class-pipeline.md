@@ -1,8 +1,9 @@
 # Phase 14 Gap 1: Remove Fallback-First-Class Production Routing
 
 Date: 2026-02-25  
-Status: Open  
+Status: Done  
 Parent: `issues/216-phase14-codegen-architecture-closeout-epic.md`
+Merged PR: `#784`
 
 ---
 

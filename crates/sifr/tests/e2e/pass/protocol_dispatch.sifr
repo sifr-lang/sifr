@@ -30,5 +30,7 @@ def main():
     r: Robot = Robot(42)
     say_hello(p)
     say_hello(r)
-    assert p.greet() == "Hello, Alice!"
-    assert r.greet() == "Beep boop #42"
+    p2: Person = Person("Alice")
+    r2: Robot = Robot(42)
+    assert p2.greet() == "Hello, Alice!"
+    assert r2.greet() == "Beep boop #42"

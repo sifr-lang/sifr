@@ -1,8 +1,9 @@
 # Phase 14 Gap 3: Enforce RawCode-Zero in Core Production Paths
 
 Date: 2026-02-25  
-Status: Open  
+Status: Done  
 Parent: `issues/216-phase14-codegen-architecture-closeout-epic.md`
+Merged PR: `#786`
 
 ---
 

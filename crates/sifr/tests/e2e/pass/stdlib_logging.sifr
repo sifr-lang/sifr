@@ -4,13 +4,15 @@ from sifr.logging import getLogger, Logger
 
 def main():
     path: str = "/tmp/sifr_logging_module_test.log"
-    _clear: None = write_text(path, "")
-    logger: Logger = getLogger("server")
-    logger.set_file(path)
-    logger._emit("INFO", 20, "server started")
-    logger._emit("WARN", 30, "disk space low")
+    try:
+        _: None = write_text(path, "")
 
-    output: str = read_text(path)
-    assert output == "[INFO] server: server started
-[WARN] server: disk space low
-"
+        logger: Logger = getLogger("server")
+        logger.set_file(path)
+        logger._emit("INFO", 20, "server started")
+        logger._emit("WARN", 30, "disk space low")
+
+        output: str = read_text(path)
+        assert output == "[INFO] server: server started\n[WARN] server: disk space low\n"
+    except IOError as e:
+        assert False
