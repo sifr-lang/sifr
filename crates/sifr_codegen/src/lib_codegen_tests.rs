@@ -1278,6 +1278,42 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
 }
 
 #[test]
+fn test_emit_expr_prefers_structured_before_force_fallback_name() {
+    let mut emitter = RustEmitter::new();
+    emitter.intrinsic_functions.insert("clock".to_string());
+    let expr = HirExpr::Name {
+        name: "clock".to_string(),
+        ty: Type::Int,
+    };
+
+    emitter.emit_expr(&expr);
+
+    assert_eq!(emitter.output, "clock");
+    assert_eq!(emitter.lowering_stats.expr_structured, 1);
+    assert_eq!(emitter.lowering_stats.expr_lowering_errors, 0);
+}
+
+#[test]
+fn test_emit_expr_borrowed_compare_keeps_fallback_path() {
+    let mut emitter = RustEmitter::new();
+    emitter.borrowed_params.insert("lhs".to_string());
+    let expr = HirExpr::Compare {
+        left: Box::new(HirExpr::Name {
+            name: "lhs".to_string(),
+            ty: Type::Str,
+        }),
+        ops: vec!["==".to_string()],
+        comparators: vec![HirExpr::StringLiteral("ok".to_string())],
+        ty: Type::Bool,
+    };
+
+    emitter.emit_expr(&expr);
+
+    assert!(emitter.output.contains("*lhs"));
+    assert_eq!(emitter.lowering_stats.expr_lowering_errors, 0);
+}
+
+#[test]
 fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     let lib_src = include_str!("lib.rs");
     let stmt_src = include_str!("stmt_emitter.rs");
