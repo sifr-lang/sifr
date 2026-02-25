@@ -1282,6 +1282,52 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
 }
 
 #[test]
+fn test_structured_stmt_bridge_handles_copy_typed_assign_expr() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Let {
+                    name: "x".to_string(),
+                    ty: Type::Float,
+                    value: HirExpr::FloatLiteral(0.0),
+                    is_mutable: true,
+                },
+                HirStmt::Assign {
+                    name: "x".to_string(),
+                    value: HirExpr::Call {
+                        func: "sqrt".to_string(),
+                        args: vec![HirExpr::FloatLiteral(9.0)],
+                        ty: Type::Float,
+                    },
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["sqrt".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("x = (9.0 as f64).sqrt();"));
+    assert!(
+        generated.lowering_stats.stmt_structured >= 2,
+        "let + assign should be emitted through structured stmt path"
+    );
+}
+
+#[test]
 fn test_emit_expr_prefers_structured_before_force_fallback_name() {
     let mut emitter = RustEmitter::new();
     emitter.intrinsic_functions.insert("clock".to_string());

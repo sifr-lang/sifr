@@ -940,6 +940,21 @@ impl RustEmitter {
             return Ok(true);
         }
 
+        if let HirStmt::Assign { name, value } = stmt {
+            if is_copyish_structured_stmt_expr_type(value.ty()) {
+                let output_len = self.output.len();
+                self.write(name);
+                self.write(" = ");
+                if self.try_emit_structured_expr(value)? {
+                    self.lowering_stats.stmt_structured += 1;
+                    self.lowering_stats.stmt_candidate_structured += 1;
+                    self.write(";\n");
+                    return Ok(true);
+                }
+                self.output.truncate(output_len);
+            }
+        }
+
         if let HirStmt::Expr { expr } = stmt {
             let output_len = self.output.len();
             if self.try_emit_structured_expr(expr)? {
@@ -1037,6 +1052,14 @@ fn is_self_field_access_expr(expr: &HirExpr) -> bool {
         return matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
     }
     false
+}
+
+fn is_copyish_structured_stmt_expr_type(ty: &Type) -> bool {
+    match ty {
+        Type::Alias(_, inner) => is_copyish_structured_stmt_expr_type(inner),
+        Type::Int | Type::Float | Type::Bool | Type::Enum { .. } => true,
+        _ => false,
+    }
 }
 
 fn expr_uses_borrowed_param(
