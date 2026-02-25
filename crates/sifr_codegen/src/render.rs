@@ -866,6 +866,12 @@ pub fn render_expr(expr: &RustExpr) -> String {
     renderer.output
 }
 
+pub fn render_type(ty: &RustType) -> String {
+    let mut renderer = Renderer::new();
+    renderer.render_type(ty);
+    renderer.output
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

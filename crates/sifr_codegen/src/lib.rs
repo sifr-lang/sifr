@@ -940,6 +940,32 @@ impl RustEmitter {
             return Ok(true);
         }
 
+        if let HirStmt::Let {
+            name, ty, value, ..
+        } = stmt
+        {
+            if is_copyish_structured_stmt_expr_type(ty)
+                && is_copyish_structured_stmt_expr_type(value.ty())
+            {
+                let output_len = self.output.len();
+                self.write("let ");
+                if self.mutated_vars.contains(name) {
+                    self.write("mut ");
+                }
+                self.write(name);
+                self.write(": ");
+                self.write(&crate::render_type(&sifr_type_to_rust_type(ty)));
+                self.write(" = ");
+                if self.try_emit_structured_expr(value)? {
+                    self.lowering_stats.stmt_structured += 1;
+                    self.lowering_stats.stmt_candidate_structured += 1;
+                    self.write(";\n");
+                    return Ok(true);
+                }
+                self.output.truncate(output_len);
+            }
+        }
+
         if let HirStmt::Assign { name, value } = stmt {
             if is_copyish_structured_stmt_expr_type(value.ty()) {
                 let output_len = self.output.len();

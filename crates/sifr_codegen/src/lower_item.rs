@@ -1,8 +1,8 @@
 //! Item lowering scaffolds for the IR migration.
 
 use crate::{
-    try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustItem,
-    RustLiteral, RustStmt, RustType, Visibility,
+    try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustItem, RustLiteral,
+    RustStmt, RustType, Visibility,
 };
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
@@ -44,11 +44,15 @@ pub fn try_lower_simple_module_constant_item_result(
 
 fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
     if name.trim().is_empty() {
-        return Err(CodegenError::new("invalid module constant shape: empty name"));
+        return Err(CodegenError::new(
+            "invalid module constant shape: empty name",
+        ));
     }
     let mut chars = name.chars();
     let Some(first) = chars.next() else {
-        return Err(CodegenError::new("invalid module constant shape: empty name"));
+        return Err(CodegenError::new(
+            "invalid module constant shape: empty name",
+        ));
     };
     if !(first == '_' || first.is_ascii_alphabetic()) {
         return Err(CodegenError::new(
@@ -330,10 +334,13 @@ mod tests {
 
     #[test]
     fn dispatcher_result_lowers_simple_module_constant_item() {
-        let lowered =
-            try_lower_simple_module_constant_item_result("answer", &Type::Int, &HirExpr::IntLiteral(42))
-                .expect("result dispatcher should validate and lower")
-                .expect("dispatcher should lower simple constant");
+        let lowered = try_lower_simple_module_constant_item_result(
+            "answer",
+            &Type::Int,
+            &HirExpr::IntLiteral(42),
+        )
+        .expect("result dispatcher should validate and lower")
+        .expect("dispatcher should lower simple constant");
         assert_eq!(lowered.1, "ANSWER");
         assert!(matches!(lowered.0, RustItem::Const { .. }));
     }
@@ -346,7 +353,9 @@ mod tests {
             &HirExpr::IntLiteral(42),
         )
         .expect_err("invalid constant name should return error");
-        assert!(err.message.contains("name must start with ASCII letter or underscore"));
+        assert!(err
+            .message
+            .contains("name must start with ASCII letter or underscore"));
     }
 
     #[test]

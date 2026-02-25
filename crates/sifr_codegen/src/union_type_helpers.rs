@@ -1,4 +1,7 @@
-use crate::{sifr_type_to_rust_type, RustEmitter, RustEnumVariant, RustItem, RustParam, RustStmt, RustType, Visibility};
+use crate::{
+    sifr_type_to_rust_type, RustEmitter, RustEnumVariant, RustItem, RustParam, RustStmt, RustType,
+    Visibility,
+};
 use sifr_hir::{HirModule, HirStmt};
 use sifr_type_system::ParamConvention;
 use sifr_type_system::Type;
