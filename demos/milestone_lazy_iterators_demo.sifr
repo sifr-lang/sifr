@@ -45,6 +45,20 @@ def count_up(n: int) -> list[int]:
         i = i + 1
 
 
+def format_int_list(values: list[int]) -> str:
+    if len(values) == 0:
+        return "[]"
+    formatted: str = "["
+    i: int = 0
+    while i < len(values):
+        formatted = formatted + str(values[i])
+        if i + 1 < len(values):
+            formatted = formatted + ", "
+        i = i + 1
+    formatted = formatted + "]"
+    return formatted
+
+
 def main():
     output: list[str] = []
 
@@ -56,7 +70,7 @@ def main():
     # Part 2: Collect into a list
     output.append("=== Squares (collected) ===")
     sq: list[int] = squares(5)
-    output.append(str(sq))
+    output.append(format_int_list(sq))
 
     # Part 3: Conditional yield — only even numbers
     output.append("=== Evens (conditional yield) ===")
@@ -69,7 +83,7 @@ def main():
         output.append(str(c))
     output.append("=== Count (collected) ===")
     nums: list[int] = count_up(5)
-    output.append(str(nums))
+    output.append(format_int_list(nums))
 
     assert output == [
         "=== Fibonacci (lazy for loop) ===",
@@ -96,3 +110,7 @@ def main():
         "=== Count (collected) ===",
         "[0, 1, 2, 3, 4]",
     ]
+
+    print("Lazy iterator demo output:")
+    for item in output:
+        print(item)
