@@ -61,7 +61,7 @@ use helpers::{
 };
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
-use ir_validate::validate_items;
+use ir_validate::{validate_items, validate_no_raw_code};
 use sifr_hir::{HirExpr, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -409,7 +409,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         assembled_body_items.extend(preamble_items.clone());
     }
     if !stdlib_preamble.is_empty() {
-        assembled_body_items.push(RustItem::RawCode(stdlib_preamble.clone()));
+        emitter.push_syn_items_from_source(&stdlib_preamble, "stdlib preamble assembly");
     }
     if !emitter.body_items.is_empty() {
         assembled_body_items.extend(emitter.body_items.clone());
@@ -468,6 +468,16 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
         file_issues.is_empty(),
         "codegen IR validation failed (assembled file): {}",
         file_issues
+            .iter()
+            .map(|issue| issue.message.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ")
+    );
+    let raw_issues = validate_no_raw_code(&file_items);
+    assert!(
+        raw_issues.is_empty(),
+        "codegen raw-code gate failed (assembled file): {}",
+        raw_issues
             .iter()
             .map(|issue| issue.message.as_str())
             .collect::<Vec<_>>()
@@ -583,6 +593,17 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
             "codegen IR validation failed (multi module file `{}`): {}",
             module_name,
             file_issues
+                .iter()
+                .map(|issue| issue.message.as_str())
+                .collect::<Vec<_>>()
+                .join(" | ")
+        );
+        let raw_issues = validate_no_raw_code(&file_items);
+        assert!(
+            raw_issues.is_empty(),
+            "codegen raw-code gate failed (multi module file `{}`): {}",
+            module_name,
+            raw_issues
                 .iter()
                 .map(|issue| issue.message.as_str())
                 .collect::<Vec<_>>()

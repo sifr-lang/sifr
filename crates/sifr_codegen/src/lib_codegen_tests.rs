@@ -1804,8 +1804,10 @@ fn test_module_constants_flow_through_assembled_body_items() {
 
     assert!(module_constants_src.contains("self.body_items.push(item);"));
     assert!(
-        module_constants_src.contains("self.body_items.push(RustItem::RawCode(fallback_item));")
+        module_constants_src
+            .contains("self.push_syn_items_from_source(&fallback_item, \"module constant fallback emission\")")
     );
+    assert!(!module_constants_src.contains("RustItem::RawCode"));
     assert!(!module_constants_src.contains("self.output.push_str(&render_items(&[item]))"));
 
     assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
@@ -1815,6 +1817,7 @@ fn test_module_constants_flow_through_assembled_body_items() {
     );
     assert!(!entrypoints_src.contains("if !emitter.output.is_empty() {"));
     assert!(!lib_src.contains("if !emitter.output.is_empty() {"));
+    assert!(!lib_src.contains("RustItem::RawCode(stdlib_preamble.clone())"));
 }
 
 #[test]
