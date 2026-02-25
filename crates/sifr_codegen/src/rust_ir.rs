@@ -65,6 +65,7 @@ pub enum RustItem {
         value: RustExpr,
     },
     Attr(String),
+    SynItem(String),
     RawCode(String),
 }
 

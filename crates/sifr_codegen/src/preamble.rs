@@ -1565,6 +1565,7 @@ mod tests {
                 count_raw_in_type(ty) + count_raw_in_expr(value)
             }
             RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => 0,
+            RustItem::SynItem(_) => 0,
             RustItem::RawCode(_) => 1,
         }
     }

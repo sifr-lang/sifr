@@ -254,7 +254,7 @@ impl Renderer {
                 ));
             }
             RustItem::Attr(attr) => self.writeln(attr),
-            RustItem::RawCode(code) => self.write_raw_top_level(code),
+            RustItem::SynItem(code) | RustItem::RawCode(code) => self.write_raw_top_level(code),
         }
     }
 
