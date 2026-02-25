@@ -49,6 +49,37 @@ fn ok_expr(value: RustExpr) -> RustExpr {
     }
 }
 
+fn trim_trailing_crlf_stmt(name: &str) -> RustStmt {
+    RustStmt::If {
+        cond: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(name.to_string())),
+            method: "ends_with".to_string(),
+            args: vec![RustExpr::Literal(RustLiteral::Char('\n'))],
+        },
+        then_body: vec![
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(name.to_string())),
+                method: "pop".to_string(),
+                args: vec![],
+            }),
+            RustStmt::If {
+                cond: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(name.to_string())),
+                    method: "ends_with".to_string(),
+                    args: vec![RustExpr::Literal(RustLiteral::Char('\r'))],
+                },
+                then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(name.to_string())),
+                    method: "pop".to_string(),
+                    args: vec![],
+                })],
+                else_body: None,
+            },
+        ],
+        else_body: None,
+    }
+}
+
 fn next_handle_id_expr(static_name: &str) -> RustExpr {
     RustExpr::RawCode(format!(
         "{{ use std::sync::atomic::{{AtomicI64, Ordering}}; \
@@ -498,16 +529,54 @@ pub(super) fn lower_file_readline(args: &[RustExpr]) -> Option<RustExpr> {
         return None;
     }
     let readline_body = vec![
-        RustStmt::RawCode("let mut __line = String::new();".to_string()),
-        RustStmt::RawCode("let __n = __r.read_line(&mut __line).map_err(__io_err)?;".to_string()),
-        RustStmt::RawCode(
-            "if __n == 0 { Ok(None) } else { if __line.ends_with('\\n') { __line.pop(); if __line.ends_with('\\r') { __line.pop(); } } Ok(Some(__line)) }"
-                .to_string(),
-        ),
+        RustStmt::Let {
+            mutable: true,
+            name: "__line".to_string(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "String".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            },
+        },
+        RustStmt::Let {
+            mutable: false,
+            name: "__n".to_string(),
+            ty: None,
+            value: map_io_err_try(std_io_trait_call(
+                "BufRead",
+                "read_line",
+                vec![
+                    RustExpr::Ident("__r".to_string()),
+                    RustExpr::Ref {
+                        mutable: true,
+                        expr: Box::new(RustExpr::Ident("__line".to_string())),
+                    },
+                ],
+            )),
+        },
+        RustStmt::If {
+            cond: RustExpr::BinOp {
+                left: Box::new(RustExpr::Ident("__n".to_string())),
+                op: "==".to_string(),
+                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+            },
+            then_body: vec![RustStmt::Return(Some(ok_expr(RustExpr::Literal(
+                RustLiteral::None,
+            ))))],
+            else_body: None,
+        },
+        trim_trailing_crlf_stmt("__line"),
+        RustStmt::Return(Some(ok_expr(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![RustExpr::Ident("__line".to_string())],
+        }))),
     ];
     Some(wrap_handle_result(
         args[0].clone(),
-        &["use std::io::BufRead;"],
+        &[],
         "TextRead(ref mut __r)",
         readline_body,
         "file not open for reading",
@@ -519,15 +588,82 @@ pub(super) fn lower_file_readlines(args: &[RustExpr]) -> Option<RustExpr> {
         return None;
     }
     let readlines_body = vec![
-        RustStmt::RawCode("let mut __lines: Vec<String> = Vec::new();".to_string()),
-        RustStmt::RawCode(
-            "let mut __line = String::new(); loop { __line.clear(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { break; } let mut __l = __line.clone(); if __l.ends_with('\\n') { __l.pop(); if __l.ends_with('\\r') { __l.pop(); } } __lines.push(__l); } Ok(__lines)"
-                .to_string(),
-        ),
+        RustStmt::Let {
+            mutable: true,
+            name: "__lines".to_string(),
+            ty: Some(RustType::Vec(Box::new(RustType::String_))),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
+                args: vec![],
+            },
+        },
+        RustStmt::Let {
+            mutable: true,
+            name: "__line".to_string(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "String".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            },
+        },
+        RustStmt::Loop {
+            body: vec![
+                RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__line".to_string())),
+                    method: "clear".to_string(),
+                    args: vec![],
+                }),
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__n".to_string(),
+                    ty: None,
+                    value: map_io_err_try(std_io_trait_call(
+                        "BufRead",
+                        "read_line",
+                        vec![
+                            RustExpr::Ident("__r".to_string()),
+                            RustExpr::Ref {
+                                mutable: true,
+                                expr: Box::new(RustExpr::Ident("__line".to_string())),
+                            },
+                        ],
+                    )),
+                },
+                RustStmt::If {
+                    cond: RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__n".to_string())),
+                        op: "==".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                    },
+                    then_body: vec![RustStmt::Break],
+                    else_body: None,
+                },
+                RustStmt::Let {
+                    mutable: true,
+                    name: "__l".to_string(),
+                    ty: None,
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__line".to_string())),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    },
+                },
+                trim_trailing_crlf_stmt("__l"),
+                RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__lines".to_string())),
+                    method: "push".to_string(),
+                    args: vec![RustExpr::Ident("__l".to_string())],
+                }),
+            ],
+        },
+        RustStmt::Return(Some(ok_expr(RustExpr::Ident("__lines".to_string())))),
     ];
     Some(wrap_handle_result(
         args[0].clone(),
-        &["use std::io::BufRead;"],
+        &[],
         "TextRead(ref mut __r)",
         readlines_body,
         "file not open for reading",
