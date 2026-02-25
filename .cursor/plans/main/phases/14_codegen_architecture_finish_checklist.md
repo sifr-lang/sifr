@@ -156,6 +156,7 @@ status: **partially met**
 - [x] `generate_rust_multi` module-import prelude now lowers as structured `RustItem::Use`/`RustItem::UseAlias` items (no raw import-string prelude block)
 - [x] Module constant emission now routes into assembled body-item lists (`RustItem`/`RawCode` entries) instead of writing constant definitions directly into `emitter.output` strings
 - [x] Module class/function body emission now drains per-item raw chunks into assembled body-item lists (`RustItem::RawCode`) instead of retaining monolithic `emitter.output` accumulation
+- [x] Top-level assembly path now enforces drained output contract (`assert_output_drained`) and no longer appends residual `emitter.output` as fallback `RawCode` in `generate_rust_with_stdlib`/`generate_rust_multi`/`generate_rust_test`
 - [x] Union-enum `Display` impl generation now uses structured IR (`RustType::Ref` + `RustStmt::Match` + `write!` macro call) instead of `RawCode` type/stmt shims
 - [ ] `RawCode`-zero gate not enforced for all core production paths (IR type still carries bridge; fallback emitters remain)
 - [ ] Structural passes not run over full user-code IR because full user-code IR assembly is not yet the production path

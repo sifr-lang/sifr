@@ -2,6 +2,7 @@ use super::{CodegenResult, HirModule, Renderer, RustEmitter, RustFile, RustItem,
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::ir_optimize::remove_trivial_clones_in_items;
 use crate::ir_validate::validate_items;
+use crate::assert_output_drained;
 
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
@@ -31,9 +32,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if !emitter.body_items.is_empty() {
         emitted_items.extend(emitter.body_items.clone());
     }
-    if !emitter.output.is_empty() {
-        emitted_items.push(RustItem::RawCode(emitter.output.clone()));
-    }
+    assert_output_drained(&emitter.output, "generate_rust_test");
     let import_needs = collect_import_needs_from_items(&emitted_items);
 
     let mut import_items = Vec::new();
