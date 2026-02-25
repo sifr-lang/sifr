@@ -79,6 +79,7 @@ status: **partially met**
 - [x] Logging intrinsics (`set_global_level`, `get_global_level`) now lower via structured IR nodes (no `RawCode` emission path)
 - [x] `file_close` intrinsic now lowers via structured IR (typed arg + `remove(&__hid)`), removing monolithic `RawCode` template
 - [x] `builtin_open` / `open_file` now lower through structured IR blocks/match arms (no monolithic string-template assembly)
+- [x] File-handle read/write lowerers now build structured match arm stmt vectors (no per-intrinsic `String` body assembly)
 - [x] Method registry borrowed-arg helpers now avoid `RawCode` variant handling; tuple helpers use structured literals/casts
 - [x] Math intrinsic `ldexp` now lowers via typed structured IR (`f64` cast + `2.0.powi(i32)`), removing its monolithic `RawCode` template
 - [x] Math intrinsic `sumprod` now lowers via structured IR block/for-loop accumulation (no monolithic `RawCode` template)

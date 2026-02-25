@@ -19,44 +19,52 @@ fn next_handle_id_expr(static_name: &str) -> RustExpr {
 }
 
 fn wrap_handle_result(
-    hid_expr: &str,
-    _result_ty: &str,
-    imports: &str,
+    hid_expr: RustExpr,
+    imports: &[&str],
     arm_pattern: &str,
-    arm_body: &str,
+    arm_body: Vec<RustStmt>,
     err_message: &str,
 ) -> RustExpr {
-    let err_expr = io_other_error_expr(err_message);
+    let err_expr = format!("Err({})", io_other_error_expr(err_message));
     let mut body = Vec::new();
-    if !imports.trim().is_empty() {
-        body.push(RustStmt::RawCode(imports.to_string()));
+    for import in imports {
+        if !import.trim().is_empty() {
+            body.push(RustStmt::RawCode((*import).to_string()));
+        }
     }
     body.push(RustStmt::Let {
         mutable: false,
         name: "__hid".to_string(),
         ty: None,
-        value: RustExpr::RawCode(format!("({hid_expr})")),
+        value: hid_expr,
     });
     body.push(RustStmt::Let {
         mutable: true,
         name: "__handles".to_string(),
         ty: None,
-        value: RustExpr::RawCode("__SIFR_FILE_HANDLES.lock().unwrap()".to_string()),
+        value: file_handles_lock_expr(),
     });
     body.push(RustStmt::Match {
-        expr: RustExpr::RawCode("__handles.get_mut(&__hid)".to_string()),
+        expr: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__handles".to_string())),
+            method: "get_mut".to_string(),
+            args: vec![RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Ident("__hid".to_string())),
+            }],
+        },
         arms: vec![
             RustMatchArm {
                 pattern: format!("Some(SifrFileHandle::{arm_pattern})"),
                 bindings: vec![],
                 guard: None,
-                body: vec![RustStmt::RawCode(arm_body.to_string())],
+                body: arm_body,
             },
             RustMatchArm {
                 pattern: "_".to_string(),
                 bindings: vec![],
                 guard: None,
-                body: vec![RustStmt::RawCode(format!("Err({err_expr})"))],
+                body: vec![RustStmt::RawCode(err_expr)],
             },
         ],
     });
@@ -373,17 +381,16 @@ pub(super) fn lower_file_read(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    let mut read_body = String::new();
-    read_body.push_str("let mut __s = String::new(); ");
-    read_body.push_str("__r.read_to_string(&mut __s).map_err(__io_err)?; ");
-    read_body.push_str("Ok(__s)");
-    let hid_expr = crate::render_expr(&args[0]);
+    let read_body = vec![
+        RustStmt::RawCode("let mut __s = String::new();".to_string()),
+        RustStmt::RawCode("__r.read_to_string(&mut __s).map_err(__io_err)?;".to_string()),
+        RustStmt::RawCode("Ok(__s)".to_string()),
+    ];
     Some(wrap_handle_result(
-        &hid_expr,
-        "String",
-        "use std::io::Read;",
+        args[0].clone(),
+        &["use std::io::Read;"],
         "TextRead(ref mut __r)",
-        &read_body,
+        read_body,
         "file not open for reading",
     ))
 }
@@ -392,20 +399,17 @@ pub(super) fn lower_file_write(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let hid_expr = crate::render_expr(&args[0]);
     let data_expr = crate::render_expr(&args[1]);
-    let mut write_body = String::new();
-    write_body.push_str("let __data: &str = (");
-    write_body.push_str(&data_expr);
-    write_body.push_str(").as_ref(); ");
-    write_body.push_str("__w.write_all(__data.as_bytes()).map_err(__io_err)?; ");
-    write_body.push_str("Ok(())");
+    let write_body = vec![
+        RustStmt::RawCode(format!("let __data: &str = ({data_expr}).as_ref();")),
+        RustStmt::RawCode("__w.write_all(__data.as_bytes()).map_err(__io_err)?;".to_string()),
+        RustStmt::RawCode("Ok(())".to_string()),
+    ];
     Some(wrap_handle_result(
-        &hid_expr,
-        "()",
-        "use std::io::Write;",
+        args[0].clone(),
+        &["use std::io::Write;"],
         "TextWrite(ref mut __w)",
-        &write_body,
+        write_body,
         "file not open for writing",
     ))
 }
@@ -414,20 +418,19 @@ pub(super) fn lower_file_readline(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    let mut readline_body = String::new();
-    readline_body.push_str("let mut __line = String::new(); ");
-    readline_body.push_str("let __n = __r.read_line(&mut __line).map_err(__io_err)?; ");
-    readline_body.push_str("if __n == 0 { Ok(None) } else { ");
-    readline_body.push_str("if __line.ends_with('\\n') { __line.pop(); ");
-    readline_body.push_str("if __line.ends_with('\\r') { __line.pop(); } } ");
-    readline_body.push_str("Ok(Some(__line)) }");
-    let hid_expr = crate::render_expr(&args[0]);
+    let readline_body = vec![
+        RustStmt::RawCode("let mut __line = String::new();".to_string()),
+        RustStmt::RawCode("let __n = __r.read_line(&mut __line).map_err(__io_err)?;".to_string()),
+        RustStmt::RawCode(
+            "if __n == 0 { Ok(None) } else { if __line.ends_with('\\n') { __line.pop(); if __line.ends_with('\\r') { __line.pop(); } } Ok(Some(__line)) }"
+                .to_string(),
+        ),
+    ];
     Some(wrap_handle_result(
-        &hid_expr,
-        "Option<String>",
-        "use std::io::BufRead;",
+        args[0].clone(),
+        &["use std::io::BufRead;"],
         "TextRead(ref mut __r)",
-        &readline_body,
+        readline_body,
         "file not open for reading",
     ))
 }
@@ -436,21 +439,18 @@ pub(super) fn lower_file_readlines(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    let mut readlines_body = String::new();
-    readlines_body.push_str("let mut __lines: Vec<String> = Vec::new(); ");
-    readlines_body.push_str("let mut __line = String::new(); loop { __line.clear(); ");
-    readlines_body.push_str("let __n = __r.read_line(&mut __line).map_err(__io_err)?; ");
-    readlines_body.push_str("if __n == 0 { break; } let mut __l = __line.clone(); ");
-    readlines_body.push_str("if __l.ends_with('\\n') { __l.pop(); ");
-    readlines_body.push_str("if __l.ends_with('\\r') { __l.pop(); } } ");
-    readlines_body.push_str("__lines.push(__l); } Ok(__lines)");
-    let hid_expr = crate::render_expr(&args[0]);
+    let readlines_body = vec![
+        RustStmt::RawCode("let mut __lines: Vec<String> = Vec::new();".to_string()),
+        RustStmt::RawCode(
+            "let mut __line = String::new(); loop { __line.clear(); let __n = __r.read_line(&mut __line).map_err(__io_err)?; if __n == 0 { break; } let mut __l = __line.clone(); if __l.ends_with('\\n') { __l.pop(); if __l.ends_with('\\r') { __l.pop(); } } __lines.push(__l); } Ok(__lines)"
+                .to_string(),
+        ),
+    ];
     Some(wrap_handle_result(
-        &hid_expr,
-        "Vec<String>",
-        "use std::io::BufRead;",
+        args[0].clone(),
+        &["use std::io::BufRead;"],
         "TextRead(ref mut __r)",
-        &readlines_body,
+        readlines_body,
         "file not open for reading",
     ))
 }
@@ -484,17 +484,16 @@ pub(super) fn lower_file_read_bytes(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    let mut read_bytes_body = String::new();
-    read_bytes_body.push_str("let mut __buf = Vec::new(); ");
-    read_bytes_body.push_str("__r.read_to_end(&mut __buf).map_err(__io_err)?; ");
-    read_bytes_body.push_str("Ok(__buf.iter().map(|&b| b as i64).collect())");
-    let hid_expr = crate::render_expr(&args[0]);
+    let read_bytes_body = vec![
+        RustStmt::RawCode("let mut __buf = Vec::new();".to_string()),
+        RustStmt::RawCode("__r.read_to_end(&mut __buf).map_err(__io_err)?;".to_string()),
+        RustStmt::RawCode("Ok(__buf.iter().map(|&b| b as i64).collect())".to_string()),
+    ];
     Some(wrap_handle_result(
-        &hid_expr,
-        "Vec<i64>",
-        "use std::io::Read;",
+        args[0].clone(),
+        &["use std::io::Read;"],
         "BinaryRead(ref mut __r)",
-        &read_bytes_body,
+        read_bytes_body,
         "file not open for binary reading",
     ))
 }
@@ -503,20 +502,19 @@ pub(super) fn lower_file_write_bytes(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let hid_expr = crate::render_expr(&args[0]);
     let data_expr = crate::render_expr(&args[1]);
-    let mut write_bytes_body = String::new();
-    write_bytes_body.push_str("let __data: Vec<u8> = (");
-    write_bytes_body.push_str(&data_expr);
-    write_bytes_body.push_str(").iter().map(|&b| b as u8).collect(); ");
-    write_bytes_body.push_str("__w.write_all(&__data).map_err(__io_err)?; ");
-    write_bytes_body.push_str("Ok(())");
+    let write_bytes_body = vec![
+        RustStmt::RawCode(format!(
+            "let __data: Vec<u8> = ({data_expr}).iter().map(|&b| b as u8).collect();"
+        )),
+        RustStmt::RawCode("__w.write_all(&__data).map_err(__io_err)?;".to_string()),
+        RustStmt::RawCode("Ok(())".to_string()),
+    ];
     Some(wrap_handle_result(
-        &hid_expr,
-        "()",
-        "use std::io::Write;",
+        args[0].clone(),
+        &["use std::io::Write;"],
         "BinaryWrite(ref mut __w)",
-        &write_bytes_body,
+        write_bytes_body,
         "file not open for binary writing",
     ))
 }
