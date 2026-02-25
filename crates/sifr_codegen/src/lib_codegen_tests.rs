@@ -1576,8 +1576,10 @@ fn test_union_display_impl_uses_structured_ir() {
     assert!(!union_src.contains("RustType::RawCode(\"&mut std::fmt::Formatter<'_>\""));
     assert!(!union_src.contains("RustType::RawCode(\"std::fmt::Result\""));
     assert!(!union_src.contains("RustStmt::RawCode(match_lines)"));
+    assert!(!union_src.contains("RustExpr::RawCode(format!(\"\\\"{fmt_spec}\\\"\"))"));
     assert!(union_src.contains("RustType::Ref {"));
     assert!(union_src.contains("RustStmt::Match {"));
+    assert!(union_src.contains("RustExpr::Literal(RustLiteral::Str(fmt_spec.to_string()))"));
 }
 
 #[test]
