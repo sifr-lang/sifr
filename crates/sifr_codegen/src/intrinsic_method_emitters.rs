@@ -142,15 +142,12 @@ impl RustEmitter {
     }
 
     fn lower_registry_expr_with_fallback(&mut self, expr: &HirExpr) -> crate::RustExpr {
-        if self.should_force_render_fallback(expr) {
-            return crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(expr));
-        }
-        match crate::try_lower_leaf_expr_result(expr) {
+        match self.try_lower_registry_expr_result(expr) {
             Ok(Some(lowered_expr)) => lowered_expr,
-            Ok(None) => crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(expr)),
+            Ok(None) => crate::RustExpr::RawCode(self.render_expr_via_fallback_only(expr)),
             Err(_) => {
                 self.lowering_stats.expr_lowering_errors += 1;
-                crate::RustExpr::RawCode(self.render_expr_with_lowered_fallback(expr))
+                crate::RustExpr::RawCode(self.render_expr_via_fallback_only(expr))
             }
         }
     }

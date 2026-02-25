@@ -2,39 +2,34 @@ use crate::RustEmitter;
 use sifr_hir::{HirExpr, HirFStringPart};
 
 impl RustEmitter {
-    pub(super) fn render_expr_with_lowered_fallback(&mut self, expr: &HirExpr) -> String {
+    pub(super) fn render_expr_via_fallback_only(&mut self, expr: &HirExpr) -> String {
+        let saved_output = std::mem::take(&mut self.output);
+        let saved_indent = self.indent;
+        self.indent = 0;
+        self.emit_expr(expr);
+        let result = std::mem::take(&mut self.output);
+        self.output = saved_output;
+        self.indent = saved_indent;
+        result.trim().to_string()
+    }
+
+    pub(super) fn try_lower_registry_expr_result(
+        &self,
+        expr: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         if self.should_force_render_fallback(expr) {
-            let saved_output = std::mem::take(&mut self.output);
-            let saved_indent = self.indent;
-            self.indent = 0;
-            self.emit_expr(expr);
-            let result = std::mem::take(&mut self.output);
-            self.output = saved_output;
-            self.indent = saved_indent;
-            return result.trim().to_string();
+            return Ok(None);
         }
-        match crate::try_lower_leaf_expr_result(expr) {
+        crate::try_lower_leaf_expr_result(expr)
+    }
+
+    pub(super) fn render_expr_with_lowered_fallback(&mut self, expr: &HirExpr) -> String {
+        match self.try_lower_registry_expr_result(expr) {
             Ok(Some(lowered_expr)) => crate::render_expr(&lowered_expr),
-            Ok(None) => {
-                let saved_output = std::mem::take(&mut self.output);
-                let saved_indent = self.indent;
-                self.indent = 0;
-                self.emit_expr(expr);
-                let result = std::mem::take(&mut self.output);
-                self.output = saved_output;
-                self.indent = saved_indent;
-                result.trim().to_string()
-            }
+            Ok(None) => self.render_expr_via_fallback_only(expr),
             Err(_) => {
                 self.lowering_stats.expr_lowering_errors += 1;
-                let saved_output = std::mem::take(&mut self.output);
-                let saved_indent = self.indent;
-                self.indent = 0;
-                self.emit_expr(expr);
-                let result = std::mem::take(&mut self.output);
-                self.output = saved_output;
-                self.indent = saved_indent;
-                result.trim().to_string()
+                self.render_expr_via_fallback_only(expr)
             }
         }
     }
