@@ -152,6 +152,7 @@ status: **partially met**
 - [x] `ir_imports` now uses structural `syn` traversal for `RawCode` payloads (text-token scan only as parse-failure fallback)
 - [x] Production and test codegen entrypoints now run `validate_items` on assembled `file_items` (including `RawCode` wrappers) before render
 - [x] `generate_rust_multi` now uses assembled `RustFile` + `validate_items` + single renderer sink instead of manual string assembly
+- [x] `generate_rust_multi` module-import prelude now lowers as structured `RustItem::Use`/`RustItem::UseAlias` items (no raw import-string prelude block)
 - [ ] `RawCode`-zero gate not enforced for all core production paths (IR type still carries bridge; fallback emitters remain)
 - [ ] Structural passes not run over full user-code IR because full user-code IR assembly is not yet the production path
 

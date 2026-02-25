@@ -25,7 +25,7 @@ pub(crate) fn validate_items(items: &[RustItem]) -> Vec<IrValidationIssue> {
 
 fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
     match item {
-        RustItem::Use(_) | RustItem::Attr(_) => {}
+        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => {}
         RustItem::Struct { name, fields, .. } => {
             let mut seen = HashSet::new();
             for (field_name, field_ty) in fields {

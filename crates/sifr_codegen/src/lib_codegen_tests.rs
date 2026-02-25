@@ -1530,8 +1530,10 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
         .expect("generate_project docs should exist");
     let generate_block = &lib_src[start..end];
 
+    assert!(generate_block.contains("RustItem::UseAlias"));
     assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
     assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
     assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(!generate_block.contains("module_import_prelude"));
     assert!(!generate_block.contains("result.push_str(&emitter.output)"));
 }

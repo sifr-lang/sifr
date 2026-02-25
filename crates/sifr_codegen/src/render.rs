@@ -34,6 +34,9 @@ impl Renderer {
     pub fn render_item(&mut self, item: &RustItem) {
         match item {
             RustItem::Use(path) => self.writeln(&format!("use {};", path.join("::"))),
+            RustItem::UseAlias { path, alias } => {
+                self.writeln(&format!("use {} as {};", path.join("::"), alias));
+            }
             RustItem::Struct {
                 name,
                 visibility,
@@ -980,6 +983,15 @@ mod tests {
             }
         }
         "###);
+    }
+
+    #[test]
+    fn renders_use_alias_item() {
+        let rendered = render_items(&[RustItem::UseAlias {
+            path: vec!["crate".to_string(), "utils".to_string(), "helper".to_string()],
+            alias: "h".to_string(),
+        }]);
+        assert_eq!(rendered, "use crate::utils::helper as h;\n");
     }
 
     #[test]
