@@ -1503,6 +1503,16 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
 }
 
 #[test]
+fn test_union_display_impl_uses_structured_ir() {
+    let union_src = include_str!("union_type_helpers.rs");
+    assert!(!union_src.contains("RustType::RawCode(\"&mut std::fmt::Formatter<'_>\""));
+    assert!(!union_src.contains("RustType::RawCode(\"std::fmt::Result\""));
+    assert!(!union_src.contains("RustStmt::RawCode(match_lines)"));
+    assert!(union_src.contains("RustType::Ref {"));
+    assert!(union_src.contains("RustStmt::Match {"));
+}
+
+#[test]
 fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     let lib_src = include_str!("lib.rs");
     let start = lib_src
