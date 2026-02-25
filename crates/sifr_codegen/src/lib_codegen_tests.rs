@@ -1555,6 +1555,22 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
 }
 
 #[test]
+fn test_production_lowering_contract_uses_result_helpers_only() {
+    let lib_src = include_str!("lib.rs");
+    let module_constants_src = include_str!("module_constants.rs");
+    let expr_render_helpers_src = include_str!("expr_render_helpers.rs");
+
+    assert!(lib_src.contains("try_lower_simple_stmt_with_scope_result("));
+    assert!(lib_src.contains("try_lower_leaf_expr_result("));
+    assert!(module_constants_src.contains("try_lower_simple_module_constant_item_result("));
+    assert!(expr_render_helpers_src.contains("try_lower_registry_expr_result("));
+
+    assert!(!lib_src.contains("try_lower_simple_stmt_with_scope("));
+    assert!(!lib_src.contains("try_lower_leaf_expr("));
+    assert!(!module_constants_src.contains("try_lower_simple_module_constant_item("));
+}
+
+#[test]
 fn test_union_display_impl_uses_structured_ir() {
     let union_src = include_str!("union_type_helpers.rs");
     assert!(!union_src.contains("RustType::RawCode(\"&mut std::fmt::Formatter<'_>\""));
