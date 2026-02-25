@@ -930,9 +930,13 @@ impl RustEmitter {
             &self.borrowed_params,
             &scope_ctx,
         )? {
+            let rewritten_stmts = lowered_stmts
+                .into_iter()
+                .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                .collect::<Vec<_>>();
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
-            self.emit_lowered_stmts(&lowered_stmts);
+            self.emit_lowered_stmts(&rewritten_stmts);
             return Ok(true);
         }
 
@@ -941,9 +945,10 @@ impl RustEmitter {
 
     fn try_emit_structured_expr(&mut self, expr: &HirExpr) -> Result<bool, crate::CodegenError> {
         if let Some(lowered_expr) = try_lower_leaf_expr_result(expr)? {
+            let rewritten_expr = self.rewrite_stdlib_constant_idents_in_expr(lowered_expr);
             self.lowering_stats.expr_structured += 1;
             self.lowering_stats.expr_candidate_structured += 1;
-            self.write(&crate::render_expr(&lowered_expr));
+            self.write(&crate::render_expr(&rewritten_expr));
             return Ok(true);
         }
 
@@ -1012,9 +1017,7 @@ fn should_force_expr_fallback(emitter: &RustEmitter, expr: &HirExpr) -> bool {
 fn expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExpr) -> bool {
     match expr {
         HirExpr::Name { name, .. } => {
-            emitter.intrinsic_functions.contains(name.as_str())
-                || emitter.is_stdlib_constant(name)
-                || emitter.module_constants.contains_key(name)
+            emitter.intrinsic_functions.contains(name.as_str()) && !is_stdlib_math_constant(name)
         }
         HirExpr::BinOp { left, right, .. } => {
             expr_contains_force_fallback_name(emitter, left)
@@ -1172,6 +1175,10 @@ fn expr_contains_force_fallback_name(emitter: &RustEmitter, expr: &HirExpr) -> b
         | HirExpr::NoneLiteral
         | HirExpr::EnumVariant { .. } => false,
     }
+}
+
+fn is_stdlib_math_constant(name: &str) -> bool {
+    matches!(name, "pi" | "e" | "tau" | "inf" | "nan")
 }
 
 fn should_force_stmt_fallback(emitter: &RustEmitter, stmt: &HirStmt) -> bool {

@@ -49,7 +49,10 @@ impl RustEmitter {
             )
     }
 
-    fn rewrite_stdlib_constant_idents_in_expr(&self, expr: crate::RustExpr) -> crate::RustExpr {
+    pub(super) fn rewrite_stdlib_constant_idents_in_expr(
+        &self,
+        expr: crate::RustExpr,
+    ) -> crate::RustExpr {
         match expr {
             crate::RustExpr::Ident(name) => self.rewrite_special_ident(name),
             crate::RustExpr::MethodCall {
@@ -226,7 +229,10 @@ impl RustEmitter {
         }
     }
 
-    fn rewrite_stdlib_constant_idents_in_stmt(&self, stmt: crate::RustStmt) -> crate::RustStmt {
+    pub(super) fn rewrite_stdlib_constant_idents_in_stmt(
+        &self,
+        stmt: crate::RustStmt,
+    ) -> crate::RustStmt {
         match stmt {
             crate::RustStmt::Let {
                 mutable,
