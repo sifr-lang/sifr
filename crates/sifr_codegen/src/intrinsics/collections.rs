@@ -2,6 +2,10 @@
 
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 
+fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
+    args[idx].clone()
+}
+
 fn cloned_vec(expr: &str) -> String {
     format!("({expr}).clone()")
 }
@@ -10,7 +14,7 @@ fn borrowed_str(expr: &str) -> String {
     format!("&({expr})")
 }
 
-pub(super) fn lower_new_set(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_new_set(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -23,7 +27,7 @@ pub(super) fn lower_new_set(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_set_from_list(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_set_from_list(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -33,7 +37,7 @@ pub(super) fn lower_set_from_list(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__items".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: true,
@@ -56,7 +60,7 @@ pub(super) fn lower_set_from_list(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_set_add(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_set_add(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -66,7 +70,7 @@ pub(super) fn lower_set_add(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__items".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: true,
@@ -78,7 +82,7 @@ pub(super) fn lower_set_add(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "v".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: arg_expr(args, 1),
             },
             RustStmt::If {
                 cond: RustExpr::UnaryOp {
@@ -104,21 +108,21 @@ pub(super) fn lower_set_add(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_set_contains(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_set_contains(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
     Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident(args[0].clone())),
+        receiver: Box::new(arg_expr(args, 0)),
         method: "contains".to_string(),
         args: vec![RustExpr::Ref {
             mutable: false,
-            expr: Box::new(RustExpr::Ident(args[1].clone())),
+            expr: Box::new(arg_expr(args, 1)),
         }],
     })
 }
 
-pub(super) fn lower_set_remove(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_set_remove(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -128,7 +132,7 @@ pub(super) fn lower_set_remove(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__items".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: true,
@@ -147,7 +151,7 @@ pub(super) fn lower_set_remove(args: &[String]) -> Option<RustExpr> {
                     body: Box::new(RustExpr::BinOp {
                         left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident("x".to_string())))),
                         op: "!=".to_string(),
-                        right: Box::new(RustExpr::Ident(args[1].clone())),
+                        right: Box::new(arg_expr(args, 1)),
                     }),
                     is_move: false,
                 }],
@@ -157,13 +161,13 @@ pub(super) fn lower_set_remove(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_set_len(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_set_len(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::Cast {
         expr: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(args[0].clone())),
+            receiver: Box::new(arg_expr(args, 0)),
             method: "len".to_string(),
             args: vec![],
         }),
@@ -171,7 +175,7 @@ pub(super) fn lower_set_len(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_set_union(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_set_union(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -181,13 +185,13 @@ pub(super) fn lower_set_union(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__left".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(args[0].clone()))),
+                value: RustExpr::Clone(Box::new(arg_expr(args, 0))),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__right".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(args[1].clone()))),
+                value: RustExpr::Clone(Box::new(arg_expr(args, 1))),
             },
             RustStmt::Let {
                 mutable: true,
@@ -229,7 +233,7 @@ pub(super) fn lower_set_union(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_set_intersection(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_set_intersection(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -239,13 +243,13 @@ pub(super) fn lower_set_intersection(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__left".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(args[0].clone()))),
+                value: RustExpr::Clone(Box::new(arg_expr(args, 0))),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__right".to_string(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(args[1].clone()))),
+                value: RustExpr::Clone(Box::new(arg_expr(args, 1))),
             },
             RustStmt::Let {
                 mutable: false,
@@ -291,7 +295,7 @@ pub(super) fn lower_set_intersection(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_counter_from_list(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_counter_from_list(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -301,7 +305,7 @@ pub(super) fn lower_counter_from_list(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__items".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: true,
@@ -358,7 +362,7 @@ pub(super) fn lower_counter_from_list(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_counter_get(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_counter_get(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -368,7 +372,7 @@ pub(super) fn lower_counter_get(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__counter_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
@@ -395,7 +399,7 @@ pub(super) fn lower_counter_get(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__key".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: arg_expr(args, 1),
             },
         ],
         expr: Some(Box::new(RustExpr::Deref(Box::new(RustExpr::MethodCall {
@@ -417,7 +421,7 @@ pub(super) fn lower_counter_get(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_counter_most_common(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_counter_most_common(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -427,13 +431,13 @@ pub(super) fn lower_counter_most_common(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__counter_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__limit".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: arg_expr(args, 1),
             },
             RustStmt::Let {
                 mutable: false,
@@ -560,7 +564,7 @@ pub(super) fn lower_counter_most_common(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_counter_total(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_counter_total(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -570,7 +574,7 @@ pub(super) fn lower_counter_total(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__counter_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
@@ -606,7 +610,7 @@ pub(super) fn lower_counter_total(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_counter_values(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_counter_values(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -616,7 +620,7 @@ pub(super) fn lower_counter_values(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__counter_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
@@ -656,7 +660,7 @@ pub(super) fn lower_counter_values(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_counter_keys(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_counter_keys(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -666,7 +670,7 @@ pub(super) fn lower_counter_keys(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__counter_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
@@ -706,7 +710,7 @@ pub(super) fn lower_counter_keys(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_counter_items(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_counter_items(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
@@ -716,7 +720,7 @@ pub(super) fn lower_counter_items(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__counter_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
@@ -835,7 +839,7 @@ pub(super) fn lower_counter_items(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_counter_increment(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_counter_increment(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -845,13 +849,13 @@ pub(super) fn lower_counter_increment(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__counter_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__key".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: arg_expr(args, 1),
             },
             RustStmt::Let {
                 mutable: true,
@@ -909,18 +913,18 @@ pub(super) fn lower_counter_increment(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_defaultdict_new(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_defaultdict_new(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::FormatMacro {
         name: "format".to_string(),
         format_str: "{{\"__default__\":{}}}".to_string(),
-        args: vec![RustExpr::Ident(args[0].clone())],
+        args: vec![arg_expr(args, 0)],
     })
 }
 
-pub(super) fn lower_defaultdict_get(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_defaultdict_get(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -930,13 +934,13 @@ pub(super) fn lower_defaultdict_get(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__defaultdict_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__key".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: arg_expr(args, 1),
             },
             RustStmt::Let {
                 mutable: false,
@@ -996,7 +1000,7 @@ pub(super) fn lower_defaultdict_get(args: &[String]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_defaultdict_set(args: &[String]) -> Option<RustExpr> {
+pub(super) fn lower_defaultdict_set(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 3 {
         return None;
     }
@@ -1006,13 +1010,13 @@ pub(super) fn lower_defaultdict_set(args: &[String]) -> Option<RustExpr> {
                 mutable: false,
                 name: "__defaultdict_json".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[0].clone()),
+                value: arg_expr(args, 0),
             },
             RustStmt::Let {
                 mutable: false,
                 name: "__key".to_string(),
                 ty: None,
-                value: RustExpr::Ident(args[1].clone()),
+                value: arg_expr(args, 1),
             },
             RustStmt::Let {
                 mutable: true,
@@ -1046,7 +1050,7 @@ pub(super) fn lower_defaultdict_set(args: &[String]) -> Option<RustExpr> {
                     },
                     RustExpr::MacroCall {
                         name: "serde_json::json".to_string(),
-                        args: vec![RustExpr::Ident(args[2].clone())],
+                        args: vec![arg_expr(args, 2)],
                     },
                 ],
             }),
