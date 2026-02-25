@@ -2,22 +2,20 @@
 
 use crate::{RustExpr, RustLiteral, RustMatchArm, RustStmt};
 
-fn owned_str(arg: &RustExpr) -> String {
-    format!("({}).to_string()", crate::render_expr(arg))
+fn owned_str(arg: &RustExpr) -> RustExpr {
+    RustExpr::RawCode(format!("({}).to_string()", crate::render_expr(arg)))
 }
 
 fn io_other_error_expr(message: &str) -> String {
     format!("IOError {{ message: \"{message}\".to_string(), kind: \"Other\".to_string() }}")
 }
 
-fn invalid_mode_error_expr(with_return: bool) -> String {
-    let mut code = String::new();
-    if with_return {
-        code.push_str("return ");
-    }
-    code.push_str("Err(IOError { message: format!(\"invalid mode: {}\", __mode), ");
-    code.push_str("kind: \"Other\".to_string() })");
-    code
+fn next_handle_id_expr(static_name: &str) -> RustExpr {
+    RustExpr::RawCode(format!(
+        "{{ use std::sync::atomic::{{AtomicI64, Ordering}}; \
+         static {static_name}: AtomicI64 = AtomicI64::new(1); \
+         {static_name}.fetch_add(1, Ordering::SeqCst) }}"
+    ))
 }
 
 fn wrap_handle_result(
@@ -84,125 +82,291 @@ fn file_handles_lock_expr() -> RustExpr {
     }
 }
 
-fn open_arm(pattern: &str, open_expr: &str, variant: &str, success_expr: &str) -> String {
+fn path_as_str_expr() -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident("__path".to_string())),
+        method: "as_str".to_string(),
+        args: vec![],
+    }
+}
+
+fn mode_as_str_expr() -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident("__mode".to_string())),
+        method: "as_str".to_string(),
+        args: vec![],
+    }
+}
+
+fn open_file_expr(path_expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "std".to_string(),
+            "fs".to_string(),
+            "File".to_string(),
+            "open".to_string(),
+        ])),
+        args: vec![path_expr],
+    }
+}
+
+fn create_file_expr(path_expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "std".to_string(),
+            "fs".to_string(),
+            "File".to_string(),
+            "create".to_string(),
+        ])),
+        args: vec![path_expr],
+    }
+}
+
+fn append_file_expr(path_expr: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "fs".to_string(),
+                        "OpenOptions".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![],
+                }),
+                method: "append".to_string(),
+                args: vec![RustExpr::Literal(RustLiteral::Bool(true))],
+            }),
+            method: "create".to_string(),
+            args: vec![RustExpr::Literal(RustLiteral::Bool(true))],
+        }),
+        method: "open".to_string(),
+        args: vec![path_expr],
+    }
+}
+
+fn invalid_mode_error_expr(with_return: bool) -> RustStmt {
+    let err_expr = RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+        args: vec![RustExpr::StructInit {
+            name: "IOError".to_string(),
+            fields: vec![
+                (
+                    "message".to_string(),
+                    RustExpr::FormatMacro {
+                        name: "format".to_string(),
+                        format_str: "invalid mode: {}".to_string(),
+                        args: vec![RustExpr::Ident("__mode".to_string())],
+                    },
+                ),
+                (
+                    "kind".to_string(),
+                    RustExpr::Literal(RustLiteral::Str("Other".to_string())),
+                ),
+            ],
+        }],
+    };
+    if with_return {
+        RustStmt::Return(Some(err_expr))
+    } else {
+        RustStmt::RawCode(crate::render_expr(&err_expr))
+    }
+}
+
+fn open_arm(
+    pattern: &str,
+    open_expr: RustExpr,
+    variant: &str,
+    success_expr: &RustExpr,
+) -> RustMatchArm {
     let (buffer_ty, buffer_var) = if variant.ends_with("Read") {
         ("BufReader", "__reader")
     } else {
         ("BufWriter", "__writer")
     };
-    let mut code = String::new();
-    code.push_str(pattern);
-    code.push_str(" => { let __f = ");
-    code.push_str(open_expr);
-    code.push_str(".map_err(__io_err)?; let ");
-    code.push_str(buffer_var);
-    code.push_str(" = ");
-    code.push_str(buffer_ty);
-    code.push_str("::new(__f); ");
-    code.push_str("__SIFR_FILE_HANDLES.lock().unwrap().insert(");
-    code.push_str("__handle_id, SifrFileHandle::");
-    code.push_str(variant);
-    code.push('(');
-    code.push_str(buffer_var);
-    code.push_str(")); ");
-    code.push_str(success_expr);
-    code.push_str(" }");
-    code
+    RustMatchArm {
+        pattern: pattern.to_string(),
+        bindings: vec![],
+        guard: None,
+        body: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__f".to_string(),
+                ty: None,
+                value: RustExpr::Try(Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(open_expr),
+                    method: "map_err".to_string(),
+                    args: vec![RustExpr::Ident("__io_err".to_string())],
+                })),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: buffer_var.to_string(),
+                ty: None,
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        buffer_ty.to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![RustExpr::Ident("__f".to_string())],
+                },
+            },
+            RustStmt::Expr(RustExpr::MethodCall {
+                receiver: Box::new(file_handles_lock_expr()),
+                method: "insert".to_string(),
+                args: vec![
+                    RustExpr::Ident("__handle_id".to_string()),
+                    RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "SifrFileHandle".to_string(),
+                            variant.to_string(),
+                        ])),
+                        args: vec![RustExpr::Ident(buffer_var.to_string())],
+                    },
+                ],
+            }),
+            RustStmt::RawCode(crate::render_expr(success_expr)),
+        ],
+    }
 }
 
-fn build_open_match(path_ref: &str, success_expr: &str, invalid_expr: &str) -> String {
-    let arms = [
-        open_arm(
-            "\"r\" | \"rt\"",
-            &format!("std::fs::File::open({path_ref})"),
-            "TextRead",
-            success_expr,
-        ),
-        open_arm(
-            "\"w\" | \"wt\"",
-            &format!("std::fs::File::create({path_ref})"),
-            "TextWrite",
-            success_expr,
-        ),
-        open_arm(
-            "\"a\" | \"at\"",
-            &format!("std::fs::OpenOptions::new().append(true).create(true).open({path_ref})"),
-            "TextWrite",
-            success_expr,
-        ),
-        open_arm(
-            "\"rb\"",
-            &format!("std::fs::File::open({path_ref})"),
-            "BinaryRead",
-            success_expr,
-        ),
-        open_arm(
-            "\"wb\"",
-            &format!("std::fs::File::create({path_ref})"),
-            "BinaryWrite",
-            success_expr,
-        ),
-        open_arm(
-            "\"ab\"",
-            &format!("std::fs::OpenOptions::new().append(true).create(true).open({path_ref})"),
-            "BinaryWrite",
-            success_expr,
-        ),
-    ];
-    format!("match __mode.as_str() {{ {}, _ => {invalid_expr} }}", arms.join(", "))
+fn build_open_match(success_expr: &RustExpr, invalid_stmt: RustStmt) -> RustStmt {
+    let path_ref = path_as_str_expr();
+    RustStmt::Match {
+        expr: mode_as_str_expr(),
+        arms: vec![
+            open_arm(
+                "\"r\" | \"rt\"",
+                open_file_expr(path_ref.clone()),
+                "TextRead",
+                success_expr,
+            ),
+            open_arm(
+                "\"w\" | \"wt\"",
+                create_file_expr(path_ref.clone()),
+                "TextWrite",
+                success_expr,
+            ),
+            open_arm(
+                "\"a\" | \"at\"",
+                append_file_expr(path_ref.clone()),
+                "TextWrite",
+                success_expr,
+            ),
+            open_arm(
+                "\"rb\"",
+                open_file_expr(path_ref.clone()),
+                "BinaryRead",
+                success_expr,
+            ),
+            open_arm(
+                "\"wb\"",
+                create_file_expr(path_ref.clone()),
+                "BinaryWrite",
+                success_expr,
+            ),
+            open_arm(
+                "\"ab\"",
+                append_file_expr(path_ref),
+                "BinaryWrite",
+                success_expr,
+            ),
+            RustMatchArm {
+                pattern: "_".to_string(),
+                bindings: vec![],
+                guard: None,
+                body: vec![invalid_stmt],
+            },
+        ],
+    }
 }
 
 pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let path_expr = owned_str(&args[0]);
-    let mode_expr = owned_str(&args[1]);
-    let match_expr = build_open_match(
-        "__path.as_str()",
-        "FileHandle { _handle: __handle_id, _mode: __mode.to_string() }",
-        &invalid_mode_error_expr(true),
-    );
-    let mut code = String::new();
-    code.push_str("{ use std::io::{BufReader, BufWriter}; ");
-    code.push_str("let __path = ");
-    code.push_str(&path_expr);
-    code.push_str("; let __mode = ");
-    code.push_str(&mode_expr);
-    code.push_str("; let __handle_id: i64 = { ");
-    code.push_str("use std::sync::atomic::{AtomicI64, Ordering}; ");
-    code.push_str("static __NEXT_FH_ID: AtomicI64 = AtomicI64::new(1); ");
-    code.push_str("__NEXT_FH_ID.fetch_add(1, Ordering::SeqCst) }; ");
-    code.push_str(&match_expr);
-    code.push_str(" }");
-    Some(RustExpr::RawCode(code))
+    let success_expr = RustExpr::StructInit {
+        name: "FileHandle".to_string(),
+        fields: vec![
+            (
+                "_handle".to_string(),
+                RustExpr::Ident("__handle_id".to_string()),
+            ),
+            (
+                "_mode".to_string(),
+                RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__mode".to_string())),
+                    method: "to_string".to_string(),
+                    args: vec![],
+                },
+            ),
+        ],
+    };
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::RawCode("use std::io::{BufReader, BufWriter};".to_string()),
+            RustStmt::Let {
+                mutable: false,
+                name: "__path".to_string(),
+                ty: None,
+                value: owned_str(&args[0]),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__mode".to_string(),
+                ty: None,
+                value: owned_str(&args[1]),
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__handle_id".to_string(),
+                ty: None,
+                value: next_handle_id_expr("__NEXT_FH_ID"),
+            },
+            build_open_match(&success_expr, invalid_mode_error_expr(true)),
+        ],
+        expr: None,
+    })
 }
 
 pub(super) fn lower_open_file(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
-    let path_expr = owned_str(&args[0]);
-    let mode_expr = owned_str(&args[1]);
-    let match_expr = build_open_match(
-        "__path.as_str()",
-        "Ok(__handle_id)",
-        &invalid_mode_error_expr(false),
-    );
-    let mut code = String::new();
-    code.push_str("(|| -> Result<i64, IOError> { ");
-    code.push_str("use std::io::{BufReader, BufWriter}; ");
-    code.push_str("let __path = ");
-    code.push_str(&path_expr);
-    code.push_str("; let __mode = ");
-    code.push_str(&mode_expr);
-    code.push_str("; let __handle_id: i64 = { ");
-    code.push_str("use std::sync::atomic::{AtomicI64, Ordering}; ");
-    code.push_str("static __NEXT_ID: AtomicI64 = AtomicI64::new(1); ");
-    code.push_str("__NEXT_ID.fetch_add(1, Ordering::SeqCst) }; ");
-    code.push_str(&match_expr);
-    code.push_str(" })()");
-    Some(RustExpr::RawCode(code))
+    let success_expr = RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+        args: vec![RustExpr::Ident("__handle_id".to_string())],
+    };
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::ClosureBlock {
+            params: vec![],
+            body: vec![
+                RustStmt::RawCode("use std::io::{BufReader, BufWriter};".to_string()),
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__path".to_string(),
+                    ty: None,
+                    value: owned_str(&args[0]),
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__mode".to_string(),
+                    ty: None,
+                    value: owned_str(&args[1]),
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__handle_id".to_string(),
+                    ty: None,
+                    value: next_handle_id_expr("__NEXT_ID"),
+                },
+                build_open_match(&success_expr, invalid_mode_error_expr(false)),
+            ],
+            is_move: false,
+        }),
+        args: vec![],
+    })
 }
 
 pub(super) fn lower_file_read(args: &[RustExpr]) -> Option<RustExpr> {
