@@ -1,4 +1,4 @@
-use crate::{render_items, try_lower_simple_module_constant_item_result, RustEmitter};
+use crate::{try_lower_simple_module_constant_item_result, RustEmitter, RustItem};
 use sifr_hir::{HirExpr, HirModule};
 use sifr_type_system::Type;
 
@@ -12,10 +12,11 @@ impl RustEmitter {
                     self.lowering_stats.item_lowering_errors += 1;
                 }
             }
+            let output_len = self.output.len();
             self.emit_module_constant_fallback(name, ty, value);
-        }
-        if !module.constants.is_empty() {
-            self.output.push('\n');
+            let fallback_item = self.output[output_len..].to_string();
+            self.output.truncate(output_len);
+            self.body_items.push(RustItem::RawCode(fallback_item));
         }
     }
 
@@ -30,7 +31,7 @@ impl RustEmitter {
         else {
             return Ok(false);
         };
-        self.output.push_str(&render_items(&[item]));
+        self.body_items.push(item);
         self.module_constants
             .insert(name.to_string(), (ty.clone(), rust_name_call));
         Ok(true)
