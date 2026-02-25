@@ -199,6 +199,7 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
         | RustExpr::Deref(operand)
         | RustExpr::Clone(operand)
         | RustExpr::Try(operand)
+        | RustExpr::Paren(operand)
         | RustExpr::Await(operand) => collect_expr(operand, needs),
         RustExpr::Field { expr, .. } => collect_expr(expr, needs),
         RustExpr::Index { expr, index } => {

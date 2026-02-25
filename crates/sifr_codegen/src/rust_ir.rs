@@ -210,6 +210,7 @@ pub enum RustExpr {
     Vec(Vec<RustExpr>),
     Try(Box<RustExpr>),
     Await(Box<RustExpr>),
+    Paren(Box<RustExpr>),
     Range {
         start: Box<RustExpr>,
         end: Box<RustExpr>,
@@ -456,6 +457,20 @@ mod tests {
         match expr {
             RustExpr::Closure { params, .. } => assert_eq!(params.len(), 1),
             _ => unreachable!("constructed as Closure"),
+        }
+    }
+
+    #[test]
+    fn constructs_parenthesized_expression() {
+        let expr = RustExpr::Paren(Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+            op: "+".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(2))),
+        }));
+
+        match expr {
+            RustExpr::Paren(inner) => assert!(matches!(*inner, RustExpr::BinOp { .. })),
+            _ => unreachable!("constructed as Paren"),
         }
     }
 

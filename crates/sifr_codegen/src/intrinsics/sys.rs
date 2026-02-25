@@ -3,7 +3,7 @@
 use crate::{RustExpr, RustLiteral, RustType};
 
 fn parenthesized(expr: &RustExpr) -> RustExpr {
-    RustExpr::RawCode(format!("({})", crate::render_expr(expr)))
+    RustExpr::Paren(Box::new(expr.clone()))
 }
 
 pub(super) fn lower_sys_exit(args: &[RustExpr]) -> Option<RustExpr> {

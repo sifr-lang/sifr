@@ -221,6 +221,7 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
         | RustExpr::Deref(operand)
         | RustExpr::Clone(operand)
         | RustExpr::Try(operand)
+        | RustExpr::Paren(operand)
         | RustExpr::Await(operand) => validate_expr(operand, issues, in_function),
         RustExpr::Field { expr, .. } => validate_expr(expr, issues, in_function),
         RustExpr::Index { expr, index } => {

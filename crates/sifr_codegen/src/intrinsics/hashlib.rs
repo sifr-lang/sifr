@@ -3,7 +3,7 @@
 use crate::RustExpr;
 
 fn parenthesized(expr: &RustExpr) -> RustExpr {
-    RustExpr::RawCode(format!("({})", crate::render_expr(expr)))
+    RustExpr::Paren(Box::new(expr.clone()))
 }
 
 fn digest_hex(digest_path: &str, arg: &RustExpr) -> RustExpr {
@@ -25,10 +25,7 @@ pub(super) fn lower_sha1(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(digest_hex(
-        "<sha1::Sha1 as sha1::Digest>::digest",
-        &args[0],
-    ))
+    Some(digest_hex("<sha1::Sha1 as sha1::Digest>::digest", &args[0]))
 }
 
 pub(super) fn lower_sha512(args: &[RustExpr]) -> Option<RustExpr> {

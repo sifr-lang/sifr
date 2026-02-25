@@ -720,6 +720,7 @@ impl Renderer {
             ),
             RustExpr::Try(expr) => format!("{}?", Self::wrap_expr(expr)),
             RustExpr::Await(expr) => format!("{}.await", Self::wrap_expr(expr)),
+            RustExpr::Paren(expr) => format!("({})", Self::render_expr_string(expr)),
             RustExpr::Range { start, end } => format!(
                 "{}..{}",
                 Self::render_expr_string(start),
@@ -1129,6 +1130,18 @@ mod tests {
 
         let rendered = render_expr(&expr);
         assert_eq!(rendered, "(1..10).step_by(2 as usize)");
+    }
+
+    #[test]
+    fn renders_parenthesized_expression_node() {
+        let expr = RustExpr::Paren(Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("a".to_string())),
+            op: "+".to_string(),
+            right: Box::new(RustExpr::Ident("b".to_string())),
+        }));
+
+        let rendered = render_expr(&expr);
+        assert_eq!(rendered, "(a + b)");
     }
 
     #[test]

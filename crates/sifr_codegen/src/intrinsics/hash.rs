@@ -3,7 +3,7 @@
 use crate::RustExpr;
 
 fn parenthesized(expr: &RustExpr) -> RustExpr {
-    RustExpr::RawCode(format!("({})", crate::render_expr(expr)))
+    RustExpr::Paren(Box::new(expr.clone()))
 }
 
 pub(super) fn lower_sha256(args: &[RustExpr]) -> Option<RustExpr> {

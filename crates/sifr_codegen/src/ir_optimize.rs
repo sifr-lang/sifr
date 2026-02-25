@@ -169,6 +169,7 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
         RustExpr::UnaryOp { operand, .. }
         | RustExpr::Deref(operand)
         | RustExpr::Try(operand)
+        | RustExpr::Paren(operand)
         | RustExpr::Await(operand) => optimize_expr(operand),
         RustExpr::Field { expr, .. } => optimize_expr(expr),
         RustExpr::Index { expr, index } => optimize_expr(expr) + optimize_expr(index),
