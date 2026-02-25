@@ -940,6 +940,17 @@ impl RustEmitter {
             return Ok(true);
         }
 
+        if let HirStmt::Expr { expr } = stmt {
+            let output_len = self.output.len();
+            if self.try_emit_structured_expr(expr)? {
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                self.write(";\n");
+                return Ok(true);
+            }
+            self.output.truncate(output_len);
+        }
+
         Ok(false)
     }
 
