@@ -20,6 +20,7 @@ jobs:
       SIFR_E2E_SIFR_JOBS: 4
       SIFR_E2E_RUST_JOBS: 2
       SIFR_E2E_RUN_JOBS: 2
+      SIFR_E2E_CARGO_BUILD_JOBS: 1
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -32,10 +33,11 @@ jobs:
     needs: e2e-runner-modes
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     env:
-      SIFR_E2E_RUNNER_MODE: compare
+      SIFR_E2E_RUNNER_MODE: new
       SIFR_E2E_SIFR_JOBS: 6
       SIFR_E2E_RUST_JOBS: 4
       SIFR_E2E_RUN_JOBS: 4
+      SIFR_E2E_CARGO_BUILD_JOBS: 1
       SIFR_E2E_BENCH_RUNS: 7
       SIFR_E2E_BENCH_P50_MS: 90000
       SIFR_E2E_BENCH_P95_MS: 110000

@@ -11,6 +11,7 @@
 //! - `SIFR_E2E_SIFR_JOBS`: bounded parallel compile workers.
 //! - `SIFR_E2E_RUST_JOBS`: bounded parallel build workers.
 //! - `SIFR_E2E_RUN_JOBS`: bounded parallel run workers.
+//! - `SIFR_E2E_CARGO_BUILD_JOBS`: cargo jobs per generated group build.
 //! - `SIFR_E2E_DISABLE_CACHE=1` disables cache reuse.
 
 use serde::{Deserialize, Serialize};
@@ -47,6 +48,7 @@ struct RunnerConfig {
     sifr_jobs: usize,
     rust_jobs: usize,
     run_jobs: usize,
+    cargo_build_jobs: usize,
     cache: CacheConfig,
 }
 
@@ -301,6 +303,8 @@ fn runner_config() -> Result<RunnerConfig, String> {
         env::var("SIFR_E2E_RUN_JOBS").ok().as_deref(),
         available_workers,
     );
+    let cargo_build_jobs =
+        parse_positive_usize(env::var("SIFR_E2E_CARGO_BUILD_JOBS").ok().as_deref(), 1);
 
     let cache_enabled = !matches!(
         env::var("SIFR_E2E_DISABLE_CACHE")
@@ -315,6 +319,7 @@ fn runner_config() -> Result<RunnerConfig, String> {
         sifr_jobs,
         rust_jobs,
         run_jobs,
+        cargo_build_jobs,
         cache: CacheConfig {
             enabled: cache_enabled,
             root: Path::new(E2E_CACHE_DIR).to_path_buf(),
@@ -889,7 +894,7 @@ fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<BatchGroup, Str
     })
 }
 
-fn plan_batches(compiled_cases: Vec<CompiledCase>) -> Vec<BatchGroup> {
+fn plan_batches(compiled_cases: Vec<CompiledCase>) -> (Vec<BatchGroup>, Vec<FixtureExecution>) {
     let mut buckets: BTreeMap<DependencyFingerprint, Vec<CompiledCase>> = BTreeMap::new();
     for case in compiled_cases {
         let fp = case.dependency_fingerprint();
@@ -897,14 +902,31 @@ fn plan_batches(compiled_cases: Vec<CompiledCase>) -> Vec<BatchGroup> {
     }
 
     let mut groups = Vec::with_capacity(buckets.len());
+    let mut planning_failures = Vec::new();
     for (_, cases) in buckets {
-        if let Ok(group) = build_group_sources(cases) {
-            groups.push(group);
+        let fixture_names = cases
+            .iter()
+            .map(|case| case.fixture.name.clone())
+            .collect::<Vec<_>>();
+        match build_group_sources(cases) {
+            Ok(group) => groups.push(group),
+            Err(err) => {
+                for fixture_name in fixture_names {
+                    planning_failures.push(FixtureExecution {
+                        name: fixture_name.clone(),
+                        status: Err(format!(
+                            "FAIL [{}]: failed to generate grouped crate source: {}",
+                            fixture_name, err
+                        )),
+                    });
+                }
+            }
         }
     }
 
     groups.sort_by(|left, right| left.id.cmp(&right.id));
-    groups
+    planning_failures.sort_by(|left, right| left.name.cmp(&right.name));
+    (groups, planning_failures)
 }
 
 fn cache_env_signature() -> String {
@@ -1116,8 +1138,12 @@ fn build_batch_group(
         } else if let Err(err) = std::fs::write(&source_path, &group.generated_main) {
             build_error = Some(format!("failed to write main.rs: {err}"));
         } else {
-            let build_capture =
-                command_with_capture("cargo", &["build", "--quiet"], Some(&group_root));
+            let mut build_command = Command::new("cargo");
+            build_command
+                .args(["build", "--quiet", "-j"])
+                .arg(config.cargo_build_jobs.to_string())
+                .current_dir(&group_root);
+            let build_capture = run_capture(build_command);
             if !build_capture.status_ok {
                 let log_path = group_root.join("build.log");
                 let mut diagnostic = String::new();
@@ -1303,7 +1329,14 @@ fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<FixtureExecution
                 .iter()
                 .map(|case| FixtureExecution {
                     name: case.fixture.name.clone(),
-                    status: Err(format!("FAIL [{}]: {}", case.fixture.name, message)),
+                    status: Err(format!(
+                        "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}",
+                        case.fixture.name,
+                        message,
+                        group.id,
+                        group.fingerprint.hash(),
+                        config_cache_root().join("groups").join(&group.id).display(),
+                    )),
                 })
                 .collect();
         }
@@ -1313,12 +1346,19 @@ fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<FixtureExecution
         .cases
         .iter()
         .map(|case| {
-            let status = run_single_case(
-                &artifact,
-                &case.fixture.name,
-                case.fixture.expected_stdout.as_ref(),
-            )
-            .map(|_| ());
+            let status =
+                match run_single_case(&artifact, &case.fixture.name, case.fixture.expected_stdout.as_ref()) {
+                    Ok(_) => Ok(()),
+                    Err(err) => Err(format!(
+                        "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}\n  artifact: {}",
+                        case.fixture.name,
+                        err,
+                        group.id,
+                        group.fingerprint.hash(),
+                        config_cache_root().join("groups").join(&group.id).display(),
+                        artifact.display(),
+                    )),
+                };
             FixtureExecution {
                 name: case.fixture.name.clone(),
                 status: status,
@@ -1425,15 +1465,14 @@ fn build_and_run_with_deps(
 
 fn run_in_parallel<T, R, F>(items: &[T], workers: usize, worker: F) -> Vec<R>
 where
-    T: Send + Sync + Clone,
+    T: Sync,
     R: Send,
     F: Fn(&T) -> R + Send + Sync,
 {
     if items.is_empty() {
         return Vec::new();
     }
-    let workers = workers.max(1);
-    let items = Arc::new(items.to_vec());
+    let workers = workers.max(1).min(items.len());
     let results: Arc<Mutex<Vec<Option<R>>>> = Arc::new(Mutex::new(
         (0..items.len()).map(|_| None).collect::<Vec<_>>(),
     ));
@@ -1445,7 +1484,6 @@ where
         for _ in 0..workers {
             let worker = Arc::clone(&worker);
             let index = Arc::clone(&index);
-            let items = Arc::clone(&items);
             let results = Arc::clone(&results);
 
             let handle = scope.spawn(move || loop {
@@ -1559,7 +1597,7 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
     }
 
     let plan_started = Instant::now();
-    let groups = plan_batches(compiled_cases);
+    let (groups, planning_failures) = plan_batches(compiled_cases);
     let plan_ms = plan_started.elapsed().as_millis();
 
     let toolchain = toolchain_info();
@@ -1596,6 +1634,7 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
     let (run_cases, run_outcomes) = run_batch_suite(&build_outcomes, config);
     all_cases.extend(run_cases);
     all_cases.extend(compiled_failures);
+    all_cases.extend(planning_failures);
     let run_ms = run_started.elapsed().as_millis();
 
     let mut build_timing = build_outcomes
