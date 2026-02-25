@@ -84,12 +84,13 @@ fn trim_trailing_crlf_stmt(name: &str) -> RustStmt {
     }
 }
 
-fn next_handle_id_expr(static_name: &str) -> RustExpr {
-    RustExpr::RawCode(format!(
-        "{{ use std::sync::atomic::{{AtomicI64, Ordering}}; \
-         static {static_name}: AtomicI64 = AtomicI64::new(1); \
-         {static_name}.fetch_add(1, Ordering::SeqCst) }}"
-    ))
+fn next_handle_id_expr() -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "__sifr_next_file_handle_id".to_string()
+        ])),
+        args: vec![],
+    }
 }
 
 fn wrap_handle_result(
@@ -413,7 +414,7 @@ pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
                     mutable: false,
                     name: "__handle_id".to_string(),
                     ty: None,
-                    value: next_handle_id_expr("__NEXT_FH_ID"),
+                    value: next_handle_id_expr(),
                 },
                 build_open_match(&success_expr, invalid_mode_error_expr()),
             ],
@@ -451,7 +452,7 @@ pub(super) fn lower_open_file(args: &[RustExpr]) -> Option<RustExpr> {
                     mutable: false,
                     name: "__handle_id".to_string(),
                     ty: None,
-                    value: next_handle_id_expr("__NEXT_ID"),
+                    value: next_handle_id_expr(),
                 },
                 build_open_match(&success_expr, invalid_mode_error_expr()),
             ],

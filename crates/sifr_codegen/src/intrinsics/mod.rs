@@ -1047,6 +1047,7 @@ mod tests {
         let open = lower_intrinsic("open_file", &["path".to_string(), "mode".to_string()])
             .expect("open_file");
         assert!(render_expr(&open.expr).contains("__SIFR_FILE_HANDLES"));
+        assert!(render_expr(&open.expr).contains("__sifr_next_file_handle_id()"));
 
         let read = lower_intrinsic("file_read", &["hid".to_string()]).expect("file_read");
         assert!(render_expr(&read.expr).contains("TextRead"));
@@ -1063,6 +1064,7 @@ mod tests {
             lower_intrinsic("builtin_open", &["path".to_string(), "mode".to_string()])
                 .expect("builtin_open");
         assert!(render_expr(&builtin_open.expr).contains("FileHandle"));
+        assert!(render_expr(&builtin_open.expr).contains("__sifr_next_file_handle_id()"));
 
         let set_level =
             lower_intrinsic("set_global_level", &["n".to_string()]).expect("set_global_level");
