@@ -836,8 +836,6 @@ struct RustEmitter {
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
     callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
     /// Fallback recursion guard for non-structured emitter paths.
-    /// When non-zero, emitters bypass structured lowering and recurse via fallback only.
-    fallback_depth: usize,
     lowering_stats: LoweringStats,
 }
 
@@ -897,7 +895,6 @@ impl RustEmitter {
             try_enum_counter: 0,
             try_closure_depth: 0,
             callable_var_conventions: HashMap::new(),
-            fallback_depth: 0,
             lowering_stats: LoweringStats::default(),
         }
     }
@@ -955,10 +952,6 @@ impl RustEmitter {
 
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         self.lowering_stats.stmt_total += 1;
-        if self.fallback_depth > 0 {
-            self.emit_stmt_fallback(stmt);
-            return;
-        }
         if should_force_stmt_fallback(self, stmt) {
             self.emit_stmt_fallback(stmt);
             return;
@@ -980,10 +973,6 @@ impl RustEmitter {
 
     fn emit_expr(&mut self, expr: &HirExpr) {
         self.lowering_stats.expr_total += 1;
-        if self.fallback_depth > 0 {
-            self.emit_expr_fallback(expr);
-            return;
-        }
         if is_leaf_expr_candidate(expr) {
             self.lowering_stats.expr_candidate_total += 1;
         }
@@ -999,28 +988,6 @@ impl RustEmitter {
                 self.emit_expr_fallback(expr);
                 return;
             }
-        }
-        if matches!(
-            expr,
-            HirExpr::Call { .. }
-                | HirExpr::MethodCall { .. }
-                | HirExpr::ConstructorCall { .. }
-                | HirExpr::Index { .. }
-                | HirExpr::Slice { .. }
-                | HirExpr::DictLiteral { .. }
-                | HirExpr::SetLiteral { .. }
-                | HirExpr::ListComp { .. }
-                | HirExpr::DictComp { .. }
-                | HirExpr::SetComp { .. }
-                | HirExpr::GeneratorExpr { .. }
-                | HirExpr::FString { .. }
-                | HirExpr::Lambda { .. }
-        ) {
-            let saved_fallback_depth = self.fallback_depth;
-            self.fallback_depth += 1;
-            self.emit_expr_fallback(expr);
-            self.fallback_depth = saved_fallback_depth;
-            return;
         }
         self.emit_expr_fallback(expr);
     }

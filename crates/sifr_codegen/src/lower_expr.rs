@@ -261,15 +261,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 Some(lowered_range)
             }
         }
-        HirExpr::FieldAccess { object, field, .. } => {
-            if matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self") {
-                return None;
-            }
-            Some(RustExpr::Field {
-                expr: Box::new(try_lower_leaf_or_name_expr(object)?),
-                field: field.clone(),
-            })
-        }
+        HirExpr::FieldAccess { .. } => None,
         HirExpr::ContainsOp {
             element,
             collection,
@@ -2607,7 +2599,7 @@ mod tests {
     }
 
     #[test]
-    fn lowers_field_access_for_non_self_name() {
+    fn does_not_lower_field_access_for_non_self_name() {
         let expr = HirExpr::FieldAccess {
             object: Box::new(HirExpr::Name {
                 name: "point".to_string(),
@@ -2622,13 +2614,7 @@ mod tests {
             ty: Type::Int,
         };
 
-        let lowered = try_lower_leaf_expr(&expr).expect("field access lowered");
-        assert!(matches!(
-            lowered,
-            RustExpr::Field { expr, field }
-                if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "point")
-                    && field == "x"
-        ));
+        assert!(try_lower_leaf_expr(&expr).is_none());
     }
 
     #[test]
@@ -2645,6 +2631,25 @@ mod tests {
             }),
             field: "x".to_string(),
             ty: Type::Int,
+        };
+
+        assert!(try_lower_leaf_expr(&expr).is_none());
+    }
+
+    #[test]
+    fn does_not_lower_subclass_field_access() {
+        let expr = HirExpr::FieldAccess {
+            object: Box::new(HirExpr::Name {
+                name: "dog".to_string(),
+                ty: Type::Class {
+                    name: "Dog".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: Some("Animal".to_string()),
+                },
+            }),
+            field: "name".to_string(),
+            ty: Type::Str,
         };
 
         assert!(try_lower_leaf_expr(&expr).is_none());
