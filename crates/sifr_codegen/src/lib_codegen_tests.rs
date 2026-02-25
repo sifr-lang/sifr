@@ -1226,6 +1226,10 @@ fn test_structured_expr_path_handles_intrinsic_call_expression() {
         generated.lowering_stats.expr_structured > 0,
         "intrinsic call should be emitted through structured expr path"
     );
+    assert!(
+        generated.lowering_stats.stmt_structured > 0,
+        "expression statement should be emitted through structured stmt path"
+    );
 }
 
 #[test]
