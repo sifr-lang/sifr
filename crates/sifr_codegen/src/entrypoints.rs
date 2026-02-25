@@ -28,6 +28,9 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if !emitter.enum_items.is_empty() {
         emitted_items.extend(emitter.enum_items.clone());
     }
+    if !emitter.body_items.is_empty() {
+        emitted_items.extend(emitter.body_items.clone());
+    }
     if !emitter.output.is_empty() {
         emitted_items.push(RustItem::RawCode(emitter.output.clone()));
     }

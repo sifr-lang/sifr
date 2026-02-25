@@ -1615,3 +1615,19 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
     assert!(!generate_block.contains("module_import_prelude"));
     assert!(!generate_block.contains("result.push_str(&emitter.output)"));
 }
+
+#[test]
+fn test_module_constants_flow_through_assembled_body_items() {
+    let module_constants_src = include_str!("module_constants.rs");
+    let entrypoints_src = include_str!("entrypoints.rs");
+    let lib_src = include_str!("lib.rs");
+
+    assert!(module_constants_src.contains("self.body_items.push(item);"));
+    assert!(
+        module_constants_src.contains("self.body_items.push(RustItem::RawCode(fallback_item));")
+    );
+    assert!(!module_constants_src.contains("self.output.push_str(&render_items(&[item]))"));
+
+    assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
+    assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
+}

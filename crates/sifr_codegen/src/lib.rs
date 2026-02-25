@@ -410,6 +410,9 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if !stdlib_preamble.is_empty() {
         assembled_body_items.push(RustItem::RawCode(stdlib_preamble.clone()));
     }
+    if !emitter.body_items.is_empty() {
+        assembled_body_items.extend(emitter.body_items.clone());
+    }
     if !emitter.output.is_empty() {
         assembled_body_items.push(RustItem::RawCode(emitter.output.clone()));
     }
@@ -535,6 +538,9 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         assembled_items.extend(module_import_items);
         if !emitter.enum_items.is_empty() {
             assembled_items.extend(emitter.enum_items.clone());
+        }
+        if !emitter.body_items.is_empty() {
+            assembled_items.extend(emitter.body_items.clone());
         }
         if !emitter.output.is_empty() {
             assembled_items.push(RustItem::RawCode(emitter.output.clone()));
@@ -806,6 +812,8 @@ struct RustEmitter {
     union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated union enum items to prepend
     enum_items: Vec<RustItem>,
+    /// Accumulated non-enum body items to assemble before raw fallback output.
+    body_items: Vec<RustItem>,
     /// The return type of the function currently being emitted
     current_return_type: Option<Type>,
     /// Set of variable names currently narrowed via `if let Some(...)` unwrap
@@ -907,6 +915,7 @@ impl RustEmitter {
             runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),
             enum_items: Vec::new(),
+            body_items: Vec::new(),
             current_return_type: None,
             option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
