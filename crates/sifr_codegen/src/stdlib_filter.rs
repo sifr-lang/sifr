@@ -232,7 +232,10 @@ fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
             Item::Struct(item_struct) if item_struct.ident == "FileHandle" => {
                 shared_needs.file_handles.provides_file_handle_struct = true;
             }
-            Item::Static(item_static) if item_static.ident == "__SIFR_FILE_HANDLES" => {
+            Item::Static(item_static)
+                if item_static.ident == "__SIFR_FILE_HANDLES"
+                    || item_static.ident == "__SIFR_NEXT_FILE_HANDLE_ID" =>
+            {
                 shared_needs.file_handles.needs_file_handles = true;
             }
             _ => {}
@@ -254,7 +257,9 @@ fn derive_shared_needs_fallback(code: &str) -> SharedPreludeNeeds {
             needs_vecdeque: code.contains("VecDeque"),
         },
         file_handles: SharedPreludeFileHandleNeeds {
-            needs_file_handles: code.contains("__SIFR_FILE_HANDLES"),
+            needs_file_handles: code.contains("__SIFR_FILE_HANDLES")
+                || code.contains("__SIFR_NEXT_FILE_HANDLE_ID")
+                || code.contains("__sifr_next_file_handle_id"),
             provides_file_handle_struct: code.contains("struct FileHandle"),
         },
     }
@@ -273,7 +278,11 @@ impl<'ast> Visit<'ast> for SharedNeedsCollector {
                 "HashMap" => self.shared_needs.collections.needs_hashmap = true,
                 "HashSet" => self.shared_needs.collections.needs_hashset = true,
                 "VecDeque" => self.shared_needs.collections.needs_vecdeque = true,
-                "__SIFR_FILE_HANDLES" => self.shared_needs.file_handles.needs_file_handles = true,
+                "__SIFR_FILE_HANDLES"
+                | "__SIFR_NEXT_FILE_HANDLE_ID"
+                | "__sifr_next_file_handle_id" => {
+                    self.shared_needs.file_handles.needs_file_handles = true;
+                }
                 _ => {}
             }
         }
@@ -287,8 +296,10 @@ fn is_shared_prelude_item(item: &Item) -> bool {
         Item::Enum(item_enum) => item_enum.ident == "SifrFileHandle",
         Item::Static(item_static) => {
             item_static.ident == "__SIFR_FILE_HANDLES"
+                || item_static.ident == "__SIFR_NEXT_FILE_HANDLE_ID"
                 || item_static.ident == "__SIFR_GLOBAL_LOG_LEVEL"
         }
+        Item::Fn(item_fn) => item_fn.sig.ident == "__sifr_next_file_handle_id",
         _ => false,
     }
 }
@@ -859,6 +870,10 @@ enum SifrFileHandle {
 static __SIFR_FILE_HANDLES: std::sync::OnceLock<
     Mutex<HashMap<i64, SifrFileHandle>>
 > = std::sync::OnceLock::new();
+static __SIFR_NEXT_FILE_HANDLE_ID: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(1);
+fn __sifr_next_file_handle_id() -> i64 {
+    __SIFR_NEXT_FILE_HANDLE_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+}
 
 struct FileHandle {
     _handle: i64,
@@ -886,6 +901,12 @@ fn keep_me() {
         assert!(!prepared
             .stripped_code
             .contains("static __SIFR_FILE_HANDLES"));
+        assert!(!prepared
+            .stripped_code
+            .contains("static __SIFR_NEXT_FILE_HANDLE_ID"));
+        assert!(!prepared
+            .stripped_code
+            .contains("fn __sifr_next_file_handle_id"));
         assert!(prepared.stripped_code.contains("fn keep_me()"));
     }
 

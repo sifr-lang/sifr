@@ -88,6 +88,7 @@ status: **partially met**
 - [x] `open_file` now emits structured success returns and uses fully qualified `std::io::BufReader/BufWriter` constructors (no raw open-path import stubs)
 - [x] `builtin_open` now routes through closure-`Result` + `?` with structured success returns (removing raw open-arm success emission)
 - [x] File-handle `owned_str` and wrapper plumbing now use structured IR only (`to_string` method call + no dead raw-import shim in handle wrappers)
+- [x] File-handle ID allocation now uses preamble IR static+helper (`__SIFR_NEXT_FILE_HANDLE_ID`, `__sifr_next_file_handle_id`) so open lowerers no longer inject AtomicI64 `RawCode` blocks
 - [x] Intrinsic parenthesization now has first-class IR support (`RustExpr::Paren`), and `math`/`hash`/`hashlib`/`sys` lowerers no longer use `RawCode(format!("({})", ...))` shims
 - [x] Method registry borrowed-arg helpers now avoid `RawCode` variant handling; tuple helpers use structured literals/casts
 - [x] Math intrinsic `ldexp` now lowers via typed structured IR (`f64` cast + `2.0.powi(i32)`), removing its monolithic `RawCode` template
