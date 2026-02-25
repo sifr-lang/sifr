@@ -257,11 +257,33 @@ fn open_arm(
     open_expr: RustExpr,
     variant: &str,
     success_expr: &RustExpr,
+    return_success: bool,
 ) -> RustMatchArm {
-    let (buffer_ty, buffer_var) = if variant.ends_with("Read") {
-        ("BufReader", "__reader")
+    let (buffer_ctor, buffer_var) = if variant.ends_with("Read") {
+        (
+            vec![
+                "std".to_string(),
+                "io".to_string(),
+                "BufReader".to_string(),
+                "new".to_string(),
+            ],
+            "__reader",
+        )
     } else {
-        ("BufWriter", "__writer")
+        (
+            vec![
+                "std".to_string(),
+                "io".to_string(),
+                "BufWriter".to_string(),
+                "new".to_string(),
+            ],
+            "__writer",
+        )
+    };
+    let success_stmt = if return_success {
+        RustStmt::Return(Some(success_expr.clone()))
+    } else {
+        RustStmt::RawCode(crate::render_expr(success_expr))
     };
     RustMatchArm {
         pattern: pattern.to_string(),
@@ -283,10 +305,7 @@ fn open_arm(
                 name: buffer_var.to_string(),
                 ty: None,
                 value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        buffer_ty.to_string(),
-                        "new".to_string(),
-                    ])),
+                    func: Box::new(RustExpr::Path(buffer_ctor)),
                     args: vec![RustExpr::Ident("__f".to_string())],
                 },
             },
@@ -304,12 +323,16 @@ fn open_arm(
                     },
                 ],
             }),
-            RustStmt::RawCode(crate::render_expr(success_expr)),
+            success_stmt,
         ],
     }
 }
 
-fn build_open_match(success_expr: &RustExpr, invalid_stmt: RustStmt) -> RustStmt {
+fn build_open_match(
+    success_expr: &RustExpr,
+    invalid_stmt: RustStmt,
+    return_success: bool,
+) -> RustStmt {
     let path_ref = path_as_str_expr();
     RustStmt::Match {
         expr: mode_as_str_expr(),
@@ -319,36 +342,42 @@ fn build_open_match(success_expr: &RustExpr, invalid_stmt: RustStmt) -> RustStmt
                 open_file_expr(path_ref.clone()),
                 "TextRead",
                 success_expr,
+                return_success,
             ),
             open_arm(
                 "\"w\" | \"wt\"",
                 create_file_expr(path_ref.clone()),
                 "TextWrite",
                 success_expr,
+                return_success,
             ),
             open_arm(
                 "\"a\" | \"at\"",
                 append_file_expr(path_ref.clone()),
                 "TextWrite",
                 success_expr,
+                return_success,
             ),
             open_arm(
                 "\"rb\"",
                 open_file_expr(path_ref.clone()),
                 "BinaryRead",
                 success_expr,
+                return_success,
             ),
             open_arm(
                 "\"wb\"",
                 create_file_expr(path_ref.clone()),
                 "BinaryWrite",
                 success_expr,
+                return_success,
             ),
             open_arm(
                 "\"ab\"",
                 append_file_expr(path_ref),
                 "BinaryWrite",
                 success_expr,
+                return_success,
             ),
             RustMatchArm {
                 pattern: "_".to_string(),
@@ -383,7 +412,6 @@ pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
     };
     Some(RustExpr::Block {
         stmts: vec![
-            RustStmt::RawCode("use std::io::{BufReader, BufWriter};".to_string()),
             RustStmt::Let {
                 mutable: false,
                 name: "__path".to_string(),
@@ -402,7 +430,7 @@ pub(super) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
                 ty: None,
                 value: next_handle_id_expr("__NEXT_FH_ID"),
             },
-            build_open_match(&success_expr, invalid_mode_error_expr(true)),
+            build_open_match(&success_expr, invalid_mode_error_expr(true), false),
         ],
         expr: None,
     })
@@ -420,7 +448,6 @@ pub(super) fn lower_open_file(args: &[RustExpr]) -> Option<RustExpr> {
         func: Box::new(RustExpr::ClosureBlock {
             params: vec![],
             body: vec![
-                RustStmt::RawCode("use std::io::{BufReader, BufWriter};".to_string()),
                 RustStmt::Let {
                     mutable: false,
                     name: "__path".to_string(),
@@ -439,7 +466,7 @@ pub(super) fn lower_open_file(args: &[RustExpr]) -> Option<RustExpr> {
                     ty: None,
                     value: next_handle_id_expr("__NEXT_ID"),
                 },
-                build_open_match(&success_expr, invalid_mode_error_expr(false)),
+                build_open_match(&success_expr, invalid_mode_error_expr(false), true),
             ],
             is_move: false,
         }),
