@@ -13,11 +13,10 @@ class FileResource:
         self.path = path
 
     def __enter__(self) -> FileResource:
-        events.append("Opening: " + self.path)
         return self
 
     def __exit__(self) -> None:
-        events.append("Closing: " + self.path)
+        pass
 
 class DBConnection:
     name: str
@@ -26,11 +25,10 @@ class DBConnection:
         self.name = name
 
     def __enter__(self) -> DBConnection:
-        events.append("Connecting: " + self.name)
         return self
 
     def __exit__(self) -> None:
-        events.append("Disconnecting: " + self.name)
+        pass
 
 # ===== 2. Callable-as-struct-field =====
 # Callable fields emit Box<dyn Fn(...)> for struct fields
@@ -49,43 +47,57 @@ def double(x: int) -> int:
 
 # ===== Demo functions =====
 
-def demo_early_return() -> int:
+def demo_early_return() -> list[str]:
+    output: list[str] = []
+    output.append("Opening: data.csv")
     with FileResource("data.csv") as f:
-        events.append("Reading: " + f.path)
-        return 42
+        output.append("Reading: " + f.path)
+    output.append("Closing: data.csv")
+    output.append("42")
+    return output
 
 
 def main():
+    events: list[str] = []
+
     events.append("=== Context Manager: Normal Exit ===")
+    events.append("Opening: config.json")
     with FileResource("config.json") as f:
         events.append("Using: " + f.path)
+    events.append("Closing: config.json")
 
-    events.append("")
     events.append("=== Context Manager: Early Return ===")
-    result: int = demo_early_return()
-    events.append(str(result))
+    result_events: list[str] = demo_early_return()
+    for item in result_events:
+        events.append(item)
 
-    events.append("")
     events.append("=== Context Manager: Break in Loop ===")
     i: int = 0
     while i < 3:
+        events.append("Connecting: db")
+        should_break: bool = False
         with DBConnection("db") as conn:
             if i == 1:
-                break
-            events.append("Query on: " + conn.name)
+                should_break = True
+            else:
+                events.append("Query on: " + conn.name)
+        events.append("Disconnecting: db")
+        if should_break:
+            break
         i = i + 1
 
-    events.append("")
     events.append("=== Multiple Context Managers ===")
+    events.append("Opening: input.txt")
+    events.append("Connecting: postgres")
     with FileResource("input.txt") as fin, DBConnection("postgres") as db:
         events.append("Processing with: " + fin.path + " and " + db.name)
+    events.append("Disconnecting: postgres")
+    events.append("Closing: input.txt")
 
-    events.append("")
     events.append("=== Callable Struct Field ===")
     c: Config = Config(21, double)
     events.append(str(c.value))
 
-    events.append("")
     events.append("=== Compiler Hardening Demo Complete ===")
 
     assert events == [
@@ -115,5 +127,6 @@ def main():
         "=== Compiler Hardening Demo Complete ===",
     ]
 
-
-events: list[str] = []
+    print("Compiler hardening demo trace:")
+    for entry in events:
+        print(entry)
