@@ -1594,6 +1594,8 @@ fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
     assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
     assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(generate_block.contains("assert_output_drained(&emitter.output, \"generate_rust_with_stdlib\")"));
+    assert!(!generate_block.contains("if !emitter.output.is_empty() {"));
     assert!(!generate_block.contains("result.push_str(&emitter.output)"));
 }
 
@@ -1612,6 +1614,8 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
     assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
     assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
     assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(generate_block.contains("assert_output_drained(&emitter.output, \"generate_rust_multi\")"));
+    assert!(!generate_block.contains("if !emitter.output.is_empty() {"));
     assert!(!generate_block.contains("module_import_prelude"));
     assert!(!generate_block.contains("result.push_str(&emitter.output)"));
 }
@@ -1630,6 +1634,9 @@ fn test_module_constants_flow_through_assembled_body_items() {
 
     assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
     assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
+    assert!(entrypoints_src.contains("assert_output_drained(&emitter.output, \"generate_rust_test\")"));
+    assert!(!entrypoints_src.contains("if !emitter.output.is_empty() {"));
+    assert!(!lib_src.contains("if !emitter.output.is_empty() {"));
 }
 
 #[test]

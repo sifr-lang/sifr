@@ -413,9 +413,7 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if !emitter.body_items.is_empty() {
         assembled_body_items.extend(emitter.body_items.clone());
     }
-    if !emitter.output.is_empty() {
-        assembled_body_items.push(RustItem::RawCode(emitter.output.clone()));
-    }
+    assert_output_drained(&emitter.output, "generate_rust_with_stdlib");
 
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
     let needs_hashmap = body_import_needs.collections.needs_hashmap;
@@ -542,9 +540,7 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         if !emitter.body_items.is_empty() {
             assembled_items.extend(emitter.body_items.clone());
         }
-        if !emitter.output.is_empty() {
-            assembled_items.push(RustItem::RawCode(emitter.output.clone()));
-        }
+        assert_output_drained(&emitter.output, "generate_rust_multi");
         let import_needs = collect_import_needs_from_items(&assembled_items);
 
         let mut import_items: Vec<RustItem> = Vec::new();
@@ -1190,6 +1186,13 @@ impl RustEmitter {
 
 pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
     helpers::body_contains_yield_inner(stmts)
+}
+
+pub(crate) fn assert_output_drained(output: &str, context: &str) {
+    assert!(
+        output.trim().is_empty(),
+        "codegen output contract violation in {context}: residual top-level output detected"
+    );
 }
 
 fn is_self_field_access_expr(expr: &HirExpr) -> bool {
