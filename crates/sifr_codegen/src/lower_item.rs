@@ -29,6 +29,7 @@ fn is_simple_module_none_const_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::None)
 }
 
+#[cfg(test)]
 pub fn lower_item_raw(raw: &str) -> Result<Vec<RustItem>, CodegenError> {
     Ok(vec![RustItem::RawCode(raw.to_string())])
 }

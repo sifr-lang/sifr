@@ -47,10 +47,8 @@ impl RustEmitter {
                     self.write(&crate::render_expr(lowered_expr));
                     self.write(";\n");
                 }
-                RustStmt::RawCode(code) => {
-                    self.write_indent();
-                    self.write(code);
-                    self.write("\n");
+                RustStmt::RawCode(_) => {
+                    panic!("RawCode statement reached core production emission path");
                 }
                 RustStmt::Break => {
                     self.writeln("break;");

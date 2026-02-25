@@ -14,6 +14,7 @@ use sifr_hir::{
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 
+#[cfg(test)]
 pub fn lower_stmt_raw(raw: &str) -> Result<Vec<RustStmt>, CodegenError> {
     Ok(vec![RustStmt::RawCode(raw.to_string())])
 }

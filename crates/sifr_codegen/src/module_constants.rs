@@ -1,4 +1,4 @@
-use crate::{try_lower_simple_module_constant_item_result, RustEmitter, RustItem};
+use crate::{try_lower_simple_module_constant_item_result, RustEmitter};
 use sifr_hir::{HirExpr, HirModule};
 use sifr_type_system::Type;
 
@@ -16,7 +16,7 @@ impl RustEmitter {
             self.emit_module_constant_fallback(name, ty, value);
             let fallback_item = self.output[output_len..].to_string();
             self.output.truncate(output_len);
-            self.body_items.push(RustItem::RawCode(fallback_item));
+            self.push_syn_items_from_source(&fallback_item, "module constant fallback emission");
         }
     }
 

@@ -221,7 +221,9 @@ impl RustEmitter {
             },
             crate::RustExpr::Literal(lit) => crate::RustExpr::Literal(lit),
             crate::RustExpr::Path(path) => crate::RustExpr::Path(path),
-            crate::RustExpr::RawCode(code) => crate::RustExpr::RawCode(code),
+            crate::RustExpr::RawCode(_) => {
+                panic!("RawCode expression reached core production rewrite path")
+            }
         }
     }
 
@@ -343,8 +345,9 @@ impl RustEmitter {
                     .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
                     .collect(),
             ),
-            crate::RustStmt::Break | crate::RustStmt::Continue | crate::RustStmt::RawCode(_) => {
-                stmt
+            crate::RustStmt::Break | crate::RustStmt::Continue => stmt,
+            crate::RustStmt::RawCode(_) => {
+                panic!("RawCode statement reached core production rewrite path")
             }
         }
     }

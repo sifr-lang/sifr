@@ -7,6 +7,7 @@ pub(crate) enum IrValidationKind {
     EmptyFunctionBody,
     ReturnOutsideFunction,
     InvalidSynItem,
+    RawCodeInProduction,
     UnbalancedRawCodeBraces,
 }
 
@@ -22,6 +23,314 @@ pub(crate) fn validate_items(items: &[RustItem]) -> Vec<IrValidationIssue> {
         validate_item(item, &mut issues);
     }
     issues
+}
+
+pub(crate) fn validate_no_raw_code(items: &[RustItem]) -> Vec<IrValidationIssue> {
+    let mut issues = Vec::new();
+    for item in items {
+        validate_no_raw_item(item, &mut issues);
+    }
+    issues
+}
+
+fn validate_no_raw_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
+    match item {
+        RustItem::RawCode(_) => issues.push(IrValidationIssue {
+            kind: IrValidationKind::RawCodeInProduction,
+            message: "RawCode item leaked into production assembly".to_string(),
+        }),
+        RustItem::Use(_)
+        | RustItem::UseAlias { .. }
+        | RustItem::Attr(_)
+        | RustItem::SynItem(_)
+        | RustItem::Struct { .. }
+        | RustItem::TupleStruct { .. }
+        | RustItem::Enum { .. } => {
+            validate_no_raw_nested_item(item, issues);
+        }
+        RustItem::Trait { methods, .. } | RustItem::Impl { items: methods, .. } => {
+            for method in methods {
+                validate_no_raw_item(method, issues);
+            }
+        }
+        RustItem::Fn { body, .. } => {
+            for stmt in body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+        }
+        RustItem::Const { value, .. } | RustItem::Static { value, .. } => {
+            validate_no_raw_expr(value, issues);
+        }
+    }
+}
+
+fn validate_no_raw_nested_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
+    match item {
+        RustItem::Struct { fields, .. } => {
+            for (_, ty) in fields {
+                validate_no_raw_type(ty, issues);
+            }
+        }
+        RustItem::TupleStruct { inner, .. } => {
+            validate_no_raw_type(inner, issues);
+        }
+        RustItem::Enum { variants, .. } => {
+            for variant in variants {
+                for ty in &variant.tuple_fields {
+                    validate_no_raw_type(ty, issues);
+                }
+                for (_, ty) in &variant.fields {
+                    validate_no_raw_type(ty, issues);
+                }
+                if let Some(value) = &variant.value {
+                    validate_no_raw_expr(value, issues);
+                }
+            }
+        }
+        RustItem::Use(_)
+        | RustItem::UseAlias { .. }
+        | RustItem::Attr(_)
+        | RustItem::SynItem(_)
+        | RustItem::RawCode(_)
+        | RustItem::Trait { .. }
+        | RustItem::Impl { .. }
+        | RustItem::Fn { .. }
+        | RustItem::Const { .. }
+        | RustItem::Static { .. } => {}
+    }
+}
+
+fn validate_no_raw_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>) {
+    match stmt {
+        RustStmt::RawCode(_) => issues.push(IrValidationIssue {
+            kind: IrValidationKind::RawCodeInProduction,
+            message: "RawCode statement leaked into production assembly".to_string(),
+        }),
+        RustStmt::Let { ty, value, .. } => {
+            if let Some(ty) = ty {
+                validate_no_raw_type(ty, issues);
+            }
+            validate_no_raw_expr(value, issues);
+        }
+        RustStmt::LetPattern { value, .. } => validate_no_raw_expr(value, issues),
+        RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
+            validate_no_raw_expr(target, issues);
+            validate_no_raw_expr(value, issues);
+        }
+        RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => validate_no_raw_expr(expr, issues),
+        RustStmt::Assert { cond, msg } => {
+            validate_no_raw_expr(cond, issues);
+            if let Some(msg) = msg {
+                validate_no_raw_expr(msg, issues);
+            }
+        }
+        RustStmt::If {
+            cond,
+            then_body,
+            else_body,
+        } => {
+            validate_no_raw_expr(cond, issues);
+            for stmt in then_body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+            if let Some(else_body) = else_body {
+                for stmt in else_body {
+                    validate_no_raw_stmt(stmt, issues);
+                }
+            }
+        }
+        RustStmt::IfLet {
+            expr,
+            then_body,
+            else_body,
+            ..
+        } => {
+            validate_no_raw_expr(expr, issues);
+            for stmt in then_body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+            if let Some(else_body) = else_body {
+                for stmt in else_body {
+                    validate_no_raw_stmt(stmt, issues);
+                }
+            }
+        }
+        RustStmt::Match { expr, arms } => {
+            validate_no_raw_expr(expr, issues);
+            for arm in arms {
+                if let Some(guard) = &arm.guard {
+                    validate_no_raw_expr(guard, issues);
+                }
+                for stmt in &arm.body {
+                    validate_no_raw_stmt(stmt, issues);
+                }
+            }
+        }
+        RustStmt::For { iter, body, .. } => {
+            validate_no_raw_expr(iter, issues);
+            for stmt in body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+        }
+        RustStmt::While { cond, body } => {
+            validate_no_raw_expr(cond, issues);
+            for stmt in body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+        }
+        RustStmt::Loop { body } | RustStmt::Block(body) => {
+            for stmt in body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+        }
+        RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => {}
+    }
+}
+
+fn validate_no_raw_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>) {
+    match expr {
+        RustExpr::RawCode(_) => issues.push(IrValidationIssue {
+            kind: IrValidationKind::RawCodeInProduction,
+            message: "RawCode expression leaked into production assembly".to_string(),
+        }),
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => {}
+        RustExpr::MethodCall { receiver, args, .. } => {
+            validate_no_raw_expr(receiver, issues);
+            for arg in args {
+                validate_no_raw_expr(arg, issues);
+            }
+        }
+        RustExpr::FnCall { func, args } => {
+            validate_no_raw_expr(func, issues);
+            for arg in args {
+                validate_no_raw_expr(arg, issues);
+            }
+        }
+        RustExpr::MacroCall { args, .. }
+        | RustExpr::Tuple(args)
+        | RustExpr::Vec(args)
+        | RustExpr::FormatMacro { args, .. } => {
+            for arg in args {
+                validate_no_raw_expr(arg, issues);
+            }
+        }
+        RustExpr::BinOp { left, right, .. } => {
+            validate_no_raw_expr(left, issues);
+            validate_no_raw_expr(right, issues);
+        }
+        RustExpr::UnaryOp { operand, .. }
+        | RustExpr::Deref(operand)
+        | RustExpr::Clone(operand)
+        | RustExpr::Try(operand)
+        | RustExpr::Paren(operand)
+        | RustExpr::Await(operand) => validate_no_raw_expr(operand, issues),
+        RustExpr::Field { expr, .. } => validate_no_raw_expr(expr, issues),
+        RustExpr::Index { expr, index } => {
+            validate_no_raw_expr(expr, issues);
+            validate_no_raw_expr(index, issues);
+        }
+        RustExpr::Slice { expr, start, stop } => {
+            validate_no_raw_expr(expr, issues);
+            if let Some(start) = start {
+                validate_no_raw_expr(start, issues);
+            }
+            if let Some(stop) = stop {
+                validate_no_raw_expr(stop, issues);
+            }
+        }
+        RustExpr::Ref { expr, .. } => validate_no_raw_expr(expr, issues),
+        RustExpr::Cast { expr, ty } => {
+            validate_no_raw_expr(expr, issues);
+            validate_no_raw_type(ty, issues);
+        }
+        RustExpr::Block { stmts, expr } => {
+            for stmt in stmts {
+                validate_no_raw_stmt(stmt, issues);
+            }
+            if let Some(expr) = expr {
+                validate_no_raw_expr(expr, issues);
+            }
+        }
+        RustExpr::If {
+            cond,
+            then_expr,
+            else_expr,
+        } => {
+            validate_no_raw_expr(cond, issues);
+            validate_no_raw_expr(then_expr, issues);
+            if let Some(else_expr) = else_expr {
+                validate_no_raw_expr(else_expr, issues);
+            }
+        }
+        RustExpr::Match { expr, arms } => {
+            validate_no_raw_expr(expr, issues);
+            for arm in arms {
+                if let Some(guard) = &arm.guard {
+                    validate_no_raw_expr(guard, issues);
+                }
+                for stmt in &arm.body {
+                    validate_no_raw_stmt(stmt, issues);
+                }
+            }
+        }
+        RustExpr::Closure { body, .. } => validate_no_raw_expr(body, issues),
+        RustExpr::ClosureBlock { body, .. } => {
+            for stmt in body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+        }
+        RustExpr::StructInit { fields, .. } => {
+            for (_, value) in fields {
+                validate_no_raw_expr(value, issues);
+            }
+        }
+        RustExpr::Range { start, end } => {
+            validate_no_raw_expr(start, issues);
+            validate_no_raw_expr(end, issues);
+        }
+    }
+}
+
+fn validate_no_raw_type(ty: &RustType, issues: &mut Vec<IrValidationIssue>) {
+    match ty {
+        RustType::RawCode(_) => issues.push(IrValidationIssue {
+            kind: IrValidationKind::RawCodeInProduction,
+            message: "RawCode type leaked into production assembly".to_string(),
+        }),
+        RustType::I64
+        | RustType::F64
+        | RustType::Bool
+        | RustType::String_
+        | RustType::Unit
+        | RustType::Named(_)
+        | RustType::DynTrait(_)
+        | RustType::Impl(_) => {}
+        RustType::Vec(inner)
+        | RustType::HashSet(inner)
+        | RustType::VecDeque(inner)
+        | RustType::Option(inner)
+        | RustType::Ref { inner, .. } => validate_no_raw_type(inner, issues),
+        RustType::HashMap(key, value) | RustType::Result(key, value) => {
+            validate_no_raw_type(key, issues);
+            validate_no_raw_type(value, issues);
+        }
+        RustType::Tuple(types) => {
+            for ty in types {
+                validate_no_raw_type(ty, issues);
+            }
+        }
+        RustType::Generic { params, .. } => {
+            for param in params {
+                validate_no_raw_type(param, issues);
+            }
+        }
+        RustType::Fn { params, ret } => {
+            for param in params {
+                validate_no_raw_type(param, issues);
+            }
+            validate_no_raw_type(ret, issues);
+        }
+    }
 }
 
 fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {

@@ -4,6 +4,7 @@ use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 use sifr_hir::{HirExpr, HirFStringPart, HirParam};
 use sifr_type_system::Type;
 
+#[cfg(test)]
 pub fn lower_expr_raw(raw: &str) -> Result<RustExpr, CodegenError> {
     Ok(RustExpr::RawCode(raw.to_string()))
 }
