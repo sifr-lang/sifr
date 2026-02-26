@@ -48,6 +48,8 @@ These are the real migration targets that must move from `.write()` emission to 
 10. `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
 11. `crates/sifr_codegen/src/expr_ref_emitter.rs`
 12. `crates/sifr_codegen/src/expr_render_helpers.rs` (legacy render fallback helpers)
+13. `crates/sifr_codegen/src/type_emitters.rs` (protocol trait / enum class / newtype emission)
+14. `crates/sifr_codegen/src/stmt_support_emitter.rs`
 
 Support/orchestration files:
 
@@ -160,13 +162,14 @@ Target:
 Primary files:
 1. `crates/sifr_codegen/src/module_body.rs`
 2. `crates/sifr_codegen/src/class_emitter.rs`
-3. `crates/sifr_codegen/src/function_emitter.rs`
-4. `crates/sifr_codegen/src/class_method_emitter.rs`
-5. `crates/sifr_codegen/src/operator_protocol_emitters.rs`
-6. `crates/sifr_codegen/src/lower_item.rs`
-7. `crates/sifr_codegen/src/lib.rs`
-8. `crates/sifr_codegen/src/entrypoints.rs`
-9. `crates/sifr_codegen/src/lib_codegen_tests.rs`
+3. `crates/sifr_codegen/src/type_emitters.rs`
+4. `crates/sifr_codegen/src/function_emitter.rs`
+5. `crates/sifr_codegen/src/class_method_emitter.rs`
+6. `crates/sifr_codegen/src/operator_protocol_emitters.rs`
+7. `crates/sifr_codegen/src/lower_item.rs`
+8. `crates/sifr_codegen/src/lib.rs`
+9. `crates/sifr_codegen/src/entrypoints.rs`
+10. `crates/sifr_codegen/src/lib_codegen_tests.rs`
 
 PR slices:
 1. PR-WS3A: remove drain-parse `SynItem` for user class/function body.
