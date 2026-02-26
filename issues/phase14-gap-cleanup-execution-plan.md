@@ -35,21 +35,43 @@ No waiting on CI. Local validation is the gate.
 
 ---
 
+## Cross-Issue Architecture Decisions (Locked)
+
+1. `Issue 217` is dependency-ordered: wrapper fallback removal is not considered complete until structured lowering coverage is functionally complete for production-reachable stmt/expr shapes.
+2. Generator lowering is a first-class migration track, not an implicit subtask.
+3. `RustItem::SynItem` is treated as legacy/opaque. Target for this cleanup: zero `SynItem` in production `file_items`.
+4. `lib.rs` stdlib preamble insertion via `push_syn_items_from_source(&stdlib_preamble, ...)` is explicitly in scope and must be removed or replaced by structured item assembly.
+5. Any temporary exception must be explicitly documented in issue docs with exact file/line path and a blocking follow-up ticket before epic closeout.
+
+---
+
 ## Issue 217 Plan: Remove fallback-first-class production routing
+
+Scope baseline (from current bridge surface):
+1. `HirExpr` variants currently covered by legacy bridge: 35
+2. `HirStmt` variants currently covered by legacy bridge: 27
+3. Immediate implication: removing fallback without coverage expansion is not valid.
 
 To-do:
 1. Keep `emit_stmt` and `emit_expr` strict structured-only in production path.
 2. Remove default routing from production wrappers to legacy bridge/fallback.
-3. Migrate generator-init and high-frequency emission callsites away from legacy wrappers.
-4. Add or update guard tests to assert no default wrapper fallback routing.
-5. Record remaining temporary bridge surface explicitly (if any) and track follow-up removal.
+3. Add structured coverage map by stmt/expr variant and mark production-reachable gaps.
+4. Migrate generator-init and high-frequency emission callsites away from legacy wrappers.
+5. Add or update guard tests to assert:
+6. wrappers do not route to legacy bridge by default
+7. new bridge/fallback routing cannot be reintroduced silently
+8. Record temporary bridge surface explicitly with owner and removal checkpoint.
+9. Remove temporary migration wrappers after structured coverage is complete.
 
 PR target:
-1. One focused PR for wrapper routing + callsite migration slice.
+1. PR A: wrapper hardening + guard tests + coverage map.
+2. PR B: structured lowering expansion for remaining production-reachable variants.
+3. PR C: remove temporary migration wrappers/bridge once coverage reaches completion gate.
 
 Done condition:
 1. Production wrappers do not default to legacy bridge.
-2. Tests enforce regression protection.
+2. Production code path no longer depends on legacy bridge for reachable stmt/expr shapes.
+3. Tests enforce regression protection.
 
 Planned change files:
 1. `crates/sifr_codegen/src/lib.rs`
@@ -79,16 +101,22 @@ To-do:
 1. Remove module drain-and-parse `SynItem` assembly path for class/function body.
 2. Introduce structured item lowering entrypoints for class/function top-level items.
 3. Make module body assembly item-first only (`RustItem` nodes).
-4. Ensure `generate_rust`, `generate_rust_test`, `generate_rust_multi` follow same item-first contract.
-5. Add tests proving class/function outputs are structured items and not string-drain wrappers.
+4. Add explicit generator-function lowering path:
+5. migrate `function_emitter.rs` generator closure emission (`yield` pipeline) to structured item/body lowering.
+6. Add explicit class trait/operator scope:
+7. migrate class methods + operator impls + protocol impls + Display/Error impl generation into structured item assembly.
+8. Ensure `generate_rust`, `generate_rust_test`, `generate_rust_multi` follow same item-first contract.
+9. Add tests proving class/function/generator outputs are structured items and not string-drain wrappers.
 
 PR target:
 1. One or more PRs if needed:
 2. PR A for module_body orchestration refactor.
-3. PR B for class/function item lowering migration.
+3. PR B for class/function/method/operator/protocol item lowering migration.
+4. PR C for generator lowering migration and parity tests.
 
 Done condition:
-1. User class/function module body no longer depends on drain/parse `SynItem` wrapping.
+1. User class/function/generator module body no longer depends on drain/parse `SynItem` wrapping.
+2. Trait/operator/protocol impl emission is on structured assembly path.
 
 Planned change files:
 1. `crates/sifr_codegen/src/module_body.rs`
@@ -102,6 +130,8 @@ Planned change files:
 9. `crates/sifr_codegen/src/render.rs`
 10. `crates/sifr_codegen/src/lib_codegen_tests.rs`
 11. `issues/218-phase14-promote-full-ir-module-assembly.md`
+12. `crates/sifr_codegen/src/class_method_emitter.rs`
+13. `crates/sifr_codegen/src/operator_protocol_emitters.rs`
 
 ---
 
@@ -111,14 +141,17 @@ To-do:
 1. Remove remaining production string escape insertions for module constants and preamble.
 2. Keep hard validation gates for `RustItem::RawCode`, `RustStmt::RawCode`, `RustExpr::RawCode`.
 3. Ensure production-reachable type mapping never creates `RustType::RawCode`.
-4. Add regression tests for production raw/opaque leakage.
-5. Keep test-only raw helpers explicitly gated.
+4. Add production gate for opaque items: fail if `RustItem::SynItem` reaches final production `file_items`.
+5. Remove or test-gate `push_syn_items_from_source` in production assembly paths.
+6. Add regression tests for production raw/opaque leakage.
+7. Keep test-only raw helpers explicitly gated.
 
 PR target:
-1. One focused PR for production-path raw/opaque elimination and gate hardening.
+1. PR A: module constants + preamble production path cleanup.
+2. PR B: no-raw + no-opaque production validation hard gates.
 
 Done condition:
-1. Core production assembly path is raw-free and validated.
+1. Core production assembly path is raw-free and no-opaque (`SynItem`-free) and validated.
 
 Planned change files:
 1. `crates/sifr_codegen/src/module_constants.rs`
@@ -133,6 +166,7 @@ Planned change files:
 10. `crates/sifr_codegen/src/preamble.rs`
 11. `crates/sifr_codegen/src/lib_codegen_tests.rs`
 12. `issues/219-phase14-enforce-rawcode-zero-in-core-production-path.md`
+13. `crates/sifr_codegen/src/rust_ir.rs`
 
 ---
 
@@ -142,14 +176,16 @@ To-do:
 1. Keep structural passes hard-failing when raw nodes appear in production.
 2. Remove production fallback text-scanning reliance for raw handling paths.
 3. Restrict any remaining fallback collectors to test-only if still needed.
-4. Keep `syn` runtime usage only where needed for structural AST traversal.
-5. Document dependency rationale if `syn` cannot be removed from main deps.
+4. Ensure structural import/validation passes do not depend on parsing opaque `SynItem` in production.
+5. Keep `syn` runtime usage only where needed for structural AST traversal of explicit structured sources (for example stdlib IR filtering), not opaque item fallback.
+6. Document dependency rationale if `syn` cannot be removed from main deps.
 
 PR target:
 1. One focused PR for structural pass hard-gate cleanup and dependency rationale.
 
 Done condition:
 1. Production structural passes do not rely on raw-text fallback behavior.
+2. Production structural passes are not forced to parse opaque `SynItem` payloads.
 
 Planned change files:
 1. `crates/sifr_codegen/src/ir_imports.rs`
@@ -177,6 +213,7 @@ To-do:
 9. `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md`
 10. `.cursor/plans/main/phases/14_codegen_architecture.md` (if required by acceptance wording)
 11. `.cursor/plans/main/architecture.md` and `.cursor/plans/main/roadmap.md` if milestone status changed.
+12. Add explicit statement on `SynItem` final status and remaining exceptions (must be zero for closeout unless approved with blocking follow-up).
 
 PR target:
 1. Final closeout PR after all gap PRs are merged.
@@ -194,6 +231,17 @@ Planned change files:
 7. `.cursor/plans/main/phases/14_codegen_architecture.md`
 8. `.cursor/plans/main/architecture.md`
 9. `.cursor/plans/main/roadmap.md`
+
+---
+
+## 217 Completion Gate Quantification
+
+1. Variant inventory table is added to `issues/217-phase14-remove-fallback-first-class-pipeline.md` with:
+2. all `HirExpr` variants
+3. all `HirStmt` variants
+4. status per variant: structured-ready, partial, legacy-dependent
+5. Production reachability marker per variant from e2e/demo coverage.
+6. `Issue 217` is only marked done when production-reachable variants are no longer legacy-dependent.
 
 ---
 
