@@ -319,7 +319,7 @@ No CI waiting required for progression.
 
 ## Issue-to-workstream mapping
 
-1. `217`: WS0, WS1, WS2, WS4
+1. `217`: WS0, WS1, WS2, WS3, WS4
 2. `218`: WS0, WS3
 3. `219`: WS5
 4. `220`: WS6
