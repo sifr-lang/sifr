@@ -3,6 +3,7 @@
 ## Core expectations
 
 - Solve root causes, not superficial symptoms.
+- Do NOT create fallback paths or solutions unless explicitly requested.
 - No laziness and no shortcuts, make sure to ideally fix the root cause.
 - Keep changes focused on the requested milestone/issue.
 - Prefer small, reviewable PRs with clear validation.
