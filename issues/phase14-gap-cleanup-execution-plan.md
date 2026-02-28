@@ -113,10 +113,18 @@ Loop progress log:
 53. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 54. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1132`.
 55. `self.write(...)` in `method_call_emitter.rs` -> `0`; `self.write(...)` in `intrinsic_method_emitters.rs` -> `0`.
+56. 2026-02-28 Pass F updates:
+57. Moved additional display-critical lowering into shared registry IR path (no emitter-local string fallback): string step-slice (`s[::2]`, `s[::-1]`), `**` binop, `sum(...)`, and `Compare` chains.
+58. Fixed structured index lowering regression by normalizing negative list/string indices in IR blocks (`[-1]` behavior restored) with single-evaluation object binding.
+59. Fixed method-call convention loss in structured expression lowering for class methods by resolving class method parameter conventions from signatures/class metadata and applying borrow/option wrapping in registry method-call lowering.
+60. Full validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
+61. Full demo sweep: `demos/*.sifr` -> pass (`83/83`).
+62. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1107`.
+63. File-level progress: `expr_ref_emitter.rs` now has `0` direct `self.write(...)`; `method_call_emitter.rs=0`; `intrinsic_method_emitters.rs=0`.
 
 ### Next Loop To-do (Evidence-Based)
 
-1. [ ] Loop-2A: Migrate `expr_render_helpers.rs` hot paths (`432` writes) to structured IR-first expression builders.
+1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`432` writes) to structured IR-first expression builders.
 2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`218` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `slice_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
 4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.

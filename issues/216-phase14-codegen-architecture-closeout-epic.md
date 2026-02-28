@@ -170,3 +170,15 @@ Latest validation loop (2026-02-28):
 - `./scripts/run_all_tests.sh` -> pass.
 - Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
 - Strict re-audit evidence: `self.write(...)` remains high (`1132` total in `crates/sifr_codegen/src`), and user-path `RustItem::SynItem` is still emitted in `crates/sifr_codegen/src/module_body.rs:54`.
+
+Latest validation loop (2026-02-28, Pass F):
+- Root-cause regressions fixed in structured expression lowering:
+- string step-slice lowering in registry IR (`s[::2]`, `s[::-1]`),
+- exponent binop lowering (`**`),
+- builtin call lowering for `sum(...)` and display compare chains,
+- class-method argument convention application in registry method-call lowering.
+- Negative list/string indexing semantics restored in structured index IR blocks (no direct cast-to-`usize` regression).
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
+- Strict re-audit evidence: `self.write(...)` reduced to `1107` total in `crates/sifr_codegen/src`; remaining highest-write files are still `expr_render_helpers.rs` and `stmt_support_emitter.rs`.

@@ -33,19 +33,40 @@ impl RustEmitter {
         class_name: &str,
         method: &str,
         args: &[HirExpr],
+        class_methods: &[(String, FunctionType)],
     ) -> bool {
         let Some(object_expr) = self.try_lower_registry_expr_strict(object) else {
             return false;
         };
         let method_key = format!("{class_name}::{method}");
-        let method_info = self.func_signatures.get(&method_key).cloned();
+        let method_params: Option<Vec<(Type, ParamConvention)>> = self
+            .func_signatures
+            .get(&method_key)
+            .map(|(params, _)| params.clone())
+            .or_else(|| {
+                class_methods
+                    .iter()
+                    .find(|(method_name, _)| method_name == method)
+                    .map(|(_, fty)| {
+                        let self_offset = usize::from(
+                            fty.params
+                                .first()
+                                .is_some_and(|(param_name, _, _)| param_name == "self"),
+                        );
+                        fty.params
+                            .iter()
+                            .skip(self_offset)
+                            .map(|(_, ty, conv)| (ty.clone(), *conv))
+                            .collect::<Vec<_>>()
+                    })
+            });
         let mut lowered_args = Vec::with_capacity(args.len());
         for (i, arg) in args.iter().enumerate() {
             let mut lowered = match self.try_lower_registry_expr_strict(arg) {
                 Some(expr) => expr,
                 None => return false,
             };
-            if let Some((ref params, _)) = method_info {
+            if let Some(params) = method_params.as_ref() {
                 if let Some((param_ty, convention)) = params.get(i) {
                     if *convention == ParamConvention::Borrow
                         && matches!(param_ty, Type::TypeVar(_))
@@ -186,7 +207,7 @@ impl RustEmitter {
             if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
         let needs_self_field_clone_suppression =
             is_self_field && MUTATING_METHODS.contains(&method);
-        let obj_ty = object.ty();
+        let obj_ty = crate::resolve_alias_type_for_plain_call(object.ty());
         if self.try_emit_method_via_registry(obj_ty, object, method, args) {
             return;
         }
@@ -203,7 +224,7 @@ impl RustEmitter {
             if self.emit_class_callable_field_call(object, method, args, fields, methods) {
                 return;
             }
-            self.emit_class_method_call_with_conventions(object, class_name, method, args);
+            self.emit_class_method_call_with_conventions(object, class_name, method, args, methods);
             return;
         }
 
@@ -240,9 +261,15 @@ impl RustEmitter {
         class_name: &str,
         method: &str,
         args: &[HirExpr],
+        class_methods: &[(String, FunctionType)],
     ) {
-        if self.try_emit_lowered_class_method_call_with_conventions(object, class_name, method, args)
-        {
+        if self.try_emit_lowered_class_method_call_with_conventions(
+            object,
+            class_name,
+            method,
+            args,
+            class_methods,
+        ) {
             return;
         }
         panic!(
@@ -279,7 +306,9 @@ impl RustEmitter {
         arg_name: Option<&str>,
     ) {
         if let Some(prefix) = self.borrow_prefix_for_name(convention, arg_ty, param_ty, arg_name) {
-            self.output.push_str(prefix);
+            for ch in prefix.chars() {
+                self.output.push(ch);
+            }
         }
     }
 }

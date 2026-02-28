@@ -82,22 +82,39 @@ fn display_option_inner_type(expr: &HirExpr) -> Option<Type> {
 }
 
 impl RustEmitter {
+    fn lower_ref_expr_or_panic(&mut self, expr: &HirExpr, context: &str) -> crate::RustExpr {
+        if let Some(lowered) = self.try_lower_registry_expr_strict(expr) {
+            return lowered;
+        }
+        if let HirExpr::Index { object, index, .. } = expr {
+            match self.try_lower_structured_index_expr(object, index) {
+                Ok(Some(lowered)) => return lowered,
+                Ok(None) => {}
+                Err(err) => {
+                    panic!(
+                        "structured expr-ref index lowering error for {context}: {expr:?}: {err:?}"
+                    );
+                }
+            }
+        }
+        panic!("structured expr-ref lowering missing for {context}: {expr:?}")
+    }
+
     /// Emit an expression wrapped in parentheses.
     ///
     /// This is used before method chaining to avoid Rust precedence bugs such as
     /// `x as f64.round()` where the cast must be grouped first.
     pub(super) fn emit_parenthesized_expr(&mut self, expr: &HirExpr) {
-        self.write("(");
-        self.emit_expr(expr);
-        self.write(")");
+        let lowered = self.lower_ref_expr_or_panic(expr, "parenthesized expression");
+        self.write_registry_expr(&crate::RustExpr::Paren(Box::new(lowered)));
     }
 
     /// Emit an expression as a `HashMap` key reference.
     /// String literals are emitted directly (e.g., `"key"`) since `HashMap::get` accepts &str via Borrow.
     /// Other expressions are emitted with `&` prefix (e.g., `&var`).
     pub(super) fn emit_key_ref_expr(&mut self, expr: &HirExpr) {
-        if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{val:?}"));
+        let lowered = if let HirExpr::StringLiteral(val) = expr {
+            crate::RustExpr::Literal(crate::RustLiteral::Str(val.clone()))
         } else if let HirExpr::Name { name, ty } = expr {
             // If the name is already a borrowed parameter (&String or &mut String),
             // emitting `&name` would produce `&&String` which fails Borrow<str> bounds.
@@ -107,21 +124,29 @@ impl RustEmitter {
                 && matches!(ty, Type::Str)
             {
                 // already &String -- deref-coerces to &str via as_str()
-                self.write(name);
-                self.write(".as_str()");
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident(name.clone())),
+                    method: "as_str".to_string(),
+                    args: vec![],
+                }
             } else if self.borrowed_params.contains(name.as_str())
                 || self.mut_borrowed_params.contains(name.as_str())
             {
                 // already a reference -- pass directly (no extra &)
-                self.emit_expr(expr);
+                self.lower_ref_expr_or_panic(expr, "key ref borrowed param")
             } else {
-                self.write("&");
-                self.emit_expr(expr);
+                crate::RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(self.lower_ref_expr_or_panic(expr, "key ref")),
+                }
             }
         } else {
-            self.write("&");
-            self.emit_expr(expr);
-        }
+            crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(self.lower_ref_expr_or_panic(expr, "key ref")),
+            }
+        };
+        self.write_registry_expr(&lowered);
     }
 
     /// Emit an expression as a `&str` reference.
@@ -129,10 +154,16 @@ impl RustEmitter {
     /// Other string expressions are emitted with `.as_str()` (e.g., `s.as_str()`).
     pub(super) fn emit_str_ref_expr(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{val:?}"));
+            self.write_registry_expr(&crate::RustExpr::Literal(crate::RustLiteral::Str(
+                val.clone(),
+            )));
         } else {
-            self.emit_parenthesized_expr(expr);
-            self.write(".as_str()");
+            let lowered = self.lower_ref_expr_or_panic(expr, "str ref");
+            self.write_registry_expr(&crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                method: "as_str".to_string(),
+                args: vec![],
+            });
         }
     }
 
@@ -142,20 +173,25 @@ impl RustEmitter {
     /// Other expressions are emitted as `&expr` (borrow the String, deref-coerces to `&str`).
     /// Use this for Rust APIs that accept `&str`, `AsRef<str>`, `AsRef<Path>`, `AsRef<OsStr>`, etc.
     pub(super) fn emit_expr_as_str_ref(&mut self, expr: &HirExpr) {
-        if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{val:?}"));
+        let lowered = if let HirExpr::StringLiteral(val) = expr {
+            crate::RustExpr::Literal(crate::RustLiteral::Str(val.clone()))
         } else if let HirExpr::Name { name, .. } = expr {
             if self.borrowed_params.contains(name) {
                 // Already &String, no extra & needed
-                self.emit_expr(expr);
+                self.lower_ref_expr_or_panic(expr, "str ref borrowed param")
             } else {
-                self.write("&");
-                self.emit_expr(expr);
+                crate::RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(self.lower_ref_expr_or_panic(expr, "str ref")),
+                }
             }
         } else {
-            self.write("&");
-            self.emit_expr(expr);
-        }
+            crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(self.lower_ref_expr_or_panic(expr, "str ref")),
+            }
+        };
+        self.write_registry_expr(&lowered);
     }
 
     /// Emit an expression for use in comparisons, dereferencing borrowed params.
@@ -167,12 +203,13 @@ impl RustEmitter {
             if self.borrowed_params.contains(name)
                 && (matches!(ty, Type::Str) || matches!(ty, Type::TypeVar(_)))
             {
-                self.write("*");
-                self.emit_expr(expr);
+                let lowered = self.lower_ref_expr_or_panic(expr, "compare deref");
+                self.write_registry_expr(&crate::RustExpr::Deref(Box::new(lowered)));
                 return;
             }
         }
-        self.emit_expr(expr);
+        let lowered = self.lower_ref_expr_or_panic(expr, "compare expr");
+        self.write_registry_expr(&lowered);
     }
 
     /// Emit an expression for use on the left side of a comparison operator.
@@ -182,11 +219,11 @@ impl RustEmitter {
         // Check if emitting this expression will result in a type cast that needs parens
         // This includes IntLiteral (which becomes "N_i64") and FloatLiteral (which becomes "N_f64")
         if matches!(expr, HirExpr::IntLiteral(_) | HirExpr::FloatLiteral(_)) {
-            self.write("(");
-            self.emit_expr(expr);
-            self.write(")");
+            let lowered = self.lower_ref_expr_or_panic(expr, "compare parens");
+            self.write_registry_expr(&crate::RustExpr::Paren(Box::new(lowered)));
         } else {
-            self.emit_expr(expr);
+            let lowered = self.lower_ref_expr_or_panic(expr, "compare plain");
+            self.write_registry_expr(&lowered);
         }
     }
 
@@ -195,10 +232,20 @@ impl RustEmitter {
     /// Other expressions are emitted as `expr.as_bytes()` (String has `.as_bytes()`).
     pub(super) fn emit_expr_as_bytes(&mut self, expr: &HirExpr) {
         if let HirExpr::StringLiteral(val) = expr {
-            self.write(&format!("{val:?}.as_bytes()"));
+            self.write_registry_expr(&crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
+                    val.clone(),
+                ))),
+                method: "as_bytes".to_string(),
+                args: vec![],
+            });
         } else {
-            self.emit_parenthesized_expr(expr);
-            self.write(".as_bytes()");
+            let lowered = self.lower_ref_expr_or_panic(expr, "bytes ref");
+            self.write_registry_expr(&crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                method: "as_bytes".to_string(),
+                args: vec![],
+            });
         }
     }
 
@@ -211,10 +258,16 @@ impl RustEmitter {
     /// List literals are emitted directly (no `.clone()`).
     /// Other expressions are emitted with `.clone()`.
     pub(super) fn emit_collection_expr(&mut self, expr: &HirExpr) {
-        self.emit_expr(expr);
-        if !Self::is_list_literal(expr) {
-            self.write(".clone()");
+        let lowered = self.lower_ref_expr_or_panic(expr, "collection expr");
+        if Self::is_list_literal(expr) {
+            self.write_registry_expr(&lowered);
+            return;
         }
+        self.write_registry_expr(&crate::RustExpr::MethodCall {
+            receiver: Box::new(lowered),
+            method: "clone".to_string(),
+            args: vec![],
+        });
     }
 
     /// Emit an expression suitable for use inside format!/println! contexts.
@@ -239,25 +292,54 @@ impl RustEmitter {
             }
         };
         if let Some(inner) = inferred_option_inner {
-            // Wrap: expr.map_or("None".to_string(), |_v| format!("{}", _v))
-            self.write("(");
-            self.emit_expr(expr);
-            self.write(").map_or(\"None\".to_string(), |_v| ");
-            if uses_debug_display_format(&inner) {
-                self.write("format!(\"{:?}\", _v))");
+            let lowered = self.lower_ref_expr_or_panic(expr, "display option expr");
+            let format_str = if uses_debug_display_format(&inner) {
+                "{:?}".to_string()
             } else {
-                self.write("format!(\"{}\", _v))");
-            }
+                "{}".to_string()
+            };
+            let lowered = crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                method: "map_or".to_string(),
+                args: vec![
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
+                            "None".to_string(),
+                        ))),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    },
+                    crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "_v".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::FormatMacro {
+                            name: "format".to_string(),
+                            format_str,
+                            args: vec![crate::RustExpr::Ident("_v".to_string())],
+                        }),
+                        is_move: false,
+                    },
+                ],
+            };
+            self.write_registry_expr(&lowered);
         } else if let HirExpr::StringLiteral(val) = expr {
             // In display contexts, string literals don't need .to_string()
-            self.write(&format!("{val:?}"));
+            self.write_registry_expr(&crate::RustExpr::Literal(crate::RustLiteral::Str(
+                val.clone(),
+            )));
         } else if uses_debug_display_format(expr.ty()) {
             // Collections use Debug-style formatting in display contexts.
-            self.write("format!(\"{:?}\", ");
-            self.emit_expr(expr);
-            self.write(")");
+            let lowered = self.lower_ref_expr_or_panic(expr, "display debug expr");
+            self.write_registry_expr(&crate::RustExpr::FormatMacro {
+                name: "format".to_string(),
+                format_str: "{:?}".to_string(),
+                args: vec![lowered],
+            });
         } else {
-            self.emit_expr(expr);
+            let lowered = self.lower_ref_expr_or_panic(expr, "display expr");
+            self.write_registry_expr(&lowered);
         }
     }
 }
