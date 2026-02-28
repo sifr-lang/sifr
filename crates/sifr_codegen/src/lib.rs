@@ -44,6 +44,7 @@ mod module_constants;
 mod module_prescan;
 mod operator_protocol_emitters;
 mod output_helpers;
+mod lib_support;
 mod slice_emitter;
 mod stdlib_filter;
 mod stmt_support_emitter;
@@ -68,6 +69,10 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 use stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
+};
+pub(crate) use lib_support::{
+    assert_output_drained, is_reserved_plain_builtin_call, is_self_field_access_expr,
+    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result, type_has_typevar,
 };
 
 type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
@@ -993,12 +998,40 @@ impl RustEmitter {
             },
         };
 
+        if let HirStmt::NestedFunction { func } = stmt {
+            if crate::helpers::body_calls_function(&func.body, &func.name) {
+                let param_names = func
+                    .params
+                    .iter()
+                    .map(|param| param.name.clone())
+                    .collect::<HashSet<_>>();
+                let referenced_with_types =
+                    crate::helpers::collect_referenced_vars_with_types(&func.body);
+                let locally_defined = crate::helpers::collect_locally_defined_vars(&func.body);
+                let captures = referenced_with_types
+                    .into_iter()
+                    .filter(|(name, _)| {
+                        !param_names.contains(name) && !locally_defined.contains(name)
+                    })
+                    .collect::<Vec<(String, Type)>>();
+                if captures.is_empty() {
+                    self.nested_fn_captures.remove(&func.name);
+                } else {
+                    self.nested_fn_captures.insert(func.name.clone(), captures);
+                }
+            } else {
+                self.nested_fn_captures.remove(&func.name);
+            }
+        }
+
         if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result(
             stmt,
             &self.mutated_vars,
             &self.borrowed_params,
             &scope_ctx,
         )? {
+            self.lowering_stats.expr_candidate_total += 1;
+            self.lowering_stats.expr_candidate_structured += 1;
             let rewritten_stmts = lowered_stmts
                 .into_iter()
                 .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
@@ -1013,64 +1046,114 @@ impl RustEmitter {
             name, ty, value, ..
         } = stmt
         {
-            if is_copyish_structured_stmt_expr_type(ty)
-                && is_copyish_structured_stmt_expr_type(value.ty())
-            {
-                let output_len = self.output.len();
-                self.write("let ");
-                if self.mutated_vars.contains(name) {
-                    self.write("mut ");
-                }
-                self.write(name);
-                self.write(": ");
-                self.write(&crate::render_type(&sifr_type_to_rust_type(ty)));
-                self.write(" = ");
-                if self.try_emit_structured_expr(value)? {
-                    self.lowering_stats.stmt_structured += 1;
-                    self.lowering_stats.stmt_candidate_structured += 1;
-                    self.write(";\n");
-                    return Ok(true);
-                }
-                self.output.truncate(output_len);
+            let output_len = self.output.len();
+            self.write("let ");
+            if self.mutated_vars.contains(name) {
+                self.write("mut ");
             }
+            self.write(name);
+            self.write(": ");
+            self.write(&crate::render_type(&sifr_type_to_rust_type(ty)));
+            self.write(" = ");
+            if self.try_emit_structured_expr(value)? {
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                self.write(";\n");
+                return Ok(true);
+            }
+            self.output.truncate(output_len);
         }
 
         if let HirStmt::Assign { name, value } = stmt {
-            if is_copyish_structured_stmt_expr_type(value.ty()) {
-                let output_len = self.output.len();
-                self.write(name);
-                self.write(" = ");
-                if self.try_emit_structured_expr(value)? {
-                    self.lowering_stats.stmt_structured += 1;
-                    self.lowering_stats.stmt_candidate_structured += 1;
-                    self.write(";\n");
-                    return Ok(true);
-                }
-                self.output.truncate(output_len);
+            let output_len = self.output.len();
+            self.write(name);
+            self.write(" = ");
+            if self.try_emit_structured_expr(value)? {
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                self.write(";\n");
+                return Ok(true);
             }
+            self.output.truncate(output_len);
         }
-
+        if self.try_emit_structured_field_assign_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_emit_structured_attribute_subscript_assign_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
         if let HirStmt::Return { value: Some(value) } = stmt {
-            if !self.emission_ctx.in_display_impl
-                && !self.emission_ctx.in_generator_closure
-                && self
-                    .current_return_type
-                    .as_ref()
-                    .is_some_and(is_copyish_structured_stmt_expr_type)
-                && is_copyish_structured_stmt_expr_type(value.ty())
+            if self.current_class_name.is_some()
+                && matches!(value, HirExpr::Name { name, .. } if name == "self")
             {
-                let output_len = self.output.len();
-                self.write("return ");
-                if self.try_emit_structured_expr(value)? {
-                    self.lowering_stats.stmt_structured += 1;
-                    self.lowering_stats.stmt_candidate_structured += 1;
-                    self.write(";\n");
-                    return Ok(true);
-                }
-                self.output.truncate(output_len);
+                self.write_indent();
+                self.write("return self.clone();\n");
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
             }
+            let output_len = self.output.len();
+            self.write("return ");
+            if self.try_emit_structured_expr(value)? {
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                self.write(";\n");
+                return Ok(true);
+            }
+            self.output.truncate(output_len);
         }
 
+        if let HirStmt::Raise { value } = stmt {
+            let output_len = self.output.len();
+            self.write_indent();
+            self.write("return Err(");
+            if self.try_emit_structured_expr(value)? {
+                self.write(");\n");
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
+            }
+            self.output.truncate(output_len);
+        }
+        if self.try_emit_structured_if_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_emit_structured_while_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_emit_structured_for_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_emit_structured_with_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_emit_structured_try_except_stmt(stmt) {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_emit_structured_assert_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
+        if self.try_emit_structured_aug_assign_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
+        }
         if let HirStmt::Expr { expr } = stmt {
             let output_len = self.output.len();
             if self.try_emit_structured_expr(expr)? {
@@ -1081,28 +1164,59 @@ impl RustEmitter {
             }
             self.output.truncate(output_len);
         }
-
         Ok(false)
     }
-
     pub(crate) fn try_emit_structured_expr(
         &mut self,
         expr: &HirExpr,
     ) -> Result<bool, crate::CodegenError> {
-        if matches!(expr, HirExpr::Compare { .. } | HirExpr::BoolOp { .. })
-            && expr_uses_borrowed_param(expr, &self.borrowed_params, &self.mut_borrowed_params)
-        {
-            return Ok(false);
+        self.lowering_stats.expr_total += 1;
+        self.lowering_stats.expr_candidate_total += 1;
+
+        if self.try_emit_structured_pre_call_expr(expr)? {
+            self.lowering_stats.expr_structured += 1;
+            self.lowering_stats.expr_candidate_structured += 1;
+            return Ok(true);
         }
         if let HirExpr::Call { func, args, .. } = expr {
+            if func == "print" && self.try_emit_structured_print_call(args)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+            if self.try_emit_structured_special_call(func, args)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
             if (self.intrinsic_functions.contains(func.as_str()) || func == "builtin_open")
                 && self.try_emit_intrinsic_via_registry(func, args)
             {
                 self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
                 return Ok(true);
             }
             if self.try_emit_structured_plain_call_with_signature(func, args)? {
                 self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+            if self.try_emit_structured_plain_call(func, args)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+        if let HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } = expr
+        {
+            if self.try_emit_structured_if_expr(condition, then_expr, else_expr)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
                 return Ok(true);
             }
         }
@@ -1113,10 +1227,118 @@ impl RustEmitter {
             ..
         } = expr
         {
-            if !is_self_field_access_expr(object)
-                && self.try_emit_method_via_registry(object.ty(), object, method, args)
+            if self.try_emit_structured_method_call(object, method, args)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+        if let HirExpr::FieldAccess { object, field, ty } = expr {
+            if let Some(lowered_expr) =
+                self.try_lower_structured_field_access_expr(object, field, ty)?
             {
                 self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                self.write(&crate::render_expr(&lowered_expr));
+                return Ok(true);
+            }
+        }
+        if let HirExpr::ConstructorCall {
+            class_name, args, ..
+        } = expr
+        {
+            if self.try_emit_structured_constructor_call_expr(class_name, args)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+        if let HirExpr::ListLiteral { elements, .. } = expr {
+            if self.try_emit_structured_list_literal_expr(elements)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+        if let HirExpr::DictLiteral { keys, values, .. } = expr {
+            if self.try_emit_structured_dict_literal_expr(keys, values)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+        if let HirExpr::SetLiteral { elements, .. } = expr {
+            if self.try_emit_structured_set_literal_expr(elements)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+        if let HirExpr::Index { object, index, .. } = expr {
+            if self.try_emit_structured_index_expr(object, index)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+            if let Some(lowered_expr) = self.try_lower_structured_index_expr(object, index)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                self.write(&crate::render_expr(&lowered_expr));
+                return Ok(true);
+            }
+        }
+        if let HirExpr::Slice {
+            object,
+            start,
+            stop,
+            step,
+            ..
+        } = expr
+        {
+            if self.try_emit_structured_slice_expr(
+                object,
+                start.as_deref(),
+                stop.as_deref(),
+                step.as_deref(),
+            )? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+        }
+        if let HirExpr::BinOp {
+            left,
+            op,
+            right,
+            ty,
+        } = expr
+        {
+            if let Some(lowered_expr) =
+                self.try_lower_structured_class_binop_expr(left, op, right)?
+            {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                self.write(&crate::render_expr(&lowered_expr));
+                return Ok(true);
+            }
+            if self.try_emit_structured_string_concat_expr(left, op, right, ty)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+            if self.try_emit_structured_string_repeat_expr(left, op, right, ty)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+            if self.try_emit_structured_list_concat_expr(left, op, right, ty)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                return Ok(true);
+            }
+            if self.try_emit_structured_numeric_binop_expr(left, op, right, ty)? {
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
                 return Ok(true);
             }
         }
@@ -1131,228 +1353,37 @@ impl RustEmitter {
         Ok(false)
     }
 
-    fn try_emit_structured_plain_call_with_signature(
-        &mut self,
-        func: &str,
-        args: &[HirExpr],
-    ) -> Result<bool, crate::CodegenError> {
-        if func.contains("::")
-            || is_fallback_special_plain_call(func)
-            || self.nested_fn_captures.contains_key(func)
-        {
-            return Ok(false);
-        }
-
-        let Some((param_types, _)) = self.func_signatures.get(func) else {
-            return Ok(false);
-        };
-        if param_types.len() != args.len() {
-            return Ok(false);
-        }
-
-        let mut lowered_args = Vec::with_capacity(args.len());
-        for ((param_ty, convention), arg) in param_types.iter().zip(args.iter()) {
-            if *convention != ParamConvention::Own {
-                return Ok(false);
-            }
-            if type_has_typevar(param_ty) || type_has_typevar(arg.ty()) {
-                return Ok(false);
-            }
-            if resolve_alias_type_for_plain_call(param_ty)
-                != resolve_alias_type_for_plain_call(arg.ty())
-            {
-                return Ok(false);
-            }
-            let Some(lowered_arg) = try_lower_leaf_or_name_expr_result(arg)? else {
-                return Ok(false);
-            };
-            lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
-        }
-
-        let lowered_call = RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(func.to_string())),
-            args: lowered_args,
-        };
-        self.write(&crate::render_expr(&lowered_call));
-        Ok(true)
-    }
-
     fn emit_stmt(&mut self, stmt: &HirStmt) {
         self.lowering_stats.stmt_total += 1;
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;
         }
         match self.try_emit_structured_stmt(stmt) {
-            Ok(true) => return,
-            Ok(false) => {}
+            Ok(true) => {}
+            Ok(false) => {
+                panic!("structured statement emission missing for production path: {stmt:?}");
+            }
             Err(_) => {
                 self.lowering_stats.stmt_lowering_errors += 1;
-                if self.try_emit_stmt_legacy_bridge(stmt) {
-                    return;
-                }
                 panic!("structured statement lowering failed for production path: {stmt:?}");
             }
         }
-        if self.try_emit_stmt_legacy_bridge(stmt) {
-            return;
-        }
-        panic!("structured statement emission missing for production path: {stmt:?}");
     }
 
     fn emit_expr(&mut self, expr: &HirExpr) {
-        self.lowering_stats.expr_total += 1;
-        if is_leaf_expr_candidate(expr) {
-            self.lowering_stats.expr_candidate_total += 1;
-        }
         match self.try_emit_structured_expr(expr) {
-            Ok(true) => return,
-            Ok(false) => {}
+            Ok(true) => {}
+            Ok(false) => {
+                panic!("structured expression emission missing for production path: {expr:?}");
+            }
             Err(_) => {
                 self.lowering_stats.expr_lowering_errors += 1;
-                if self.try_emit_expr_legacy_bridge(expr) {
-                    return;
-                }
                 panic!("structured expression lowering failed for production path: {expr:?}");
             }
         }
-        if self.try_emit_expr_legacy_bridge(expr) {
-            return;
-        }
-        panic!("structured expression emission missing for production path: {expr:?}");
     }
 }
 
 pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
     helpers::body_contains_yield_inner(stmts)
-}
-
-pub(crate) fn assert_output_drained(output: &str, context: &str) {
-    assert!(
-        output.trim().is_empty(),
-        "codegen output contract violation in {context}: residual top-level output detected"
-    );
-}
-
-fn is_self_field_access_expr(expr: &HirExpr) -> bool {
-    if let HirExpr::FieldAccess { object, .. } = expr {
-        return matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
-    }
-    false
-}
-
-fn is_copyish_structured_stmt_expr_type(ty: &Type) -> bool {
-    match ty {
-        Type::Alias(_, inner) => is_copyish_structured_stmt_expr_type(inner),
-        Type::Int | Type::Float | Type::Bool | Type::Enum { .. } => true,
-        _ => false,
-    }
-}
-
-fn resolve_alias_type_for_plain_call(ty: &Type) -> &Type {
-    match ty {
-        Type::Alias(_, inner) => resolve_alias_type_for_plain_call(inner),
-        _ => ty,
-    }
-}
-
-fn type_has_typevar(ty: &Type) -> bool {
-    match ty {
-        Type::Alias(_, inner) => type_has_typevar(inner),
-        Type::TypeVar(_) => true,
-        Type::List(inner) | Type::Set(inner) => type_has_typevar(inner),
-        Type::Dict(key, val) => type_has_typevar(key) || type_has_typevar(val),
-        Type::Tuple(elems) | Type::Union(elems) => elems.iter().any(type_has_typevar),
-        Type::Result(ok, err) => type_has_typevar(ok) || type_has_typevar(err),
-        Type::Class {
-            fields, methods, ..
-        } => {
-            fields.iter().any(|(_, t)| type_has_typevar(t))
-                || methods.iter().any(|(_, ft)| {
-                    ft.params.iter().any(|(_, t, _)| type_has_typevar(t))
-                        || type_has_typevar(&ft.return_type)
-                })
-        }
-        _ => false,
-    }
-}
-
-fn try_lower_leaf_or_name_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
-    if let Some(lowered) = try_lower_leaf_expr_result(expr)? {
-        return Ok(Some(lowered));
-    }
-    if let HirExpr::Name { name, .. } = expr {
-        return Ok(Some(RustExpr::Ident(name.clone())));
-    }
-    Ok(None)
-}
-
-fn is_fallback_special_plain_call(func: &str) -> bool {
-    matches!(
-        func,
-        "print"
-            | "isinstance"
-            | "str"
-            | "pow"
-            | "abs"
-            | "hash"
-            | "round"
-            | "repr"
-            | "int"
-            | "bigint"
-            | "float"
-            | "bool"
-            | "min"
-            | "max"
-            | "sum"
-            | "sorted"
-            | "reversed"
-            | "enumerate"
-            | "zip"
-            | "any"
-            | "all"
-            | "map"
-            | "filter"
-            | "builtin_open"
-    )
-}
-
-fn expr_uses_borrowed_param(
-    expr: &HirExpr,
-    borrowed_params: &HashSet<String>,
-    mut_borrowed_params: &HashSet<String>,
-) -> bool {
-    match expr {
-        HirExpr::Name { name, .. } => {
-            borrowed_params.contains(name) || mut_borrowed_params.contains(name)
-        }
-        HirExpr::Compare {
-            left, comparators, ..
-        } => {
-            expr_uses_borrowed_param(left, borrowed_params, mut_borrowed_params)
-                || comparators
-                    .iter()
-                    .any(|c| expr_uses_borrowed_param(c, borrowed_params, mut_borrowed_params))
-        }
-        HirExpr::BoolOp { values, .. } => values
-            .iter()
-            .any(|v| expr_uses_borrowed_param(v, borrowed_params, mut_borrowed_params)),
-        HirExpr::UnaryOp { operand, .. } => {
-            expr_uses_borrowed_param(operand, borrowed_params, mut_borrowed_params)
-        }
-        HirExpr::BinOp { left, right, .. } => {
-            expr_uses_borrowed_param(left, borrowed_params, mut_borrowed_params)
-                || expr_uses_borrowed_param(right, borrowed_params, mut_borrowed_params)
-        }
-        HirExpr::IfExpr {
-            condition,
-            then_expr,
-            else_expr,
-            ..
-        } => {
-            expr_uses_borrowed_param(condition, borrowed_params, mut_borrowed_params)
-                || expr_uses_borrowed_param(then_expr, borrowed_params, mut_borrowed_params)
-                || expr_uses_borrowed_param(else_expr, borrowed_params, mut_borrowed_params)
-        }
-        _ => false,
-    }
 }

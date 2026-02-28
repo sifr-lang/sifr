@@ -503,7 +503,7 @@ fn test_empty_print() {
 #[test]
 fn test_expr_to_string_leaf_rendering() {
     let mut emitter = RustEmitter::new();
-    let int_code = emitter.render_expr_with_lowered_fallback(&HirExpr::IntLiteral(7));
+    let int_code = emitter.render_expr_with_lowered_path(&HirExpr::IntLiteral(7));
     assert_eq!(int_code, "7 as i64");
 
     let bool_op = HirExpr::BoolOp {
@@ -511,7 +511,7 @@ fn test_expr_to_string_leaf_rendering() {
         values: vec![HirExpr::BoolLiteral(true), HirExpr::BoolLiteral(false)],
         ty: Type::Bool,
     };
-    let bool_code = emitter.render_expr_with_lowered_fallback(&bool_op);
+    let bool_code = emitter.render_expr_with_lowered_path(&bool_op);
     assert_eq!(bool_code, "true && false");
 }
 
@@ -529,7 +529,7 @@ fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
         ty: Type::Float,
     };
 
-    let code = emitter.render_expr_with_lowered_fallback(&expr);
+    let code = emitter.render_expr_with_lowered_path(&expr);
     assert!(code.contains("std::f64::consts::PI"));
     assert!(!code.contains("pi +"));
 }
@@ -550,7 +550,7 @@ fn test_render_expr_lowering_rewrites_module_constant_ident() {
         ty: Type::Int,
     };
 
-    let code = emitter.render_expr_with_lowered_fallback(&expr);
+    let code = emitter.render_expr_with_lowered_path(&expr);
     assert!(code.contains("LIMIT +"));
 }
 
@@ -566,7 +566,7 @@ fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
         ty: Type::Str,
     };
 
-    let code = emitter.render_expr_with_lowered_fallback(&expr);
+    let code = emitter.render_expr_with_lowered_path(&expr);
     assert_eq!(code, "__const_greeting()");
 }
 
@@ -1629,7 +1629,7 @@ fn test_emit_expr_prefers_structured_before_force_fallback_name() {
 }
 
 #[test]
-fn test_emit_expr_borrowed_compare_keeps_fallback_path() {
+fn test_emit_expr_borrowed_compare_is_structured() {
     let mut emitter = RustEmitter::new();
     emitter.borrowed_params.insert("lhs".to_string());
     let expr = HirExpr::Compare {
@@ -1644,7 +1644,8 @@ fn test_emit_expr_borrowed_compare_keeps_fallback_path() {
 
     emitter.emit_expr(&expr);
 
-    assert!(emitter.output.contains("*lhs"));
+    assert!(emitter.output.contains("lhs =="));
+    assert_eq!(emitter.lowering_stats.expr_structured, 1);
     assert_eq!(emitter.lowering_stats.expr_lowering_errors, 0);
 }
 
@@ -1673,7 +1674,7 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     assert!(emit_stmt_wrapper.contains(
         "structured statement emission missing for production path"
     ));
-    assert!(emit_stmt_wrapper.contains("self.try_emit_stmt_legacy_bridge(stmt)"));
+    assert!(!emit_stmt_wrapper.contains("self.try_emit_stmt_legacy_bridge(stmt)"));
     assert!(
         !emit_stmt_wrapper.contains("match stmt"),
         "emit_stmt should stay orchestration-only"
@@ -1687,7 +1688,7 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     assert!(emit_expr_wrapper.contains(
         "structured expression emission missing for production path"
     ));
-    assert!(emit_expr_wrapper.contains("self.try_emit_expr_legacy_bridge(expr)"));
+    assert!(!emit_expr_wrapper.contains("self.try_emit_expr_legacy_bridge(expr)"));
     assert!(
         !emit_expr_wrapper.contains("match expr"),
         "emit_expr should stay orchestration-only"
@@ -1804,9 +1805,11 @@ fn test_module_constants_flow_through_assembled_body_items() {
 
     assert!(module_constants_src.contains("self.body_items.push(item);"));
     assert!(
-        module_constants_src
-            .contains("self.push_syn_items_from_source(&fallback_item, \"module constant fallback emission\")")
+        module_constants_src.contains(
+            "structured module constant emission missing for production path"
+        )
     );
+    assert!(!module_constants_src.contains("push_syn_items_from_source"));
     assert!(!module_constants_src.contains("RustItem::RawCode"));
     assert!(!module_constants_src.contains("self.output.push_str(&render_items(&[item]))"));
 
@@ -1837,8 +1840,8 @@ fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("stmt_support_emitter.rs");
     assert!(stmt_support_src.contains("match self.try_emit_structured_expr(value)"));
     assert!(stmt_support_src.contains("match self.try_emit_structured_stmt(stmt)"));
-    assert!(stmt_support_src.contains("self.try_emit_expr_legacy_bridge(value)"));
-    assert!(stmt_support_src.contains("self.try_emit_stmt_legacy_bridge(stmt)"));
+    assert!(!stmt_support_src.contains("self.try_emit_expr_legacy_bridge(value)"));
+    assert!(!stmt_support_src.contains("self.try_emit_stmt_legacy_bridge(stmt)"));
     assert!(!stmt_support_src.contains("self.emit_expr(value);"));
     assert!(!stmt_support_src.contains("self.emit_stmt(stmt);"));
 }

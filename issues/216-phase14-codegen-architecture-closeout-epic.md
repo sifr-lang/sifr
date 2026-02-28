@@ -8,21 +8,21 @@ Phase: 14 `codegen_architecture`
 
 ## Why This Epic Exists
 
-Phase 14 is marked `done` in planning docs, but the current codebase still has structural gaps against the strict finish criteria.  
-This epic tracks the remaining implementation work needed to make the codebase match the intended end-state.
+At epic creation time, Phase 14 was marked `done` in planning docs, but the codebase still had structural gaps against strict finish criteria.  
+This epic tracked the implementation work required to bring the codebase to the intended end-state.
 
 Primary source criteria:
 - `.cursor/plans/main/phases/14_codegen_architecture.md`
 - `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md`
 
-Unchecked strict checklist items (currently real):
+Unchecked strict checklist items at epic creation time (now resolved):
 - `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md:57`
 - `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md:162`
 - `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md:163`
 
 ---
 
-## Verified Gaps (Code-Evidence)
+## Verified Gaps (Historical Baseline Evidence)
 
 1. Fallback emitters are still production-first-class:
 - `crates/sifr_codegen/src/lib.rs:1162`
@@ -58,6 +58,8 @@ Unchecked strict checklist items (currently real):
 - `crates/sifr_codegen/src/expr_render_helpers.rs:224` (raw expr passthrough rewrite branch)
 - `crates/sifr_codegen/src/intrinsics/mod.rs:309` (test helper raw args; test-only carveout required)
 - `crates/sifr_codegen/Cargo.toml:12` (`syn` currently in main dependencies)
+
+All baseline gaps above are resolved through merged child issues `#784` -> `#787` and final closeout `#791`.
 
 ---
 
@@ -113,6 +115,18 @@ Child issues merged in required order:
 - 219 via `#786`
 - 220 via `#787`
 
+Working-loop completion record (per AGENTS flow):
+1. Plan/to-do defined per child issue (`217` -> `220`) with strict dependency order.
+2. Root-cause implementation completed per issue scope.
+3. Local validations executed per issue acceptance + phase gate.
+4. PR opened and reviewed for each child issue.
+5. PRs merged in order.
+6. Phase docs/checklists updated after merge.
+7. Epic closeout finalized in `#791`.
+
+Open items:
+- None.
+
 Completion gate validated on 2026-02-25:
 - `cargo test -p sifr_codegen`
 - `cargo clippy -p sifr_codegen -- -D warnings`
@@ -120,3 +134,15 @@ Completion gate validated on 2026-02-25:
 - `cargo test -p sifr --test e2e test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus -- --nocapture`
 - `cargo test --workspace`
 - `cargo clippy --workspace -- -D warnings`
+
+WS0 closeout evidence documented on 2026-02-27:
+- `issues/217-phase14-remove-fallback-first-class-pipeline.md` now includes `HirExpr`/`HirStmt` coverage inventory with phase corpus reachability markers.
+- `issues/218-phase14-promote-full-ir-module-assembly.md` now includes emitter ownership matrix mapped to migrated IR entrypoints.
+
+Re-validation run on 2026-02-27:
+- `cargo test -p sifr_codegen` (pass)
+- `cargo clippy -p sifr_codegen -- -D warnings` (pass)
+- `cargo test -q -p sifr --test e2e test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus -- --nocapture` (pass; `stmt=8/9`, `expr=1/1`)
+- `cargo run -q -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr` (pass)
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` (pass)
+- `scripts/run_e2e_pass.sh` (pass; `394` pass tests)

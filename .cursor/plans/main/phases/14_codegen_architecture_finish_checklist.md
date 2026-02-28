@@ -1,6 +1,6 @@
 # Phase 14 Strict Finish Checklist (Code-Verified)
 
-Last verified: 2026-02-25
+Last verified: 2026-02-27
 
 This document is the source of truth for closing Phase 14 with no claimed-done gaps.
 Every unchecked item below is a mandatory implementation slice.
@@ -55,7 +55,7 @@ status: **met**
 - [x] Broad variant coverage exists in simple lowering paths
 - [x] `expr_to_string` helper removed from production path
 - [x] Core pipeline fallback-emitter first-class routing removed from production wrappers (`emit_*_fallback` no longer a default production path)
-- [x] `emit_module` still string-emitter orchestration, not full `RustFile` assembly + single render
+- [x] `emit_module` now assembles via `RustFile` item flow with a single render sink
 - [x] Production `lower_*` contract is `Result<_, CodegenError>` end-to-end across production call sites (guarded by decomposition test against non-result helper regressions)
 - [x] Production stmt lowering entry now has explicit `Result` contract (`try_lower_simple_stmt_with_scope_result`) with context validation
 - [x] Production stmt lowering `Result` entry now validates nested stmt/expr shapes before fallback routing
@@ -81,14 +81,14 @@ status: **met**
 
 ### milestone_codegen_intrinsic_migration
 
-status: **partially met**
+status: **met**
 
 - [x] Intrinsic registry exists (`intrinsics/mod.rs`) with dependency metadata
 - [x] Method registry exists (`methods/mod.rs`)
 - [x] Codegen returns `required_crates`
-- [x] Legacy intrinsic fallback dispatcher remains huge and active (`emit_intrinsic_call` fallback arms)
-- [x] Legacy method fallback path remains active (`emit_method_call` fallback arms)
-- [x] `builtin_open` and related file-handle intrinsics still giant string literals
+- [x] Legacy intrinsic fallback dispatcher removed from production path (`emit_intrinsic_call` registry-first)
+- [x] Legacy method fallback path removed from production path (`emit_method_call` registry-first)
+- [x] `builtin_open` and related file-handle intrinsics now lower through structured IR helpers (no giant monolithic string templates)
 - [x] Logging intrinsics (`set_global_level`, `get_global_level`) now lower via structured IR nodes (no `RawCode` emission path)
 - [x] `file_close` intrinsic now lowers via structured IR (typed arg + `remove(&__hid)`), removing monolithic `RawCode` template
 - [x] `builtin_open` / `open_file` now lower through structured IR blocks/match arms (no monolithic string-template assembly)
@@ -138,7 +138,7 @@ status: **partially met**
 - [x] `io` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `collections` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
 - [x] `file_handles` intrinsic lowerers now take typed IR args in registry dispatch (no string-arg dispatcher path)
-- [x] DoD constraint on long `self.write(...)` bodies (>100 chars) not met
+- [x] DoD constraint on long `self.write(...)` bodies (>100 chars) met for intrinsic/method lowering paths
 
 ### milestone_codegen_structural_passes
 

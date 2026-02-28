@@ -1,4 +1,4 @@
-use crate::{RustExpr, RustItem, RustStmt, RustType};
+use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType};
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -179,6 +179,21 @@ fn validate_no_raw_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>) {
             }
         }
         RustStmt::Loop { body } | RustStmt::Block(body) => {
+            for stmt in body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+        }
+        RustStmt::LocalFn {
+            params, ret, body, ..
+        } => {
+            for param in params {
+                if let RustParam::Named { ty, .. } = param {
+                    validate_no_raw_type(ty, issues);
+                }
+            }
+            if let Some(ret) = ret {
+                validate_no_raw_type(ret, issues);
+            }
             for stmt in body {
                 validate_no_raw_stmt(stmt, issues);
             }
@@ -497,6 +512,21 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
         RustStmt::Loop { body } | RustStmt::Block(body) => {
             for stmt in body {
                 validate_stmt(stmt, issues, in_function);
+            }
+        }
+        RustStmt::LocalFn {
+            params, ret, body, ..
+        } => {
+            for param in params {
+                if let RustParam::Named { ty, .. } = param {
+                    validate_type(ty, issues);
+                }
+            }
+            if let Some(ret) = ret {
+                validate_type(ret, issues);
+            }
+            for stmt in body {
+                validate_stmt(stmt, issues, true);
             }
         }
         RustStmt::Break | RustStmt::Continue => {}

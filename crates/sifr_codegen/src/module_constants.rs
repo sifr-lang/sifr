@@ -5,18 +5,12 @@ use sifr_type_system::Type;
 impl RustEmitter {
     pub(super) fn emit_module_constants(&mut self, module: &HirModule) {
         for (name, ty, value) in &module.constants {
-            match self.try_emit_lowered_module_constant_result(name, ty, value) {
-                Ok(true) => continue,
-                Ok(false) => {}
-                Err(_) => {
-                    self.lowering_stats.item_lowering_errors += 1;
-                }
+            if let Err(err) = self.try_emit_lowered_module_constant_result(name, ty, value) {
+                self.lowering_stats.item_lowering_errors += 1;
+                panic!(
+                    "structured module constant emission missing for production path ({name}): {err}"
+                );
             }
-            let output_len = self.output.len();
-            self.emit_module_constant_fallback(name, ty, value);
-            let fallback_item = self.output[output_len..].to_string();
-            self.output.truncate(output_len);
-            self.push_syn_items_from_source(&fallback_item, "module constant fallback emission");
         }
     }
 
@@ -25,56 +19,17 @@ impl RustEmitter {
         name: &str,
         ty: &Type,
         value: &HirExpr,
-    ) -> Result<bool, crate::CodegenError> {
+    ) -> Result<(), crate::CodegenError> {
         let Some((item, rust_name_call)) =
             try_lower_simple_module_constant_item_result(name, ty, value)?
         else {
-            return Ok(false);
+            return Err(crate::CodegenError::new(format!(
+                "unsupported module constant lowering shape: name={name}, ty={ty:?}, value={value:?}"
+            )));
         };
         self.body_items.push(item);
         self.module_constants
             .insert(name.to_string(), (ty.clone(), rust_name_call));
-        Ok(true)
-    }
-
-    fn emit_module_constant_fallback(&mut self, name: &str, ty: &Type, value: &HirExpr) {
-        let rust_name = format!("__const_{name}");
-        self.write_indent();
-        self.write(&format!(
-            "fn {rust_name}() -> {} {{ ",
-            fallback_module_constant_return_type(ty)
-        ));
-        self.emit_expr(value);
-        if matches!(ty, Type::Str) {
-            self.write(".to_string()");
-        }
-        self.write(" }\n");
-        self.module_constants
-            .insert(name.to_string(), (ty.clone(), format!("{rust_name}()")));
-    }
-}
-
-fn fallback_module_constant_return_type(ty: &Type) -> String {
-    if matches!(ty, Type::Str) {
-        "String".to_string()
-    } else {
-        ty.rust_type()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::fallback_module_constant_return_type;
-    use sifr_type_system::Type;
-
-    #[test]
-    fn fallback_string_return_type_uses_owned_string() {
-        assert_eq!(fallback_module_constant_return_type(&Type::Str), "String");
-    }
-
-    #[test]
-    fn fallback_non_string_return_type_uses_rust_type() {
-        let ty = Type::Int;
-        assert_eq!(fallback_module_constant_return_type(&ty), ty.rust_type());
+        Ok(())
     }
 }

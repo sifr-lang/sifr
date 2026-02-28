@@ -125,6 +125,13 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             }
             removed
         }
+        RustStmt::LocalFn { body, .. } => {
+            let mut removed = 0usize;
+            for stmt in body {
+                removed += optimize_stmt(stmt);
+            }
+            removed
+        }
     }
 }
 

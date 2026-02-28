@@ -21,7 +21,7 @@ impl RustEmitter {
         if let Some(code) = Self::match_pattern_literal_code(value) {
             return code;
         }
-        self.render_expr_with_lowered_fallback(value)
+        self.render_expr_with_lowered_path(value)
     }
 
     fn render_match_guard_expr(
@@ -30,7 +30,7 @@ impl RustEmitter {
         pattern: &HirPattern,
         is_non_option_union: bool,
     ) -> String {
-        let guard_code = self.render_expr_with_lowered_fallback(guard_expr);
+        let guard_code = self.render_expr_with_lowered_path(guard_expr);
         Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union)
     }
 
