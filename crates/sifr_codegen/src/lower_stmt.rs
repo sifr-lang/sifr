@@ -1,7 +1,8 @@
 //! Statement lowering scaffolds for the IR migration.
 
 use crate::helpers::{
-    body_calls_function, codegen_body_always_exits, collect_mutated_vars, detect_and_not_none_vars,
+    body_calls_function, codegen_body_always_exits, collect_locally_defined_vars,
+    collect_mutated_vars, collect_referenced_vars_with_types, detect_and_not_none_vars,
     detect_is_none_var, detect_is_not_none_var,
 };
 use crate::{
@@ -11,7 +12,7 @@ use crate::{
 use sifr_hir::{
     HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt, MethodKind,
 };
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::Type;
 use std::collections::HashSet;
 
 #[cfg(test)]
@@ -54,7 +55,61 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
 /// Lowers an expression statement when the expression is a leaf
 /// supported by `try_lower_leaf_expr`.
 pub fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {
+    if let Some(lowered_print) = try_lower_simple_print_expr_stmt(expr) {
+        return Some(vec![lowered_print]);
+    }
     try_lower_leaf_expr(expr).map(|lowered_expr| vec![RustStmt::Expr(lowered_expr)])
+}
+
+fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
+    let HirExpr::Call { func, args, .. } = expr else {
+        return None;
+    };
+    if func != "print" {
+        return None;
+    }
+    match args.as_slice() {
+        [] => Some(RustStmt::Expr(RustExpr::MacroCall {
+            name: "println".to_string(),
+            args: vec![],
+        })),
+        [HirExpr::StringLiteral(value)] => Some(RustStmt::Expr(RustExpr::MacroCall {
+            name: "println".to_string(),
+            args: vec![RustExpr::Ident(format!("{value:?}"))],
+        })),
+        [HirExpr::FString { parts, .. }] => {
+            let mut format_str = String::new();
+            let mut lowered_args = Vec::new();
+            for part in parts {
+                match part {
+                    HirFStringPart::Literal(value) => {
+                        for ch in value.chars() {
+                            match ch {
+                                '{' => format_str.push_str("{{"),
+                                '}' => format_str.push_str("}}"),
+                                _ => format_str.push(ch),
+                            }
+                        }
+                    }
+                    HirFStringPart::Expr(value_expr) => {
+                        format_str.push_str("{}");
+                        lowered_args.push(try_lower_leaf_or_name_expr(value_expr)?);
+                    }
+                }
+            }
+            Some(RustStmt::Expr(RustExpr::FormatMacro {
+                name: "println".to_string(),
+                format_str,
+                args: lowered_args,
+            }))
+        }
+        [arg] => Some(RustStmt::Expr(RustExpr::FormatMacro {
+            name: "println".to_string(),
+            format_str: "{}".to_string(),
+            args: vec![try_lower_leaf_or_name_expr(arg)?],
+        })),
+        _ => None,
+    }
 }
 
 #[derive(Clone, Copy, Default)]
@@ -648,9 +703,18 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         HirStmt::With { items, body } => {
             try_lower_simple_with_stmt(items, body, in_loop_with_else, bindings, ctx)
         }
-        HirStmt::Match { subject, arms, .. } => {
-            try_lower_simple_match_stmt(subject, arms, in_loop_with_else, bindings, ctx)
-        }
+        HirStmt::Match {
+            subject,
+            subject_ty,
+            arms,
+        } => try_lower_simple_match_stmt(
+            subject,
+            subject_ty,
+            arms,
+            in_loop_with_else,
+            bindings,
+            ctx,
+        ),
         HirStmt::NestedFunction { func } => {
             try_lower_simple_nested_function_stmt(func, in_loop_with_else, bindings)
         }
@@ -684,7 +748,6 @@ fn try_lower_simple_nested_function_stmt(
     if func.method_kind != MethodKind::Regular
         || !func.decorators.is_empty()
         || !func.type_params.is_empty()
-        || body_calls_function(&func.body, &func.name)
     {
         return None;
     }
@@ -697,27 +760,68 @@ fn try_lower_simple_nested_function_stmt(
     }
 
     let nested_mutated_vars = collect_mutated_vars(&func.body);
-    let nested_borrowed_params: HashSet<String> = func
-        .params
-        .iter()
-        .filter(|param| {
-            param.convention == ParamConvention::Borrow
-                || param.convention == ParamConvention::MutBorrow
-        })
-        .map(|param| param.name.clone())
+    let nested_borrowed_params: HashSet<String> = HashSet::new();
+    let is_recursive = body_calls_function(&func.body, &func.name);
+    let allowed_calls = if is_recursive {
+        vec![func.name.clone()]
+    } else {
+        vec![]
+    };
+    let mut lowered_body = crate::with_allowed_plain_calls(&allowed_calls, || {
+        try_lower_simple_stmt_block(
+            &func.body,
+            in_loop_with_else,
+            &nested_mutated_vars,
+            &nested_borrowed_params,
+            SimpleStmtLoweringCtx {
+                return_type: Some(&func.return_type),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+    })?;
+    let param_names: HashSet<String> = func.params.iter().map(|param| param.name.clone()).collect();
+    let referenced_with_types = collect_referenced_vars_with_types(&func.body);
+    let locally_defined = collect_locally_defined_vars(&func.body);
+    let captures: Vec<(String, Type)> = referenced_with_types
+        .into_iter()
+        .filter(|(name, _)| !param_names.contains(name) && !locally_defined.contains(name))
         .collect();
-    let lowered_body = try_lower_simple_stmt_block(
-        &func.body,
-        in_loop_with_else,
-        &nested_mutated_vars,
-        &nested_borrowed_params,
-        SimpleStmtLoweringCtx {
-            return_type: Some(&func.return_type),
-            in_display_impl: false,
-            in_class_scope: false,
-            in_generator_closure: false,
-        },
-    )?;
+
+    if is_recursive {
+        let capture_names = captures
+            .iter()
+            .map(|(name, _)| name.clone())
+            .collect::<Vec<_>>();
+        if !capture_names.is_empty() {
+            append_recursive_capture_args_to_stmts(&mut lowered_body, &func.name, &capture_names);
+        }
+        let fn_params = func
+            .params
+            .iter()
+            .map(|param| RustParam::Named {
+                name: param.name.clone(),
+                ty: crate::sifr_type_to_rust_type(&param.ty),
+            })
+            .chain(captures.iter().map(|(name, ty)| RustParam::Named {
+                name: name.clone(),
+                ty: crate::sifr_type_to_rust_type(ty),
+            }))
+            .collect::<Vec<_>>();
+        let ret = if matches!(func.return_type, Type::None) {
+            None
+        } else {
+            Some(crate::sifr_type_to_rust_type(&func.return_type))
+        };
+        return Some(vec![RustStmt::LocalFn {
+            name: func.name.clone(),
+            params: fn_params,
+            ret,
+            body: lowered_body,
+        }]);
+    }
+
     let lowered_params = func
         .params
         .iter()
@@ -739,6 +843,192 @@ fn try_lower_simple_nested_function_stmt(
     }])
 }
 
+fn append_recursive_capture_args_to_stmts(
+    stmts: &mut [RustStmt],
+    fn_name: &str,
+    capture_names: &[String],
+) {
+    for stmt in stmts {
+        match stmt {
+            RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
+                append_recursive_capture_args_to_expr(value, fn_name, capture_names);
+            }
+            RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
+                append_recursive_capture_args_to_expr(target, fn_name, capture_names);
+                append_recursive_capture_args_to_expr(value, fn_name, capture_names);
+            }
+            RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => {
+                append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            }
+            RustStmt::Assert { cond, msg } => {
+                append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
+                if let Some(msg) = msg {
+                    append_recursive_capture_args_to_expr(msg, fn_name, capture_names);
+                }
+            }
+            RustStmt::If {
+                cond,
+                then_body,
+                else_body,
+            } => {
+                append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(then_body, fn_name, capture_names);
+                if let Some(else_body) = else_body {
+                    append_recursive_capture_args_to_stmts(else_body, fn_name, capture_names);
+                }
+            }
+            RustStmt::IfLet {
+                expr,
+                then_body,
+                else_body,
+                ..
+            } => {
+                append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(then_body, fn_name, capture_names);
+                if let Some(else_body) = else_body {
+                    append_recursive_capture_args_to_stmts(else_body, fn_name, capture_names);
+                }
+            }
+            RustStmt::Match { expr, arms } => {
+                append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+                for arm in arms {
+                    if let Some(guard) = &mut arm.guard {
+                        append_recursive_capture_args_to_expr(guard, fn_name, capture_names);
+                    }
+                    append_recursive_capture_args_to_stmts(&mut arm.body, fn_name, capture_names);
+                }
+            }
+            RustStmt::For { iter, body, .. } => {
+                append_recursive_capture_args_to_expr(iter, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::While { cond, body } => {
+                append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::Loop { body } | RustStmt::Block(body) => {
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::LocalFn { body, .. } => {
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
+            RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue | RustStmt::RawCode(_) => {}
+        }
+    }
+}
+
+fn append_recursive_capture_args_to_expr(
+    expr: &mut RustExpr,
+    fn_name: &str,
+    capture_names: &[String],
+) {
+    match expr {
+        RustExpr::FnCall { func, args } => {
+            append_recursive_capture_args_to_expr(func, fn_name, capture_names);
+            for arg in args.iter_mut() {
+                append_recursive_capture_args_to_expr(arg, fn_name, capture_names);
+            }
+            if matches!(func.as_ref(), RustExpr::Ident(name) if name == fn_name) {
+                for capture_name in capture_names {
+                    args.push(RustExpr::Ident(capture_name.clone()));
+                }
+            }
+        }
+        RustExpr::MethodCall { receiver, args, .. } => {
+            append_recursive_capture_args_to_expr(receiver, fn_name, capture_names);
+            for arg in args {
+                append_recursive_capture_args_to_expr(arg, fn_name, capture_names);
+            }
+        }
+        RustExpr::Field { expr, .. } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+        }
+        RustExpr::Index { expr, index } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(index, fn_name, capture_names);
+        }
+        RustExpr::Slice { expr, start, stop } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            if let Some(start) = start {
+                append_recursive_capture_args_to_expr(start, fn_name, capture_names);
+            }
+            if let Some(stop) = stop {
+                append_recursive_capture_args_to_expr(stop, fn_name, capture_names);
+            }
+        }
+        RustExpr::BinOp { left, right, .. } => {
+            append_recursive_capture_args_to_expr(left, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(right, fn_name, capture_names);
+        }
+        RustExpr::UnaryOp { operand, .. }
+        | RustExpr::Deref(operand)
+        | RustExpr::Clone(operand)
+        | RustExpr::Try(operand)
+        | RustExpr::Await(operand)
+        | RustExpr::Paren(operand) => {
+            append_recursive_capture_args_to_expr(operand, fn_name, capture_names);
+        }
+        RustExpr::Cast { expr, .. } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+        }
+        RustExpr::Ref { expr, .. } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+        }
+        RustExpr::Block { stmts, expr } => {
+            append_recursive_capture_args_to_stmts(stmts, fn_name, capture_names);
+            if let Some(expr) = expr {
+                append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            }
+        }
+        RustExpr::If {
+            cond,
+            then_expr,
+            else_expr,
+        } => {
+            append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(then_expr, fn_name, capture_names);
+            if let Some(else_expr) = else_expr {
+                append_recursive_capture_args_to_expr(else_expr, fn_name, capture_names);
+            }
+        }
+        RustExpr::Match { expr, arms } => {
+            append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
+            for arm in arms {
+                if let Some(guard) = &mut arm.guard {
+                    append_recursive_capture_args_to_expr(guard, fn_name, capture_names);
+                }
+                append_recursive_capture_args_to_stmts(&mut arm.body, fn_name, capture_names);
+            }
+        }
+        RustExpr::Closure { body, .. } => {
+            append_recursive_capture_args_to_expr(body, fn_name, capture_names);
+        }
+        RustExpr::ClosureBlock { body, .. } => {
+            append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+        }
+        RustExpr::StructInit { fields, .. } => {
+            for (_, field_value) in fields {
+                append_recursive_capture_args_to_expr(field_value, fn_name, capture_names);
+            }
+        }
+        RustExpr::Tuple(items) | RustExpr::Vec(items) | RustExpr::MacroCall { args: items, .. } => {
+            for item in items {
+                append_recursive_capture_args_to_expr(item, fn_name, capture_names);
+            }
+        }
+        RustExpr::FormatMacro { args, .. } => {
+            for arg in args {
+                append_recursive_capture_args_to_expr(arg, fn_name, capture_names);
+            }
+        }
+        RustExpr::Range { start, end } => {
+            append_recursive_capture_args_to_expr(start, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(end, fn_name, capture_names);
+        }
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::RawCode(_) => {}
+    }
+}
+
 fn try_lower_simple_try_except_stmt(
     body: &[HirStmt],
     handlers: &[HirExceptHandler],
@@ -754,7 +1044,6 @@ fn try_lower_simple_try_except_stmt(
         .error_type
         .as_deref()
         .is_some_and(|error_type| error_type != "Error")
-        || handler.name.is_some()
     {
         return None;
     }
@@ -787,6 +1076,7 @@ fn try_lower_simple_try_except_stmt(
         func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
         args: vec![RustExpr::Literal(RustLiteral::Unit)],
     })));
+    let handler_name = handler.name.clone().unwrap_or_else(|| "_e".to_string());
 
     Some(vec![
         RustStmt::Let {
@@ -803,7 +1093,7 @@ fn try_lower_simple_try_except_stmt(
             },
         },
         RustStmt::IfLet {
-            pattern: "Err(_e)".to_string(),
+            pattern: format!("Err({handler_name})"),
             expr: RustExpr::Ident("__sifr_try_res".to_string()),
             then_body: lowered_handler_body,
             else_body: None,
@@ -1204,29 +1494,36 @@ fn try_lower_simple_yield_stmt(
 
 fn try_lower_simple_match_stmt(
     subject: &HirExpr,
+    subject_ty: &Type,
     arms: &[sifr_hir::HirMatchArm],
     in_loop_with_else: bool,
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    // Keep fallback emission for string literal match patterns.
-    // Fallback uses guarded matching that correctly handles `String` subjects.
-    if arms
-        .iter()
-        .any(|arm| pattern_contains_string_literal(&arm.pattern))
-    {
-        return None;
-    }
-
     let lowered_subject = try_lower_leaf_or_name_expr(subject)?;
     let lowered_arms = arms
         .iter()
         .map(|arm| {
-            let (pattern, arm_bindings) = try_lower_match_pattern(&arm.pattern)?;
-            let guard = if let Some(guard_expr) = arm.guard.as_ref() {
-                Some(try_lower_leaf_or_name_expr(guard_expr)?)
-            } else {
-                None
+            let (pattern, arm_bindings, auto_guard) =
+                if matches!(resolve_alias_type(subject_ty), Type::Str) {
+                    try_lower_match_pattern_for_string_subject(&arm.pattern)?
+                } else {
+                    let (pattern, arm_bindings) = try_lower_match_pattern(&arm.pattern)?;
+                    (pattern, arm_bindings, None)
+                };
+            let lowered_guard = arm
+                .guard
+                .as_ref()
+                .and_then(try_lower_leaf_or_name_expr);
+            let guard = match (auto_guard, lowered_guard) {
+                (Some(left), Some(right)) => Some(RustExpr::BinOp {
+                    left: Box::new(left),
+                    op: "&&".to_string(),
+                    right: Box::new(right),
+                }),
+                (Some(left), None) => Some(left),
+                (None, Some(right)) => Some(right),
+                (None, None) => None,
             };
             let body = try_lower_simple_stmt_block(
                 &arm.body,
@@ -1250,17 +1547,58 @@ fn try_lower_simple_match_stmt(
     }])
 }
 
-fn pattern_contains_string_literal(pattern: &HirPattern) -> bool {
+fn try_lower_match_pattern_for_string_subject(
+    pattern: &HirPattern,
+) -> Option<(String, Vec<String>, Option<RustExpr>)> {
     match pattern {
         HirPattern::Literal {
             value: HirExpr::StringLiteral(_),
-        } => true,
-        HirPattern::Or { patterns } => patterns.iter().any(pattern_contains_string_literal),
-        HirPattern::Tuple { elements } => elements.iter().any(pattern_contains_string_literal),
-        HirPattern::Class { fields, .. } => fields
-            .iter()
-            .any(|(_, pat)| pattern_contains_string_literal(pat)),
-        _ => false,
+        } => Some((
+            "__s".to_string(),
+            vec![],
+            Some(try_lower_string_literal_match_guard(pattern)?),
+        )),
+        HirPattern::Or { patterns } => {
+            if patterns
+                .iter()
+                .any(|p| matches!(p, HirPattern::Wildcard))
+            {
+                return Some(("_".to_string(), vec![], None));
+            }
+            Some((
+                "__s".to_string(),
+                vec![],
+                Some(try_lower_string_literal_match_guard(pattern)?),
+            ))
+        }
+        _ => {
+            let (pattern, bindings) = try_lower_match_pattern(pattern)?;
+            Some((pattern, bindings, None))
+        }
+    }
+}
+
+fn try_lower_string_literal_match_guard(pattern: &HirPattern) -> Option<RustExpr> {
+    match pattern {
+        HirPattern::Literal {
+            value: HirExpr::StringLiteral(expected),
+        } => Some(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("__s".to_string())),
+            op: "==".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Str(expected.clone()))),
+        }),
+        HirPattern::Or { patterns } => {
+            let mut guards = Vec::with_capacity(patterns.len());
+            for pattern in patterns {
+                guards.push(try_lower_string_literal_match_guard(pattern)?);
+            }
+            guards.into_iter().reduce(|left, right| RustExpr::BinOp {
+                left: Box::new(left),
+                op: "||".to_string(),
+                right: Box::new(right),
+            })
+        }
+        _ => None,
     }
 }
 
@@ -1293,7 +1631,23 @@ fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, Vec<String>)
             }
             Some((format!("({})", rendered.join(", ")), bindings))
         }
-        HirPattern::Class { .. } => None,
+        HirPattern::Class { class_name, fields } => {
+            let mut rendered_fields = Vec::new();
+            let mut bindings = Vec::new();
+            for (field_name, field_pattern) in fields {
+                let (field_pat, field_binds) = try_lower_match_pattern(field_pattern)?;
+                rendered_fields.push(format!("{field_name}: {field_pat}"));
+                bindings.extend(field_binds);
+            }
+            if rendered_fields.is_empty() {
+                Some((format!("{class_name} {{ .. }}"), bindings))
+            } else {
+                Some((
+                    format!("{class_name} {{ {}, .. }}", rendered_fields.join(", ")),
+                    bindings,
+                ))
+            }
+        }
     }
 }
 
@@ -1592,7 +1946,13 @@ fn try_lower_simple_condition_test_expr(
     expr: &HirExpr,
     borrowed_params: &HashSet<String>,
 ) -> Option<RustExpr> {
-    // Preserve fallback semantics for borrowed-param comparisons (e.g. `&String == String`).
+    if let Some(lowered) = try_lower_borrowed_typevar_compare_condition(expr, borrowed_params) {
+        return Some(lowered);
+    }
+    if let Some(lowered) = try_lower_structured_compare_condition_expr(expr) {
+        return Some(lowered);
+    }
+    // Preserve borrowed-param comparison semantics (e.g. `&String == String`).
     if expr_uses_borrowed_name(expr, borrowed_params) {
         return None;
     }
@@ -1604,6 +1964,145 @@ fn try_lower_simple_condition_test_expr(
         receiver: Box::new(RustExpr::Ident(option_var)),
         method: "is_some".to_string(),
         args: vec![],
+    })
+}
+
+fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if try_lower_leaf_expr(expr).is_some() {
+        return None;
+    }
+    let HirExpr::Compare {
+        left,
+        ops,
+        comparators,
+        ..
+    } = expr
+    else {
+        return None;
+    };
+    if ops.len() != 1 || comparators.len() != 1 {
+        return None;
+    }
+    let rhs_expr = comparators.first()?;
+    let lowered_op = match ops[0].as_str() {
+        "==" | "!=" | "<" | "<=" | ">" | ">=" => ops[0].as_str(),
+        "is" => "==",
+        "is not" => "!=",
+        _ => return None,
+    };
+    Some(RustExpr::BinOp {
+        left: Box::new(try_lower_condition_operand_expr(left)?),
+        op: lowered_op.to_string(),
+        right: Box::new(try_lower_condition_operand_expr(rhs_expr)?),
+    })
+}
+
+fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let Some(lowered) = try_lower_leaf_or_name_expr(expr) {
+        return Some(lowered);
+    }
+    match expr {
+        HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ..
+        } if method == "len" && args.is_empty() => Some(RustExpr::Cast {
+            expr: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                method: "len".to_string(),
+                args: vec![],
+            }),
+            ty: RustType::I64,
+        }),
+        HirExpr::Index { object, index, .. } => try_lower_condition_index_operand_expr(object, index),
+        _ => None,
+    }
+}
+
+fn try_lower_condition_index_operand_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
+    match resolve_alias_type(object.ty()) {
+        Type::Dict(_, _) => {
+            let lowered_key = if let HirExpr::StringLiteral(value) = index {
+                RustExpr::Ident(format!("{value:?}"))
+            } else {
+                RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                }
+            };
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![lowered_key],
+                }),
+                method: "cloned".to_string(),
+                args: vec![],
+            })
+        }
+        Type::List(_) => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                method: "get".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                    ty: RustType::Named("usize".to_string()),
+                }],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        }),
+        _ => None,
+    }
+}
+
+fn try_lower_borrowed_typevar_compare_condition(
+    expr: &HirExpr,
+    borrowed_params: &HashSet<String>,
+) -> Option<RustExpr> {
+    let HirExpr::Compare {
+        left,
+        ops,
+        comparators,
+        ..
+    } = expr
+    else {
+        return None;
+    };
+    if ops.len() != 1 || comparators.len() != 1 {
+        return None;
+    }
+
+    let rhs_expr = comparators.first()?;
+    if !matches!(resolve_alias_type(left.ty()), Type::TypeVar(_))
+        || !matches!(resolve_alias_type(rhs_expr.ty()), Type::TypeVar(_))
+    {
+        return None;
+    }
+
+    let lowered_op = match ops[0].as_str() {
+        "==" | "!=" | "<" | "<=" | ">" | ">=" => ops[0].as_str(),
+        "is" => "==",
+        "is not" => "!=",
+        _ => return None,
+    };
+
+    let lower_operand = |operand: &HirExpr| -> Option<RustExpr> {
+        let HirExpr::Name { name, .. } = operand else {
+            return None;
+        };
+        let ident = RustExpr::Ident(name.clone());
+        if borrowed_params.contains(name) {
+            return Some(RustExpr::Deref(Box::new(ident)));
+        }
+        Some(ident)
+    };
+
+    Some(RustExpr::BinOp {
+        left: Box::new(lower_operand(left)?),
+        op: lowered_op.to_string(),
+        right: Box::new(lower_operand(rhs_expr)?),
     })
 }
 
@@ -1705,7 +2204,111 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }
+    if let Some(lowered) = try_lower_stmt_index_expr(expr) {
+        return Some(lowered);
+    }
+    if let Some(lowered) = try_lower_stmt_string_concat_expr(expr) {
+        return Some(lowered);
+    }
     try_lower_name_ident_expr(expr)
+}
+
+fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
+    let HirExpr::Index { object, index, .. } = expr else {
+        return None;
+    };
+    match resolve_alias_type(object.ty()) {
+        Type::Dict(_, _) => {
+            let lowered_key = if let HirExpr::StringLiteral(value) = index.as_ref() {
+                RustExpr::Ident(format!("{value:?}"))
+            } else {
+                RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                }
+            };
+            Some(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    method: "get".to_string(),
+                    args: vec![lowered_key],
+                }),
+                method: "cloned".to_string(),
+                args: vec![],
+            })
+        }
+        Type::List(_) => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                method: "get".to_string(),
+                args: vec![RustExpr::Cast {
+                    expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+                    ty: RustType::Named("usize".to_string()),
+                }],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        }),
+        _ => None,
+    }
+}
+
+fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustExpr> {
+    let HirExpr::BinOp {
+        left,
+        op,
+        right,
+        ty,
+    } = expr
+    else {
+        return None;
+    };
+    if op != "+" || !matches!(resolve_alias_type(ty), Type::Str) {
+        return None;
+    }
+
+    let mut parts = Vec::new();
+    collect_stmt_string_concat_parts(left, &mut parts);
+    collect_stmt_string_concat_parts(right, &mut parts);
+
+    if parts
+        .iter()
+        .all(|part| matches!(part, HirExpr::StringLiteral(_)))
+    {
+        let mut combined = String::new();
+        for part in parts {
+            if let HirExpr::StringLiteral(value) = part {
+                combined.push_str(value);
+            }
+        }
+        return Some(RustExpr::Literal(RustLiteral::Str(combined)));
+    }
+
+    Some(RustExpr::FormatMacro {
+        name: "format".to_string(),
+        format_str: "{}".repeat(parts.len()),
+        args: parts
+            .iter()
+            .map(|part| try_lower_leaf_or_name_expr(part))
+            .collect::<Option<Vec<_>>>()?,
+    })
+}
+
+fn collect_stmt_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
+    if let HirExpr::BinOp {
+        left,
+        op,
+        right,
+        ty,
+    } = expr
+    {
+        if op == "+" && matches!(resolve_alias_type(ty), Type::Str) {
+            collect_stmt_string_concat_parts(left, parts);
+            collect_stmt_string_concat_parts(right, parts);
+            return;
+        }
+    }
+    parts.push(expr);
 }
 
 fn try_lower_attribute_dict_insert_key_expr(index: &HirExpr, field_ty: &Type) -> Option<RustExpr> {
@@ -1716,7 +2319,7 @@ fn try_lower_attribute_dict_insert_key_expr(index: &HirExpr, field_ty: &Type) ->
     if matches!(resolve_alias_type(key_ty), Type::Str | Type::TypeVar(_))
         && matches!(index, HirExpr::Name { .. })
     {
-        // Preserve fallback path for potential borrowed-name key cloning semantics.
+        // Preserve borrowed-name key cloning semantics.
         return None;
     }
 
@@ -1834,7 +2437,7 @@ fn try_lower_simple_delete_stmt(object: &HirExpr, index: &HirExpr) -> Option<Vec
 
 fn build_dict_delete_key_arg(index: &HirExpr) -> Option<RustExpr> {
     if matches!(index, HirExpr::Name { .. }) {
-        // Preserve fallback path for name keys to keep borrowing behavior identical.
+    // Preserve name-key borrowing behavior.
         return None;
     }
     let lowered_index = try_lower_leaf_expr(index)?;
@@ -2013,8 +2616,17 @@ fn try_lower_simple_return_stmt(
     value: &HirExpr,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if ctx.in_display_impl || ctx.in_class_scope {
+    if ctx.in_display_impl {
         return None;
+    }
+    if ctx.in_class_scope
+        && matches!(value, HirExpr::Name { name, .. } if name == "self")
+    {
+        return Some(vec![RustStmt::Return(Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("self".to_string())),
+            method: "clone".to_string(),
+            args: vec![],
+        }))]);
     }
     let option_return = ctx.return_type.is_some_and(is_option_like_type);
     if matches!(value.ty(), Type::TypeVar(_)) {
@@ -2116,12 +2728,6 @@ fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
     if !is_alias_equivalent_type(ty, value.ty()) {
         return None;
     }
-    if !matches!(
-        resolve_alias_type(ty),
-        Type::Int | Type::Float | Type::Bool | Type::Str | Type::Enum { .. } | Type::None
-    ) {
-        return None;
-    }
     try_lower_leaf_or_name_expr(value)
 }
 
@@ -2129,7 +2735,7 @@ fn try_lower_simple_assign_value(
     value: &HirExpr,
     borrowed_params: &HashSet<String>,
 ) -> Option<RustExpr> {
-    // Preserve legacy behavior where TypeVar assignment from borrowed params appends `.clone()`.
+    // Preserve TypeVar assignment behavior for borrowed params by appending `.clone()`.
     if matches!(value.ty(), Type::TypeVar(_))
         && matches!(value, HirExpr::Name { name, .. } if borrowed_params.contains(name))
     {
@@ -4647,7 +5253,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_return_in_class_scope() {
+    fn lowers_return_in_class_scope() {
         let stmt = HirStmt::Return {
             value: Some(HirExpr::IntLiteral(5)),
         };
@@ -4663,7 +5269,49 @@ mod tests {
                 in_generator_closure: false,
             },
         )
-        .is_none());
+        .is_some());
+    }
+
+    #[test]
+    fn lowers_self_return_in_class_scope_with_clone() {
+        let stmt = HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "self".to_string(),
+                ty: Type::Class {
+                    name: "Point".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: None,
+                },
+            }),
+        };
+
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&Type::Class {
+                    name: "Point".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: None,
+                }),
+                in_display_impl: false,
+                in_class_scope: true,
+                in_generator_closure: false,
+            },
+        )
+        .expect("self return in class scope lowered");
+
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Return(Some(RustExpr::MethodCall { ref receiver, ref method, ref args }))
+                if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "self")
+                    && method == "clone"
+                    && args.is_empty()
+        ));
     }
 
     #[test]
@@ -6429,6 +7077,129 @@ mod tests {
     }
 
     #[test]
+    fn lowers_match_with_class_patterns_and_captures() {
+        let point_ty = Type::Class {
+            name: "Point".to_string(),
+            fields: vec![("x".to_string(), Type::Int), ("y".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+        let stmt = HirStmt::Match {
+            subject: HirExpr::Name {
+                name: "p".to_string(),
+                ty: point_ty.clone(),
+            },
+            subject_ty: point_ty,
+            arms: vec![
+                sifr_hir::HirMatchArm {
+                    pattern: HirPattern::Class {
+                        class_name: "Point".to_string(),
+                        fields: vec![
+                            (
+                                "x".to_string(),
+                                HirPattern::Literal {
+                                    value: HirExpr::IntLiteral(0),
+                                },
+                            ),
+                            (
+                                "y".to_string(),
+                                HirPattern::Capture {
+                                    name: "py".to_string(),
+                                    ty: Type::Int,
+                                },
+                            ),
+                        ],
+                    },
+                    guard: None,
+                    body: vec![HirStmt::Return {
+                        value: Some(HirExpr::StringLiteral("axis".to_string())),
+                    }],
+                },
+                sifr_hir::HirMatchArm {
+                    pattern: HirPattern::Wildcard,
+                    guard: None,
+                    body: vec![HirStmt::Return {
+                        value: Some(HirExpr::StringLiteral("other".to_string())),
+                    }],
+                },
+            ],
+        };
+
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&Type::Str),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .expect("class match lowered");
+
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Match { ref arms, .. }
+                if arms.len() == 2
+                    && arms[0].pattern.contains("Point { x: 0, y: py")
+                    && arms[0].bindings.iter().any(|name| name == "py")
+        ));
+    }
+
+    #[test]
+    fn lowers_match_with_string_literal_patterns() {
+        let stmt = HirStmt::Match {
+            subject: HirExpr::Name {
+                name: "method".to_string(),
+                ty: Type::Str,
+            },
+            subject_ty: Type::Str,
+            arms: vec![
+                sifr_hir::HirMatchArm {
+                    pattern: HirPattern::Literal {
+                        value: HirExpr::StringLiteral("GET".to_string()),
+                    },
+                    guard: None,
+                    body: vec![HirStmt::Return {
+                        value: Some(HirExpr::StringLiteral("read".to_string())),
+                    }],
+                },
+                sifr_hir::HirMatchArm {
+                    pattern: HirPattern::Wildcard,
+                    guard: None,
+                    body: vec![HirStmt::Return {
+                        value: Some(HirExpr::StringLiteral("other".to_string())),
+                    }],
+                },
+            ],
+        };
+
+        let lowered = try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&Type::Str),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .expect("string match lowered");
+
+        assert!(matches!(
+            lowered[0],
+            RustStmt::Match { ref arms, .. }
+                if arms.len() == 2
+                    && arms[0].pattern == "__s"
+                    && arms[0].guard.is_some()
+        ));
+    }
+
+    #[test]
     fn lowers_simple_nested_function_to_closure_block() {
         let stmt = HirStmt::NestedFunction {
             func: HirFunction {
@@ -6457,7 +7228,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_recursive_nested_function() {
+    fn lowers_recursive_nested_function_without_captures_to_local_fn() {
         let stmt = HirStmt::NestedFunction {
             func: HirFunction {
                 name: "inner".to_string(),
@@ -6475,7 +7246,12 @@ mod tests {
                 type_params: vec![],
             },
         };
-        assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+        let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+            .expect("recursive nested function lowered");
+        assert!(matches!(
+            lowered[0],
+            RustStmt::LocalFn { ref name, .. } if name == "inner"
+        ));
     }
 
     #[test]

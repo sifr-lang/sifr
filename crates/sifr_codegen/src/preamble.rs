@@ -1524,6 +1524,19 @@ mod tests {
             RustStmt::Loop { body } | RustStmt::Block(body) => {
                 body.iter().map(count_raw_in_stmt).sum()
             }
+            RustStmt::LocalFn {
+                params, ret, body, ..
+            } => {
+                params
+                    .iter()
+                    .map(|p| match p {
+                        RustParam::Named { ty, .. } => count_raw_in_type(ty),
+                        RustParam::SelfParam { .. } => 0,
+                    })
+                    .sum::<usize>()
+                    + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
+                    + body.iter().map(count_raw_in_stmt).sum::<usize>()
+            }
             RustStmt::RawCode(_) => 1,
         }
     }

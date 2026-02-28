@@ -123,6 +123,12 @@ pub enum RustStmt {
     Loop {
         body: Vec<RustStmt>,
     },
+    LocalFn {
+        name: String,
+        params: Vec<RustParam>,
+        ret: Option<RustType>,
+        body: Vec<RustStmt>,
+    },
     Break,
     Continue,
     Block(Vec<RustStmt>),

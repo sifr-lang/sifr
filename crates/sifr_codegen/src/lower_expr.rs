@@ -3,6 +3,34 @@
 use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 use sifr_hir::{HirExpr, HirFStringPart, HirParam};
 use sifr_type_system::Type;
+use std::cell::RefCell;
+
+thread_local! {
+    static ALLOWED_PLAIN_CALLS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+}
+
+pub(crate) fn with_allowed_plain_calls<T>(
+    allowed_calls: &[String],
+    f: impl FnOnce() -> T,
+) -> T {
+    ALLOWED_PLAIN_CALLS.with(|calls| {
+        {
+            let mut calls_mut = calls.borrow_mut();
+            calls_mut.extend(allowed_calls.iter().cloned());
+        }
+        let result = f();
+        {
+            let mut calls_mut = calls.borrow_mut();
+            let trunc_len = calls_mut.len().saturating_sub(allowed_calls.len());
+            calls_mut.truncate(trunc_len);
+        }
+        result
+    })
+}
+
+fn is_allowed_plain_call(func: &str) -> bool {
+    ALLOWED_PLAIN_CALLS.with(|calls| calls.borrow().iter().any(|name| name == func))
+}
 
 #[cfg(test)]
 pub fn lower_expr_raw(raw: &str) -> Result<RustExpr, CodegenError> {
@@ -383,9 +411,23 @@ fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
 }
 
 fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> {
-    // Keep plain function-name calls on the legacy fallback path for now because
-    // they may require emitter-context rewrites (ownership/convention wrappers).
-    if !func.contains("::") || is_fallback_special_call_func(func) {
+    if func == "hash" {
+        return try_lower_simple_hash_call_expr(args);
+    }
+    if func == "divmod" {
+        return try_lower_simple_divmod_call_expr(args);
+    }
+    if func == "map" {
+        return try_lower_simple_map_call_expr(args);
+    }
+    if func == "filter" {
+        return try_lower_simple_filter_call_expr(args);
+    }
+
+    if is_reserved_builtin_call_func(func) {
+        return None;
+    }
+    if !func.contains("::") && !is_allowed_plain_call(func) {
         return None;
     }
 
@@ -406,12 +448,163 @@ fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> 
     })
 }
 
+fn try_lower_simple_hash_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
+    let [arg] = args else {
+        return None;
+    };
+    let lowered_arg = try_lower_leaf_or_name_expr(arg)?;
+    let hasher_ident = "__sifr_hash".to_string();
+
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: hasher_ident.clone(),
+                ty: None,
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "std".to_string(),
+                        "collections".to_string(),
+                        "hash_map".to_string(),
+                        "DefaultHasher".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![],
+                },
+            },
+            RustStmt::Expr(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "hash".to_string(),
+                    "Hash".to_string(),
+                    "hash".to_string(),
+                ])),
+                args: vec![
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(lowered_arg),
+                    },
+                    RustExpr::Ref {
+                        mutable: true,
+                        expr: Box::new(RustExpr::Ident(hasher_ident.clone())),
+                    },
+                ],
+            }),
+        ],
+        expr: Some(Box::new(RustExpr::Cast {
+            expr: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "hash".to_string(),
+                    "Hasher".to_string(),
+                    "finish".to_string(),
+                ])),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident(hasher_ident)),
+                }],
+            }),
+            ty: RustType::I64,
+        })),
+    })
+}
+
+fn try_lower_simple_divmod_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
+    let [left, right] = args else {
+        return None;
+    };
+    let lowered_left = try_lower_leaf_or_name_expr(left)?;
+    let lowered_right = try_lower_leaf_or_name_expr(right)?;
+
+    Some(RustExpr::Tuple(vec![
+        RustExpr::BinOp {
+            left: Box::new(lowered_left.clone()),
+            op: "/".to_string(),
+            right: Box::new(lowered_right.clone()),
+        },
+        RustExpr::BinOp {
+            left: Box::new(lowered_left),
+            op: "%".to_string(),
+            right: Box::new(lowered_right),
+        },
+    ]))
+}
+
+fn try_lower_simple_callable_expr(expr: &HirExpr) -> Option<RustExpr> {
+    if let HirExpr::Lambda { params, body, .. } = expr {
+        let lowered_params = params
+            .iter()
+            .map(|param| RustParam::Named {
+                name: param.name.clone(),
+                ty: RustType::Named("_".to_string()),
+            })
+            .collect::<Vec<_>>();
+        return Some(RustExpr::Closure {
+            params: lowered_params,
+            body: Box::new(try_lower_leaf_or_name_expr(body)?),
+            is_move: false,
+        });
+    }
+    try_lower_leaf_or_name_expr(expr)
+}
+
+fn try_lower_simple_map_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
+    let [callable, iter] = args else {
+        return None;
+    };
+    let lowered_callable = try_lower_simple_callable_expr(callable)?;
+    let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
+    let mapped_iter = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "clone".to_string(),
+                args: vec![],
+            }),
+            method: "into_iter".to_string(),
+            args: vec![],
+        }),
+        method: "map".to_string(),
+        args: vec![lowered_callable],
+    };
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "from_iter".to_string()])),
+        args: vec![mapped_iter],
+    })
+}
+
+fn try_lower_simple_filter_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
+    let [callable, iter] = args else {
+        return None;
+    };
+    let lowered_callable = try_lower_simple_callable_expr(callable)?;
+    let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
+    let filtered_iter = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(lowered_iter),
+                method: "clone".to_string(),
+                args: vec![],
+            }),
+            method: "into_iter".to_string(),
+            args: vec![],
+        }),
+        method: "filter".to_string(),
+        args: vec![lowered_callable],
+    };
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "from_iter".to_string()])),
+        args: vec![filtered_iter],
+    })
+}
+
 fn try_lower_simple_method_call_expr(
     object: &HirExpr,
     method: &str,
     args: &[HirExpr],
 ) -> Option<RustExpr> {
-    // Keep typed method calls on fallback path; they frequently need type-specific rewrites.
+    // Typed method calls are handled by the method emission path because they
+    // frequently need type-specific rewrites.
     if object.ty() != &Type::Any || method == "len" {
         return None;
     }
@@ -429,9 +622,17 @@ fn try_lower_simple_method_call_expr(
     })
 }
 
+fn try_lower_dict_get_key_expr(index: &HirExpr) -> Option<RustExpr> {
+    if let HirExpr::StringLiteral(value) = index {
+        return Some(RustExpr::Ident(format!("{value:?}")));
+    }
+    Some(RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(try_lower_leaf_or_name_expr(index)?),
+    })
+}
+
 fn try_lower_simple_constructor_call_expr(class_name: &str, args: &[HirExpr]) -> Option<RustExpr> {
-    // Keep local/user class constructors on fallback path due recursive-field boxing
-    // and subclass-to-base remapping handled by legacy emitter state.
     if !class_name.contains("::") {
         return None;
     }
@@ -454,15 +655,22 @@ fn try_lower_simple_constructor_call_expr(class_name: &str, args: &[HirExpr]) ->
 }
 
 fn try_lower_simple_index_expr(object: &HirExpr, index: &HirExpr) -> Option<RustExpr> {
-    // Keep typed indexing rewrites (dict/list/string/tuple/option) on fallback path.
-    if object.ty() != &Type::Any {
-        return None;
+    match resolve_alias_type(object.ty()) {
+        Type::Dict(_, _) => Some(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
+                method: "get".to_string(),
+                args: vec![try_lower_dict_get_key_expr(index)?],
+            }),
+            method: "cloned".to_string(),
+            args: vec![],
+        }),
+        Type::Any => Some(RustExpr::Index {
+            expr: Box::new(try_lower_leaf_or_name_expr(object)?),
+            index: Box::new(try_lower_leaf_or_name_expr(index)?),
+        }),
+        _ => None,
     }
-
-    Some(RustExpr::Index {
-        expr: Box::new(try_lower_leaf_or_name_expr(object)?),
-        index: Box::new(try_lower_leaf_or_name_expr(index)?),
-    })
 }
 
 fn try_lower_simple_slice_expr(
@@ -471,7 +679,6 @@ fn try_lower_simple_slice_expr(
     stop: Option<&HirExpr>,
     step: Option<&HirExpr>,
 ) -> Option<RustExpr> {
-    // Keep typed slice rewrites and stepped slices on fallback path.
     if object.ty() != &Type::Any || step.is_some() {
         return None;
     }
@@ -489,81 +696,46 @@ fn try_lower_simple_slice_expr(
 fn try_lower_simple_dict_literal_expr(
     keys: &[HirExpr],
     values: &[HirExpr],
-    ty: &Type,
+    _ty: &Type,
 ) -> Option<RustExpr> {
     if keys.len() != values.len() {
         return None;
     }
-
-    if resolve_alias_type(ty) != &Type::Any {
-        return None;
-    }
-
-    let map_ident = "__sifr_dict_literal".to_string();
-    let mut stmts = vec![RustStmt::Let {
-        mutable: true,
-        name: map_ident.clone(),
-        ty: None,
-        value: RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "std".to_string(),
-                "collections".to_string(),
-                "HashMap".to_string(),
-                "new".to_string(),
-            ])),
-            args: vec![],
-        },
-    }];
-
+    let mut entries = Vec::with_capacity(keys.len());
     for (key, value) in keys.iter().zip(values.iter()) {
-        stmts.push(RustStmt::Expr(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(map_ident.clone())),
-            method: "insert".to_string(),
-            args: vec![
-                try_lower_leaf_or_name_expr(key)?,
-                try_lower_leaf_or_name_expr(value)?,
-            ],
-        }));
+        let lowered_key = try_lower_leaf_or_name_expr(key)?;
+        let lowered_value = try_lower_leaf_or_name_expr(value)?;
+        entries.push(format!(
+            "({}, {})",
+            crate::render_expr(&lowered_key),
+            crate::render_expr(&lowered_value)
+        ));
     }
 
-    Some(RustExpr::Block {
-        stmts,
-        expr: Some(Box::new(RustExpr::Ident(map_ident))),
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "HashMap".to_string(),
+            "from".to_string(),
+        ])),
+        args: vec![RustExpr::Ident(format!("[{}]", entries.join(", ")))],
     })
 }
 
-fn try_lower_simple_set_literal_expr(elements: &[HirExpr], ty: &Type) -> Option<RustExpr> {
-    if resolve_alias_type(ty) != &Type::Any {
-        return None;
-    }
-
-    let set_ident = "__sifr_set_literal".to_string();
-    let mut stmts = vec![RustStmt::Let {
-        mutable: true,
-        name: set_ident.clone(),
-        ty: None,
-        value: RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "std".to_string(),
-                "collections".to_string(),
-                "HashSet".to_string(),
-                "new".to_string(),
-            ])),
-            args: vec![],
-        },
-    }];
-
+fn try_lower_simple_set_literal_expr(elements: &[HirExpr], _ty: &Type) -> Option<RustExpr> {
+    let mut lowered_elements = Vec::with_capacity(elements.len());
     for element in elements {
-        stmts.push(RustStmt::Expr(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(set_ident.clone())),
-            method: "insert".to_string(),
-            args: vec![try_lower_leaf_or_name_expr(element)?],
-        }));
+        lowered_elements.push(crate::render_expr(&try_lower_leaf_or_name_expr(element)?));
     }
 
-    Some(RustExpr::Block {
-        stmts,
-        expr: Some(Box::new(RustExpr::Ident(set_ident))),
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "HashSet".to_string(),
+            "from".to_string(),
+        ])),
+        args: vec![RustExpr::Ident(format!(
+            "[{}]",
+            lowered_elements.join(", ")
+        ))],
     })
 }
 
@@ -572,60 +744,60 @@ fn try_lower_simple_list_comp_expr(
     generators: &[(String, HirExpr, Option<HirExpr>)],
     ty: &Type,
 ) -> Option<RustExpr> {
-    if generators.len() != 1 || resolve_alias_type(ty) != &Type::Any {
+    if generators.is_empty() || !matches!(resolve_alias_type(ty), Type::Any | Type::List(_)) {
         return None;
     }
-
-    let (var, iter_expr, maybe_filter) = generators.first()?;
-    if var.contains(',') {
-        return None;
-    }
-
-    let lowered_iter = try_lower_leaf_or_name_expr(iter_expr)?;
-    let iter = if matches!(iter_expr.ty(), Type::Range) {
-        lowered_iter
-    } else {
-        RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_iter),
-                method: "clone".to_string(),
-                args: vec![],
-            }),
-            method: "into_iter".to_string(),
-            args: vec![],
-        }
-    };
 
     let result_ident = "__sifr_list_comp".to_string();
-    let push_stmt = RustStmt::Expr(RustExpr::MethodCall {
+    let mut nested_body = vec![RustStmt::Expr(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(result_ident.clone())),
         method: "push".to_string(),
         args: vec![try_lower_leaf_or_name_expr(expr)?],
-    });
+    })];
 
-    let loop_body = if let Some(filter) = maybe_filter {
-        vec![RustStmt::If {
-            cond: try_lower_leaf_or_name_expr(filter)?,
-            then_body: vec![push_stmt],
-            else_body: None,
-        }]
-    } else {
-        vec![push_stmt]
-    };
+    for (var, iter_expr, maybe_filter) in generators.iter().rev() {
+        if var.contains(',') {
+            return None;
+        }
+        let lowered_iter = try_lower_leaf_or_name_expr(iter_expr)?;
+        let iter = if matches!(iter_expr.ty(), Type::Range) {
+            lowered_iter
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }),
+                method: "into_iter".to_string(),
+                args: vec![],
+            }
+        };
+        let loop_body = if let Some(filter) = maybe_filter {
+            vec![RustStmt::If {
+                cond: try_lower_leaf_or_name_expr(filter)?,
+                then_body: nested_body,
+                else_body: None,
+            }]
+        } else {
+            nested_body
+        };
+        nested_body = vec![RustStmt::For {
+            var: var.clone(),
+            iter,
+            body: loop_body,
+        }];
+    }
 
-    let stmts = vec![
+    let mut stmts = vec![
         RustStmt::Let {
             mutable: true,
             name: result_ident.clone(),
             ty: None,
             value: RustExpr::Vec(vec![]),
         },
-        RustStmt::For {
-            var: var.clone(),
-            iter,
-            body: loop_body,
-        },
     ];
+    stmts.extend(nested_body);
 
     Some(RustExpr::Block {
         stmts,
@@ -639,7 +811,9 @@ fn try_lower_simple_dict_comp_expr(
     generators: &[(String, HirExpr, Option<HirExpr>)],
     ty: &Type,
 ) -> Option<RustExpr> {
-    if generators.len() != 1 || resolve_alias_type(ty) != &Type::Any {
+    if generators.len() != 1
+        || !matches!(resolve_alias_type(ty), Type::Any | Type::Dict(_, _))
+    {
         return None;
     }
 
@@ -689,12 +863,7 @@ fn try_lower_simple_dict_comp_expr(
             name: result_ident.clone(),
             ty: None,
             value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "std".to_string(),
-                    "collections".to_string(),
-                    "HashMap".to_string(),
-                    "new".to_string(),
-                ])),
+                func: Box::new(RustExpr::Path(vec!["HashMap".to_string(), "new".to_string()])),
                 args: vec![],
             },
         },
@@ -716,7 +885,9 @@ fn try_lower_simple_set_comp_expr(
     generators: &[(String, HirExpr, Option<HirExpr>)],
     ty: &Type,
 ) -> Option<RustExpr> {
-    if generators.len() != 1 || resolve_alias_type(ty) != &Type::Any {
+    if generators.len() != 1
+        || !matches!(resolve_alias_type(ty), Type::Any | Type::Set(_))
+    {
         return None;
     }
 
@@ -763,12 +934,7 @@ fn try_lower_simple_set_comp_expr(
             name: result_ident.clone(),
             ty: None,
             value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "std".to_string(),
-                    "collections".to_string(),
-                    "HashSet".to_string(),
-                    "new".to_string(),
-                ])),
+                func: Box::new(RustExpr::Path(vec!["HashSet".to_string(), "new".to_string()])),
                 args: vec![],
             },
         },
@@ -792,7 +958,10 @@ fn try_lower_simple_generator_expr(
     filter: Option<&HirExpr>,
     ty: &Type,
 ) -> Option<RustExpr> {
-    if resolve_alias_type(ty) != &Type::Any || filter.is_some() || var.contains(',') {
+    if !matches!(resolve_alias_type(ty), Type::Any | Type::List(_))
+        || filter.is_some()
+        || var.contains(',')
+    {
         return None;
     }
 
@@ -820,7 +989,7 @@ fn try_lower_simple_generator_expr(
     })
 }
 
-fn is_fallback_special_call_func(func: &str) -> bool {
+fn is_reserved_builtin_call_func(func: &str) -> bool {
     matches!(
         func,
         "print"
@@ -1004,6 +1173,9 @@ fn is_safe_simple_compare(op: &str, left_ty: &Type, right_ty: &Type) -> bool {
     }
     let left_unaliased = resolve_alias_type(left_ty);
     let right_unaliased = resolve_alias_type(right_ty);
+    if left_unaliased == right_unaliased && matches!(left_unaliased, Type::TypeVar(_)) {
+        return true;
+    }
     if left_unaliased == right_unaliased && matches!(left_unaliased, Type::Enum { .. }) {
         return matches!(op, "==" | "!=");
     }
@@ -1035,6 +1207,11 @@ fn is_safe_simple_binop(op: &str, left_ty: &Type, right_ty: &Type, result_ty: &T
         && is_mixed_simple_float_binop(op, left_ty, right_ty, result_ty)
     {
         return true;
+    }
+    if matches!(op, "&" | "|" | "^" | "<<" | ">>") {
+        return is_same_simple_numeric_kind(left_ty, right_ty)
+            && is_same_simple_numeric_kind(left_ty, result_ty)
+            && is_int_like_simple(left_ty);
     }
     if !matches!(op, "+" | "-" | "*" | "%") {
         return false;
@@ -1139,7 +1316,10 @@ fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
 
 fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::Name { name, ty } = expr {
-        if normalize_simple_compare_scalar_type(ty).is_some() || is_enum_like_simple(ty) {
+        if normalize_simple_compare_scalar_type(ty).is_some()
+            || is_enum_like_simple(ty)
+            || matches!(resolve_alias_type(ty), Type::TypeVar(_))
+        {
             return Some(RustExpr::Ident(name.clone()));
         }
     }
@@ -2827,6 +3007,72 @@ mod tests {
     }
 
     #[test]
+    fn lowers_hash_builtin_call_with_leaf_arg() {
+        let expr = HirExpr::Call {
+            func: "hash".to_string(),
+            args: vec![HirExpr::Name {
+                name: "item".to_string(),
+                ty: Type::Class {
+                    name: "Color".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: None,
+                },
+            }],
+            ty: Type::Int,
+        };
+        assert!(try_lower_leaf_expr(&expr).is_some());
+    }
+
+    #[test]
+    fn lowers_divmod_builtin_call_with_leaf_args() {
+        let expr = HirExpr::Call {
+            func: "divmod".to_string(),
+            args: vec![HirExpr::IntLiteral(17), HirExpr::IntLiteral(5)],
+            ty: Type::Tuple(vec![Type::Int, Type::Int]),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_some());
+    }
+
+    #[test]
+    fn lowers_map_builtin_call_with_typed_lambda() {
+        let expr = HirExpr::Call {
+            func: "map".to_string(),
+            args: vec![
+                HirExpr::Lambda {
+                    params: vec![HirParam {
+                        name: "x".to_string(),
+                        ty: Type::Int,
+                        default: None,
+                        keyword_only: false,
+                        convention: sifr_type_system::ParamConvention::Borrow,
+                    }],
+                    body: Box::new(HirExpr::BinOp {
+                        left: Box::new(HirExpr::Name {
+                            name: "x".to_string(),
+                            ty: Type::Int,
+                        }),
+                        op: "*".to_string(),
+                        right: Box::new(HirExpr::IntLiteral(2)),
+                        ty: Type::Int,
+                    }),
+                    ty: Type::Callable(
+                        vec![Type::Int],
+                        vec![sifr_type_system::ParamConvention::Own],
+                        Box::new(Type::Int),
+                    ),
+                },
+                HirExpr::Name {
+                    name: "nums".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+            ],
+            ty: Type::List(Box::new(Type::Int)),
+        };
+        assert!(try_lower_leaf_expr(&expr).is_some());
+    }
+
+    #[test]
     fn does_not_lower_call_with_non_leaf_arg() {
         let expr = HirExpr::Call {
             func: "compute".to_string(),
@@ -3027,14 +3273,14 @@ mod tests {
         let lowered = try_lower_leaf_expr(&expr).expect("dict literal lowered");
         assert!(matches!(
             lowered,
-            RustExpr::Block { stmts, expr: Some(result) }
-                if matches!(stmts.first(), Some(RustStmt::Let { name, mutable, .. }) if name == "__sifr_dict_literal" && *mutable)
-                    && matches!(result.as_ref(), RustExpr::Ident(name) if name == "__sifr_dict_literal")
+            RustExpr::FnCall { func, args }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["HashMap".to_string(), "from".to_string()])
+                    && matches!(args.first(), Some(RustExpr::Ident(entries)) if entries.starts_with("[("))
         ));
     }
 
     #[test]
-    fn does_not_lower_dict_literal_with_non_leaf_entry() {
+    fn lowers_dict_literal_with_nested_lowerable_entry() {
         let expr = HirExpr::DictLiteral {
             keys: vec![HirExpr::StringLiteral("k".to_string())],
             values: vec![HirExpr::ListComp {
@@ -3054,17 +3300,22 @@ mod tests {
             }],
             ty: Type::Any,
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        assert!(try_lower_leaf_expr(&expr).is_some());
     }
 
     #[test]
-    fn does_not_lower_dict_literal_on_typed_dict() {
+    fn lowers_dict_literal_on_typed_dict() {
         let expr = HirExpr::DictLiteral {
             keys: vec![HirExpr::StringLiteral("k".to_string())],
             values: vec![HirExpr::IntLiteral(1)],
             ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        let lowered = try_lower_leaf_expr(&expr).expect("typed dict literal lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::FnCall { func, .. }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["HashMap".to_string(), "from".to_string()])
+        ));
     }
 
     #[test]
@@ -3077,14 +3328,14 @@ mod tests {
         let lowered = try_lower_leaf_expr(&expr).expect("set literal lowered");
         assert!(matches!(
             lowered,
-            RustExpr::Block { stmts, expr: Some(result) }
-                if matches!(stmts.first(), Some(RustStmt::Let { name, mutable, .. }) if name == "__sifr_set_literal" && *mutable)
-                    && matches!(result.as_ref(), RustExpr::Ident(name) if name == "__sifr_set_literal")
+            RustExpr::FnCall { func, args }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["HashSet".to_string(), "from".to_string()])
+                    && matches!(args.first(), Some(RustExpr::Ident(entries)) if entries.starts_with("["))
         ));
     }
 
     #[test]
-    fn does_not_lower_set_literal_with_non_leaf_entry() {
+    fn lowers_set_literal_with_nested_lowerable_entry() {
         let expr = HirExpr::SetLiteral {
             elements: vec![HirExpr::ListComp {
                 expr: Box::new(HirExpr::Name {
@@ -3103,16 +3354,21 @@ mod tests {
             }],
             ty: Type::Any,
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        assert!(try_lower_leaf_expr(&expr).is_some());
     }
 
     #[test]
-    fn does_not_lower_set_literal_on_typed_set() {
+    fn lowers_set_literal_on_typed_set() {
         let expr = HirExpr::SetLiteral {
             elements: vec![HirExpr::IntLiteral(1)],
             ty: Type::Set(Box::new(Type::Int)),
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        let lowered = try_lower_leaf_expr(&expr).expect("typed set literal lowered");
+        assert!(matches!(
+            lowered,
+            RustExpr::FnCall { func, .. }
+                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["HashSet".to_string(), "from".to_string()])
+        ));
     }
 
     #[test]
@@ -3144,7 +3400,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_list_comp_with_multiple_generators() {
+    fn lowers_list_comp_with_multiple_generators() {
         let expr = HirExpr::ListComp {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -3170,11 +3426,11 @@ mod tests {
             ],
             ty: Type::Any,
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        assert!(try_lower_leaf_expr(&expr).is_some());
     }
 
     #[test]
-    fn does_not_lower_list_comp_on_typed_list() {
+    fn lowers_list_comp_on_typed_list() {
         let expr = HirExpr::ListComp {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -3190,7 +3446,7 @@ mod tests {
             )],
             ty: Type::List(Box::new(Type::Int)),
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        assert!(try_lower_leaf_expr(&expr).is_some());
     }
 
     #[test]
@@ -3260,7 +3516,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_dict_comp_on_typed_dict() {
+    fn lowers_dict_comp_on_typed_dict() {
         let expr = HirExpr::DictComp {
             key_expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -3280,7 +3536,7 @@ mod tests {
             )],
             ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        assert!(try_lower_leaf_expr(&expr).is_some());
     }
 
     #[test]
@@ -3342,7 +3598,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_set_comp_on_typed_set() {
+    fn lowers_set_comp_on_typed_set() {
         let expr = HirExpr::SetComp {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -3358,7 +3614,7 @@ mod tests {
             )],
             ty: Type::Set(Box::new(Type::Int)),
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        assert!(try_lower_leaf_expr(&expr).is_some());
     }
 
     #[test]
@@ -3414,7 +3670,7 @@ mod tests {
     }
 
     #[test]
-    fn does_not_lower_generator_expr_on_typed_result() {
+    fn lowers_generator_expr_on_typed_list_result() {
         let expr = HirExpr::GeneratorExpr {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
@@ -3428,7 +3684,7 @@ mod tests {
             filter: None,
             ty: Type::List(Box::new(Type::Int)),
         };
-        assert!(try_lower_leaf_expr(&expr).is_none());
+        assert!(try_lower_leaf_expr(&expr).is_some());
     }
 
     #[test]

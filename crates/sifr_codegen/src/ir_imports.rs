@@ -181,6 +181,22 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds, allow_raw: bool) {
                 collect_stmt(stmt, needs, allow_raw);
             }
         }
+        RustStmt::LocalFn {
+            params, ret, body, ..
+        } => {
+            for param in params {
+                match param {
+                    RustParam::Named { ty, .. } => collect_type(ty, needs, allow_raw),
+                    RustParam::SelfParam { .. } => {}
+                }
+            }
+            if let Some(ret) = ret {
+                collect_type(ret, needs, allow_raw);
+            }
+            for stmt in body {
+                collect_stmt(stmt, needs, allow_raw);
+            }
+        }
     }
 }
 

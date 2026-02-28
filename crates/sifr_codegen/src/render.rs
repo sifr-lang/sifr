@@ -403,6 +403,32 @@ impl Renderer {
                 self.dedent();
                 self.writeln("}");
             }
+            RustStmt::LocalFn {
+                name,
+                params,
+                ret,
+                body,
+            } => {
+                let rendered_params = params
+                    .iter()
+                    .map(Self::render_param_string)
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                if let Some(ret) = ret {
+                    self.writeln(&format!(
+                        "fn {name}({rendered_params}) -> {} {{",
+                        Self::render_type_string(ret)
+                    ));
+                } else {
+                    self.writeln(&format!("fn {name}({rendered_params}) {{"));
+                }
+                self.indent();
+                for stmt in body {
+                    self.render_stmt(stmt);
+                }
+                self.dedent();
+                self.writeln("}");
+            }
             RustStmt::Break => self.writeln("break;"),
             RustStmt::Continue => self.writeln("continue;"),
             RustStmt::Block(stmts) => {

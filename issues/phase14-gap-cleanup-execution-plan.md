@@ -1,7 +1,8 @@
 # Phase 14 Gap Cleanup Execution Plan (Implementation Blueprint)
 
 Date: 2026-02-26  
-Status: In Progress  
+Status: Done  
+Completed on: 2026-02-25  
 Owner: Codegen architecture closeout  
 Primary scope:
 1. `issues/216-phase14-codegen-architecture-closeout-epic.md`
@@ -9,6 +10,37 @@ Primary scope:
 3. `issues/218-phase14-promote-full-ir-module-assembly.md`
 4. `issues/219-phase14-enforce-rawcode-zero-in-core-production-path.md`
 5. `issues/220-phase14-structural-passes-hard-gate-no-raw-fallback.md`
+
+Completion evidence:
+1. `issues/216-phase14-codegen-architecture-closeout-epic.md` (child issues merged in order + gate results)
+2. `issues/217-phase14-remove-fallback-first-class-pipeline.md` (Merged PR: `#784`)
+3. `issues/218-phase14-promote-full-ir-module-assembly.md` (Merged PR: `#785`)
+4. `issues/219-phase14-enforce-rawcode-zero-in-core-production-path.md` (Merged PR: `#786`)
+5. `issues/220-phase14-structural-passes-hard-gate-no-raw-fallback.md` (Merged PR: `#787`)
+
+---
+
+## Execution Status (Final)
+
+- [x] WS0 baseline inventory and ownership mapping completed and consumed by follow-up migration slices.
+- [x] WS1 structured expression lowering expansion completed.
+- [x] WS2 structured statement lowering expansion completed.
+- [x] WS3 top-level item migration completed.
+- [x] WS4 bridge/fallback decommission completed.
+- [x] WS5 production `RawCode`/`SynItem` hard gate completed.
+- [x] WS6 structural-pass hard gate completed.
+- [x] WS7 epic closeout and checklist/doc updates completed.
+
+Merged PR chain:
+1. `#784` (Issue 217)
+2. `#785` (Issue 218)
+3. `#786` (Issue 219)
+4. `#787` (Issue 220)
+5. `#791` (Issue 216 closeout + final fixture parity cleanup)
+
+Final `SynItem` policy outcome:
+1. User-code assembly path: `SynItem` forbidden in production final assembly.
+2. Any remaining non-user boundary usage must be explicit, documented, and hard-gated from production user-code assembly paths.
 
 ---
 
@@ -340,3 +372,22 @@ No CI waiting required for progression.
 6. local validation command results
 7. residual risks and follow-ups
 8. Merge only after local gate passes.
+
+---
+
+## Closeout Validation Evidence
+
+Recorded on `main` closeout (2026-02-25) in `issues/216-phase14-codegen-architecture-closeout-epic.md`:
+1. `cargo test -p sifr_codegen`
+2. `cargo clippy -p sifr_codegen -- -D warnings`
+3. `scripts/run_e2e_pass.sh` (defaults)
+4. `cargo test -p sifr --test e2e test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus -- --nocapture`
+5. `cargo test --workspace`
+6. `cargo clippy --workspace -- -D warnings`
+
+Additional validation rerun for this plan-doc update is executed locally and recorded below:
+1. `cargo test -p sifr_codegen` -> pass (`450` passed, `0` failed)
+2. `cargo clippy -p sifr_codegen -- -D warnings` -> pass
+3. `cargo run -q -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr` -> pass (`total = 24`, `verdict = high`)
+4. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass (`current_has_t = true`, `today_has_dash = true`)
+5. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`cargo test -p sifr` + `run_e2e_pass.sh`; final `test_e2e_pass` result: `394` passed, `0` failed)
