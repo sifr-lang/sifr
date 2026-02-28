@@ -476,6 +476,94 @@ impl RustEmitter {
                 };
                 Some(iter_chain)
             }
+            "any" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                        self.try_lower_registry_expr_strict(&args[0])?,
+                    ))),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "any".to_string(),
+                args: vec![crate::RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "x".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
+                        "x".to_string(),
+                    )))),
+                    is_move: false,
+                }],
+            }),
+            "all" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                        self.try_lower_registry_expr_strict(&args[0])?,
+                    ))),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "all".to_string(),
+                args: vec![crate::RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "x".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
+                        "x".to_string(),
+                    )))),
+                    is_move: false,
+                }],
+            }),
+            "reversed" if args.len() == 1 => Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                self.try_lower_registry_expr_strict(&args[0])?,
+                            ))),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    }),
+                    method: "rev".to_string(),
+                    args: vec![],
+                }),
+                method: "collect::<Vec<_>>".to_string(),
+                args: vec![],
+            }),
+            "zip" if args.len() == 2 => Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                self.try_lower_registry_expr_strict(&args[0])?,
+                            ))),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    }),
+                    method: "zip".to_string(),
+                    args: vec![crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                self.try_lower_registry_expr_strict(&args[1])?,
+                            ))),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    }],
+                }),
+                method: "collect::<Vec<_>>".to_string(),
+                args: vec![],
+            }),
             "abs" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 Some(crate::RustExpr::MethodCall {

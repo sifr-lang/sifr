@@ -1103,8 +1103,10 @@ impl RustEmitter {
         func: &str,
         args: &[HirExpr],
     ) -> Result<bool, crate::CodegenError> {
-        if matches!(func, "bool" | "pow" | "bigint" | "round" | "abs" | "sum")
-            || ((func == "min" || func == "max") && args.len() == 2)
+        if matches!(
+            func,
+            "bool" | "pow" | "bigint" | "round" | "abs" | "sum" | "any" | "all" | "reversed"
+        ) || ((func == "min" || func == "max" || func == "zip") && args.len() == 2)
         {
             if let Some(lowered) = self.try_lower_registry_builtin_call_expr(func, args) {
                 self.write_registry_expr(&lowered);
@@ -1373,48 +1375,6 @@ impl RustEmitter {
                 self.write("_v }");
                 Ok(true)
             }
-            "any" => {
-                let [arg] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                self.write("(");
-                self.write(&arg_rendered);
-                self.write(").iter().any(|x| *x)");
-                Ok(true)
-            }
-            "all" => {
-                let [arg] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                self.write("(");
-                self.write(&arg_rendered);
-                self.write(").iter().all(|x| *x)");
-                Ok(true)
-            }
-            "reversed" => {
-                let [arg] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                self.write("(");
-                self.write(&arg_rendered);
-                self.write(").iter().cloned().rev().collect::<Vec<_>>()");
-                Ok(true)
-            }
             "enumerate" => {
                 let [arg] = args else {
                     return Ok(false);
@@ -1429,26 +1389,6 @@ impl RustEmitter {
                 self.write(
                     ").iter().cloned().enumerate().map(|(i, v)| (i as i64, v)).collect::<Vec<_>>()",
                 );
-                Ok(true)
-            }
-            "zip" => {
-                let [left, right] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(left_rendered) = self.try_render_structured_expr(left)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                let Some(right_rendered) = self.try_render_structured_expr(right)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                self.write("(");
-                self.write(&left_rendered);
-                self.write(").iter().cloned().zip((");
-                self.write(&right_rendered);
-                self.write(").iter().cloned()).collect::<Vec<_>>()");
                 Ok(true)
             }
             _ => Ok(false),

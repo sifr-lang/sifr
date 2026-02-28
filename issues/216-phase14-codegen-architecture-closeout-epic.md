@@ -190,3 +190,11 @@ Latest validation loop (2026-02-28, Pass G):
 - `./scripts/run_all_tests.sh` -> pass.
 - Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
 - Strict re-audit evidence: `self.write(...)` now `1050` total in `crates/sifr_codegen/src` (`expr_render_helpers.rs` `432 -> 375` in this pass).
+
+Latest validation loop (2026-02-28, Pass H):
+- Shared registry IR lowering expanded for special-call builtins `any`, `all`, `reversed`, `zip`.
+- Duplicate write-based emission branches for these builtins were removed from `expr_render_helpers.rs`.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
+- Strict re-audit evidence: `self.write(...)` now `1036` total in `crates/sifr_codegen/src` (`expr_render_helpers.rs` `375 -> 361` in this pass).

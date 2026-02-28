@@ -128,6 +128,12 @@ Loop progress log:
 68. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
 69. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 70. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1050` (`expr_render_helpers.rs` reduced `432 -> 375`).
+71. 2026-02-28 Pass H updates:
+72. Added registry IR lowering coverage for additional special-call builtins (`any`, `all`, `reversed`, `zip`) in `intrinsic_method_emitters.rs`.
+73. Removed duplicated write-based special-call branches for `any`/`all`/`reversed`/`zip` in `expr_render_helpers.rs`; these now route through registry IR lowering.
+74. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
+75. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+76. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1036` (`expr_render_helpers.rs` reduced `375 -> 361`).
 
 ### Next Loop To-do (Evidence-Based)
 
