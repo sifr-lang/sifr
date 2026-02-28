@@ -444,7 +444,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_registry_builtin_call_expr(
+    pub(crate) fn try_lower_registry_builtin_call_expr(
         &mut self,
         func: &str,
         args: &[HirExpr],
@@ -611,6 +611,13 @@ impl RustEmitter {
                     })
                 }
             }
+            "bigint" if args.len() == 1 => Some(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "BigInt".to_string(),
+                    "from".to_string(),
+                ])),
+                args: vec![self.try_lower_registry_expr_strict(&args[0])?],
+            }),
             "str" if args.len() == 1 => Some(crate::RustExpr::FormatMacro {
                 name: "format".to_string(),
                 format_str: "{}".to_string(),

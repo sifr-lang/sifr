@@ -121,6 +121,13 @@ Loop progress log:
 61. Full demo sweep: `demos/*.sifr` -> pass (`83/83`).
 62. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1107`.
 63. File-level progress: `expr_ref_emitter.rs` now has `0` direct `self.write(...)`; `method_call_emitter.rs=0`; `intrinsic_method_emitters.rs=0`.
+64. 2026-02-28 Pass G updates:
+65. Converted structured plain-call emission in `expr_render_helpers.rs` to emit IR `RustExpr::FnCall` (removed direct write-based call assembly).
+66. Delegated additional special-call builtins to registry IR lowering (`bool`, `pow`, `bigint`, `round`, `abs`, `sum`, plus 2-arg `min/max`) and removed duplicated write-based branches.
+67. Reduced `min/max` fallback branch in `expr_render_helpers.rs` to list-aggregator case only (`args.len()==1`) with 2-arg path handled by registry lowering.
+68. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
+69. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+70. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1050` (`expr_render_helpers.rs` reduced `432 -> 375`).
 
 ### Next Loop To-do (Evidence-Based)
 

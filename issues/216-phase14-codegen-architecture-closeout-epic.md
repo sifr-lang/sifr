@@ -182,3 +182,11 @@ Latest validation loop (2026-02-28, Pass F):
 - `./scripts/run_all_tests.sh` -> pass.
 - Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
 - Strict re-audit evidence: `self.write(...)` reduced to `1107` total in `crates/sifr_codegen/src`; remaining highest-write files are still `expr_render_helpers.rs` and `stmt_support_emitter.rs`.
+
+Latest validation loop (2026-02-28, Pass G):
+- Structured plain-call emission migrated to IR `FnCall` in `expr_render_helpers.rs`.
+- Additional builtin special-calls now route through shared registry IR lowering (`bool`, `pow`, `bigint`, `round`, `abs`, `sum`, and 2-arg `min/max`), with duplicate write-based branches removed.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
+- Strict re-audit evidence: `self.write(...)` now `1050` total in `crates/sifr_codegen/src` (`expr_render_helpers.rs` `432 -> 375` in this pass).
