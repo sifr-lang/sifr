@@ -248,3 +248,10 @@ Latest validation loop (2026-02-28, Pass N):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Strict re-audit evidence: `slice_emitter.rs` removed; total `self.write(...)` now `896` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-02-28, Pass O):
+- Migrated `match_emitter.rs` from fragmented `.write(...)` emission to rendered pattern/guard line assembly helpers.
+- Preserved match semantics for option/union patterns, class capture substitution in guards, and string-pattern guard behavior.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Strict re-audit evidence: `match_emitter.rs` now has `0` direct `self.write(...)`; total `self.write(...)` is now `867` in `crates/sifr_codegen/src`.

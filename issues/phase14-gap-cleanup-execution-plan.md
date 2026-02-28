@@ -169,6 +169,12 @@ Loop progress log:
 109. Validation: `./scripts/run_all_tests.sh` -> pass.
 110. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 111. Strict implementation re-audit refresh: `slice_emitter.rs` removed; total `self.write(...)` in `crates/sifr_codegen/src` -> `896`.
+112. 2026-02-28 Pass O updates:
+113. Completed `match_emitter.rs` migration from token-by-token writes to line-based pattern/guard rendering helpers; direct `self.write(...)` usage in the file removed.
+114. Kept semantics for option/non-option-union class patterns, string literal guard handling, and guard substitution paths while switching to rendered-line assembly.
+115. Validation: `./scripts/run_all_tests.sh` -> pass.
+116. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+117. Strict implementation re-audit refresh: `match_emitter.rs` direct `self.write(...)` -> `0`; total `self.write(...)` in `crates/sifr_codegen/src` -> `867`.
 
 ### Next Loop To-do (Evidence-Based)
 
@@ -183,7 +189,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 1. [x] `helpers.rs` (completed in Pass L; now `0` direct `self.write(...)`)
 2. [x] `render.rs` (completed in Pass M; now `0` direct `self.write(...)`)
 3. [x] `slice_emitter.rs` (completed in Pass N; dead module removed)
-4. [ ] `match_emitter.rs` (`29` writes; pattern arm lowering primitive consumed by stmt emission)
+4. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
 5. [ ] `expr_render_helpers.rs` (`305` writes; core expression lowering hot path)
 6. [ ] `stmt_support_emitter.rs` (`218` writes; core statement lowering hot path)
 7. [ ] `function_emitter.rs` (`50` writes; item-level wrapper over stmt/expr lowering)

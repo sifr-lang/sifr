@@ -34,6 +34,110 @@ impl RustEmitter {
         Self::substitute_class_captures_in_guard(&guard_code, pattern, is_non_option_union)
     }
 
+    fn render_match_arm_pattern(
+        &mut self,
+        pattern: &HirPattern,
+        subject_ty: &Type,
+        is_option: bool,
+        is_non_option_union: bool,
+    ) -> String {
+        match pattern {
+            HirPattern::Wildcard => "_".to_string(),
+            HirPattern::None => {
+                if is_option {
+                    "None".to_string()
+                } else {
+                    "_".to_string()
+                }
+            }
+            HirPattern::Capture { name, ty } => {
+                if is_option {
+                    let _ = ty;
+                    format!("Some({name})")
+                } else {
+                    name.clone()
+                }
+            }
+            HirPattern::Literal { value } => {
+                if let HirExpr::StringLiteral(_) = value {
+                    "__s".to_string()
+                } else {
+                    self.render_match_pattern_value(value)
+                }
+            }
+            HirPattern::Or { patterns } => {
+                let has_str = patterns.iter().any(|p| {
+                    matches!(
+                        p,
+                        HirPattern::Literal {
+                            value: HirExpr::StringLiteral(_)
+                        }
+                    )
+                });
+                if has_str {
+                    "__s".to_string()
+                } else {
+                    patterns
+                        .iter()
+                        .map(|p| match p {
+                            HirPattern::Literal { value } => self.render_match_pattern_value(value),
+                            HirPattern::None => "None".to_string(),
+                            HirPattern::Wildcard => "_".to_string(),
+                            HirPattern::Value { path } => path.join("::"),
+                            _ => "_".to_string(),
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" | ")
+                }
+            }
+            HirPattern::Class { class_name, fields } => {
+                if is_non_option_union {
+                    let enum_name = subject_ty.union_enum_name();
+                    let variant_name = if let Type::Union(members) = subject_ty {
+                        let target_ty = match class_name.as_str() {
+                            "int" => Some(Type::Int),
+                            "str" => Some(Type::Str),
+                            "float" => Some(Type::Float),
+                            "bool" => Some(Type::Bool),
+                            other => members
+                                .iter()
+                                .find(|m| matches!(m, Type::Class { name, .. } if name == other))
+                                .cloned(),
+                        };
+                        if let Some(ty) = target_ty {
+                            ty.union_variant_name()
+                        } else {
+                            class_name.clone()
+                        }
+                    } else {
+                        class_name.clone()
+                    };
+                    if fields.is_empty() {
+                        format!("{enum_name}::{variant_name}(_)")
+                    } else {
+                        format!("{enum_name}::{variant_name}(__inner)")
+                    }
+                } else {
+                    "__matched".to_string()
+                }
+            }
+            HirPattern::Value { path } => path.join("::"),
+            HirPattern::Tuple { elements } => {
+                let rendered = elements
+                    .iter()
+                    .map(|elem| match elem {
+                        HirPattern::Capture { name, .. } => name.clone(),
+                        HirPattern::Wildcard => "_".to_string(),
+                        HirPattern::Literal { value } => self.render_match_pattern_value(value),
+                        _ => "_".to_string(),
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("({rendered})")
+            }
+        }
+    }
+
     pub(super) fn emit_match(
         &mut self,
         subject: &HirExpr,
@@ -44,11 +148,8 @@ impl RustEmitter {
         let is_option = is_option_type(subject_ty);
         let is_non_option_union = matches!(subject_ty, Type::Union(_)) && !is_option;
 
-        self.write_indent();
-        // For both union and non-union subjects, emit a direct Rust match.
-        self.write("match ");
-        self.emit_expr(subject);
-        self.write(" {\n");
+        let subject_rendered = self.render_expr_with_lowered_path(subject);
+        self.writeln(&format!("match {subject_rendered} {{"));
 
         self.indent += 1;
 
@@ -85,8 +186,6 @@ impl RustEmitter {
         is_option: bool,
         is_non_option_union: bool,
     ) {
-        self.write_indent();
-
         // Build the pattern part (without =>)
         let has_str_guard = matches!(
             pattern,
@@ -94,120 +193,8 @@ impl RustEmitter {
                 value: HirExpr::StringLiteral(_)
             }
         ) || matches!(pattern, HirPattern::Or { patterns } if patterns.iter().any(|p| matches!(p, HirPattern::Literal { value: HirExpr::StringLiteral(_) })));
-
-        match pattern {
-            HirPattern::Wildcard => {
-                self.write("_");
-            }
-            HirPattern::None => {
-                if is_option {
-                    self.write("None");
-                } else {
-                    self.write("_");
-                }
-            }
-            HirPattern::Capture { name, ty } => {
-                if is_option {
-                    let _ = ty;
-                    self.write(&format!("Some({name})"));
-                } else {
-                    self.write(name);
-                }
-            }
-            HirPattern::Literal { value } => {
-                if let HirExpr::StringLiteral(_) = value {
-                    // String matching needs a guard since Rust can't match String directly
-                    self.write("__s");
-                } else {
-                    let lit_code = self.render_match_pattern_value(value);
-                    self.write(&lit_code);
-                }
-            }
-            HirPattern::Or { patterns } => {
-                let has_str = patterns.iter().any(|p| {
-                    matches!(
-                        p,
-                        HirPattern::Literal {
-                            value: HirExpr::StringLiteral(_)
-                        }
-                    )
-                });
-                if has_str {
-                    self.write("__s");
-                } else {
-                    let mut parts = Vec::new();
-                    for p in patterns {
-                        match p {
-                            HirPattern::Literal { value } => {
-                                let lit_code = self.render_match_pattern_value(value);
-                                parts.push(lit_code);
-                            }
-                            HirPattern::None => parts.push("None".to_string()),
-                            HirPattern::Wildcard => parts.push("_".to_string()),
-                            HirPattern::Value { path } => {
-                                parts.push(path.join("::"));
-                            }
-                            _ => parts.push("_".to_string()),
-                        }
-                    }
-                    self.write(&parts.join(" | "));
-                }
-            }
-            HirPattern::Class { class_name, fields } => {
-                if is_non_option_union {
-                    let enum_name = subject_ty.union_enum_name();
-                    let variant_name = if let Type::Union(members) = subject_ty {
-                        let target_ty = match class_name.as_str() {
-                            "int" => Some(Type::Int),
-                            "str" => Some(Type::Str),
-                            "float" => Some(Type::Float),
-                            "bool" => Some(Type::Bool),
-                            other => members
-                                .iter()
-                                .find(|m| matches!(m, Type::Class { name, .. } if name == other))
-                                .cloned(),
-                        };
-                        if let Some(ty) = target_ty {
-                            ty.union_variant_name()
-                        } else {
-                            class_name.clone()
-                        }
-                    } else {
-                        class_name.clone()
-                    };
-                    if fields.is_empty() {
-                        self.write(&format!("{enum_name}::{variant_name}(_)"));
-                    } else {
-                        self.write(&format!("{enum_name}::{variant_name}(__inner)"));
-                    }
-                } else {
-                    // For direct struct patterns, use __matched with field guards
-                    self.write("__matched");
-                }
-            }
-            HirPattern::Value { path } => {
-                let rust_path = path.join("::");
-                self.write(&rust_path);
-            }
-            HirPattern::Tuple { elements } => {
-                self.write("(");
-                for (i, elem) in elements.iter().enumerate() {
-                    if i > 0 {
-                        self.write(", ");
-                    }
-                    match elem {
-                        HirPattern::Capture { name, .. } => self.write(name),
-                        HirPattern::Wildcard => self.write("_"),
-                        HirPattern::Literal { value } => {
-                            let lit_code = self.render_match_pattern_value(value);
-                            self.write(&lit_code);
-                        }
-                        _ => self.write("_"),
-                    }
-                }
-                self.write(")");
-            }
-        }
+        let pattern_code =
+            self.render_match_arm_pattern(pattern, subject_ty, is_option, is_non_option_union);
 
         // Build field guards for class patterns with literal field values
         let class_field_guards: Vec<String> = if let HirPattern::Class { fields, .. } = pattern {
@@ -231,7 +218,7 @@ impl RustEmitter {
         };
 
         // Add guard
-        if has_str_guard {
+        let guard_suffix = if has_str_guard {
             // Build string guard condition
             let str_guard = match pattern {
                 HirPattern::Literal {
@@ -258,9 +245,9 @@ impl RustEmitter {
             if let Some(guard_expr) = guard {
                 let guard_code =
                     self.render_match_guard_expr(guard_expr, pattern, is_non_option_union);
-                self.write(&format!(" if ({str_guard}) && ({guard_code})"));
+                format!(" if ({str_guard}) && ({guard_code})")
             } else {
-                self.write(&format!(" if {str_guard}"));
+                format!(" if {str_guard}")
             }
         } else if !class_field_guards.is_empty() {
             let mut all_guards = class_field_guards;
@@ -269,13 +256,16 @@ impl RustEmitter {
                     self.render_match_guard_expr(guard_expr, pattern, is_non_option_union);
                 all_guards.push(guard_code);
             }
-            self.write(&format!(" if {}", all_guards.join(" && ")));
+            format!(" if {}", all_guards.join(" && "))
         } else if let Some(guard_expr) = guard {
             let guard_code = self.render_match_guard_expr(guard_expr, pattern, is_non_option_union);
-            self.write(&format!(" if {guard_code}"));
-        }
+            format!(" if {guard_code}")
+        } else {
+            String::new()
+        };
 
-        self.write(" => {\n");
+        self.writeln(&format!("{pattern_code}{guard_suffix} => {{"));
+
         self.indent += 1;
 
         // For class patterns with fields on union types, destructure
@@ -283,15 +273,13 @@ impl RustEmitter {
             if is_non_option_union && !fields.is_empty() {
                 for (fname, fpat) in fields {
                     if let HirPattern::Capture { name, .. } = fpat {
-                        self.write_indent();
-                        self.write(&format!("let {name} = __inner.{fname};\n"));
+                        self.writeln(&format!("let {name} = __inner.{fname};"));
                     }
                 }
             } else if !is_non_option_union {
                 for (fname, fpat) in fields {
                     if let HirPattern::Capture { name, .. } = fpat {
-                        self.write_indent();
-                        self.write(&format!("let {name} = __matched.{fname};\n"));
+                        self.writeln(&format!("let {name} = __matched.{fname};"));
                     }
                 }
             }
