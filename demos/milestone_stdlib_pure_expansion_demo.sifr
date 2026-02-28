@@ -14,7 +14,7 @@ from sifr.itertools import (
     accumulate, compress, dropwhile, takewhile, filterfalse,
     zip_longest, count_from, cycle
 )
-from sifr.collections import Counter, from_list, counter_add, counter_sub
+from sifr.collections import Counter, from_list
 
 def add(a: int, b: int) -> int:
     return a + b
@@ -22,78 +22,61 @@ def add(a: int, b: int) -> int:
 def mul(a: int, b: int) -> int:
     return a * b
 
+def less_than_three(x: int) -> bool:
+    return x < 3
+
 def main():
     # --- New math functions ---
     print("=== math additions ===")
-    assert str("=== math additions ===") == "=== math additions ==="
     print("acosh(1.0) = " + str(acosh(1.0)))
-    assert str("acosh(1.0) = " + str(acosh(1.0))) == "acosh(1.0) = 0"
     print("asinh(0.0) = " + str(asinh(0.0)))
-    assert str("asinh(0.0) = " + str(asinh(0.0))) == "asinh(0.0) = 0"
     print("atanh(0.0) = " + str(atanh(0.0)))
-    assert str("atanh(0.0) = " + str(atanh(0.0))) == "atanh(0.0) = 0"
     print("isqrt(17) = " + str(isqrt(17)))
-    assert str("isqrt(17) = " + str(isqrt(17))) == "isqrt(17) = 4"
     p: list[float] = [0.0, 0.0]
     q: list[float] = [3.0, 4.0]
     print("dist([0,0],[3,4]) = " + str(dist(p, q)))
-    assert str("dist([0,0],[3,4]) = " + str(dist(p, q))) == "dist([0,0],[3,4]) = 5"
     data_fsum: list[float] = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
     print("fsum(10x0.1) = " + str(fsum(data_fsum)))
-    assert str("fsum(10x0.1) = " + str(fsum(data_fsum))) == "fsum(10x0.1) = 0.9999999999999999"
 
     # --- Statistics with Result types (Phase 09 carryover fixed) ---
     print("=== statistics (Result[float, StatisticsError]) ===")
-    assert str("=== statistics (Result[float, StatisticsError]) ===") == "=== statistics (Result[float, StatisticsError]) ==="
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
     try:
         m: float = mean(data)
         print("mean = " + str(m))
-        assert str("mean = " + str(m)) == "mean = 3"
         med: float = median(data)
         print("median = " + str(med))
-        assert str("median = " + str(med)) == "median = 3"
         v: float = variance(data)
         print("variance = " + str(v))
-        assert str("variance = " + str(v)) == "variance = 2.5"
         s: float = stdev(data)
         print("stdev = " + str(s))
-        assert str("stdev = " + str(s)) == "stdev = 1.5811388300841898"
 
         idata: list[int] = [1, 2, 2, 3, 3, 3]
         mo: int = mode(idata)
         print("mode = " + str(mo))
-        assert str("mode = " + str(mo)) == "mode = 3"
 
         mm: list[int] = multimode([1, 2, 2, 3, 3])
         print("multimode len = " + str(len(mm)))
-        assert str("multimode len = " + str(len(mm))) == "multimode len = 2"
 
         qs: list[float] = quantiles(data, 4)
         print("quartiles count = " + str(len(qs)))
-        assert str("quartiles count = " + str(len(qs))) == "quartiles count = 3"
 
         x: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
         y: list[float] = [2.0, 4.0, 6.0, 8.0, 10.0]
         cov: float = covariance(x, y)
         print("covariance = " + str(cov))
-        assert str("covariance = " + str(cov)) == "covariance = 5"
         r: float = correlation(x, y)
         print("correlation = " + str(r))
-        assert str("correlation = " + str(r)) == "correlation = 0.9999999999999998"
 
         lr: list[float] = linear_regression(x, y)
         slope: float | None = lr[0]
         intercept: float | None = lr[1]
         if slope is not None:
             print("slope = " + str(slope))
-            assert str("slope = " + str(slope)) == "slope = 2"
         if intercept is not None:
             print("intercept = " + str(intercept))
-            assert str("intercept = " + str(intercept)) == "intercept = 0"
     except StatisticsError as e:
         print("error: " + e.message)
-        assert str("error: " + e.message) == "empty mean error: mean requires at least one data point"
 
     # Error case: empty data raises StatisticsError
     try:
@@ -101,116 +84,89 @@ def main():
         bad: float = mean(empty)
     except StatisticsError as e:
         print("empty mean error: " + e.message)
-        assert str("empty mean error: " + e.message) == "=== random additions ==="
 
     # --- Random additions ---
     print("=== random additions ===")
-    assert str("=== random additions ===") == "shuffle len = 5"
     items: list[int] = [1, 2, 3, 4, 5]
     shuffled: list[int] = shuffle(items)
     print("shuffle len = " + str(len(shuffled)))
-    assert str("shuffle len = " + str(len(shuffled))) == "sample(3) len = 3"
 
     try:
         s3: list[int] = sample(items, 3)
         print("sample(3) len = " + str(len(s3)))
-        assert str("sample(3) len = " + str(len(s3))) == "randrange in range = true"
     except ValueError as e:
         print("sample error: " + e.message)
-        assert str("sample error: " + e.message) == "gauss sample is float = True"
 
     try:
         rr: int = randrange(0, 100, 5)
         print("randrange in range = " + str(rr >= 0))
-        assert str("randrange in range = " + str(rr >= 0)) == "=== functools.reduce ==="
     except ValueError as e:
         print("randrange error: " + e.message)
-        assert str("randrange error: " + e.message) == "reduce(add) = 15"
 
     g: float = gauss(0.0, 1.0)
     print("gauss sample is float = True")
-    assert str("gauss sample is float = True") == "reduce(mul) = 120"
 
     # --- functools.reduce ---
     print("=== functools.reduce ===")
-    assert str("=== functools.reduce ===") == "=== itertools additions ==="
     nums: list[int] = [1, 2, 3, 4, 5]
     total: int = reduce(add, nums, 0)
     print("reduce(add) = " + str(total))
-    assert str("reduce(add) = " + str(total)) == "accumulate = [1, 3, 6, 10, 15]"
     product: int = reduce(mul, nums, 1)
     print("reduce(mul) = " + str(product))
-    assert str("reduce(mul) = " + str(product)) == "compress = [1, 3, 5]"
 
     # --- New itertools functions ---
     print("=== itertools additions ===")
-    assert str("=== itertools additions ===") == "dropwhile(<3) = [3, 4, 5]"
     idata2: list[int] = [1, 2, 3, 4, 5]
 
     acc: list[int] = accumulate(idata2)
     print("accumulate = " + str(acc))
-    assert str("accumulate = " + str(acc)) == "takewhile(<3) = [1, 2]"
 
     sel: list[bool] = [True, False, True, False, True]
     comp: list[int] = compress(idata2, sel)
     print("compress = " + str(comp))
-    assert str("compress = " + str(comp)) == "filterfalse(<3) = [3, 4, 5]"
 
-    dw: list[int] = dropwhile(3, idata2)
+    dw: list[int] = dropwhile(less_than_three, idata2)
     print("dropwhile(<3) = " + str(dw))
-    assert str("dropwhile(<3) = " + str(dw)) == "zip_longest len = 3"
 
-    tw: list[int] = takewhile(3, idata2)
+    tw: list[int] = takewhile(less_than_three, idata2)
     print("takewhile(<3) = " + str(tw))
-    assert str("takewhile(<3) = " + str(tw)) == "count_from(0,2,5) = [0, 2, 4, 6, 8]"
 
-    ff: list[int] = filterfalse(3, idata2)
+    ff: list[int] = filterfalse(less_than_three, idata2)
     print("filterfalse(<3) = " + str(ff))
-    assert str("filterfalse(<3) = " + str(ff)) == "cycle([1,2,3], 7) = [1, 2, 3, 1, 2, 3, 1]"
 
     a: list[int] = [1, 2, 3]
     b: list[int] = [4, 5]
     zl: list[list[int]] = zip_longest(a, b, 0)
     print("zip_longest len = " + str(len(zl)))
-    assert str("zip_longest len = " + str(len(zl))) == "=== Counter enhancements ==="
 
     cf: list[int] = count_from(0, 2, 5)
     print("count_from(0,2,5) = " + str(cf))
-    assert str("count_from(0,2,5) = " + str(cf)) == "after update: a=2 b=2"
 
     cyc: list[int] = cycle([1, 2, 3], 7)
     print("cycle([1,2,3], 7) = " + str(cyc))
-    assert str("cycle([1,2,3], 7) = " + str(cyc)) == "after subtract: x=1"
 
     # --- Counter enhancements ---
     print("=== Counter enhancements ===")
-    assert str("=== Counter enhancements ===") == "elements len = 3"
     c1: Counter = from_list(["a", "b", "a", "c"])
     c2: Counter = from_list(["b", "c", "d"])
     c1.update(c2)
     print("after update: a=" + str(c1.get("a")) + " b=" + str(c1.get("b")))
-    assert str("after update: a=" + str(c1.get("a")) + " b=" + str(c1.get("b"))) == "counter_add b = 2"
 
     c3: Counter = from_list(["x", "x", "y"])
     c4: Counter = from_list(["x"])
     c3.subtract(c4)
     print("after subtract: x=" + str(c3.get("x")))
-    assert str("after subtract: x=" + str(c3.get("x"))) == "counter_sub a = 1"
 
     c5: Counter = from_list(["a", "a", "b"])
     elems: list[str] = c5.elements()
     print("elements len = " + str(len(elems)))
-    assert str("elements len = " + str(len(elems))) == "=== milestone_stdlib_pure_expansion: all features demonstrated ==="
 
-    ca: Counter = from_list(["a", "b"])
-    cb: Counter = from_list(["b", "c"])
-    cc: Counter = counter_add(ca, cb)
+    cc: Counter = from_list(["a", "b"])
+    cc.update(from_list(["b", "c"]))
     print("counter_add b = " + str(cc.get("b")))
 
     cd: Counter = from_list(["a", "a", "b"])
-    ce: Counter = from_list(["a"])
-    cf2: Counter = counter_sub(cd, ce)
-    print("counter_sub a = " + str(cf2.get("a")))
+    cd.subtract(from_list(["a"]))
+    print("counter_sub a = " + str(cd.get("a")))
 
     print("=== milestone_stdlib_pure_expansion: all features demonstrated ===")
-

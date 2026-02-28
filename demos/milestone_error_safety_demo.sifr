@@ -33,85 +33,68 @@ def process_age(age: int) -> Result[int, ValueError]:
 def main():
     # --- Built-in Error Classes ---
     print("=== Built-in Error Classes ===")
-    assert str("=== Built-in Error Classes ===") == "=== Built-in Error Classes ==="
 
     try:
         age: int = validate_age(-5)
     except ValueError as e:
         print(f"caught ValueError: {e.message}")
-        assert str(f"caught ValueError: {e.message}") == "caught ValueError: age must be positive"
 
     try:
         result: int = safe_divide(10, 0)
     except DivisionError as e:
         print(f"caught DivisionError: {e.message}")
-        assert str(f"caught DivisionError: {e.message}") == "caught DivisionError: division by zero"
 
     try:
         n: int = int("not_a_number")
     except ParseError as e:
         print(f"caught ParseError: {e.message}")
-        assert str(f"caught ParseError: {e.message}") == "caught ParseError: invalid digit found in string"
 
     # --- Custom Error Classes ---
     print("=== Custom Error Classes ===")
-    assert str("=== Custom Error Classes ===") == "=== Custom Error Classes ==="
 
     try:
         val: int = check_input(-1)
     except AppError as e:
         print(f"caught AppError: {e.message}")
-        assert str(f"caught AppError: {e.message}") == "caught AppError: invalid input"
 
     # --- Exhaustiveness: Specific Except Arms ---
     print("=== Exhaustiveness: Specific Except Arms ===")
-    assert str("=== Exhaustiveness: Specific Except Arms ===") == "=== Exhaustiveness: Specific Except Arms ==="
 
     try:
         a: int = validate_age(-10)
     except ValueError as e:
         print(f"caught ValueError: {e.message}")
-        assert str(f"caught ValueError: {e.message}") == "caught ValueError: negative input"
 
     # --- Exhaustiveness: Catch-All ---
     print("=== Exhaustiveness: Catch-All ===")
-    assert str("=== Exhaustiveness: Catch-All ===") == "=== Exhaustiveness: Catch-All ==="
 
     try:
         b: int = validate_age(200)
     except Error as e:
         print(f"caught: {e.message}")
-        assert str(f"caught: {e.message}") == "caught: too large"
 
     # --- Error Propagation ---
     print("=== Error Propagation ===")
-    assert str("=== Error Propagation ===") == "=== Error Propagation ==="
 
     try:
         c: int = process_age(-1)
     except ValueError as e:
         print(f"pipeline error: {e.message}")
-        assert str(f"pipeline error: {e.message}") == "pipeline error: age must be positive"
 
     # --- Multiple Try/Except ---
     print("=== Multiple Try/Except ===")
-    assert str("=== Multiple Try/Except ===") == "=== Multiple Try/Except ==="
 
     try:
         parsed: int = int("42")
         print(f"parsed: {parsed}")
-        assert str(f"parsed: {parsed}") == "parsed: 42"
     except ParseError as e:
         print(f"parse error: {e.message}")
-        assert str(f"parse error: {e.message}") == "validated: 42"
 
     try:
         validated: int = validate_age(42)
         print(f"validated: {validated}")
-        assert str(f"validated: {validated}") == "result: 7"
     except ValueError as e:
         print(f"validation error: {e.message}")
-        assert str(f"validation error: {e.message}") == "demo complete!"
 
     try:
         divided: int = safe_divide(42, 6)

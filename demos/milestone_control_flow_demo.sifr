@@ -62,8 +62,12 @@ def main():
     print(f"=== Lists ===")
     nums: list[int] = [10, 20, 30, 40, 50]
     print(f"Length: {len(nums)}")
-    print(f"First: {nums[0]}")
-    print(f"Last: {nums[4]}")
+    first: int | None = nums[0]
+    if first is not None:
+        print(f"First: {first}")
+    last: int | None = nums[4]
+    if last is not None:
+        print(f"Last: {last}")
 
     total: int = 0
     for n in nums:
@@ -78,8 +82,12 @@ def main():
     # --- Dict ---
     print(f"=== Dict ===")
     ages: dict[str, int] = {"Alice": 30, "Bob": 25, "Charlie": 35}
-    print(f"Alice is {ages['Alice']} years old")
-    print(f"Bob is {ages['Bob']} years old")
+    alice_age: int | None = ages["Alice"]
+    if alice_age is not None:
+        print(f"Alice is {alice_age} years old")
+    bob_age: int | None = ages["Bob"]
+    if bob_age is not None:
+        print(f"Bob is {bob_age} years old")
 
     # --- In operator ---
     print(f"=== In Operator ===")

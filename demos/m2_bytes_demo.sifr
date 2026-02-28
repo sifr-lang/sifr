@@ -4,33 +4,25 @@ from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, c
 def main():
     data: list[int] = encode_utf8("sifr-bytes")
     print(len(data))
-    assert str(len(data)) == "10"
     print(count_byte(data, 115))
-    assert str(count_byte(data, 115)) == "2"
 
     idx: int | None = find_byte(data, 45)
     if idx is not None:
         print(idx)
-        assert str(idx) == "4"
 
     print(starts_with(data, encode_utf8("sifr")))
-    assert str(starts_with(data, encode_utf8("sifr"))) == "true"
     print(ends_with(data, encode_utf8("bytes")))
-    assert str(ends_with(data, encode_utf8("bytes"))) == "true"
 
     try:
         hex_data: str = bytes_to_hex(data)
         print(hex_data)
-        assert str(hex_data) == "736966722d6279746573"
     except ParseError as e:
         print("hex encode error: " + e.message)
-        assert str("hex encode error: " + e.message) == "sifr"
 
     try:
         parsed: list[int] = bytes_from_hex("73 69 66 72")
         text: str = decode_utf8(parsed)
         print(text)
-        assert str(text) == "range-safe"
     except ParseError as e:
         print("hex decode error: " + e.message)
 

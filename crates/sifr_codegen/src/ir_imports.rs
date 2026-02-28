@@ -607,8 +607,6 @@ mod tests {
     #[test]
     #[should_panic(expected = "RawCode is forbidden in production structural import pass")]
     fn production_mode_panics_on_raw_item() {
-        let _ = collect_import_needs_from_items(&[RustItem::RawCode(
-            "fn demo() {}".to_string(),
-        )]);
+        let _ = collect_import_needs_from_items(&[RustItem::RawCode("fn demo() {}".to_string())]);
     }
 }

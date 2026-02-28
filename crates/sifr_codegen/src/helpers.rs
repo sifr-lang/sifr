@@ -101,36 +101,39 @@ pub(super) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
             if let HirExpr::Name { name, ty } = &args[0] {
                 if let Type::Union(members) = ty {
                     if !is_option_type(ty) {
-                        // The second arg is a StringLiteral with the type name
-                        if let HirExpr::StringLiteral(type_name) = &args[1] {
-                            let target_ty = match type_name.as_str() {
-                                "int" => Type::Int,
-                                "str" => Type::Str,
-                                "float" => Type::Float,
-                                "bool" => Type::Bool,
-                                other => {
-                                    // Check if it's a class type in the union members
-                                    if let Some(class_ty) = members.iter().find(
-                                        |m| matches!(m, Type::Class { name, .. } if name == other),
-                                    ) {
-                                        class_ty.clone()
-                                    } else {
-                                        return None;
-                                    }
-                                }
-                            };
-                            // Check that this type is a member of the union
-                            if members.contains(&target_ty) {
-                                let variant = target_ty.union_variant_name();
-                                let enum_name = ty.union_enum_name();
-                                // Collect other variants for else branch destructuring
-                                let other_variants: Vec<(String, Type)> = members
+                        let type_name = match &args[1] {
+                            HirExpr::StringLiteral(type_name) => type_name.as_str(),
+                            HirExpr::Name { name, .. } => name.as_str(),
+                            _ => return None,
+                        };
+                        let target_ty = match type_name {
+                            "int" => Type::Int,
+                            "str" => Type::Str,
+                            "float" => Type::Float,
+                            "bool" => Type::Bool,
+                            other => {
+                                // Check if it's a class type in the union members
+                                if let Some(class_ty) = members
                                     .iter()
-                                    .filter(|m| *m != &target_ty)
-                                    .map(|m| (m.union_variant_name(), m.clone()))
-                                    .collect();
-                                return Some((name.clone(), variant, enum_name, other_variants));
+                                    .find(|m| matches!(m, Type::Class { name, .. } if name == other))
+                                {
+                                    class_ty.clone()
+                                } else {
+                                    return None;
+                                }
                             }
+                        };
+                        // Check that this type is a member of the union
+                        if members.contains(&target_ty) {
+                            let variant = target_ty.union_variant_name();
+                            let enum_name = ty.union_enum_name();
+                            // Collect other variants for else branch destructuring
+                            let other_variants: Vec<(String, Type)> = members
+                                .iter()
+                                .filter(|m| *m != &target_ty)
+                                .map(|m| (m.union_variant_name(), m.clone()))
+                                .collect();
+                            return Some((name.clone(), variant, enum_name, other_variants));
                         }
                     }
                 }

@@ -1,9 +1,5 @@
-//! Sifr Code Generation
-//!
-//! Translates the typed HIR into Rust source code.
-
+//! Sifr Code Generation: translates typed HIR into Rust source code.
 #![allow(dead_code)]
-
 mod rust_ir;
 pub use rust_ir::*;
 mod render;
@@ -35,6 +31,7 @@ mod intrinsics;
 mod ir_imports;
 mod ir_optimize;
 mod ir_validate;
+mod lib_support;
 mod match_emitter;
 mod match_guard_helpers;
 mod method_call_emitter;
@@ -44,7 +41,6 @@ mod module_constants;
 mod module_prescan;
 mod operator_protocol_emitters;
 mod output_helpers;
-mod lib_support;
 mod slice_emitter;
 mod stdlib_filter;
 mod stmt_support_emitter;
@@ -62,16 +58,16 @@ use helpers::{
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::{validate_items, validate_no_raw_code};
+pub(crate) use lib_support::{
+    assert_output_drained, is_reserved_plain_builtin_call, is_self_field_access_expr,
+    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
+};
 use sifr_hir::{HirExpr, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 use stdlib_filter::{
     collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
-};
-pub(crate) use lib_support::{
-    assert_output_drained, is_reserved_plain_builtin_call, is_self_field_access_expr,
-    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
 };
 
 type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
@@ -898,8 +894,12 @@ struct RustEmitter {
     /// Return statements in this context become write!(f, "{}", val) + return Ok(())
     /// Counter for generating unique try-block error enum names
     try_enum_counter: usize,
-    /// Depth of try-block closures we're currently inside (for return statement handling)
+    /// Depth of try-block closures that capture return statements.
     try_closure_depth: usize,
+    /// Per-try closure return wrapping mode (true => wrap return payload in Some(...)).
+    try_closure_option_wrap: Vec<bool>,
+    /// Per-try closure target error type for `?` adaptation.
+    try_closure_error_type: Vec<String>,
     /// Map from variable name -> Callable parameter (type, convention) list.
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
@@ -964,6 +964,8 @@ impl RustEmitter {
             emission_ctx: EmissionContext::default(),
             try_enum_counter: 0,
             try_closure_depth: 0,
+            try_closure_option_wrap: Vec::new(),
+            try_closure_error_type: Vec::new(),
             callable_var_conventions: HashMap::new(),
             lowering_stats: LoweringStats::default(),
         }
@@ -1051,9 +1053,20 @@ impl RustEmitter {
                 self.write("mut ");
             }
             self.write(name);
-            self.write(": ");
-            self.write(&crate::render_type(&sifr_type_to_rust_type(ty)));
+            let is_generic_class = matches!(ty, Type::Class { name: class_name, .. } if self.generic_classes.contains(class_name));
+            if !is_generic_class {
+                self.write(": ");
+                self.write(&crate::render_type(&sifr_type_to_rust_type(ty)));
+            }
             self.write(" = ");
+            if ty.ownership() == sifr_type_system::OwnershipKind::Move
+                && self.emit_borrowed_return_name_clone_expr(value)
+            {
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                self.write(";\n");
+                return Ok(true);
+            }
             if self.try_emit_structured_expr(value)? {
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
@@ -1085,38 +1098,15 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if let HirStmt::Return { value: Some(value) } = stmt {
-            if self.current_class_name.is_some()
-                && matches!(value, HirExpr::Name { name, .. } if name == "self")
-            {
-                self.write_indent();
-                self.write("return self.clone();\n");
-                self.lowering_stats.stmt_structured += 1;
-                self.lowering_stats.stmt_candidate_structured += 1;
-                return Ok(true);
-            }
-            let output_len = self.output.len();
-            self.write("return ");
-            if self.try_emit_structured_expr(value)? {
-                self.lowering_stats.stmt_structured += 1;
-                self.lowering_stats.stmt_candidate_structured += 1;
-                self.write(";\n");
-                return Ok(true);
-            }
-            self.output.truncate(output_len);
+        if self.try_emit_structured_return_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
         }
-
-        if let HirStmt::Raise { value } = stmt {
-            let output_len = self.output.len();
-            self.write_indent();
-            self.write("return Err(");
-            if self.try_emit_structured_expr(value)? {
-                self.write(");\n");
-                self.lowering_stats.stmt_structured += 1;
-                self.lowering_stats.stmt_candidate_structured += 1;
-                return Ok(true);
-            }
-            self.output.truncate(output_len);
+        if self.try_emit_structured_raise_stmt(stmt)? {
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
         }
         if self.try_emit_structured_if_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
@@ -1273,8 +1263,8 @@ impl RustEmitter {
                 return Ok(true);
             }
         }
-        if let HirExpr::Index { object, index, .. } = expr {
-            if self.try_emit_structured_index_expr(object, index)? {
+        if let HirExpr::Index { object, index, ty, .. } = expr {
+            if self.try_emit_structured_index_expr(object, index, ty)? {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;
                 return Ok(true);

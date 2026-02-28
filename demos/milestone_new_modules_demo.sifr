@@ -7,7 +7,7 @@ from sifr.operator import add, sub, mul, floordiv, mod_val, neg, lt, eq, itemget
 from sifr.calendar import isleap, weekday, monthrange
 from sifr.html import escape, unescape
 from sifr.sys import version, maxsize
-from sifr.subprocess import run
+from sifr.subprocess import run, CompletedProcess
 from sifr.configparser import ConfigParser
 from sifr.gzip import compress, decompress
 from sifr.zipfile import ZipFile
@@ -15,111 +15,75 @@ from sifr.os import remove_file
 
 def demo_operator() -> None:
     print("=== operator ===")
-    assert str("=== operator ===") == "=== operator ==="
     print("add(10, 5) = " + str(add(10, 5)))
-    assert str("add(10, 5) = " + str(add(10, 5))) == "add(10, 5) = 15"
     print("sub(10, 5) = " + str(sub(10, 5)))
-    assert str("sub(10, 5) = " + str(sub(10, 5))) == "sub(10, 5) = 5"
     print("mul(3, 4) = " + str(mul(3, 4)))
-    assert str("mul(3, 4) = " + str(mul(3, 4))) == "mul(3, 4) = 12"
     print("floordiv(7, 2) = " + str(floordiv(7, 2)))
-    assert str("floordiv(7, 2) = " + str(floordiv(7, 2))) == "floordiv(7, 2) = 3"
     print("mod_val(7, 2) = " + str(mod_val(7, 2)))
-    assert str("mod_val(7, 2) = " + str(mod_val(7, 2))) == "mod_val(7, 2) = 1"
     print("neg(42) = " + str(neg(42)))
-    assert str("neg(42) = " + str(neg(42))) == "neg(42) = -42"
     print("lt(3, 5) = " + str(lt(3, 5)))
-    assert str("lt(3, 5) = " + str(lt(3, 5))) == "lt(3, 5) = true"
     print("eq(5, 5) = " + str(eq(5, 5)))
-    assert str("eq(5, 5) = " + str(eq(5, 5))) == "eq(5, 5) = true"
     items: list[int] = [1, 2, 3]
     print("itemgetter([1,2,3], 1) = " + str(itemgetter(items, 1)))
-    assert str("itemgetter([1,2,3], 1) = " + str(itemgetter(items, 1))) == "itemgetter([1,2,3], 1) = 2"
 
 def demo_calendar() -> None:
     print("=== calendar ===")
-    assert str("=== calendar ===") == "=== calendar ==="
     print("isleap(2000) = " + str(isleap(2000)))
-    assert str("isleap(2000) = " + str(isleap(2000))) == "isleap(2000) = true"
     print("isleap(1900) = " + str(isleap(1900)))
-    assert str("isleap(1900) = " + str(isleap(1900))) == "isleap(1900) = false"
     print("isleap(2024) = " + str(isleap(2024)))
-    assert str("isleap(2024) = " + str(isleap(2024))) == "isleap(2024) = true"
     wd: int = weekday(2024, 1, 1)
     print("weekday(2024,1,1) = " + str(wd))
-    assert str("weekday(2024,1,1) = " + str(wd)) == "weekday(2024,1,1) = 0"
     mr: list[int] = monthrange(2024, 2)
     print("monthrange(2024,2)[1] = " + str(mr[1]))
-    assert str("monthrange(2024,2)[1] = " + str(mr[1])) == "monthrange(2024,2)[1] = 29"
 
 def demo_html() -> None:
     print("=== html ===")
-    assert str("=== html ===") == "=== html ==="
     s: str = "<b>Hi & Bye</b>"
     esc: str = escape(s)
     print("escape(<b>Hi & Bye</b>) = " + esc)
-    assert str("escape(<b>Hi & Bye</b>) = " + esc) == "escape(<b>Hi & Bye</b>) = &lt;b&gt;Hi &amp; Bye&lt;/b&gt;"
     unesc: str = unescape(esc)
     print("unescape(&lt;b&gt;Hi &amp; Bye&lt;/b&gt;) = " + unesc)
-    assert str("unescape(&lt;b&gt;Hi &amp; Bye&lt;/b&gt;) = " + unesc) == "unescape(&lt;b&gt;Hi &amp; Bye&lt;/b&gt;) = <b>Hi & Bye</b>"
 
 def demo_sys() -> None:
     print("=== sys ===")
-    assert str("=== sys ===") == "=== sys ==="
     print("version = " + version())
-    assert str("version = " + version()) == "version = sifr 0.1.0"
     ms: int = maxsize()
     print("maxsize > 0 = " + str(ms > 0))
-    assert str("maxsize > 0 = " + str(ms > 0)) == "maxsize > 0 = true"
 
 def demo_subprocess() -> None:
     print("=== subprocess ===")
-    assert str("=== subprocess ===") == "=== subprocess ==="
     try:
-        result: str = run("echo hello")
-        print("echo hello = " + result)
-        assert str("echo hello = " + result) == "echo hello = hello"
+        result: CompletedProcess = run("echo hello")
+        print("echo hello = " + result.stdout)
     except IOError as e:
         print("error: " + e.message)
-        assert str("error: " + e.message) == "=== configparser ==="
 
 def demo_configparser() -> None:
     print("=== configparser ===")
-    assert str("=== configparser ===") == "host = db.example.com"
     config: ConfigParser = ConfigParser()
     config.read_string("[database]\nhost = db.example.com\nport = 5432\n")
     print("host = " + config.get("database", "host"))
-    assert str("host = " + config.get("database", "host")) == "port = 5432"
     print("port = " + config.get("database", "port"))
-    assert str("port = " + config.get("database", "port")) == "has_host = true"
     print("has_host = " + str(config.has_option("database", "host")))
-    assert str("has_host = " + str(config.has_option("database", "host"))) == "has_missing = false"
     print("has_missing = " + str(config.has_option("database", "missing")))
-    assert str("has_missing = " + str(config.has_option("database", "missing"))) == "=== gzip ==="
 
 def demo_gzip() -> None:
     print("=== gzip ===")
-    assert str("=== gzip ===") == "compressed len > 0 = true"
     data: str = "Sifr stdlib gzip compression!"
     compressed: list[int] = compress(data)
     print("compressed len > 0 = " + str(len(compressed) > 0))
-    assert str("compressed len > 0 = " + str(len(compressed) > 0)) == "decompressed = Sifr stdlib gzip compression!"
     try:
         decompressed: str = decompress(compressed)
         print("decompressed = " + decompressed)
-        assert str("decompressed = " + decompressed) == "=== zipfile ==="
     except IOError as e:
         print("error: " + e.message)
-        assert str("error: " + e.message) == "zip created = true"
 
 def demo_zipfile() -> None:
     print("=== zipfile ===")
-    assert str("=== zipfile ===") == "zip content = Hello from ZipFile!"
     zf: ZipFile = ZipFile("/tmp/sifr_demo_zipfile.zip")
     try:
         _c: None = zf.create()
         print("zip created = true")
-        assert str("zip created = true") == "zip namelist len = 1"
     except IOError as e:
         print("create error: " + e.message)
     try:

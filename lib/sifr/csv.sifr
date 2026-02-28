@@ -246,6 +246,5 @@ def writer_to_path(path: str, rows: list[list[str]]) -> Result[None, IOError]:
         content: str = format_csv(rows)
         _: None = file_write(handle, content)
         file_close(handle)
-        return None
     except IOError as e:
         raise IOError(e.message)

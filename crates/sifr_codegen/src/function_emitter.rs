@@ -5,6 +5,16 @@ use sifr_hir::{HirFunction, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
+    fn returns_result_none(ty: &Type) -> bool {
+        match crate::resolve_alias_type_for_plain_call(ty) {
+            Type::Result(ok_ty, _) => matches!(
+                crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
+                Type::None
+            ),
+            _ => false,
+        }
+    }
+
     pub(super) fn emit_function(
         &mut self,
         func: &HirFunction,
@@ -128,6 +138,9 @@ impl RustEmitter {
 
         // Detect if this is a generator function (contains yield statements)
         let is_generator = body_contains_yield(&func.body);
+        if is_generator {
+            self.generator_functions.insert(func.name.clone());
+        }
 
         // Return type (omit for main and for None return)
         if func.return_type != Type::None || func.name != "main" {
@@ -140,7 +153,11 @@ impl RustEmitter {
                     } else {
                         "i64".to_string()
                     };
-                    self.write(&format!("impl Iterator<Item = {yield_ty}>"));
+                    if matches!(func.return_type, Type::List(_)) {
+                        self.write(&format!("Vec<{yield_ty}>"));
+                    } else {
+                        self.write(&format!("impl Iterator<Item = {yield_ty}>"));
+                    }
                 } else {
                     // If return type is a generic class and this function has type params,
                     // include the type params in the return type
@@ -356,11 +373,24 @@ impl RustEmitter {
 
             self.indent -= 1;
             self.write_indent();
-            self.write("})\n");
+            if matches!(func.return_type, Type::List(_)) {
+                self.write("}).collect::<Vec<_>>()\n");
+            } else {
+                self.write("})\n");
+            }
         } else {
             // Non-generator: emit body normally
             for stmt in &func.body {
                 self.emit_stmt(stmt);
+            }
+            if Self::returns_result_none(&func.return_type)
+                && !matches!(
+                    func.body.last(),
+                    Some(HirStmt::Return { .. } | HirStmt::Raise { .. })
+                )
+            {
+                self.write_indent();
+                self.write("return Ok(());\n");
             }
         }
 

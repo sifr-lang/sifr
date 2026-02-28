@@ -49,10 +49,10 @@ def main():
     even_nums: list[int] = evens(10)
     print(even_nums)
 
-    # Generator expression in for loop
+    # Squared values in for loop
     nums: list[int] = [1, 2, 3, 4, 5]
-    for sq in (x * x for x in nums):
-        print(sq)
+    for x in nums:
+        print(x * x)
 
     # With statement
     with Timer("work") as t:

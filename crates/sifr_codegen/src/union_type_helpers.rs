@@ -36,23 +36,55 @@ impl RustEmitter {
         }
         // Also scan class method bodies and register their signatures
         for class in &module.classes {
+            let mut has_constructor = false;
             for method in &class.methods {
                 // Register method signature under ClassName::method_name
                 let param_info: Vec<(Type, ParamConvention)> = method
                     .params
                     .iter()
-                    .map(|p| (p.ty.clone(), p.convention))
+                    .map(|p| {
+                        let conv = if method.name == "new" {
+                            ParamConvention::Own
+                        } else {
+                            p.convention
+                        };
+                        (p.ty.clone(), conv)
+                    })
                     .collect();
                 self.func_signatures.insert(
                     format!("{}::{}", class.name, method.name),
                     (param_info, method.return_type.clone()),
                 );
+                if method.name == "new" {
+                    has_constructor = true;
+                }
 
                 for param in &method.params {
                     self.register_union_type(&param.ty);
                 }
                 self.register_union_type(&method.return_type);
                 self.collect_union_types_in_stmts(&method.body);
+            }
+            if !has_constructor {
+                // Classes without an explicit `new` still get an auto-generated constructor.
+                // Register it so call sites can apply ownership conventions correctly.
+                let ctor_params = class
+                    .fields
+                    .iter()
+                    .map(|(_, ty)| (ty.clone(), ParamConvention::Own))
+                    .collect::<Vec<_>>();
+                self.func_signatures.insert(
+                    format!("{}::new", class.name),
+                    (
+                        ctor_params,
+                        Type::Class {
+                            name: class.name.clone(),
+                            fields: class.fields.clone(),
+                            methods: Vec::new(),
+                            parent_class: class.parent_class.clone(),
+                        },
+                    ),
+                );
             }
         }
     }

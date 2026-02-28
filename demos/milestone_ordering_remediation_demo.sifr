@@ -51,7 +51,8 @@ def main():
     # re: search, sub, findall, split (aliases for re_find, re_replace, etc.)
     try:
         found: str | None = search("\\d+", "abc123")
-        print(found)
+        if found is not None:
+            print(found)
         replaced: str = sub("\\d", "X", "a1b2c3")
         print(replaced)
         words: list[str] = findall("\\w+", "hello world")

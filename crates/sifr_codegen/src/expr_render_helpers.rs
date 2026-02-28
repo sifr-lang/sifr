@@ -47,6 +47,84 @@ fn option_inner_type(ty: &Type) -> Option<&Type> {
     members.iter().find(|member| !matches!(member, Type::None))
 }
 
+fn option_inner_from_rust_type(ty: &Type) -> Option<Type> {
+    let rust_ty = ty.rust_type();
+    if !rust_ty.starts_with("Option<") {
+        return None;
+    }
+    if rust_ty.contains("String") {
+        return Some(Type::Str);
+    }
+    if rust_ty.contains("i64") {
+        return Some(Type::Int);
+    }
+    if rust_ty.contains("f64") {
+        return Some(Type::Float);
+    }
+    if rust_ty.contains("bool") {
+        return Some(Type::Bool);
+    }
+    Some(Type::Unknown)
+}
+
+fn display_option_inner_type(expr: &HirExpr) -> Option<Type> {
+    if let Some(inner) = option_inner_type(expr.ty()) {
+        return Some(inner.clone());
+    }
+    if let HirExpr::Index { object, .. } = expr {
+        match crate::resolve_alias_type_for_plain_call(object.ty()) {
+            Type::List(elem) => return Some((**elem).clone()),
+            Type::Dict(_, value) => return Some((**value).clone()),
+            Type::Str => return Some(Type::Str),
+            _ => {}
+        }
+    }
+    option_inner_from_rust_type(expr.ty())
+}
+
+fn can_construct_error_from_message(ty_name: &str) -> bool {
+    matches!(
+        ty_name,
+        "Error"
+            | "IOError"
+            | "ParseError"
+            | "ValueError"
+            | "DivisionError"
+            | "KeyError"
+            | "JSONDecodeError"
+            | "TOMLDecodeError"
+            | "RegexError"
+            | "OverflowError"
+            | "IndexError"
+            | "AttributeError"
+            | "TypeError"
+            | "ZeroDivisionError"
+            | "RuntimeError"
+            | "NotImplementedError"
+            | "HashlibError"
+    )
+}
+
+fn is_string_like_type(ty: &Type) -> bool {
+    matches!(
+        crate::resolve_alias_type_for_plain_call(ty),
+        Type::Str | Type::LiteralStr(_)
+    )
+}
+
+fn is_borrowed_string_name_expr(
+    expr: &HirExpr,
+    borrowed_params: &std::collections::HashSet<String>,
+    mut_borrowed_params: &std::collections::HashSet<String>,
+) -> bool {
+    matches!(
+        expr,
+        HirExpr::Name { name, ty }
+            if is_string_like_type(ty)
+                && (borrowed_params.contains(name) || mut_borrowed_params.contains(name))
+    )
+}
+
 impl RustEmitter {
     pub(super) fn render_expr_via_direct_emit(&mut self, expr: &HirExpr) -> String {
         let saved_output = std::mem::take(&mut self.output);
@@ -448,18 +526,39 @@ impl RustEmitter {
         };
 
         let class_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        let method_params = if let Type::Class { methods, .. } = class_ty {
-            methods
-                .iter()
-                .find(|(name, _)| name == method)
-                .map(|(_, fty)| &fty.params)
+        let method_params: Option<Vec<(Type, ParamConvention)>> = if let Type::Class {
+            name, methods, ..
+        } = class_ty
+        {
+            self.func_signatures
+                .get(&format!("{name}::{method}"))
+                .map(|(params, _)| params.clone())
+                .or_else(|| {
+                    methods
+                        .iter()
+                        .find(|(method_name, _)| method_name == method)
+                        .map(|(_, fty)| {
+                            let self_offset = usize::from(
+                                fty.params
+                                    .first()
+                                    .is_some_and(|(param_name, _, _)| param_name == "self"),
+                            );
+                            fty.params
+                                .iter()
+                                .skip(self_offset)
+                                .map(|(_, ty, conv)| (ty.clone(), *conv))
+                                .collect::<Vec<_>>()
+                        })
+                })
         } else {
             None
         };
 
         let mut rendered_args = Vec::with_capacity(args.len());
         for (idx, arg) in args.iter().enumerate() {
-            let mut rendered_arg = if let Some(lowered_arg) = crate::try_lower_leaf_or_name_expr_result(arg)? {
+            let mut rendered_arg = if let Some(lowered_arg) =
+                crate::try_lower_leaf_or_name_expr_result(arg)?
+            {
                 let rewritten = self.rewrite_stdlib_constant_idents_in_expr(lowered_arg);
                 crate::render_expr(&rewritten)
             } else {
@@ -474,13 +573,30 @@ impl RustEmitter {
                 rendered
             };
 
-            if let Some(params) = method_params {
-                if let Some((_, _param_ty, convention)) = params.get(idx) {
-                    rendered_arg = match convention {
-                        ParamConvention::Borrow => format!("&({rendered_arg})"),
-                        ParamConvention::MutBorrow => format!("&mut ({rendered_arg})"),
-                        ParamConvention::Own => rendered_arg,
-                    };
+            if let Some(params) = method_params.as_ref() {
+                if let Some((param_ty, convention)) = params.get(idx) {
+                    let mut prefix = String::new();
+                    let prev_output = std::mem::take(&mut self.output);
+                    self.emit_borrow_prefix_for_name(
+                        *convention,
+                        arg.ty(),
+                        Some(param_ty),
+                        match arg {
+                            HirExpr::Name { name, .. } => Some(name.as_str()),
+                            _ => None,
+                        },
+                    );
+                    prefix.push_str(&self.output);
+                    self.output = prev_output;
+                    if !prefix.is_empty() {
+                        rendered_arg = format!("{prefix}({rendered_arg})");
+                    } else if *convention == ParamConvention::Own
+                        && matches!(arg, HirExpr::Name { name, .. }
+                            if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name))
+                        && arg.ty().ownership() == sifr_type_system::OwnershipKind::Move
+                    {
+                        rendered_arg = format!("({rendered_arg}).clone()");
+                    }
                 }
             }
 
@@ -488,7 +604,10 @@ impl RustEmitter {
         }
 
         let lowered_object = crate::render_expr(&lowered_object);
-        let is_callable_field = if let Type::Class { fields, methods, .. } = class_ty {
+        let is_callable_field = if let Type::Class {
+            fields, methods, ..
+        } = class_ty
+        {
             !methods.iter().any(|(name, _)| name == method)
                 && fields
                     .iter()
@@ -526,8 +645,31 @@ impl RustEmitter {
             self.write("println!()");
             return Ok(true);
         }
-        if args.len() != 1 {
-            return Ok(false);
+        if args.len() > 1 {
+            if let HirExpr::StringLiteral(fmt) = &args[0] {
+                self.write("println!(");
+                self.write(&format!("{fmt:?}"));
+                for arg in args.iter().skip(1) {
+                    self.write(", ");
+                    self.emit_display_expr(arg);
+                }
+                self.write(")");
+                return Ok(true);
+            }
+            self.write("println!(\"");
+            for idx in 0..args.len() {
+                if idx > 0 {
+                    self.write(" ");
+                }
+                self.write("{}");
+            }
+            self.write("\"");
+            for arg in args {
+                self.write(", ");
+                self.emit_display_expr(arg);
+            }
+            self.write(")");
+            return Ok(true);
         }
         let arg = &args[0];
         if let HirExpr::StringLiteral(value) = arg {
@@ -547,20 +689,38 @@ impl RustEmitter {
         let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
             return Ok(false);
         };
-        if let Some(inner) = option_inner_type(arg.ty()) {
-                self.write("println!(\"{}\", (");
-                self.write(&arg_rendered);
-                self.write(").map_or(\"None\".to_string(), |__v| ");
-                if uses_debug_display_format(inner) {
-                    self.write("format!(\"{:?}\", __v)");
-                } else {
-                    self.write("format!(\"{}\", __v)");
-                }
-                self.write("))");
+        let inferred_option_inner = if let Some(inner) = display_option_inner_type(arg) {
+            Some(inner)
+        } else if !matches!(
+            crate::resolve_alias_type_for_plain_call(arg.ty()),
+            Type::Str | Type::LiteralStr(_)
+        ) && arg_rendered.contains(".get(")
+            && arg_rendered.contains(").cloned()")
+        {
+            Some(Type::Unknown)
+        } else if !matches!(
+            crate::resolve_alias_type_for_plain_call(arg.ty()),
+            Type::Str | Type::LiteralStr(_)
+        ) && arg_rendered.contains(".chars().nth(")
+        {
+            Some(Type::Str)
+        } else {
+            None
+        };
+        if let Some(inner) = inferred_option_inner {
+            self.write("println!(\"{}\", (");
+            self.write(&arg_rendered);
+            self.write(").map_or(\"None\".to_string(), |__v| ");
+            if uses_debug_display_format(&inner) {
+                self.write("format!(\"{:?}\", __v)");
+            } else {
+                self.write("format!(\"{}\", __v)");
+            }
+            self.write("))");
         } else if uses_debug_display_format(arg.ty()) {
-                self.write("println!(\"{:?}\", ");
-                self.write(&arg_rendered);
-                self.write(")");
+            self.write("println!(\"{:?}\", ");
+            self.write(&arg_rendered);
+            self.write(")");
         } else {
             self.write("println!(\"{}\", ");
             self.write(&arg_rendered);
@@ -671,9 +831,7 @@ impl RustEmitter {
         func: &str,
         args: &[HirExpr],
     ) -> Result<bool, crate::CodegenError> {
-        if func.contains("::")
-            || crate::is_reserved_plain_builtin_call(func)
-            || self.nested_fn_captures.contains_key(func)
+        if crate::is_reserved_plain_builtin_call(func) || self.nested_fn_captures.contains_key(func)
         {
             return Ok(false);
         }
@@ -681,7 +839,8 @@ impl RustEmitter {
         let param_types = self
             .func_signatures
             .get(func)
-            .map(|(params, _)| params.clone());
+            .map(|(params, _)| params.clone())
+            .or_else(|| self.callable_var_conventions.get(func).cloned());
         if param_types
             .as_ref()
             .is_some_and(|params| params.len() != args.len())
@@ -702,25 +861,100 @@ impl RustEmitter {
                 let (param_ty, convention) = &params[idx];
                 param_ty_for_arg = Some(param_ty.clone());
                 convention_for_arg = Some(*convention);
-                self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
+                self.emit_borrow_prefix_for_name(
+                    *convention,
+                    arg.ty(),
+                    Some(param_ty),
+                    match arg {
+                        HirExpr::Name { name, .. } => Some(name.as_str()),
+                        _ => None,
+                    },
+                );
             }
             let saved_stats = self.lowering_stats;
-            let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
+            let Some(mut arg_rendered) = self.try_render_structured_expr(arg)? else {
                 self.output.truncate(output_len);
                 return Ok(false);
             };
             self.lowering_stats = saved_stats;
+            let mut should_wrap_option = false;
+            let mut should_wrap_option_box = false;
+            let mut should_box_protocol = false;
+            let mut result_error_coerce_target: Option<String> = None;
+            if let Some(param_ty) = param_ty_for_arg.as_ref() {
+                if let Some(adapted) =
+                    self.try_build_callable_adapter_closure(arg, param_ty, &arg_rendered)
+                {
+                    arg_rendered = adapted;
+                }
+                let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
+                should_wrap_option = crate::helpers::is_option_type(resolved_param)
+                    && !crate::helpers::is_option_type(arg.ty())
+                    && !matches!(arg, HirExpr::NoneLiteral);
+                should_wrap_option_box =
+                    should_wrap_option && param_ty.rust_type().starts_with("Option<Box<");
+                should_box_protocol = matches!(resolved_param, Type::Protocol { .. });
+                if let (Type::Result(param_ok, param_err), Type::Result(arg_ok, arg_err)) = (
+                    resolved_param,
+                    crate::resolve_alias_type_for_plain_call(arg.ty()),
+                ) {
+                    let param_ok_ty = crate::render_type(&crate::sifr_type_to_rust_type(param_ok));
+                    let arg_ok_ty = crate::render_type(&crate::sifr_type_to_rust_type(arg_ok));
+                    let param_err_ty =
+                        crate::render_type(&crate::sifr_type_to_rust_type(param_err));
+                    let arg_err_ty = crate::render_type(&crate::sifr_type_to_rust_type(arg_err));
+                    let ok_compatible = matches!(param_ok.as_ref(), Type::TypeVar(_))
+                        || param_ok_ty == arg_ok_ty;
+                    if ok_compatible
+                        && param_err_ty != arg_err_ty
+                        && can_construct_error_from_message(&param_err_ty)
+                    {
+                        result_error_coerce_target = Some(param_err_ty);
+                    }
+                }
+            }
+            if let Some(target_err_ty) = result_error_coerce_target {
+                arg_rendered =
+                    format!("({arg_rendered}).map_err(|__e| {target_err_ty}::new(__e.to_string()))");
+            }
+            if should_wrap_option {
+                if should_wrap_option_box {
+                    arg_rendered = format!("Some(Box::new({arg_rendered}))");
+                } else {
+                    arg_rendered = format!("Some({arg_rendered})");
+                }
+            }
+            if should_box_protocol {
+                arg_rendered = format!("Box::new({arg_rendered})");
+            }
+            let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty }
+                if self.borrowed_params.contains(name)
+                    || self.mut_borrowed_params.contains(name)
+                    || ty.rust_type().starts_with('&'));
+            let should_clone_for_own = (matches!(convention_for_arg, Some(ParamConvention::Own))
+                && borrowed_name_arg)
+                || (convention_for_arg.is_none()
+                    && func.ends_with("::new")
+                    && matches!(arg, HirExpr::Name { .. }));
 
             if let Some(param_ty) = param_ty_for_arg.as_ref() {
                 let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
                 if let Type::Union(members) = resolved_param {
                     if !crate::helpers::is_option_type(resolved_param)
-                        && !matches!(crate::resolve_alias_type_for_plain_call(arg.ty()), Type::Union(_))
+                        && !matches!(
+                            crate::resolve_alias_type_for_plain_call(arg.ty()),
+                            Type::Union(_)
+                        )
                     {
-                        if let Some(variant) = crate::helpers::find_union_variant(members, arg.ty()) {
+                        if let Some(variant) = crate::helpers::find_union_variant(members, arg.ty())
+                        {
                             let enum_name = resolved_param.union_enum_name();
                             self.write(&format!("{enum_name}::{variant}("));
-                            if matches!(
+                            if should_clone_for_own {
+                                self.write("(");
+                                self.write(&arg_rendered);
+                                self.write(").clone()");
+                            } else if matches!(
                                 convention_for_arg,
                                 Some(ParamConvention::Borrow | ParamConvention::MutBorrow)
                             ) && !matches!(arg, HirExpr::Name { .. })
@@ -737,7 +971,11 @@ impl RustEmitter {
                     }
                 }
             }
-            if matches!(
+            if should_clone_for_own {
+                self.write("(");
+                self.write(&arg_rendered);
+                self.write(").clone()");
+            } else if matches!(
                 convention_for_arg,
                 Some(ParamConvention::Borrow | ParamConvention::MutBorrow)
             ) && !matches!(arg, HirExpr::Name { .. })
@@ -751,6 +989,76 @@ impl RustEmitter {
         }
         self.write(")");
         Ok(true)
+    }
+
+    fn try_build_callable_adapter_closure(
+        &self,
+        arg: &HirExpr,
+        param_ty: &Type,
+        rendered_arg: &str,
+    ) -> Option<String> {
+        let Type::Callable(_, expected_conventions, _) =
+            crate::resolve_alias_type_for_plain_call(param_ty)
+        else {
+            return None;
+        };
+        let HirExpr::Name { name: callee, .. } = arg else {
+            return None;
+        };
+        let provided_params = self
+            .func_signatures
+            .get(callee)
+            .map(|(params, _)| params.clone())
+            .or_else(|| self.callable_var_conventions.get(callee).cloned())?;
+        if provided_params.len() != expected_conventions.len() {
+            return None;
+        }
+        if !provided_params
+            .iter()
+            .zip(expected_conventions.iter())
+            .any(|((_, provided), expected)| *provided != *expected)
+        {
+            return None;
+        }
+
+        let mut closure = String::new();
+        closure.push('|');
+        for idx in 0..provided_params.len() {
+            if idx > 0 {
+                closure.push_str(", ");
+            }
+            closure.push_str("__arg");
+            closure.push_str(&idx.to_string());
+        }
+        closure.push_str("| ");
+        closure.push_str(rendered_arg);
+        closure.push('(');
+        for (idx, ((_, provided), expected)) in provided_params
+            .iter()
+            .zip(expected_conventions.iter())
+            .enumerate()
+        {
+            if idx > 0 {
+                closure.push_str(", ");
+            }
+            let arg_name = format!("__arg{idx}");
+            let adapted = match (expected, provided) {
+                (ParamConvention::Borrow | ParamConvention::MutBorrow, ParamConvention::Own) => {
+                    format!("({arg_name}).clone()")
+                }
+                (ParamConvention::Own, ParamConvention::Borrow) => format!("&{arg_name}"),
+                (ParamConvention::Own, ParamConvention::MutBorrow) => {
+                    format!("&mut {arg_name}")
+                }
+                (ParamConvention::Borrow, ParamConvention::MutBorrow) => {
+                    format!("&*{arg_name}")
+                }
+                _ => arg_name,
+            };
+            closure.push_str(&adapted);
+        }
+        closure.push(')');
+        Some(closure)
     }
 
     pub(crate) fn try_emit_structured_plain_call(
@@ -811,7 +1119,15 @@ impl RustEmitter {
                     return Ok(false);
                 };
                 self.lowering_stats = saved_stats;
-                if let Some(inner) = option_inner_type(arg.ty()) {
+                let call_return_ty = if let HirExpr::Call { func, .. } = arg {
+                    self.func_signatures
+                        .get(func)
+                        .map(|(_, ret)| ret.clone())
+                } else {
+                    None
+                };
+                let str_arg_ty = call_return_ty.as_ref().unwrap_or_else(|| arg.ty());
+                if let Some(inner) = option_inner_type(str_arg_ty) {
                     self.write("(");
                     self.write(&arg_rendered);
                     self.write(").map_or(\"None\".to_string(), |__v| ");
@@ -823,7 +1139,7 @@ impl RustEmitter {
                     self.write(")");
                     return Ok(true);
                 }
-                if uses_debug_display_format(arg.ty()) {
+                if uses_debug_display_format(str_arg_ty) {
                     self.write("format!(\"{:?}\", ");
                 } else {
                     self.write("format!(\"{}\", ");
@@ -832,8 +1148,102 @@ impl RustEmitter {
                 self.write(")");
                 Ok(true)
             }
+            "repr" => {
+                let [arg] = args else {
+                    return Ok(false);
+                };
+                let saved_stats = self.lowering_stats;
+                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
+                    return Ok(false);
+                };
+                self.lowering_stats = saved_stats;
+                if option_inner_type(arg.ty()).is_some() {
+                    self.write("(");
+                    self.write(&arg_rendered);
+                    self.write(").map_or(\"None\".to_string(), |__v| format!(\"{:?}\", __v))");
+                    return Ok(true);
+                }
+                self.write("format!(\"{:?}\", ");
+                self.write(&arg_rendered);
+                self.write(")");
+                Ok(true)
+            }
             "isinstance" => {
-                self.write("true");
+                let [object, type_arg] = args else {
+                    return Ok(false);
+                };
+                let type_name = match type_arg {
+                    HirExpr::StringLiteral(name) => name.as_str(),
+                    HirExpr::Name { name, .. } => name.as_str(),
+                    _ => return Ok(false),
+                };
+                let resolved_object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
+                if let Type::Union(members) = resolved_object_ty {
+                    let target_ty = match type_name {
+                        "int" => Some(Type::Int),
+                        "str" => Some(Type::Str),
+                        "float" => Some(Type::Float),
+                        "bool" => Some(Type::Bool),
+                        other => members
+                            .iter()
+                            .find(|m| matches!(m, Type::Class { name, .. } if name == other))
+                            .cloned(),
+                    };
+                    let Some(target_ty) = target_ty else {
+                        self.write("false");
+                        return Ok(true);
+                    };
+                    if !members.contains(&target_ty) {
+                        self.write("false");
+                        return Ok(true);
+                    }
+                    let saved_stats = self.lowering_stats;
+                    let Some(object_rendered) = self.try_render_structured_expr(object)? else {
+                        return Ok(false);
+                    };
+                    self.lowering_stats = saved_stats;
+                    let preferred_enum_name = resolved_object_ty.union_enum_name();
+                    let variant_name = target_ty.union_variant_name();
+                    let enum_name = if self.union_enums.contains_key(&preferred_enum_name) {
+                        preferred_enum_name
+                    } else {
+                        self.union_enums
+                            .iter()
+                            .find_map(|(candidate, candidate_members)| {
+                                let has_variant = candidate_members
+                                    .iter()
+                                    .any(|member| member.union_variant_name() == variant_name);
+                                let has_all_members = members.iter().all(|needed_member| {
+                                    let needed_variant = needed_member.union_variant_name();
+                                    candidate_members.iter().any(|member| {
+                                        member.union_variant_name() == needed_variant
+                                    })
+                                });
+                                if has_variant && has_all_members {
+                                    Some(candidate.clone())
+                                } else {
+                                    None
+                                }
+                            })
+                            .unwrap_or(preferred_enum_name)
+                    };
+                    self.write("matches!(");
+                    self.write(&object_rendered);
+                    self.write(", ");
+                    self.write(&format!("{enum_name}::{variant_name}(..)"));
+                    self.write(")");
+                    return Ok(true);
+                }
+                let matches = match type_name {
+                    "int" => matches!(resolved_object_ty, Type::Int | Type::LiteralInt(_)),
+                    "str" => matches!(resolved_object_ty, Type::Str | Type::LiteralStr(_)),
+                    "float" => matches!(resolved_object_ty, Type::Float),
+                    "bool" => matches!(resolved_object_ty, Type::Bool | Type::LiteralBool(_)),
+                    other => {
+                        matches!(resolved_object_ty, Type::Class { name, .. } if name == other)
+                    }
+                };
+                self.write(if matches { "true" } else { "false" });
                 Ok(true)
             }
             "bool" => {
@@ -859,7 +1269,9 @@ impl RustEmitter {
                         self.write(&arg_rendered);
                         self.write(").is_empty()");
                     }
-                    Type::Tuple(elems) => self.write(if elems.is_empty() { "false" } else { "true" }),
+                    Type::Tuple(elems) => {
+                        self.write(if elems.is_empty() { "false" } else { "true" });
+                    }
                     Type::Bool => self.write(&arg_rendered),
                     Type::None => self.write("false"),
                     _ => self.write(&arg_rendered),
@@ -884,7 +1296,9 @@ impl RustEmitter {
                     Type::Str => {
                         self.write("(");
                         self.write(&arg_rendered);
-                        self.write(").parse::<i64>().map_err(|e| ParseError { message: e.to_string() })");
+                        self.write(
+                            ").parse::<i64>().map_err(|e| ParseError { message: e.to_string() })",
+                        );
                     }
                     Type::Bool => {
                         self.write("if ");
@@ -913,9 +1327,13 @@ impl RustEmitter {
                     return Ok(false);
                 };
                 self.lowering_stats = saved_stats;
-                if matches!(crate::resolve_alias_type_for_plain_call(base.ty()), Type::Int)
-                    && matches!(crate::resolve_alias_type_for_plain_call(exp.ty()), Type::Int)
-                {
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(base.ty()),
+                    Type::Int
+                ) && matches!(
+                    crate::resolve_alias_type_for_plain_call(exp.ty()),
+                    Type::Int
+                ) {
                     self.write("(");
                     self.write(&base_rendered);
                     self.write(").pow((");
@@ -962,7 +1380,9 @@ impl RustEmitter {
                     Type::Str => {
                         self.write("(");
                         self.write(&arg_rendered);
-                        self.write(").parse::<f64>().map_err(|e| ParseError { message: e.to_string() })");
+                        self.write(
+                            ").parse::<f64>().map_err(|e| ParseError { message: e.to_string() })",
+                        );
                     }
                     Type::Bool => {
                         self.write("if ");
@@ -985,6 +1405,20 @@ impl RustEmitter {
                 self.write(").round() as i64");
                 Ok(true)
             }
+            "abs" => {
+                let [arg] = args else {
+                    return Ok(false);
+                };
+                let saved_stats = self.lowering_stats;
+                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
+                    return Ok(false);
+                };
+                self.lowering_stats = saved_stats;
+                self.write("(");
+                self.write(&arg_rendered);
+                self.write(").abs()");
+                Ok(true)
+            }
             "min" | "max" => {
                 if args.len() == 1 {
                     let arg = &args[0];
@@ -1002,7 +1436,9 @@ impl RustEmitter {
                             if matches!(crate::resolve_alias_type_for_plain_call(inner), Type::Float)
                     ) {
                         self.write(func);
-                        self.write("_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))");
+                        self.write(
+                            "_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))",
+                        );
                     } else {
                         self.write(func);
                         self.write("()");
@@ -1017,9 +1453,13 @@ impl RustEmitter {
                     let Some(right_rendered) = self.try_render_structured_expr(right)? else {
                         return Ok(false);
                     };
-                    if matches!(crate::resolve_alias_type_for_plain_call(left.ty()), Type::Float)
-                        && matches!(crate::resolve_alias_type_for_plain_call(right.ty()), Type::Float)
-                    {
+                    if matches!(
+                        crate::resolve_alias_type_for_plain_call(left.ty()),
+                        Type::Float
+                    ) && matches!(
+                        crate::resolve_alias_type_for_plain_call(right.ty()),
+                        Type::Float
+                    ) {
                         self.write("(");
                         self.write(&left_rendered);
                         self.write(").");
@@ -1138,7 +1578,29 @@ impl RustEmitter {
                 self.lowering_stats = saved_stats;
                 self.write("(");
                 self.write(&arg_rendered);
-                self.write(").iter().cloned().enumerate().map(|(i, v)| (i as i64, v)).collect::<Vec<_>>()");
+                self.write(
+                    ").iter().cloned().enumerate().map(|(i, v)| (i as i64, v)).collect::<Vec<_>>()",
+                );
+                Ok(true)
+            }
+            "zip" => {
+                let [left, right] = args else {
+                    return Ok(false);
+                };
+                let saved_stats = self.lowering_stats;
+                let Some(left_rendered) = self.try_render_structured_expr(left)? else {
+                    return Ok(false);
+                };
+                self.lowering_stats = saved_stats;
+                let Some(right_rendered) = self.try_render_structured_expr(right)? else {
+                    return Ok(false);
+                };
+                self.lowering_stats = saved_stats;
+                self.write("(");
+                self.write(&left_rendered);
+                self.write(").iter().cloned().zip((");
+                self.write(&right_rendered);
+                self.write(").iter().cloned()).collect::<Vec<_>>()");
                 Ok(true)
             }
             _ => Ok(false),
@@ -1177,6 +1639,25 @@ impl RustEmitter {
                 "is not" => "!=",
                 _ => return Ok(false),
             };
+
+            let lhs_none_like = matches!(lhs_expr, HirExpr::NoneLiteral)
+                || matches!(
+                    crate::resolve_alias_type_for_plain_call(lhs_expr.ty()),
+                    Type::None
+                );
+            let rhs_none_like = matches!(rhs_expr, HirExpr::NoneLiteral)
+                || matches!(
+                    crate::resolve_alias_type_for_plain_call(rhs_expr.ty()),
+                    Type::None
+                );
+            if (op == "is" || op == "is not") && lhs_none_like && rhs_none_like {
+                if idx > 0 {
+                    rendered_chain.push_str(" && ");
+                }
+                rendered_chain.push_str(if op == "is" { "true" } else { "false" });
+                lhs_expr = rhs_expr;
+                continue;
+            }
             if idx > 0 {
                 rendered_chain.push_str(" && ");
             }
@@ -1190,12 +1671,53 @@ impl RustEmitter {
             } else {
                 rhs_rendered
             };
+
+            let mut lhs_cmp = lhs_wrapped;
+            let mut rhs_cmp = rhs_wrapped;
+            let mut string_as_str_applied = false;
+
+            let is_comparison_op =
+                matches!(lowered_op, "==" | "!=" | "<" | "<=" | ">" | ">=");
+            if is_comparison_op
+                && option_inner_type(lhs_expr.ty()).is_some()
+                && option_inner_type(rhs_expr.ty()).is_none()
+                && !matches!(rhs_expr, HirExpr::NoneLiteral)
+            {
+                rhs_cmp = format!("Some({rhs_cmp})");
+            } else if is_comparison_op
+                && option_inner_type(lhs_expr.ty()).is_none()
+                && option_inner_type(rhs_expr.ty()).is_some()
+                && !matches!(lhs_expr, HirExpr::NoneLiteral)
+            {
+                lhs_cmp = format!("Some({lhs_cmp})");
+            } else if is_string_like_type(lhs_expr.ty()) && is_string_like_type(rhs_expr.ty()) {
+                lhs_cmp = format!("({lhs_cmp}).as_str()");
+                rhs_cmp = format!("({rhs_cmp}).as_str()");
+                string_as_str_applied = true;
+            }
+
+            if !string_as_str_applied
+                && ((is_borrowed_string_name_expr(
+                    lhs_expr,
+                    &self.borrowed_params,
+                    &self.mut_borrowed_params,
+                ) && is_string_like_type(rhs_expr.ty()))
+                    || (is_borrowed_string_name_expr(
+                        rhs_expr,
+                        &self.borrowed_params,
+                        &self.mut_borrowed_params,
+                    ) && is_string_like_type(lhs_expr.ty())))
+            {
+                lhs_cmp = format!("({lhs_cmp}).as_str()");
+                rhs_cmp = format!("({rhs_cmp}).as_str()");
+            }
+
             rendered_chain.push('(');
-            rendered_chain.push_str(&lhs_wrapped);
+            rendered_chain.push_str(&lhs_cmp);
             rendered_chain.push(' ');
             rendered_chain.push_str(lowered_op);
             rendered_chain.push(' ');
-            rendered_chain.push_str(&rhs_wrapped);
+            rendered_chain.push_str(&rhs_cmp);
             rendered_chain.push(')');
             lhs_expr = rhs_expr;
         }
@@ -1213,6 +1735,26 @@ impl RustEmitter {
             return Ok(false);
         };
         self.lowering_stats = saved_stats;
+        if let Some(target_err_ty) = self.try_closure_error_type.last().cloned() {
+            let resolved_inner_ty = crate::resolve_alias_type_for_plain_call(inner.ty());
+            if let Type::Result(_, inner_err_ty) = resolved_inner_ty {
+                let inner_err_ty_name =
+                    crate::render_type(&crate::sifr_type_to_rust_type(inner_err_ty));
+                if inner_err_ty_name == target_err_ty {
+                    self.write(&inner_rendered);
+                    self.write("?");
+                    return Ok(true);
+                }
+                if can_construct_error_from_message(&target_err_ty) {
+                    self.write("(");
+                    self.write(&inner_rendered);
+                    self.write(").map_err(|__e| ");
+                    self.write(&target_err_ty);
+                    self.write("::new(__e.to_string()))?");
+                    return Ok(true);
+                }
+            }
+        }
         self.write(&inner_rendered);
         self.write("?");
         Ok(true)
@@ -1279,14 +1821,77 @@ impl RustEmitter {
         class_name: &str,
         args: &[HirExpr],
     ) -> Result<bool, crate::CodegenError> {
+        let ctor_params = self
+            .func_signatures
+            .get(&format!("{class_name}::new"))
+            .map(|(params, _)| params.clone());
+        if ctor_params
+            .as_ref()
+            .is_some_and(|params| params.len() != args.len())
+        {
+            return Ok(false);
+        }
+
         let mut rendered_args = Vec::with_capacity(args.len());
-        for arg in args {
+        for (idx, arg) in args.iter().enumerate() {
             let saved_stats = self.lowering_stats;
             let Some(rendered) = self.try_render_structured_expr(arg)? else {
                 return Ok(false);
             };
             self.lowering_stats = saved_stats;
-            rendered_args.push(rendered);
+            let mut rendered_arg = rendered;
+            let mut should_wrap_option = false;
+            let mut should_wrap_option_box = false;
+            let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty }
+                if self.borrowed_params.contains(name)
+                    || self.mut_borrowed_params.contains(name)
+                    || ty.rust_type().starts_with('&'));
+            if let Some(params) = ctor_params.as_ref() {
+                let (param_ty, convention) = &params[idx];
+                let is_recursive_ctor_field = self
+                    .class_field_order
+                    .get(class_name)
+                    .and_then(|fields| fields.get(idx))
+                    .is_some_and(|field_name| {
+                        self.recursive_fields
+                            .contains(&(class_name.to_string(), field_name.clone()))
+                    });
+                let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
+                should_wrap_option = crate::helpers::is_option_type(resolved_param)
+                    && !crate::helpers::is_option_type(arg.ty())
+                    && !matches!(arg, HirExpr::NoneLiteral);
+                should_wrap_option_box = should_wrap_option
+                    && (param_ty.rust_type().starts_with("Option<Box<")
+                        || is_recursive_ctor_field);
+                let mut prefix = String::new();
+                let prev_output = std::mem::take(&mut self.output);
+                self.emit_borrow_prefix_for_name(
+                    *convention,
+                    arg.ty(),
+                    Some(param_ty),
+                    match arg {
+                        HirExpr::Name { name, .. } => Some(name.as_str()),
+                        _ => None,
+                    },
+                );
+                prefix.push_str(&self.output);
+                self.output = prev_output;
+                if !prefix.is_empty() {
+                    rendered_arg = format!("{prefix}({rendered_arg})");
+                } else if *convention == ParamConvention::Own && borrowed_name_arg {
+                    rendered_arg = format!("({rendered_arg}).clone()");
+                }
+            } else if matches!(arg, HirExpr::Name { .. }) {
+                rendered_arg = format!("({rendered_arg}).clone()");
+            }
+            if should_wrap_option {
+                if should_wrap_option_box {
+                    rendered_arg = format!("Some(Box::new({rendered_arg}))");
+                } else {
+                    rendered_arg = format!("Some({rendered_arg})");
+                }
+            }
+            rendered_args.push(rendered_arg);
         }
 
         self.write(class_name);
@@ -1393,7 +1998,8 @@ impl RustEmitter {
     ) -> Result<bool, crate::CodegenError> {
         match expr {
             HirExpr::Name { name, .. } => {
-                self.write(name);
+                let rewritten = self.rewrite_special_ident(name.clone());
+                self.write(&crate::render_expr(&rewritten));
                 Ok(true)
             }
             HirExpr::UnaryOp { op, operand, .. } => {
@@ -1403,9 +2009,7 @@ impl RustEmitter {
             HirExpr::QuestionMark { expr: inner, .. } => {
                 self.try_emit_structured_question_mark_expr(inner)
             }
-            HirExpr::OkWrap { value, .. } => {
-                self.try_emit_structured_result_wrap_expr("Ok", value)
-            }
+            HirExpr::OkWrap { value, .. } => self.try_emit_structured_result_wrap_expr("Ok", value),
             HirExpr::ErrWrap { value, .. } => {
                 self.try_emit_structured_result_wrap_expr("Err", value)
             }
@@ -1471,9 +2075,9 @@ impl RustEmitter {
             Type::Dict(_, _) => {
                 self.write("(");
                 self.write(&collection_rendered);
-                self.write(").contains_key(&(");
-                self.write(&element_rendered);
-                self.write("))");
+                self.write(").contains_key(");
+                self.write_dict_key_lookup_arg(element, &element_rendered);
+                self.write(")");
                 Ok(true)
             }
             Type::List(_) | Type::Set(_) | Type::Str => {
@@ -1486,6 +2090,28 @@ impl RustEmitter {
             }
             _ => Ok(false),
         }
+    }
+
+    fn write_dict_key_lookup_arg(&mut self, key_expr: &HirExpr, key_rendered: &str) {
+        if let HirExpr::StringLiteral(value) = key_expr {
+            self.write(&format!("{value:?}"));
+            return;
+        }
+        if let HirExpr::Name { name, ty } = key_expr {
+            if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name) {
+                if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Str) {
+                    self.write("(");
+                    self.write(key_rendered);
+                    self.write(").as_str()");
+                } else {
+                    self.write(key_rendered);
+                }
+                return;
+            }
+        }
+        self.write("&(");
+        self.write(key_rendered);
+        self.write(")");
     }
 
     pub(crate) fn try_emit_structured_unary_expr(
@@ -1501,9 +2127,38 @@ impl RustEmitter {
 
         match op {
             "not" => {
-                self.write("!(");
-                self.write(&operand_rendered);
-                self.write(")");
+                match crate::resolve_alias_type_for_plain_call(operand.ty()) {
+                    Type::Int | Type::LiteralInt(_) => {
+                        self.write(&operand_rendered);
+                        self.write(" == 0");
+                    }
+                    Type::Float => {
+                        self.write(&operand_rendered);
+                        self.write(" == 0.0");
+                    }
+                    Type::Str | Type::List(_) | Type::Dict(_, _) | Type::Set(_) => {
+                        self.write("(");
+                        self.write(&operand_rendered);
+                        self.write(").is_empty()");
+                    }
+                    Type::Tuple(elems) => self.write(if elems.is_empty() { "true" } else { "false" }),
+                    Type::Bool => {
+                        self.write("!(");
+                        self.write(&operand_rendered);
+                        self.write(")");
+                    }
+                    Type::None => self.write("true"),
+                    _ if option_inner_type(operand.ty()).is_some() => {
+                        self.write("(");
+                        self.write(&operand_rendered);
+                        self.write(").is_none()");
+                    }
+                    _ => {
+                        self.write("!(");
+                        self.write(&operand_rendered);
+                        self.write(")");
+                    }
+                }
                 Ok(true)
             }
             "-" => {
@@ -1548,6 +2203,31 @@ impl RustEmitter {
             return Ok(false);
         };
         self.lowering_stats = right_saved_stats;
+        let mut left_rendered = left_rendered;
+        let mut right_rendered = right_rendered;
+        if option_inner_type(ty).is_none() {
+            if option_inner_type(left.ty()).is_some() {
+                left_rendered = format!("({left_rendered}).unwrap()");
+            }
+            if option_inner_type(right.ty()).is_some() {
+                right_rendered = format!("({right_rendered}).unwrap()");
+            }
+        }
+
+        if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Float) {
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(left.ty()),
+                Type::Int | Type::LiteralInt(_)
+            ) {
+                left_rendered = format!("({left_rendered}) as f64");
+            }
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(right.ty()),
+                Type::Int | Type::LiteralInt(_)
+            ) {
+                right_rendered = format!("({right_rendered}) as f64");
+            }
+        }
 
         if op == "**" {
             match (
@@ -1588,12 +2268,12 @@ impl RustEmitter {
 
         let rendered_op = if op == "//" { "/" } else { op };
         if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::BigInt) {
-            let left_rendered = if matches!(left, HirExpr::Name { .. } | HirExpr::FieldAccess { .. })
-            {
-                format!("({left_rendered}).clone()")
-            } else {
-                left_rendered
-            };
+            let left_rendered =
+                if matches!(left, HirExpr::Name { .. } | HirExpr::FieldAccess { .. }) {
+                    format!("({left_rendered}).clone()")
+                } else {
+                    left_rendered
+                };
             let right_rendered =
                 if matches!(right, HirExpr::Name { .. } | HirExpr::FieldAccess { .. }) {
                     format!("({right_rendered}).clone()")
@@ -1660,19 +2340,15 @@ impl RustEmitter {
             "-" => "__sub__",
             _ => return Ok(None),
         };
-        let Type::Class { methods, .. } = crate::resolve_alias_type_for_plain_call(left.ty()) else {
+        let Type::Class { methods, .. } = crate::resolve_alias_type_for_plain_call(left.ty())
+        else {
             return Ok(None);
         };
         let Some((_, method_sig)) = methods.iter().find(|(name, _)| name == method_name) else {
             return Ok(None);
         };
 
-        let lowered_left = if let HirExpr::FieldAccess {
-            object,
-            field,
-            ty,
-        } = left
-        {
+        let lowered_left = if let HirExpr::FieldAccess { object, field, ty } = left {
             self.try_lower_structured_field_access_expr(object, field, ty)?
         } else {
             crate::try_lower_leaf_or_name_expr_result(left)?
@@ -1681,12 +2357,7 @@ impl RustEmitter {
             return Ok(None);
         };
 
-        let lowered_right = if let HirExpr::FieldAccess {
-            object,
-            field,
-            ty,
-        } = right
-        {
+        let lowered_right = if let HirExpr::FieldAccess { object, field, ty } = right {
             self.try_lower_structured_field_access_expr(object, field, ty)?
         } else {
             crate::try_lower_leaf_or_name_expr_result(right)?
@@ -1695,7 +2366,12 @@ impl RustEmitter {
             return Ok(None);
         };
 
-        let arg_expr = if method_sig
+        let left_expr = crate::RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(lowered_left),
+        };
+
+        let right_expr = if method_sig
             .params
             .first()
             .is_some_and(|(_, _, conv)| *conv == ParamConvention::Borrow)
@@ -1708,10 +2384,10 @@ impl RustEmitter {
             lowered_right
         };
 
-        Ok(Some(crate::RustExpr::MethodCall {
-            receiver: Box::new(lowered_left),
-            method: method_name.to_string(),
-            args: vec![arg_expr],
+        Ok(Some(crate::RustExpr::BinOp {
+            left: Box::new(left_expr),
+            op: op.to_string(),
+            right: Box::new(right_expr),
         }))
     }
 
@@ -1826,8 +2502,10 @@ impl RustEmitter {
         &mut self,
         object: &HirExpr,
         index: &HirExpr,
+        result_ty: &Type,
     ) -> Result<bool, crate::CodegenError> {
         let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
+        let result_is_option = crate::helpers::is_option_type(result_ty);
         let option_inner_ty = if let Type::Union(members) = object_ty {
             let mut inner = None;
             for member in members {
@@ -1845,9 +2523,13 @@ impl RustEmitter {
         } else {
             None
         };
-        if !matches!(object_ty, Type::Dict(_, _) | Type::List(_) | Type::Str | Type::Tuple(_))
-            && !matches!(option_inner_ty, Some(Type::Dict(_, _) | Type::List(_) | Type::Str))
-        {
+        if !matches!(
+            object_ty,
+            Type::Dict(_, _) | Type::List(_) | Type::Str | Type::Tuple(_)
+        ) && !matches!(
+            option_inner_ty,
+            Some(Type::Dict(_, _) | Type::List(_) | Type::Str)
+        ) {
             return Ok(false);
         }
 
@@ -1883,13 +2565,7 @@ impl RustEmitter {
             match inner_ty {
                 Type::Dict(_, _) => {
                     self.write("__v.get(");
-                    if let HirExpr::StringLiteral(value) = index {
-                        self.write(&format!("{value:?}"));
-                    } else {
-                        self.write("&(");
-                        self.write(&index_rendered);
-                        self.write(")");
-                    }
+                    self.write_dict_key_lookup_arg(index, &index_rendered);
                     self.write(").cloned()");
                 }
                 Type::List(_) => {
@@ -1926,27 +2602,39 @@ impl RustEmitter {
             }
             Type::Dict(_, _) => {
                 self.write(&object_rendered);
-                self.write(".get(");
-                if let HirExpr::StringLiteral(value) = index {
-                    self.write(&format!("{value:?}"));
+                if result_is_option {
+                    self.write(".get(");
+                    self.write_dict_key_lookup_arg(index, &index_rendered);
+                    self.write(").cloned()");
                 } else {
-                    self.write("&(");
-                    self.write(&index_rendered);
-                    self.write(")");
+                    self.write("[");
+                    self.write_dict_key_lookup_arg(index, &index_rendered);
+                    self.write("].clone()");
                 }
-                self.write(").cloned()");
             }
             Type::List(_) => {
                 self.write(&object_rendered);
-                self.write(".get((");
-                self.write(&index_rendered);
-                self.write(") as usize).cloned()");
+                if result_is_option {
+                    self.write(".get((");
+                    self.write(&index_rendered);
+                    self.write(") as usize).cloned()");
+                } else {
+                    self.write("[(");
+                    self.write(&index_rendered);
+                    self.write(") as usize].clone()");
+                }
             }
             Type::Str => {
                 self.write(&object_rendered);
-                self.write(".chars().nth((");
-                self.write(&index_rendered);
-                self.write(") as usize).map(|c| c.to_string())");
+                if result_is_option {
+                    self.write(".chars().nth((");
+                    self.write(&index_rendered);
+                    self.write(") as usize).map(|c| c.to_string())");
+                } else {
+                    self.write(".chars().nth((");
+                    self.write(&index_rendered);
+                    self.write(") as usize).unwrap().to_string()");
+                }
             }
             _ => return Ok(false),
         }
@@ -2009,12 +2697,19 @@ impl RustEmitter {
                 self.write("{ let _s = &(");
                 self.write(&object_rendered);
                 self.write("); let _len = _s.chars().count() as i64; ");
+                if let Some(step_rendered) = &step_rendered {
+                    self.write("let _step = ");
+                    self.write(step_rendered);
+                    self.write("; ");
+                }
 
                 self.write("let _start = ");
                 if let Some(start_rendered) = &start_rendered {
                     self.write("{ let _sv = ");
                     self.write(start_rendered);
                     self.write("; if _sv < 0 { ((_len + _sv).max(0)) as usize } else { (_sv.min(_len)) as usize } }");
+                } else if step_rendered.is_some() {
+                    self.write("if _step > 0 { 0 } else { (_len - 1) as usize }");
                 } else {
                     self.write("0_usize");
                 }
@@ -2025,18 +2720,30 @@ impl RustEmitter {
                     self.write("{ let _ev = ");
                     self.write(stop_rendered);
                     self.write("; if _ev < 0 { ((_len + _ev).max(0)) as usize } else { (_ev.min(_len)) as usize } }");
+                } else if step_rendered.is_some() {
+                    self.write("if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }");
                 } else {
                     self.write("_len as usize");
                 }
                 self.write("; ");
 
-                if let Some(step_rendered) = &step_rendered {
-                    self.write("let _step = { let _st = ");
-                    self.write(step_rendered);
-                    self.write("; if _st <= 0 { 1_usize } else { _st as usize } }; ");
-                    self.write("_s.chars().skip(_start).take(_stop.saturating_sub(_start)).step_by(_step).collect::<String>() }");
+                if step_rendered.is_some() {
+                    self.write("let mut _chars: Vec<char> = _s.chars().collect(); ");
+                    self.write("let mut _result = String::new(); ");
+                    self.write("if _step > 0 { let mut _i = _start; ");
+                    self.write("while _i < _stop { ");
+                    self.write("if let Some(&_ch) = _chars.get(_i) { _result.push(_ch); } ");
+                    self.write("_i += _step as usize; } }");
+                    self.write(" else { let mut _i = _start as i64; ");
+                    self.write("let _stop_i = _stop as i64; while _i > _stop_i { ");
+                    self.write("if _i >= 0 { ");
+                    self.write("if let Some(&_ch) = _chars.get(_i as usize) { _result.push(_ch); } ");
+                    self.write("} _i += _step; } }");
+                    self.write("; _result }");
                 } else {
-                    self.write("_s.chars().skip(_start).take(_stop - _start).collect::<String>() }");
+                    self.write(
+                        "_s.chars().skip(_start).take(_stop - _start).collect::<String>() }",
+                    );
                 }
                 Ok(true)
             }
@@ -2044,12 +2751,19 @@ impl RustEmitter {
                 self.write("{ let _v = &(");
                 self.write(&object_rendered);
                 self.write("); let _len = _v.len() as i64; ");
+                if let Some(step_rendered) = &step_rendered {
+                    self.write("let _step = ");
+                    self.write(step_rendered);
+                    self.write("; ");
+                }
 
                 self.write("let _start = ");
                 if let Some(start_rendered) = &start_rendered {
                     self.write("{ let _s = ");
                     self.write(start_rendered);
                     self.write("; if _s < 0 { ((_len + _s).max(0)) as usize } else { (_s.min(_len)) as usize } }");
+                } else if step_rendered.is_some() {
+                    self.write("if _step > 0 { 0 } else { (_len - 1) as usize }");
                 } else {
                     self.write("0_usize");
                 }
@@ -2060,16 +2774,25 @@ impl RustEmitter {
                     self.write("{ let _e = ");
                     self.write(stop_rendered);
                     self.write("; if _e < 0 { ((_len + _e).max(0)) as usize } else { (_e.min(_len)) as usize } }");
+                } else if step_rendered.is_some() {
+                    self.write("if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }");
                 } else {
                     self.write("_len as usize");
                 }
                 self.write("; ");
 
-                if let Some(step_rendered) = &step_rendered {
-                    self.write("let _step = { let _st = ");
-                    self.write(step_rendered);
-                    self.write("; if _st <= 0 { 1_usize } else { _st as usize } }; ");
-                    self.write("_v.iter().skip(_start).take(_stop.saturating_sub(_start)).step_by(_step).cloned().collect::<Vec<_>>() }");
+                if step_rendered.is_some() {
+                    self.write("let mut _result = Vec::new(); ");
+                    self.write("if _step > 0 { let mut _i = _start; ");
+                    self.write("while _i < _stop { ");
+                    self.write("if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } ");
+                    self.write("_i += _step as usize; } }");
+                    self.write(" else { let mut _i = _start as i64; ");
+                    self.write("let _stop_i = _stop as i64; while _i > _stop_i { ");
+                    self.write("if _i >= 0 { ");
+                    self.write("if let Some(_el) = _v.get(_i as usize) { _result.push(_el.clone()); } ");
+                    self.write("} _i += _step; } }");
+                    self.write("; _result }");
                 } else {
                     self.write("_v[_start.._stop].to_vec() }");
                 }
@@ -2086,9 +2809,7 @@ impl RustEmitter {
         right: &HirExpr,
         ty: &Type,
     ) -> Result<bool, crate::CodegenError> {
-        if op != "+"
-            || !matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Str)
-        {
+        if op != "+" || !matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Str) {
             return Ok(false);
         }
 
@@ -2151,15 +2872,14 @@ impl RustEmitter {
             return Ok(false);
         }
 
-        let (string_expr, count_expr) =
-            match (
-                crate::resolve_alias_type_for_plain_call(left.ty()),
-                crate::resolve_alias_type_for_plain_call(right.ty()),
-            ) {
-                (Type::Str, Type::Int | Type::LiteralInt(_)) => (left, right),
-                (Type::Int | Type::LiteralInt(_), Type::Str) => (right, left),
-                _ => return Ok(false),
-            };
+        let (string_expr, count_expr) = match (
+            crate::resolve_alias_type_for_plain_call(left.ty()),
+            crate::resolve_alias_type_for_plain_call(right.ty()),
+        ) {
+            (Type::Str, Type::Int | Type::LiteralInt(_)) => (left, right),
+            (Type::Int | Type::LiteralInt(_), Type::Str) => (right, left),
+            _ => return Ok(false),
+        };
 
         let saved_stats = self.lowering_stats;
         let Some(rendered_string) = self.try_render_structured_expr(string_expr)? else {
@@ -2263,9 +2983,7 @@ fn render_expr_contains_force_guard_name(emitter: &RustEmitter, expr: &HirExpr) 
             render_expr_contains_force_guard_name(emitter, left)
                 || render_expr_contains_force_guard_name(emitter, right)
         }
-        HirExpr::UnaryOp { operand, .. } => {
-            render_expr_contains_force_guard_name(emitter, operand)
-        }
+        HirExpr::UnaryOp { operand, .. } => render_expr_contains_force_guard_name(emitter, operand),
         HirExpr::Compare {
             left, comparators, ..
         } => {
@@ -2354,18 +3072,14 @@ fn render_expr_contains_force_guard_name(emitter: &RustEmitter, expr: &HirExpr) 
                     .as_ref()
                     .is_some_and(|expr| render_expr_contains_force_guard_name(emitter, expr))
         }
-        HirExpr::WalrusExpr { value, .. } => {
-            render_expr_contains_force_guard_name(emitter, value)
-        }
+        HirExpr::WalrusExpr { value, .. } => render_expr_contains_force_guard_name(emitter, value),
         HirExpr::FieldAccess { object, .. } => {
             render_expr_contains_force_guard_name(emitter, object)
         }
         HirExpr::ConstructorCall { args, .. } => args
             .iter()
             .any(|expr| render_expr_contains_force_guard_name(emitter, expr)),
-        HirExpr::QuestionMark { expr, .. } => {
-            render_expr_contains_force_guard_name(emitter, expr)
-        }
+        HirExpr::QuestionMark { expr, .. } => render_expr_contains_force_guard_name(emitter, expr),
         HirExpr::OkWrap { value, .. } | HirExpr::ErrWrap { value, .. } => {
             render_expr_contains_force_guard_name(emitter, value)
         }

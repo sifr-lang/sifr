@@ -390,18 +390,46 @@ fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
             }
             // Store class method signatures (ClassName::method -> params, return_type)
             for class in &result.module.classes {
+                let mut has_constructor = false;
                 for method in &class.methods {
-                    if method.name != "new" {
-                        let param_info: Vec<(Type, ParamConvention)> = method
-                            .params
-                            .iter()
-                            .map(|p| (p.ty.clone(), p.convention))
-                            .collect();
-                        sig_map.insert(
-                            format!("{}::{}", class.name, method.name),
-                            (param_info, method.return_type.clone()),
-                        );
+                    let param_info: Vec<(Type, ParamConvention)> = method
+                        .params
+                        .iter()
+                        .map(|p| {
+                            let conv = if method.name == "new" {
+                                ParamConvention::Own
+                            } else {
+                                p.convention
+                            };
+                            (p.ty.clone(), conv)
+                        })
+                        .collect();
+                    sig_map.insert(
+                        format!("{}::{}", class.name, method.name),
+                        (param_info, method.return_type.clone()),
+                    );
+                    if method.name == "new" {
+                        has_constructor = true;
                     }
+                }
+                if !has_constructor {
+                    let ctor_params = class
+                        .fields
+                        .iter()
+                        .map(|(_, ty)| (ty.clone(), ParamConvention::Own))
+                        .collect::<Vec<_>>();
+                    sig_map.insert(
+                        format!("{}::new", class.name),
+                        (
+                            ctor_params,
+                            Type::Class {
+                                name: class.name.clone(),
+                                fields: class.fields.clone(),
+                                methods: Vec::new(),
+                                parent_class: class.parent_class.clone(),
+                            },
+                        ),
+                    );
                 }
             }
             if !sig_map.is_empty() {

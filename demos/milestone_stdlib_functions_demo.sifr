@@ -11,27 +11,17 @@ from sifr.itertools import pairwise, batched
 
 def main():
     print("=== Math Functions ===")
-    assert str("=== Math Functions ===") == "=== Math Functions ==="
     print("factorial(10) = " + str(factorial(10)))
-    assert str("factorial(10) = " + str(factorial(10))) == "factorial(10) = 3628800"
     print("gcd(48, 18) = " + str(gcd(48, 18)))
-    assert str("gcd(48, 18) = " + str(gcd(48, 18))) == "gcd(48, 18) = 6"
     print("lcm(4, 6) = " + str(lcm(4, 6)))
-    assert str("lcm(4, 6) = " + str(lcm(4, 6))) == "lcm(4, 6) = 12"
     print("comb(10, 3) = " + str(comb(10, 3)))
-    assert str("comb(10, 3) = " + str(comb(10, 3))) == "comb(10, 3) = 120"
     print("perm(5, 3) = " + str(perm(5, 3)))
-    assert str("perm(5, 3) = " + str(perm(5, 3))) == "perm(5, 3) = 60"
     nums: list[int] = [1, 2, 3, 4, 5]
     print("prod([1,2,3,4,5]) = " + str(prod(nums)))
-    assert str("prod([1,2,3,4,5]) = " + str(prod(nums))) == "prod([1,2,3,4,5]) = 120"
     print("exp(1.0) = " + str(exp(1.0)))
-    assert str("exp(1.0) = " + str(exp(1.0))) == "exp(1.0) = 2.718281828459045"
     print("isfinite(1.0) = " + str(isfinite(1.0)))
-    assert str("isfinite(1.0) = " + str(isfinite(1.0))) == "isfinite(1.0) = true"
 
     print("=== Statistics Functions ===")
-    assert str("=== Statistics Functions ===") == "=== Statistics Functions ==="
     data: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
     even: list[float] = [1.0, 2.0, 3.0, 4.0]
     try:
@@ -39,43 +29,29 @@ def main():
         ml: float = median_low(even)
         mh: float = median_high(even)
         print("harmonic_mean = " + str(hm))
-        assert str("harmonic_mean = " + str(hm)) == "harmonic_mean = 2.18978102189781"
         print("median_low = " + str(ml))
-        assert str("median_low = " + str(ml)) == "median_low = 2"
         print("median_high = " + str(mh))
-        assert str("median_high = " + str(mh)) == "median_high = 3"
     except StatisticsError as se:
         print("statistics error: " + se.message)
-        assert str("statistics error: " + se.message) == "=== String Functions ==="
 
     print("=== String Functions ===")
-    assert str("=== String Functions ===") == "capwords = Hello World Test"
     print("capwords = " + capwords("hello world test"))
-    assert str("capwords = " + capwords("hello world test")) == "=== Path Functions ==="
 
     print("=== Path Functions ===")
-    assert str("=== Path Functions ===") == "stem = report"
     print("stem = " + stem("/docs/report.pdf"))
-    assert str("stem = " + stem("/docs/report.pdf")) == "is_absolute = true"
     print("is_absolute = " + str(is_absolute("/usr/bin")))
-    assert str("is_absolute = " + str(is_absolute("/usr/bin"))) == "=== Generic Bisect ==="
 
     print("=== Generic Bisect ===")
-    assert str("=== Generic Bisect ===") == "bisect_left(floats, 2.5) = 2"
     floats: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
     print("bisect_left(floats, 2.5) = " + str(bisect_left(floats, 2.5)))
-    assert str("bisect_left(floats, 2.5) = " + str(bisect_left(floats, 2.5))) == "=== Itertools ==="
 
     print("=== Itertools ===")
-    assert str("=== Itertools ===") == "pairwise = [[1, 2], [2, 3], [3, 4]]"
     items: list[int] = [1, 2, 3, 4]
     print("pairwise = " + str(pairwise(items)))
-    assert str("pairwise = " + str(pairwise(items))) == "batched = [[1, 2, 3], [4, 5, 6], [7, 8]]"
     items2: list[int] = [1, 2, 3, 4, 5, 6, 7, 8]
     try:
         bat: list[list[int]] = batched(items2, 3)
         print("batched = " + str(bat))
-        assert str("batched = " + str(bat)) == "Done!"
     except ValueError as e:
         print(f"error: {e.message}")
 

@@ -16,9 +16,15 @@ def main():
     ts.add(2, 1)
     try:
         order: list[int] = ts.static_order()
-        print(order[0])
-        print(order[1])
-        print(order[2])
+        first: int | None = order[0]
+        second: int | None = order[1]
+        third: int | None = order[2]
+        if first is not None:
+            print(first)
+        if second is not None:
+            print(second)
+        if third is not None:
+            print(third)
     except CycleError as err:
         print(f"cycle error: {err.message}")
 

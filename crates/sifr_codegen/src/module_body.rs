@@ -43,9 +43,7 @@ impl RustEmitter {
             return;
         }
         let parsed = syn::parse_file(source).unwrap_or_else(|err| {
-            panic!(
-                "failed to parse emitted Rust items in {context}: {err}; source:\n{source}"
-            )
+            panic!("failed to parse emitted Rust items in {context}: {err}; source:\n{source}")
         });
         for item in parsed.items {
             let rendered = prettyplease::unparse(&syn::File {

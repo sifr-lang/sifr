@@ -61,39 +61,6 @@ pub fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {
     try_lower_leaf_expr(expr).map(|lowered_expr| vec![RustStmt::Expr(lowered_expr)])
 }
 
-fn print_uses_debug_format(ty: &Type) -> bool {
-    match resolve_alias_type(ty) {
-        Type::Int
-        | Type::Float
-        | Type::Bool
-        | Type::Str
-        | Type::None
-        | Type::Range
-        | Type::Union(_)
-        | Type::LiteralInt(_)
-        | Type::LiteralStr(_)
-        | Type::LiteralBool(_)
-        | Type::Class { .. }
-        | Type::Newtype { .. }
-        | Type::TypeVar(_)
-        | Type::Enum { .. }
-        | Type::BigInt => false,
-        Type::List(_)
-        | Type::Dict(_, _)
-        | Type::Set(_)
-        | Type::Tuple(_)
-        | Type::Function(_)
-        | Type::Callable(..)
-        | Type::Result(_, _)
-        | Type::Protocol { .. }
-        | Type::Any
-        | Type::Unknown
-        | Type::Intersection(_)
-        | Type::Never => true,
-        Type::Alias(_, inner) => print_uses_debug_format(inner),
-    }
-}
-
 fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
     let HirExpr::Call { func, args, .. } = expr else {
         return None;
@@ -110,41 +77,8 @@ fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
             name: "println".to_string(),
             args: vec![RustExpr::Ident(format!("{value:?}"))],
         })),
-        [HirExpr::FString { parts, .. }] => {
-            let mut format_str = String::new();
-            let mut lowered_args = Vec::new();
-            for part in parts {
-                match part {
-                    HirFStringPart::Literal(value) => {
-                        for ch in value.chars() {
-                            match ch {
-                                '{' => format_str.push_str("{{"),
-                                '}' => format_str.push_str("}}"),
-                                _ => format_str.push(ch),
-                            }
-                        }
-                    }
-                    HirFStringPart::Expr(value_expr) => {
-                        format_str.push_str("{}");
-                        lowered_args.push(try_lower_leaf_or_name_expr(value_expr)?);
-                    }
-                }
-            }
-            Some(RustStmt::Expr(RustExpr::FormatMacro {
-                name: "println".to_string(),
-                format_str,
-                args: lowered_args,
-            }))
-        }
-        [arg] => Some(RustStmt::Expr(RustExpr::FormatMacro {
-            name: "println".to_string(),
-            format_str: if print_uses_debug_format(arg.ty()) {
-                "{:?}".to_string()
-            } else {
-                "{}".to_string()
-            },
-            args: vec![try_lower_leaf_or_name_expr(arg)?],
-        })),
+        [HirExpr::FString { .. }] => None,
+        [_arg] => None,
         _ => None,
     }
 }
@@ -744,14 +678,9 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
             subject,
             subject_ty,
             arms,
-        } => try_lower_simple_match_stmt(
-            subject,
-            subject_ty,
-            arms,
-            in_loop_with_else,
-            bindings,
-            ctx,
-        ),
+        } => {
+            try_lower_simple_match_stmt(subject, subject_ty, arms, in_loop_with_else, bindings, ctx)
+        }
         HirStmt::NestedFunction { func } => {
             try_lower_simple_nested_function_stmt(func, in_loop_with_else, bindings)
         }
@@ -949,7 +878,10 @@ fn append_recursive_capture_args_to_stmts(
             RustStmt::LocalFn { body, .. } => {
                 append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
             }
-            RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue | RustStmt::RawCode(_) => {}
+            RustStmt::Return(None)
+            | RustStmt::Break
+            | RustStmt::Continue
+            | RustStmt::RawCode(_) => {}
         }
     }
 }
@@ -1119,7 +1051,10 @@ fn try_lower_simple_try_except_stmt(
         RustStmt::Let {
             mutable: false,
             name: "__sifr_try_res".to_string(),
-            ty: None,
+            ty: Some(RustType::Result(
+                Box::new(RustType::Unit),
+                Box::new(RustType::Named("Error".to_string())),
+            )),
             value: RustExpr::FnCall {
                 func: Box::new(RustExpr::ClosureBlock {
                     params: vec![],
@@ -1538,20 +1473,29 @@ fn try_lower_simple_match_stmt(
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
     let lowered_subject = try_lower_leaf_or_name_expr(subject)?;
+    let subject_is_borrowed_name = matches!(subject, HirExpr::Name { name, .. } if bindings.borrowed_params.contains(name));
     let lowered_arms = arms
         .iter()
         .map(|arm| {
             let (pattern, arm_bindings, auto_guard) =
                 if matches!(resolve_alias_type(subject_ty), Type::Str) {
                     try_lower_match_pattern_for_string_subject(&arm.pattern)?
+                } else if let Some((pattern, bindings)) =
+                    try_lower_union_class_match_pattern(&arm.pattern, subject_ty)
+                {
+                    (pattern, bindings, None)
                 } else {
                     let (pattern, arm_bindings) = try_lower_match_pattern(&arm.pattern)?;
                     (pattern, arm_bindings, None)
                 };
-            let lowered_guard = arm
-                .guard
-                .as_ref()
-                .and_then(try_lower_leaf_or_name_expr);
+            let mut lowered_guard = arm.guard.as_ref().and_then(try_lower_leaf_or_name_expr);
+            if subject_is_borrowed_name {
+                let copy_captures = collect_copy_capture_names(&arm.pattern);
+                if !copy_captures.is_empty() {
+                    lowered_guard = lowered_guard
+                        .map(|guard| deref_guard_copy_captures(guard, &copy_captures));
+                }
+            }
             let guard = match (auto_guard, lowered_guard) {
                 (Some(left), Some(right)) => Some(RustExpr::BinOp {
                     left: Box::new(left),
@@ -1596,10 +1540,7 @@ fn try_lower_match_pattern_for_string_subject(
             Some(try_lower_string_literal_match_guard(pattern)?),
         )),
         HirPattern::Or { patterns } => {
-            if patterns
-                .iter()
-                .any(|p| matches!(p, HirPattern::Wildcard))
-            {
+            if patterns.iter().any(|p| matches!(p, HirPattern::Wildcard)) {
                 return Some(("_".to_string(), vec![], None));
             }
             Some((
@@ -1620,9 +1561,17 @@ fn try_lower_string_literal_match_guard(pattern: &HirPattern) -> Option<RustExpr
         HirPattern::Literal {
             value: HirExpr::StringLiteral(expected),
         } => Some(RustExpr::BinOp {
-            left: Box::new(RustExpr::Ident("__s".to_string())),
+            left: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__s".to_string())),
+                method: "as_str".to_string(),
+                args: vec![],
+            }),
             op: "==".to_string(),
-            right: Box::new(RustExpr::Literal(RustLiteral::Str(expected.clone()))),
+            right: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Literal(RustLiteral::Str(expected.clone()))),
+                method: "as_str".to_string(),
+                args: vec![],
+            }),
         }),
         HirPattern::Or { patterns } => {
             let mut guards = Vec::with_capacity(patterns.len());
@@ -1685,6 +1634,152 @@ fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, Vec<String>)
                 ))
             }
         }
+    }
+}
+
+fn try_lower_union_class_match_pattern(
+    pattern: &HirPattern,
+    subject_ty: &Type,
+) -> Option<(String, Vec<String>)> {
+    let Type::Union(members) = resolve_alias_type(subject_ty) else {
+        return None;
+    };
+    let HirPattern::Class { class_name, fields } = pattern else {
+        return None;
+    };
+
+    let target_ty = match class_name.as_str() {
+        "int" => Some(Type::Int),
+        "str" => Some(Type::Str),
+        "float" => Some(Type::Float),
+        "bool" => Some(Type::Bool),
+        other => members
+            .iter()
+            .find(|m| matches!(m, Type::Class { name, .. } if name == other))
+            .cloned(),
+    }?;
+    if !members.contains(&target_ty) {
+        return None;
+    }
+
+    let enum_name = resolve_alias_type(subject_ty).union_enum_name();
+    let variant_name = target_ty.union_variant_name();
+    if fields.is_empty() {
+        return Some((format!("{enum_name}::{variant_name}(..)"), vec![]));
+    }
+    if !matches!(target_ty, Type::Class { .. }) {
+        return None;
+    }
+    let mut rendered_fields = Vec::new();
+    let mut bindings = Vec::new();
+    for (field_name, field_pattern) in fields {
+        let (field_pat, field_binds) = try_lower_match_pattern(field_pattern)?;
+        rendered_fields.push(format!("{field_name}: {field_pat}"));
+        bindings.extend(field_binds);
+    }
+    Some((
+        format!(
+            "{enum_name}::{variant_name}({class_name} {{ {}, .. }})",
+            rendered_fields.join(", ")
+        ),
+        bindings,
+    ))
+}
+
+fn is_copy_capture_type(ty: &Type) -> bool {
+    matches!(
+        resolve_alias_type(ty),
+        Type::Int
+            | Type::LiteralInt(_)
+            | Type::Float
+            | Type::Bool
+            | Type::LiteralBool(_)
+    )
+}
+
+fn collect_copy_capture_names(pattern: &HirPattern) -> HashSet<String> {
+    let mut names = HashSet::new();
+    collect_copy_capture_names_inner(pattern, &mut names);
+    names
+}
+
+fn collect_copy_capture_names_inner(pattern: &HirPattern, out: &mut HashSet<String>) {
+    match pattern {
+        HirPattern::Capture { name, ty } if is_copy_capture_type(ty) => {
+            out.insert(name.clone());
+        }
+        HirPattern::Class { fields, .. } => {
+            for (_, field_pattern) in fields {
+                collect_copy_capture_names_inner(field_pattern, out);
+            }
+        }
+        HirPattern::Tuple { elements } => {
+            for element in elements {
+                collect_copy_capture_names_inner(element, out);
+            }
+        }
+        HirPattern::Or { patterns } => {
+            for pattern in patterns {
+                collect_copy_capture_names_inner(pattern, out);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn deref_guard_copy_captures(expr: RustExpr, captures: &HashSet<String>) -> RustExpr {
+    match expr {
+        RustExpr::Ident(name) if captures.contains(&name) => {
+            RustExpr::Deref(Box::new(RustExpr::Ident(name)))
+        }
+        RustExpr::BinOp { left, op, right } => RustExpr::BinOp {
+            left: Box::new(deref_guard_copy_captures(*left, captures)),
+            op,
+            right: Box::new(deref_guard_copy_captures(*right, captures)),
+        },
+        RustExpr::UnaryOp { op, operand } => RustExpr::UnaryOp {
+            op,
+            operand: Box::new(deref_guard_copy_captures(*operand, captures)),
+        },
+        RustExpr::FnCall { func, args } => RustExpr::FnCall {
+            func: Box::new(deref_guard_copy_captures(*func, captures)),
+            args: args
+                .into_iter()
+                .map(|arg| deref_guard_copy_captures(arg, captures))
+                .collect(),
+        },
+        RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } => RustExpr::MethodCall {
+            receiver: Box::new(deref_guard_copy_captures(*receiver, captures)),
+            method,
+            args: args
+                .into_iter()
+                .map(|arg| deref_guard_copy_captures(arg, captures))
+                .collect(),
+        },
+        RustExpr::Ref { mutable, expr } => RustExpr::Ref {
+            mutable,
+            expr: Box::new(deref_guard_copy_captures(*expr, captures)),
+        },
+        RustExpr::Deref(expr) => RustExpr::Deref(Box::new(deref_guard_copy_captures(
+            *expr, captures,
+        ))),
+        RustExpr::Cast { expr, ty } => RustExpr::Cast {
+            expr: Box::new(deref_guard_copy_captures(*expr, captures)),
+            ty,
+        },
+        RustExpr::Field { expr, field } => RustExpr::Field {
+            expr: Box::new(deref_guard_copy_captures(*expr, captures)),
+            field,
+        },
+        RustExpr::Index { expr, index } => RustExpr::Index {
+            expr: Box::new(deref_guard_copy_captures(*expr, captures)),
+            index: Box::new(deref_guard_copy_captures(*index, captures)),
+        },
+        other => other,
     }
 }
 
@@ -2027,10 +2122,29 @@ fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExp
         "is not" => "!=",
         _ => return None,
     };
+    let mut lowered_left = try_lower_condition_operand_expr(left)?;
+    let mut lowered_right = try_lower_condition_operand_expr(rhs_expr)?;
+    if is_option_like_type(left.ty())
+        && !is_option_like_type(rhs_expr.ty())
+        && !matches!(rhs_expr, HirExpr::NoneLiteral)
+    {
+        lowered_right = RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered_right],
+        };
+    } else if !is_option_like_type(left.ty())
+        && is_option_like_type(rhs_expr.ty())
+        && !matches!(left.as_ref(), HirExpr::NoneLiteral)
+    {
+        lowered_left = RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+            args: vec![lowered_left],
+        };
+    }
     Some(RustExpr::BinOp {
-        left: Box::new(try_lower_condition_operand_expr(left)?),
+        left: Box::new(lowered_left),
         op: lowered_op.to_string(),
-        right: Box::new(try_lower_condition_operand_expr(rhs_expr)?),
+        right: Box::new(lowered_right),
     })
 }
 
@@ -2052,7 +2166,9 @@ fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
             }),
             ty: RustType::I64,
         }),
-        HirExpr::Index { object, index, .. } => try_lower_condition_index_operand_expr(object, index),
+        HirExpr::Index { object, index, .. } => {
+            try_lower_condition_index_operand_expr(object, index)
+        }
         _ => None,
     }
 }
@@ -2474,7 +2590,7 @@ fn try_lower_simple_delete_stmt(object: &HirExpr, index: &HirExpr) -> Option<Vec
 
 fn build_dict_delete_key_arg(index: &HirExpr) -> Option<RustExpr> {
     if matches!(index, HirExpr::Name { .. }) {
-    // Preserve name-key borrowing behavior.
+        // Preserve name-key borrowing behavior.
         return None;
     }
     let lowered_index = try_lower_leaf_expr(index)?;
@@ -2656,9 +2772,7 @@ fn try_lower_simple_return_stmt(
     if ctx.in_display_impl {
         return None;
     }
-    if ctx.in_class_scope
-        && matches!(value, HirExpr::Name { name, .. } if name == "self")
-    {
+    if ctx.in_class_scope && matches!(value, HirExpr::Name { name, .. } if name == "self") {
         return Some(vec![RustStmt::Return(Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("self".to_string())),
             method: "clone".to_string(),

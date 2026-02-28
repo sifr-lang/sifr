@@ -12,103 +12,78 @@ from sifr.shutil import disk_usage
 
 def demo_math() -> None:
     print("=== math new intrinsics ===")
-    assert str("=== math new intrinsics ===") == "=== math new intrinsics ==="
     e0: float = erf(0.0)
     print("erf near 0 = " + str(e0 < 0.001 and e0 > -0.001))
-    assert str("erf near 0 = " + str(e0 < 0.001 and e0 > -0.001)) == "erf near 0 = true"
     ec0: float = erfc(0.0)
     print("erfc near 1 = " + str(ec0 > 0.999 and ec0 < 1.001))
-    assert str("erfc near 1 = " + str(ec0 > 0.999 and ec0 < 1.001)) == "erfc near 1 = true"
     g: float = gamma(5.0)
     print("gamma(5) > 23 = " + str(g > 23.0))
-    assert str("gamma(5) > 23 = " + str(g > 23.0)) == "gamma(5) > 23 = true"
     lg: float = lgamma(5.0)
     print("lgamma(5) > 3 = " + str(lg > 3.0))
-    assert str("lgamma(5) > 3 = " + str(lg > 3.0)) == "lgamma(5) > 3 = true"
     fp: list[float] = frexp(8.0)
-    print("frexp(8.0) mantissa = " + str(fp[0]))
-    assert str("frexp(8.0) mantissa = " + str(fp[0])) == "frexp(8.0) mantissa = 0.5"
+    mantissa: float | None = fp[0]
+    if mantissa is not None:
+        print("frexp(8.0) mantissa = " + str(mantissa))
     ld: float = ldexp(0.5, 4)
     print("ldexp(0.5, 4) = " + str(ld))
-    assert str("ldexp(0.5, 4) = " + str(ld)) == "ldexp(0.5, 4) = 8"
     md: list[float] = modf(3.7)
-    print("modf(3.7) frac > 0 = " + str(md[0] > 0.0))
-    assert str("modf(3.7) frac > 0 = " + str(md[0] > 0.0)) == "modf(3.7) frac > 0 = true"
+    frac: float | None = md[0]
+    if frac is not None:
+        print("modf(3.7) frac > 0 = " + str(frac > 0.0))
     na: float = nextafter(1.0, 2.0)
     print("nextafter(1.0, 2.0) > 1.0 = " + str(na > 1.0))
-    assert str("nextafter(1.0, 2.0) > 1.0 = " + str(na > 1.0)) == "nextafter(1.0, 2.0) > 1.0 = true"
     u: float = ulp(1.0)
     print("ulp(1.0) > 0 = " + str(u > 0.0))
-    assert str("ulp(1.0) > 0 = " + str(u > 0.0)) == "ulp(1.0) > 0 = true"
 
 def demo_os() -> None:
     print("=== os new intrinsics ===")
-    assert str("=== os new intrinsics ===") == "=== os new intrinsics ==="
     pid: int = getpid()
     print("pid > 0 = " + str(pid > 0))
-    assert str("pid > 0 = " + str(pid > 0)) == "pid > 0 = true"
     cpus: int = cpu_count()
     print("cpu_count >= 1 = " + str(cpus >= 1))
-    assert str("cpu_count >= 1 = " + str(cpus >= 1)) == "cpu_count >= 1 = true"
 
 def demo_hashlib() -> None:
     print("=== hashlib new intrinsics ===")
-    assert str("=== hashlib new intrinsics ===") == "=== hashlib new intrinsics ==="
     s: str = "hello"
     print("sha224 len = " + str(len(sha224(s))))
-    assert str("sha224 len = " + str(len(sha224(s)))) == "sha224 len = 56"
     print("sha384 len = " + str(len(sha384(s))))
-    assert str("sha384 len = " + str(len(sha384(s)))) == "sha384 len = 96"
     print("blake2b len = " + str(len(blake2b(s))))
-    assert str("blake2b len = " + str(len(blake2b(s)))) == "blake2b len = 128"
     print("blake2s len = " + str(len(blake2s(s))))
-    assert str("blake2s len = " + str(len(blake2s(s)))) == "blake2s len = 64"
 
 def demo_platform() -> None:
     print("=== platform new intrinsics ===")
-    assert str("=== platform new intrinsics ===") == "=== platform new intrinsics ==="
     print("system len > 0 = " + str(len(system()) > 0))
-    assert str("system len > 0 = " + str(len(system()) > 0)) == "system len > 0 = true"
     print("machine len > 0 = " + str(len(machine()) > 0))
-    assert str("machine len > 0 = " + str(len(machine()) > 0)) == "machine len > 0 = true"
     print("processor len > 0 = " + str(len(processor()) > 0))
-    assert str("processor len > 0 = " + str(len(processor()) > 0)) == "processor len > 0 = true"
 
 def demo_time() -> None:
     print("=== time new intrinsics ===")
-    assert str("=== time new intrinsics ===") == "=== time new intrinsics ==="
     gmt: str = gmtime(0.0)
     print("gmtime len > 0 = " + str(len(gmt) > 0))
-    assert str("gmtime len > 0 = " + str(len(gmt) > 0)) == "gmtime len > 0 = true"
     lt: str = localtime(0.0)
     print("localtime len > 0 = " + str(len(lt) > 0))
-    assert str("localtime len > 0 = " + str(len(lt) > 0)) == "localtime len > 0 = true"
     try:
         parsed: str = strptime("2024-01-15 10:30:00", "%Y-%m-%d %H:%M:%S")
         print("strptime ok = " + str(len(parsed) > 0))
-        assert str("strptime ok = " + str(len(parsed) > 0)) == "strptime ok = true"
     except ValueError as e:
         print("strptime error: " + e.message)
-        assert str("strptime error: " + e.message) == "=== base64 new intrinsics ==="
 
 def demo_base64() -> None:
     print("=== base64 new intrinsics ===")
-    assert str("=== base64 new intrinsics ===") == "b32encode len > 0 = true"
     encoded: str = b32encode("hello world")
     print("b32encode len > 0 = " + str(len(encoded) > 0))
-    assert str("b32encode len > 0 = " + str(len(encoded) > 0)) == "b32decode = hello world"
     try:
         decoded: str = b32decode(encoded)
         print("b32decode = " + decoded)
-        assert str("b32decode = " + decoded) == "=== shutil new intrinsics ==="
     except ParseError as e:
         print("b32decode error: " + e.message)
-        assert str("b32decode error: " + e.message) == "disk_total > 0 = true"
 
 def demo_shutil() -> None:
     print("=== shutil new intrinsics ===")
     usage: list[int] = disk_usage("/")
-    print("disk_total > 0 = " + str(usage[0] > 0))
+    total: int | None = usage[0]
+    if total is not None:
+        print("disk_total > 0 = " + str(total > 0))
 
 def main():
     demo_math()

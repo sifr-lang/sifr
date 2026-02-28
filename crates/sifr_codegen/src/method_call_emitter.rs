@@ -147,9 +147,14 @@ impl RustEmitter {
         // If the parameter type is a TypeVar, always emit the borrow prefix
         // because the generated Rust signature uses &T for borrowed TypeVar params
         let is_generic_param = param_ty.is_some_and(|t| matches!(t, Type::TypeVar(_)));
-        // Copy types are always passed by value regardless of convention,
-        // unless the parameter is generic (TypeVar)
-        if !is_generic_param && arg_ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+        // Copy types are passed by value regardless of convention unless the
+        // parameter is generic (TypeVar). Base this on the parameter type when
+        // available (not the argument expression type), because constructor
+        // expressions can carry payload types that differ from the parameter.
+        let borrow_decision_ty = param_ty.unwrap_or(arg_ty);
+        if !is_generic_param
+            && borrow_decision_ty.ownership() == sifr_type_system::OwnershipKind::Copy
+        {
             return;
         }
         // If the argument is already a borrowed parameter (&T), don't add another borrow.

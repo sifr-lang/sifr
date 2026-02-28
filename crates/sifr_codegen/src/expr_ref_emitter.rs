@@ -46,6 +46,41 @@ fn option_inner_type(ty: &Type) -> Option<&Type> {
     members.iter().find(|member| !matches!(member, Type::None))
 }
 
+fn option_inner_from_rust_type(ty: &Type) -> Option<Type> {
+    let rust_ty = ty.rust_type();
+    if !rust_ty.starts_with("Option<") {
+        return None;
+    }
+    if rust_ty.contains("String") {
+        return Some(Type::Str);
+    }
+    if rust_ty.contains("i64") {
+        return Some(Type::Int);
+    }
+    if rust_ty.contains("f64") {
+        return Some(Type::Float);
+    }
+    if rust_ty.contains("bool") {
+        return Some(Type::Bool);
+    }
+    Some(Type::Unknown)
+}
+
+fn display_option_inner_type(expr: &HirExpr) -> Option<Type> {
+    if let Some(inner) = option_inner_type(expr.ty()) {
+        return Some(inner.clone());
+    }
+    if let HirExpr::Index { object, .. } = expr {
+        match crate::resolve_alias_type_for_plain_call(object.ty()) {
+            Type::List(elem) => return Some((**elem).clone()),
+            Type::Dict(_, value) => return Some((**value).clone()),
+            Type::Str => return Some(Type::Str),
+            _ => {}
+        }
+    }
+    option_inner_from_rust_type(expr.ty())
+}
+
 impl RustEmitter {
     /// Emit an expression wrapped in parentheses.
     ///
@@ -186,12 +221,29 @@ impl RustEmitter {
     /// Wraps Option<T> expressions so they display as the inner value or "None".
     /// Omits `.to_string()` on string literals since format macros accept &str.
     pub(super) fn emit_display_expr(&mut self, expr: &HirExpr) {
-        if let Some(inner) = option_inner_type(expr.ty()) {
+        let inferred_option_inner = if let Some(inner) = display_option_inner_type(expr) {
+            Some(inner)
+        } else if matches!(
+            crate::resolve_alias_type_for_plain_call(expr.ty()),
+            Type::Str | Type::LiteralStr(_)
+        ) {
+            None
+        } else {
+            let probe = self.render_expr_via_direct_emit(expr);
+            if probe.contains(".get(") && probe.contains(").cloned()") {
+                Some(Type::Unknown)
+            } else if probe.contains(".chars().nth(") {
+                Some(Type::Str)
+            } else {
+                None
+            }
+        };
+        if let Some(inner) = inferred_option_inner {
             // Wrap: expr.map_or("None".to_string(), |_v| format!("{}", _v))
             self.write("(");
             self.emit_expr(expr);
             self.write(").map_or(\"None\".to_string(), |_v| ");
-            if uses_debug_display_format(inner) {
+            if uses_debug_display_format(&inner) {
                 self.write("format!(\"{:?}\", _v))");
             } else {
                 self.write("format!(\"{}\", _v))");

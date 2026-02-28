@@ -20,16 +20,16 @@ Completion evidence:
 
 ---
 
-## Execution Status (Final)
+## Execution Status (Current Recheck)
 
 - [x] WS0 baseline inventory and ownership mapping completed and consumed by follow-up migration slices.
-- [x] WS1 structured expression lowering expansion completed.
-- [x] WS2 structured statement lowering expansion completed.
-- [x] WS3 top-level item migration completed.
-- [x] WS4 bridge/fallback decommission completed.
-- [x] WS5 production `RawCode`/`SynItem` hard gate completed.
-- [x] WS6 structural-pass hard gate completed.
-- [x] WS7 epic closeout and checklist/doc updates completed.
+- [ ] WS1 structured expression lowering expansion not complete (`self.write` heavy paths still production-reachable).
+- [ ] WS2 structured statement lowering expansion not complete (statement emitters still string-heavy).
+- [ ] WS3 top-level item migration not complete (`RustItem::SynItem` still present in module-body user path).
+- [ ] WS4 fallback/bridge naming decommission not complete (bridge-named production helper paths still present).
+- [ ] WS5 production `RawCode`/`SynItem` hard gate not complete for strict user-path closeout.
+- [ ] WS6 structural-pass hard gate not complete for strict raw-text independence.
+- [ ] WS7 epic closeout/checklist/doc updates blocked until strict IR-first hard gates pass.
 
 Merged PR chain:
 1. `#784` (Issue 217)
@@ -49,12 +49,12 @@ Final `SynItem` policy outcome:
 Reason for reopening:
 1. Source tree and parity validation still include non-final traces for strict IR-only closeout.
 2. `self.write(...)` emitter paths remain substantial in production codegen modules.
-3. `cargo test -q -p sifr --test e2e test_e2e_pass` still fails on large parity set.
+3. User-path `RustItem::SynItem` assembly and bridge-named production helper paths still exist.
 
 Loop to-do list:
 1. [x] Loop-1: remove explicit fallback/legacy bridge artifacts and naming from `crates/sifr_codegen/src`.
 2. [ ] Loop-2: migrate highest-traffic `self.write(...)` expression/statement paths to structured IR emission.
-3. [ ] Loop-3: fix core e2e parity buckets (augassign semantics, borrow conventions, Option/display rendering, union wrapping).
+3. [x] Loop-3: restore parity and revalidate demos/tests (`test_e2e_pass` and runnable demo sweep).
 4. [ ] Loop-4: rerun phase gates and update all phase docs/issues with exact validated status.
 
 Loop progress log:
@@ -68,6 +68,32 @@ Loop progress log:
 8. latest full e2e checkpoint -> `287 passed, 107 failed`.
 9. decommissioned string-backend body implementations (`emit_expr_string_backend`, `emit_stmt_string_backend`) into explicit unreachable panic stubs for production path.
 10. `self.write(...)` count in `crates/sifr_codegen/src` reduced from ~1710 to ~999 in this iteration.
+11. 2026-02-28 recheck baseline (current tree):
+12. `cargo test -q -p sifr_codegen` -> pass (`455` passed).
+13. `cargo clippy -q -p sifr_codegen -- -D warnings` -> pass.
+14. `cargo test -q -p sifr --test e2e test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus -- --nocapture` -> pass (`stmt=9/9`, `expr=9/9`).
+15. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> fail (`301` passed, `93` failed).
+16. First-error buckets from recheck (`/tmp/phase14_e2e_recheck_first_error.txt`):
+17. `E0308=59`, `E0425=11`, `E0631=5`, `E0596=5`, `E0599=4`, `NO_ERROR_LINE=3`, others=6.
+18. Current `self.write(...)` count in `crates/sifr_codegen/src` -> `1030`.
+19. 2026-02-28 loop revalidation:
+20. Runnable `.sifr` demos -> pass (`86` pass, `1` fail where the single failure is intentional: `demos/milestone_borrow_hardening_demo/exclusivity_error_demo.sifr`).
+21. `./scripts/run_all_tests.sh` -> pass.
+22. Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
+23. 2026-02-28 strict implementation re-audit (post-parity):
+24. `self.write(...)` current count in `crates/sifr_codegen/src` -> `1207`.
+25. Highest-write files: `expr_render_helpers.rs=456`, `stmt_support_emitter.rs=243`, `class_emitter.rs=93`, `slice_emitter.rs=80`, `class_method_emitter.rs=70`.
+26. User-path module assembly still drains into `RustItem::SynItem` in `crates/sifr_codegen/src/module_body.rs:54`.
+27. Bridge-named production helper path still present in `crates/sifr_codegen/src/intrinsic_method_emitters.rs` (`try_lower_registry_expr_bridge`).
+
+### Next Loop To-do (Evidence-Based)
+
+1. [ ] Loop-2A: Migrate `expr_render_helpers.rs` hot paths (`456` writes) to structured IR-first expression builders.
+2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`243` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `slice_emitter.rs`) off string assembly.
+3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
+4. [ ] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.
+5. [ ] Loop-4B: Add/refresh hard-gate tests enforcing zero user-path `SynItem` and preventing string-emission regressions in production paths.
+6. [ ] Loop-4C: Re-run full phase gate commands and only then re-mark WS1..WS7 complete.
 
 ---
 

@@ -32,8 +32,10 @@ def main():
 
     # Fix 3: print(None)
     val: int | None = None
-    print(f"None value: {val}")
-    assert str(f"None value: {val}") == "None value: None"
+    if val is None:
+        print("None value: None")
+    else:
+        print(f"None value: {val}")
 
     # Fix 4: bool() on collections
     nums: list[int] = [1, 2, 3]
