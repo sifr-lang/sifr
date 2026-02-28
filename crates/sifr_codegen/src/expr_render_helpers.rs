@@ -1105,8 +1105,20 @@ impl RustEmitter {
     ) -> Result<bool, crate::CodegenError> {
         if matches!(
             func,
-            "bool" | "pow" | "bigint" | "round" | "abs" | "sum" | "any" | "all" | "reversed"
-        ) || ((func == "min" || func == "max" || func == "zip") && args.len() == 2)
+            "bool"
+                | "pow"
+                | "bigint"
+                | "round"
+                | "abs"
+                | "sum"
+                | "any"
+                | "all"
+                | "reversed"
+                | "min"
+                | "max"
+                | "sorted"
+                | "enumerate"
+        ) || (func == "zip" && args.len() == 2)
         {
             if let Some(lowered) = self.try_lower_registry_builtin_call_expr(func, args) {
                 self.write_registry_expr(&lowered);
@@ -1320,75 +1332,6 @@ impl RustEmitter {
                     }
                     _ => self.write(&arg_rendered),
                 }
-                Ok(true)
-            }
-            "min" | "max" => {
-                let [arg] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                self.write("(");
-                self.write(&arg_rendered);
-                self.write(").iter().cloned().");
-                if matches!(
-                    crate::resolve_alias_type_for_plain_call(arg.ty()),
-                    Type::List(inner)
-                        if matches!(crate::resolve_alias_type_for_plain_call(inner), Type::Float)
-                ) {
-                    self.write(func);
-                    self.write(
-                        "_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))",
-                    );
-                } else {
-                    self.write(func);
-                    self.write("()");
-                }
-                Ok(true)
-            }
-            "sorted" => {
-                let [arg] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                let Type::List(elem_ty) = crate::resolve_alias_type_for_plain_call(arg.ty()) else {
-                    return Ok(false);
-                };
-                self.write("{ let mut _v = (");
-                self.write(&arg_rendered);
-                self.write(").iter().cloned().collect::<Vec<_>>(); ");
-                if matches!(
-                    crate::resolve_alias_type_for_plain_call(elem_ty),
-                    Type::Float
-                ) {
-                    self.write("_v.sort_by(f64::total_cmp); ");
-                } else {
-                    self.write("_v.sort(); ");
-                }
-                self.write("_v }");
-                Ok(true)
-            }
-            "enumerate" => {
-                let [arg] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                self.write("(");
-                self.write(&arg_rendered);
-                self.write(
-                    ").iter().cloned().enumerate().map(|(i, v)| (i as i64, v)).collect::<Vec<_>>()",
-                );
                 Ok(true)
             }
             _ => Ok(false),

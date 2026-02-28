@@ -134,6 +134,12 @@ Loop progress log:
 74. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
 75. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 76. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1036` (`expr_render_helpers.rs` reduced `375 -> 361`).
+77. 2026-02-28 Pass I updates:
+78. Added registry IR lowering for `min/max` list form (`args.len()==1`), `sorted`, and `enumerate` special calls.
+79. Removed duplicated write-based `min/max` (list form), `sorted`, and `enumerate` branches from `expr_render_helpers.rs`.
+80. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
+81. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+82. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1020` (`expr_render_helpers.rs` reduced `361 -> 345`).
 
 ### Next Loop To-do (Evidence-Based)
 
