@@ -206,3 +206,13 @@ Latest validation loop (2026-02-28, Pass I):
 - `./scripts/run_all_tests.sh` -> pass.
 - Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
 - Strict re-audit evidence: `self.write(...)` now `1020` total in `crates/sifr_codegen/src` (`expr_render_helpers.rs` `361 -> 345` in this pass).
+
+Latest validation loop (2026-02-28, Pass J):
+- Closed strict registry-IR lowering gaps in recursive expression lowering used by `str/repr` nested paths (`BoolOp`, `ConstructorCall`, option/debug-aware `FString`, option/string-aware `Compare`, callable-field invocation).
+- Restored parity for recursive field access and self-field mutation semantics in registry-first method-call flow:
+- inherited parent-field remap preserved in recursive `FieldAccess` lowering,
+- self-field mutating calls now suppress clone in structured registry path (no mutation-on-clone regression).
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Focused e2e validation: `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed).
+- Strict re-audit evidence: `self.write(...)` now `1003` total in `crates/sifr_codegen/src` (`expr_render_helpers.rs` `345 -> 328` in this pass).

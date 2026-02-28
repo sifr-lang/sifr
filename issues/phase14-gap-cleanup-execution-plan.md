@@ -140,10 +140,17 @@ Loop progress log:
 80. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
 81. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 82. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1020` (`expr_render_helpers.rs` reduced `361 -> 345`).
+83. 2026-02-28 Pass J updates:
+84. Closed remaining strict registry-IR lowering gaps used by `str/repr` nested paths: recursive `BoolOp`, `ConstructorCall`, option/debug-aware `FString`, option/string-aware `Compare`, and callable-field invocation lowering.
+85. Restored parity for recursive field access and method-call semantics: inherited field remap preserved and self-field mutating calls now suppress clone in registry-first structured method-call flow.
+86. Validation: `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed).
+87. Validation: `./scripts/run_all_tests.sh` -> pass.
+88. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+89. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1003` (`expr_render_helpers.rs` reduced `345 -> 328` in this pass).
 
 ### Next Loop To-do (Evidence-Based)
 
-1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`432` writes) to structured IR-first expression builders.
+1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`328` writes) to structured IR-first expression builders.
 2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`218` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `slice_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
 4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.

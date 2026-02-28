@@ -17,10 +17,10 @@ impl RustEmitter {
             return false;
         };
         let lowered = crate::RustExpr::FnCall {
-            func: Box::new(crate::RustExpr::Field {
+            func: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Field {
                 expr: Box::new(object_expr),
                 field: method.to_string(),
-            }),
+            }))),
             args: arg_exprs,
         };
         self.write_registry_expr(&lowered);

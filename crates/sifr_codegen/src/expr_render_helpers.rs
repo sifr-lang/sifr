@@ -521,15 +521,20 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
     ) -> Result<bool, crate::CodegenError> {
-        if self.try_emit_method_via_registry(object.ty(), object, method, args) {
-            return Ok(true);
-        }
-
         let suppress_self_field_clone = crate::is_self_field_access_expr(object)
             && MUTATING_METHODS.contains(&method)
             && self.pending_self_field_clone_suppression == 0;
+        let suppression_prev = self.pending_self_field_clone_suppression;
         if suppress_self_field_clone {
             self.pending_self_field_clone_suppression += 1;
+        }
+        if self.try_emit_method_via_registry(object.ty(), object, method, args) {
+            if suppress_self_field_clone
+                && self.pending_self_field_clone_suppression > suppression_prev
+            {
+                self.pending_self_field_clone_suppression -= 1;
+            }
+            return Ok(true);
         }
 
         let lowered_object = if let HirExpr::FieldAccess {
@@ -544,7 +549,9 @@ impl RustEmitter {
         };
 
         let Some(lowered_object) = lowered_object else {
-            if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {
+            if suppress_self_field_clone
+                && self.pending_self_field_clone_suppression > suppression_prev
+            {
                 self.pending_self_field_clone_suppression -= 1;
             }
             return Ok(false);
@@ -589,7 +596,9 @@ impl RustEmitter {
             } else {
                 let saved_stats = self.lowering_stats;
                 let Some(rendered) = self.try_render_structured_expr(arg)? else {
-                    if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {
+                    if suppress_self_field_clone
+                        && self.pending_self_field_clone_suppression > suppression_prev
+                    {
                         self.pending_self_field_clone_suppression -= 1;
                     }
                     return Ok(false);
@@ -659,6 +668,11 @@ impl RustEmitter {
             self.write(arg);
         }
         self.write(")");
+        if suppress_self_field_clone
+            && self.pending_self_field_clone_suppression > suppression_prev
+        {
+            self.pending_self_field_clone_suppression -= 1;
+        }
         Ok(true)
     }
 
@@ -1129,17 +1143,21 @@ impl RustEmitter {
         match func {
             "str" => {
                 if args.is_empty() {
-                    self.write("String::new()");
+                    self.write_registry_expr(&crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "String".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: vec![],
+                    });
                     return Ok(true);
                 }
                 let [arg] = args else {
                     return Ok(false);
                 };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
+                let Some(lowered_arg) = self.try_lower_registry_expr_strict(arg) else {
                     return Ok(false);
                 };
-                self.lowering_stats = saved_stats;
                 let call_return_ty = if let HirExpr::Call { func, .. } = arg {
                     self.func_signatures
                         .get(func)
@@ -1149,44 +1167,89 @@ impl RustEmitter {
                 };
                 let str_arg_ty = call_return_ty.as_ref().unwrap_or_else(|| arg.ty());
                 if let Some(inner) = option_inner_type(str_arg_ty) {
-                    self.write("(");
-                    self.write(&arg_rendered);
-                    self.write(").map_or(\"None\".to_string(), |__v| ");
-                    if uses_debug_display_format(inner) {
-                        self.write("format!(\"{:?}\", __v)");
+                    let format_str = if uses_debug_display_format(inner) {
+                        "{:?}".to_string()
                     } else {
-                        self.write("format!(\"{}\", __v)");
-                    }
-                    self.write(")");
+                        "{}".to_string()
+                    };
+                    self.write_registry_expr(&crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                        method: "map_or".to_string(),
+                        args: vec![
+                            crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Literal(
+                                    crate::RustLiteral::Str("None".to_string()),
+                                )),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            },
+                            crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__v".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(crate::RustExpr::FormatMacro {
+                                    name: "format".to_string(),
+                                    format_str,
+                                    args: vec![crate::RustExpr::Ident("__v".to_string())],
+                                }),
+                                is_move: false,
+                            },
+                        ],
+                    });
                     return Ok(true);
                 }
-                if uses_debug_display_format(str_arg_ty) {
-                    self.write("format!(\"{:?}\", ");
-                } else {
-                    self.write("format!(\"{}\", ");
-                }
-                self.write(&arg_rendered);
-                self.write(")");
+                self.write_registry_expr(&crate::RustExpr::FormatMacro {
+                    name: "format".to_string(),
+                    format_str: if uses_debug_display_format(str_arg_ty) {
+                        "{:?}".to_string()
+                    } else {
+                        "{}".to_string()
+                    },
+                    args: vec![lowered_arg],
+                });
                 Ok(true)
             }
             "repr" => {
                 let [arg] = args else {
                     return Ok(false);
                 };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
+                let Some(lowered_arg) = self.try_lower_registry_expr_strict(arg) else {
                     return Ok(false);
                 };
-                self.lowering_stats = saved_stats;
                 if option_inner_type(arg.ty()).is_some() {
-                    self.write("(");
-                    self.write(&arg_rendered);
-                    self.write(").map_or(\"None\".to_string(), |__v| format!(\"{:?}\", __v))");
-                    return Ok(true);
+                    self.write_registry_expr(&crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                        method: "map_or".to_string(),
+                        args: vec![
+                            crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Literal(
+                                    crate::RustLiteral::Str("None".to_string()),
+                                )),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            },
+                            crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__v".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(crate::RustExpr::FormatMacro {
+                                    name: "format".to_string(),
+                                    format_str: "{:?}".to_string(),
+                                    args: vec![crate::RustExpr::Ident("__v".to_string())],
+                                }),
+                                is_move: false,
+                            },
+                        ],
+                    });
+                } else {
+                    self.write_registry_expr(&crate::RustExpr::FormatMacro {
+                        name: "format".to_string(),
+                        format_str: "{:?}".to_string(),
+                        args: vec![lowered_arg],
+                    });
                 }
-                self.write("format!(\"{:?}\", ");
-                self.write(&arg_rendered);
-                self.write(")");
                 Ok(true)
             }
             "isinstance" => {
