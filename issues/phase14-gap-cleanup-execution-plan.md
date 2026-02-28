@@ -153,6 +153,11 @@ Loop progress log:
 93. Validation: `./scripts/run_all_tests.sh` -> pass.
 94. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 95. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `980` (`expr_render_helpers.rs` reduced `328 -> 305` in this pass).
+96. 2026-02-28 Pass L updates:
+97. Completed dependency leaf item `helpers.rs`: removed direct `self.write(".clone()")` path in `emit_expr_with_bigint_clone` and now emit structured IR `RustExpr::Clone(...)` through shared IR rendering helper.
+98. Validation: `./scripts/run_all_tests.sh` -> pass.
+99. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+100. Strict implementation re-audit refresh: `helpers.rs` direct `self.write(...)` -> `0`; total `self.write(...)` in `crates/sifr_codegen/src` remains `980` (count redistributed via shared emitter helper).
 
 ### Next Loop To-do (Evidence-Based)
 
@@ -162,6 +167,21 @@ Loop progress log:
 4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.
 5. [ ] Loop-4B: Add/refresh hard-gate tests enforcing zero user-path `SynItem` and preventing string-emission regressions in production paths.
 6. [ ] Loop-4C: Re-run full phase gate commands and only then re-mark WS1..WS7 complete.
+
+Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write` files:
+1. [x] `helpers.rs` (completed in Pass L; now `0` direct `self.write(...)`)
+2. [ ] `render.rs` (`4` writes; terminal IR renderer, keep serializer-only behavior)
+3. [ ] `slice_emitter.rs` (`80` writes; shared slice primitives consumed by expression lowering)
+4. [ ] `match_emitter.rs` (`29` writes; pattern arm lowering primitive consumed by stmt emission)
+5. [ ] `expr_render_helpers.rs` (`305` writes; core expression lowering hot path)
+6. [ ] `stmt_support_emitter.rs` (`218` writes; core statement lowering hot path)
+7. [ ] `function_emitter.rs` (`50` writes; item-level wrapper over stmt/expr lowering)
+8. [ ] `type_emitters.rs` (`61` writes; item/type wrappers over lowered expression bodies)
+9. [ ] `operator_protocol_emitters.rs` (`52` writes; operator/protocol wrappers over lowered bodies)
+10. [ ] `class_method_emitter.rs` (`70` writes; class method wrappers over stmt/expr lowering)
+11. [ ] `class_emitter.rs` (`93` writes; class item orchestration over class-method/type/operator emitters)
+12. [ ] `lib.rs` (`16` writes; top-level orchestration entrypoint and hard-gate cleanup)
+13. [ ] `lib_codegen_tests.rs` (`1` write assertion; final guard/test rewrite)
 
 ### Active Implementation Loop (2026-02-28, Pass E)
 

@@ -227,3 +227,10 @@ Latest validation loop (2026-02-28, Pass K):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Strict re-audit evidence: `self.write(...)` now `980` total in `crates/sifr_codegen/src` (`expr_render_helpers.rs` `328 -> 305` in this pass).
+
+Latest validation loop (2026-02-28, Pass L):
+- Started dependency-ordered emitter cleanup from the leaf utility file (`helpers.rs`) before higher-level orchestrators.
+- Removed direct `.write` usage in `emit_expr_with_bigint_clone` by emitting structured IR `RustExpr::Clone` and rendering through shared IR emit helper.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Strict re-audit evidence: `helpers.rs` now has `0` direct `self.write(...)`; total `self.write(...)` remains `980` in `crates/sifr_codegen/src` pending follow-up migration of higher-traffic emitters (`expr_render_helpers.rs`, `stmt_support_emitter.rs`, `slice_emitter.rs`).

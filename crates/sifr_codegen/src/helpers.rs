@@ -1311,8 +1311,10 @@ impl RustEmitter {
     pub(super) fn emit_expr_with_bigint_clone(&mut self, expr: &HirExpr) {
         match expr {
             HirExpr::Name { .. } | HirExpr::FieldAccess { .. } => {
-                self.emit_expr(expr);
-                self.write(".clone()");
+                let lowered = crate::try_lower_leaf_or_name_expr_result(expr)
+                    .expect("bigint clone source lowering should not fail")
+                    .expect("bigint clone source must lower to structured RustExpr");
+                self.emit_rust_expr(&crate::RustExpr::Clone(Box::new(lowered)));
             }
             _ => self.emit_expr(expr),
         }
