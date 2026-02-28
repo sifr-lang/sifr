@@ -1,4 +1,4 @@
-//! List method lowerers for registry migration.
+//! List method lowerers for registry lowering.
 
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 

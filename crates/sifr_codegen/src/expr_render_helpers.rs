@@ -137,6 +137,31 @@ impl RustEmitter {
         result.trim().to_string()
     }
 
+    fn capture_emitted_fragment<F>(&mut self, emit: F) -> String
+    where
+        F: FnOnce(&mut Self),
+    {
+        let saved_output = std::mem::take(&mut self.output);
+        emit(self);
+        let fragment = std::mem::take(&mut self.output);
+        self.output = saved_output;
+        fragment
+    }
+
+    fn render_display_expr_fragment(&mut self, expr: &HirExpr) -> String {
+        self.capture_emitted_fragment(|emitter| emitter.emit_display_expr(expr))
+    }
+
+    fn write_format_macro_call(&mut self, macro_name: &str, format_str: &str, args: &[String]) {
+        let mut call = format!("{macro_name}({format_str:?}");
+        for arg in args {
+            call.push_str(", ");
+            call.push_str(arg);
+        }
+        call.push(')');
+        self.write(&call);
+    }
+
     pub(super) fn try_lower_registry_expr_result(
         &self,
         expr: &HirExpr,
@@ -647,28 +672,20 @@ impl RustEmitter {
         }
         if args.len() > 1 {
             if let HirExpr::StringLiteral(fmt) = &args[0] {
-                self.write("println!(");
-                self.write(&format!("{fmt:?}"));
-                for arg in args.iter().skip(1) {
-                    self.write(", ");
-                    self.emit_display_expr(arg);
-                }
-                self.write(")");
+                let rendered_args = args
+                    .iter()
+                    .skip(1)
+                    .map(|arg| self.render_display_expr_fragment(arg))
+                    .collect::<Vec<_>>();
+                self.write_format_macro_call("println!", fmt, &rendered_args);
                 return Ok(true);
             }
-            self.write("println!(\"");
-            for idx in 0..args.len() {
-                if idx > 0 {
-                    self.write(" ");
-                }
-                self.write("{}");
-            }
-            self.write("\"");
-            for arg in args {
-                self.write(", ");
-                self.emit_display_expr(arg);
-            }
-            self.write(")");
+            let format_str = (0..args.len()).map(|_| "{}").collect::<Vec<_>>().join(" ");
+            let rendered_args = args
+                .iter()
+                .map(|arg| self.render_display_expr_fragment(arg))
+                .collect::<Vec<_>>();
+            self.write_format_macro_call("println!", &format_str, &rendered_args);
             return Ok(true);
         }
         let arg = &args[0];
@@ -708,23 +725,18 @@ impl RustEmitter {
             None
         };
         if let Some(inner) = inferred_option_inner {
-            self.write("println!(\"{}\", (");
-            self.write(&arg_rendered);
-            self.write(").map_or(\"None\".to_string(), |__v| ");
-            if uses_debug_display_format(&inner) {
-                self.write("format!(\"{:?}\", __v)");
+            let formatter = if uses_debug_display_format(&inner) {
+                "format!(\"{:?}\", __v)"
             } else {
-                self.write("format!(\"{}\", __v)");
-            }
-            self.write("))");
+                "format!(\"{}\", __v)"
+            };
+            self.write(&format!(
+                "println!(\"{{}}\", ({arg_rendered}).map_or(\"None\".to_string(), |__v| {formatter}))"
+            ));
         } else if uses_debug_display_format(arg.ty()) {
-            self.write("println!(\"{:?}\", ");
-            self.write(&arg_rendered);
-            self.write(")");
+            self.write(&format!("println!(\"{{:?}}\", {arg_rendered})"));
         } else {
-            self.write("println!(\"{}\", ");
-            self.write(&arg_rendered);
-            self.write(")");
+            self.write(&format!("println!(\"{{}}\", {arg_rendered})"));
         }
         Ok(true)
     }
@@ -3230,15 +3242,11 @@ impl RustEmitter {
                 }
             }
         }
-        self.write(macro_name);
-        self.write("(\"");
-        self.write(&format_str);
-        self.write("\"");
-        for expr in &exprs {
-            self.write(", ");
-            self.emit_display_expr(expr);
-        }
-        self.write(")");
+        let rendered_args = exprs
+            .iter()
+            .map(|expr| self.render_display_expr_fragment(expr))
+            .collect::<Vec<_>>();
+        self.write_format_macro_call(macro_name, &format_str, &rendered_args);
     }
 }
 

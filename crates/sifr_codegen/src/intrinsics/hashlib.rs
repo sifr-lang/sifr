@@ -1,4 +1,4 @@
-//! Hashlib intrinsic lowerers for registry migration.
+//! Hashlib intrinsic lowerers for registry lowering.
 
 use crate::RustExpr;
 

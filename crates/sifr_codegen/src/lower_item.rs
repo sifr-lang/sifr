@@ -1,4 +1,4 @@
-//! Item lowering scaffolds for the IR migration.
+//! Item lowering scaffolds for the IR lowering.
 
 use crate::{
     try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustItem, RustLiteral,

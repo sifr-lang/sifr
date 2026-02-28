@@ -1,4 +1,4 @@
-//! File-handle intrinsic lowerers for registry migration.
+//! File-handle intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 

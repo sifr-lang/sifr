@@ -142,6 +142,26 @@ impl RustEmitter {
         }
     }
 
+    fn write_stmt_terminator(&mut self) {
+        self.write(";\n");
+    }
+
+    fn write_wrapped_try_return_prefix(&mut self, wrap_option: bool) {
+        if wrap_option {
+            self.write("return Ok(Some(");
+        } else {
+            self.write("return Ok(");
+        }
+    }
+
+    fn write_wrapped_try_return_suffix(&mut self, wrap_option: bool) {
+        if wrap_option {
+            self.write("));\n");
+        } else {
+            self.write(");\n");
+        }
+    }
+
     pub(super) fn emit_borrowed_return_name_clone_expr(&mut self, value: &HirExpr) -> bool {
         let HirExpr::Name { name, .. } = value else {
             return false;
@@ -160,12 +180,9 @@ impl RustEmitter {
             HirStmt::Let {
                 name, ty, value, ..
             } => {
+                let prefix = format!("let mut {name}: {} = ", ty.rust_type());
                 self.write_indent();
-                self.write("let mut ");
-                self.write(name);
-                self.write(": ");
-                self.write(&ty.rust_type());
-                self.write(" = ");
+                self.write(&prefix);
                 match self.try_emit_structured_expr(value) {
                     Ok(true) => {}
                     Ok(false) | Err(_) => {
@@ -196,36 +213,35 @@ impl RustEmitter {
                     ty,
                     value,
                 } => {
-                    self.write_indent();
-                    self.write("let ");
-                    if *mutable {
-                        self.write("mut ");
-                    }
-                    self.write(name);
-                    if let Some(ty) = ty {
-                        self.write(": ");
-                        self.write(&crate::render_type(ty));
-                    }
-                    self.write(" = ");
-                    if let crate::RustExpr::Ident(value_name) = value {
+                    let value_rendered = if let crate::RustExpr::Ident(value_name) = value {
                         if self.borrowed_params.contains(value_name)
                             || self.mut_borrowed_params.contains(value_name)
                         {
-                            self.write("(");
-                            self.write(value_name);
-                            self.write(").clone()");
+                            format!("({value_name}).clone()")
                         } else {
-                            self.write(&crate::render_expr(value));
+                            crate::render_expr(value)
                         }
                     } else {
-                        self.write(&crate::render_expr(value));
+                        crate::render_expr(value)
+                    };
+                    let mut line = String::from("let ");
+                    if *mutable {
+                        line.push_str("mut ");
                     }
-                    self.write(";\n");
+                    line.push_str(name);
+                    if let Some(ty) = ty {
+                        line.push_str(": ");
+                        line.push_str(&crate::render_type(ty));
+                    }
+                    line.push_str(" = ");
+                    line.push_str(&value_rendered);
+                    line.push_str(";\n");
+                    self.write_indent();
+                    self.write(&line);
                 }
                 RustStmt::Expr(lowered_expr) => {
                     self.write_indent();
-                    self.write(&crate::render_expr(lowered_expr));
-                    self.write(";\n");
+                    self.write(&format!("{};\n", crate::render_expr(lowered_expr)));
                 }
                 RustStmt::RawCode(_) => {
                     panic!("RawCode statement reached core production emission path");
@@ -277,20 +293,12 @@ impl RustEmitter {
                     .last()
                     .copied()
                     .unwrap_or(false);
-                if wrap_option {
-                    self.write("return Ok(Some(");
-                } else {
-                    self.write("return Ok(");
-                }
+                self.write_wrapped_try_return_prefix(wrap_option);
                 if self.current_class_name.is_some()
                     && matches!(value, HirExpr::Name { name, .. } if name == "self")
                 {
                     self.write("self.clone()");
-                    if wrap_option {
-                        self.write("));\n");
-                    } else {
-                        self.write(");\n");
-                    }
+                    self.write_wrapped_try_return_suffix(wrap_option);
                     return Ok(true);
                 }
                 if !wrap_option {
@@ -310,7 +318,7 @@ impl RustEmitter {
                                 )
                             {
                                 self.write("Ok(())");
-                                self.write(");\n");
+                                self.write_wrapped_try_return_suffix(wrap_option);
                                 return Ok(true);
                             }
                         }
@@ -321,29 +329,17 @@ impl RustEmitter {
                         if !crate::helpers::is_option_type(&return_ty)
                             && self.try_emit_structured_index_expr(object, index, &return_ty)?
                         {
-                            if wrap_option {
-                                self.write("));\n");
-                            } else {
-                                self.write(");\n");
-                            }
+                            self.write_wrapped_try_return_suffix(wrap_option);
                             return Ok(true);
                         }
                     }
                 }
                 if self.emit_borrowed_return_name_clone_expr(value) {
-                    if wrap_option {
-                        self.write("));\n");
-                    } else {
-                        self.write(");\n");
-                    }
+                    self.write_wrapped_try_return_suffix(wrap_option);
                     return Ok(true);
                 }
                 if self.try_emit_structured_expr(value)? {
-                    if wrap_option {
-                        self.write("));\n");
-                    } else {
-                        self.write(");\n");
-                    }
+                    self.write_wrapped_try_return_suffix(wrap_option);
                     return Ok(true);
                 }
                 self.output.truncate(output_len);
@@ -363,17 +359,17 @@ impl RustEmitter {
                     if !crate::helpers::is_option_type(&return_ty)
                         && self.try_emit_structured_index_expr(object, index, &return_ty)?
                     {
-                        self.write(";\n");
+                        self.write_stmt_terminator();
                         return Ok(true);
                     }
                 }
             }
             if self.emit_borrowed_return_name_clone_expr(value) {
-                self.write(";\n");
+                self.write_stmt_terminator();
                 return Ok(true);
             }
             if self.try_emit_structured_expr(value)? {
-                self.write(";\n");
+                self.write_stmt_terminator();
                 return Ok(true);
             }
             self.output.truncate(output_len);

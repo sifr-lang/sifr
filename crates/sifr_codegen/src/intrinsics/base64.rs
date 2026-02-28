@@ -1,4 +1,4 @@
-//! Base64 intrinsic lowerers for registry migration.
+//! Base64 intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 

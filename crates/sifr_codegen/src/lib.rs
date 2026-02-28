@@ -904,7 +904,7 @@ struct RustEmitter {
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
     callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
-    /// Fallback recursion guard for non-structured emitter paths.
+    /// Recursion guard for non-structured emitter paths.
     lowering_stats: LoweringStats,
 }
 

@@ -1,4 +1,4 @@
-//! TOML intrinsic lowerers for registry migration.
+//! TOML intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 

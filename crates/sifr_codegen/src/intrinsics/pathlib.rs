@@ -1,4 +1,4 @@
-//! Pathlib intrinsic lowerers for registry migration.
+//! Pathlib intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 

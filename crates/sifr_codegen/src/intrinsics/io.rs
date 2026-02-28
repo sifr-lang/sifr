@@ -1,4 +1,4 @@
-//! I/O intrinsic lowerers for registry migration.
+//! I/O intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 

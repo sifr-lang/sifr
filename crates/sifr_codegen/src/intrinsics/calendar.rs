@@ -1,4 +1,4 @@
-//! Calendar intrinsic lowerers for registry migration.
+//! Calendar intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 

@@ -1,4 +1,4 @@
-//! Dict method lowerers for registry migration.
+//! Dict method lowerers for registry lowering.
 
 use crate::{RustExpr, RustParam, RustType};
 

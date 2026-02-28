@@ -121,7 +121,7 @@ impl RustEmitter {
     fn try_lower_registry_expr_strict(&mut self, expr: &HirExpr) -> Option<crate::RustExpr> {
         match self.try_lower_registry_expr_result(expr) {
             Ok(Some(lowered_expr)) => Some(lowered_expr),
-            Ok(None) => self.try_lower_registry_expr_bridge(expr),
+            Ok(None) => self.try_lower_registry_expr_recursive(expr),
             Err(_) => {
                 self.lowering_stats.expr_lowering_errors += 1;
                 None
@@ -129,7 +129,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_registry_expr_bridge(&mut self, expr: &HirExpr) -> Option<crate::RustExpr> {
+    fn try_lower_registry_expr_recursive(&mut self, expr: &HirExpr) -> Option<crate::RustExpr> {
         match expr {
             HirExpr::Name { name, .. } => Some(crate::RustExpr::Ident(name.clone())),
             HirExpr::FieldAccess { object, field, .. } => Some(crate::RustExpr::Field {
@@ -550,11 +550,17 @@ mod tests {
     #[test]
     fn registry_arg_lowering_avoids_inline_rawcode_shims() {
         let src = include_str!("intrinsic_method_emitters.rs");
-        assert!(src.contains("fn try_lower_registry_expr_strict("));
-        assert!(src.contains("fn try_lower_registry_exprs_strict("));
-        assert!(src.contains("fn try_lower_registry_expr_bridge("));
-        assert!(!src.contains(&["lower_registry_expr", "_with_string_path"].concat()));
-        assert!(!src.contains(&["render_expr_via_", "string_only("].concat()));
-        assert!(!src.contains(&["RustExpr::", "RawCode("].concat()));
+        let prod_src = src.split("\n#[cfg(test)]").next().unwrap_or(src);
+        assert!(prod_src.contains("fn try_lower_registry_expr_strict("));
+        assert!(prod_src.contains("fn try_lower_registry_exprs_strict("));
+        assert!(prod_src.contains("fn try_lower_registry_expr_recursive("));
+        let helper_defs = prod_src
+            .lines()
+            .filter(|line| line.trim_start().starts_with("fn try_lower_registry_expr"))
+            .count();
+        assert_eq!(helper_defs, 3, "unexpected registry expr helper set");
+        assert!(!prod_src.contains("lower_registry_expr_with_string_path"));
+        assert!(!prod_src.contains("render_expr_via_string_only("));
+        assert!(!prod_src.contains("RustExpr::RawCode("));
     }
 }

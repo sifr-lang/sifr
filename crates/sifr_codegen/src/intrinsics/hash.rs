@@ -1,4 +1,4 @@
-//! Hash intrinsic lowerers for registry migration.
+//! Hash intrinsic lowerers for registry lowering.
 
 use crate::RustExpr;
 

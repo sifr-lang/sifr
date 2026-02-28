@@ -1,4 +1,4 @@
-//! Platform intrinsic lowerers for registry migration.
+//! Platform intrinsic lowerers for registry lowering.
 
 use crate::RustExpr;
 

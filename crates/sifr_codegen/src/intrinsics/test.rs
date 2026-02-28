@@ -1,4 +1,4 @@
-//! Test/assertion intrinsic lowerers for registry migration.
+//! Test/assertion intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustStmt};
 

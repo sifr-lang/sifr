@@ -1,4 +1,4 @@
-//! Sys intrinsic lowerers for registry migration.
+//! Sys intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustType};
 

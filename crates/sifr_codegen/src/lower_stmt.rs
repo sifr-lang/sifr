@@ -1,4 +1,4 @@
-//! Statement lowering scaffolds for the IR migration.
+//! Statement lowering scaffolds for the IR lowering.
 
 use crate::helpers::{
     body_calls_function, codegen_body_always_exits, collect_locally_defined_vars,

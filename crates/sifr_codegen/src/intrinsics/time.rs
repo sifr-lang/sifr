@@ -1,4 +1,4 @@
-//! Time intrinsic lowerers for registry migration.
+//! Time intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 

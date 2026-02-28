@@ -1,4 +1,4 @@
-//! Collections intrinsic lowerers for registry migration.
+//! Collections intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 

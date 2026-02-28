@@ -26,7 +26,7 @@ Completion evidence:
 - [ ] WS1 structured expression lowering expansion not complete (`self.write` heavy paths still production-reachable).
 - [ ] WS2 structured statement lowering expansion not complete (statement emitters still string-heavy).
 - [ ] WS3 top-level item migration not complete (`RustItem::SynItem` still present in module-body user path).
-- [ ] WS4 fallback/bridge naming decommission not complete (bridge-named production helper paths still present).
+- [x] WS4 naming decommission completed in `crates/sifr_codegen/src` (no bridge-named production helpers remain).
 - [ ] WS5 production `RawCode`/`SynItem` hard gate not complete for strict user-path closeout.
 - [ ] WS6 structural-pass hard gate not complete for strict raw-text independence.
 - [ ] WS7 epic closeout/checklist/doc updates blocked until strict IR-first hard gates pass.
@@ -49,7 +49,7 @@ Final `SynItem` policy outcome:
 Reason for reopening:
 1. Source tree and parity validation still include non-final traces for strict IR-only closeout.
 2. `self.write(...)` emitter paths remain substantial in production codegen modules.
-3. User-path `RustItem::SynItem` assembly and bridge-named production helper paths still exist.
+3. User-path `RustItem::SynItem` assembly still exists in module-body user path.
 
 Loop to-do list:
 1. [x] Loop-1: remove explicit fallback/legacy bridge artifacts and naming from `crates/sifr_codegen/src`.
@@ -85,15 +85,36 @@ Loop progress log:
 25. Highest-write files: `expr_render_helpers.rs=456`, `stmt_support_emitter.rs=243`, `class_emitter.rs=93`, `slice_emitter.rs=80`, `class_method_emitter.rs=70`.
 26. User-path module assembly still drains into `RustItem::SynItem` in `crates/sifr_codegen/src/module_body.rs:54`.
 27. Bridge-named production helper path still present in `crates/sifr_codegen/src/intrinsic_method_emitters.rs` (`try_lower_registry_expr_bridge`).
+28. 2026-02-28 Pass B updates:
+29. Removed bridge-named production helper path by renaming `try_lower_registry_expr_bridge` -> `try_lower_registry_expr_recursive`.
+30. Added non-regression guard test asserting bridge-named helper signature is not present.
+31. Started hot-path extraction in `expr_render_helpers.rs` for print/fstring/display macro assembly via shared structured helper builders.
+32. Validation: `cargo test -q -p sifr_codegen` pass; targeted demo subset pass (`milestone_ergonomics`, `milestone_codegen_fixes`, `milestone_new_modules`, `milestone_stdlib_parity`, `milestone_stdlib_pure_expansion`, `milestone_stdlib_remediation`).
+33. 2026-02-28 Pass C fixes:
+34. Fixed malformed structured return/raise emission in `stmt_support_emitter.rs` (missing wrapper-call close `)` regression).
+35. Removed split-string test assertions in `intrinsic_method_emitters.rs` and replaced with direct production-slice guards.
+36. Full validation: `./scripts/run_all_tests.sh` -> pass.
+37. Full demo sweep: all `demos/*.sifr` -> pass (`83/83`).
+38. Terminology recheck in production source: no `bridge|fallback|legacy|migration` matches under `crates/sifr_codegen/src`.
+39. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1158`.
+40. Current highest-write files: `expr_render_helpers.rs=432`, `stmt_support_emitter.rs=218`, `class_emitter.rs=93`, `slice_emitter.rs=80`, `class_method_emitter.rs=70`.
 
 ### Next Loop To-do (Evidence-Based)
 
-1. [ ] Loop-2A: Migrate `expr_render_helpers.rs` hot paths (`456` writes) to structured IR-first expression builders.
-2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`243` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `slice_emitter.rs`) off string assembly.
+1. [ ] Loop-2A: Migrate `expr_render_helpers.rs` hot paths (`432` writes) to structured IR-first expression builders.
+2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`218` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `slice_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
-4. [ ] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.
+4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.
 5. [ ] Loop-4B: Add/refresh hard-gate tests enforcing zero user-path `SynItem` and preventing string-emission regressions in production paths.
 6. [ ] Loop-4C: Re-run full phase gate commands and only then re-mark WS1..WS7 complete.
+
+### Active Implementation Loop (2026-02-28, Pass C)
+
+1. [x] Item 1: Remove bridge-named production helper path in `intrinsic_method_emitters.rs` and keep behavior parity.
+2. [x] Item 2: Start hot-path extraction in `expr_render_helpers.rs` to reduce direct `self.write(...)` string assembly for structured print/fstring/display flows.
+3. [x] Item 3: Add focused guards/tests for naming and behavior to prevent bridge-path reintroduction.
+4. [x] Item 4: Fix structured return/raise terminator regression introduced during extraction in `stmt_support_emitter.rs`.
+5. [x] Item 5: Re-run full local validations (`./scripts/run_all_tests.sh` + full `demos/*.sifr` sweep) and record results.
 
 ---
 

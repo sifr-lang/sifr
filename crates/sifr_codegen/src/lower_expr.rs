@@ -1,4 +1,4 @@
-//! Expression lowering scaffolds for the IR migration.
+//! Expression lowering scaffolds for the IR lowering.
 
 use crate::{CodegenError, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 use sifr_hir::{HirExpr, HirFStringPart, HirParam};
@@ -86,7 +86,7 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
 }
 
 /// Lowers leaf expressions that don't require emitter state.
-/// This is the first incremental bridge from `emit_expr` string writes
+/// This is the first incremental IR rollout from `emit_expr` string writes
 /// to IR + renderer output.
 pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
     match expr {

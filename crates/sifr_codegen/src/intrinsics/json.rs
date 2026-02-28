@@ -1,4 +1,4 @@
-//! JSON intrinsic lowerers for registry migration.
+//! JSON intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 

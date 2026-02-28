@@ -1,4 +1,4 @@
-//! UUID intrinsic lowerers for registry migration.
+//! UUID intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 

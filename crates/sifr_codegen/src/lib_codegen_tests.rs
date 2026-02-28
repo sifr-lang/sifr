@@ -1231,7 +1231,7 @@ fn test_expr_path_handles_call_expression() {
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
                     func: "print".to_string(),
-                    args: vec![HirExpr::StringLiteral("bridge".to_string())],
+                    args: vec![HirExpr::StringLiteral("marker".to_string())],
                     ty: Type::None,
                 },
             }],
@@ -1249,7 +1249,7 @@ fn test_expr_path_handles_call_expression() {
     let generated = generate_rust_with_metadata(&module);
 
     assert!(generated.rust_source.contains("println!"));
-    assert!(generated.rust_source.contains("bridge"));
+    assert!(generated.rust_source.contains("marker"));
 }
 
 #[test]
@@ -1543,7 +1543,7 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
 }
 
 #[test]
-fn test_structured_stmt_bridge_handles_copy_typed_assign_expr() {
+fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -1589,7 +1589,7 @@ fn test_structured_stmt_bridge_handles_copy_typed_assign_expr() {
 }
 
 #[test]
-fn test_structured_stmt_bridge_handles_copy_typed_let_expr() {
+fn test_structured_stmt_path_handles_copy_typed_let_expr() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -1626,12 +1626,12 @@ fn test_structured_stmt_bridge_handles_copy_typed_let_expr() {
         .contains("let x: f64 = (9.0 as f64).sqrt();"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
-        "copy-typed let should be emitted through structured stmt bridge"
+        "copy-typed let should be emitted through structured stmt path"
     );
 }
 
 #[test]
-fn test_structured_stmt_bridge_handles_copy_typed_return_expr() {
+fn test_structured_stmt_path_handles_copy_typed_return_expr() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "value".to_string(),
@@ -1665,7 +1665,7 @@ fn test_structured_stmt_bridge_handles_copy_typed_return_expr() {
         .contains("return (9.0 as f64).sqrt();"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
-        "copy-typed return should be emitted through structured stmt bridge"
+        "copy-typed return should be emitted through structured stmt path"
     );
 }
 
@@ -1716,7 +1716,6 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     assert!(lib_src.contains("mod stmt_emitter;"));
     assert!(lib_src.contains("mod expr_emitter;"));
     assert!(!lib_src.contains("CodegenLoweringMode"));
-    assert!(!lib_src.contains("LegacyOnly"));
     assert!(!lib_src.contains("StructuredPreferred"));
     assert!(!lib_src.contains("should_force_stmt_string_path"));
     assert!(!lib_src.contains("should_force_expr_string_path"));
@@ -1730,7 +1729,7 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     let emit_stmt_wrapper = &lib_src[emit_stmt_start..emit_expr_start];
     assert!(!emit_stmt_wrapper.contains("self.emit_stmt_string_backend(stmt);"));
     assert!(emit_stmt_wrapper.contains("structured statement emission missing for production path"));
-    assert!(!emit_stmt_wrapper.contains("self.try_emit_stmt_string_bridge(stmt)"));
+    assert!(!emit_stmt_wrapper.contains("self.try_emit_stmt_string_"));
     assert!(
         !emit_stmt_wrapper.contains("match stmt"),
         "emit_stmt should stay orchestration-only"
@@ -1744,7 +1743,7 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     assert!(
         emit_expr_wrapper.contains("structured expression emission missing for production path")
     );
-    assert!(!emit_expr_wrapper.contains("self.try_emit_expr_string_bridge(expr)"));
+    assert!(!emit_expr_wrapper.contains("self.try_emit_expr_string_"));
     assert!(
         !emit_expr_wrapper.contains("match expr"),
         "emit_expr should stay orchestration-only"
@@ -1889,8 +1888,8 @@ fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("stmt_support_emitter.rs");
     assert!(stmt_support_src.contains("match self.try_emit_structured_expr(value)"));
     assert!(stmt_support_src.contains("match self.try_emit_structured_stmt(stmt)"));
-    assert!(!stmt_support_src.contains("self.try_emit_expr_string_bridge(value)"));
-    assert!(!stmt_support_src.contains("self.try_emit_stmt_string_bridge(stmt)"));
+    assert!(!stmt_support_src.contains("self.try_emit_expr_string_"));
+    assert!(!stmt_support_src.contains("self.try_emit_stmt_string_"));
     assert!(!stmt_support_src.contains("self.emit_expr(value);"));
     assert!(!stmt_support_src.contains("self.emit_stmt(stmt);"));
 }

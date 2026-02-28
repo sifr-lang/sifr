@@ -1,4 +1,4 @@
-//! Subprocess intrinsic lowerers for registry migration.
+//! Subprocess intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustStmt};
 

@@ -1,4 +1,4 @@
-//! Logging state intrinsic lowerers for registry migration.
+//! Logging state intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustStmt};
 

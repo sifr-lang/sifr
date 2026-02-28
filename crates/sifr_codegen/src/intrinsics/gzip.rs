@@ -1,4 +1,4 @@
-//! `GZip` intrinsic lowerers for registry migration.
+//! `GZip` intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 

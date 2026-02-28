@@ -1,4 +1,4 @@
-//! Method registry and dispatch for incremental migration.
+//! Method registry and dispatch for incremental IR rollout.
 
 mod common;
 mod deque;

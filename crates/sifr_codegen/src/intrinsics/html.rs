@@ -1,4 +1,4 @@
-//! HTML intrinsic lowerers for registry migration.
+//! HTML intrinsic lowerers for registry lowering.
 
 use crate::{RustExpr, RustLiteral};
 

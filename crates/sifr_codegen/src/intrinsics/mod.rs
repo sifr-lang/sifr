@@ -1,4 +1,4 @@
-//! Intrinsic registry and dispatch for incremental migration.
+//! Intrinsic registry and dispatch for incremental IR rollout.
 
 mod base32;
 mod base64;

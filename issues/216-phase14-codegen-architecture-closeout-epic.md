@@ -127,7 +127,7 @@ Working-loop completion record (per AGENTS flow):
 Open items:
 - Structured IR migration still incomplete in high-traffic `.write(...)` emitters.
 - User-path `RustItem::SynItem` still appears in module body assembly.
-- Bridge-named production helper traces still remain in codegen source (`try_lower_registry_expr_bridge`).
+- Full closeout gate rerun remains pending until the remaining `.write(...)`/`SynItem` migration work is completed.
 
 Completion gate validated on 2026-02-25:
 - `cargo test -p sifr_codegen`
@@ -156,11 +156,17 @@ Recheck run on 2026-02-28 (current working tree):
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` (fail; `301` passed, `93` failed)
 - Current first-error distribution from `/tmp/phase14_e2e_recheck_first_error.txt`: `E0308=59`, `E0425=11`, `E0631=5`, `E0596=5`, `E0599=4`, others=9.
 
+Recheck run on 2026-02-28 (Pass C, current tree):
+- `./scripts/run_all_tests.sh` (pass; includes `test_e2e_pass` -> `394` passed, `0` failed)
+- Full demo sweep `demos/*.sifr` (pass; `83/83`)
+- Production source terminology scan in `crates/sifr_codegen/src` for `bridge|fallback|legacy|migration` (no matches)
+- Current `.write(...)` count in `crates/sifr_codegen/src`: `1158`
+
 Closeout decision:
-- Epic cannot be marked done again until the reopened loop plan in `issues/phase14-gap-cleanup-execution-plan.md` reaches zero failing e2e fixtures and all strict completion conditions are revalidated.
+- Epic cannot be marked done again until user-path `SynItem` and remaining high-traffic string emitters are migrated to structured IR and all strict completion conditions are revalidated.
 
 Latest validation loop (2026-02-28):
-- `cargo run -q -p sifr -- run demos/**/*.sifr` filtered to runnable demo entrypoints -> pass for all runnable demos; only intentional negative demo `demos/milestone_borrow_hardening_demo/exclusivity_error_demo.sifr` fails by design.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
-- Strict re-audit evidence: `self.write(...)` remains high (`1207` total in `crates/sifr_codegen/src`), and user-path `RustItem::SynItem` is still emitted in `crates/sifr_codegen/src/module_body.rs:54`.
+- Strict re-audit evidence: `self.write(...)` remains high (`1158` total in `crates/sifr_codegen/src`), and user-path `RustItem::SynItem` is still emitted in `crates/sifr_codegen/src/module_body.rs:54`.
