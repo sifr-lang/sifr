@@ -41,7 +41,6 @@ mod module_constants;
 mod module_prescan;
 mod operator_protocol_emitters;
 mod output_helpers;
-mod slice_emitter;
 mod stdlib_filter;
 mod stmt_support_emitter;
 mod type_emitters;

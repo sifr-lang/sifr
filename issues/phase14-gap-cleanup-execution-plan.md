@@ -163,6 +163,12 @@ Loop progress log:
 103. Validation: `./scripts/run_all_tests.sh` -> pass.
 104. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 105. Strict implementation re-audit refresh: `render.rs` direct `self.write(...)` -> `0`; total `self.write(...)` in `crates/sifr_codegen/src` -> `976`.
+106. 2026-02-28 Pass N updates:
+107. Removed dead `slice_emitter` module (`crates/sifr_codegen/src/slice_emitter.rs`) and dropped `mod slice_emitter;` from `lib.rs`.
+108. Verified no callsites existed for `emit_walrus_hoists`, `emit_list_slice`, or `emit_string_slice` before removal.
+109. Validation: `./scripts/run_all_tests.sh` -> pass.
+110. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+111. Strict implementation re-audit refresh: `slice_emitter.rs` removed; total `self.write(...)` in `crates/sifr_codegen/src` -> `896`.
 
 ### Next Loop To-do (Evidence-Based)
 
@@ -176,7 +182,7 @@ Loop progress log:
 Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write` files:
 1. [x] `helpers.rs` (completed in Pass L; now `0` direct `self.write(...)`)
 2. [x] `render.rs` (completed in Pass M; now `0` direct `self.write(...)`)
-3. [ ] `slice_emitter.rs` (`80` writes; shared slice primitives consumed by expression lowering)
+3. [x] `slice_emitter.rs` (completed in Pass N; dead module removed)
 4. [ ] `match_emitter.rs` (`29` writes; pattern arm lowering primitive consumed by stmt emission)
 5. [ ] `expr_render_helpers.rs` (`305` writes; core expression lowering hot path)
 6. [ ] `stmt_support_emitter.rs` (`218` writes; core statement lowering hot path)

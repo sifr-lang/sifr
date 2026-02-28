@@ -241,3 +241,10 @@ Latest validation loop (2026-02-28, Pass M):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Strict re-audit evidence: `render.rs` now has `0` direct `self.write(...)`; total `self.write(...)` is now `976` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-02-28, Pass N):
+- Continued dependency-ordered cleanup by removing dead string-emitter module `slice_emitter.rs` and removing `mod slice_emitter;` from `lib.rs`.
+- Verified module methods had no repo callsites before deletion (`emit_walrus_hoists`, `emit_list_slice`, `emit_string_slice`).
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Strict re-audit evidence: `slice_emitter.rs` removed; total `self.write(...)` now `896` in `crates/sifr_codegen/src`.
