@@ -445,20 +445,20 @@ impl Renderer {
     }
 
     pub fn render_expr(&mut self, expr: &RustExpr) {
-        self.write(&Self::render_expr_string(expr));
+        self.append(&Self::render_expr_string(expr));
     }
 
     pub fn render_type(&mut self, ty: &RustType) {
-        self.write(&Self::render_type_string(ty));
+        self.append(&Self::render_type_string(ty));
     }
 
-    fn write(&mut self, s: &str) {
+    fn append(&mut self, s: &str) {
         self.output.push_str(s);
     }
 
     fn writeln(&mut self, s: &str) {
         self.write_indent();
-        self.write(s);
+        self.append(s);
         self.output.push('\n');
     }
 
@@ -679,11 +679,11 @@ impl Renderer {
             }
             RustExpr::Match { expr, arms } => {
                 let mut renderer = Renderer::new();
-                renderer.write(&format!("match {} {{\n", Self::render_expr_string(expr)));
+                renderer.append(&format!("match {} {{\n", Self::render_expr_string(expr)));
                 renderer.indent();
                 renderer.render_match_arms(arms);
                 renderer.dedent();
-                renderer.write("}");
+                renderer.append("}");
                 renderer.output
             }
             RustExpr::Closure {
@@ -711,13 +711,13 @@ impl Renderer {
                     .collect::<Vec<_>>()
                     .join(", ");
                 let mut renderer = Renderer::new();
-                renderer.write(&format!("{move_kw}|{params}| {{\n"));
+                renderer.append(&format!("{move_kw}|{params}| {{\n"));
                 renderer.indent();
                 for stmt in body {
                     renderer.render_stmt(stmt);
                 }
                 renderer.dedent();
-                renderer.write("}");
+                renderer.append("}");
                 renderer.output
             }
             RustExpr::StructInit { name, fields } => format!(
@@ -831,18 +831,18 @@ impl Renderer {
 
     fn render_block_expr(stmts: &[RustStmt], trailing_expr: Option<&RustExpr>) -> String {
         let mut renderer = Renderer::new();
-        renderer.write("{\n");
+        renderer.append("{\n");
         renderer.indent();
         for stmt in stmts {
             renderer.render_stmt(stmt);
         }
         if let Some(expr) = trailing_expr {
             renderer.write_indent();
-            renderer.write(&Self::render_expr_string(expr));
+            renderer.append(&Self::render_expr_string(expr));
             renderer.output.push('\n');
         }
         renderer.dedent();
-        renderer.write("}");
+        renderer.append("}");
         renderer.output
     }
 
@@ -864,7 +864,7 @@ impl Renderer {
     }
 
     fn write_raw_top_level(&mut self, code: &str) {
-        self.write(code);
+        self.append(code);
         if !code.ends_with('\n') {
             self.output.push('\n');
         }

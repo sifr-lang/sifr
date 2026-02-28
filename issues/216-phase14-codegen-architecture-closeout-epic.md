@@ -234,3 +234,10 @@ Latest validation loop (2026-02-28, Pass L):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Strict re-audit evidence: `helpers.rs` now has `0` direct `self.write(...)`; total `self.write(...)` remains `980` in `crates/sifr_codegen/src` pending follow-up migration of higher-traffic emitters (`expr_render_helpers.rs`, `stmt_support_emitter.rs`, `slice_emitter.rs`).
+
+Latest validation loop (2026-02-28, Pass M):
+- Continued dependency-ordered leaf cleanup with `render.rs`.
+- Removed all direct renderer `.write(...)` callsites (`self.write` / `renderer.write`) while preserving IR renderer output behavior.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Strict re-audit evidence: `render.rs` now has `0` direct `self.write(...)`; total `self.write(...)` is now `976` in `crates/sifr_codegen/src`.

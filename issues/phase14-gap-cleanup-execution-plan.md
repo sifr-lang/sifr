@@ -158,6 +158,11 @@ Loop progress log:
 98. Validation: `./scripts/run_all_tests.sh` -> pass.
 99. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 100. Strict implementation re-audit refresh: `helpers.rs` direct `self.write(...)` -> `0`; total `self.write(...)` in `crates/sifr_codegen/src` remains `980` (count redistributed via shared emitter helper).
+101. 2026-02-28 Pass M updates:
+102. Completed dependency leaf item `render.rs`: removed renderer `.write(...)` callsites (`self.write(...)`/`renderer.write(...)`) by using a single append primitive while preserving IR renderer behavior.
+103. Validation: `./scripts/run_all_tests.sh` -> pass.
+104. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+105. Strict implementation re-audit refresh: `render.rs` direct `self.write(...)` -> `0`; total `self.write(...)` in `crates/sifr_codegen/src` -> `976`.
 
 ### Next Loop To-do (Evidence-Based)
 
@@ -170,7 +175,7 @@ Loop progress log:
 
 Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write` files:
 1. [x] `helpers.rs` (completed in Pass L; now `0` direct `self.write(...)`)
-2. [ ] `render.rs` (`4` writes; terminal IR renderer, keep serializer-only behavior)
+2. [x] `render.rs` (completed in Pass M; now `0` direct `self.write(...)`)
 3. [ ] `slice_emitter.rs` (`80` writes; shared slice primitives consumed by expression lowering)
 4. [ ] `match_emitter.rs` (`29` writes; pattern arm lowering primitive consumed by stmt emission)
 5. [ ] `expr_render_helpers.rs` (`305` writes; core expression lowering hot path)
