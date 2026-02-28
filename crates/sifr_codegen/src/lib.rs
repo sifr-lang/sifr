@@ -50,7 +50,6 @@ mod stdlib_filter;
 mod stmt_support_emitter;
 mod type_emitters;
 mod union_type_helpers;
-mod legacy_bridge_emitters;
 
 #[cfg(test)]
 mod lib_codegen_tests;
@@ -72,7 +71,7 @@ use stdlib_filter::{
 };
 pub(crate) use lib_support::{
     assert_output_drained, is_reserved_plain_builtin_call, is_self_field_access_expr,
-    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result, type_has_typevar,
+    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
 };
 
 type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
@@ -835,7 +834,7 @@ struct RustEmitter {
     union_enums: HashMap<String, Vec<Type>>,
     /// Accumulated union enum items to prepend
     enum_items: Vec<RustItem>,
-    /// Accumulated non-enum body items to assemble before raw fallback output.
+    /// Accumulated non-enum body items to assemble before raw output rendering.
     body_items: Vec<RustItem>,
     /// The return type of the function currently being emitted
     current_return_type: Option<Type>,

@@ -90,6 +90,118 @@ impl RustEmitter {
             return Ok(false);
         };
 
+        if elif_clauses.is_empty() {
+            if let Some((var_name, variant_name, enum_name, other_variants)) =
+                crate::helpers::detect_isinstance_union(condition)
+            {
+                let output_len = self.output.len();
+                self.write_indent();
+                self.write("match ");
+                self.write(&var_name);
+                self.write(" {\n");
+                self.indent += 1;
+
+                let then_mutated = crate::helpers::collect_mutated_vars(then_body);
+                let then_binding = if then_mutated.contains(&var_name) {
+                    format!("mut {var_name}")
+                } else {
+                    var_name.clone()
+                };
+                self.write_indent();
+                self.write(&format!(
+                    "{enum_name}::{variant_name}({then_binding}) => {{\n"
+                ));
+                self.indent += 1;
+                for then_stmt in then_body {
+                    self.emit_stmt(then_stmt);
+                }
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
+
+                if let Some(else_body) = else_body {
+                    let else_mutated = crate::helpers::collect_mutated_vars(else_body);
+                    let else_binding = if else_mutated.contains(&var_name) {
+                        format!("mut {var_name}")
+                    } else {
+                        var_name.clone()
+                    };
+                    if other_variants.len() == 1 {
+                        let (other_variant, _) = &other_variants[0];
+                        self.write_indent();
+                        self.write(&format!(
+                            "{enum_name}::{other_variant}({else_binding}) => {{\n"
+                        ));
+                    } else {
+                        self.write_indent();
+                        self.write("_ => {\n");
+                    }
+                    self.indent += 1;
+                    for else_stmt in else_body {
+                        self.emit_stmt(else_stmt);
+                    }
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}\n");
+                } else {
+                    self.write_indent();
+                    self.write("_ => {}\n");
+                }
+
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}\n");
+                if !self
+                    .output
+                    .get(output_len..)
+                    .is_some_and(|segment| !segment.is_empty())
+                {
+                    self.output.truncate(output_len);
+                    return Ok(false);
+                }
+                return Ok(true);
+            }
+
+            if let Some(var_name) = crate::helpers::detect_is_not_none_var(condition) {
+                let output_len = self.output.len();
+                self.write_indent();
+                self.write("if let Some(");
+                self.write(&var_name);
+                self.write(") = ");
+                self.write(&var_name);
+                self.write(" {\n");
+                self.indent += 1;
+                self.option_unwrapped_vars.insert(var_name.clone());
+                for then_stmt in then_body {
+                    self.emit_stmt(then_stmt);
+                }
+                self.option_unwrapped_vars.remove(&var_name);
+                self.indent -= 1;
+                self.write_indent();
+                self.write("}");
+                if let Some(else_body) = else_body {
+                    self.write(" else {\n");
+                    self.indent += 1;
+                    for else_stmt in else_body {
+                        self.emit_stmt(else_stmt);
+                    }
+                    self.indent -= 1;
+                    self.write_indent();
+                    self.write("}");
+                }
+                self.write("\n");
+                if !self
+                    .output
+                    .get(output_len..)
+                    .is_some_and(|segment| !segment.is_empty())
+                {
+                    self.output.truncate(output_len);
+                    return Ok(false);
+                }
+                return Ok(true);
+            }
+        }
+
         let output_len = self.output.len();
         self.write_indent();
         self.write("if ");
@@ -537,6 +649,44 @@ impl RustEmitter {
         let HirStmt::AugAssign { name, op, value } = stmt else {
             return Ok(false);
         };
+        let value_ty = Self::resolve_alias_type_for_loop_iter(value.ty());
+
+        if op == "+=" {
+            match value_ty {
+                Type::Str => {
+                    let output_len = self.output.len();
+                    self.write_indent();
+                    self.write(name);
+                    self.write(".push_str(");
+                    if let HirExpr::StringLiteral(val) = value {
+                        self.write(&format!("{val:?}"));
+                    } else {
+                        self.write("(");
+                        if !self.try_emit_structured_expr(value)? {
+                            self.output.truncate(output_len);
+                            return Ok(false);
+                        }
+                        self.write(").as_str()");
+                    }
+                    self.write(");\n");
+                    return Ok(true);
+                }
+                Type::List(_) => {
+                    let output_len = self.output.len();
+                    self.write_indent();
+                    self.write(name);
+                    self.write(".extend(");
+                    if !self.try_emit_structured_expr(value)? {
+                        self.output.truncate(output_len);
+                        return Ok(false);
+                    }
+                    self.write(");\n");
+                    return Ok(true);
+                }
+                _ => {}
+            }
+        }
+
         if op == "**=" {
             let output_len = self.output.len();
             self.write_indent();

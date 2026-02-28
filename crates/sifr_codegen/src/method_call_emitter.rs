@@ -185,7 +185,7 @@ impl RustEmitter {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn emit_method_call_uses_registry_first_without_legacy_type_match() {
+    fn emit_method_call_uses_registry_first_without_old_type_match() {
         let src = include_str!("method_call_emitter.rs");
         let start = src
             .find("pub(crate) fn emit_method_call")

@@ -1,8 +1,8 @@
 # Phase 14 Gap Cleanup Execution Plan (Implementation Blueprint)
 
 Date: 2026-02-26  
-Status: Done  
-Completed on: 2026-02-25  
+Status: In Progress (Reopened 2026-02-28)  
+Completed on: 2026-02-25 (original closeout)
 Owner: Codegen architecture closeout  
 Primary scope:
 1. `issues/216-phase14-codegen-architecture-closeout-epic.md`
@@ -41,6 +41,33 @@ Merged PR chain:
 Final `SynItem` policy outcome:
 1. User-code assembly path: `SynItem` forbidden in production final assembly.
 2. Any remaining non-user boundary usage must be explicit, documented, and hard-gated from production user-code assembly paths.
+
+---
+
+## Reopened Cleanup Loop (2026-02-28)
+
+Reason for reopening:
+1. Source tree and parity validation still include non-final traces for strict IR-only closeout.
+2. `self.write(...)` emitter paths remain substantial in production codegen modules.
+3. `cargo test -q -p sifr --test e2e test_e2e_pass` still fails on large parity set.
+
+Loop to-do list:
+1. [x] Loop-1: remove explicit fallback/legacy bridge artifacts and naming from `crates/sifr_codegen/src`.
+2. [ ] Loop-2: migrate highest-traffic `self.write(...)` expression/statement paths to structured IR emission.
+3. [ ] Loop-3: fix core e2e parity buckets (augassign semantics, borrow conventions, Option/display rendering, union wrapping).
+4. [ ] Loop-4: rerun phase gates and update all phase docs/issues with exact validated status.
+
+Loop progress log:
+1. 2026-02-28: loop baseline confirmed with `cargo test -q -p sifr --test e2e test_e2e_pass` -> `213 passed, 181 failed`.
+2. 2026-02-28: loop iteration applied and validated:
+3. fallback/legacy bridge module removed from `crates/sifr_codegen/src`.
+4. `+=` structured semantics fixed for `str` and `list`.
+5. structured display/stringify/print behavior tightened for Option/collection-heavy paths.
+6. user-call signature path updated to apply borrow conventions and union arg wrapping in structured call emission.
+7. Option not-None detection expanded to handle `!= None` / `== None` variants used in corpus.
+8. latest full e2e checkpoint -> `287 passed, 107 failed`.
+9. decommissioned string-backend body implementations (`emit_expr_string_backend`, `emit_stmt_string_backend`) into explicit unreachable panic stubs for production path.
+10. `self.write(...)` count in `crates/sifr_codegen/src` reduced from ~1710 to ~999 in this iteration.
 
 ---
 

@@ -218,7 +218,7 @@ impl RustEmitter {
                 self.write_indent();
                 self.write("write!(f, \"{}\", self.message)\n");
             } else {
-                // Use Debug format as fallback
+                // Use Debug format when Display is unavailable
                 self.write_indent();
                 self.write("write!(f, \"{:?}\", self)\n");
             }

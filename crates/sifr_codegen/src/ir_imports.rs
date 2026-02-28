@@ -48,7 +48,7 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds, allow_raw: bool) {
             if allow_raw {
                 collect_from_raw_item_code(code, needs);
             } else {
-                raw_import_fallback_forbidden("item RawCode");
+                raw_import_in_production_forbidden("item RawCode");
             }
         }
         RustItem::Struct { fields, .. } => {
@@ -118,7 +118,7 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds, allow_raw: bool) {
             if allow_raw {
                 collect_from_raw_stmt_code(code, needs);
             } else {
-                raw_import_fallback_forbidden("statement RawCode");
+                raw_import_in_production_forbidden("statement RawCode");
             }
         }
         RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => {}
@@ -207,7 +207,7 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds, allow_raw: bool) {
             if allow_raw {
                 collect_from_raw_expr_code(code, needs);
             } else {
-                raw_import_fallback_forbidden("expression RawCode");
+                raw_import_in_production_forbidden("expression RawCode");
             }
         }
         RustExpr::Ident(name) => mark_symbol(name, needs),
@@ -322,7 +322,7 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds, allow_raw: bool) {
             if allow_raw {
                 collect_from_raw_type_code(code, needs);
             } else {
-                raw_import_fallback_forbidden("type RawCode");
+                raw_import_in_production_forbidden("type RawCode");
             }
         }
         RustType::Vec(inner)
@@ -364,7 +364,7 @@ fn collect_from_raw_item_code(code: &str, needs: &mut IrImportNeeds) {
         collect_from_syn_file(&file, needs);
         return;
     }
-    scan_named_text_fallback(code, needs);
+    scan_named_text(code, needs);
 }
 
 fn collect_from_syn_item_code(code: &str, needs: &mut IrImportNeeds) {
@@ -379,7 +379,7 @@ fn collect_from_raw_stmt_code(code: &str, needs: &mut IrImportNeeds) {
         collect_from_syn_stmt(&stmt, needs);
         return;
     }
-    scan_named_text_fallback(code, needs);
+    scan_named_text(code, needs);
 }
 
 fn collect_from_raw_expr_code(code: &str, needs: &mut IrImportNeeds) {
@@ -387,7 +387,7 @@ fn collect_from_raw_expr_code(code: &str, needs: &mut IrImportNeeds) {
         collect_from_syn_expr(&expr, needs);
         return;
     }
-    scan_named_text_fallback(code, needs);
+    scan_named_text(code, needs);
 }
 
 fn collect_from_raw_type_code(code: &str, needs: &mut IrImportNeeds) {
@@ -395,7 +395,7 @@ fn collect_from_raw_type_code(code: &str, needs: &mut IrImportNeeds) {
         collect_from_syn_type(&ty, needs);
         return;
     }
-    scan_named_text_fallback(code, needs);
+    scan_named_text(code, needs);
 }
 
 fn collect_from_type_text(text: &str, needs: &mut IrImportNeeds) {
@@ -403,7 +403,7 @@ fn collect_from_type_text(text: &str, needs: &mut IrImportNeeds) {
         collect_from_syn_type(&ty, needs);
         return;
     }
-    scan_named_text_fallback(text, needs);
+    scan_named_text(text, needs);
 }
 
 fn collect_from_syn_file(file: &syn::File, needs: &mut IrImportNeeds) {
@@ -446,7 +446,7 @@ impl Visit<'_> for SynImportNeedsCollector<'_> {
     }
 }
 
-fn scan_named_text_fallback(text: &str, needs: &mut IrImportNeeds) {
+fn scan_named_text(text: &str, needs: &mut IrImportNeeds) {
     let bytes = text.as_bytes();
     let mut i = 0usize;
     while i < bytes.len() {
@@ -473,8 +473,8 @@ fn scan_named_text_fallback(text: &str, needs: &mut IrImportNeeds) {
     }
 }
 
-fn raw_import_fallback_forbidden(context: &str) -> ! {
-    panic!("RawCode fallback is forbidden in production structural import pass ({context})")
+fn raw_import_in_production_forbidden(context: &str) -> ! {
+    panic!("RawCode is forbidden in production structural import pass ({context})")
 }
 
 fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
@@ -605,7 +605,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "RawCode fallback is forbidden in production structural import pass")]
+    #[should_panic(expected = "RawCode is forbidden in production structural import pass")]
     fn production_mode_panics_on_raw_item() {
         let _ = collect_import_needs_from_items(&[RustItem::RawCode(
             "fn demo() {}".to_string(),

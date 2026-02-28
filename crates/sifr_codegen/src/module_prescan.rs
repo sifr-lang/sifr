@@ -7,6 +7,7 @@ impl RustEmitter {
         self.collect_import_metadata(module);
         self.collect_display_class_metadata(module);
         self.collect_parent_field_metadata(module);
+        self.collect_function_signature_metadata(module);
     }
 
     fn collect_import_metadata(&mut self, module: &HirModule) {
@@ -52,7 +53,7 @@ impl RustEmitter {
                     }
                 }
             } else {
-                // No intrinsic info available (legacy path) — treat all as intrinsic.
+                // No intrinsic info available for this import set; treat all as intrinsic.
                 for name in &import.names {
                     self.intrinsic_functions.insert(name.clone());
                 }
@@ -108,6 +109,18 @@ impl RustEmitter {
                     );
                 }
             }
+        }
+    }
+
+    fn collect_function_signature_metadata(&mut self, module: &HirModule) {
+        for func in &module.functions {
+            let params = func
+                .params
+                .iter()
+                .map(|param| (param.ty.clone(), param.convention))
+                .collect::<Vec<_>>();
+            self.func_signatures
+                .insert(func.name.clone(), (params, func.return_type.clone()));
         }
     }
 }

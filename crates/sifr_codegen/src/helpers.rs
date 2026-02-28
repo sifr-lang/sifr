@@ -59,7 +59,10 @@ pub(super) fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
         ..
     } = expr
     {
-        if ops.len() == 1 && ops[0] == "is not" && matches!(comparators[0], HirExpr::NoneLiteral) {
+        if ops.len() == 1
+            && (ops[0] == "is not" || ops[0] == "!=")
+            && matches!(comparators[0], HirExpr::NoneLiteral)
+        {
             if let HirExpr::Name { name, ty } = left.as_ref() {
                 // Only match for Option types (2-member unions with None)
                 if is_option_type(ty) {
@@ -168,7 +171,10 @@ pub(super) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
         ..
     } = expr
     {
-        if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
+        if ops.len() == 1
+            && (ops[0] == "is" || ops[0] == "==")
+            && matches!(comparators[0], HirExpr::NoneLiteral)
+        {
             if let HirExpr::Name { name, ty } = left.as_ref() {
                 // Only match for Option types (2-member unions with None)
                 if is_option_type(ty) {

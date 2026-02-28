@@ -535,7 +535,7 @@ impl RustEmitter {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn emit_intrinsic_call_has_no_legacy_match_dispatch() {
+    fn emit_intrinsic_call_has_no_pre_registry_match_dispatch() {
         let src = include_str!("intrinsic_method_emitters.rs");
         let start = src
             .find("pub(crate) fn emit_intrinsic_call")
@@ -553,8 +553,8 @@ mod tests {
         assert!(src.contains("fn try_lower_registry_expr_strict("));
         assert!(src.contains("fn try_lower_registry_exprs_strict("));
         assert!(src.contains("fn try_lower_registry_expr_bridge("));
-        assert!(!src.contains(&["lower_registry_expr", "_with_fallback"].concat()));
-        assert!(!src.contains(&["render_expr_via_", "fallback_only("].concat()));
+        assert!(!src.contains(&["lower_registry_expr", "_with_string_path"].concat()));
+        assert!(!src.contains(&["render_expr_via_", "string_only("].concat()));
         assert!(!src.contains(&["RustExpr::", "RawCode("].concat()));
     }
 }

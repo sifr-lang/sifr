@@ -1,6 +1,50 @@
-use crate::{helpers::is_option_type, RustEmitter};
+use crate::RustEmitter;
 use sifr_hir::HirExpr;
 use sifr_type_system::Type;
+
+fn uses_debug_display_format(ty: &Type) -> bool {
+    match crate::resolve_alias_type_for_plain_call(ty) {
+        Type::Int
+        | Type::Float
+        | Type::Bool
+        | Type::Str
+        | Type::None
+        | Type::Range
+        | Type::Union(_)
+        | Type::LiteralInt(_)
+        | Type::LiteralStr(_)
+        | Type::LiteralBool(_)
+        | Type::Class { .. }
+        | Type::Newtype { .. }
+        | Type::TypeVar(_)
+        | Type::Enum { .. }
+        | Type::BigInt => false,
+        Type::List(_)
+        | Type::Dict(_, _)
+        | Type::Set(_)
+        | Type::Tuple(_)
+        | Type::Function(_)
+        | Type::Callable(..)
+        | Type::Result(_, _)
+        | Type::Protocol { .. }
+        | Type::Any
+        | Type::Unknown
+        | Type::Intersection(_)
+        | Type::Never => true,
+        Type::Alias(_, inner) => uses_debug_display_format(inner),
+    }
+}
+
+fn option_inner_type(ty: &Type) -> Option<&Type> {
+    let resolved = crate::resolve_alias_type_for_plain_call(ty);
+    let Type::Union(members) = resolved else {
+        return None;
+    };
+    if members.len() != 2 || !members.iter().any(|member| matches!(member, Type::None)) {
+        return None;
+    }
+    members.iter().find(|member| !matches!(member, Type::None))
+}
 
 impl RustEmitter {
     /// Emit an expression wrapped in parentheses.
@@ -142,14 +186,24 @@ impl RustEmitter {
     /// Wraps Option<T> expressions so they display as the inner value or "None".
     /// Omits `.to_string()` on string literals since format macros accept &str.
     pub(super) fn emit_display_expr(&mut self, expr: &HirExpr) {
-        if is_option_type(expr.ty()) {
+        if let Some(inner) = option_inner_type(expr.ty()) {
             // Wrap: expr.map_or("None".to_string(), |_v| format!("{}", _v))
             self.write("(");
             self.emit_expr(expr);
-            self.write(").map_or(\"None\".to_string(), |_v| format!(\"{}\", _v))");
+            self.write(").map_or(\"None\".to_string(), |_v| ");
+            if uses_debug_display_format(inner) {
+                self.write("format!(\"{:?}\", _v))");
+            } else {
+                self.write("format!(\"{}\", _v))");
+            }
         } else if let HirExpr::StringLiteral(val) = expr {
             // In display contexts, string literals don't need .to_string()
             self.write(&format!("{val:?}"));
+        } else if uses_debug_display_format(expr.ty()) {
+            // Collections use Debug-style formatting in display contexts.
+            self.write("format!(\"{:?}\", ");
+            self.emit_expr(expr);
+            self.write(")");
         } else {
             self.emit_expr(expr);
         }

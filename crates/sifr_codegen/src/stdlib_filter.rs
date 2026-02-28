@@ -74,7 +74,7 @@ pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlib
     let Ok(parsed) = syn::parse_file(filtered) else {
         return PreparedStdlibModule {
             stripped_code: filtered.to_string(),
-            shared_needs: derive_shared_needs_fallback(filtered),
+            shared_needs: derive_shared_needs_text_scan(filtered),
         };
     };
 
@@ -249,7 +249,7 @@ fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
     collector.shared_needs
 }
 
-fn derive_shared_needs_fallback(code: &str) -> SharedPreludeNeeds {
+fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
     SharedPreludeNeeds {
         collections: SharedPreludeCollectionNeeds {
             needs_hashmap: code.contains("HashMap"),

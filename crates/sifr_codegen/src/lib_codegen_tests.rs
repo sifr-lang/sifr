@@ -1119,7 +1119,62 @@ fn test_codegen_structured_lowering_applies_to_simple_stmt() {
 }
 
 #[test]
-fn test_fallback_stmt_path_handles_nested_function() {
+fn test_structured_aug_assign_uses_string_and_list_methods() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![
+                HirStmt::Let {
+                    name: "s".to_string(),
+                    ty: Type::Str,
+                    value: HirExpr::StringLiteral("Hello".to_string()),
+                    is_mutable: true,
+                },
+                HirStmt::AugAssign {
+                    name: "s".to_string(),
+                    op: "+=".to_string(),
+                    value: HirExpr::StringLiteral("World".to_string()),
+                },
+                HirStmt::Let {
+                    name: "items".to_string(),
+                    ty: Type::List(Box::new(Type::Int)),
+                    value: HirExpr::ListLiteral {
+                        elements: vec![HirExpr::IntLiteral(1)],
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    is_mutable: true,
+                },
+                HirStmt::AugAssign {
+                    name: "items".to_string(),
+                    op: "+=".to_string(),
+                    value: HirExpr::ListLiteral {
+                        elements: vec![HirExpr::IntLiteral(2)],
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                },
+            ],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_with_metadata(&module);
+    assert!(generated.rust_source.contains("s.push_str(\"World\")"));
+    assert!(generated.rust_source.contains("items.extend(vec![2 as i64])"));
+    assert!(!generated.rust_source.contains("s += "));
+    assert!(!generated.rust_source.contains("items += "));
+}
+
+#[test]
+fn test_stmt_path_handles_nested_function() {
     let nested = HirFunction {
         name: "inner".to_string(),
         params: vec![],
@@ -1165,7 +1220,7 @@ fn test_fallback_stmt_path_handles_nested_function() {
 }
 
 #[test]
-fn test_fallback_expr_path_handles_call_expression() {
+fn test_expr_path_handles_call_expression() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -1481,7 +1536,7 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
     );
     assert!(
         !generated.rust_source.contains("d2.update("),
-        "dict update fallback method call should not be emitted"
+        "dict update method call should not be emitted"
     );
 }
 
@@ -1613,7 +1668,7 @@ fn test_structured_stmt_bridge_handles_copy_typed_return_expr() {
 }
 
 #[test]
-fn test_emit_expr_prefers_structured_before_force_fallback_name() {
+fn test_emit_expr_prefers_structured_name_path() {
     let mut emitter = RustEmitter::new();
     emitter.intrinsic_functions.insert("clock".to_string());
     let expr = HirExpr::Name {
@@ -1660,8 +1715,8 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     assert!(!lib_src.contains("CodegenLoweringMode"));
     assert!(!lib_src.contains("LegacyOnly"));
     assert!(!lib_src.contains("StructuredPreferred"));
-    assert!(!lib_src.contains("should_force_stmt_fallback"));
-    assert!(!lib_src.contains("should_force_expr_fallback"));
+    assert!(!lib_src.contains("should_force_stmt_string_path"));
+    assert!(!lib_src.contains("should_force_expr_string_path"));
 
     let emit_stmt_start = lib_src
         .find("fn emit_stmt(&mut self, stmt: &HirStmt) {")
@@ -1670,11 +1725,11 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         .find("fn emit_expr(&mut self, expr: &HirExpr) {")
         .expect("emit_expr wrapper should exist");
     let emit_stmt_wrapper = &lib_src[emit_stmt_start..emit_expr_start];
-    assert!(!emit_stmt_wrapper.contains("self.emit_stmt_fallback(stmt);"));
+    assert!(!emit_stmt_wrapper.contains("self.emit_stmt_string_backend(stmt);"));
     assert!(emit_stmt_wrapper.contains(
         "structured statement emission missing for production path"
     ));
-    assert!(!emit_stmt_wrapper.contains("self.try_emit_stmt_legacy_bridge(stmt)"));
+    assert!(!emit_stmt_wrapper.contains("self.try_emit_stmt_string_bridge(stmt)"));
     assert!(
         !emit_stmt_wrapper.contains("match stmt"),
         "emit_stmt should stay orchestration-only"
@@ -1684,11 +1739,11 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         .find("pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {")
         .expect("body_contains_yield should exist");
     let emit_expr_wrapper = &lib_src[emit_expr_start..body_contains_yield_start];
-    assert!(!emit_expr_wrapper.contains("self.emit_expr_fallback(expr);"));
+    assert!(!emit_expr_wrapper.contains("self.emit_expr_string_backend(expr);"));
     assert!(emit_expr_wrapper.contains(
         "structured expression emission missing for production path"
     ));
-    assert!(!emit_expr_wrapper.contains("self.try_emit_expr_legacy_bridge(expr)"));
+    assert!(!emit_expr_wrapper.contains("self.try_emit_expr_string_bridge(expr)"));
     assert!(
         !emit_expr_wrapper.contains("match expr"),
         "emit_expr should stay orchestration-only"
@@ -1706,14 +1761,10 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         "lib.rs should not regain write-heavy emission logic (self.write count: {lib_direct_write_calls})"
     );
 
-    assert!(
-        stmt_src.lines().count() > 1000,
-        "statement fallback emitter should hold migrated logic"
-    );
-    assert!(
-        expr_src.lines().count() > 1000,
-        "expression fallback emitter should hold migrated logic"
-    );
+    assert!(stmt_src.contains("emit_stmt_string_backend"));
+    assert!(expr_src.contains("emit_expr_string_backend"));
+    assert!(stmt_src.contains("unreachable in production structured codegen path"));
+    assert!(expr_src.contains("unreachable in production structured codegen path"));
 }
 
 #[test]
@@ -1840,8 +1891,8 @@ fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("stmt_support_emitter.rs");
     assert!(stmt_support_src.contains("match self.try_emit_structured_expr(value)"));
     assert!(stmt_support_src.contains("match self.try_emit_structured_stmt(stmt)"));
-    assert!(!stmt_support_src.contains("self.try_emit_expr_legacy_bridge(value)"));
-    assert!(!stmt_support_src.contains("self.try_emit_stmt_legacy_bridge(stmt)"));
+    assert!(!stmt_support_src.contains("self.try_emit_expr_string_bridge(value)"));
+    assert!(!stmt_support_src.contains("self.try_emit_stmt_string_bridge(stmt)"));
     assert!(!stmt_support_src.contains("self.emit_expr(value);"));
     assert!(!stmt_support_src.contains("self.emit_stmt(stmt);"));
 }

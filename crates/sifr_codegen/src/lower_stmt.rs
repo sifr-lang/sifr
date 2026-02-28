@@ -61,6 +61,39 @@ pub fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {
     try_lower_leaf_expr(expr).map(|lowered_expr| vec![RustStmt::Expr(lowered_expr)])
 }
 
+fn print_uses_debug_format(ty: &Type) -> bool {
+    match resolve_alias_type(ty) {
+        Type::Int
+        | Type::Float
+        | Type::Bool
+        | Type::Str
+        | Type::None
+        | Type::Range
+        | Type::Union(_)
+        | Type::LiteralInt(_)
+        | Type::LiteralStr(_)
+        | Type::LiteralBool(_)
+        | Type::Class { .. }
+        | Type::Newtype { .. }
+        | Type::TypeVar(_)
+        | Type::Enum { .. }
+        | Type::BigInt => false,
+        Type::List(_)
+        | Type::Dict(_, _)
+        | Type::Set(_)
+        | Type::Tuple(_)
+        | Type::Function(_)
+        | Type::Callable(..)
+        | Type::Result(_, _)
+        | Type::Protocol { .. }
+        | Type::Any
+        | Type::Unknown
+        | Type::Intersection(_)
+        | Type::Never => true,
+        Type::Alias(_, inner) => print_uses_debug_format(inner),
+    }
+}
+
 fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
     let HirExpr::Call { func, args, .. } = expr else {
         return None;
@@ -105,7 +138,11 @@ fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStmt> {
         }
         [arg] => Some(RustStmt::Expr(RustExpr::FormatMacro {
             name: "println".to_string(),
-            format_str: "{}".to_string(),
+            format_str: if print_uses_debug_format(arg.ty()) {
+                "{:?}".to_string()
+            } else {
+                "{}".to_string()
+            },
             args: vec![try_lower_leaf_or_name_expr(arg)?],
         })),
         _ => None,
