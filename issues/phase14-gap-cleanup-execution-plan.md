@@ -98,6 +98,14 @@ Loop progress log:
 38. Terminology recheck in production source: no `bridge|fallback|legacy|migration` matches under `crates/sifr_codegen/src`.
 39. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1158`.
 40. Current highest-write files: `expr_render_helpers.rs=432`, `stmt_support_emitter.rs=218`, `class_emitter.rs=93`, `slice_emitter.rs=80`, `class_method_emitter.rs=70`.
+41. 2026-02-28 Pass D updates:
+42. `intrinsic_method_emitters.rs` moved to structured registry-expression rendering only; direct `self.write(...)` usage in that file removed (`12 -> 0`).
+43. Validation: `cargo test -q -p sifr_codegen` -> pass (`455` passed).
+44. Validation: targeted intrinsic guard tests -> pass (`emit_intrinsic_call_has_no_pre_registry_match_dispatch`, `registry_arg_lowering_avoids_inline_rawcode_shims`).
+45. Validation: `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass.
+46. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1146`.
+47. Full validation rerun: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
+48. Full demo sweep rerun: all `demos/*.sifr` -> pass (`83/83`).
 
 ### Next Loop To-do (Evidence-Based)
 
@@ -108,13 +116,14 @@ Loop progress log:
 5. [ ] Loop-4B: Add/refresh hard-gate tests enforcing zero user-path `SynItem` and preventing string-emission regressions in production paths.
 6. [ ] Loop-4C: Re-run full phase gate commands and only then re-mark WS1..WS7 complete.
 
-### Active Implementation Loop (2026-02-28, Pass C)
+### Active Implementation Loop (2026-02-28, Pass D)
 
 1. [x] Item 1: Remove bridge-named production helper path in `intrinsic_method_emitters.rs` and keep behavior parity.
 2. [x] Item 2: Start hot-path extraction in `expr_render_helpers.rs` to reduce direct `self.write(...)` string assembly for structured print/fstring/display flows.
 3. [x] Item 3: Add focused guards/tests for naming and behavior to prevent bridge-path reintroduction.
 4. [x] Item 4: Fix structured return/raise terminator regression introduced during extraction in `stmt_support_emitter.rs`.
 5. [x] Item 5: Re-run full local validations (`./scripts/run_all_tests.sh` + full `demos/*.sifr` sweep) and record results.
+6. [x] Item 6: Remove direct `self.write(...)` from `intrinsic_method_emitters.rs` by routing emission through lowered IR rendering only.
 
 ---
 

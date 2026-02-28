@@ -3,6 +3,10 @@ use sifr_hir::HirExpr;
 use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
+    fn write_registry_expr(&mut self, expr: &crate::RustExpr) {
+        self.output.push_str(&crate::render_expr(expr));
+    }
+
     /// Check if a name is a stdlib constant.
     pub(crate) fn is_stdlib_constant(&self, name: &str) -> bool {
         matches!(name, "pi" | "e" | "tau" | "inf" | "nan")
@@ -11,14 +15,50 @@ impl RustEmitter {
 
     /// Emit a stdlib constant value.
     pub(crate) fn emit_stdlib_constant(&mut self, name: &str) {
-        match name {
-            "pi" => self.write("std::f64::consts::PI"),
-            "e" => self.write("std::f64::consts::E"),
-            "tau" => self.write("std::f64::consts::TAU"),
-            "inf" => self.write("f64::INFINITY"),
-            "nan" => self.write("f64::NAN"),
-            _ => self.write(name),
-        }
+        let lowered = match name {
+            "pi" => crate::RustExpr::Path(vec![
+                "std".to_string(),
+                "f64".to_string(),
+                "consts".to_string(),
+                "PI".to_string(),
+            ]),
+            "e" => crate::RustExpr::Path(vec![
+                "std".to_string(),
+                "f64".to_string(),
+                "consts".to_string(),
+                "E".to_string(),
+            ]),
+            "tau" => crate::RustExpr::Path(vec![
+                "std".to_string(),
+                "f64".to_string(),
+                "consts".to_string(),
+                "TAU".to_string(),
+            ]),
+            "inf" => crate::RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()]),
+            "nan" => crate::RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()]),
+            _ => crate::RustExpr::Ident(name.to_string()),
+        };
+        self.write_registry_expr(&lowered);
+    }
+
+    fn emit_registry_plain_call_expr(&mut self, func: &str, args: &[HirExpr]) {
+        let lowered_args = self
+            .try_lower_registry_exprs_strict(args)
+            .unwrap_or_else(|| panic!("structured intrinsic-call lowering missing for args: {args:?}"));
+        let lowered = if func.contains("::") {
+            crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(
+                    func.split("::").map(str::to_string).collect(),
+                )),
+                args: lowered_args,
+            }
+        } else {
+            crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Ident(func.to_string())),
+                args: lowered_args,
+            }
+        };
+        self.write_registry_expr(&lowered);
     }
 
     /// Emit an intrinsic function call with the correct Rust code.
@@ -27,23 +67,15 @@ impl RustEmitter {
             return;
         }
 
-        // Unknown intrinsic name: emit as regular function call.
-        self.write(func);
-        self.write("(");
-        for (i, arg) in args.iter().enumerate() {
-            if i > 0 {
-                self.write(", ");
-            }
-            self.emit_expr(arg);
-        }
-        self.write(")");
+        // Unknown intrinsic name: still lower and emit as a normal call expression.
+        self.emit_registry_plain_call_expr(func, args);
     }
 
     pub(crate) fn try_emit_intrinsic_via_registry(&mut self, func: &str, args: &[HirExpr]) -> bool {
         let Some(lowered_expr) = self.try_lower_registry_intrinsic_call_expr(func, args) else {
             return false;
         };
-        self.write(&crate::render_expr(&lowered_expr));
+        self.write_registry_expr(&lowered_expr);
         true
     }
 
@@ -103,7 +135,7 @@ impl RustEmitter {
         ) else {
             return false;
         };
-        self.write(&crate::render_expr(&lowered.expr));
+        self.write_registry_expr(&lowered.expr);
         true
     }
 
