@@ -1216,24 +1216,129 @@ impl RustEmitter {
             }
             "float" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
-                if matches!(args[0].ty(), Type::Float) {
-                    Some(lowered)
-                } else {
-                    Some(crate::RustExpr::Cast {
+                match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                    Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::Cast {
                         expr: Box::new(lowered),
                         ty: crate::RustType::F64,
-                    })
+                    }),
+                    Type::Str => Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                            method: "parse::<f64>".to_string(),
+                            args: vec![],
+                        }),
+                        method: "map_err".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "e".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::StructInit {
+                                name: "ParseError".to_string(),
+                                fields: vec![(
+                                    "message".to_string(),
+                                    crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Ident(
+                                            "e".to_string(),
+                                        )),
+                                        method: "to_string".to_string(),
+                                        args: vec![],
+                                    },
+                                )],
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    Type::Bool => Some(crate::RustExpr::If {
+                        cond: Box::new(lowered),
+                        then_expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Float(
+                            1.0,
+                        ))),
+                        else_expr: Some(Box::new(crate::RustExpr::Literal(
+                            crate::RustLiteral::Float(0.0),
+                        ))),
+                    }),
+                    _ => Some(lowered),
                 }
             }
             "int" if args.len() == 1 => {
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
-                if matches!(args[0].ty(), Type::Int | Type::LiteralInt(_)) {
-                    Some(lowered)
-                } else {
-                    Some(crate::RustExpr::Cast {
+                match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                    Type::Float => Some(crate::RustExpr::Cast {
                         expr: Box::new(lowered),
                         ty: crate::RustType::I64,
-                    })
+                    }),
+                    Type::Str => Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                            method: "parse::<i64>".to_string(),
+                            args: vec![],
+                        }),
+                        method: "map_err".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "e".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::StructInit {
+                                name: "ParseError".to_string(),
+                                fields: vec![(
+                                    "message".to_string(),
+                                    crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Ident(
+                                            "e".to_string(),
+                                        )),
+                                        method: "to_string".to_string(),
+                                        args: vec![],
+                                    },
+                                )],
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    Type::Bool => Some(crate::RustExpr::If {
+                        cond: Box::new(lowered),
+                        then_expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(1))),
+                        else_expr: Some(Box::new(crate::RustExpr::Literal(
+                            crate::RustLiteral::Int(0),
+                        ))),
+                    }),
+                    Type::BigInt => Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "i64".to_string(),
+                                "try_from".to_string(),
+                            ])),
+                            args: vec![crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                            }],
+                        }),
+                        method: "map_err".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__e_ignored".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::StructInit {
+                                name: "OverflowError".to_string(),
+                                fields: vec![(
+                                    "message".to_string(),
+                                    crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Literal(
+                                            crate::RustLiteral::Str(
+                                                "bigint value out of range for int".to_string(),
+                                            ),
+                                        )),
+                                        method: "to_string".to_string(),
+                                        args: vec![],
+                                    },
+                                )],
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    _ => Some(lowered),
                 }
             }
             "bigint" if args.len() == 1 => Some(crate::RustExpr::FnCall {

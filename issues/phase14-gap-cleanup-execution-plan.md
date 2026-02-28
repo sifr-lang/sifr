@@ -147,10 +147,16 @@ Loop progress log:
 87. Validation: `./scripts/run_all_tests.sh` -> pass.
 88. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 89. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1003` (`expr_render_helpers.rs` reduced `345 -> 328` in this pass).
+90. 2026-02-28 Pass K updates:
+91. Migrated `int(...)` / `float(...)` special-call lowering to shared registry builtin IR path in `intrinsic_method_emitters.rs` with parity conversions (`str` parse + `ParseError`, `bool` numeric mapping, `bigint` range check + `OverflowError`).
+92. Removed duplicated write-assembled `int(...)` / `float(...)` branches from `expr_render_helpers.rs` special-call emission.
+93. Validation: `./scripts/run_all_tests.sh` -> pass.
+94. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+95. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `980` (`expr_render_helpers.rs` reduced `328 -> 305` in this pass).
 
 ### Next Loop To-do (Evidence-Based)
 
-1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`328` writes) to structured IR-first expression builders.
+1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`305` writes) to structured IR-first expression builders.
 2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`218` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `slice_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
 4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.

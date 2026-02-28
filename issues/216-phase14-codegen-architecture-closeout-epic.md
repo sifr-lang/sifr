@@ -216,3 +216,14 @@ Latest validation loop (2026-02-28, Pass J):
 - `./scripts/run_all_tests.sh` -> pass.
 - Focused e2e validation: `cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed).
 - Strict re-audit evidence: `self.write(...)` now `1003` total in `crates/sifr_codegen/src` (`expr_render_helpers.rs` `345 -> 328` in this pass).
+
+Latest validation loop (2026-02-28, Pass K):
+- `int(...)` / `float(...)` special-call semantics migrated to shared registry builtin IR lowering in `intrinsic_method_emitters.rs`.
+- Behavior parity preserved in registry IR path:
+- string parse branches return `ParseError` via `map_err`,
+- bool coercions map to numeric `0/1` / `0.0/1.0`,
+- bigint->int conversion preserves overflow mapping to `OverflowError`.
+- Removed duplicated write-assembled `int(...)` / `float(...)` branches from `expr_render_helpers.rs`.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Strict re-audit evidence: `self.write(...)` now `980` total in `crates/sifr_codegen/src` (`expr_render_helpers.rs` `328 -> 305` in this pass).

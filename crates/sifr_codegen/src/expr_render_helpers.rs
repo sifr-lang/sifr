@@ -1122,6 +1122,8 @@ impl RustEmitter {
             "bool"
                 | "pow"
                 | "bigint"
+                | "int"
+                | "float"
                 | "round"
                 | "abs"
                 | "sum"
@@ -1328,73 +1330,6 @@ impl RustEmitter {
                     }
                 };
                 self.write(if matches { "true" } else { "false" });
-                Ok(true)
-            }
-            "int" => {
-                let [arg] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                match crate::resolve_alias_type_for_plain_call(arg.ty()) {
-                    Type::Float => {
-                        self.write("(");
-                        self.write(&arg_rendered);
-                        self.write(") as i64");
-                    }
-                    Type::Str => {
-                        self.write("(");
-                        self.write(&arg_rendered);
-                        self.write(
-                            ").parse::<i64>().map_err(|e| ParseError { message: e.to_string() })",
-                        );
-                    }
-                    Type::Bool => {
-                        self.write("if ");
-                        self.write(&arg_rendered);
-                        self.write(" { 1_i64 } else { 0_i64 }");
-                    }
-                    Type::BigInt => {
-                        self.write("i64::try_from(&(");
-                        self.write(&arg_rendered);
-                        self.write(")).map_err(|_| OverflowError { message: \"bigint value out of range for int\".to_string() })");
-                    }
-                    _ => self.write(&arg_rendered),
-                }
-                Ok(true)
-            }
-            "float" => {
-                let [arg] = args else {
-                    return Ok(false);
-                };
-                let saved_stats = self.lowering_stats;
-                let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
-                    return Ok(false);
-                };
-                self.lowering_stats = saved_stats;
-                match crate::resolve_alias_type_for_plain_call(arg.ty()) {
-                    Type::Int | Type::LiteralInt(_) => {
-                        self.write("(");
-                        self.write(&arg_rendered);
-                        self.write(") as f64");
-                    }
-                    Type::Str => {
-                        self.write("(");
-                        self.write(&arg_rendered);
-                        self.write(
-                            ").parse::<f64>().map_err(|e| ParseError { message: e.to_string() })",
-                        );
-                    }
-                    Type::Bool => {
-                        self.write("if ");
-                        self.write(&arg_rendered);
-                        self.write(" { 1.0_f64 } else { 0.0_f64 }");
-                    }
-                    _ => self.write(&arg_rendered),
-                }
                 Ok(true)
             }
             _ => Ok(false),
