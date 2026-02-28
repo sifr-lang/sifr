@@ -3,7 +3,7 @@ use sifr_hir::HirExpr;
 use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
-    fn write_registry_expr(&mut self, expr: &crate::RustExpr) {
+    pub(crate) fn write_registry_expr(&mut self, expr: &crate::RustExpr) {
         self.output.push_str(&crate::render_expr(expr));
     }
 
@@ -139,7 +139,7 @@ impl RustEmitter {
         true
     }
 
-    fn try_lower_registry_exprs_strict(
+    pub(crate) fn try_lower_registry_exprs_strict(
         &mut self,
         exprs: &[HirExpr],
     ) -> Option<Vec<crate::RustExpr>> {
@@ -150,7 +150,7 @@ impl RustEmitter {
         Some(lowered)
     }
 
-    fn try_lower_registry_expr_strict(&mut self, expr: &HirExpr) -> Option<crate::RustExpr> {
+    pub(crate) fn try_lower_registry_expr_strict(&mut self, expr: &HirExpr) -> Option<crate::RustExpr> {
         match self.try_lower_registry_expr_result(expr) {
             Ok(Some(lowered_expr)) => Some(lowered_expr),
             Ok(None) => self.try_lower_registry_expr_recursive(expr),
@@ -588,7 +588,11 @@ mod tests {
         assert!(prod_src.contains("fn try_lower_registry_expr_recursive("));
         let helper_defs = prod_src
             .lines()
-            .filter(|line| line.trim_start().starts_with("fn try_lower_registry_expr"))
+            .filter(|line| {
+                let trimmed = line.trim_start();
+                trimmed.starts_with("fn try_lower_registry_expr")
+                    || trimmed.starts_with("pub(crate) fn try_lower_registry_expr")
+            })
             .count();
         assert_eq!(helper_defs, 3, "unexpected registry expr helper set");
         assert!(!prod_src.contains("lower_registry_expr_with_string_path"));

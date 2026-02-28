@@ -4,6 +4,172 @@ use sifr_hir::HirExpr;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 
 impl RustEmitter {
+    fn try_emit_lowered_callable_field_call(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+    ) -> bool {
+        let Some(object_expr) = self.try_lower_registry_expr_strict(object) else {
+            return false;
+        };
+        let Some(arg_exprs) = self.try_lower_registry_exprs_strict(args) else {
+            return false;
+        };
+        let lowered = crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Field {
+                expr: Box::new(object_expr),
+                field: method.to_string(),
+            }),
+            args: arg_exprs,
+        };
+        self.write_registry_expr(&lowered);
+        true
+    }
+
+    fn try_emit_lowered_class_method_call_with_conventions(
+        &mut self,
+        object: &HirExpr,
+        class_name: &str,
+        method: &str,
+        args: &[HirExpr],
+    ) -> bool {
+        let Some(object_expr) = self.try_lower_registry_expr_strict(object) else {
+            return false;
+        };
+        let method_key = format!("{class_name}::{method}");
+        let method_info = self.func_signatures.get(&method_key).cloned();
+        let mut lowered_args = Vec::with_capacity(args.len());
+        for (i, arg) in args.iter().enumerate() {
+            let mut lowered = match self.try_lower_registry_expr_strict(arg) {
+                Some(expr) => expr,
+                None => return false,
+            };
+            if let Some((ref params, _)) = method_info {
+                if let Some((param_ty, convention)) = params.get(i) {
+                    if *convention == ParamConvention::Borrow
+                        && matches!(param_ty, Type::TypeVar(_))
+                    {
+                        lowered = crate::RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(lowered),
+                        };
+                        lowered_args.push(lowered);
+                        continue;
+                    }
+                    lowered = self.apply_borrow_convention_expr(
+                        *convention,
+                        arg.ty(),
+                        Some(param_ty),
+                        Self::name_from_expr(arg),
+                        lowered,
+                    );
+                }
+            }
+            lowered_args.push(lowered);
+        }
+
+        let lowered = crate::RustExpr::MethodCall {
+            receiver: Box::new(object_expr),
+            method: method.to_string(),
+            args: lowered_args,
+        };
+        self.write_registry_expr(&lowered);
+        true
+    }
+
+    fn try_emit_lowered_generic_method_call(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+    ) -> bool {
+        let Some(object_expr) = self.try_lower_registry_expr_strict(object) else {
+            return false;
+        };
+        let Some(arg_exprs) = self.try_lower_registry_exprs_strict(args) else {
+            return false;
+        };
+        let lowered = crate::RustExpr::MethodCall {
+            receiver: Box::new(object_expr),
+            method: method.to_string(),
+            args: arg_exprs,
+        };
+        self.write_registry_expr(&lowered);
+        true
+    }
+
+    fn name_from_expr(expr: &HirExpr) -> Option<&str> {
+        if let HirExpr::Name { name, .. } = expr {
+            return Some(name);
+        }
+        None
+    }
+
+    fn borrow_prefix_for_name(
+        &self,
+        convention: ParamConvention,
+        arg_ty: &Type,
+        param_ty: Option<&Type>,
+        arg_name: Option<&str>,
+    ) -> Option<&'static str> {
+        // Own convention: pass by value (move), no prefix needed
+        if convention == ParamConvention::Own {
+            return None;
+        }
+        // If the parameter type is a TypeVar, always emit the borrow prefix
+        // because the generated Rust signature uses &T for borrowed TypeVar params.
+        let is_generic_param = param_ty.is_some_and(|t| matches!(t, Type::TypeVar(_)));
+        // Copy types are passed by value regardless of convention unless the
+        // parameter is generic (TypeVar).
+        let borrow_decision_ty = param_ty.unwrap_or(arg_ty);
+        if !is_generic_param
+            && borrow_decision_ty.ownership() == sifr_type_system::OwnershipKind::Copy
+        {
+            return None;
+        }
+        // Avoid borrowing an already borrowed parameter again.
+        if let Some(name) = arg_name {
+            if self.borrowed_params.contains(name) && convention == ParamConvention::Borrow {
+                return None;
+            }
+            if self.mut_borrowed_params.contains(name) {
+                if convention == ParamConvention::MutBorrow {
+                    return None;
+                }
+                if convention == ParamConvention::Borrow {
+                    return None;
+                }
+            }
+        }
+        match convention {
+            ParamConvention::Borrow => Some("&"),
+            ParamConvention::MutBorrow => Some("&mut "),
+            ParamConvention::Own => None,
+        }
+    }
+
+    fn apply_borrow_convention_expr(
+        &self,
+        convention: ParamConvention,
+        arg_ty: &Type,
+        param_ty: Option<&Type>,
+        arg_name: Option<&str>,
+        lowered: crate::RustExpr,
+    ) -> crate::RustExpr {
+        match self.borrow_prefix_for_name(convention, arg_ty, param_ty, arg_name) {
+            Some("&") => crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(lowered),
+            },
+            Some("&mut ") => crate::RustExpr::Ref {
+                mutable: true,
+                expr: Box::new(lowered),
+            },
+            _ => lowered,
+        }
+    }
+
     /// Check if an expression is a call to a generator function
     pub(crate) fn is_generator_call(&self, expr: &HirExpr) -> bool {
         if let HirExpr::Call { func, .. } = expr {
@@ -60,17 +226,12 @@ impl RustEmitter {
             return false;
         }
 
-        self.write("(");
-        self.emit_expr(object);
-        self.write(&format!(".{method})("));
-        for (i, arg) in args.iter().enumerate() {
-            if i > 0 {
-                self.write(", ");
-            }
-            self.emit_expr(arg);
+        if self.try_emit_lowered_callable_field_call(object, method, args) {
+            return true;
         }
-        self.write(")");
-        true
+        panic!(
+            "structured callable-field method call lowering missing for production path: object={object:?}, method={method}, args={args:?}"
+        );
     }
 
     fn emit_class_method_call_with_conventions(
@@ -80,45 +241,22 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
     ) {
-        self.emit_expr(object);
-        self.write(&format!(".{method}("));
-
-        let method_key = format!("{class_name}::{method}");
-        let method_info = self.func_signatures.get(&method_key).cloned();
-        for (i, arg) in args.iter().enumerate() {
-            if i > 0 {
-                self.write(", ");
-            }
-            if let Some((ref params, _)) = method_info {
-                if let Some((param_ty, convention)) = params.get(i) {
-                    if *convention == ParamConvention::Borrow
-                        && matches!(param_ty, Type::TypeVar(_))
-                    {
-                        self.write("&(");
-                        self.emit_expr(arg);
-                        self.write(")");
-                        continue;
-                    }
-                    self.emit_borrow_prefix(*convention, arg.ty(), Some(param_ty));
-                    self.emit_expr(arg);
-                    continue;
-                }
-            }
-            self.emit_expr(arg);
+        if self.try_emit_lowered_class_method_call_with_conventions(object, class_name, method, args)
+        {
+            return;
         }
-        self.write(")");
+        panic!(
+            "structured class-method call lowering missing for production path: class={class_name}, method={method}, object={object:?}, args={args:?}"
+        );
     }
 
     fn emit_generic_method_call(&mut self, object: &HirExpr, method: &str, args: &[HirExpr]) {
-        self.emit_expr(object);
-        self.write(&format!(".{method}("));
-        for (i, arg) in args.iter().enumerate() {
-            if i > 0 {
-                self.write(", ");
-            }
-            self.emit_expr(arg);
+        if self.try_emit_lowered_generic_method_call(object, method, args) {
+            return;
         }
-        self.write(")");
+        panic!(
+            "structured generic method call lowering missing for production path: method={method}, object={object:?}, args={args:?}"
+        );
     }
 
     /// Emit `&` or `&mut` prefix for a function argument based on parameter convention.
@@ -140,49 +278,8 @@ impl RustEmitter {
         param_ty: Option<&Type>,
         arg_name: Option<&str>,
     ) {
-        // Own convention: pass by value (move), no prefix needed
-        if convention == ParamConvention::Own {
-            return;
-        }
-        // If the parameter type is a TypeVar, always emit the borrow prefix
-        // because the generated Rust signature uses &T for borrowed TypeVar params
-        let is_generic_param = param_ty.is_some_and(|t| matches!(t, Type::TypeVar(_)));
-        // Copy types are passed by value regardless of convention unless the
-        // parameter is generic (TypeVar). Base this on the parameter type when
-        // available (not the argument expression type), because constructor
-        // expressions can carry payload types that differ from the parameter.
-        let borrow_decision_ty = param_ty.unwrap_or(arg_ty);
-        if !is_generic_param
-            && borrow_decision_ty.ownership() == sifr_type_system::OwnershipKind::Copy
-        {
-            return;
-        }
-        // If the argument is already a borrowed parameter (&T), don't add another borrow.
-        // This handles the case where a Callable call passes a borrowed param:
-        //   fn apply(f: Callable[[list[int]], int], items: &Vec<i64>) { f(items) }
-        // Here items is already &Vec<i64>, so we pass it as-is (no extra &).
-        //
-        // Similarly, if the argument is already a mutably borrowed parameter (&mut T),
-        // don't add another &mut. E.g.:
-        //   fn heapify(data: &mut Vec<i64>) { _sift_down(data, 0, n); }
-        // Here data is already &mut Vec<i64>; passing &mut data would be &&mut Vec<i64> error.
-        if let Some(name) = arg_name {
-            if self.borrowed_params.contains(name) && convention == ParamConvention::Borrow {
-                return; // already &T, no additional borrow needed
-            }
-            if self.mut_borrowed_params.contains(name) {
-                if convention == ParamConvention::MutBorrow {
-                    return; // already &mut T, no additional &mut needed
-                }
-                if convention == ParamConvention::Borrow {
-                    return; // &mut T -> &T is implicit reborrow in Rust; no extra & needed
-                }
-            }
-        }
-        match convention {
-            ParamConvention::Borrow => self.write("&"),
-            ParamConvention::MutBorrow => self.write("&mut "),
-            ParamConvention::Own => {} // no prefix -- pass by value (move)
+        if let Some(prefix) = self.borrow_prefix_for_name(convention, arg_ty, param_ty, arg_name) {
+            self.output.push_str(prefix);
         }
     }
 }
@@ -202,4 +299,5 @@ mod tests {
         assert!(!emit_block.contains("match (obj_ty, method)"));
         assert!(!emit_block.contains("tuple.count() not fully supported"));
     }
+
 }

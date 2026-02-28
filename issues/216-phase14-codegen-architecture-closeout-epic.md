@@ -160,7 +160,7 @@ Recheck run on 2026-02-28 (Pass C, current tree):
 - `./scripts/run_all_tests.sh` (pass; includes `test_e2e_pass` -> `394` passed, `0` failed)
 - Full demo sweep `demos/*.sifr` (pass; `83/83`)
 - Production source terminology scan in `crates/sifr_codegen/src` for `bridge|fallback|legacy|migration` (no matches)
-- Current `.write(...)` count in `crates/sifr_codegen/src`: `1146`
+- Current `.write(...)` count in `crates/sifr_codegen/src`: `1132`
 
 Closeout decision:
 - Epic cannot be marked done again until user-path `SynItem` and remaining high-traffic string emitters are migrated to structured IR and all strict completion conditions are revalidated.
@@ -169,4 +169,4 @@ Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Included e2e pass check from script: `test_e2e_pass` -> `394` passed, `0` failed.
-- Strict re-audit evidence: `self.write(...)` remains high (`1146` total in `crates/sifr_codegen/src`), and user-path `RustItem::SynItem` is still emitted in `crates/sifr_codegen/src/module_body.rs:54`.
+- Strict re-audit evidence: `self.write(...)` remains high (`1132` total in `crates/sifr_codegen/src`), and user-path `RustItem::SynItem` is still emitted in `crates/sifr_codegen/src/module_body.rs:54`.

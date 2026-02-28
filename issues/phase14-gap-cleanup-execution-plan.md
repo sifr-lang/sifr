@@ -106,6 +106,13 @@ Loop progress log:
 46. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1146`.
 47. Full validation rerun: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
 48. Full demo sweep rerun: all `demos/*.sifr` -> pass (`83/83`).
+49. 2026-02-28 Pass E updates:
+50. Removed all direct `self.write(...)` usage from `method_call_emitter.rs` and enforced structured-only method-call emission (no fallback branch; missing shapes now hard-fail).
+51. Exposed structured registry expr helpers in `intrinsic_method_emitters.rs` for cross-emitter reuse.
+52. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
+53. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+54. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1132`.
+55. `self.write(...)` in `method_call_emitter.rs` -> `0`; `self.write(...)` in `intrinsic_method_emitters.rs` -> `0`.
 
 ### Next Loop To-do (Evidence-Based)
 
@@ -116,7 +123,7 @@ Loop progress log:
 5. [ ] Loop-4B: Add/refresh hard-gate tests enforcing zero user-path `SynItem` and preventing string-emission regressions in production paths.
 6. [ ] Loop-4C: Re-run full phase gate commands and only then re-mark WS1..WS7 complete.
 
-### Active Implementation Loop (2026-02-28, Pass D)
+### Active Implementation Loop (2026-02-28, Pass E)
 
 1. [x] Item 1: Remove bridge-named production helper path in `intrinsic_method_emitters.rs` and keep behavior parity.
 2. [x] Item 2: Start hot-path extraction in `expr_render_helpers.rs` to reduce direct `self.write(...)` string assembly for structured print/fstring/display flows.
@@ -124,6 +131,7 @@ Loop progress log:
 4. [x] Item 4: Fix structured return/raise terminator regression introduced during extraction in `stmt_support_emitter.rs`.
 5. [x] Item 5: Re-run full local validations (`./scripts/run_all_tests.sh` + full `demos/*.sifr` sweep) and record results.
 6. [x] Item 6: Remove direct `self.write(...)` from `intrinsic_method_emitters.rs` by routing emission through lowered IR rendering only.
+7. [x] Item 7: Remove direct `self.write(...)` from `method_call_emitter.rs` and enforce structured-only method-call emission (no fallback).
 
 ---
 
