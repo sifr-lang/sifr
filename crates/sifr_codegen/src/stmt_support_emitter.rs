@@ -1203,6 +1203,44 @@ impl RustEmitter {
                     }],
                     true,
                 )
+            } else if let HirStmt::For {
+                target,
+                iter,
+                body,
+                else_body,
+                ..
+            } = stmt
+            {
+                if else_body.is_some() {
+                    return Ok(None);
+                }
+                let Some(lowered_iter) = self.try_lower_for_iter_expr_for_ir(iter)? else {
+                    return Ok(None);
+                };
+                let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                    return Ok(None);
+                };
+                let var = if target.contains(',') {
+                    let names = target
+                        .split(',')
+                        .map(str::trim)
+                        .filter(|name| !name.is_empty())
+                        .collect::<Vec<_>>();
+                    if names.is_empty() {
+                        return Ok(None);
+                    }
+                    format!("({})", names.join(", "))
+                } else {
+                    target.clone()
+                };
+                (
+                    vec![RustStmt::For {
+                        var,
+                        iter: lowered_iter,
+                        body: lowered_body,
+                    }],
+                    true,
+                )
             } else if let HirStmt::With { items, body } = stmt {
                 let Some(lowered_with) = self.try_lower_with_stmt_for_ir(items, body)? else {
                     return Ok(None);
@@ -1240,6 +1278,128 @@ impl RustEmitter {
             return Ok(Some(crate::RustExpr::RawCode(rendered_expr)));
         }
         self.lower_rendered_expr_for_ir(condition)
+    }
+
+    fn try_lower_for_iter_expr_for_ir(
+        &mut self,
+        iter: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::Call { func, args, .. } = iter {
+            if func == "enumerate" && args.len() == 1 {
+                let Some(lowered_arg) = self.lower_rendered_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                let iter_source = match Self::resolve_alias_type_for_loop_iter(args[0].ty()) {
+                    Type::List(_) => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    },
+                    Type::Dict(_, _) => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "keys".to_string(),
+                            args: vec![],
+                        }),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    },
+                    Type::Str => crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "chars".to_string(),
+                            args: vec![],
+                        }),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "c".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
+                                method: "to_string".to_string(),
+                                args: vec![],
+                            }),
+                            is_move: false,
+                        }],
+                    },
+                    _ => lowered_arg,
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(iter_source),
+                        method: "enumerate".to_string(),
+                        args: vec![],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "(i, v)".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::Tuple(vec![
+                            crate::RustExpr::Cast {
+                                expr: Box::new(crate::RustExpr::Ident("i".to_string())),
+                                ty: crate::RustType::I64,
+                            },
+                            crate::RustExpr::Ident("v".to_string()),
+                        ])),
+                        is_move: false,
+                    }],
+                }));
+            }
+        }
+
+        let Some(lowered_iter) = self.lower_rendered_expr_for_ir(iter)? else {
+            return Ok(None);
+        };
+        let lowered_iter = match Self::resolve_alias_type_for_loop_iter(iter.ty()) {
+            Type::List(_) => crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "iter".to_string(),
+                    args: vec![],
+                }),
+                method: "cloned".to_string(),
+                args: vec![],
+            },
+            Type::Dict(_, _) => crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "keys".to_string(),
+                    args: vec![],
+                }),
+                method: "cloned".to_string(),
+                args: vec![],
+            },
+            Type::Str => crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_iter),
+                    method: "chars".to_string(),
+                    args: vec![],
+                }),
+                method: "map".to_string(),
+                args: vec![crate::RustExpr::Closure {
+                    params: vec![crate::RustParam::Named {
+                        name: "c".to_string(),
+                        ty: crate::RustType::Named("_".to_string()),
+                    }],
+                    body: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    }),
+                    is_move: false,
+                }],
+            },
+            _ => lowered_iter,
+        };
+        Ok(Some(lowered_iter))
     }
 
     fn try_lower_with_stmt_for_ir(
@@ -2286,25 +2446,21 @@ impl RustEmitter {
             return Ok(false);
         }
 
-        let output_len = self.output.len();
-        self.write_indent();
-        self.write("while ");
-        if self.try_emit_structured_expr(condition)? {
-            self.loop_else_stack.push(false);
-            self.write(" {\n");
-            self.indent += 1;
-            for body_stmt in body {
-                self.emit_stmt(body_stmt);
-            }
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
-            let popped = self.loop_else_stack.pop();
-            debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
-            return Ok(true);
-        }
-        self.output.truncate(output_len);
-        Ok(false)
+        let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
+            return Ok(false);
+        };
+        self.loop_else_stack.push(false);
+        let lowered_body = self.try_lower_stmt_block_for_ir(body)?;
+        let popped = self.loop_else_stack.pop();
+        debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
+        let Some(lowered_body) = lowered_body else {
+            return Ok(false);
+        };
+        self.emit_rust_stmt_with_current_indent(&RustStmt::While {
+            cond: lowered_cond,
+            body: lowered_body,
+        });
+        Ok(true)
     }
 
     pub(crate) fn try_emit_structured_for_stmt(
