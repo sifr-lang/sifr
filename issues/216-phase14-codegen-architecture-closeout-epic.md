@@ -528,8 +528,19 @@ Latest validation loop (2026-03-01, Pass Z):
 - Re-audit evidence after this loop: direct `self.write(...) = 271` in `crates/sifr_codegen/src` with remaining files:
 - `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `stmt_support_emitter.rs` (`57`), `function_emitter.rs` (`51`).
 
+Latest validation loop (2026-03-01, Pass AA):
+- Migrated `try_emit_structured_if_stmt` to IR-first lowering for union narrowing + option guards + generic branches (`RustStmt::If`/`IfLet`/`Match`), removing direct token-write if/elif/else assembly.
+- Added nested block support for `FieldAssign` in `try_lower_stmt_block_for_ir` so IR-lowered `if` bodies remain production-reachable without fallback panic.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed, `0` failed).
+- `SIFR_E2E_RUNNER_MODE=new cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394/394`, `66.91s`).
+- Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Re-audit evidence after this loop: direct `self.write(...) = 215` in `crates/sifr_codegen/src` with remaining files:
+- `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`), `stmt_support_emitter.rs` (`1`).
+
 Next loop todo (dependency-ordered):
-1. `function_emitter.rs` (`51`) IR migration (unblocked by Pass Z try/closure return parity fixes).
-2. `class_method_emitter.rs` (`70`) IR migration.
-3. `class_emitter.rs` (`93`) IR migration.
-4. `stmt_support_emitter.rs` (`57`) final structured stmt cleanup.
+1. `stmt_support_emitter.rs` (`1`) final structured stmt cleanup.
+2. `function_emitter.rs` (`51`) IR migration.
+3. `class_method_emitter.rs` (`70`) IR migration.
+4. `class_emitter.rs` (`93`) IR migration.
