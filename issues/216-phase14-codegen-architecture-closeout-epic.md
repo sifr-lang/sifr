@@ -256,6 +256,14 @@ Latest loop update (2026-03-01):
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `412.77s`).
 - runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
 - Refreshed strict inventory after `a6355f6b`: `self.write(...)` in `crates/sifr_codegen/src` is now `408` (`expr_render_helpers.rs` `67 -> 0`).
+- Additional loop slice (2026-03-01):
+- `d5f3f22e`: added shared IR statement emission helper (`emit_rust_stmt_with_current_indent`) and migrated `stmt_support_emitter.rs` lowered-statement/generator-init/borrowed-return-clone paths to structured `RustStmt`/`RustExpr` emission.
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `410.51s`).
+- runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
+- Refreshed strict inventory after `d5f3f22e`: `self.write(...)` in `crates/sifr_codegen/src` is now `398` (`stmt_support_emitter.rs` `186 -> 176`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
