@@ -876,9 +876,22 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 8. Re-audit totals after this slice: direct `self.write(...) = 308` in `crates/sifr_codegen/src`
 9. File breakdown: `stmt_support_emitter.rs` `94`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`
 
+### Validation rerun (2026-03-01, Pass Z)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+2. `SIFR_E2E_RUNNER_MODE=new cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `65.05s`)
+3. Full runnable demos sweep `demos/*.sifr` -> pass (`83/83`)
+4. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass
+5. IR-first cleanup this loop:
+6. migrated structured `try/except` emission from token writes to IR stmt trees (`RustStmt::Let` + `ClosureBlock` + `Match` / `IfLet`) in `stmt_support_emitter.rs`
+7. added nested `TryExcept` lowering support inside `try_lower_stmt_block_for_ir` so nested error-handling blocks remain on structured IR paths
+8. aligned block-level `Return` lowering with try-closure semantics (option/direct capture wrapping), fixing compile-time regressions from nested try lowering
+9. Re-audit totals after this slice: direct `self.write(...) = 271` in `crates/sifr_codegen/src`
+10. File breakdown: `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `stmt_support_emitter.rs` `57`, `function_emitter.rs` `51`
+
 ### Next Loop Todo (Dependency-Ordered)
 
-1. `function_emitter.rs` (`51`) -> migrate function/generator body emission to IR statements/expressions.
+1. `function_emitter.rs` (`51`) -> migrate function/generator body emission to IR statements/expressions (after reusing Pass Z try/closure return semantics).
 2. `class_method_emitter.rs` (`70`) -> migrate constructor/method assembly to IR using shared lowering helpers.
 3. `class_emitter.rs` (`93`) -> migrate class/type/display impl assembly to IR item trees.
-4. `stmt_support_emitter.rs` (`94`) -> finish remaining statement paths and remove final direct write sites.
+4. `stmt_support_emitter.rs` (`57`) -> finish remaining statement paths and remove final direct write sites.
