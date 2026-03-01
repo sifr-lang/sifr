@@ -198,6 +198,10 @@ Latest loop update (2026-03-01):
 - `1721a268`: set literals now emit structured IR block (`HashSet::new` + `insert` + return value) instead of formatted `HashSet::from([...])` string assembly.
 - Validation for these slices: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), and milestone structural-pass demo pass.
 - Refreshed strict inventory after these slices: `self.write(...)` in `crates/sifr_codegen/src` is now `575` (`expr_render_helpers.rs` `173 -> 167`).
+- Additional loop slice:
+- `3b0c119c`: union `isinstance` membership emission now routes through structured `matches!` macro IR node rather than token-by-token write assembly.
+- Validation: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), and milestone structural-pass demo pass.
+- Refreshed strict inventory after this slice: `self.write(...)` in `crates/sifr_codegen/src` is now `570` (`expr_render_helpers.rs` `167 -> 162`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).

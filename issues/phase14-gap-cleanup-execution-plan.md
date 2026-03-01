@@ -95,6 +95,14 @@ Completion evidence:
 60. Refreshed direct emission inventory after these slices:
 61. `self.write(...)` total in `crates/sifr_codegen/src` -> `575`
 62. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `167`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+63. `3b0c119c`: union `isinstance` membership check now emits `matches!` through macro IR node (no token-by-token writes).
+64. Validation for this slice:
+65. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+66. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+67. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+68. Refreshed direct emission inventory after latest slice:
+69. `self.write(...)` total in `crates/sifr_codegen/src` -> `570`
+70. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `162`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
