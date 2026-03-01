@@ -6,7 +6,7 @@ impl RustEmitter {
     }
 
     pub(super) fn emit_rust_expr(&mut self, expr: &crate::RustExpr) {
-        self.write(&crate::render_expr(expr));
+        self.output.push_str(&crate::render_expr(expr));
     }
 
     pub(super) fn writeln(&mut self, s: &str) {
