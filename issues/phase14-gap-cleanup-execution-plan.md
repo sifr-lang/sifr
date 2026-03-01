@@ -84,6 +84,17 @@ Completion evidence:
 49. Refreshed direct emission inventory after `62f10dff`:
 50. `self.write(...)` total in `crates/sifr_codegen/src` -> `581`
 51. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `173`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+52. `fcd02efd`: migrated `isinstance` bool terminal emission to `RustLiteral::Bool` IR output in `expr_render_helpers.rs`.
+53. `4303b745`: migrated literal-only string concat fast path to IR method call (`RustExpr::Literal(Str).to_string()`).
+54. `7c6fb3b4`: migrated pre-call `HirExpr::Name` rewrite emission to `emit_rust_expr` path.
+55. `1721a268`: migrated set literal emission to structured IR block (`HashSet::new` + `insert` + final expr), removing formatted set string assembly.
+56. Validation for slices `fcd02efd`, `4303b745`, `7c6fb3b4`, `1721a268`:
+57. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+58. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+59. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+60. Refreshed direct emission inventory after these slices:
+61. `self.write(...)` total in `crates/sifr_codegen/src` -> `575`
+62. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `167`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)

@@ -191,6 +191,13 @@ Latest loop update (2026-03-01):
 - `62f10dff`: `expr_render_helpers.rs` now emits `print()` and single string-literal `print` through structured macro IR (`RustExpr::MacroCall`/`RustExpr::FormatMacro`) instead of direct string write emission.
 - Validation: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), and milestone structural-pass demo pass.
 - Refreshed strict inventory after `62f10dff`: `self.write(...)` in `crates/sifr_codegen/src` is now `581` (`expr_render_helpers.rs` `175 -> 173`).
+- Additional loop slices:
+- `fcd02efd`: `isinstance` terminal boolean branches now emit `RustLiteral::Bool` IR instead of string booleans.
+- `4303b745`: literal-only string concat fast path now emits IR method call (`Str(...).to_string()`).
+- `7c6fb3b4`: pre-call rewritten `HirExpr::Name` emission now routes via `emit_rust_expr`.
+- `1721a268`: set literals now emit structured IR block (`HashSet::new` + `insert` + return value) instead of formatted `HashSet::from([...])` string assembly.
+- Validation for these slices: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), and milestone structural-pass demo pass.
+- Refreshed strict inventory after these slices: `self.write(...)` in `crates/sifr_codegen/src` is now `575` (`expr_render_helpers.rs` `173 -> 167`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
