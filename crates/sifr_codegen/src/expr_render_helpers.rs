@@ -1645,23 +1645,40 @@ impl RustEmitter {
         }
         let mut entries = Vec::with_capacity(keys.len());
         for (key, value) in keys.iter().zip(values.iter()) {
-            let saved_stats = self.lowering_stats;
-            let Some(key_rendered) = self.try_render_structured_expr(key)? else {
+            let Some(key_lowered) = self.lower_stmt_expr_for_ir(key)? else {
                 return Ok(false);
             };
-            self.lowering_stats = saved_stats;
-            let Some(value_rendered) = self.try_render_structured_expr(value)? else {
+            let Some(value_lowered) = self.lower_stmt_expr_for_ir(value)? else {
                 return Ok(false);
             };
-            self.lowering_stats = saved_stats;
-            entries.push((key_rendered, value_rendered));
+            entries.push((key_lowered, value_lowered));
         }
-        let rendered_entries = entries
-            .iter()
-            .map(|(key_rendered, value_rendered)| format!("({key_rendered}, {value_rendered})"))
-            .collect::<Vec<_>>()
-            .join(", ");
-        self.write(&format!("HashMap::from([{rendered_entries}])"));
+        let map_ident = "__sifr_dict_lit".to_string();
+        let mut stmts = vec![crate::RustStmt::Let {
+            mutable: true,
+            name: map_ident.clone(),
+            ty: None,
+            value: crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "std".to_string(),
+                    "collections".to_string(),
+                    "HashMap".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            },
+        }];
+        for (key_expr, value_expr) in entries {
+            stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Ident(map_ident.clone())),
+                method: "insert".to_string(),
+                args: vec![key_expr, value_expr],
+            }));
+        }
+        self.emit_rust_expr(&crate::RustExpr::Block {
+            stmts,
+            expr: Some(Box::new(crate::RustExpr::Ident(map_ident))),
+        });
         Ok(true)
     }
 
