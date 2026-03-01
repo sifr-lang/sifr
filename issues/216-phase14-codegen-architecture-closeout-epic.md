@@ -216,6 +216,15 @@ Latest loop update (2026-03-01):
 - `a489f70e`: structured print tail branches now emit `RustExpr::FormatMacro` IR nodes (including option-map display formatting) instead of raw formatted `println!` string writes.
 - Validation: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), milestone structural-pass demo pass.
 - Refreshed strict inventory after this slice: `self.write(...)` in `crates/sifr_codegen/src` is now `563` (`expr_render_helpers.rs` `158 -> 155`).
+- Additional loop slices (2026-03-01):
+- `05cc91e1`: moved structured result-wrap and walrus emission to IR (`RustExpr::FnCall`/`RustExpr::Block`) in `expr_render_helpers.rs`.
+- `b4946b1f`: moved structured `contains`, unary ops, numeric binops (including `**` forms), and if-expr emission to `RustExpr` trees in `expr_render_helpers.rs`.
+- Validation for both slices:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `405.92s`).
+- Demo sweeps: recursive `demos/**/*.sifr` only hits known intentional error demo (`exclusivity_error_demo.sifr`); runnable milestone sweep `demos/*.sifr` passes (`83/83`).
+- Refreshed strict inventory after `b4946b1f`: `self.write(...)` in `crates/sifr_codegen/src` is now `533` (`expr_render_helpers.rs` `155 -> 125`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).

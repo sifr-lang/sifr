@@ -127,6 +127,25 @@ Completion evidence:
 92. Refreshed direct emission inventory after `a489f70e`:
 93. `self.write(...)` total in `crates/sifr_codegen/src` -> `563`
 94. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `155`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+95. `05cc91e1`: migrated structured result-wrap (`Ok`/`Err`) and walrus emission in `expr_render_helpers.rs` to IR (`RustExpr::FnCall`/`RustExpr::Block`) instead of direct formatted `self.write(...)`.
+96. Validation for `05cc91e1`:
+97. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+98. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+99. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, long-running)
+100. Refreshed direct emission inventory after `05cc91e1`:
+101. `self.write(...)` total in `crates/sifr_codegen/src` -> `561`
+102. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `153`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+103. `b4946b1f`: migrated structured `contains`, unary ops, numeric binop ops (including pow forms), and if-expr emission to direct `RustExpr` trees in `expr_render_helpers.rs`.
+104. Validation for `b4946b1f`:
+105. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+106. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+107. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `405.92s`)
+108. Demo sweep checks:
+109. recursive sweep `find demos -name '*.sifr'` -> expected intentional error demo hit at `demos/milestone_borrow_hardening_demo/exclusivity_error_demo.sifr`
+110. runnable milestone sweep `find demos -maxdepth 1 -name '*.sifr'` -> pass (`83/83`)
+111. Refreshed direct emission inventory after `b4946b1f`:
+112. `self.write(...)` total in `crates/sifr_codegen/src` -> `533`
+113. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `125`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
@@ -287,8 +306,8 @@ Loop progress log:
 
 ### Next Loop To-do (Evidence-Based)
 
-1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`305` writes) to structured IR-first expression builders.
-2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`218` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `slice_emitter.rs`) off string assembly.
+1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`125` writes) to structured IR-first expression builders.
+2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`186` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `function_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
 4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.
 5. [ ] Loop-4B: Add/refresh hard-gate tests enforcing zero user-path `SynItem` and preventing string-emission regressions in production paths.
@@ -297,17 +316,15 @@ Loop progress log:
 Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write` files:
 1. [x] `helpers.rs` (completed in Pass L; now `0` direct `self.write(...)`)
 2. [x] `render.rs` (completed in Pass M; now `0` direct `self.write(...)`)
-3. [x] `slice_emitter.rs` (completed in Pass N; dead module removed)
-4. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
-5. [ ] `expr_render_helpers.rs` (`176` writes; core expression lowering hot path)
-6. [ ] `stmt_support_emitter.rs` (`218` writes; core statement lowering hot path)
-7. [ ] `function_emitter.rs` (`50` writes; item-level wrapper over stmt/expr lowering)
-8. [ ] `type_emitters.rs` (`61` writes; item/type wrappers over lowered expression bodies)
-9. [ ] `operator_protocol_emitters.rs` (`52` writes; operator/protocol wrappers over lowered bodies)
-10. [ ] `class_method_emitter.rs` (`70` writes; class method wrappers over stmt/expr lowering)
-11. [ ] `class_emitter.rs` (`93` writes; class item orchestration over class-method/type/operator emitters)
-12. [ ] `lib.rs` (`16` writes; top-level orchestration entrypoint and hard-gate cleanup)
-13. [ ] `lib_codegen_tests.rs` (`1` write assertion; final guard/test rewrite)
+3. [x] `type_emitters.rs` (completed; now `0` direct `self.write(...)`)
+4. [x] `operator_protocol_emitters.rs` (completed; now `0` direct `self.write(...)`)
+5. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
+6. [ ] `expr_render_helpers.rs` (`125` writes; expression leaf hot path)
+7. [ ] `stmt_support_emitter.rs` (`186` writes; statement lowering over expression leafs)
+8. [ ] `function_emitter.rs` (`51` writes; item wrapper over stmt/expr lowering)
+9. [ ] `class_method_emitter.rs` (`70` writes; class method wrapper over stmt/expr lowering)
+10. [ ] `class_emitter.rs` (`93` writes; class item orchestration over class methods)
+11. [ ] `lib.rs` (`8` writes; top-level orchestration and hard-gate cleanup)
 
 ### Active Implementation Loop (2026-02-28, Pass E)
 
