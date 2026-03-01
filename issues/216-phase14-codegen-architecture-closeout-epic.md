@@ -492,3 +492,15 @@ Latest validation loop (2026-03-01, Pass W):
 - Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
 - Re-audit evidence after this loop: direct `self.write(...) = 330` in `crates/sifr_codegen/src` with remaining files:
 - `stmt_support_emitter.rs` (`116`), `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).
+
+Latest validation loop (2026-03-01, Pass X):
+- Migrated `try_emit_structured_while_stmt` to structured IR emission (`RustStmt::While`) instead of direct token-write assembly.
+- Expanded recursive block IR lowering to cover nested `for` iteration forms (including `enumerate` lowering and collection iteration normalization) so while-body lowering remains in structured IR paths.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed, `0` failed).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394/394`, `426.80s`).
+- Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Re-audit evidence after this loop: direct `self.write(...) = 327` in `crates/sifr_codegen/src` with remaining files:
+- `stmt_support_emitter.rs` (`113`), `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).

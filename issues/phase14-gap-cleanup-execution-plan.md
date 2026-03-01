@@ -850,3 +850,16 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 11. added explicit recursive `Raise` lowering in `try_lower_stmt_block_for_ir` to keep nested control-flow branches fully structured
 12. Re-audit totals: direct `self.write(...) = 330` in `crates/sifr_codegen/src`
 13. File breakdown: `stmt_support_emitter.rs` `116`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
+
+### Validation rerun (2026-03-01, Pass X)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+2. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+3. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `426.80s`)
+4. Full runnable demos sweep `demos/*.sifr` -> pass (`83/83`)
+5. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass
+6. IR-first cleanup this loop:
+7. migrated `try_emit_structured_while_stmt` from token writes to `RustStmt::While` emission through recursive IR lowering
+8. expanded recursive block IR lowering for nested `for` iter-shapes (`enumerate` and collection iteration normalization) to keep while bodies on structured IR
+9. Re-audit totals after this slice: direct `self.write(...) = 327` in `crates/sifr_codegen/src`
+10. File breakdown: `stmt_support_emitter.rs` `113`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
