@@ -32,7 +32,6 @@ mod ir_imports;
 mod ir_optimize;
 mod ir_validate;
 mod lib_support;
-mod match_emitter;
 mod match_guard_helpers;
 mod method_call_emitter;
 mod methods;
