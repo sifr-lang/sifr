@@ -208,6 +208,10 @@ Latest loop update (2026-03-01):
 - `6bf28c68`: static unary `not` outcomes now emit `RustLiteral::Bool` IR for tuple/none branches.
 - Validation for these slices: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), and milestone structural-pass demo pass.
 - Refreshed strict inventory after these slices: `self.write(...)` in `crates/sifr_codegen/src` is now `566` (`expr_render_helpers.rs` `162 -> 158`).
+- Additional root-enabler slice:
+- `22c8b6af`: expanded statement-expression IR lowering coverage in `stmt_support_emitter.rs` for `QuestionMark`, `OkWrap`, `ErrWrap`, `IfExpr`, and tuple index lowering.
+- Validation: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), milestone structural-pass demo pass.
+- Inventory impact: unchanged (`566` direct `self.write(...)`) because this slice is coverage-first infrastructure for the upcoming `lib.rs` let/assign IR migration.
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
