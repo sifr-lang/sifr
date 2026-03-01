@@ -103,6 +103,16 @@ Completion evidence:
 68. Refreshed direct emission inventory after latest slice:
 69. `self.write(...)` total in `crates/sifr_codegen/src` -> `570`
 70. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `162`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+71. `54392392`: list literal emission now lowers to `RustExpr::Vec` IR (removed `vec![...]` string assembly).
+72. `2340bde8`: dict literal emission now lowers to structured `HashMap` IR block (`new` + `insert` + return value) instead of formatted `HashMap::from([...])`.
+73. `6bf28c68`: static unary `not` outcomes now emit `RustLiteral::Bool` IR for tuple/none cases.
+74. Validation for slices `54392392`, `2340bde8`, `6bf28c68`:
+75. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+76. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+77. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+78. Refreshed direct emission inventory after these slices:
+79. `self.write(...)` total in `crates/sifr_codegen/src` -> `566`
+80. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `158`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
