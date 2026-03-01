@@ -156,6 +156,14 @@ Completion evidence:
 121. Refreshed direct emission inventory after `2e1dd70a`:
 122. `self.write(...)` total in `crates/sifr_codegen/src` -> `506`
 123. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `98`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+124. `4b6109bd`: migrated structured question-mark (`?`) emission and closure-error `map_err` shaping to `RustExpr::Try` + structured IR; compare-chain terminal emission now routes through IR node emission in `expr_render_helpers.rs`.
+125. Validation for `4b6109bd`:
+126. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+127. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+128. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `402.65s`)
+129. Refreshed direct emission inventory after `4b6109bd`:
+130. `self.write(...)` total in `crates/sifr_codegen/src` -> `496`
+131. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `88`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
@@ -316,7 +324,7 @@ Loop progress log:
 
 ### Next Loop To-do (Evidence-Based)
 
-1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`98` writes) to structured IR-first expression builders.
+1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`88` writes) to structured IR-first expression builders.
 2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`186` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `function_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
 4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.
@@ -329,7 +337,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 3. [x] `type_emitters.rs` (completed; now `0` direct `self.write(...)`)
 4. [x] `operator_protocol_emitters.rs` (completed; now `0` direct `self.write(...)`)
 5. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
-6. [ ] `expr_render_helpers.rs` (`98` writes; expression leaf hot path)
+6. [ ] `expr_render_helpers.rs` (`88` writes; expression leaf hot path)
 7. [ ] `stmt_support_emitter.rs` (`186` writes; statement lowering over expression leafs)
 8. [ ] `function_emitter.rs` (`51` writes; item wrapper over stmt/expr lowering)
 9. [ ] `class_method_emitter.rs` (`70` writes; class method wrapper over stmt/expr lowering)

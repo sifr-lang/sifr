@@ -234,6 +234,13 @@ Latest loop update (2026-03-01):
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `402.17s`).
 - Runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
 - Refreshed strict inventory after `2e1dd70a`: `self.write(...)` in `crates/sifr_codegen/src` is now `506` (`expr_render_helpers.rs` `125 -> 98`).
+- Additional loop slice (2026-03-01):
+- `4b6109bd`: migrated structured question-mark (`?`) emission and closure-error `map_err` shaping to `RustExpr::Try` + structured IR in `expr_render_helpers.rs`; compare-chain terminal emission now routes through IR node emission.
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `402.65s`).
+- Refreshed strict inventory after `4b6109bd`: `self.write(...)` in `crates/sifr_codegen/src` is now `496` (`expr_render_helpers.rs` `98 -> 88`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
