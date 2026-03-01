@@ -119,6 +119,14 @@ Completion evidence:
 84. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
 85. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
 86. Inventory status after `22c8b6af`: unchanged at `566` direct `self.write(...)` callsites (root-enabler slice, no direct-write reduction yet).
+87. `a489f70e`: structured print tail branches in `expr_render_helpers.rs` now emit `RustExpr::FormatMacro` IR (including option-map display branch) instead of raw formatted `println!` string writes.
+88. Validation for `a489f70e`:
+89. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+90. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+91. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+92. Refreshed direct emission inventory after `a489f70e`:
+93. `self.write(...)` total in `crates/sifr_codegen/src` -> `563`
+94. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `155`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)

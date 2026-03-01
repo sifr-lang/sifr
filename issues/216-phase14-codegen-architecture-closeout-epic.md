@@ -212,6 +212,10 @@ Latest loop update (2026-03-01):
 - `22c8b6af`: expanded statement-expression IR lowering coverage in `stmt_support_emitter.rs` for `QuestionMark`, `OkWrap`, `ErrWrap`, `IfExpr`, and tuple index lowering.
 - Validation: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), milestone structural-pass demo pass.
 - Inventory impact: unchanged (`566` direct `self.write(...)`) because this slice is coverage-first infrastructure for the upcoming `lib.rs` let/assign IR migration.
+- Additional loop slice:
+- `a489f70e`: structured print tail branches now emit `RustExpr::FormatMacro` IR nodes (including option-map display formatting) instead of raw formatted `println!` string writes.
+- Validation: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), milestone structural-pass demo pass.
+- Refreshed strict inventory after this slice: `self.write(...)` in `crates/sifr_codegen/src` is now `563` (`expr_render_helpers.rs` `158 -> 155`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
