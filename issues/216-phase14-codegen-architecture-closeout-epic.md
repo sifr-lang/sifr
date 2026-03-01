@@ -241,6 +241,13 @@ Latest loop update (2026-03-01):
 - `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `402.65s`).
 - Refreshed strict inventory after `4b6109bd`: `self.write(...)` in `crates/sifr_codegen/src` is now `496` (`expr_render_helpers.rs` `98 -> 88`).
+- Additional loop slice (2026-03-01):
+- `302765ff`: migrated string concat (`+`), string repeat (`*`), and list concat (`+`) structured emission in `expr_render_helpers.rs` from direct token writes to structured `RustExpr`/`RustStmt` IR shapes.
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `418.21s`).
+- Refreshed strict inventory after `302765ff`: `self.write(...)` in `crates/sifr_codegen/src` is now `475` (`expr_render_helpers.rs` `88 -> 67`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
