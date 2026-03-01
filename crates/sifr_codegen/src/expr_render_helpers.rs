@@ -1311,11 +1311,13 @@ impl RustEmitter {
                             })
                             .unwrap_or(preferred_enum_name)
                     };
-                    self.write("matches!(");
-                    self.write(&object_rendered);
-                    self.write(", ");
-                    self.write(&format!("{enum_name}::{variant_name}(..)"));
-                    self.write(")");
+                    self.emit_rust_expr(&crate::RustExpr::MacroCall {
+                        name: "matches".to_string(),
+                        args: vec![
+                            crate::RustExpr::RawCode(object_rendered),
+                            crate::RustExpr::RawCode(format!("{enum_name}::{variant_name}(..)")),
+                        ],
+                    });
                     return Ok(true);
                 }
                 let matches = match type_name {
