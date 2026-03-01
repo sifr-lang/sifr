@@ -212,6 +212,15 @@ Completion evidence:
 177. Refreshed direct emission inventory after `e7ca4643`:
 178. `self.write(...)` total in `crates/sifr_codegen/src` -> `378`
 179. Remaining files: `stmt_support_emitter.rs` `156`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+180. `b33d143a`: migrated `lib.rs` structured `Let`/`Assign` statement emission from direct token writes to IR statements (`RustStmt::Let`/`RustStmt::Assign`) with structured-rendered IR payload expressions.
+181. Validation for `b33d143a`:
+182. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+183. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+184. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `408.97s`)
+185. runnable milestone demo sweep `demos/*.sifr` -> pass (`83/83`)
+186. Refreshed direct emission inventory after `b33d143a`:
+187. `self.write(...)` total in `crates/sifr_codegen/src` -> `370`
+188. Remaining files: `stmt_support_emitter.rs` `156`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
@@ -390,7 +399,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 8. [ ] `function_emitter.rs` (`51` writes; item wrapper over stmt/expr lowering)
 9. [ ] `class_method_emitter.rs` (`70` writes; class method wrapper over stmt/expr lowering)
 10. [ ] `class_emitter.rs` (`93` writes; class item orchestration over class methods)
-11. [ ] `lib.rs` (`8` writes; top-level orchestration and hard-gate cleanup)
+11. [x] `lib.rs` (completed; now `0` direct `self.write(...)`)
 
 ### Active Implementation Loop (2026-02-28, Pass E)
 

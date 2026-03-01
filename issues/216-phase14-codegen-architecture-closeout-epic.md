@@ -281,6 +281,14 @@ Latest loop update (2026-03-01):
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `413.84s`).
 - runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
 - Refreshed strict inventory after `e7ca4643`: `self.write(...)` in `crates/sifr_codegen/src` is now `378` (`stmt_support_emitter.rs` `168 -> 156`).
+- Additional loop slice (2026-03-01):
+- `b33d143a`: migrated `lib.rs` structured `Let`/`Assign` emission to IR statements (`RustStmt::Let`/`RustStmt::Assign`) with structured-rendered IR expression payloads; removed remaining direct `self.write(...)` in `lib.rs`.
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `408.97s`).
+- runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
+- Refreshed strict inventory after `b33d143a`: `self.write(...)` in `crates/sifr_codegen/src` is now `370` (`lib.rs` `8 -> 0`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
