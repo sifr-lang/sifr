@@ -251,7 +251,7 @@ impl RustEmitter {
         }
     }
 
-    fn lower_stmt_expr_for_ir(
+    pub(crate) fn lower_stmt_expr_for_ir(
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {

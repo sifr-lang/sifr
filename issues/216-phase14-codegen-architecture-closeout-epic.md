@@ -296,3 +296,36 @@ Latest validation loop (2026-03-01, Pass S):
 - `./scripts/run_all_tests.sh` -> pass.
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - Re-audit evidence after this loop: direct `self.write(...) = 713`, direct `self.writeln(...) = 56` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-03-01, Pass T):
+- Added explicit IR support for protocol trait method signatures:
+- `RustItem::TraitMethodSig` introduced in `rust_ir.rs`,
+- renderer support added in `render.rs`,
+- IR import/optimize/validate/preamble raw-code counter passes updated to handle the new item shape.
+- Migrated protocol class emission in `type_emitters.rs` to push structured `RustItem::Trait` with `TraitMethodSig` entries (no direct protocol string emission via `self.write(...)`).
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- Re-audit evidence after this loop: direct `self.write(...) = 697`, direct `self.writeln(...) = 56` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-03-01, Pass U):
+- Migrated protocol implementation emission (`impl Protocol for Class`) in `operator_protocol_emitters.rs` to direct IR item assembly:
+- removed string-assembled protocol impl blocks,
+- now emits `RustItem::Impl` + method `RustItem::Fn` entries with explicit IR call/return nodes.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- Re-audit evidence after this loop: direct `self.write(...) = 679`, direct `self.writeln(...) = 57` in `crates/sifr_codegen/src` (all `self.writeln` remains confined to IR renderer).
+
+Latest validation loop (2026-03-01, Pass V):
+- Fully migrated `type_emitters.rs` from string assembly to IR-first item construction:
+- enum/newtype item definitions now emit `RustItem::Enum` / `RustItem::TupleStruct` directly,
+- enum/newtype Display and helper impls now emit structured `RustItem::Impl` + `RustItem::Fn`,
+- enum/newtype user-defined methods now lower via structured stmt lowering into IR method bodies (no direct write path in this emitter).
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- Re-audit evidence after this loop: direct `self.write(...) = 634`, direct `self.writeln(...) = 57` in `crates/sifr_codegen/src`.

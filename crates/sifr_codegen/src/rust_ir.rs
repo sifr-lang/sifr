@@ -52,6 +52,15 @@ pub enum RustItem {
         body: Vec<RustStmt>,
         is_async: bool,
     },
+    TraitMethodSig {
+        name: String,
+        params: Vec<RustParam>,
+        ret: Option<RustType>,
+    },
+    TypeAlias {
+        name: String,
+        ty: RustType,
+    },
     Const {
         name: String,
         visibility: Visibility,
@@ -275,6 +284,7 @@ pub enum RustType {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RustParam {
     SelfParam { mutable: bool },
+    SelfValue,
     Named { name: String, ty: RustType },
 }
 

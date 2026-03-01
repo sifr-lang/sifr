@@ -58,6 +58,19 @@ fn validate_no_raw_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
                 validate_no_raw_stmt(stmt, issues);
             }
         }
+        RustItem::TraitMethodSig { params, ret, .. } => {
+            for param in params {
+                if let RustParam::Named { ty, .. } = param {
+                    validate_no_raw_type(ty, issues);
+                }
+            }
+            if let Some(ret_ty) = ret {
+                validate_no_raw_type(ret_ty, issues);
+            }
+        }
+        RustItem::TypeAlias { ty, .. } => {
+            validate_no_raw_type(ty, issues);
+        }
         RustItem::Const { value, .. } | RustItem::Static { value, .. } => {
             validate_no_raw_expr(value, issues);
         }
@@ -95,6 +108,8 @@ fn validate_no_raw_nested_item(item: &RustItem, issues: &mut Vec<IrValidationIss
         | RustItem::Trait { .. }
         | RustItem::Impl { .. }
         | RustItem::Fn { .. }
+        | RustItem::TraitMethodSig { .. }
+        | RustItem::TypeAlias { .. }
         | RustItem::Const { .. }
         | RustItem::Static { .. } => {}
     }
@@ -404,6 +419,17 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
                 validate_stmt(stmt, issues, true);
             }
         }
+        RustItem::TraitMethodSig { params, ret, .. } => {
+            for param in params {
+                if let crate::RustParam::Named { ty, .. } = param {
+                    validate_type(ty, issues);
+                }
+            }
+            if let Some(ret_ty) = ret {
+                validate_type(ret_ty, issues);
+            }
+        }
+        RustItem::TypeAlias { ty, .. } => validate_type(ty, issues),
         RustItem::Const { ty, value, .. } | RustItem::Static { ty, value, .. } => {
             validate_type(ty, issues);
             validate_expr(value, issues, false);

@@ -87,6 +87,17 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds, allow_raw: bool) {
                 collect_stmt(stmt, needs, allow_raw);
             }
         }
+        RustItem::TraitMethodSig { params, ret, .. } => {
+            for param in params {
+                if let RustParam::Named { ty, .. } = param {
+                    collect_type(ty, needs, allow_raw);
+                }
+            }
+            if let Some(ret_ty) = ret {
+                collect_type(ret_ty, needs, allow_raw);
+            }
+        }
+        RustItem::TypeAlias { ty, .. } => collect_type(ty, needs, allow_raw),
         RustItem::Const { ty, value, .. } | RustItem::Static { ty, value, .. } => {
             collect_type(ty, needs, allow_raw);
             collect_expr(value, needs, allow_raw);
@@ -187,7 +198,7 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds, allow_raw: bool) {
             for param in params {
                 match param {
                     RustParam::Named { ty, .. } => collect_type(ty, needs, allow_raw),
-                    RustParam::SelfParam { .. } => {}
+                    RustParam::SelfParam { .. } | RustParam::SelfValue => {}
                 }
             }
             if let Some(ret) = ret {

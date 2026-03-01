@@ -589,3 +589,33 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 3. Emitter cleanup this loop:
 4. removed local `self.writeln(...)` usage in `function_emitter.rs` and `match_emitter.rs`
 5. Re-audit totals: `self.write(...) = 713`, `self.writeln(...) = 56` in `crates/sifr_codegen/src`.
+
+### Validation rerun (2026-03-01, Pass T)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+2. `./scripts/run_all_tests.sh` -> pass
+3. Full demos sweep `demos/*.sifr` -> pass (`83/83`)
+4. IR-first cleanup this loop:
+5. added `RustItem::TraitMethodSig` and renderer/pass support (`render.rs`, `ir_imports.rs`, `ir_optimize.rs`, `ir_validate.rs`, `preamble.rs`)
+6. migrated protocol trait emission in `type_emitters.rs` to structured IR item assembly
+7. Re-audit totals: `self.write(...) = 697`, `self.writeln(...) = 56` in `crates/sifr_codegen/src`.
+
+### Validation rerun (2026-03-01, Pass U)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+2. `./scripts/run_all_tests.sh` -> pass
+3. Full demos sweep `demos/*.sifr` -> pass (`83/83`)
+4. IR-first cleanup this loop:
+5. migrated protocol impl emission in `operator_protocol_emitters.rs` from string assembly to `RustItem::Impl` IR assembly
+6. delegation methods now emitted as IR `RustItem::Fn` with explicit `RustExpr::FnCall` and structured return/expr statements
+7. Re-audit totals: `self.write(...) = 679`, `self.writeln(...) = 57` in `crates/sifr_codegen/src` (renderer-only `writeln` usage).
+
+### Validation rerun (2026-03-01, Pass V)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+2. `./scripts/run_all_tests.sh` -> pass
+3. Full demos sweep `demos/*.sifr` -> pass (`83/83`)
+4. IR-first cleanup this loop:
+5. fully migrated `type_emitters.rs` enum/newtype emission to IR-first item assembly (`RustItem::Enum`, `RustItem::TupleStruct`, `RustItem::Impl`, `RustItem::Fn`)
+6. moved enum/newtype user-method emission to structured stmt-lowering-backed IR bodies in this emitter (no direct write-based type emitter output)
+7. Re-audit totals: `self.write(...) = 634`, `self.writeln(...) = 57` in `crates/sifr_codegen/src`.

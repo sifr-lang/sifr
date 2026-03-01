@@ -43,6 +43,8 @@ fn optimize_item(item: &mut RustItem) -> usize {
             }
             removed
         }
+        RustItem::TraitMethodSig { .. } => 0,
+        RustItem::TypeAlias { .. } => 0,
         RustItem::Const { value, .. } | RustItem::Static { value, .. } => optimize_expr(value),
     }
 }

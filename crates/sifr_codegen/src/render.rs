@@ -225,6 +225,21 @@ impl Renderer {
                 self.dedent();
                 self.writeln("}");
             }
+            RustItem::TraitMethodSig { name, params, ret } => {
+                let params = params
+                    .iter()
+                    .map(Self::render_param_string)
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let ret = ret
+                    .as_ref()
+                    .map(|t| format!(" -> {}", Self::render_type_string(t)))
+                    .unwrap_or_default();
+                self.writeln(&format!("fn {name}({params}){ret};"));
+            }
+            RustItem::TypeAlias { name, ty } => {
+                self.writeln(&format!("type {name} = {};", Self::render_type_string(ty)));
+            }
             RustItem::Const {
                 name,
                 visibility,
@@ -496,6 +511,7 @@ impl Renderer {
                     "&self".to_string()
                 }
             }
+            RustParam::SelfValue => "self".to_string(),
             RustParam::Named { name, ty } => format!("{name}: {}", Self::render_type_string(ty)),
         }
     }
@@ -824,7 +840,7 @@ impl Renderer {
 
     fn render_closure_param_string(param: &RustParam) -> String {
         match param {
-            RustParam::SelfParam { .. } => "self".to_string(),
+            RustParam::SelfParam { .. } | RustParam::SelfValue => "self".to_string(),
             RustParam::Named { name, .. } => name.clone(),
         }
     }

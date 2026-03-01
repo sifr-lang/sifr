@@ -1531,7 +1531,7 @@ mod tests {
                     .iter()
                     .map(|p| match p {
                         RustParam::Named { ty, .. } => count_raw_in_type(ty),
-                        RustParam::SelfParam { .. } => 0,
+                        RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
                     })
                     .sum::<usize>()
                     + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
@@ -1567,13 +1567,24 @@ mod tests {
                 params
                     .iter()
                     .map(|p| match p {
-                        RustParam::SelfParam { .. } => 0,
+                        RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
                         RustParam::Named { ty, .. } => count_raw_in_type(ty),
                     })
                     .sum::<usize>()
                     + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
                     + body.iter().map(count_raw_in_stmt).sum::<usize>()
             }
+            RustItem::TraitMethodSig { params, ret, .. } => {
+                params
+                    .iter()
+                    .map(|p| match p {
+                        RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
+                        RustParam::Named { ty, .. } => count_raw_in_type(ty),
+                    })
+                    .sum::<usize>()
+                    + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
+            }
+            RustItem::TypeAlias { ty, .. } => count_raw_in_type(ty),
             RustItem::Const { ty, value, .. } | RustItem::Static { ty, value, .. } => {
                 count_raw_in_type(ty) + count_raw_in_expr(value)
             }
