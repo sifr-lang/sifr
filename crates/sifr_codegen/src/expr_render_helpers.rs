@@ -2556,7 +2556,11 @@ impl RustEmitter {
                     combined.push_str(value);
                 }
             }
-            self.write(&format!("{combined:?}.to_string()"));
+            self.emit_rust_expr(&crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(combined))),
+                method: "to_string".to_string(),
+                args: vec![],
+            });
             return Ok(true);
         }
 
