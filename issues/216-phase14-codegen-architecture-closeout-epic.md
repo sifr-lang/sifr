@@ -554,3 +554,14 @@ Next loop todo (dependency-ordered):
 1. `function_emitter.rs` (`51`) IR migration.
 2. `class_method_emitter.rs` (`70`) IR migration.
 3. `class_emitter.rs` (`93`) IR migration.
+
+Latest validation loop (2026-03-01, Pass AC):
+- Added missing renderer support for function generic bounds in IR (`RustItem::Fn` now renders `T: Bound` constraints instead of dropping bounds).
+- Added renderer regression coverage for bounded generic function signatures (`render.rs` snapshot test).
+- This is prerequisite plumbing for direct-IR migration of `function_emitter.rs`/`class_*` emitters, which currently require accurate bounded generic rendering.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`456` passed, `0` failed).
+- Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass (including e2e pass suite `394/394`).
+- Re-audit evidence after this loop: direct `self.write(...) = 214` in `crates/sifr_codegen/src` (unchanged), remaining files:
+- `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).

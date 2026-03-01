@@ -194,7 +194,13 @@ impl Renderer {
                         "<{}>",
                         type_params
                             .iter()
-                            .map(|p| p.name.clone())
+                            .map(|p| {
+                                if p.bounds.is_empty() {
+                                    p.name.clone()
+                                } else {
+                                    format!("{}: {}", p.name, p.bounds.join(" + "))
+                                }
+                            })
                             .collect::<Vec<_>>()
                             .join(", ")
                     )
@@ -1192,6 +1198,31 @@ mod tests {
                     println!("non-zero".to_string());
                 },
             }
+        }
+        "###);
+    }
+
+    #[test]
+    fn renders_function_type_param_bounds() {
+        let rendered = render_items(&[RustItem::Fn {
+            name: "identity".to_string(),
+            visibility: Visibility::Pub,
+            type_params: vec![RustTypeParam {
+                name: "T".to_string(),
+                bounds: vec!["Clone".to_string(), "std::fmt::Display".to_string()],
+            }],
+            params: vec![RustParam::Named {
+                name: "value".to_string(),
+                ty: RustType::Named("T".to_string()),
+            }],
+            ret: Some(RustType::Named("T".to_string())),
+            body: vec![RustStmt::Return(Some(RustExpr::Ident("value".to_string())))],
+            is_async: false,
+        }]);
+
+        assert_snapshot!(rendered, @r###"
+        pub fn identity<T: Clone + std::fmt::Display>(value: T) -> T {
+            return value;
         }
         "###);
     }
