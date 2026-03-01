@@ -181,6 +181,12 @@ Loop progress log:
 121. Validation: `./scripts/run_all_tests.sh` -> pass.
 122. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 123. Strict implementation re-audit refresh: `expr_render_helpers.rs` direct `self.write(...)` -> `249` (`305 -> 249` in this pass); total `self.write(...)` in `crates/sifr_codegen/src` -> `811`.
+124. 2026-02-28 Pass Q updates:
+125. Migrated additional high-frequency `expr_render_helpers.rs` clusters to composed expression emission:
+126. numeric binop (`**` and standard ops), conditional expression (`if ... else ...`), and index expression assembly now emit via formatted expression strings instead of token-fragment writes.
+127. Validation: `./scripts/run_all_tests.sh` -> pass.
+128. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+129. Strict implementation re-audit refresh: `expr_render_helpers.rs` direct `self.write(...)` -> `176` (`249 -> 176` in this pass); total `self.write(...)` in `crates/sifr_codegen/src` -> `738`.
 
 ### Next Loop To-do (Evidence-Based)
 
@@ -196,7 +202,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 2. [x] `render.rs` (completed in Pass M; now `0` direct `self.write(...)`)
 3. [x] `slice_emitter.rs` (completed in Pass N; dead module removed)
 4. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
-5. [ ] `expr_render_helpers.rs` (`249` writes; core expression lowering hot path)
+5. [ ] `expr_render_helpers.rs` (`176` writes; core expression lowering hot path)
 6. [ ] `stmt_support_emitter.rs` (`218` writes; core statement lowering hot path)
 7. [ ] `function_emitter.rs` (`50` writes; item-level wrapper over stmt/expr lowering)
 8. [ ] `type_emitters.rs` (`61` writes; item/type wrappers over lowered expression bodies)

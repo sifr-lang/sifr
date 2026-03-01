@@ -1892,39 +1892,22 @@ impl RustEmitter {
         }
 
         if op == "**" {
-            match (
+            let rendered_pow = match (
                 crate::resolve_alias_type_for_plain_call(left.ty()),
                 crate::resolve_alias_type_for_plain_call(right.ty()),
             ) {
                 (Type::BigInt, _) => {
-                    self.write("(");
-                    self.write(&left_rendered);
-                    self.write(").pow(u32::try_from(");
-                    self.write(&right_rendered);
-                    self.write(").unwrap_or(0))");
+                    format!("({left_rendered}).pow(u32::try_from({right_rendered}).unwrap_or(0))")
                 }
                 (Type::Int | Type::LiteralInt(_), Type::Int | Type::LiteralInt(_)) => {
-                    self.write("(");
-                    self.write(&left_rendered);
-                    self.write(").pow((");
-                    self.write(&right_rendered);
-                    self.write(") as u32)");
+                    format!("({left_rendered}).pow(({right_rendered}) as u32)")
                 }
                 (Type::Float, Type::Int | Type::LiteralInt(_)) => {
-                    self.write("(");
-                    self.write(&left_rendered);
-                    self.write(").powi((");
-                    self.write(&right_rendered);
-                    self.write(") as i32)");
+                    format!("({left_rendered}).powi(({right_rendered}) as i32)")
                 }
-                _ => {
-                    self.write("((");
-                    self.write(&left_rendered);
-                    self.write(") as f64).powf((");
-                    self.write(&right_rendered);
-                    self.write(") as f64)");
-                }
-            }
+                _ => format!("(({left_rendered}) as f64).powf(({right_rendered}) as f64)"),
+            };
+            self.write(&rendered_pow);
             return Ok(true);
         }
 
@@ -1942,22 +1925,10 @@ impl RustEmitter {
                 } else {
                     right_rendered
                 };
-            self.write("(");
-            self.write(&left_rendered);
-            self.write(" ");
-            self.write(rendered_op);
-            self.write(" ");
-            self.write(&right_rendered);
-            self.write(")");
+            self.write(&format!("({left_rendered} {rendered_op} {right_rendered})"));
             return Ok(true);
         }
-        self.write("(");
-        self.write(&left_rendered);
-        self.write(" ");
-        self.write(rendered_op);
-        self.write(" ");
-        self.write(&right_rendered);
-        self.write(")");
+        self.write(&format!("({left_rendered} {rendered_op} {right_rendered})"));
         Ok(true)
     }
 
@@ -1981,13 +1952,9 @@ impl RustEmitter {
         };
         self.lowering_stats = saved_stats;
 
-        self.write("if ");
-        self.write(&rendered_condition);
-        self.write(" { ");
-        self.write(&rendered_then);
-        self.write(" } else { ");
-        self.write(&rendered_else);
-        self.write(" }");
+        self.write(&format!(
+            "if {rendered_condition} {{ {rendered_then} }} else {{ {rendered_else} }}"
+        ));
         Ok(true)
     }
 
@@ -2333,33 +2300,24 @@ impl RustEmitter {
         self.lowering_stats = saved_stats;
 
         if let Some(inner_ty) = option_inner_ty {
-            self.write("(");
-            self.write(&object_rendered);
-            self.write(").as_ref().and_then(|__v| ");
-            match inner_ty {
+            let option_index_expr = match inner_ty {
                 Type::Dict(_, _) => {
-                    self.write("__v.get(");
                     let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
-                    self.write(&key_lookup_arg);
-                    self.write(").cloned()");
+                    format!("__v.get({key_lookup_arg}).cloned()")
                 }
-                Type::List(_) => {
-                    self.write("__v.get((");
-                    self.write(&index_rendered);
-                    self.write(") as usize).cloned()");
-                }
+                Type::List(_) => format!("__v.get(({index_rendered}) as usize).cloned()"),
                 Type::Str => {
-                    self.write("__v.chars().nth((");
-                    self.write(&index_rendered);
-                    self.write(") as usize).map(|c| c.to_string())");
+                    format!("__v.chars().nth(({index_rendered}) as usize).map(|c| c.to_string())")
                 }
                 _ => return Ok(false),
-            }
-            self.write(")");
+            };
+            self.write(&format!(
+                "({object_rendered}).as_ref().and_then(|__v| {option_index_expr})"
+            ));
             return Ok(true);
         }
 
-        match object_ty {
+        let rendered_index_expr = match object_ty {
             Type::Tuple(elements) => {
                 let HirExpr::IntLiteral(idx) = index else {
                     return Ok(false);
@@ -2370,51 +2328,33 @@ impl RustEmitter {
                 if idx >= elements.len() {
                     return Ok(false);
                 }
-                self.write("(");
-                self.write(&object_rendered);
-                self.write(").");
-                self.write(&idx.to_string());
+                format!("({object_rendered}).{idx}")
             }
             Type::Dict(_, _) => {
-                self.write(&object_rendered);
+                let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
                 if result_is_option {
-                    self.write(".get(");
-                    let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
-                    self.write(&key_lookup_arg);
-                    self.write(").cloned()");
+                    format!("{object_rendered}.get({key_lookup_arg}).cloned()")
                 } else {
-                    self.write("[");
-                    let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
-                    self.write(&key_lookup_arg);
-                    self.write("].clone()");
+                    format!("{object_rendered}[{key_lookup_arg}].clone()")
                 }
             }
             Type::List(_) => {
-                self.write(&object_rendered);
                 if result_is_option {
-                    self.write(".get((");
-                    self.write(&index_rendered);
-                    self.write(") as usize).cloned()");
+                    format!("{object_rendered}.get(({index_rendered}) as usize).cloned()")
                 } else {
-                    self.write("[(");
-                    self.write(&index_rendered);
-                    self.write(") as usize].clone()");
+                    format!("{object_rendered}[({index_rendered}) as usize].clone()")
                 }
             }
             Type::Str => {
-                self.write(&object_rendered);
                 if result_is_option {
-                    self.write(".chars().nth((");
-                    self.write(&index_rendered);
-                    self.write(") as usize).map(|c| c.to_string())");
+                    format!("{object_rendered}.chars().nth(({index_rendered}) as usize).map(|c| c.to_string())")
                 } else {
-                    self.write(".chars().nth((");
-                    self.write(&index_rendered);
-                    self.write(") as usize).unwrap().to_string()");
+                    format!("{object_rendered}.chars().nth(({index_rendered}) as usize).unwrap().to_string()")
                 }
             }
             _ => return Ok(false),
-        }
+        };
+        self.write(&rendered_index_expr);
         Ok(true)
     }
 

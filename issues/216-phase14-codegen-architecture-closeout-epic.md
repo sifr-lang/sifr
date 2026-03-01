@@ -264,3 +264,10 @@ Latest validation loop (2026-02-28, Pass P):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Strict re-audit evidence: `expr_render_helpers.rs` reduced `self.write(...)` from `305` to `249`; total `self.write(...)` is now `811` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-02-28, Pass Q):
+- Continued `expr_render_helpers.rs` cleanup for additional expression hot paths:
+- numeric binop emission (`**` and non-`**`), structured `if` expression emission, and structured index emission moved to composed expression-string assembly.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Strict re-audit evidence: `expr_render_helpers.rs` reduced `self.write(...)` from `249` to `176`; total `self.write(...)` is now `738` in `crates/sifr_codegen/src`.
