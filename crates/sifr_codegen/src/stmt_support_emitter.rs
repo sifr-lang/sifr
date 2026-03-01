@@ -1116,6 +1116,26 @@ impl RustEmitter {
                     })],
                     true,
                 )
+            } else if let HirStmt::FieldAssign {
+                object,
+                field,
+                value,
+            } = stmt
+            {
+                let target = crate::RustExpr::Field {
+                    expr: Box::new(Self::object_name_expr_for_ir(object)),
+                    field: field.clone(),
+                };
+                let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+                (
+                    vec![RustStmt::Assign {
+                        target,
+                        value: value_expr,
+                    }],
+                    true,
+                )
             } else if let HirStmt::Assert { test, msg } = stmt {
                 let Some(lowered_test) = self.lower_rendered_expr_for_ir(test)? else {
                     return Ok(None);
@@ -2240,94 +2260,73 @@ impl RustEmitter {
             }
             if all_isinstance {
                 let enum_name = self.resolve_union_enum_name(&first_enum_name, &needed_variants);
-                let output_len = self.output.len();
-                for (idx, (variant_name, body)) in branch_specs.iter().enumerate() {
-                    self.write_indent();
-                    if idx == 0 {
-                        self.write("if let ");
+                let mut nested_else = if let Some(else_body) = else_body {
+                    let remaining_variants = self
+                        .union_enums
+                        .get(&enum_name)
+                        .map(|members| {
+                            members
+                                .iter()
+                                .map(Type::union_variant_name)
+                                .filter(|variant| !needed_variants.contains(variant))
+                                .collect::<Vec<_>>()
+                        })
+                        .unwrap_or_default();
+                    let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)?
+                    else {
+                        return Ok(false);
+                    };
+                    if remaining_variants.len() == 1 {
+                        let else_mutated = crate::helpers::collect_mutated_vars(else_body);
+                        let else_binding = if else_mutated.contains(&var_name) {
+                            format!("mut {var_name}")
+                        } else {
+                            var_name.clone()
+                        };
+                        Some(vec![RustStmt::IfLet {
+                            pattern: format!(
+                                "{enum_name}::{}({else_binding})",
+                                remaining_variants[0]
+                            ),
+                            expr: RustExpr::Ident(var_name.clone()),
+                            then_body: lowered_else_body,
+                            else_body: Some(vec![RustStmt::Expr(RustExpr::FormatMacro {
+                                name: "unreachable".to_string(),
+                                format_str:
+                                    "sifr union narrowing fell through exhaustive branch chain"
+                                        .to_string(),
+                                args: vec![],
+                            })]),
+                        }])
                     } else {
-                        self.write("else if let ");
+                        Some(lowered_else_body)
                     }
+                } else {
+                    None
+                };
+
+                for (variant_name, body) in branch_specs.iter().rev() {
                     let mutated = crate::helpers::collect_mutated_vars(body);
                     let binding = if mutated.contains(&var_name) {
                         format!("mut {var_name}")
                     } else {
                         var_name.clone()
                     };
-                    self.write(&format!(
-                        "{enum_name}::{variant_name}({binding}) = {var_name} {{\n"
-                    ));
-                    self.indent += 1;
-                    for branch_stmt in *body {
-                        self.emit_stmt(branch_stmt);
-                    }
-                    self.indent -= 1;
-                    self.write_indent();
-                    self.write("}");
-                    if idx + 1 == branch_specs.len() {
-                        if let Some(else_body) = else_body {
-                            let remaining_variants = self
-                                .union_enums
-                                .get(&enum_name)
-                                .map(|members| {
-                                    members
-                                        .iter()
-                                        .map(Type::union_variant_name)
-                                        .filter(|variant| !needed_variants.contains(variant))
-                                        .collect::<Vec<_>>()
-                                })
-                                .unwrap_or_default();
-                            if remaining_variants.len() == 1 {
-                                let else_mutated = crate::helpers::collect_mutated_vars(else_body);
-                                let else_binding = if else_mutated.contains(&var_name) {
-                                    format!("mut {var_name}")
-                                } else {
-                                    var_name.clone()
-                                };
-                                self.write(" else if let ");
-                                self.write(&format!(
-                                    "{enum_name}::{}({else_binding}) = {var_name} {{\n",
-                                    remaining_variants[0]
-                                ));
-                                self.indent += 1;
-                                for else_stmt in else_body {
-                                    self.emit_stmt(else_stmt);
-                                }
-                                self.indent -= 1;
-                                self.write_indent();
-                                self.write("} else {\n");
-                                self.indent += 1;
-                                self.write_indent();
-                                self.write(
-                                    "unreachable!(\"sifr union narrowing fell through exhaustive branch chain\");\n",
-                                );
-                                self.indent -= 1;
-                                self.write_indent();
-                                self.write("}");
-                            } else {
-                                self.write(" else {\n");
-                                self.indent += 1;
-                                for else_stmt in else_body {
-                                    self.emit_stmt(else_stmt);
-                                }
-                                self.indent -= 1;
-                                self.write_indent();
-                                self.write("}");
-                            }
-                        }
-                        self.write("\n");
-                    } else {
-                        self.write(" ");
-                    }
+                    let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                        return Ok(false);
+                    };
+                    nested_else = Some(vec![RustStmt::IfLet {
+                        pattern: format!("{enum_name}::{variant_name}({binding})"),
+                        expr: RustExpr::Ident(var_name.clone()),
+                        then_body: lowered_body,
+                        else_body: nested_else,
+                    }]);
                 }
-                if !self
-                    .output
-                    .get(output_len..)
-                    .is_some_and(|segment| !segment.is_empty())
-                {
-                    self.output.truncate(output_len);
+
+                let Some(root) = nested_else.and_then(|stmts| stmts.into_iter().next()) else {
                     return Ok(false);
-                }
+                };
+                self.emit_rust_stmt_with_current_indent(&root);
                 return Ok(true);
             }
         }
@@ -2339,12 +2338,6 @@ impl RustEmitter {
                 let mut needed_variants = vec![variant_name.clone()];
                 needed_variants.extend(other_variants.iter().map(|(variant, _)| variant.clone()));
                 let enum_name = self.resolve_union_enum_name(&enum_name, &needed_variants);
-                let output_len = self.output.len();
-                self.write_indent();
-                self.write("match ");
-                self.write(&var_name);
-                self.write(" {\n");
-                self.indent += 1;
 
                 let then_mutated = crate::helpers::collect_mutated_vars(then_body);
                 let then_binding = if then_mutated.contains(&var_name) {
@@ -2352,17 +2345,16 @@ impl RustEmitter {
                 } else {
                     var_name.clone()
                 };
-                self.write_indent();
-                self.write(&format!(
-                    "{enum_name}::{variant_name}({then_binding}) => {{\n"
-                ));
-                self.indent += 1;
-                for then_stmt in then_body {
-                    self.emit_stmt(then_stmt);
-                }
-                self.indent -= 1;
-                self.write_indent();
-                self.write("}\n");
+                let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
+                    return Ok(false);
+                };
+
+                let mut arms = vec![crate::RustMatchArm {
+                    pattern: format!("{enum_name}::{variant_name}({then_binding})"),
+                    bindings: vec![],
+                    guard: None,
+                    body: lowered_then_body,
+                }];
 
                 if let Some(else_body) = else_body {
                     let else_mutated = crate::helpers::collect_mutated_vars(else_body);
@@ -2371,208 +2363,53 @@ impl RustEmitter {
                     } else {
                         var_name.clone()
                     };
-                    if other_variants.len() == 1 {
-                        let (other_variant, _) = &other_variants[0];
-                        self.write_indent();
-                        self.write(&format!(
-                            "{enum_name}::{other_variant}({else_binding}) => {{\n"
-                        ));
-                    } else {
-                        self.write_indent();
-                        self.write("_ => {\n");
-                    }
-                    self.indent += 1;
-                    for else_stmt in else_body {
-                        self.emit_stmt(else_stmt);
-                    }
-                    self.indent -= 1;
-                    self.write_indent();
-                    self.write("}\n");
-                } else {
-                    self.write_indent();
-                    self.write("_ => {}\n");
-                }
-
-                self.indent -= 1;
-                self.write_indent();
-                self.write("}\n");
-                if !self
-                    .output
-                    .get(output_len..)
-                    .is_some_and(|segment| !segment.is_empty())
-                {
-                    self.output.truncate(output_len);
-                    return Ok(false);
-                }
-                return Ok(true);
-            }
-
-            if let Some(var_name) = crate::helpers::detect_is_not_none_var(condition) {
-                let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
-                    return Ok(false);
-                };
-                let lowered_else_body = if let Some(else_body) = else_body {
-                    let Some(lowered_else) = self.try_lower_stmt_block_for_ir(else_body)? else {
+                    let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)?
+                    else {
                         return Ok(false);
                     };
-                    Some(lowered_else)
+                    if other_variants.len() == 1 {
+                        let (other_variant, _) = &other_variants[0];
+                        arms.push(crate::RustMatchArm {
+                            pattern: format!("{enum_name}::{other_variant}({else_binding})"),
+                            bindings: vec![],
+                            guard: None,
+                            body: lowered_else_body,
+                        });
+                    } else {
+                        arms.push(crate::RustMatchArm {
+                            pattern: "_".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: lowered_else_body,
+                        });
+                    }
                 } else {
-                    None
-                };
+                    arms.push(crate::RustMatchArm {
+                        pattern: "_".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![],
+                    });
+                }
 
-                self.emit_rust_stmt_with_current_indent(&RustStmt::IfLet {
-                    pattern: format!("Some({var_name})"),
-                    expr: crate::RustExpr::Ident(var_name),
-                    then_body: lowered_then_body,
-                    else_body: lowered_else_body,
+                self.emit_rust_stmt_with_current_indent(&RustStmt::Match {
+                    expr: RustExpr::Ident(var_name),
+                    arms,
                 });
                 return Ok(true);
             }
-
-            if let Some(var_name) = crate::helpers::detect_is_none_var(condition) {
-                let output_len = self.output.len();
-                self.write_indent();
-                self.write("if ");
-                if !self.try_emit_structured_expr(condition)? {
-                    self.output.truncate(output_len);
-                    return Ok(false);
-                }
-                self.write(" {\n");
-                self.indent += 1;
-                for then_stmt in then_body {
-                    self.emit_stmt(then_stmt);
-                }
-                self.indent -= 1;
-                self.write_indent();
-                self.write("}");
-                if let Some(else_body) = else_body {
-                    self.write(" else if let Some(");
-                    self.write(&var_name);
-                    self.write(") = ");
-                    self.write(&var_name);
-                    self.write(" {\n");
-                    self.indent += 1;
-                    self.option_unwrapped_vars.insert(var_name.clone());
-                    for else_stmt in else_body {
-                        self.emit_stmt(else_stmt);
-                    }
-                    self.option_unwrapped_vars.remove(&var_name);
-                    self.indent -= 1;
-                    self.write_indent();
-                    self.write("}");
-                }
-                self.write("\n");
-                if !self
-                    .output
-                    .get(output_len..)
-                    .is_some_and(|segment| !segment.is_empty())
-                {
-                    self.output.truncate(output_len);
-                    return Ok(false);
-                }
-                return Ok(true);
-            }
-
-            if let Some(var_names) = crate::helpers::detect_and_not_none_vars(condition) {
-                let output_len = self.output.len();
-                self.write_indent();
-                self.write("if let (");
-                for (idx, var_name) in var_names.iter().enumerate() {
-                    if idx > 0 {
-                        self.write(", ");
-                    }
-                    self.write("Some(");
-                    self.write(var_name);
-                    self.write(")");
-                }
-                self.write(") = (");
-                for (idx, var_name) in var_names.iter().enumerate() {
-                    if idx > 0 {
-                        self.write(", ");
-                    }
-                    self.write("&");
-                    self.write(var_name);
-                }
-                self.write(") {\n");
-                self.indent += 1;
-                for var_name in &var_names {
-                    self.option_unwrapped_vars.insert(var_name.clone());
-                }
-                for then_stmt in then_body {
-                    self.emit_stmt(then_stmt);
-                }
-                for var_name in &var_names {
-                    self.option_unwrapped_vars.remove(var_name);
-                }
-                self.indent -= 1;
-                self.write_indent();
-                self.write("}");
-                if let Some(else_body) = else_body {
-                    self.write(" else {\n");
-                    self.indent += 1;
-                    for else_stmt in else_body {
-                        self.emit_stmt(else_stmt);
-                    }
-                    self.indent -= 1;
-                    self.write_indent();
-                    self.write("}");
-                }
-                self.write("\n");
-                if !self
-                    .output
-                    .get(output_len..)
-                    .is_some_and(|segment| !segment.is_empty())
-                {
-                    self.output.truncate(output_len);
-                    return Ok(false);
-                }
-                return Ok(true);
-            }
         }
 
-        let output_len = self.output.len();
-        self.write_indent();
-        self.write("if ");
-        if !self.try_emit_structured_expr(condition)? {
-            self.output.truncate(output_len);
+        let Some(lowered_if_stmt) = self.try_lower_if_stmt_for_ir(
+            condition,
+            then_body,
+            elif_clauses,
+            else_body.as_deref(),
+        )?
+        else {
             return Ok(false);
-        }
-        self.write(" {\n");
-        self.indent += 1;
-        for then_stmt in then_body {
-            self.emit_stmt(then_stmt);
-        }
-        self.indent -= 1;
-        self.write_indent();
-        self.write("}");
-
-        for (elif_cond, elif_body) in elif_clauses {
-            self.write(" else if ");
-            if !self.try_emit_structured_expr(elif_cond)? {
-                self.output.truncate(output_len);
-                return Ok(false);
-            }
-            self.write(" {\n");
-            self.indent += 1;
-            for elif_stmt in elif_body {
-                self.emit_stmt(elif_stmt);
-            }
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}");
-        }
-
-        if let Some(else_body) = else_body {
-            self.write(" else {\n");
-            self.indent += 1;
-            for else_stmt in else_body {
-                self.emit_stmt(else_stmt);
-            }
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}");
-        }
-        self.write("\n");
+        };
+        self.emit_rust_stmt_with_current_indent(&lowered_if_stmt);
         Ok(true)
     }
 
