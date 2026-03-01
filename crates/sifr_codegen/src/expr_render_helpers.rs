@@ -2853,33 +2853,34 @@ impl RustEmitter {
             return Ok(true);
         }
 
-        self.write("format!(\"");
+        let mut format_str = String::new();
+        let mut format_args = Vec::new();
         for part in &parts {
             if let HirExpr::StringLiteral(value) = part {
                 for ch in value.chars() {
                     match ch {
-                        '{' => self.write("{{"),
-                        '}' => self.write("}}"),
-                        '"' => self.write("\\\""),
-                        '\\' => self.write("\\\\"),
-                        _ => self.write(&ch.to_string()),
+                        '{' => format_str.push_str("{{"),
+                        '}' => format_str.push_str("}}"),
+                        _ => format_str.push(ch),
                     }
                 }
             } else {
-                self.write("{}");
+                format_str.push_str("{}");
             }
         }
-        self.write("\"");
         for part in &parts {
             if !matches!(part, HirExpr::StringLiteral(_)) {
-                let Some(rendered) = self.try_render_structured_expr(part)? else {
+                let Some(lowered) = self.try_lower_expr_for_structured_emit(part)? else {
                     return Ok(false);
                 };
-                self.write(", ");
-                self.write(&rendered);
+                format_args.push(lowered);
             }
         }
-        self.write(")");
+        self.emit_rust_expr(&crate::RustExpr::FormatMacro {
+            name: "format".to_string(),
+            format_str,
+            args: format_args,
+        });
         Ok(true)
     }
 
@@ -2903,21 +2904,43 @@ impl RustEmitter {
             _ => return Ok(false),
         };
 
-        let saved_stats = self.lowering_stats;
-        let Some(rendered_string) = self.try_render_structured_expr(string_expr)? else {
+        let Some(string_lowered) = self.try_lower_expr_for_structured_emit(string_expr)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
-        let Some(rendered_count) = self.try_render_structured_expr(count_expr)? else {
+        let Some(count_lowered) = self.try_lower_expr_for_structured_emit(count_expr)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
 
-        self.write("{ let __n = ");
-        self.write(&rendered_count);
-        self.write("; if __n <= 0 { String::new() } else { (");
-        self.write(&rendered_string);
-        self.write(").repeat(__n as usize) } }");
+        self.emit_rust_expr(&crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::Let {
+                mutable: false,
+                name: "__n".to_string(),
+                ty: None,
+                value: count_lowered,
+            }],
+            expr: Some(Box::new(crate::RustExpr::If {
+                cond: Box::new(crate::RustExpr::BinOp {
+                    left: Box::new(crate::RustExpr::Ident("__n".to_string())),
+                    op: "<=".to_string(),
+                    right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                }),
+                then_expr: Box::new(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "String".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![],
+                }),
+                else_expr: Some(Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(string_lowered))),
+                    method: "repeat".to_string(),
+                    args: vec![crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Ident("__n".to_string())),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }],
+                })),
+            })),
+        });
         Ok(true)
     }
 
@@ -2941,21 +2964,39 @@ impl RustEmitter {
             return Ok(false);
         }
 
-        let saved_stats = self.lowering_stats;
-        let Some(rendered_left) = self.try_render_structured_expr(left)? else {
+        let Some(left_lowered) = self.try_lower_expr_for_structured_emit(left)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
-        let Some(rendered_right) = self.try_render_structured_expr(right)? else {
+        let Some(right_lowered) = self.try_lower_expr_for_structured_emit(right)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
 
-        self.write("{ let mut __v = (");
-        self.write(&rendered_left);
-        self.write(").clone(); __v.extend((");
-        self.write(&rendered_right);
-        self.write(").iter().cloned()); __v }");
+        self.emit_rust_expr(&crate::RustExpr::Block {
+            stmts: vec![
+                crate::RustStmt::Let {
+                    mutable: true,
+                    name: "__v".to_string(),
+                    ty: None,
+                    value: crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
+                        left_lowered,
+                    )))),
+                },
+                crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
+                    method: "extend".to_string(),
+                    args: vec![crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(right_lowered))),
+                            method: "iter".to_string(),
+                            args: vec![],
+                        }),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    }],
+                }),
+            ],
+            expr: Some(Box::new(crate::RustExpr::Ident("__v".to_string()))),
+        });
         Ok(true)
     }
 
