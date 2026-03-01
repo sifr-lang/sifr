@@ -1855,13 +1855,21 @@ impl RustEmitter {
                         self.write(&operand_rendered);
                         self.write(").is_empty()");
                     }
-                    Type::Tuple(elems) => self.write(if elems.is_empty() { "true" } else { "false" }),
+                    Type::Tuple(elems) => {
+                        self.emit_rust_expr(&crate::RustExpr::Literal(crate::RustLiteral::Bool(
+                            elems.is_empty(),
+                        )));
+                    }
                     Type::Bool => {
                         self.write("!(");
                         self.write(&operand_rendered);
                         self.write(")");
                     }
-                    Type::None => self.write("true"),
+                    Type::None => {
+                        self.emit_rust_expr(&crate::RustExpr::Literal(crate::RustLiteral::Bool(
+                            true,
+                        )));
+                    }
                     _ if option_inner_type(operand.ty()).is_some() => {
                         self.write("(");
                         self.write(&operand_rendered);
