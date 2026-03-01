@@ -934,8 +934,9 @@ impl RustEmitter {
             if self.current_class_name.is_some()
                 && matches!(value, HirExpr::Name { name, .. } if name == "self")
             {
-                self.write_indent();
-                self.write("return self.clone();\n");
+                self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                    crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident("self".to_string()))),
+                )));
                 return Ok(true);
             }
             self.write("return ");
@@ -968,7 +969,15 @@ impl RustEmitter {
                 .copied()
                 .unwrap_or(false);
             if wrap_option {
-                self.write("return Ok(Some(()));\n");
+                self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                    crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                        args: vec![crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                        }],
+                    },
+                )));
             } else {
                 let direct_result_none = self.current_return_type.as_ref().is_some_and(|ret_ty| {
                     match crate::resolve_alias_type_for_plain_call(ret_ty) {
@@ -980,16 +989,31 @@ impl RustEmitter {
                     }
                 });
                 if direct_result_none {
-                    self.write("return Ok(Ok(()));\n");
+                    self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                        crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                            args: vec![crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                            }],
+                        },
+                    )));
                 } else {
-                    self.write("return Ok(());\n");
+                    self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                        crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                        },
+                    )));
                 }
             }
         } else if self.emission_ctx.in_display_impl {
-            self.write_indent();
-            self.write("return Ok(());\n");
+            self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+            })));
         } else {
-            self.write("return;\n");
+            self.emit_rust_stmt_with_current_indent(&RustStmt::Return(None));
         }
         Ok(true)
     }
@@ -1001,15 +1025,14 @@ impl RustEmitter {
         let HirStmt::Raise { value } = stmt else {
             return Ok(false);
         };
-        let output_len = self.output.len();
-        self.write_indent();
-        self.write("return Err(");
-        if self.try_emit_structured_expr(value)? {
-            self.write(");\n");
-            return Ok(true);
-        }
-        self.output.truncate(output_len);
-        Ok(false)
+        let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
+            return Ok(false);
+        };
+        self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
+            args: vec![lowered],
+        })));
+        Ok(true)
     }
 
     pub(crate) fn try_emit_structured_if_stmt(
