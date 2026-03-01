@@ -271,3 +271,18 @@ Latest validation loop (2026-02-28, Pass Q):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Strict re-audit evidence: `expr_render_helpers.rs` reduced `self.write(...)` from `249` to `176`; total `self.write(...)` is now `738` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-03-01, Pass R):
+- Continued structured statement-path IR migration in `stmt_support_emitter.rs` without bridge/fallback paths.
+- Migrated structured handling for:
+- `FieldAssign` -> IR `RustStmt::Assign` (including deque `_data` `VecDeque::new/from` handling),
+- `AttributeSubscriptAssign` -> IR `MethodCall("insert", ...)`,
+- `AugAssign` specialized string/list/pow and generic ops -> IR forms.
+- Expanded statement-expression IR lowering helper coverage used by those statement emitters for non-leaf expression shapes encountered in production/e2e (constructor calls, compares, list literals, option-aware and direct indexing, builtin/special calls, string concat, generic binops).
+- Restored assert-path behavioral parity by keeping canonical structured expression renderer path for `assert(...)` emission while preserving production hard-gate behavior.
+- Removed remaining local `self.writeln(...)` usage in `stmt_support_emitter.rs` break/continue emission.
+- Validation evidence:
+- `./scripts/run_all_tests.sh` -> pass (unit + full e2e + e2e pass suite all green).
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- Focused crate validation: `cargo test -q -p sifr_codegen` -> pass (`455` passed).
+- Strict re-audit evidence: direct `self.write(...)` count is now `706` in `crates/sifr_codegen/src` (`self.writeln(...)` count `63`).

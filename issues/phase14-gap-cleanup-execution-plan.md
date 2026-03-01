@@ -571,3 +571,13 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 3. `cargo run -q -p sifr -- run demos/milestone_codegen_stmt_expr_migration_demo.sifr` -> pass (`total = 24`, `verdict = high`)
 4. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass (`current_has_t = true`, `today_has_dash = true`)
 5. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (`cargo test -p sifr` + `run_e2e_pass.sh`; final `test_e2e_pass` result: `394` passed, `0` failed)
+
+### Validation rerun (2026-03-01, Pass R)
+
+1. `./scripts/run_all_tests.sh` -> pass (unit tests + e2e suite + e2e pass suite)
+2. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+3. Full demos sweep `demos/*.sifr` -> pass (`83/83`)
+4. Production-path cleanup progress this loop:
+5. structured IR path retained for `FieldAssign` / `AttributeSubscriptAssign` / `AugAssign` in `stmt_support_emitter.rs`
+6. no bridge/fallback path added
+7. Remaining direct emitter calls re-audit: `self.write(...) = 706`, `self.writeln(...) = 63` in `crates/sifr_codegen/src`.

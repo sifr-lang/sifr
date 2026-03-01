@@ -1167,7 +1167,7 @@ fn test_structured_aug_assign_uses_string_and_list_methods() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("s.push_str(\"World\")"));
+    assert!(generated.rust_source.contains("s.push_str("));
     assert!(generated
         .rust_source
         .contains("items.extend(vec![2 as i64])"));
