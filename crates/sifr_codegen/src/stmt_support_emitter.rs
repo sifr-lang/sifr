@@ -1013,41 +1013,188 @@ impl RustEmitter {
 
         let mut lowered_block = Vec::new();
         for stmt in stmts {
-            let (lowered_stmts, skip_rewrite) =
-                if let Some(lowered_stmts) = crate::try_lower_simple_stmt_with_scope_result(
+            let (lowered_stmts, skip_rewrite) = if let Some(lowered_stmts) =
+                crate::try_lower_simple_stmt_with_scope_result(
                     stmt,
                     &self.mutated_vars,
                     &self.borrowed_params,
                     &scope_ctx,
                 )? {
-                    (lowered_stmts, false)
-                } else if let HirStmt::Assert { test, msg } = stmt {
-                    let Some(lowered_test) = self.lower_rendered_expr_for_ir(test)? else {
-                        return Ok(None);
-                    };
-                    let lowered_msg = if let Some(msg_expr) = msg {
-                        let Some(lowered) = self.lower_rendered_expr_for_ir(msg_expr)? else {
-                            return Ok(None);
-                        };
-                        Some(lowered)
+                (lowered_stmts, false)
+            } else if let HirStmt::Let {
+                name, ty, value, ..
+            } = stmt
+            {
+                let is_generic_class = matches!(ty, Type::Class { name: class_name, .. } if self.generic_classes.contains(class_name));
+                let lowered_value = if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+                    if let HirExpr::Name {
+                        name: value_name, ..
+                    } = value
+                    {
+                        if self.borrowed_params.contains(value_name)
+                            || self.mut_borrowed_params.contains(value_name)
+                        {
+                            Some(crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
+                                value_name.clone(),
+                            ))))
+                        } else {
+                            None
+                        }
                     } else {
                         None
-                    };
-                    (
-                        vec![RustStmt::Assert {
-                            cond: lowered_test,
-                            msg: lowered_msg,
-                        }],
-                        true,
-                    )
-                } else if let HirStmt::Expr { expr } = stmt {
-                    let Some(lowered_expr) = self.lower_rendered_expr_for_ir(expr)? else {
+                    }
+                } else {
+                    None
+                };
+                let lowered_value = if let Some(clone_expr) = lowered_value {
+                    clone_expr
+                } else {
+                    let Some(lowered) = self.lower_rendered_expr_for_ir(value)? else {
                         return Ok(None);
                     };
-                    (vec![RustStmt::Expr(lowered_expr)], true)
-                } else {
+                    lowered
+                };
+                (
+                    vec![RustStmt::Let {
+                        mutable: self.mutated_vars.contains(name),
+                        name: name.clone(),
+                        ty: if is_generic_class {
+                            None
+                        } else {
+                            Some(crate::sifr_type_to_rust_type(ty))
+                        },
+                        value: lowered_value,
+                    }],
+                    true,
+                )
+            } else if let HirStmt::Assign { name, value } = stmt {
+                let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
                     return Ok(None);
                 };
+                (
+                    vec![RustStmt::Assign {
+                        target: crate::RustExpr::Ident(name.clone()),
+                        value: lowered_value,
+                    }],
+                    true,
+                )
+            } else if let HirStmt::AttributeSubscriptAssign {
+                object,
+                field,
+                index,
+                value,
+                field_ty,
+            } = stmt
+            {
+                let Type::Dict(key_ty, _) = field_ty else {
+                    return Ok(None);
+                };
+
+                let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_))
+                    && matches!(index, HirExpr::Name { name, .. }
+                            if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()));
+
+                let Some(mut index_expr) = self.lower_rendered_expr_for_ir(index)? else {
+                    return Ok(None);
+                };
+                if key_needs_clone {
+                    index_expr = crate::RustExpr::Clone(Box::new(index_expr));
+                }
+                let Some(value_expr) = self.lower_rendered_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+
+                let receiver = crate::RustExpr::Field {
+                    expr: Box::new(Self::object_name_expr_for_ir(object)),
+                    field: field.clone(),
+                };
+                (
+                    vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(receiver),
+                        method: "insert".to_string(),
+                        args: vec![index_expr, value_expr],
+                    })],
+                    true,
+                )
+            } else if let HirStmt::Assert { test, msg } = stmt {
+                let Some(lowered_test) = self.lower_rendered_expr_for_ir(test)? else {
+                    return Ok(None);
+                };
+                let lowered_msg = if let Some(msg_expr) = msg {
+                    let Some(lowered) = self.lower_rendered_expr_for_ir(msg_expr)? else {
+                        return Ok(None);
+                    };
+                    Some(lowered)
+                } else {
+                    None
+                };
+                (
+                    vec![RustStmt::Assert {
+                        cond: lowered_test,
+                        msg: lowered_msg,
+                    }],
+                    true,
+                )
+            } else if let HirStmt::Expr { expr } = stmt {
+                let Some(lowered_expr) = self.lower_rendered_expr_for_ir(expr)? else {
+                    return Ok(None);
+                };
+                (vec![RustStmt::Expr(lowered_expr)], true)
+            } else if let HirStmt::Return { value } = stmt {
+                let return_ty_snapshot = self.current_return_type.clone();
+                let lowered_return = if let Some(value) = value {
+                    let Some(lowered) =
+                        self.lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
+                    else {
+                        return Ok(None);
+                    };
+                    Some(lowered)
+                } else {
+                    None
+                };
+                (vec![RustStmt::Return(lowered_return)], true)
+            } else if let HirStmt::If {
+                condition,
+                then_body,
+                elif_clauses,
+                else_body,
+            } = stmt
+            {
+                let Some(lowered_if_stmt) = self.try_lower_if_stmt_for_ir(
+                    condition,
+                    then_body,
+                    elif_clauses,
+                    else_body.as_deref(),
+                )?
+                else {
+                    return Ok(None);
+                };
+                (vec![lowered_if_stmt], true)
+            } else if let HirStmt::While {
+                condition,
+                body,
+                else_body,
+            } = stmt
+            {
+                if else_body.is_some() {
+                    return Ok(None);
+                }
+                let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
+                    return Ok(None);
+                };
+                let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                    return Ok(None);
+                };
+                (
+                    vec![RustStmt::While {
+                        cond: lowered_cond,
+                        body: lowered_body,
+                    }],
+                    true,
+                )
+            } else {
+                return Ok(None);
+            };
             if skip_rewrite {
                 lowered_block.extend(lowered_stmts);
             } else {
@@ -1059,6 +1206,326 @@ impl RustEmitter {
             }
         }
         Ok(Some(lowered_block))
+    }
+
+    fn lower_condition_expr_for_ir(
+        &mut self,
+        condition: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let Some(lowered) = self.try_lower_borrowed_name_compare_condition_for_ir(condition) {
+            return Ok(Some(lowered));
+        }
+        if self.condition_uses_borrowed_name_for_ir(condition) {
+            let saved_stats = self.lowering_stats;
+            let Some(rendered_expr) = self.try_render_structured_expr(condition)? else {
+                return Ok(None);
+            };
+            self.lowering_stats = saved_stats;
+            return Ok(Some(crate::RustExpr::RawCode(rendered_expr)));
+        }
+        self.lower_rendered_expr_for_ir(condition)
+    }
+
+    fn try_lower_borrowed_name_compare_condition_for_ir(
+        &self,
+        expr: &HirExpr,
+    ) -> Option<crate::RustExpr> {
+        let HirExpr::Compare {
+            left,
+            ops,
+            comparators,
+            ..
+        } = expr
+        else {
+            return None;
+        };
+        if ops.len() != 1 || comparators.len() != 1 {
+            return None;
+        }
+        let rhs = comparators.first()?;
+        let lowered_op = match ops[0].as_str() {
+            "==" | "!=" | "<" | "<=" | ">" | ">=" => ops[0].as_str(),
+            "is" => "==",
+            "is not" => "!=",
+            _ => return None,
+        };
+
+        let lower_operand =
+            |operand: &HirExpr, emitter: &Self| -> Option<(crate::RustExpr, bool)> {
+                let HirExpr::Name { name, .. } = operand else {
+                    return None;
+                };
+                let borrowed = emitter.borrowed_params.contains(name)
+                    || emitter.mut_borrowed_params.contains(name);
+                let ident = crate::RustExpr::Ident(name.clone());
+                let lowered = if borrowed {
+                    crate::RustExpr::Deref(Box::new(ident))
+                } else {
+                    ident
+                };
+                Some((lowered, borrowed))
+            };
+
+        let (lowered_left, left_borrowed) = lower_operand(left, self)?;
+        let (lowered_right, right_borrowed) = lower_operand(rhs, self)?;
+        if !left_borrowed && !right_borrowed {
+            return None;
+        }
+
+        Some(crate::RustExpr::BinOp {
+            left: Box::new(lowered_left),
+            op: lowered_op.to_string(),
+            right: Box::new(lowered_right),
+        })
+    }
+
+    fn condition_uses_borrowed_name_for_ir(&self, expr: &HirExpr) -> bool {
+        match expr {
+            HirExpr::Name { name, .. } => {
+                self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)
+            }
+            HirExpr::Compare {
+                left, comparators, ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(left)
+                    || comparators
+                        .iter()
+                        .any(|expr| self.condition_uses_borrowed_name_for_ir(expr))
+            }
+            HirExpr::BoolOp { values, .. } => values
+                .iter()
+                .any(|expr| self.condition_uses_borrowed_name_for_ir(expr)),
+            HirExpr::BinOp { left, right, .. } => {
+                self.condition_uses_borrowed_name_for_ir(left)
+                    || self.condition_uses_borrowed_name_for_ir(right)
+            }
+            HirExpr::UnaryOp { operand, .. } => self.condition_uses_borrowed_name_for_ir(operand),
+            HirExpr::Index { object, index, .. } => {
+                self.condition_uses_borrowed_name_for_ir(object)
+                    || self.condition_uses_borrowed_name_for_ir(index)
+            }
+            HirExpr::FieldAccess { object, .. } => self.condition_uses_borrowed_name_for_ir(object),
+            HirExpr::MethodCall { object, args, .. } => {
+                self.condition_uses_borrowed_name_for_ir(object)
+                    || args
+                        .iter()
+                        .any(|expr| self.condition_uses_borrowed_name_for_ir(expr))
+            }
+            HirExpr::Call { args, .. } => args
+                .iter()
+                .any(|expr| self.condition_uses_borrowed_name_for_ir(expr)),
+            HirExpr::TupleLiteral { elements, .. } | HirExpr::ListLiteral { elements, .. } => {
+                elements
+                    .iter()
+                    .any(|expr| self.condition_uses_borrowed_name_for_ir(expr))
+            }
+            HirExpr::DictLiteral { keys, values, .. } => {
+                keys.iter()
+                    .any(|expr| self.condition_uses_borrowed_name_for_ir(expr))
+                    || values
+                        .iter()
+                        .any(|expr| self.condition_uses_borrowed_name_for_ir(expr))
+            }
+            HirExpr::SetLiteral { elements, .. } => elements
+                .iter()
+                .any(|expr| self.condition_uses_borrowed_name_for_ir(expr)),
+            HirExpr::IfExpr {
+                condition,
+                then_expr,
+                else_expr,
+                ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(condition)
+                    || self.condition_uses_borrowed_name_for_ir(then_expr)
+                    || self.condition_uses_borrowed_name_for_ir(else_expr)
+            }
+            HirExpr::WalrusExpr { value, .. } => self.condition_uses_borrowed_name_for_ir(value),
+            HirExpr::GeneratorExpr {
+                expr, iter, filter, ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(expr)
+                    || self.condition_uses_borrowed_name_for_ir(iter)
+                    || filter
+                        .as_ref()
+                        .is_some_and(|cond| self.condition_uses_borrowed_name_for_ir(cond))
+            }
+            HirExpr::ListComp {
+                expr, generators, ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(expr)
+                    || generators.iter().any(|(_, iter, cond)| {
+                        self.condition_uses_borrowed_name_for_ir(iter)
+                            || cond
+                                .as_ref()
+                                .is_some_and(|cond| self.condition_uses_borrowed_name_for_ir(cond))
+                    })
+            }
+            HirExpr::DictComp {
+                key_expr,
+                val_expr,
+                generators,
+                ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(key_expr)
+                    || self.condition_uses_borrowed_name_for_ir(val_expr)
+                    || generators.iter().any(|(_, iter, cond)| {
+                        self.condition_uses_borrowed_name_for_ir(iter)
+                            || cond
+                                .as_ref()
+                                .is_some_and(|cond| self.condition_uses_borrowed_name_for_ir(cond))
+                    })
+            }
+            HirExpr::SetComp {
+                expr, generators, ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(expr)
+                    || generators.iter().any(|(_, iter, cond)| {
+                        self.condition_uses_borrowed_name_for_ir(iter)
+                            || cond
+                                .as_ref()
+                                .is_some_and(|cond| self.condition_uses_borrowed_name_for_ir(cond))
+                    })
+            }
+            HirExpr::RangeLiteral {
+                start, end, step, ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(start)
+                    || self.condition_uses_borrowed_name_for_ir(end)
+                    || step
+                        .as_ref()
+                        .is_some_and(|step| self.condition_uses_borrowed_name_for_ir(step))
+            }
+            HirExpr::ContainsOp {
+                element,
+                collection,
+                ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(element)
+                    || self.condition_uses_borrowed_name_for_ir(collection)
+            }
+            HirExpr::Slice {
+                object,
+                start,
+                stop,
+                step,
+                ..
+            } => {
+                self.condition_uses_borrowed_name_for_ir(object)
+                    || start
+                        .as_ref()
+                        .is_some_and(|start| self.condition_uses_borrowed_name_for_ir(start))
+                    || stop
+                        .as_ref()
+                        .is_some_and(|stop| self.condition_uses_borrowed_name_for_ir(stop))
+                    || step
+                        .as_ref()
+                        .is_some_and(|step| self.condition_uses_borrowed_name_for_ir(step))
+            }
+            HirExpr::Lambda { body, .. } => self.condition_uses_borrowed_name_for_ir(body),
+            HirExpr::QuestionMark { expr, .. } => self.condition_uses_borrowed_name_for_ir(expr),
+            HirExpr::OkWrap { value, .. } | HirExpr::ErrWrap { value, .. } => {
+                self.condition_uses_borrowed_name_for_ir(value)
+            }
+            HirExpr::SuperCall { args, .. } => args
+                .iter()
+                .any(|expr| self.condition_uses_borrowed_name_for_ir(expr)),
+            _ => false,
+        }
+    }
+
+    fn try_lower_if_stmt_for_ir(
+        &mut self,
+        condition: &HirExpr,
+        then_body: &[HirStmt],
+        elif_clauses: &[(HirExpr, Vec<HirStmt>)],
+        else_body: Option<&[HirStmt]>,
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let mut nested_else = if let Some(else_body) = else_body {
+            let Some(lowered_else) = self.try_lower_stmt_block_for_ir(else_body)? else {
+                return Ok(None);
+            };
+            Some(lowered_else)
+        } else {
+            None
+        };
+
+        for (elif_cond, elif_body) in elif_clauses.iter().rev() {
+            let Some(lowered_elif) =
+                self.try_lower_if_clause_for_ir(elif_cond, elif_body, nested_else)?
+            else {
+                return Ok(None);
+            };
+            nested_else = Some(vec![lowered_elif]);
+        }
+
+        self.try_lower_if_clause_for_ir(condition, then_body, nested_else)
+    }
+
+    fn try_lower_if_clause_for_ir(
+        &mut self,
+        condition: &HirExpr,
+        then_body: &[HirStmt],
+        nested_else: Option<Vec<RustStmt>>,
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
+            return Ok(None);
+        };
+
+        if let Some(option_var) = crate::helpers::detect_is_not_none_var(condition) {
+            return Ok(Some(RustStmt::IfLet {
+                pattern: format!("Some({option_var})"),
+                expr: crate::RustExpr::Ident(option_var),
+                then_body: lowered_then_body,
+                else_body: nested_else,
+            }));
+        }
+
+        if let Some(option_vars) = crate::helpers::detect_and_not_none_vars(condition) {
+            let mut chain_then = lowered_then_body;
+            for option_var in option_vars.iter().rev() {
+                chain_then = vec![RustStmt::IfLet {
+                    pattern: format!("Some({option_var})"),
+                    expr: crate::RustExpr::Ident(option_var.clone()),
+                    then_body: chain_then,
+                    else_body: None,
+                }];
+            }
+            let Some(mut chain_root) = chain_then.into_iter().next() else {
+                return Ok(None);
+            };
+            if let RustStmt::IfLet { else_body, .. } = &mut chain_root {
+                *else_body = nested_else;
+            }
+            return Ok(Some(chain_root));
+        }
+
+        if let Some(option_var) = crate::helpers::detect_is_none_var(condition) {
+            let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
+                return Ok(None);
+            };
+            let lowered_else = nested_else.map(|else_body| {
+                vec![RustStmt::IfLet {
+                    pattern: format!("Some({option_var})"),
+                    expr: crate::RustExpr::Ident(option_var.clone()),
+                    then_body: else_body,
+                    else_body: None,
+                }]
+            });
+            return Ok(Some(RustStmt::If {
+                cond: lowered_cond,
+                then_body: lowered_then_body,
+                else_body: lowered_else,
+            }));
+        }
+
+        let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
+            return Ok(None);
+        };
+        Ok(Some(RustStmt::If {
+            cond: lowered_cond,
+            then_body: lowered_then_body,
+            else_body: nested_else,
+        }))
     }
 
     pub(super) fn emit_borrowed_return_name_clone_expr(&mut self, value: &HirExpr) -> bool {
@@ -1344,7 +1811,8 @@ impl RustEmitter {
                         comparators: comparators.clone(),
                         ty: condition.ty().clone(),
                     };
-                    let Some(lowered_cond) = self.lower_rendered_expr_for_ir(&walrus_compare_expr)?
+                    let Some(lowered_cond) =
+                        self.lower_rendered_expr_for_ir(&walrus_compare_expr)?
                     else {
                         return Ok(false);
                     };
@@ -1559,41 +2027,24 @@ impl RustEmitter {
             }
 
             if let Some(var_name) = crate::helpers::detect_is_not_none_var(condition) {
-                let output_len = self.output.len();
-                self.write_indent();
-                self.write("if let Some(");
-                self.write(&var_name);
-                self.write(") = ");
-                self.write(&var_name);
-                self.write(" {\n");
-                self.indent += 1;
-                self.option_unwrapped_vars.insert(var_name.clone());
-                for then_stmt in then_body {
-                    self.emit_stmt(then_stmt);
-                }
-                self.option_unwrapped_vars.remove(&var_name);
-                self.indent -= 1;
-                self.write_indent();
-                self.write("}");
-                if let Some(else_body) = else_body {
-                    self.write(" else {\n");
-                    self.indent += 1;
-                    for else_stmt in else_body {
-                        self.emit_stmt(else_stmt);
-                    }
-                    self.indent -= 1;
-                    self.write_indent();
-                    self.write("}");
-                }
-                self.write("\n");
-                if !self
-                    .output
-                    .get(output_len..)
-                    .is_some_and(|segment| !segment.is_empty())
-                {
-                    self.output.truncate(output_len);
+                let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
                     return Ok(false);
-                }
+                };
+                let lowered_else_body = if let Some(else_body) = else_body {
+                    let Some(lowered_else) = self.try_lower_stmt_block_for_ir(else_body)? else {
+                        return Ok(false);
+                    };
+                    Some(lowered_else)
+                } else {
+                    None
+                };
+
+                self.emit_rust_stmt_with_current_indent(&RustStmt::IfLet {
+                    pattern: format!("Some({var_name})"),
+                    expr: crate::RustExpr::Ident(var_name),
+                    then_body: lowered_then_body,
+                    else_body: lowered_else_body,
+                });
                 return Ok(true);
             }
 
