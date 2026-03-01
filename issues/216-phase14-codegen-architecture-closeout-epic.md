@@ -165,6 +165,16 @@ Recheck run on 2026-02-28 (Pass C, current tree):
 Closeout decision:
 - Epic cannot be marked done again until user-path `SynItem` and remaining high-traffic string emitters are migrated to structured IR and all strict completion conditions are revalidated.
 
+Latest loop update (2026-03-01):
+- Landed `66e4ed97`: structured IR expansion for type/operator emission with root semantic fixes in operator lowering.
+- Landed `b26a68e5`: removed dead legacy `match_emitter` module from production build graph.
+- Validation:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+- `./scripts/run_all_tests.sh` -> pass
+- Demo sweep (`demos/**/*.sifr` via `sifr run`) confirmed no new runnable regressions; remaining failures are fixture-only (`no main`) or intentional error demo.
+- Refreshed strict inventory: `self.write(...)` in `crates/sifr_codegen/src` is now `594`.
+
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.

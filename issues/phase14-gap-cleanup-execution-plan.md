@@ -31,6 +31,25 @@ Completion evidence:
 - [ ] WS6 structural-pass hard gate not complete for strict raw-text independence.
 - [ ] WS7 epic closeout/checklist/doc updates blocked until strict IR-first hard gates pass.
 
+### Latest Loop Update (2026-03-01)
+
+1. Commits completed in this loop:
+2. `66e4ed97` `codegen: move type/operator emission to structured IR and fix operator lowering semantics`
+3. `b26a68e5` `codegen: remove dead legacy match emitter module`
+4. Validation executed after loop commits:
+5. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+6. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+7. `./scripts/run_all_tests.sh` -> pass
+8. Demo validation sweep (`find demos -name '*.sifr'` with `sifr run`) -> `91` files scanned, `86` runnable pass, `5` expected non-runnable/intentional:
+9. `demos/milestone_borrow_hardening_demo/exclusivity_error_demo.sifr` (intentional borrow-check failure demo)
+10. `demos/milestone_imports_demo/models.sifr` (module file; no `main`)
+11. `demos/milestone_imports_demo/utils.sifr` (module file; no `main`)
+12. `demos/milestone_test_runner_demo/test_arithmetic.sifr` (test fixture; no `main`)
+13. `demos/milestone_test_runner_demo/test_strings.sifr` (test fixture; no `main`)
+14. Refreshed direct emission inventory:
+15. `self.write(...)` total in `crates/sifr_codegen/src` -> `594`
+16. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `176`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `16`, `output_helpers.rs` `1`, `lib_codegen_tests.rs` `1`.
+
 Merged PR chain:
 1. `#784` (Issue 217)
 2. `#785` (Issue 218)
