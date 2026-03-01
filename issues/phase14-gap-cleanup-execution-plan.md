@@ -55,6 +55,14 @@ Completion evidence:
 20. Refreshed direct emission inventory after follow-up slices:
 21. `self.write(...)` total in `crates/sifr_codegen/src` -> `592`
 22. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `176`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `16`.
+23. `c045131c`: `lib.rs` now emits lowered expression nodes through `emit_rust_expr` in structured expr paths (field access/index/class-binop/leaf), removing direct `render_expr` writeouts.
+24. Validation for this slice:
+25. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+26. `./scripts/run_all_tests.sh` -> pass
+27. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+28. Refreshed direct emission inventory after `c045131c`:
+29. `self.write(...)` total in `crates/sifr_codegen/src` -> `588`
+30. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `176`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `12`.
 
 Merged PR chain:
 1. `#784` (Issue 217)

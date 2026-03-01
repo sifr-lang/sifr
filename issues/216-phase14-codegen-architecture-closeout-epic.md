@@ -178,6 +178,10 @@ Latest loop update (2026-03-01):
 - `fc2d650c`: removed test-only `self.write(` assertion trace in `lib_codegen_tests.rs`.
 - `6ac79b14`: removed remaining direct helper callsite in `output_helpers.rs`.
 - Refreshed strict inventory after follow-up slices: `self.write(...)` in `crates/sifr_codegen/src` is now `592`.
+- Additional loop slice:
+- `c045131c`: `lib.rs` structured expr paths now emit lowered IR expressions via `emit_rust_expr` instead of direct `render_expr` string writes.
+- Validation for `c045131c`: `cargo test -q -p sifr_codegen` pass, `./scripts/run_all_tests.sh` pass, demo smoke pass.
+- Refreshed strict inventory after `c045131c`: `self.write(...)` in `crates/sifr_codegen/src` is now `588` (`lib.rs` `16 -> 12`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
