@@ -225,6 +225,15 @@ Latest loop update (2026-03-01):
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `405.92s`).
 - Demo sweeps: recursive `demos/**/*.sifr` only hits known intentional error demo (`exclusivity_error_demo.sifr`); runnable milestone sweep `demos/*.sifr` passes (`83/83`).
 - Refreshed strict inventory after `b4946b1f`: `self.write(...)` in `crates/sifr_codegen/src` is now `533` (`expr_render_helpers.rs` `155 -> 125`).
+- Additional loop slice (2026-03-01):
+- `2e1dd70a`: migrated structured call/lambda helper paths in `expr_render_helpers.rs` to IR emission (`FnCall`/`MethodCall`/`Closure`/`FormatMacro`) and removed direct token-write call assembly.
+- Root semantic fix in this slice: callable struct-field invocation is emitted as callable-field form (`((obj.field))(...)`) instead of method-call form.
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `402.17s`).
+- Runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
+- Refreshed strict inventory after `2e1dd70a`: `self.write(...)` in `crates/sifr_codegen/src` is now `506` (`expr_render_helpers.rs` `125 -> 98`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
