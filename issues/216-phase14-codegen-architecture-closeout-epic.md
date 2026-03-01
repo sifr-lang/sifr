@@ -174,6 +174,10 @@ Latest loop update (2026-03-01):
 - `./scripts/run_all_tests.sh` -> pass
 - Demo sweep (`demos/**/*.sifr` via `sifr run`) confirmed no new runnable regressions; remaining failures are fixture-only (`no main`) or intentional error demo.
 - Refreshed strict inventory: `self.write(...)` in `crates/sifr_codegen/src` is now `594`.
+- Follow-up micro-slices in same loop:
+- `fc2d650c`: removed test-only `self.write(` assertion trace in `lib_codegen_tests.rs`.
+- `6ac79b14`: removed remaining direct helper callsite in `output_helpers.rs`.
+- Refreshed strict inventory after follow-up slices: `self.write(...)` in `crates/sifr_codegen/src` is now `592`.
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).

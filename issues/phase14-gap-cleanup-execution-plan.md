@@ -49,6 +49,12 @@ Completion evidence:
 14. Refreshed direct emission inventory:
 15. `self.write(...)` total in `crates/sifr_codegen/src` -> `594`
 16. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `176`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `16`, `output_helpers.rs` `1`, `lib_codegen_tests.rs` `1`.
+17. 2026-03-01 follow-up micro-slices:
+18. `fc2d650c`: removed test-only `self.write(` assertion trace from `lib_codegen_tests.rs`.
+19. `6ac79b14`: removed final direct helper callsite `self.write(...)` in `output_helpers.rs::emit_rust_expr`.
+20. Refreshed direct emission inventory after follow-up slices:
+21. `self.write(...)` total in `crates/sifr_codegen/src` -> `592`
+22. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `176`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `16`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
