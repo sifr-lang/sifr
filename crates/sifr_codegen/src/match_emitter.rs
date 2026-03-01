@@ -149,7 +149,8 @@ impl RustEmitter {
         let is_non_option_union = matches!(subject_ty, Type::Union(_)) && !is_option;
 
         let subject_rendered = self.render_expr_with_lowered_path(subject);
-        self.writeln(&format!("match {subject_rendered} {{"));
+        self.write_indent();
+        self.write(&format!("match {subject_rendered} {{\n"));
 
         self.indent += 1;
 
@@ -174,7 +175,8 @@ impl RustEmitter {
         }
 
         self.indent -= 1;
-        self.writeln("}");
+        self.write_indent();
+        self.write("}\n");
     }
 
     fn emit_match_arm(
@@ -264,7 +266,8 @@ impl RustEmitter {
             String::new()
         };
 
-        self.writeln(&format!("{pattern_code}{guard_suffix} => {{"));
+        self.write_indent();
+        self.write(&format!("{pattern_code}{guard_suffix} => {{\n"));
 
         self.indent += 1;
 
@@ -273,13 +276,15 @@ impl RustEmitter {
             if is_non_option_union && !fields.is_empty() {
                 for (fname, fpat) in fields {
                     if let HirPattern::Capture { name, .. } = fpat {
-                        self.writeln(&format!("let {name} = __inner.{fname};"));
+                        self.write_indent();
+                        self.write(&format!("let {name} = __inner.{fname};\n"));
                     }
                 }
             } else if !is_non_option_union {
                 for (fname, fpat) in fields {
                     if let HirPattern::Capture { name, .. } = fpat {
-                        self.writeln(&format!("let {name} = __matched.{fname};"));
+                        self.write_indent();
+                        self.write(&format!("let {name} = __matched.{fname};\n"));
                     }
                 }
             }
@@ -291,6 +296,7 @@ impl RustEmitter {
         }
 
         self.indent -= 1;
-        self.writeln("}");
+        self.write_indent();
+        self.write("}\n");
     }
 }

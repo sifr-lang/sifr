@@ -395,7 +395,8 @@ impl RustEmitter {
         }
 
         self.indent -= 1;
-        self.writeln("}");
+        self.write_indent();
+        self.write("}\n");
 
         self.current_return_type = None;
         self.mutated_vars.clear();

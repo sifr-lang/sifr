@@ -286,3 +286,13 @@ Latest validation loop (2026-03-01, Pass R):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - Focused crate validation: `cargo test -q -p sifr_codegen` -> pass (`455` passed).
 - Strict re-audit evidence: direct `self.write(...)` count is now `706` in `crates/sifr_codegen/src` (`self.writeln(...)` count `63`).
+
+Latest validation loop (2026-03-01, Pass S):
+- Next-loop cleanup removed remaining non-render `self.writeln(...)` usage in:
+- `crates/sifr_codegen/src/function_emitter.rs` (function close brace emission),
+- `crates/sifr_codegen/src/match_emitter.rs` (match header/arm/body brace + destructure lines).
+- Replaced with explicit indent + line write emission while preserving behavior.
+- Validation evidence:
+- `./scripts/run_all_tests.sh` -> pass.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- Re-audit evidence after this loop: direct `self.write(...) = 713`, direct `self.writeln(...) = 56` in `crates/sifr_codegen/src`.

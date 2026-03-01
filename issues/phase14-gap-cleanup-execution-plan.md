@@ -581,3 +581,11 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. structured IR path retained for `FieldAssign` / `AttributeSubscriptAssign` / `AugAssign` in `stmt_support_emitter.rs`
 6. no bridge/fallback path added
 7. Remaining direct emitter calls re-audit: `self.write(...) = 706`, `self.writeln(...) = 63` in `crates/sifr_codegen/src`.
+
+### Validation rerun (2026-03-01, Pass S)
+
+1. `./scripts/run_all_tests.sh` -> pass
+2. Full demos sweep `demos/*.sifr` -> pass (`83/83`)
+3. Emitter cleanup this loop:
+4. removed local `self.writeln(...)` usage in `function_emitter.rs` and `match_emitter.rs`
+5. Re-audit totals: `self.write(...) = 713`, `self.writeln(...) = 56` in `crates/sifr_codegen/src`.
