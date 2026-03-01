@@ -668,7 +668,10 @@ impl RustEmitter {
         args: &[HirExpr],
     ) -> Result<bool, crate::CodegenError> {
         if args.is_empty() {
-            self.write("println!()");
+            self.emit_rust_expr(&crate::RustExpr::MacroCall {
+                name: "println".to_string(),
+                args: vec![],
+            });
             return Ok(true);
         }
         if args.len() > 1 {
@@ -696,7 +699,11 @@ impl RustEmitter {
                 .replace('"', "\\\"")
                 .replace('{', "{{")
                 .replace('}', "}}");
-            self.write(&format!("println!(\"{escaped}\")"));
+            self.emit_rust_expr(&crate::RustExpr::FormatMacro {
+                name: "println".to_string(),
+                format_str: escaped,
+                args: vec![],
+            });
             return Ok(true);
         }
         if let HirExpr::FString { parts, .. } = arg {
