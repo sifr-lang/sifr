@@ -691,7 +691,7 @@ impl RustEmitter {
         crate::RustExpr::Ident(object.to_string())
     }
 
-    fn write_stmt_terminator(&mut self) {
+    pub(super) fn write_stmt_terminator(&mut self) {
         self.write(";\n");
     }
 

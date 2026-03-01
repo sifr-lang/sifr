@@ -1062,13 +1062,13 @@ impl RustEmitter {
             {
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
-                self.write(";\n");
+                self.write_stmt_terminator();
                 return Ok(true);
             }
             if self.try_emit_structured_expr(value)? {
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
-                self.write(";\n");
+                self.write_stmt_terminator();
                 return Ok(true);
             }
             self.output.truncate(output_len);
@@ -1081,7 +1081,7 @@ impl RustEmitter {
             if self.try_emit_structured_expr(value)? {
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
-                self.write(";\n");
+                self.write_stmt_terminator();
                 return Ok(true);
             }
             self.output.truncate(output_len);
@@ -1146,7 +1146,7 @@ impl RustEmitter {
             if self.try_emit_structured_expr(expr)? {
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
-                self.write(";\n");
+                self.write_stmt_terminator();
                 return Ok(true);
             }
             self.output.truncate(output_len);
