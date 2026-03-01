@@ -172,6 +172,15 @@ Completion evidence:
 137. Refreshed direct emission inventory after `302765ff`:
 138. `self.write(...)` total in `crates/sifr_codegen/src` -> `475`
 139. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `67`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+140. `a6355f6b`: removed remaining direct `self.write(...)` usage from `expr_render_helpers.rs` by migrating index/slice terminal emission through structured emitter calls (no direct write calls remain in the file).
+141. Validation for `a6355f6b`:
+142. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+143. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+144. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `412.77s`)
+145. Full runnable milestone demo sweep: `find demos -maxdepth 1 -name '*.sifr'` -> pass (`83/83`)
+146. Refreshed direct emission inventory after `a6355f6b`:
+147. `self.write(...)` total in `crates/sifr_codegen/src` -> `408`
+148. Remaining files: `stmt_support_emitter.rs` `186`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
@@ -332,7 +341,7 @@ Loop progress log:
 
 ### Next Loop To-do (Evidence-Based)
 
-1. [ ] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`67` writes) to structured IR-first expression builders.
+1. [x] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`67` writes) to structured IR-first expression builders.
 2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`186` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `function_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
 4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.
@@ -345,7 +354,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 3. [x] `type_emitters.rs` (completed; now `0` direct `self.write(...)`)
 4. [x] `operator_protocol_emitters.rs` (completed; now `0` direct `self.write(...)`)
 5. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
-6. [ ] `expr_render_helpers.rs` (`67` writes; expression leaf hot path)
+6. [x] `expr_render_helpers.rs` (completed in `a6355f6b`; now `0` direct `self.write(...)`)
 7. [ ] `stmt_support_emitter.rs` (`186` writes; statement lowering over expression leafs)
 8. [ ] `function_emitter.rs` (`51` writes; item wrapper over stmt/expr lowering)
 9. [ ] `class_method_emitter.rs` (`70` writes; class method wrapper over stmt/expr lowering)

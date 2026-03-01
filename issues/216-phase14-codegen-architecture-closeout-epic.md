@@ -248,6 +248,14 @@ Latest loop update (2026-03-01):
 - `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `418.21s`).
 - Refreshed strict inventory after `302765ff`: `self.write(...)` in `crates/sifr_codegen/src` is now `475` (`expr_render_helpers.rs` `88 -> 67`).
+- Additional loop slice (2026-03-01):
+- `a6355f6b`: removed remaining direct `self.write(...)` usage from `expr_render_helpers.rs` (index/slice helpers now emit through structured emitter calls; no direct writes remain in that file).
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `412.77s`).
+- runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
+- Refreshed strict inventory after `a6355f6b`: `self.write(...)` in `crates/sifr_codegen/src` is now `408` (`expr_render_helpers.rs` `67 -> 0`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
