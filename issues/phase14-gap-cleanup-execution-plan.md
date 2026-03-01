@@ -76,6 +76,14 @@ Completion evidence:
 41. Refreshed direct emission inventory after `2608d998` + `86e17211`:
 42. `self.write(...)` total in `crates/sifr_codegen/src` -> `583`
 43. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `175`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+44. `62f10dff`: `expr_render_helpers.rs` now emits `print()` and single string-literal print via structured macro IR (`RustExpr::MacroCall`/`RustExpr::FormatMacro`) instead of direct literal `self.write(...)`.
+45. Validation for `62f10dff`:
+46. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+47. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+48. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+49. Refreshed direct emission inventory after `62f10dff`:
+50. `self.write(...)` total in `crates/sifr_codegen/src` -> `581`
+51. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `173`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)

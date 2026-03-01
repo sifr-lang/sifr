@@ -187,6 +187,10 @@ Latest loop update (2026-03-01):
 - `86e17211`: `lib.rs` statement terminators now route through shared stmt helper (`write_stmt_terminator`), removing direct terminator writes in lib stmt path.
 - Validation for both slices: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), and `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
 - Refreshed strict inventory after these slices: `self.write(...)` in `crates/sifr_codegen/src` is now `583` (`expr_render_helpers.rs` `176 -> 175`, `lib.rs` `12 -> 8`).
+- Additional loop slice:
+- `62f10dff`: `expr_render_helpers.rs` now emits `print()` and single string-literal `print` through structured macro IR (`RustExpr::MacroCall`/`RustExpr::FormatMacro`) instead of direct string write emission.
+- Validation: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), and milestone structural-pass demo pass.
+- Refreshed strict inventory after `62f10dff`: `self.write(...)` in `crates/sifr_codegen/src` is now `581` (`expr_render_helpers.rs` `175 -> 173`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
