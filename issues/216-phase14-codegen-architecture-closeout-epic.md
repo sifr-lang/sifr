@@ -289,6 +289,15 @@ Latest loop update (2026-03-01):
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `408.97s`).
 - runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
 - Refreshed strict inventory after `b33d143a`: `self.write(...)` in `crates/sifr_codegen/src` is now `370` (`lib.rs` `8 -> 0`).
+- Additional loop slice (2026-03-01):
+- `649fd630`: migrated walrus-`if` statement emission in `stmt_support_emitter.rs` to IR control nodes (`RustStmt::Let` + `RustStmt::If`) and removed direct write-assembled walrus-if path.
+- Root-cause follow-up in same slice: added IR block-lowering helper support for `Assert` and expression statements when simple block lowering is unavailable, keeping walrus branches on the structured path.
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `429.15s`).
+- runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
+- Refreshed strict inventory after `649fd630`: `self.write(...)` in `crates/sifr_codegen/src` is now `363` (`stmt_support_emitter.rs` `156 -> 149`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).

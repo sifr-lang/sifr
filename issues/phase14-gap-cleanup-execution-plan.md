@@ -221,6 +221,18 @@ Completion evidence:
 186. Refreshed direct emission inventory after `b33d143a`:
 187. `self.write(...)` total in `crates/sifr_codegen/src` -> `370`
 188. Remaining files: `stmt_support_emitter.rs` `156`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
+189. `649fd630`: migrated walrus-`if` statement emission path in `stmt_support_emitter.rs` to IR control nodes (`RustStmt::Let` + `RustStmt::If`) and removed direct write-based walrus-if assembly.
+190. Root fixes in the same slice:
+191. added structured block-lowering helper for walrus branch body emission.
+192. extended that helper to lower `Assert` and expression statements via IR when simple block lowering is unavailable, preserving production behavior without reverting walrus path to string assembly.
+193. Validation for `649fd630`:
+194. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+195. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+196. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `429.15s`)
+197. runnable milestone demo sweep `demos/*.sifr` -> pass (`83/83`)
+198. Refreshed direct emission inventory after `649fd630`:
+199. `self.write(...)` total in `crates/sifr_codegen/src` -> `363`
+200. Remaining files: `stmt_support_emitter.rs` `149`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
@@ -395,7 +407,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 4. [x] `operator_protocol_emitters.rs` (completed; now `0` direct `self.write(...)`)
 5. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
 6. [x] `expr_render_helpers.rs` (completed in `a6355f6b`; now `0` direct `self.write(...)`)
-7. [ ] `stmt_support_emitter.rs` (`156` writes; statement lowering over expression leafs)
+7. [ ] `stmt_support_emitter.rs` (`149` writes; statement lowering over expression leafs)
 8. [ ] `function_emitter.rs` (`51` writes; item wrapper over stmt/expr lowering)
 9. [ ] `class_method_emitter.rs` (`70` writes; class method wrapper over stmt/expr lowering)
 10. [ ] `class_emitter.rs` (`93` writes; class item orchestration over class methods)
