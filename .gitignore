@@ -35,3 +35,6 @@ demos/**/*.dylib
 demos/**/*.exe
 !demos/**/*.sifr
 !demos/**/*.rs
+
+# Claude worktrees
+.claude/worktrees/*
