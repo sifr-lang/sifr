@@ -1512,7 +1512,7 @@ impl RustEmitter {
             lhs_expr = rhs_expr;
         }
 
-        self.write(&rendered_chain);
+        self.emit_rust_expr(&crate::RustExpr::RawCode(rendered_chain));
         Ok(true)
     }
 
@@ -1520,33 +1520,51 @@ impl RustEmitter {
         &mut self,
         inner: &HirExpr,
     ) -> Result<bool, crate::CodegenError> {
-        let saved_stats = self.lowering_stats;
-        let Some(inner_rendered) = self.try_render_structured_expr(inner)? else {
+        let Some(inner_expr) = self.try_lower_expr_for_structured_emit(inner)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
         if let Some(target_err_ty) = self.try_closure_error_type.last().cloned() {
             let resolved_inner_ty = crate::resolve_alias_type_for_plain_call(inner.ty());
             if let Type::Result(_, inner_err_ty) = resolved_inner_ty {
                 let inner_err_ty_name =
                     crate::render_type(&crate::sifr_type_to_rust_type(inner_err_ty));
                 if inner_err_ty_name == target_err_ty {
-                    self.write(&inner_rendered);
-                    self.write("?");
+                    self.emit_rust_expr(&crate::RustExpr::Try(Box::new(inner_expr)));
                     return Ok(true);
                 }
                 if can_construct_error_from_message(&target_err_ty) {
-                    self.write("(");
-                    self.write(&inner_rendered);
-                    self.write(").map_err(|__e| ");
-                    self.write(&target_err_ty);
-                    self.write("::new(__e.to_string()))?");
+                    let ctor_func = if target_err_ty.contains("::") {
+                        let mut path: Vec<String> =
+                            target_err_ty.split("::").map(str::to_string).collect();
+                        path.push("new".to_string());
+                        crate::RustExpr::Path(path)
+                    } else {
+                        crate::RustExpr::RawCode(format!("{target_err_ty}::new"))
+                    };
+                    self.emit_rust_expr(&crate::RustExpr::Try(Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(inner_expr))),
+                        method: "map_err".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__e".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::FnCall {
+                                func: Box::new(ctor_func),
+                                args: vec![crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Ident("__e".to_string())),
+                                    method: "to_string".to_string(),
+                                    args: vec![],
+                                }],
+                            }),
+                            is_move: false,
+                        }],
+                    })));
                     return Ok(true);
                 }
             }
         }
-        self.write(&inner_rendered);
-        self.write("?");
+        self.emit_rust_expr(&crate::RustExpr::Try(Box::new(inner_expr)));
         Ok(true)
     }
 
