@@ -179,7 +179,10 @@ impl RustEmitter {
         members.iter().find(|member| !matches!(member, Type::None))
     }
 
-    fn collect_stmt_string_concat_parts_for_ir<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
+    fn collect_stmt_string_concat_parts_for_ir<'a>(
+        expr: &'a HirExpr,
+        parts: &mut Vec<&'a HirExpr>,
+    ) {
         if let HirExpr::BinOp {
             left,
             op,
@@ -227,7 +230,9 @@ impl RustEmitter {
                     combined.push_str(value);
                 }
             }
-            return Ok(Some(crate::RustExpr::Literal(crate::RustLiteral::Str(combined))));
+            return Ok(Some(crate::RustExpr::Literal(crate::RustLiteral::Str(
+                combined,
+            ))));
         }
 
         let mut lowered_parts = Vec::with_capacity(parts.len());
@@ -421,6 +426,14 @@ impl RustEmitter {
                 return Ok(None);
             };
             return Ok(Some(crate::RustExpr::Try(Box::new(lowered_inner))));
+        }
+        if matches!(expr, HirExpr::Slice { .. }) {
+            let saved_stats = self.lowering_stats;
+            let Some(rendered_slice) = self.try_render_structured_expr(expr)? else {
+                return Ok(None);
+            };
+            self.lowering_stats = saved_stats;
+            return Ok(Some(crate::RustExpr::RawCode(rendered_slice)));
         }
         if let HirExpr::OkWrap { value, .. } = expr {
             let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
@@ -645,6 +658,85 @@ impl RustEmitter {
                 _ => {}
             }
         }
+        if let HirExpr::ContainsOp {
+            element,
+            collection,
+            ..
+        } = expr
+        {
+            let Some(lowered_element) = self.lower_stmt_expr_for_ir(element)? else {
+                return Ok(None);
+            };
+            let Some(lowered_collection) = self.lower_stmt_expr_for_ir(collection)? else {
+                return Ok(None);
+            };
+            let lowered = match crate::resolve_alias_type_for_plain_call(collection.ty()) {
+                Type::Dict(_, _) => {
+                    let key_arg = if let HirExpr::StringLiteral(value) = element.as_ref() {
+                        crate::RustExpr::Literal(crate::RustLiteral::Str(value.clone()))
+                    } else if let HirExpr::Name { name, ty } = element.as_ref() {
+                        if self.borrowed_params.contains(name)
+                            || self.mut_borrowed_params.contains(name)
+                        {
+                            if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Str) {
+                                crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                        lowered_element,
+                                    ))),
+                                    method: "as_str".to_string(),
+                                    args: vec![],
+                                }
+                            } else {
+                                lowered_element
+                            }
+                        } else {
+                            crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+                            }
+                        }
+                    } else {
+                        crate::RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+                        }
+                    };
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
+                        method: "contains_key".to_string(),
+                        args: vec![key_arg],
+                    }
+                }
+                Type::List(_) | Type::Set(_) | Type::Str => crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
+                    method: "contains".to_string(),
+                    args: vec![crate::RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+                    }],
+                },
+                _ => return Ok(None),
+            };
+            return Ok(Some(lowered));
+        }
+        if let HirExpr::UnaryOp { op, operand, .. } = expr {
+            let Some(lowered_operand) = self.lower_stmt_expr_for_ir(operand)? else {
+                return Ok(None);
+            };
+            let lowered = match op.as_str() {
+                "not" => crate::RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(crate::RustExpr::Paren(Box::new(lowered_operand))),
+                },
+                "-" => crate::RustExpr::UnaryOp {
+                    op: "-".to_string(),
+                    operand: Box::new(crate::RustExpr::Paren(Box::new(lowered_operand))),
+                },
+                "+" => crate::RustExpr::Paren(Box::new(lowered_operand)),
+                _ => return Ok(None),
+            };
+            return Ok(Some(lowered));
+        }
         if let HirExpr::Compare {
             left,
             ops,
@@ -750,32 +842,164 @@ impl RustEmitter {
         self.write(";\n");
     }
 
-    fn write_wrapped_try_return_prefix(&mut self, wrap_option: bool) {
-        if wrap_option {
-            self.write("return Ok(Some(");
-        } else {
-            self.write("return Ok(");
+    fn borrowed_return_name_clone_expr_for_ir(&self, value: &HirExpr) -> Option<crate::RustExpr> {
+        let HirExpr::Name { name, .. } = value else {
+            return None;
+        };
+        if !(self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)) {
+            return None;
         }
+        Some(crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
+            name.clone(),
+        ))))
     }
 
-    fn write_wrapped_try_return_suffix(&mut self, wrap_option: bool) {
-        if wrap_option {
-            self.write("));\n");
-        } else {
-            self.write(");\n");
+    fn lower_non_option_index_return_expr_for_ir(
+        &mut self,
+        object: &HirExpr,
+        index: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
+        if !matches!(
+            object_ty,
+            Type::Tuple(_) | Type::Dict(_, _) | Type::List(_) | Type::Str
+        ) {
+            return Ok(None);
         }
+
+        let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
+            return Ok(None);
+        };
+        let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
+            return Ok(None);
+        };
+
+        let lowered = match object_ty {
+            Type::Tuple(elements) => {
+                let HirExpr::IntLiteral(raw_idx) = index else {
+                    return Ok(None);
+                };
+                let Ok(idx) = usize::try_from(*raw_idx) else {
+                    return Ok(None);
+                };
+                if idx >= elements.len() {
+                    return Ok(None);
+                }
+                crate::RustExpr::Field {
+                    expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),
+                    field: idx.to_string(),
+                }
+            }
+            Type::Dict(_, _) => {
+                let lowered_key = if matches!(index, HirExpr::StringLiteral(_)) {
+                    lowered_index
+                } else {
+                    crate::RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_index))),
+                    }
+                };
+                crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
+                    expr: Box::new(lowered_object),
+                    index: Box::new(lowered_key),
+                }))
+            }
+            Type::List(_) => crate::RustExpr::Clone(Box::new(crate::RustExpr::Index {
+                expr: Box::new(lowered_object),
+                index: Box::new(crate::RustExpr::Cast {
+                    expr: Box::new(lowered_index),
+                    ty: crate::RustType::Named("usize".to_string()),
+                }),
+            })),
+            Type::Str => crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(lowered_object),
+                        method: "chars".to_string(),
+                        args: vec![],
+                    }),
+                    method: "nth".to_string(),
+                    args: vec![crate::RustExpr::Cast {
+                        expr: Box::new(lowered_index),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }],
+                }),
+                method: "unwrap".to_string(),
+                args: vec![],
+            },
+            _ => return Ok(None),
+        };
+
+        if matches!(object_ty, Type::Str) {
+            return Ok(Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(lowered),
+                method: "to_string".to_string(),
+                args: vec![],
+            }));
+        }
+        Ok(Some(lowered))
+    }
+
+    fn lower_return_value_expr_for_ir(
+        &mut self,
+        value: &HirExpr,
+        return_ty: Option<&Type>,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if self.current_class_name.is_some()
+            && matches!(value, HirExpr::Name { name, .. } if name == "self")
+        {
+            return Ok(Some(crate::RustExpr::Clone(Box::new(
+                crate::RustExpr::Ident("self".to_string()),
+            ))));
+        }
+
+        if let Some(clone_expr) = self.borrowed_return_name_clone_expr_for_ir(value) {
+            return Ok(Some(clone_expr));
+        }
+
+        if return_ty.is_some_and(|ty| !crate::helpers::is_option_type(ty))
+            && matches!(value, HirExpr::Index { .. })
+        {
+            let HirExpr::Index { object, index, .. } = value else {
+                unreachable!();
+            };
+            if let Some(lowered) = self.lower_non_option_index_return_expr_for_ir(object, index)? {
+                return Ok(Some(lowered));
+            }
+        }
+
+        if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(value)? {
+            return Ok(Some(lowered_leaf));
+        }
+
+        let saved_stats = self.lowering_stats;
+        let Some(rendered_value) = self.try_render_structured_expr(value)? else {
+            return Ok(None);
+        };
+        self.lowering_stats = saved_stats;
+        Ok(Some(crate::RustExpr::RawCode(rendered_value)))
+    }
+
+    fn lower_rendered_expr_for_ir(
+        &mut self,
+        expr: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(expr)? {
+            return Ok(Some(lowered_leaf));
+        }
+        let saved_stats = self.lowering_stats;
+        let Some(rendered_expr) = self.try_render_structured_expr(expr)? else {
+            return Ok(None);
+        };
+        self.lowering_stats = saved_stats;
+        Ok(Some(crate::RustExpr::RawCode(rendered_expr)))
     }
 
     pub(super) fn emit_borrowed_return_name_clone_expr(&mut self, value: &HirExpr) -> bool {
-        let HirExpr::Name { name, .. } = value else {
+        let Some(clone_expr) = self.borrowed_return_name_clone_expr_for_ir(value) else {
             return false;
         };
-        if !(self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)) {
-            return false;
-        }
-        self.emit_rust_expr(&crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
-            name.clone(),
-        ))));
+        self.emit_rust_expr(&clone_expr);
         true
     }
 
@@ -837,8 +1061,9 @@ impl RustEmitter {
                         value.clone()
                     },
                 }),
-                RustStmt::Expr(lowered_expr) => self
-                    .emit_rust_stmt_with_current_indent(&crate::RustStmt::Expr(lowered_expr.clone())),
+                RustStmt::Expr(lowered_expr) => self.emit_rust_stmt_with_current_indent(
+                    &crate::RustStmt::Expr(lowered_expr.clone()),
+                ),
                 RustStmt::RawCode(_) => {
                     panic!("RawCode statement reached core production emission path");
                 }
@@ -858,36 +1083,42 @@ impl RustEmitter {
         let HirStmt::Return { value } = stmt else {
             return Ok(false);
         };
+        let return_ty_snapshot = self.current_return_type.clone();
 
         if let Some(value) = value {
             if self.emission_ctx.in_display_impl && self.try_closure_depth == 0 {
-                let output_len = self.output.len();
-                self.write_indent();
-                self.write("return write!(f, \"{}\", ");
-                if self.try_emit_structured_expr(value)? {
-                    self.write(");\n");
-                    return Ok(true);
-                }
-                self.output.truncate(output_len);
-                return Ok(false);
+                let Some(display_expr) =
+                    self.lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
+                else {
+                    return Ok(false);
+                };
+                self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                    crate::RustExpr::MacroCall {
+                        name: "write".to_string(),
+                        args: vec![
+                            crate::RustExpr::Ident("f".to_string()),
+                            crate::RustExpr::Literal(crate::RustLiteral::Str("{}".to_string())),
+                            display_expr,
+                        ],
+                    },
+                )));
+                return Ok(true);
             }
-            let output_len = self.output.len();
             if self.try_closure_depth > 0 {
                 let wrap_option = self
                     .try_closure_option_wrap
                     .last()
                     .copied()
                     .unwrap_or(false);
-                self.write_wrapped_try_return_prefix(wrap_option);
-                if self.current_class_name.is_some()
-                    && matches!(value, HirExpr::Name { name, .. } if name == "self")
-                {
-                    self.write("self.clone()");
-                    self.write_wrapped_try_return_suffix(wrap_option);
-                    return Ok(true);
-                }
+
+                let Some(mut lowered_return_value) =
+                    self.lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
+                else {
+                    return Ok(false);
+                };
+
                 if !wrap_option {
-                    if let Some(return_ty) = self.current_return_type.as_ref() {
+                    if let Some(return_ty) = return_ty_snapshot.as_ref() {
                         if let Type::Result(ok_ty, _) =
                             crate::resolve_alias_type_for_plain_call(return_ty)
                         {
@@ -902,64 +1133,39 @@ impl RustEmitter {
                                     Type::None
                                 )
                             {
-                                self.write("Ok(())");
-                                self.write_wrapped_try_return_suffix(wrap_option);
-                                return Ok(true);
+                                lowered_return_value = crate::RustExpr::FnCall {
+                                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                                };
                             }
                         }
                     }
                 }
-                if let Some(return_ty) = self.current_return_type.clone() {
-                    if let HirExpr::Index { object, index, .. } = value {
-                        if !crate::helpers::is_option_type(&return_ty)
-                            && self.try_emit_structured_index_expr(object, index, &return_ty)?
-                        {
-                            self.write_wrapped_try_return_suffix(wrap_option);
-                            return Ok(true);
-                        }
-                    }
-                }
-                if self.emit_borrowed_return_name_clone_expr(value) {
-                    self.write_wrapped_try_return_suffix(wrap_option);
-                    return Ok(true);
-                }
-                if self.try_emit_structured_expr(value)? {
-                    self.write_wrapped_try_return_suffix(wrap_option);
-                    return Ok(true);
-                }
-                self.output.truncate(output_len);
-                return Ok(false);
-            }
 
-            if self.current_class_name.is_some()
-                && matches!(value, HirExpr::Name { name, .. } if name == "self")
-            {
+                let try_payload = if wrap_option {
+                    crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                        args: vec![lowered_return_value],
+                    }
+                } else {
+                    lowered_return_value
+                };
                 self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
-                    crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident("self".to_string()))),
+                    crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                        args: vec![try_payload],
+                    },
                 )));
                 return Ok(true);
             }
-            self.write("return ");
-            if let Some(return_ty) = self.current_return_type.clone() {
-                if let HirExpr::Index { object, index, .. } = value {
-                    if !crate::helpers::is_option_type(&return_ty)
-                        && self.try_emit_structured_index_expr(object, index, &return_ty)?
-                    {
-                        self.write_stmt_terminator();
-                        return Ok(true);
-                    }
-                }
-            }
-            if self.emit_borrowed_return_name_clone_expr(value) {
-                self.write_stmt_terminator();
-                return Ok(true);
-            }
-            if self.try_emit_structured_expr(value)? {
-                self.write_stmt_terminator();
-                return Ok(true);
-            }
-            self.output.truncate(output_len);
-            return Ok(false);
+
+            let Some(lowered_return_value) =
+                self.lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
+            else {
+                return Ok(false);
+            };
+            self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(lowered_return_value)));
+            return Ok(true);
         }
 
         if self.try_closure_depth > 0 {
@@ -979,7 +1185,7 @@ impl RustEmitter {
                     },
                 )));
             } else {
-                let direct_result_none = self.current_return_type.as_ref().is_some_and(|ret_ty| {
+                let direct_result_none = return_ty_snapshot.as_ref().is_some_and(|ret_ty| {
                     match crate::resolve_alias_type_for_plain_call(ret_ty) {
                         Type::Result(ok_ty, _) => matches!(
                             crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
@@ -1008,10 +1214,12 @@ impl RustEmitter {
                 }
             }
         } else if self.emission_ctx.in_display_impl {
-            self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-            })));
+            self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                },
+            )));
         } else {
             self.emit_rust_stmt_with_current_indent(&RustStmt::Return(None));
         }
@@ -1074,7 +1282,11 @@ impl RustEmitter {
                         name: name.clone(),
                         ty: ty.clone(),
                     };
-                    if !self.try_emit_structured_compare_expr(&walrus_name_expr, ops, comparators)? {
+                    if !self.try_emit_structured_compare_expr(
+                        &walrus_name_expr,
+                        ops,
+                        comparators,
+                    )? {
                         self.output.truncate(output_len);
                         return Ok(false);
                     }
@@ -2082,21 +2294,21 @@ impl RustEmitter {
             return Ok(false);
         };
 
-        let output_len = self.output.len();
-        self.write_indent();
-        self.write("assert!(");
-        if !self.try_emit_structured_expr(test)? {
-            self.output.truncate(output_len);
+        let Some(lowered_test) = self.lower_rendered_expr_for_ir(test)? else {
             return Ok(false);
-        }
-        if let Some(msg_expr) = msg {
-            self.write(", ");
-            if !self.try_emit_structured_expr(msg_expr)? {
-                self.output.truncate(output_len);
+        };
+        let lowered_msg = if let Some(msg_expr) = msg {
+            let Some(lowered) = self.lower_rendered_expr_for_ir(msg_expr)? else {
                 return Ok(false);
-            }
-        }
-        self.write(");\n");
+            };
+            Some(lowered)
+        } else {
+            None
+        };
+        self.emit_rust_stmt_with_current_indent(&RustStmt::Assert {
+            cond: lowered_test,
+            msg: lowered_msg,
+        });
         Ok(true)
     }
 
