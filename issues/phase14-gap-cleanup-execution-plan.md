@@ -233,6 +233,20 @@ Completion evidence:
 198. Refreshed direct emission inventory after `649fd630`:
 199. `self.write(...)` total in `crates/sifr_codegen/src` -> `363`
 200. Remaining files: `stmt_support_emitter.rs` `149`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
+201. `28fad690`: migrated nested structured `if`/`while` block lowering in `stmt_support_emitter.rs` to IR-first recursive lowering helpers (`try_lower_if_stmt_for_ir`, `try_lower_if_clause_for_ir`, and nested while lowering in `try_lower_stmt_block_for_ir`), removing production misses that previously triggered hard-gate panics on nested option-guard trees.
+202. Root-cause fixes in the same slice:
+203. expanded block-lowering fallback coverage for `Let`, `Assign`, `Return`, and `AttributeSubscriptAssign` in nested structured paths, so recursive branches lower as IR statements instead of failing out of the structured pipeline.
+204. fixed borrowed-name compare semantics in recursive condition lowering via explicit borrowed compare IR lowering (`String` vs `&String` class of failure), restoring `stdlib_argparse`/`milestone_stdlib_expansion` parity.
+205. Validation for `28fad690`:
+206. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+207. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+208. `cargo run -q -p sifr -- run demos/milestone_stdlib_expansion_demo.sifr` -> pass
+209. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `409.83s`)
+210. `./scripts/run_all_tests.sh` -> pass (includes e2e pass sweep)
+211. runnable milestone demo sweep `demos/*.sifr` -> pass (`83/83`)
+212. Refreshed direct emission inventory after `28fad690`:
+213. `self.write(...)` total in `crates/sifr_codegen/src` -> `354`
+214. Remaining files: `stmt_support_emitter.rs` `140`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
 
 Merged PR chain:
 1. `#784` (Issue 217)

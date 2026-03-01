@@ -298,6 +298,19 @@ Latest loop update (2026-03-01):
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `429.15s`).
 - runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
 - Refreshed strict inventory after `649fd630`: `self.write(...)` in `crates/sifr_codegen/src` is now `363` (`stmt_support_emitter.rs` `156 -> 149`).
+- Additional loop slice (2026-03-01):
+- `28fad690`: migrated nested structured `if`/`while` block lowering in `stmt_support_emitter.rs` to recursive IR lowering (`try_lower_if_stmt_for_ir` / `try_lower_if_clause_for_ir` + nested while lowering) so nested option-guard trees remain on the structured IR path instead of falling out and hard-failing production emission.
+- Root-cause fixes in the same slice:
+- expanded nested block fallback coverage for `Let`, `Assign`, `Return`, and `AttributeSubscriptAssign` to keep recursive branch bodies lowerable through IR.
+- fixed borrowed-name compare lowering in recursive conditions (resolved `String` vs `&String` regression seen in `stdlib_argparse` and `milestone_stdlib_expansion` paths).
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo run -q -p sifr -- run demos/milestone_stdlib_expansion_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `409.83s`).
+- `./scripts/run_all_tests.sh` pass.
+- runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
+- Refreshed strict inventory after `28fad690`: `self.write(...)` in `crates/sifr_codegen/src` is now `354` (`stmt_support_emitter.rs` `149 -> 140`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
