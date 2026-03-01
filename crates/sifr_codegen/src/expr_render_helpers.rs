@@ -1669,17 +1669,40 @@ impl RustEmitter {
         &mut self,
         elements: &[HirExpr],
     ) -> Result<bool, crate::CodegenError> {
-        let mut rendered_elements = Vec::with_capacity(elements.len());
+        let mut lowered_elements = Vec::with_capacity(elements.len());
         for element in elements {
-            let saved_stats = self.lowering_stats;
-            let Some(rendered) = self.try_render_structured_expr(element)? else {
+            let Some(lowered) = self.lower_stmt_expr_for_ir(element)? else {
                 return Ok(false);
             };
-            self.lowering_stats = saved_stats;
-            rendered_elements.push(rendered);
+            lowered_elements.push(lowered);
         }
 
-        self.write(&format!("HashSet::from([{}])", rendered_elements.join(", ")));
+        let set_ident = "__sifr_set_lit".to_string();
+        let mut stmts = vec![crate::RustStmt::Let {
+            mutable: true,
+            name: set_ident.clone(),
+            ty: None,
+            value: crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "std".to_string(),
+                    "collections".to_string(),
+                    "HashSet".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            },
+        }];
+        for lowered in lowered_elements {
+            stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Ident(set_ident.clone())),
+                method: "insert".to_string(),
+                args: vec![lowered],
+            }));
+        }
+        self.emit_rust_expr(&crate::RustExpr::Block {
+            stmts,
+            expr: Some(Box::new(crate::RustExpr::Ident(set_ident))),
+        });
         Ok(true)
     }
 
