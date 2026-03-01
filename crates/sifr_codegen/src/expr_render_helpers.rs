@@ -738,13 +738,25 @@ impl RustEmitter {
             } else {
                 "format!(\"{}\", __v)"
             };
-            self.write(&format!(
-                "println!(\"{{}}\", ({arg_rendered}).map_or(\"None\".to_string(), |__v| {formatter}))"
-            ));
+            self.emit_rust_expr(&crate::RustExpr::FormatMacro {
+                name: "println".to_string(),
+                format_str: "{}".to_string(),
+                args: vec![crate::RustExpr::RawCode(format!(
+                    "({arg_rendered}).map_or(\"None\".to_string(), |__v| {formatter})"
+                ))],
+            });
         } else if uses_debug_display_format(arg.ty()) {
-            self.write(&format!("println!(\"{{:?}}\", {arg_rendered})"));
+            self.emit_rust_expr(&crate::RustExpr::FormatMacro {
+                name: "println".to_string(),
+                format_str: "{:?}".to_string(),
+                args: vec![crate::RustExpr::RawCode(arg_rendered)],
+            });
         } else {
-            self.write(&format!("println!(\"{{}}\", {arg_rendered})"));
+            self.emit_rust_expr(&crate::RustExpr::FormatMacro {
+                name: "println".to_string(),
+                format_str: "{}".to_string(),
+                args: vec![crate::RustExpr::RawCode(arg_rendered)],
+            });
         }
         Ok(true)
     }
