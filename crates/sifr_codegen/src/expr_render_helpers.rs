@@ -2612,9 +2612,9 @@ impl RustEmitter {
                 }
                 _ => return Ok(false),
             };
-            self.write(&format!(
+            self.emit_rust_expr(&crate::RustExpr::RawCode(format!(
                 "({object_rendered}).as_ref().and_then(|__v| {option_index_expr})"
-            ));
+            )));
             return Ok(true);
         }
 
@@ -2655,7 +2655,7 @@ impl RustEmitter {
             }
             _ => return Ok(false),
         };
-        self.write(&rendered_index_expr);
+        self.emit_rust_expr(&crate::RustExpr::RawCode(rendered_index_expr));
         Ok(true)
     }
 
@@ -2712,108 +2712,128 @@ impl RustEmitter {
 
         match object_ty {
             Type::Str => {
-                self.write("{ let _s = &(");
-                self.write(&object_rendered);
-                self.write("); let _len = _s.chars().count() as i64; ");
+                let mut rendered = String::new();
+                rendered.push_str("{ let _s = &(");
+                rendered.push_str(&object_rendered);
+                rendered.push_str("); let _len = _s.chars().count() as i64; ");
                 if let Some(step_rendered) = &step_rendered {
-                    self.write("let _step = ");
-                    self.write(step_rendered);
-                    self.write("; ");
+                    rendered.push_str("let _step = ");
+                    rendered.push_str(step_rendered);
+                    rendered.push_str("; ");
                 }
 
-                self.write("let _start = ");
+                rendered.push_str("let _start = ");
                 if let Some(start_rendered) = &start_rendered {
-                    self.write("{ let _sv = ");
-                    self.write(start_rendered);
-                    self.write("; if _sv < 0 { ((_len + _sv).max(0)) as usize } else { (_sv.min(_len)) as usize } }");
+                    rendered.push_str("{ let _sv = ");
+                    rendered.push_str(start_rendered);
+                    rendered.push_str(
+                        "; if _sv < 0 { ((_len + _sv).max(0)) as usize } else { (_sv.min(_len)) as usize } }",
+                    );
                 } else if step_rendered.is_some() {
-                    self.write("if _step > 0 { 0 } else { (_len - 1) as usize }");
+                    rendered.push_str("if _step > 0 { 0 } else { (_len - 1) as usize }");
                 } else {
-                    self.write("0_usize");
+                    rendered.push_str("0_usize");
                 }
-                self.write("; ");
+                rendered.push_str("; ");
 
-                self.write("let _stop = ");
+                rendered.push_str("let _stop = ");
                 if let Some(stop_rendered) = &stop_rendered {
-                    self.write("{ let _ev = ");
-                    self.write(stop_rendered);
-                    self.write("; if _ev < 0 { ((_len + _ev).max(0)) as usize } else { (_ev.min(_len)) as usize } }");
+                    rendered.push_str("{ let _ev = ");
+                    rendered.push_str(stop_rendered);
+                    rendered.push_str(
+                        "; if _ev < 0 { ((_len + _ev).max(0)) as usize } else { (_ev.min(_len)) as usize } }",
+                    );
                 } else if step_rendered.is_some() {
-                    self.write("if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }");
+                    rendered.push_str(
+                        "if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }",
+                    );
                 } else {
-                    self.write("_len as usize");
+                    rendered.push_str("_len as usize");
                 }
-                self.write("; ");
+                rendered.push_str("; ");
 
                 if step_rendered.is_some() {
-                    self.write("let mut _chars: Vec<char> = _s.chars().collect(); ");
-                    self.write("let mut _result = String::new(); ");
-                    self.write("if _step > 0 { let mut _i = _start; ");
-                    self.write("while _i < _stop { ");
-                    self.write("if let Some(&_ch) = _chars.get(_i) { _result.push(_ch); } ");
-                    self.write("_i += _step as usize; } }");
-                    self.write(" else { let mut _i = _start as i64; ");
-                    self.write("let _stop_i = _stop as i64; while _i > _stop_i { ");
-                    self.write("if _i >= 0 { ");
-                    self.write("if let Some(&_ch) = _chars.get(_i as usize) { _result.push(_ch); } ");
-                    self.write("} _i += _step; } }");
-                    self.write("; _result }");
-                } else {
-                    self.write(
-                        "_s.chars().skip(_start).take(_stop - _start).collect::<String>() }",
+                    rendered.push_str("let mut _chars: Vec<char> = _s.chars().collect(); ");
+                    rendered.push_str("let mut _result = String::new(); ");
+                    rendered.push_str("if _step > 0 { let mut _i = _start; ");
+                    rendered.push_str("while _i < _stop { ");
+                    rendered.push_str("if let Some(&_ch) = _chars.get(_i) { _result.push(_ch); } ");
+                    rendered.push_str("_i += _step as usize; } }");
+                    rendered.push_str(" else { let mut _i = _start as i64; ");
+                    rendered.push_str("let _stop_i = _stop as i64; while _i > _stop_i { ");
+                    rendered.push_str("if _i >= 0 { ");
+                    rendered.push_str(
+                        "if let Some(&_ch) = _chars.get(_i as usize) { _result.push(_ch); } ",
                     );
+                    rendered.push_str("} _i += _step; } }");
+                    rendered.push_str("; _result }");
+                } else {
+                    rendered.push_str("_s.chars().skip(_start).take(_stop - _start).collect::<String>() }");
                 }
+                self.emit_rust_expr(&crate::RustExpr::RawCode(rendered));
                 Ok(true)
             }
             Type::List(_) => {
-                self.write("{ let _v = &(");
-                self.write(&object_rendered);
-                self.write("); let _len = _v.len() as i64; ");
+                let mut rendered = String::new();
+                rendered.push_str("{ let _v = &(");
+                rendered.push_str(&object_rendered);
+                rendered.push_str("); let _len = _v.len() as i64; ");
                 if let Some(step_rendered) = &step_rendered {
-                    self.write("let _step = ");
-                    self.write(step_rendered);
-                    self.write("; ");
+                    rendered.push_str("let _step = ");
+                    rendered.push_str(step_rendered);
+                    rendered.push_str("; ");
                 }
 
-                self.write("let _start = ");
+                rendered.push_str("let _start = ");
                 if let Some(start_rendered) = &start_rendered {
-                    self.write("{ let _s = ");
-                    self.write(start_rendered);
-                    self.write("; if _s < 0 { ((_len + _s).max(0)) as usize } else { (_s.min(_len)) as usize } }");
+                    rendered.push_str("{ let _s = ");
+                    rendered.push_str(start_rendered);
+                    rendered.push_str(
+                        "; if _s < 0 { ((_len + _s).max(0)) as usize } else { (_s.min(_len)) as usize } }",
+                    );
                 } else if step_rendered.is_some() {
-                    self.write("if _step > 0 { 0 } else { (_len - 1) as usize }");
+                    rendered.push_str("if _step > 0 { 0 } else { (_len - 1) as usize }");
                 } else {
-                    self.write("0_usize");
+                    rendered.push_str("0_usize");
                 }
-                self.write("; ");
+                rendered.push_str("; ");
 
-                self.write("let _stop = ");
+                rendered.push_str("let _stop = ");
                 if let Some(stop_rendered) = &stop_rendered {
-                    self.write("{ let _e = ");
-                    self.write(stop_rendered);
-                    self.write("; if _e < 0 { ((_len + _e).max(0)) as usize } else { (_e.min(_len)) as usize } }");
+                    rendered.push_str("{ let _e = ");
+                    rendered.push_str(stop_rendered);
+                    rendered.push_str(
+                        "; if _e < 0 { ((_len + _e).max(0)) as usize } else { (_e.min(_len)) as usize } }",
+                    );
                 } else if step_rendered.is_some() {
-                    self.write("if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }");
+                    rendered.push_str(
+                        "if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }",
+                    );
                 } else {
-                    self.write("_len as usize");
+                    rendered.push_str("_len as usize");
                 }
-                self.write("; ");
+                rendered.push_str("; ");
 
                 if step_rendered.is_some() {
-                    self.write("let mut _result = Vec::new(); ");
-                    self.write("if _step > 0 { let mut _i = _start; ");
-                    self.write("while _i < _stop { ");
-                    self.write("if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } ");
-                    self.write("_i += _step as usize; } }");
-                    self.write(" else { let mut _i = _start as i64; ");
-                    self.write("let _stop_i = _stop as i64; while _i > _stop_i { ");
-                    self.write("if _i >= 0 { ");
-                    self.write("if let Some(_el) = _v.get(_i as usize) { _result.push(_el.clone()); } ");
-                    self.write("} _i += _step; } }");
-                    self.write("; _result }");
+                    rendered.push_str("let mut _result = Vec::new(); ");
+                    rendered.push_str("if _step > 0 { let mut _i = _start; ");
+                    rendered.push_str("while _i < _stop { ");
+                    rendered.push_str(
+                        "if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } ",
+                    );
+                    rendered.push_str("_i += _step as usize; } }");
+                    rendered.push_str(" else { let mut _i = _start as i64; ");
+                    rendered.push_str("let _stop_i = _stop as i64; while _i > _stop_i { ");
+                    rendered.push_str("if _i >= 0 { ");
+                    rendered.push_str(
+                        "if let Some(_el) = _v.get(_i as usize) { _result.push(_el.clone()); } ",
+                    );
+                    rendered.push_str("} _i += _step; } }");
+                    rendered.push_str("; _result }");
                 } else {
-                    self.write("_v[_start.._stop].to_vec() }");
+                    rendered.push_str("_v[_start.._stop].to_vec() }");
                 }
+                self.emit_rust_expr(&crate::RustExpr::RawCode(rendered));
                 Ok(true)
             }
             _ => Ok(false),
