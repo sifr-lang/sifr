@@ -1045,46 +1045,62 @@ impl RustEmitter {
             name, ty, value, ..
         } = stmt
         {
-            let output_len = self.output.len();
-            self.write("let ");
-            if self.mutated_vars.contains(name) {
-                self.write("mut ");
-            }
-            self.write(name);
             let is_generic_class = matches!(ty, Type::Class { name: class_name, .. } if self.generic_classes.contains(class_name));
-            if !is_generic_class {
-                self.write(": ");
-                self.write(&crate::render_type(&sifr_type_to_rust_type(ty)));
-            }
-            self.write(" = ");
-            if ty.ownership() == sifr_type_system::OwnershipKind::Move
-                && self.emit_borrowed_return_name_clone_expr(value)
-            {
-                self.lowering_stats.stmt_structured += 1;
-                self.lowering_stats.stmt_candidate_structured += 1;
-                self.write_stmt_terminator();
-                return Ok(true);
-            }
-            if self.try_emit_structured_expr(value)? {
-                self.lowering_stats.stmt_structured += 1;
-                self.lowering_stats.stmt_candidate_structured += 1;
-                self.write_stmt_terminator();
-                return Ok(true);
-            }
-            self.output.truncate(output_len);
+            let lowered_value = if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+                if let HirExpr::Name {
+                    name: value_name, ..
+                } = value
+                {
+                    if self.borrowed_params.contains(value_name)
+                        || self.mut_borrowed_params.contains(value_name)
+                    {
+                        Some(crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
+                            value_name.clone(),
+                        ))))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            let lowered_value = if let Some(clone_expr) = lowered_value {
+                clone_expr
+            } else {
+                let Some(lowered) = self.lower_rendered_expr_for_ir(value)? else {
+                    return Ok(false);
+                };
+                lowered
+            };
+
+            self.emit_rust_stmt_with_current_indent(&RustStmt::Let {
+                mutable: self.mutated_vars.contains(name),
+                name: name.clone(),
+                ty: if is_generic_class {
+                    None
+                } else {
+                    Some(sifr_type_to_rust_type(ty))
+                },
+                value: lowered_value,
+            });
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
         }
 
         if let HirStmt::Assign { name, value } = stmt {
-            let output_len = self.output.len();
-            self.write(name);
-            self.write(" = ");
-            if self.try_emit_structured_expr(value)? {
-                self.lowering_stats.stmt_structured += 1;
-                self.lowering_stats.stmt_candidate_structured += 1;
-                self.write_stmt_terminator();
-                return Ok(true);
-            }
-            self.output.truncate(output_len);
+            let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
+                return Ok(false);
+            };
+            self.emit_rust_stmt_with_current_indent(&RustStmt::Assign {
+                target: RustExpr::Ident(name.clone()),
+                value: lowered_value,
+            });
+            self.lowering_stats.stmt_structured += 1;
+            self.lowering_stats.stmt_candidate_structured += 1;
+            return Ok(true);
         }
         if self.try_emit_structured_field_assign_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
@@ -1261,7 +1277,10 @@ impl RustEmitter {
                 return Ok(true);
             }
         }
-        if let HirExpr::Index { object, index, ty, .. } = expr {
+        if let HirExpr::Index {
+            object, index, ty, ..
+        } = expr
+        {
             if self.try_emit_structured_index_expr(object, index, ty)? {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;

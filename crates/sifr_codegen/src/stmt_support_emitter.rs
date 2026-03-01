@@ -980,7 +980,7 @@ impl RustEmitter {
         Ok(Some(crate::RustExpr::RawCode(rendered_value)))
     }
 
-    fn lower_rendered_expr_for_ir(
+    pub(super) fn lower_rendered_expr_for_ir(
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
