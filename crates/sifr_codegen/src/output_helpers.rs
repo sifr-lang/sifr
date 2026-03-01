@@ -10,6 +10,10 @@ impl RustEmitter {
     }
 
     pub(super) fn emit_rust_stmt_with_current_indent(&mut self, stmt: &crate::RustStmt) {
+        if let Some(captured) = self.stmt_capture_stack.last_mut() {
+            captured.push(stmt.clone());
+            return;
+        }
         let rendered = crate::render_stmts(std::slice::from_ref(stmt));
         if self.indent == 0 {
             self.output.push_str(&rendered);

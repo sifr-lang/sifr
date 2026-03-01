@@ -1778,6 +1778,30 @@ fn test_production_lowering_contract_uses_result_helpers_only() {
 }
 
 #[test]
+fn test_capture_structured_stmts_collects_ir_without_output_writes() {
+    let mut emitter = RustEmitter::new();
+    let stmt = HirStmt::Let {
+        name: "x".to_string(),
+        ty: Type::Int,
+        value: HirExpr::IntLiteral(1),
+        is_mutable: false,
+    };
+
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+
+    assert_eq!(captured.len(), 1);
+    assert!(matches!(
+        captured.first(),
+        Some(RustStmt::Let {
+            name,
+            mutable: false,
+            ..
+        }) if name == "x"
+    ));
+    assert!(emitter.output.is_empty());
+}
+
+#[test]
 fn test_union_display_impl_uses_structured_ir() {
     let union_src = include_str!("union_type_helpers.rs");
     assert!(!union_src.contains("RustType::RawCode(\"&mut std::fmt::Formatter<'_>\""));

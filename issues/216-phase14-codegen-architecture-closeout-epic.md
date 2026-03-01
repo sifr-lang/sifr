@@ -565,3 +565,16 @@ Latest validation loop (2026-03-01, Pass AC):
 - `./scripts/run_all_tests.sh` -> pass (including e2e pass suite `394/394`).
 - Re-audit evidence after this loop: direct `self.write(...) = 214` in `crates/sifr_codegen/src` (unchanged), remaining files:
 - `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).
+
+Latest validation loop (2026-03-01, Pass AD):
+- Added structured statement-capture infrastructure in `RustEmitter`:
+- new `capture_structured_stmts(...)` helper + `stmt_capture_stack` state.
+- `emit_rust_stmt_with_current_indent` now supports IR-capture mode (collect `RustStmt` nodes without writing text output).
+- Added regression coverage to ensure capture returns IR statements and does not write to `emitter.output`.
+- This is the next prerequisite for migrating `function_emitter.rs`/`class_method_emitter.rs` off `self.write(...)` while preserving current structured stmt semantics.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass (including e2e pass suite `394/394`).
+- Re-audit evidence after this loop: direct `self.write(...) = 214` in `crates/sifr_codegen/src` (unchanged), remaining files:
+- `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).

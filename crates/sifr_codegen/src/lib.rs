@@ -902,6 +902,8 @@ struct RustEmitter {
     /// Populated per-function from params and locals with Callable types.
     /// Used to emit correct &arg/&mut arg/arg for Callable-typed variable calls.
     callable_var_conventions: HashMap<String, Vec<(Type, ParamConvention)>>,
+    /// Stack used to capture structured statement emission as IR nodes.
+    stmt_capture_stack: Vec<Vec<RustStmt>>,
     /// Recursion guard for non-structured emitter paths.
     lowering_stats: LoweringStats,
 }
@@ -965,8 +967,18 @@ impl RustEmitter {
             try_closure_option_wrap: Vec::new(),
             try_closure_error_type: Vec::new(),
             callable_var_conventions: HashMap::new(),
+            stmt_capture_stack: Vec::new(),
             lowering_stats: LoweringStats::default(),
         }
+    }
+
+    pub(crate) fn capture_structured_stmts<F>(&mut self, emit: F) -> Vec<RustStmt>
+    where
+        F: FnOnce(&mut Self),
+    {
+        self.stmt_capture_stack.push(Vec::new());
+        emit(self);
+        self.stmt_capture_stack.pop().unwrap_or_default()
     }
 
     fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
