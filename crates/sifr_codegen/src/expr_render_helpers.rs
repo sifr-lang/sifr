@@ -1813,27 +1813,32 @@ impl RustEmitter {
         element: &HirExpr,
         collection: &HirExpr,
     ) -> Result<bool, crate::CodegenError> {
-        let saved_stats = self.lowering_stats;
-        let Some(element_rendered) = self.try_render_structured_expr(element)? else {
+        let Some(element_expr) = self.try_lower_expr_for_structured_emit(element)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
-
-        let Some(collection_rendered) = self.try_render_structured_expr(collection)? else {
+        let Some(collection_expr) = self.try_lower_expr_for_structured_emit(collection)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
 
         match crate::resolve_alias_type_for_plain_call(collection.ty()) {
             Type::Dict(_, _) => {
-                let key_arg = self.render_dict_key_lookup_arg(element, &element_rendered);
-                self.write(&format!("({collection_rendered}).contains_key({key_arg})"));
+                let key_arg = self.lower_dict_key_lookup_arg_expr(element, &element_expr);
+                self.emit_rust_expr(&crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(collection_expr))),
+                    method: "contains_key".to_string(),
+                    args: vec![key_arg],
+                });
                 Ok(true)
             }
             Type::List(_) | Type::Set(_) | Type::Str => {
-                self.write(&format!(
-                    "({collection_rendered}).contains(&({element_rendered}))"
-                ));
+                self.emit_rust_expr(&crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(collection_expr))),
+                    method: "contains".to_string(),
+                    args: vec![crate::RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(crate::RustExpr::Paren(Box::new(element_expr))),
+                    }],
+                });
                 Ok(true)
             }
             _ => Ok(false),
@@ -1856,32 +1861,82 @@ impl RustEmitter {
         format!("&({key_rendered})")
     }
 
+    fn lower_dict_key_lookup_arg_expr(
+        &self,
+        key_expr: &HirExpr,
+        key_lowered: &crate::RustExpr,
+    ) -> crate::RustExpr {
+        if let HirExpr::StringLiteral(value) = key_expr {
+            return crate::RustExpr::Literal(crate::RustLiteral::Str(value.clone()));
+        }
+        if let HirExpr::Name { name, ty } = key_expr {
+            if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name) {
+                if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Str) {
+                    return crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(key_lowered.clone()))),
+                        method: "as_str".to_string(),
+                        args: vec![],
+                    };
+                }
+                return key_lowered.clone();
+            }
+        }
+        crate::RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(crate::RustExpr::Paren(Box::new(key_lowered.clone()))),
+        }
+    }
+
+    fn try_lower_expr_for_structured_emit(
+        &mut self,
+        expr: &HirExpr,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let saved_stats = self.lowering_stats;
+        if let Some(lowered) = crate::try_lower_leaf_or_name_expr_result(expr)? {
+            self.lowering_stats = saved_stats;
+            return Ok(Some(self.rewrite_stdlib_constant_idents_in_expr(lowered)));
+        }
+        let Some(rendered) = self.try_render_structured_expr(expr)? else {
+            return Ok(None);
+        };
+        self.lowering_stats = saved_stats;
+        Ok(Some(crate::RustExpr::RawCode(rendered)))
+    }
+
     pub(crate) fn try_emit_structured_unary_expr(
         &mut self,
         op: &str,
         operand: &HirExpr,
     ) -> Result<bool, crate::CodegenError> {
-        let saved_stats = self.lowering_stats;
-        let Some(operand_rendered) = self.try_render_structured_expr(operand)? else {
+        let Some(operand_expr) = self.try_lower_expr_for_structured_emit(operand)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
 
         match op {
             "not" => {
                 match crate::resolve_alias_type_for_plain_call(operand.ty()) {
                     Type::Int | Type::LiteralInt(_) => {
-                        self.write(&operand_rendered);
-                        self.write(" == 0");
+                        self.emit_rust_expr(&crate::RustExpr::BinOp {
+                            left: Box::new(crate::RustExpr::Paren(Box::new(operand_expr))),
+                            op: "==".to_string(),
+                            right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                        });
                     }
                     Type::Float => {
-                        self.write(&operand_rendered);
-                        self.write(" == 0.0");
+                        self.emit_rust_expr(&crate::RustExpr::BinOp {
+                            left: Box::new(crate::RustExpr::Paren(Box::new(operand_expr))),
+                            op: "==".to_string(),
+                            right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Float(
+                                0.0,
+                            ))),
+                        });
                     }
                     Type::Str | Type::List(_) | Type::Dict(_, _) | Type::Set(_) => {
-                        self.write("(");
-                        self.write(&operand_rendered);
-                        self.write(").is_empty()");
+                        self.emit_rust_expr(&crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(operand_expr))),
+                            method: "is_empty".to_string(),
+                            args: vec![],
+                        });
                     }
                     Type::Tuple(elems) => {
                         self.emit_rust_expr(&crate::RustExpr::Literal(crate::RustLiteral::Bool(
@@ -1889,9 +1944,10 @@ impl RustEmitter {
                         )));
                     }
                     Type::Bool => {
-                        self.write("!(");
-                        self.write(&operand_rendered);
-                        self.write(")");
+                        self.emit_rust_expr(&crate::RustExpr::UnaryOp {
+                            op: "!".to_string(),
+                            operand: Box::new(crate::RustExpr::Paren(Box::new(operand_expr))),
+                        });
                     }
                     Type::None => {
                         self.emit_rust_expr(&crate::RustExpr::Literal(crate::RustLiteral::Bool(
@@ -1899,28 +1955,30 @@ impl RustEmitter {
                         )));
                     }
                     _ if option_inner_type(operand.ty()).is_some() => {
-                        self.write("(");
-                        self.write(&operand_rendered);
-                        self.write(").is_none()");
+                        self.emit_rust_expr(&crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(operand_expr))),
+                            method: "is_none".to_string(),
+                            args: vec![],
+                        });
                     }
                     _ => {
-                        self.write("!(");
-                        self.write(&operand_rendered);
-                        self.write(")");
+                        self.emit_rust_expr(&crate::RustExpr::UnaryOp {
+                            op: "!".to_string(),
+                            operand: Box::new(crate::RustExpr::Paren(Box::new(operand_expr))),
+                        });
                     }
                 }
                 Ok(true)
             }
             "-" => {
-                self.write("-(");
-                self.write(&operand_rendered);
-                self.write(")");
+                self.emit_rust_expr(&crate::RustExpr::UnaryOp {
+                    op: "-".to_string(),
+                    operand: Box::new(crate::RustExpr::Paren(Box::new(operand_expr))),
+                });
                 Ok(true)
             }
             "+" => {
-                self.write("(");
-                self.write(&operand_rendered);
-                self.write(")");
+                self.emit_rust_expr(&crate::RustExpr::Paren(Box::new(operand_expr)));
                 Ok(true)
             }
             _ => Ok(false),
@@ -1943,24 +2001,26 @@ impl RustEmitter {
             return Ok(false);
         }
 
-        let left_saved_stats = self.lowering_stats;
-        let Some(left_rendered) = self.try_render_structured_expr(left)? else {
+        let Some(mut left_expr) = self.try_lower_expr_for_structured_emit(left)? else {
             return Ok(false);
         };
-        self.lowering_stats = left_saved_stats;
-        let right_saved_stats = self.lowering_stats;
-        let Some(right_rendered) = self.try_render_structured_expr(right)? else {
+        let Some(mut right_expr) = self.try_lower_expr_for_structured_emit(right)? else {
             return Ok(false);
         };
-        self.lowering_stats = right_saved_stats;
-        let mut left_rendered = left_rendered;
-        let mut right_rendered = right_rendered;
         if option_inner_type(ty).is_none() {
             if option_inner_type(left.ty()).is_some() {
-                left_rendered = format!("({left_rendered}).unwrap()");
+                left_expr = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(left_expr))),
+                    method: "unwrap".to_string(),
+                    args: vec![],
+                };
             }
             if option_inner_type(right.ty()).is_some() {
-                right_rendered = format!("({right_rendered}).unwrap()");
+                right_expr = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(right_expr))),
+                    method: "unwrap".to_string(),
+                    args: vec![],
+                };
             }
         }
 
@@ -1969,54 +2029,100 @@ impl RustEmitter {
                 crate::resolve_alias_type_for_plain_call(left.ty()),
                 Type::Int | Type::LiteralInt(_)
             ) {
-                left_rendered = format!("({left_rendered}) as f64");
+                left_expr = crate::RustExpr::Cast {
+                    expr: Box::new(crate::RustExpr::Paren(Box::new(left_expr))),
+                    ty: crate::RustType::F64,
+                };
             }
             if matches!(
                 crate::resolve_alias_type_for_plain_call(right.ty()),
                 Type::Int | Type::LiteralInt(_)
             ) {
-                right_rendered = format!("({right_rendered}) as f64");
+                right_expr = crate::RustExpr::Cast {
+                    expr: Box::new(crate::RustExpr::Paren(Box::new(right_expr))),
+                    ty: crate::RustType::F64,
+                };
             }
         }
 
         if op == "**" {
-            let rendered_pow = match (
+            let pow_expr = match (
                 crate::resolve_alias_type_for_plain_call(left.ty()),
                 crate::resolve_alias_type_for_plain_call(right.ty()),
             ) {
-                (Type::BigInt, _) => {
-                    format!("({left_rendered}).pow(u32::try_from({right_rendered}).unwrap_or(0))")
-                }
+                (Type::BigInt, _) => crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(left_expr))),
+                    method: "pow".to_string(),
+                    args: vec![crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "u32".to_string(),
+                                "try_from".to_string(),
+                            ])),
+                            args: vec![right_expr],
+                        }),
+                        method: "unwrap_or".to_string(),
+                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
+                    }],
+                },
                 (Type::Int | Type::LiteralInt(_), Type::Int | Type::LiteralInt(_)) => {
-                    format!("({left_rendered}).pow(({right_rendered}) as u32)")
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(left_expr))),
+                        method: "pow".to_string(),
+                        args: vec![crate::RustExpr::Cast {
+                            expr: Box::new(crate::RustExpr::Paren(Box::new(right_expr))),
+                            ty: crate::RustType::Named("u32".to_string()),
+                        }],
+                    }
                 }
-                (Type::Float, Type::Int | Type::LiteralInt(_)) => {
-                    format!("({left_rendered}).powi(({right_rendered}) as i32)")
-                }
-                _ => format!("(({left_rendered}) as f64).powf(({right_rendered}) as f64)"),
+                (Type::Float, Type::Int | Type::LiteralInt(_)) => crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(left_expr))),
+                    method: "powi".to_string(),
+                    args: vec![crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Paren(Box::new(right_expr))),
+                        ty: crate::RustType::Named("i32".to_string()),
+                    }],
+                },
+                _ => crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Paren(Box::new(left_expr))),
+                        ty: crate::RustType::F64,
+                    }),
+                    method: "powf".to_string(),
+                    args: vec![crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Paren(Box::new(right_expr))),
+                        ty: crate::RustType::F64,
+                    }],
+                },
             };
-            self.write(&rendered_pow);
+            self.emit_rust_expr(&pow_expr);
             return Ok(true);
         }
 
         let rendered_op = if op == "//" { "/" } else { op };
         if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::BigInt) {
-            let left_rendered =
-                if matches!(left, HirExpr::Name { .. } | HirExpr::FieldAccess { .. }) {
-                    format!("({left_rendered}).clone()")
-                } else {
-                    left_rendered
-                };
-            let right_rendered =
-                if matches!(right, HirExpr::Name { .. } | HirExpr::FieldAccess { .. }) {
-                    format!("({right_rendered}).clone()")
-                } else {
-                    right_rendered
-                };
-            self.write(&format!("({left_rendered} {rendered_op} {right_rendered})"));
+            if matches!(left, HirExpr::Name { .. } | HirExpr::FieldAccess { .. }) {
+                left_expr = crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
+                    left_expr,
+                ))));
+            }
+            if matches!(right, HirExpr::Name { .. } | HirExpr::FieldAccess { .. }) {
+                right_expr = crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
+                    right_expr,
+                ))));
+            }
+            self.emit_rust_expr(&crate::RustExpr::Paren(Box::new(crate::RustExpr::BinOp {
+                left: Box::new(left_expr),
+                op: rendered_op.to_string(),
+                right: Box::new(right_expr),
+            })));
             return Ok(true);
         }
-        self.write(&format!("({left_rendered} {rendered_op} {right_rendered})"));
+        self.emit_rust_expr(&crate::RustExpr::Paren(Box::new(crate::RustExpr::BinOp {
+            left: Box::new(left_expr),
+            op: rendered_op.to_string(),
+            right: Box::new(right_expr),
+        })));
         Ok(true)
     }
 
@@ -2026,23 +2132,20 @@ impl RustEmitter {
         then_expr: &HirExpr,
         else_expr: &HirExpr,
     ) -> Result<bool, crate::CodegenError> {
-        let saved_stats = self.lowering_stats;
-        let Some(rendered_condition) = self.try_render_structured_expr(condition)? else {
+        let Some(condition_expr) = self.try_lower_expr_for_structured_emit(condition)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
-        let Some(rendered_then) = self.try_render_structured_expr(then_expr)? else {
+        let Some(then_expr) = self.try_lower_expr_for_structured_emit(then_expr)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
-        let Some(rendered_else) = self.try_render_structured_expr(else_expr)? else {
+        let Some(else_expr) = self.try_lower_expr_for_structured_emit(else_expr)? else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
-
-        self.write(&format!(
-            "if {rendered_condition} {{ {rendered_then} }} else {{ {rendered_else} }}"
-        ));
+        self.emit_rust_expr(&crate::RustExpr::If {
+            cond: Box::new(condition_expr),
+            then_expr: Box::new(then_expr),
+            else_expr: Some(Box::new(else_expr)),
+        });
         Ok(true)
     }
 
