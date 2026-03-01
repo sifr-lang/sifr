@@ -255,3 +255,12 @@ Latest validation loop (2026-02-28, Pass O):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - `./scripts/run_all_tests.sh` -> pass.
 - Strict re-audit evidence: `match_emitter.rs` now has `0` direct `self.write(...)`; total `self.write(...)` is now `867` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-02-28, Pass P):
+- Continued `expr_render_helpers.rs` IR-first cleanup for high-traffic expression assembly paths:
+- method-call callsite string assembly was consolidated,
+- bool-op/result-wrap/constructor/list/dict/set literal emitters moved to composed rendered expressions,
+- walrus/contains and dictionary key lookup assembly were simplified with shared rendered-arg helper return values.
+- Full demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Strict re-audit evidence: `expr_render_helpers.rs` reduced `self.write(...)` from `305` to `249`; total `self.write(...)` is now `811` in `crates/sifr_codegen/src`.

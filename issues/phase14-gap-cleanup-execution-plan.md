@@ -175,6 +175,12 @@ Loop progress log:
 115. Validation: `./scripts/run_all_tests.sh` -> pass.
 116. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 117. Strict implementation re-audit refresh: `match_emitter.rs` direct `self.write(...)` -> `0`; total `self.write(...)` in `crates/sifr_codegen/src` -> `867`.
+118. 2026-02-28 Pass P updates:
+119. Migrated another `expr_render_helpers.rs` hot-path slice away from fragment-by-fragment writes:
+120. method-call assembly, result-wrap/bool-op/constructor/list/dict/set literal assembly, walrus/contains assembly, and dict-key lookup helper now use composed rendered expressions.
+121. Validation: `./scripts/run_all_tests.sh` -> pass.
+122. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
+123. Strict implementation re-audit refresh: `expr_render_helpers.rs` direct `self.write(...)` -> `249` (`305 -> 249` in this pass); total `self.write(...)` in `crates/sifr_codegen/src` -> `811`.
 
 ### Next Loop To-do (Evidence-Based)
 
@@ -190,7 +196,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 2. [x] `render.rs` (completed in Pass M; now `0` direct `self.write(...)`)
 3. [x] `slice_emitter.rs` (completed in Pass N; dead module removed)
 4. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
-5. [ ] `expr_render_helpers.rs` (`305` writes; core expression lowering hot path)
+5. [ ] `expr_render_helpers.rs` (`249` writes; core expression lowering hot path)
 6. [ ] `stmt_support_emitter.rs` (`218` writes; core statement lowering hot path)
 7. [ ] `function_emitter.rs` (`50` writes; item-level wrapper over stmt/expr lowering)
 8. [ ] `type_emitters.rs` (`61` writes; item/type wrappers over lowered expression bodies)

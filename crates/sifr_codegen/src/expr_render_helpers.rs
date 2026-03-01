@@ -649,25 +649,12 @@ impl RustEmitter {
         } else {
             false
         };
-        if is_callable_field {
-            self.write("(");
-            self.write(&lowered_object);
-            self.write(".");
-            self.write(method);
-            self.write(")(");
+        let rendered_call = if is_callable_field {
+            format!("({lowered_object}.{method})({})", rendered_args.join(", "))
         } else {
-            self.write(&lowered_object);
-            self.write(".");
-            self.write(method);
-            self.write("(");
-        }
-        for (idx, arg) in rendered_args.iter().enumerate() {
-            if idx > 0 {
-                self.write(", ");
-            }
-            self.write(arg);
-        }
-        self.write(")");
+            format!("{lowered_object}.{method}({})", rendered_args.join(", "))
+        };
+        self.write(&rendered_call);
         if suppress_self_field_clone
             && self.pending_self_field_clone_suppression > suppression_prev
         {
@@ -1499,10 +1486,7 @@ impl RustEmitter {
             return Ok(false);
         };
         self.lowering_stats = saved_stats;
-        self.write(wrapper);
-        self.write("(");
-        self.write(&value_rendered);
-        self.write(")");
+        self.write(&format!("{wrapper}({value_rendered})"));
         Ok(true)
     }
 
@@ -1530,18 +1514,12 @@ impl RustEmitter {
             rendered_values.push(rendered);
         }
 
-        self.write("(");
-        for (idx, rendered) in rendered_values.iter().enumerate() {
-            if idx > 0 {
-                self.write(" ");
-                self.write(lowered_op);
-                self.write(" ");
-            }
-            self.write("(");
-            self.write(rendered);
-            self.write(")");
-        }
-        self.write(")");
+        let joined = rendered_values
+            .iter()
+            .map(|rendered| format!("({rendered})"))
+            .collect::<Vec<_>>()
+            .join(&format!(" {lowered_op} "));
+        self.write(&format!("({joined})"));
         Ok(true)
     }
 
@@ -1623,15 +1601,7 @@ impl RustEmitter {
             rendered_args.push(rendered_arg);
         }
 
-        self.write(class_name);
-        self.write("::new(");
-        for (idx, rendered_arg) in rendered_args.iter().enumerate() {
-            if idx > 0 {
-                self.write(", ");
-            }
-            self.write(rendered_arg);
-        }
-        self.write(")");
+        self.write(&format!("{class_name}::new({})", rendered_args.join(", ")));
         Ok(true)
     }
 
@@ -1649,14 +1619,7 @@ impl RustEmitter {
             rendered_elements.push(rendered);
         }
 
-        self.write("vec![");
-        for (idx, rendered_element) in rendered_elements.iter().enumerate() {
-            if idx > 0 {
-                self.write(", ");
-            }
-            self.write(rendered_element);
-        }
-        self.write("]");
+        self.write(&format!("vec![{}]", rendered_elements.join(", ")));
         Ok(true)
     }
 
@@ -1681,18 +1644,12 @@ impl RustEmitter {
             self.lowering_stats = saved_stats;
             entries.push((key_rendered, value_rendered));
         }
-        self.write("HashMap::from([");
-        for (idx, (key_rendered, value_rendered)) in entries.iter().enumerate() {
-            if idx > 0 {
-                self.write(", ");
-            }
-            self.write("(");
-            self.write(key_rendered);
-            self.write(", ");
-            self.write(value_rendered);
-            self.write(")");
-        }
-        self.write("])");
+        let rendered_entries = entries
+            .iter()
+            .map(|(key_rendered, value_rendered)| format!("({key_rendered}, {value_rendered})"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        self.write(&format!("HashMap::from([{rendered_entries}])"));
         Ok(true)
     }
 
@@ -1710,14 +1667,7 @@ impl RustEmitter {
             rendered_elements.push(rendered);
         }
 
-        self.write("HashSet::from([");
-        for (idx, rendered_element) in rendered_elements.iter().enumerate() {
-            if idx > 0 {
-                self.write(", ");
-            }
-            self.write(rendered_element);
-        }
-        self.write("])");
+        self.write(&format!("HashSet::from([{}])", rendered_elements.join(", ")));
         Ok(true)
     }
 
@@ -1774,13 +1724,7 @@ impl RustEmitter {
             return Ok(false);
         };
         self.lowering_stats = saved_stats;
-        self.write("{ let ");
-        self.write(name);
-        self.write(" = ");
-        self.write(&rendered_value);
-        self.write("; ");
-        self.write(name);
-        self.write(" }");
+        self.write(&format!("{{ let {name} = {rendered_value}; {name} }}"));
         Ok(true)
     }
 
@@ -1802,45 +1746,34 @@ impl RustEmitter {
 
         match crate::resolve_alias_type_for_plain_call(collection.ty()) {
             Type::Dict(_, _) => {
-                self.write("(");
-                self.write(&collection_rendered);
-                self.write(").contains_key(");
-                self.write_dict_key_lookup_arg(element, &element_rendered);
-                self.write(")");
+                let key_arg = self.render_dict_key_lookup_arg(element, &element_rendered);
+                self.write(&format!("({collection_rendered}).contains_key({key_arg})"));
                 Ok(true)
             }
             Type::List(_) | Type::Set(_) | Type::Str => {
-                self.write("(");
-                self.write(&collection_rendered);
-                self.write(").contains(&(");
-                self.write(&element_rendered);
-                self.write("))");
+                self.write(&format!(
+                    "({collection_rendered}).contains(&({element_rendered}))"
+                ));
                 Ok(true)
             }
             _ => Ok(false),
         }
     }
 
-    fn write_dict_key_lookup_arg(&mut self, key_expr: &HirExpr, key_rendered: &str) {
+    fn render_dict_key_lookup_arg(&mut self, key_expr: &HirExpr, key_rendered: &str) -> String {
         if let HirExpr::StringLiteral(value) = key_expr {
-            self.write(&format!("{value:?}"));
-            return;
+            return format!("{value:?}");
         }
         if let HirExpr::Name { name, ty } = key_expr {
             if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name) {
                 if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Str) {
-                    self.write("(");
-                    self.write(key_rendered);
-                    self.write(").as_str()");
+                    return format!("({key_rendered}).as_str()");
                 } else {
-                    self.write(key_rendered);
+                    return key_rendered.to_string();
                 }
-                return;
             }
         }
-        self.write("&(");
-        self.write(key_rendered);
-        self.write(")");
+        format!("&({key_rendered})")
     }
 
     pub(crate) fn try_emit_structured_unary_expr(
@@ -2406,7 +2339,8 @@ impl RustEmitter {
             match inner_ty {
                 Type::Dict(_, _) => {
                     self.write("__v.get(");
-                    self.write_dict_key_lookup_arg(index, &index_rendered);
+                    let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
+                    self.write(&key_lookup_arg);
                     self.write(").cloned()");
                 }
                 Type::List(_) => {
@@ -2445,11 +2379,13 @@ impl RustEmitter {
                 self.write(&object_rendered);
                 if result_is_option {
                     self.write(".get(");
-                    self.write_dict_key_lookup_arg(index, &index_rendered);
+                    let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
+                    self.write(&key_lookup_arg);
                     self.write(").cloned()");
                 } else {
                     self.write("[");
-                    self.write_dict_key_lookup_arg(index, &index_rendered);
+                    let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
+                    self.write(&key_lookup_arg);
                     self.write("].clone()");
                 }
             }
