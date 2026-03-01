@@ -416,6 +416,52 @@ impl RustEmitter {
                 args: lowered_args,
             }));
         }
+        if let HirExpr::QuestionMark { expr: inner, .. } = expr {
+            let Some(lowered_inner) = self.lower_stmt_expr_for_ir(inner)? else {
+                return Ok(None);
+            };
+            return Ok(Some(crate::RustExpr::Try(Box::new(lowered_inner))));
+        }
+        if let HirExpr::OkWrap { value, .. } = expr {
+            let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                return Ok(None);
+            };
+            return Ok(Some(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                args: vec![lowered_value],
+            }));
+        }
+        if let HirExpr::ErrWrap { value, .. } = expr {
+            let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                return Ok(None);
+            };
+            return Ok(Some(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
+                args: vec![lowered_value],
+            }));
+        }
+        if let HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } = expr
+        {
+            let Some(lowered_condition) = self.lower_stmt_expr_for_ir(condition)? else {
+                return Ok(None);
+            };
+            let Some(lowered_then) = self.lower_stmt_expr_for_ir(then_expr)? else {
+                return Ok(None);
+            };
+            let Some(lowered_else) = self.lower_stmt_expr_for_ir(else_expr)? else {
+                return Ok(None);
+            };
+            return Ok(Some(crate::RustExpr::If {
+                cond: Box::new(lowered_condition),
+                then_expr: Box::new(lowered_then),
+                else_expr: Some(Box::new(lowered_else)),
+            }));
+        }
         if let HirExpr::Index { object, index, .. } = expr {
             if let Some(lowered) = self.try_lower_structured_index_expr(object, index)? {
                 return Ok(Some(lowered));
@@ -585,6 +631,15 @@ impl RustEmitter {
                             }),
                             is_move: false,
                         }],
+                    }));
+                }
+                Type::Tuple(_) => {
+                    let HirExpr::IntLiteral(idx) = index.as_ref() else {
+                        return Ok(None);
+                    };
+                    return Ok(Some(crate::RustExpr::Field {
+                        expr: Box::new(lowered_object),
+                        field: idx.to_string(),
                     }));
                 }
                 _ => {}
