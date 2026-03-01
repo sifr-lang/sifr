@@ -1226,7 +1226,7 @@ impl RustEmitter {
             {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;
-                self.write(&crate::render_expr(&lowered_expr));
+                self.emit_rust_expr(&lowered_expr);
                 return Ok(true);
             }
         }
@@ -1270,7 +1270,7 @@ impl RustEmitter {
             if let Some(lowered_expr) = self.try_lower_structured_index_expr(object, index)? {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;
-                self.write(&crate::render_expr(&lowered_expr));
+                self.emit_rust_expr(&lowered_expr);
                 return Ok(true);
             }
         }
@@ -1305,7 +1305,7 @@ impl RustEmitter {
             {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;
-                self.write(&crate::render_expr(&lowered_expr));
+                self.emit_rust_expr(&lowered_expr);
                 return Ok(true);
             }
             if self.try_emit_structured_string_concat_expr(left, op, right, ty)? {
@@ -1333,7 +1333,7 @@ impl RustEmitter {
             let rewritten_expr = self.rewrite_stdlib_constant_idents_in_expr(lowered_expr);
             self.lowering_stats.expr_structured += 1;
             self.lowering_stats.expr_candidate_structured += 1;
-            self.write(&crate::render_expr(&rewritten_expr));
+            self.emit_rust_expr(&rewritten_expr);
             return Ok(true);
         }
 
