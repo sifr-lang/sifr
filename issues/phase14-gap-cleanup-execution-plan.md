@@ -863,3 +863,22 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 8. expanded recursive block IR lowering for nested `for` iter-shapes (`enumerate` and collection iteration normalization) to keep while bodies on structured IR
 9. Re-audit totals after this slice: direct `self.write(...) = 327` in `crates/sifr_codegen/src`
 10. File breakdown: `stmt_support_emitter.rs` `113`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
+
+### Validation rerun (2026-03-01, Pass Y)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+2. `SIFR_E2E_RUNNER_MODE=new cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `78.64s`)
+3. Full runnable demos sweep `demos/*.sifr` -> pass (`83/83`)
+4. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass
+5. IR-first cleanup this loop:
+6. migrated `try_emit_structured_for_stmt` from token writes to structured `RustStmt::For` emission with recursive lowered body/else block support
+7. fixed iterator root cause in for-lowering: iterator-like and generator iter expressions now remain iterator-shaped (no invalid extra `.iter().cloned()` wrapping)
+8. Re-audit totals after this slice: direct `self.write(...) = 308` in `crates/sifr_codegen/src`
+9. File breakdown: `stmt_support_emitter.rs` `94`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`
+
+### Next Loop Todo (Dependency-Ordered)
+
+1. `function_emitter.rs` (`51`) -> migrate function/generator body emission to IR statements/expressions.
+2. `class_method_emitter.rs` (`70`) -> migrate constructor/method assembly to IR using shared lowering helpers.
+3. `class_emitter.rs` (`93`) -> migrate class/type/display impl assembly to IR item trees.
+4. `stmt_support_emitter.rs` (`94`) -> finish remaining statement paths and remove final direct write sites.

@@ -504,3 +504,20 @@ Latest validation loop (2026-03-01, Pass X):
 - `./scripts/run_all_tests.sh` -> pass.
 - Re-audit evidence after this loop: direct `self.write(...) = 327` in `crates/sifr_codegen/src` with remaining files:
 - `stmt_support_emitter.rs` (`113`), `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).
+
+Latest validation loop (2026-03-01, Pass Y):
+- Migrated `try_emit_structured_for_stmt` to structured IR emission (`RustStmt::For`) with recursive lowered body/else block emission, removing direct for-loop token assembly.
+- Root-cause iterator fix in same slice: preserved generator/iterator pipelines in for-iter lowering so iterator-shaped expressions are not wrapped again with `.iter().cloned()`.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed, `0` failed).
+- `SIFR_E2E_RUNNER_MODE=new cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394/394`, `78.64s`).
+- Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Re-audit evidence after this loop: direct `self.write(...) = 308` in `crates/sifr_codegen/src` with remaining files:
+- `stmt_support_emitter.rs` (`94`), `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).
+
+Next loop todo (dependency-ordered):
+1. `function_emitter.rs` (`51`) IR migration.
+2. `class_method_emitter.rs` (`70`) IR migration.
+3. `class_emitter.rs` (`93`) IR migration.
+4. `stmt_support_emitter.rs` (`94`) final structured stmt cleanup.
