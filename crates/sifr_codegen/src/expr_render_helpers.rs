@@ -1690,7 +1690,7 @@ impl RustEmitter {
         match expr {
             HirExpr::Name { name, .. } => {
                 let rewritten = self.rewrite_special_ident(name.clone());
-                self.write(&crate::render_expr(&rewritten));
+                self.emit_rust_expr(&rewritten);
                 Ok(true)
             }
             HirExpr::UnaryOp { op, operand, .. } => {
