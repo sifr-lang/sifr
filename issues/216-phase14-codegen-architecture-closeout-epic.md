@@ -182,6 +182,11 @@ Latest loop update (2026-03-01):
 - `c045131c`: `lib.rs` structured expr paths now emit lowered IR expressions via `emit_rust_expr` instead of direct `render_expr` string writes.
 - Validation for `c045131c`: `cargo test -q -p sifr_codegen` pass, `./scripts/run_all_tests.sh` pass, demo smoke pass.
 - Refreshed strict inventory after `c045131c`: `self.write(...)` in `crates/sifr_codegen/src` is now `588` (`lib.rs` `16 -> 12`).
+- Additional loop slices:
+- `2608d998`: bool-op structured emission now lowers to IR binop tree via registry lowering (removed bool-op string assembly path).
+- `86e17211`: `lib.rs` statement terminators now route through shared stmt helper (`write_stmt_terminator`), removing direct terminator writes in lib stmt path.
+- Validation for both slices: `cargo test -q -p sifr_codegen` pass (`455`), `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`), and `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- Refreshed strict inventory after these slices: `self.write(...)` in `crates/sifr_codegen/src` is now `583` (`expr_render_helpers.rs` `176 -> 175`, `lib.rs` `12 -> 8`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).

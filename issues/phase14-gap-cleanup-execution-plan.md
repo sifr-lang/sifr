@@ -63,6 +63,19 @@ Completion evidence:
 28. Refreshed direct emission inventory after `c045131c`:
 29. `self.write(...)` total in `crates/sifr_codegen/src` -> `588`
 30. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `176`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `12`.
+31. `2608d998`: migrated structured bool-op emission to IR binop tree using registry lowering (removed direct bool-op string join/write path).
+32. Validation for `2608d998`:
+33. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+34. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+35. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+36. `86e17211`: routed `lib.rs` statement terminators through shared emitter helper (`write_stmt_terminator`) and removed direct `self.write(";\n")` callsites in lib stmt path.
+37. Validation for `86e17211`:
+38. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+39. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
+40. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+41. Refreshed direct emission inventory after `2608d998` + `86e17211`:
+42. `self.write(...)` total in `crates/sifr_codegen/src` -> `583`
+43. Remaining files: `stmt_support_emitter.rs` `186`, `expr_render_helpers.rs` `175`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
