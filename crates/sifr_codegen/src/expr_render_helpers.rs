@@ -1511,7 +1511,15 @@ impl RustEmitter {
             return Ok(false);
         };
         self.lowering_stats = saved_stats;
-        self.write(&format!("{wrapper}({value_rendered})"));
+        let lowered_wrapper = if wrapper.contains("::") {
+            crate::RustExpr::Path(wrapper.split("::").map(str::to_string).collect())
+        } else {
+            crate::RustExpr::Ident(wrapper.to_string())
+        };
+        self.emit_rust_expr(&crate::RustExpr::FnCall {
+            func: Box::new(lowered_wrapper),
+            args: vec![crate::RustExpr::RawCode(value_rendered)],
+        });
         Ok(true)
     }
 
@@ -1788,7 +1796,15 @@ impl RustEmitter {
             return Ok(false);
         };
         self.lowering_stats = saved_stats;
-        self.write(&format!("{{ let {name} = {rendered_value}; {name} }}"));
+        self.emit_rust_expr(&crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::Let {
+                mutable: false,
+                name: name.to_string(),
+                ty: None,
+                value: crate::RustExpr::RawCode(rendered_value),
+            }],
+            expr: Some(Box::new(crate::RustExpr::Ident(name.to_string()))),
+        });
         Ok(true)
     }
 
