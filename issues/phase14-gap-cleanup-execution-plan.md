@@ -191,6 +191,15 @@ Completion evidence:
 156. Refreshed direct emission inventory after `d5f3f22e`:
 157. `self.write(...)` total in `crates/sifr_codegen/src` -> `398`
 158. Remaining files: `stmt_support_emitter.rs` `176`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+159. `2c823925`: migrated additional `stmt_support_emitter.rs` return/raise control paths to structured IR return statements (`RustStmt::Return` + `RustExpr::FnCall`) for closure/display/error branches.
+160. Validation for `2c823925`:
+161. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+162. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+163. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `411.82s`)
+164. Full runnable milestone demo sweep: `find demos -maxdepth 1 -name '*.sifr'` -> pass (`83/83`)
+165. Refreshed direct emission inventory after `2c823925`:
+166. `self.write(...)` total in `crates/sifr_codegen/src` -> `390`
+167. Remaining files: `stmt_support_emitter.rs` `168`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
@@ -352,7 +361,7 @@ Loop progress log:
 ### Next Loop To-do (Evidence-Based)
 
 1. [x] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`67` writes) to structured IR-first expression builders.
-2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`176` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `function_emitter.rs`) off string assembly.
+2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`168` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `function_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
 4. [x] Loop-4A: Remove bridge-named production helpers (`try_lower_registry_expr_bridge`) and replace with explicit structured-only naming/pathing.
 5. [ ] Loop-4B: Add/refresh hard-gate tests enforcing zero user-path `SynItem` and preventing string-emission regressions in production paths.
@@ -365,7 +374,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 4. [x] `operator_protocol_emitters.rs` (completed; now `0` direct `self.write(...)`)
 5. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
 6. [x] `expr_render_helpers.rs` (completed in `a6355f6b`; now `0` direct `self.write(...)`)
-7. [ ] `stmt_support_emitter.rs` (`176` writes; statement lowering over expression leafs)
+7. [ ] `stmt_support_emitter.rs` (`168` writes; statement lowering over expression leafs)
 8. [ ] `function_emitter.rs` (`51` writes; item wrapper over stmt/expr lowering)
 9. [ ] `class_method_emitter.rs` (`70` writes; class method wrapper over stmt/expr lowering)
 10. [ ] `class_emitter.rs` (`93` writes; class item orchestration over class methods)
