@@ -1,4 +1,4 @@
-use crate::{RustEmitter, RustStmt};
+use crate::{RustEmitter, RustExpr, RustStmt};
 use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirStmt};
 use sifr_type_system::Type;
 
@@ -34,7 +34,7 @@ fn select_try_error_type(handlers: &[HirExceptHandler]) -> String {
 enum HandlerMatchCondition {
     Unsupported,
     Always,
-    Expr(String),
+    Expr(RustExpr),
 }
 
 fn body_contains_return_stmt(stmts: &[HirStmt]) -> bool {
@@ -1142,17 +1142,133 @@ impl RustEmitter {
                 (vec![RustStmt::Expr(lowered_expr)], true)
             } else if let HirStmt::Return { value } = stmt {
                 let return_ty_snapshot = self.current_return_type.clone();
-                let lowered_return = if let Some(value) = value {
-                    let Some(lowered) =
-                        self.lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
-                    else {
-                        return Ok(None);
-                    };
-                    Some(lowered)
+                let lowered_return_stmt = if let Some(value) = value {
+                    if self.emission_ctx.in_display_impl && self.try_closure_depth == 0 {
+                        let Some(display_expr) = self
+                            .lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
+                        else {
+                            return Ok(None);
+                        };
+                        RustStmt::Return(Some(crate::RustExpr::MacroCall {
+                            name: "write".to_string(),
+                            args: vec![
+                                crate::RustExpr::Ident("f".to_string()),
+                                crate::RustExpr::Literal(crate::RustLiteral::Str("{}".to_string())),
+                                display_expr,
+                            ],
+                        }))
+                    } else if self.try_closure_depth > 0 {
+                        let wrap_option = self
+                            .try_closure_option_wrap
+                            .last()
+                            .copied()
+                            .unwrap_or(false);
+                        let Some(mut lowered_return_value) = self
+                            .lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
+                        else {
+                            return Ok(None);
+                        };
+
+                        if !wrap_option {
+                            if let Some(return_ty) = return_ty_snapshot.as_ref() {
+                                if let Type::Result(ok_ty, _) =
+                                    crate::resolve_alias_type_for_plain_call(return_ty)
+                                {
+                                    let value_is_none_like = matches!(value, HirExpr::NoneLiteral)
+                                        || matches!(
+                                            crate::resolve_alias_type_for_plain_call(value.ty()),
+                                            Type::None
+                                        );
+                                    if value_is_none_like
+                                        && matches!(
+                                            crate::resolve_alias_type_for_plain_call(
+                                                ok_ty.as_ref()
+                                            ),
+                                            Type::None
+                                        )
+                                    {
+                                        lowered_return_value = crate::RustExpr::FnCall {
+                                            func: Box::new(crate::RustExpr::Path(vec![
+                                                "Ok".to_string()
+                                            ])),
+                                            args: vec![crate::RustExpr::Literal(
+                                                crate::RustLiteral::Unit,
+                                            )],
+                                        };
+                                    }
+                                }
+                            }
+                        }
+
+                        let try_payload = if wrap_option {
+                            crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                                args: vec![lowered_return_value],
+                            }
+                        } else {
+                            lowered_return_value
+                        };
+                        RustStmt::Return(Some(crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                            args: vec![try_payload],
+                        }))
+                    } else {
+                        let Some(lowered_return_value) = self
+                            .lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
+                        else {
+                            return Ok(None);
+                        };
+                        RustStmt::Return(Some(lowered_return_value))
+                    }
+                } else if self.try_closure_depth > 0 {
+                    let wrap_option = self
+                        .try_closure_option_wrap
+                        .last()
+                        .copied()
+                        .unwrap_or(false);
+                    if wrap_option {
+                        RustStmt::Return(Some(crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                            args: vec![crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                            }],
+                        }))
+                    } else {
+                        let direct_result_none =
+                            return_ty_snapshot.as_ref().is_some_and(|ret_ty| {
+                                match crate::resolve_alias_type_for_plain_call(ret_ty) {
+                                    Type::Result(ok_ty, _) => matches!(
+                                        crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
+                                        Type::None
+                                    ),
+                                    _ => false,
+                                }
+                            });
+                        if direct_result_none {
+                            RustStmt::Return(Some(crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                                args: vec![crate::RustExpr::FnCall {
+                                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                                }],
+                            }))
+                        } else {
+                            RustStmt::Return(Some(crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                            }))
+                        }
+                    }
+                } else if self.emission_ctx.in_display_impl {
+                    RustStmt::Return(Some(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                    }))
                 } else {
-                    None
+                    RustStmt::Return(None)
                 };
-                (vec![RustStmt::Return(lowered_return)], true)
+                (vec![lowered_return_stmt], true)
             } else if let HirStmt::Raise { value } = stmt {
                 let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
@@ -1246,6 +1362,13 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 (vec![lowered_with], true)
+            } else if let HirStmt::TryExcept { body, handlers, .. } = stmt {
+                let Some(lowered_try_except) =
+                    self.try_lower_try_except_stmt_for_ir(body, handlers)?
+                else {
+                    return Ok(None);
+                };
+                (lowered_try_except, true)
             } else {
                 return Ok(None);
             };
@@ -2599,8 +2722,24 @@ impl RustEmitter {
         let HirStmt::TryExcept { body, handlers, .. } = stmt else {
             return false;
         };
+        let lowered = match self.try_lower_try_except_stmt_for_ir(body, handlers) {
+            Ok(Some(lowered)) => lowered,
+            Ok(None) => return false,
+            Err(_) => return false,
+        };
+        for lowered_stmt in lowered {
+            self.emit_rust_stmt_with_current_indent(&lowered_stmt);
+        }
+        true
+    }
+
+    fn try_lower_try_except_stmt_for_ir(
+        &mut self,
+        body: &[HirStmt],
+        handlers: &[HirExceptHandler],
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         if handlers.is_empty() {
-            return false;
+            return Ok(None);
         }
         let err_ty = select_try_error_type(handlers);
         let capture_returns = body_contains_return_stmt(body) && self.current_return_type.is_some();
@@ -2626,88 +2765,109 @@ impl RustEmitter {
             "()".to_string()
         };
 
-        let output_len = self.output.len();
-        self.write_indent();
-        self.write("let __sifr_try_res: Result<");
-        self.write(&ok_ty);
-        self.write(", ");
-        self.write(&err_ty);
-        self.write("> = (|| {\n");
-        self.indent += 1;
-        if capture_returns {
-            self.try_closure_depth += 1;
-            self.try_closure_option_wrap.push(!direct_return_capture);
-        }
-        self.try_closure_error_type.push(err_ty.clone());
-        for try_stmt in body {
-            self.emit_stmt(try_stmt);
-        }
-        self.write_indent();
+        let mut closure_body = {
+            if capture_returns {
+                self.try_closure_depth += 1;
+                self.try_closure_option_wrap.push(!direct_return_capture);
+            }
+            self.try_closure_error_type.push(err_ty.clone());
+            let lowered = self.try_lower_stmt_block_for_ir(body)?;
+            if capture_returns {
+                self.try_closure_depth -= 1;
+                self.try_closure_option_wrap.pop();
+            }
+            self.try_closure_error_type.pop();
+            let Some(lowered) = lowered else {
+                return Ok(None);
+            };
+            lowered
+        };
+
         if !capture_returns {
-            self.write("return Ok(());\n");
+            closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident("Ok".to_string())),
+                args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
+            })));
         } else if direct_return_capture {
-            self.write("unreachable!(\"sifr try/except return capture fell through\");\n");
+            closure_body.push(RustStmt::Expr(RustExpr::FormatMacro {
+                name: "unreachable".to_string(),
+                format_str: "sifr try/except return capture fell through".to_string(),
+                args: vec![],
+            }));
         } else {
-            self.write("return Ok(None);\n");
+            closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident("Ok".to_string())),
+                args: vec![RustExpr::Literal(crate::RustLiteral::None)],
+            })));
         }
-        if capture_returns {
-            self.try_closure_depth -= 1;
-            self.try_closure_option_wrap.pop();
-        }
-        self.try_closure_error_type.pop();
-        self.indent -= 1;
-        self.write_indent();
-        self.write("})();\n");
+
+        let mut lowered = vec![RustStmt::Let {
+            mutable: false,
+            name: "__sifr_try_res".to_string(),
+            ty: Some(crate::RustType::Result(
+                Box::new(crate::RustType::Named(ok_ty.clone())),
+                Box::new(crate::RustType::Named(err_ty.clone())),
+            )),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Paren(Box::new(RustExpr::ClosureBlock {
+                    params: vec![],
+                    body: closure_body,
+                    is_move: false,
+                }))),
+                args: vec![],
+            },
+        }];
 
         if capture_returns {
-            self.write_indent();
-            self.write("match __sifr_try_res {\n");
-            self.indent += 1;
-            self.write_indent();
-            if direct_return_capture {
-                self.write("Ok(__sifr_ret_val) => {\n");
-            } else {
-                self.write("Ok(Some(__sifr_ret_val)) => {\n");
-            }
-            self.indent += 1;
-            self.write_indent();
-            self.write("return __sifr_ret_val;\n");
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
+            let mut arms = vec![crate::RustMatchArm {
+                pattern: if direct_return_capture {
+                    "Ok(__sifr_ret_val)".to_string()
+                } else {
+                    "Ok(Some(__sifr_ret_val))".to_string()
+                },
+                bindings: vec!["__sifr_ret_val".to_string()],
+                guard: None,
+                body: vec![RustStmt::Return(Some(RustExpr::Ident(
+                    "__sifr_ret_val".to_string(),
+                )))],
+            }];
             if !direct_return_capture {
-                self.write_indent();
-                self.write("Ok(None) => {}\n");
+                arms.push(crate::RustMatchArm {
+                    pattern: "Ok(None)".to_string(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![],
+                });
             }
-            self.write_indent();
-            self.write("Err(__sifr_try_err) => {\n");
-            self.indent += 1;
-            self.emit_try_except_handler_chain(handlers, "__sifr_try_err", &err_ty);
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
+            let Some(handler_chain) =
+                self.lower_try_except_handler_chain_for_ir(handlers, "__sifr_try_err", &err_ty)?
+            else {
+                return Ok(None);
+            };
+            arms.push(crate::RustMatchArm {
+                pattern: "Err(__sifr_try_err)".to_string(),
+                bindings: vec!["__sifr_try_err".to_string()],
+                guard: None,
+                body: handler_chain,
+            });
+            lowered.push(RustStmt::Match {
+                expr: RustExpr::Ident("__sifr_try_res".to_string()),
+                arms,
+            });
         } else {
-            self.write_indent();
-            self.write("if let Err(__sifr_try_err) = __sifr_try_res {\n");
-            self.indent += 1;
-            self.emit_try_except_handler_chain(handlers, "__sifr_try_err", &err_ty);
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
+            let Some(handler_chain) =
+                self.lower_try_except_handler_chain_for_ir(handlers, "__sifr_try_err", &err_ty)?
+            else {
+                return Ok(None);
+            };
+            lowered.push(RustStmt::IfLet {
+                pattern: "Err(__sifr_try_err)".to_string(),
+                expr: RustExpr::Ident("__sifr_try_res".to_string()),
+                then_body: handler_chain,
+                else_body: None,
+            });
         }
-
-        if !self
-            .output
-            .get(output_len..)
-            .is_some_and(|segment| !segment.is_empty())
-        {
-            self.output.truncate(output_len);
-            return false;
-        }
-        true
+        Ok(Some(lowered))
     }
 
     fn try_except_handler_condition_expr(
@@ -2726,9 +2886,20 @@ impl RustEmitter {
                 return HandlerMatchCondition::Always;
             }
             if let Some(kind) = io_error_kind_for_handler(error_type) {
-                return HandlerMatchCondition::Expr(format!(
-                    "{err_ident}.kind == {kind:?}.to_string()"
-                ));
+                return HandlerMatchCondition::Expr(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident(err_ident.to_string())),
+                        field: "kind".to_string(),
+                    }),
+                    op: "==".to_string(),
+                    right: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
+                            kind.to_string(),
+                        ))),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    }),
+                });
             }
             return HandlerMatchCondition::Unsupported;
         }
@@ -2738,59 +2909,72 @@ impl RustEmitter {
         HandlerMatchCondition::Unsupported
     }
 
-    fn emit_try_except_handler_chain(
+    fn lower_try_except_handler_chain_for_ir(
         &mut self,
         handlers: &[HirExceptHandler],
         err_ident: &str,
         err_ty: &str,
-    ) {
-        let mut emitted_any = false;
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        let mut branches: Vec<(Option<RustExpr>, Vec<RustStmt>)> = Vec::new();
         for handler in handlers {
             let condition = Self::try_except_handler_condition_expr(handler, err_ident, err_ty);
             if matches!(condition, HandlerMatchCondition::Unsupported) {
                 continue;
             }
-            self.write_indent();
-            if !emitted_any {
-                if let HandlerMatchCondition::Expr(condition) = &condition {
-                    self.write("if ");
-                    self.write(condition);
-                    self.write(" {\n");
-                } else {
-                    self.write("{\n");
-                }
-            } else if let HandlerMatchCondition::Expr(condition) = &condition {
-                self.write("else if ");
-                self.write(condition);
-                self.write(" {\n");
-            } else {
-                self.write("else {\n");
-            }
-            emitted_any = true;
-            self.indent += 1;
 
+            let mut handler_body = Vec::new();
             let handler_name = handler.name.as_deref().unwrap_or("_e");
             if handler_name != "_" {
-                self.write_indent();
-                self.write("let ");
-                self.write(handler_name);
-                self.write(" = ");
-                self.write(err_ident);
-                self.write(".clone();\n");
+                handler_body.push(RustStmt::Let {
+                    mutable: false,
+                    name: handler_name.to_string(),
+                    ty: None,
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(err_ident.to_string())),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    },
+                });
             }
-            for handler_stmt in &handler.body {
-                self.emit_stmt(handler_stmt);
+            match self.try_lower_stmt_block_for_ir(&handler.body) {
+                Ok(Some(lowered_handler_body)) => handler_body.extend(lowered_handler_body),
+                Ok(None) => return Ok(None),
+                Err(err) => return Err(err),
             }
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
+
+            let cond_expr = match condition {
+                HandlerMatchCondition::Always => None,
+                HandlerMatchCondition::Expr(cond) => Some(cond),
+                HandlerMatchCondition::Unsupported => continue,
+            };
+            branches.push((cond_expr, handler_body));
         }
-        if !emitted_any {
-            self.write_indent();
-            self.write("let _ = &");
-            self.write(err_ident);
-            self.write(";\n");
+
+        if branches.is_empty() {
+            return Ok(Some(vec![RustStmt::Let {
+                mutable: false,
+                name: "_".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Ident(err_ident.to_string())),
+                },
+            }]));
         }
+
+        let mut current_else: Option<Vec<RustStmt>> = None;
+        for (cond, body) in branches.into_iter().rev() {
+            if let Some(cond) = cond {
+                current_else = Some(vec![RustStmt::If {
+                    cond,
+                    then_body: body,
+                    else_body: current_else,
+                }]);
+            } else {
+                current_else = Some(body);
+            }
+        }
+        Ok(Some(current_else.unwrap_or_default()))
     }
 
     pub(crate) fn try_emit_structured_field_assign_stmt(
