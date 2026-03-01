@@ -272,6 +272,15 @@ Latest loop update (2026-03-01):
 - `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `411.82s`).
 - runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
 - Refreshed strict inventory after `2c823925`: `self.write(...)` in `crates/sifr_codegen/src` is now `390` (`stmt_support_emitter.rs` `176 -> 168`).
+- Additional loop slice (2026-03-01):
+- `e7ca4643`: migrated `stmt_support_emitter.rs` return/assert emission to structured IR statements (`RustStmt::Return`/`RustStmt::Assert`) and removed wrapped-return string helper assembly.
+- Root-cause parity fix in the same slice: return/assert payload expressions now preserve structured expression semantics through IR-embedded rendered expressions where typed lowering coverage is not yet complete.
+- Validation:
+- `cargo test -q -p sifr_codegen` pass (`455`).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` pass (`394/394`, `413.84s`).
+- runnable milestone demo sweep `demos/*.sifr` pass (`83/83`).
+- Refreshed strict inventory after `e7ca4643`: `self.write(...)` in `crates/sifr_codegen/src` is now `378` (`stmt_support_emitter.rs` `168 -> 156`).
 
 Latest validation loop (2026-02-28):
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).

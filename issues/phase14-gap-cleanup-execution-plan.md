@@ -200,6 +200,18 @@ Completion evidence:
 165. Refreshed direct emission inventory after `2c823925`:
 166. `self.write(...)` total in `crates/sifr_codegen/src` -> `390`
 167. Remaining files: `stmt_support_emitter.rs` `168`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
+168. `e7ca4643`: migrated `stmt_support_emitter.rs` return/assert statement emission to structured IR statements (`RustStmt::Return` / `RustStmt::Assert`) and removed direct wrapped-return string helpers.
+169. Root fixes in the same slice:
+170. preserved non-option index return semantics through explicit IR index lowering (`dict/list/str/tuple`) instead of write-assembled return paths.
+171. restored e2e parity by routing return/assert expression payloads through structured expression rendering into IR (`RustExpr::RawCode`) when full typed lowering is not yet complete, preventing incorrect coercion changes.
+172. Validation for `e7ca4643`:
+173. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+174. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+175. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `413.84s`)
+176. runnable milestone demo sweep `demos/*.sifr` -> pass (`83/83`)
+177. Refreshed direct emission inventory after `e7ca4643`:
+178. `self.write(...)` total in `crates/sifr_codegen/src` -> `378`
+179. Remaining files: `stmt_support_emitter.rs` `156`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `lib.rs` `8`.
 
 Merged PR chain:
 1. `#784` (Issue 217)
@@ -374,7 +386,7 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 4. [x] `operator_protocol_emitters.rs` (completed; now `0` direct `self.write(...)`)
 5. [x] `match_emitter.rs` (completed in Pass O; now `0` direct `self.write(...)`)
 6. [x] `expr_render_helpers.rs` (completed in `a6355f6b`; now `0` direct `self.write(...)`)
-7. [ ] `stmt_support_emitter.rs` (`168` writes; statement lowering over expression leafs)
+7. [ ] `stmt_support_emitter.rs` (`156` writes; statement lowering over expression leafs)
 8. [ ] `function_emitter.rs` (`51` writes; item wrapper over stmt/expr lowering)
 9. [ ] `class_method_emitter.rs` (`70` writes; class method wrapper over stmt/expr lowering)
 10. [ ] `class_emitter.rs` (`93` writes; class item orchestration over class methods)
