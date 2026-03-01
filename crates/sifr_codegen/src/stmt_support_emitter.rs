@@ -995,6 +995,72 @@ impl RustEmitter {
         Ok(Some(crate::RustExpr::RawCode(rendered_expr)))
     }
 
+    fn try_lower_stmt_block_for_ir(
+        &mut self,
+        stmts: &[HirStmt],
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        let scope_ctx = crate::ScopeContext {
+            function_return_type: self.current_return_type.clone(),
+            in_generator_closure: self.emission_ctx.in_generator_closure,
+            in_display_impl: self.emission_ctx.in_display_impl,
+            in_loop_with_else: self.current_loop_has_else(),
+            class_scope: if self.current_class_name.is_some() {
+                crate::ClassScope::Inside
+            } else {
+                crate::ClassScope::Outside
+            },
+        };
+
+        let mut lowered_block = Vec::new();
+        for stmt in stmts {
+            let (lowered_stmts, skip_rewrite) =
+                if let Some(lowered_stmts) = crate::try_lower_simple_stmt_with_scope_result(
+                    stmt,
+                    &self.mutated_vars,
+                    &self.borrowed_params,
+                    &scope_ctx,
+                )? {
+                    (lowered_stmts, false)
+                } else if let HirStmt::Assert { test, msg } = stmt {
+                    let Some(lowered_test) = self.lower_rendered_expr_for_ir(test)? else {
+                        return Ok(None);
+                    };
+                    let lowered_msg = if let Some(msg_expr) = msg {
+                        let Some(lowered) = self.lower_rendered_expr_for_ir(msg_expr)? else {
+                            return Ok(None);
+                        };
+                        Some(lowered)
+                    } else {
+                        None
+                    };
+                    (
+                        vec![RustStmt::Assert {
+                            cond: lowered_test,
+                            msg: lowered_msg,
+                        }],
+                        true,
+                    )
+                } else if let HirStmt::Expr { expr } = stmt {
+                    let Some(lowered_expr) = self.lower_rendered_expr_for_ir(expr)? else {
+                        return Ok(None);
+                    };
+                    (vec![RustStmt::Expr(lowered_expr)], true)
+                } else {
+                    return Ok(None);
+                };
+            if skip_rewrite {
+                lowered_block.extend(lowered_stmts);
+            } else {
+                lowered_block.extend(
+                    lowered_stmts
+                        .into_iter()
+                        .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt)),
+                );
+            }
+        }
+        Ok(Some(lowered_block))
+    }
+
     pub(super) fn emit_borrowed_return_name_clone_expr(&mut self, value: &HirExpr) -> bool {
         let Some(clone_expr) = self.borrowed_return_name_clone_expr_for_ir(value) else {
             return false;
@@ -1266,38 +1332,38 @@ impl RustEmitter {
             } = condition
             {
                 if let HirExpr::WalrusExpr { name, value, ty } = left.as_ref() {
-                    let output_len = self.output.len();
-                    self.write_indent();
-                    self.write("let ");
-                    self.write(name);
-                    self.write(" = ");
-                    if !self.try_emit_structured_expr(value)? {
-                        self.output.truncate(output_len);
+                    let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
                         return Ok(false);
-                    }
-                    self.write(";\n");
-                    self.write_indent();
-                    self.write("if ");
-                    let walrus_name_expr = HirExpr::Name {
-                        name: name.clone(),
-                        ty: ty.clone(),
                     };
-                    if !self.try_emit_structured_compare_expr(
-                        &walrus_name_expr,
-                        ops,
-                        comparators,
-                    )? {
-                        self.output.truncate(output_len);
+                    let walrus_compare_expr = HirExpr::Compare {
+                        left: Box::new(HirExpr::Name {
+                            name: name.clone(),
+                            ty: ty.clone(),
+                        }),
+                        ops: ops.clone(),
+                        comparators: comparators.clone(),
+                        ty: condition.ty().clone(),
+                    };
+                    let Some(lowered_cond) = self.lower_rendered_expr_for_ir(&walrus_compare_expr)?
+                    else {
                         return Ok(false);
-                    }
-                    self.write(" {\n");
-                    self.indent += 1;
-                    for then_stmt in then_body {
-                        self.emit_stmt(then_stmt);
-                    }
-                    self.indent -= 1;
-                    self.write_indent();
-                    self.write("}\n");
+                    };
+                    let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)?
+                    else {
+                        return Ok(false);
+                    };
+
+                    self.emit_rust_stmt_with_current_indent(&RustStmt::Let {
+                        mutable: false,
+                        name: name.clone(),
+                        ty: None,
+                        value: lowered_value,
+                    });
+                    self.emit_rust_stmt_with_current_indent(&RustStmt::If {
+                        cond: lowered_cond,
+                        then_body: lowered_then_body,
+                        else_body: None,
+                    });
                     return Ok(true);
                 }
             }
