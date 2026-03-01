@@ -613,6 +613,34 @@ impl RustEmitter {
                 }));
             }
         }
+        if let HirExpr::BoolOp { op, values, .. } = expr {
+            let lowered_op = match op.as_str() {
+                "and" => "&&",
+                "or" => "||",
+                _ => return Ok(None),
+            };
+            if values.is_empty() {
+                return Ok(None);
+            }
+            let mut iter = values.iter();
+            let Some(first) = iter.next() else {
+                return Ok(None);
+            };
+            let Some(mut acc) = self.lower_stmt_expr_for_ir(first)? else {
+                return Ok(None);
+            };
+            for value in iter {
+                let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+                acc = crate::RustExpr::BinOp {
+                    left: Box::new(crate::RustExpr::Paren(Box::new(acc))),
+                    op: lowered_op.to_string(),
+                    right: Box::new(crate::RustExpr::Paren(Box::new(lowered_value))),
+                };
+            }
+            return Ok(Some(crate::RustExpr::Paren(Box::new(acc))));
+        }
         if let HirExpr::BinOp {
             left, op, right, ..
         } = expr
