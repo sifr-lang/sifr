@@ -901,9 +901,20 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 8. Re-audit totals after this slice: direct `self.write(...) = 215` in `crates/sifr_codegen/src`
 9. File breakdown: `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`, `stmt_support_emitter.rs` `1`
 
+### Validation rerun (2026-03-01, Pass AB)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+2. `SIFR_E2E_RUNNER_MODE=new cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `63.74s`)
+3. Full runnable demos sweep `demos/*.sifr` -> pass (`83/83`)
+4. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass
+5. IR-first cleanup this loop:
+6. removed final direct `self.write(...)` in `stmt_support_emitter.rs` by replacing expression-statement terminator writes with structured statement emission flow in `lib.rs`
+7. preserved existing structured expression lowering behavior by reusing `try_emit_structured_expr` output and wrapping it as `RustStmt::Expr` emission
+8. Re-audit totals after this slice: direct `self.write(...) = 214` in `crates/sifr_codegen/src`
+9. File breakdown: `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`
+
 ### Next Loop Todo (Dependency-Ordered)
 
-1. `stmt_support_emitter.rs` (`1`) -> remove final direct statement terminator write usage.
-2. `function_emitter.rs` (`51`) -> migrate function/generator body emission to IR statements/expressions.
-3. `class_method_emitter.rs` (`70`) -> migrate constructor/method assembly to IR using shared lowering helpers.
-4. `class_emitter.rs` (`93`) -> migrate class/type/display impl assembly to IR item trees.
+1. `function_emitter.rs` (`51`) -> migrate function/generator body emission to IR statements/expressions.
+2. `class_method_emitter.rs` (`70`) -> migrate constructor/method assembly to IR using shared lowering helpers.
+3. `class_emitter.rs` (`93`) -> migrate class/type/display impl assembly to IR item trees.

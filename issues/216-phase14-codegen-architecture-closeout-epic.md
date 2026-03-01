@@ -539,8 +539,18 @@ Latest validation loop (2026-03-01, Pass AA):
 - Re-audit evidence after this loop: direct `self.write(...) = 215` in `crates/sifr_codegen/src` with remaining files:
 - `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`), `stmt_support_emitter.rs` (`1`).
 
+Latest validation loop (2026-03-01, Pass AB):
+- Removed the final direct `self.write(...)` usage from `stmt_support_emitter.rs` by switching expression-statement termination to structured statement emission flow in `lib.rs`.
+- Preserved structured expression behavior by reusing existing `try_emit_structured_expr` generation and wrapping emitted expression output as statement IR emission.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed, `0` failed).
+- `SIFR_E2E_RUNNER_MODE=new cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394/394`, `63.74s`).
+- Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Re-audit evidence after this loop: direct `self.write(...) = 214` in `crates/sifr_codegen/src` with remaining files:
+- `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).
+
 Next loop todo (dependency-ordered):
-1. `stmt_support_emitter.rs` (`1`) final structured stmt cleanup.
-2. `function_emitter.rs` (`51`) IR migration.
-3. `class_method_emitter.rs` (`70`) IR migration.
-4. `class_emitter.rs` (`93`) IR migration.
+1. `function_emitter.rs` (`51`) IR migration.
+2. `class_method_emitter.rs` (`70`) IR migration.
+3. `class_emitter.rs` (`93`) IR migration.
