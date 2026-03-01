@@ -838,10 +838,6 @@ impl RustEmitter {
         crate::RustExpr::Ident(object.to_string())
     }
 
-    pub(super) fn write_stmt_terminator(&mut self) {
-        self.write(";\n");
-    }
-
     fn borrowed_return_name_clone_expr_for_ir(&self, value: &HirExpr) -> Option<crate::RustExpr> {
         let HirExpr::Name { name, .. } = value else {
             return None;

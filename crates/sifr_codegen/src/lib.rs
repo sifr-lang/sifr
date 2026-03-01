@@ -1160,9 +1160,13 @@ impl RustEmitter {
         if let HirStmt::Expr { expr } = stmt {
             let output_len = self.output.len();
             if self.try_emit_structured_expr(expr)? {
+                let emitted_expr = self.output[output_len..].to_string();
+                self.output.truncate(output_len);
+                self.emit_rust_stmt_with_current_indent(&RustStmt::Expr(RustExpr::RawCode(
+                    emitted_expr,
+                )));
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
-                self.write_stmt_terminator();
                 return Ok(true);
             }
             self.output.truncate(output_len);
