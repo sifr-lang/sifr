@@ -1358,6 +1358,14 @@ impl RustEmitter {
         let Some(lowered_iter) = self.lower_rendered_expr_for_ir(iter)? else {
             return Ok(None);
         };
+        let is_generator_expr = matches!(iter, HirExpr::GeneratorExpr { .. });
+        let is_generator_fn_call = self.is_generator_call(iter);
+        if is_generator_expr
+            || is_generator_fn_call
+            || Self::is_iterator_like_expr_for_ir(&lowered_iter)
+        {
+            return Ok(Some(lowered_iter));
+        }
         let lowered_iter = match Self::resolve_alias_type_for_loop_iter(iter.ty()) {
             Type::List(_) => crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::MethodCall {
@@ -1400,6 +1408,37 @@ impl RustEmitter {
             _ => lowered_iter,
         };
         Ok(Some(lowered_iter))
+    }
+
+    fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
+        match expr {
+            crate::RustExpr::RawCode(code) => {
+                code.contains(".into_iter()")
+                    || code.contains(".map(")
+                    || code.contains(".filter(")
+                    || code.contains(".zip(")
+                    || code.contains(".chain(")
+                    || code.contains(".enumerate(")
+            }
+            crate::RustExpr::MethodCall {
+                receiver, method, ..
+            } => {
+                matches!(
+                    method.as_str(),
+                    "into_iter" | "map" | "filter" | "zip" | "chain" | "enumerate"
+                ) || Self::is_iterator_like_expr_for_ir(receiver)
+            }
+            crate::RustExpr::FnCall { func, args } => {
+                Self::is_iterator_like_expr_for_ir(func)
+                    || args.iter().any(Self::is_iterator_like_expr_for_ir)
+            }
+            crate::RustExpr::Paren(inner)
+            | crate::RustExpr::Try(inner)
+            | crate::RustExpr::Await(inner)
+            | crate::RustExpr::Deref(inner)
+            | crate::RustExpr::Clone(inner) => Self::is_iterator_like_expr_for_ir(inner),
+            _ => false,
+        }
     }
 
     fn try_lower_with_stmt_for_ir(
@@ -2477,144 +2516,68 @@ impl RustEmitter {
         else {
             return Ok(false);
         };
-
-        let output_len = self.output.len();
         let has_else = else_body.is_some();
-        if has_else {
-            self.write_indent();
-            self.write("let mut _broke = false;\n");
-        }
-
-        self.loop_else_stack.push(has_else);
-        self.write_indent();
-        self.write("for ");
-        if target.contains(',') {
+        let var = if target.contains(',') {
             let names = target
                 .split(',')
                 .map(str::trim)
                 .filter(|name| !name.is_empty())
                 .collect::<Vec<_>>();
             if names.is_empty() {
-                let popped = self.loop_else_stack.pop();
-                debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
-                self.output.truncate(output_len);
                 return Ok(false);
             }
-            self.write("(");
-            self.write(&names.join(", "));
-            self.write(")");
+            format!("({})", names.join(", "))
         } else {
-            self.write(target);
-        }
-        self.write(" in ");
-        let iter_output_start = self.output.len();
-        let mut iter_is_iterator = false;
-        let emitted_iter = if let HirExpr::Call { func, args, .. } = iter {
-            if func == "enumerate" && args.len() == 1 {
-                let saved_stats = self.lowering_stats;
-                let arg_rendered = self.try_render_structured_expr(&args[0])?;
-                self.lowering_stats = saved_stats;
-                if let Some(arg_rendered) = arg_rendered {
-                    self.write("(");
-                    self.write(&arg_rendered);
-                    self.write(").iter().cloned().enumerate().map(|(i, v)| (i as i64, v))");
-                    iter_is_iterator = true;
-                    true
-                } else {
-                    false
-                }
-            } else {
-                let saved_stats = self.lowering_stats;
-                let rendered = self.try_render_structured_expr(iter)?;
-                self.lowering_stats = saved_stats;
-                if let Some(rendered) = rendered {
-                    if rendered.contains(".into_iter()")
-                        || rendered.contains(".map(")
-                        || rendered.contains(".filter(")
-                        || rendered.contains(".zip(")
-                        || rendered.contains(".chain(")
-                    {
-                        iter_is_iterator = true;
-                    }
-                    self.write(&rendered);
-                    true
-                } else {
-                    false
-                }
-            }
-        } else {
-            let saved_stats = self.lowering_stats;
-            let rendered = self.try_render_structured_expr(iter)?;
-            self.lowering_stats = saved_stats;
-            if let Some(rendered) = rendered {
-                if rendered.contains(".into_iter()")
-                    || rendered.contains(".map(")
-                    || rendered.contains(".filter(")
-                    || rendered.contains(".zip(")
-                    || rendered.contains(".chain(")
-                {
-                    iter_is_iterator = true;
-                }
-                self.write(&rendered);
-                true
-            } else {
-                false
-            }
+            target.clone()
         };
 
-        if !emitted_iter {
-            let popped = self.loop_else_stack.pop();
-            debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
-            self.output.truncate(output_len);
-            return Ok(false);
-        }
-        if !iter_is_iterator {
-            if let Some(iter_segment) = self.output.get(iter_output_start..) {
-                if iter_segment.contains(".into_iter()")
-                    || iter_segment.contains(".map(")
-                    || iter_segment.contains(".filter(")
-                    || iter_segment.contains(".zip(")
-                    || iter_segment.contains(".chain(")
-                {
-                    iter_is_iterator = true;
-                }
-            }
-        }
-
-        let is_generator_expr = matches!(iter, HirExpr::GeneratorExpr { .. });
-        let is_generator_fn_call = self.is_generator_call(iter);
-        if !is_generator_expr && !is_generator_fn_call && !iter_is_iterator {
-            match Self::resolve_alias_type_for_loop_iter(iter.ty()) {
-                Type::List(_) => self.write(".iter().cloned()"),
-                Type::Dict(_, _) => self.write(".keys().cloned()"),
-                Type::Str => self.write(".chars().map(|c| c.to_string())"),
-                _ => {}
-            }
-        }
-
-        self.write(" {\n");
-        self.indent += 1;
-        for body_stmt in body {
-            self.emit_stmt(body_stmt);
-        }
-        self.indent -= 1;
-        self.write_indent();
-        self.write("}\n");
+        self.loop_else_stack.push(has_else);
+        let lowered_iter = self.try_lower_for_iter_expr_for_ir(iter)?;
+        let lowered_body = self.try_lower_stmt_block_for_ir(body)?;
         let popped = self.loop_else_stack.pop();
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
+        let Some(lowered_iter) = lowered_iter else {
+            return Ok(false);
+        };
+        let Some(lowered_body) = lowered_body else {
+            return Ok(false);
+        };
 
         if let Some(else_body) = else_body {
-            self.write_indent();
-            self.write("if !_broke {\n");
-            self.indent += 1;
-            for else_stmt in else_body {
-                self.emit_stmt(else_stmt);
-            }
-            self.indent -= 1;
-            self.write_indent();
-            self.write("}\n");
+            let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)? else {
+                return Ok(false);
+            };
+            self.emit_rust_stmt_with_current_indent(&RustStmt::Block(vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: "_broke".to_string(),
+                    ty: Some(crate::RustType::Bool),
+                    value: crate::RustExpr::Literal(crate::RustLiteral::Bool(false)),
+                },
+                RustStmt::For {
+                    var,
+                    iter: lowered_iter,
+                    body: lowered_body,
+                },
+                RustStmt::If {
+                    cond: crate::RustExpr::UnaryOp {
+                        op: "!".to_string(),
+                        operand: Box::new(crate::RustExpr::Paren(Box::new(
+                            crate::RustExpr::Ident("_broke".to_string()),
+                        ))),
+                    },
+                    then_body: lowered_else_body,
+                    else_body: None,
+                },
+            ]));
+            return Ok(true);
         }
 
+        self.emit_rust_stmt_with_current_indent(&RustStmt::For {
+            var,
+            iter: lowered_iter,
+            body: lowered_body,
+        });
         Ok(true)
     }
 
