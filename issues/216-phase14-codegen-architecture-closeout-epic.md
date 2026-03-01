@@ -476,3 +476,19 @@ Latest validation loop (2026-03-01, Pass V):
 - `./scripts/run_all_tests.sh` -> pass.
 - Full demo sweep `demos/*.sifr` -> pass (`83/83`).
 - Re-audit evidence after this loop: direct `self.write(...) = 634`, direct `self.writeln(...) = 57` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-03-01, Pass W):
+- Added explicit structured IR support for `with` statements:
+- introduced `RustStmt::With` + `RustWithItem` in `rust_ir.rs`,
+- added renderer and pass support (`render.rs`, `ir_imports.rs`, `ir_optimize.rs`, `ir_validate.rs`, `preamble.rs`, `lower_stmt.rs`, `expr_render_helpers.rs`).
+- Migrated `stmt_support_emitter.rs` `try_emit_structured_with_stmt` from token writes to IR stmt emission and enabled recursive `HirStmt::With` lowering in `try_lower_stmt_block_for_ir`.
+- Added recursive `Raise` lowering in block IR helper to keep nested control-flow branches on structured IR.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`455` passed, `0` failed).
+- `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass.
+- `cargo run -q -p sifr -- run demos/milestone_stdlib_expansion_demo.sifr` -> pass.
+- `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394/394`, `418.24s`).
+- `./scripts/run_all_tests.sh` -> pass.
+- Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
+- Re-audit evidence after this loop: direct `self.write(...) = 330` in `crates/sifr_codegen/src` with remaining files:
+- `stmt_support_emitter.rs` (`116`), `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).

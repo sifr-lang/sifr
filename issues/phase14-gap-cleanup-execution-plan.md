@@ -834,3 +834,19 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. fully migrated `type_emitters.rs` enum/newtype emission to IR-first item assembly (`RustItem::Enum`, `RustItem::TupleStruct`, `RustItem::Impl`, `RustItem::Fn`)
 6. moved enum/newtype user-method emission to structured stmt-lowering-backed IR bodies in this emitter (no direct write-based type emitter output)
 7. Re-audit totals: `self.write(...) = 634`, `self.writeln(...) = 57` in `crates/sifr_codegen/src`.
+
+### Validation rerun (2026-03-01, Pass W)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
+2. `cargo run -q -p sifr -- run demos/milestone_codegen_structural_passes_demo.sifr` -> pass
+3. `cargo run -q -p sifr -- run demos/milestone_stdlib_expansion_demo.sifr` -> pass
+4. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `418.24s`)
+5. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass
+6. Full runnable demos sweep `demos/*.sifr` -> pass (`83/83`)
+7. IR-first cleanup this loop:
+8. added structured `with` statement IR node (`RustStmt::With` + `RustWithItem`) in `rust_ir.rs`
+9. added render/import/optimize/validate support for `With` (`render.rs`, `ir_imports.rs`, `ir_optimize.rs`, `ir_validate.rs`, `preamble.rs`, `lower_stmt.rs`, `expr_render_helpers.rs`)
+10. migrated `try_emit_structured_with_stmt` to IR emission and enabled recursive `HirStmt::With` lowering inside `try_lower_stmt_block_for_ir`
+11. added explicit recursive `Raise` lowering in `try_lower_stmt_block_for_ir` to keep nested control-flow branches fully structured
+12. Re-audit totals: direct `self.write(...) = 330` in `crates/sifr_codegen/src`
+13. File breakdown: `stmt_support_emitter.rs` `116`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
