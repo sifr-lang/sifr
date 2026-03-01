@@ -1270,11 +1270,15 @@ impl RustEmitter {
                             .cloned(),
                     };
                     let Some(target_ty) = target_ty else {
-                        self.write("false");
+                        self.emit_rust_expr(&crate::RustExpr::Literal(crate::RustLiteral::Bool(
+                            false,
+                        )));
                         return Ok(true);
                     };
                     if !members.contains(&target_ty) {
-                        self.write("false");
+                        self.emit_rust_expr(&crate::RustExpr::Literal(crate::RustLiteral::Bool(
+                            false,
+                        )));
                         return Ok(true);
                     }
                     let saved_stats = self.lowering_stats;
@@ -1323,7 +1327,7 @@ impl RustEmitter {
                         matches!(resolved_object_ty, Type::Class { name, .. } if name == other)
                     }
                 };
-                self.write(if matches { "true" } else { "false" });
+                self.emit_rust_expr(&crate::RustExpr::Literal(crate::RustLiteral::Bool(matches)));
                 Ok(true)
             }
             _ => Ok(false),
