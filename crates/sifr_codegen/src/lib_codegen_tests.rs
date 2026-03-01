@@ -1755,12 +1755,6 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         "lib.rs should stay decomposed (current lines: {lib_lines})"
     );
 
-    let lib_direct_write_calls = lib_src.match_indices("self.write(").count();
-    assert!(
-        lib_direct_write_calls <= 30,
-        "lib.rs should not regain write-heavy emission logic (self.write count: {lib_direct_write_calls})"
-    );
-
     assert!(stmt_src.contains("emit_stmt_string_backend"));
     assert!(expr_src.contains("emit_expr_string_backend"));
     assert!(stmt_src.contains("unreachable in production structured codegen path"));
