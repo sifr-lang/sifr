@@ -781,7 +781,7 @@ impl RustEmitter {
         })
     }
 
-    fn try_lower_registry_intrinsic_call_expr(
+    pub(crate) fn try_lower_registry_intrinsic_call_expr(
         &mut self,
         func: &str,
         args: &[HirExpr],

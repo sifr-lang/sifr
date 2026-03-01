@@ -316,6 +316,10 @@ impl RustEmitter {
             return Ok(Some(crate::RustExpr::Vec(lowered_elements)));
         }
         if let HirExpr::Call { func, args, .. } = expr {
+            if let Some(lowered_intrinsic) = self.try_lower_registry_intrinsic_call_expr(func, args)
+            {
+                return Ok(Some(lowered_intrinsic));
+            }
             if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args) {
                 return Ok(Some(lowered_builtin));
             }

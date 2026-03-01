@@ -1504,22 +1504,23 @@ impl RustEmitter {
             _ => return Ok(false),
         };
 
-        let mut rendered_values = Vec::with_capacity(values.len());
+        let mut lowered_values = Vec::with_capacity(values.len());
         for value in values {
-            let saved_stats = self.lowering_stats;
-            let Some(rendered) = self.try_render_structured_expr(value)? else {
+            let Some(lowered) = self.try_lower_registry_expr_strict(value) else {
                 return Ok(false);
             };
-            self.lowering_stats = saved_stats;
-            rendered_values.push(rendered);
+            lowered_values.push(lowered);
         }
-
-        let joined = rendered_values
-            .iter()
-            .map(|rendered| format!("({rendered})"))
-            .collect::<Vec<_>>()
-            .join(&format!(" {lowered_op} "));
-        self.write(&format!("({joined})"));
+        let mut iter = lowered_values.into_iter();
+        let Some(first) = iter.next() else {
+            return Ok(false);
+        };
+        let combined = iter.fold(first, |acc, value| crate::RustExpr::BinOp {
+            left: Box::new(crate::RustExpr::Paren(Box::new(acc))),
+            op: lowered_op.to_string(),
+            right: Box::new(crate::RustExpr::Paren(Box::new(value))),
+        });
+        self.emit_rust_expr(&crate::RustExpr::Paren(Box::new(combined)));
         Ok(true)
     }
 
