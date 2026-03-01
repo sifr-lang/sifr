@@ -9,6 +9,19 @@ impl RustEmitter {
         self.output.push_str(&crate::render_expr(expr));
     }
 
+    pub(super) fn emit_rust_stmt_with_current_indent(&mut self, stmt: &crate::RustStmt) {
+        let rendered = crate::render_stmts(std::slice::from_ref(stmt));
+        if self.indent == 0 {
+            self.output.push_str(&rendered);
+            return;
+        }
+        for line in rendered.lines() {
+            self.write_indent();
+            self.output.push_str(line);
+            self.output.push('\n');
+        }
+    }
+
     pub(super) fn writeln(&mut self, s: &str) {
         self.write_indent();
         self.output.push_str(s);

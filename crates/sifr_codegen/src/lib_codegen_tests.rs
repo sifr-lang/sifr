@@ -1880,7 +1880,7 @@ fn test_module_body_flows_through_assembled_body_items() {
 #[test]
 fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("stmt_support_emitter.rs");
-    assert!(stmt_support_src.contains("match self.try_emit_structured_expr(value)"));
+    assert!(stmt_support_src.contains("match self.lower_stmt_expr_for_ir(value)"));
     assert!(stmt_support_src.contains("match self.try_emit_structured_stmt(stmt)"));
     assert!(!stmt_support_src.contains("self.try_emit_expr_string_"));
     assert!(!stmt_support_src.contains("self.try_emit_stmt_string_"));

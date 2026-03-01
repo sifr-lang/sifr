@@ -773,8 +773,9 @@ impl RustEmitter {
         if !(self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)) {
             return false;
         }
-        self.write(name);
-        self.write(".clone()");
+        self.emit_rust_expr(&crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
+            name.clone(),
+        ))));
         true
     }
 
@@ -784,18 +785,20 @@ impl RustEmitter {
             HirStmt::Let {
                 name, ty, value, ..
             } => {
-                let prefix = format!("let mut {name}: {} = ", ty.rust_type());
-                self.write_indent();
-                self.write(&prefix);
-                match self.try_emit_structured_expr(value) {
-                    Ok(true) => {}
-                    Ok(false) | Err(_) => {
+                let lowered_value = match self.lower_stmt_expr_for_ir(value) {
+                    Ok(Some(lowered)) => lowered,
+                    Ok(None) | Err(_) => {
                         panic!(
                             "structured generator-init expression emission missing for production path: {value:?}"
                         );
                     }
-                }
-                self.write(";\n");
+                };
+                self.emit_rust_stmt_with_current_indent(&crate::RustStmt::Let {
+                    mutable: true,
+                    name: name.clone(),
+                    ty: Some(crate::sifr_type_to_rust_type(ty)),
+                    value: lowered_value,
+                });
             }
             _ => match self.try_emit_structured_stmt(stmt) {
                 Ok(true) => {}
@@ -816,54 +819,30 @@ impl RustEmitter {
                     name,
                     ty,
                     value,
-                } => {
-                    let value_rendered = if let crate::RustExpr::Ident(value_name) = value {
+                } => self.emit_rust_stmt_with_current_indent(&crate::RustStmt::Let {
+                    mutable: *mutable,
+                    name: name.clone(),
+                    ty: ty.clone(),
+                    value: if let crate::RustExpr::Ident(value_name) = value {
                         if self.borrowed_params.contains(value_name)
                             || self.mut_borrowed_params.contains(value_name)
                         {
-                            format!("({value_name}).clone()")
+                            crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
+                                crate::RustExpr::Ident(value_name.clone()),
+                            ))))
                         } else {
-                            crate::render_expr(value)
+                            value.clone()
                         }
                     } else {
-                        crate::render_expr(value)
-                    };
-                    let mut line = String::from("let ");
-                    if *mutable {
-                        line.push_str("mut ");
-                    }
-                    line.push_str(name);
-                    if let Some(ty) = ty {
-                        line.push_str(": ");
-                        line.push_str(&crate::render_type(ty));
-                    }
-                    line.push_str(" = ");
-                    line.push_str(&value_rendered);
-                    line.push_str(";\n");
-                    self.write_indent();
-                    self.write(&line);
-                }
-                RustStmt::Expr(lowered_expr) => {
-                    self.write_indent();
-                    self.write(&format!("{};\n", crate::render_expr(lowered_expr)));
-                }
+                        value.clone()
+                    },
+                }),
+                RustStmt::Expr(lowered_expr) => self
+                    .emit_rust_stmt_with_current_indent(&crate::RustStmt::Expr(lowered_expr.clone())),
                 RustStmt::RawCode(_) => {
                     panic!("RawCode statement reached core production emission path");
                 }
-                RustStmt::Break => {
-                    self.write_indent();
-                    self.write("break;\n");
-                }
-                RustStmt::Continue => {
-                    self.write_indent();
-                    self.write("continue;\n");
-                }
-                _ => {
-                    self.write_indent();
-                    let rendered = crate::render_stmts(std::slice::from_ref(lowered_stmt));
-                    self.write(rendered.trim_end());
-                    self.write("\n");
-                }
+                _ => self.emit_rust_stmt_with_current_indent(lowered_stmt),
             }
         }
     }
