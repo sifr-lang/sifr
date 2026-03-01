@@ -181,6 +181,14 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds, allow_raw: bool) {
                 collect_stmt(stmt, needs, allow_raw);
             }
         }
+        RustStmt::With { items, body } => {
+            for item in items {
+                collect_expr(&item.value, needs, allow_raw);
+            }
+            for stmt in body {
+                collect_stmt(stmt, needs, allow_raw);
+            }
+        }
         RustStmt::While { cond, body } => {
             collect_expr(cond, needs, allow_raw);
             for stmt in body {

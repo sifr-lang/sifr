@@ -868,6 +868,12 @@ fn append_recursive_capture_args_to_stmts(
                 append_recursive_capture_args_to_expr(iter, fn_name, capture_names);
                 append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
             }
+            RustStmt::With { items, body } => {
+                for item in items {
+                    append_recursive_capture_args_to_expr(&mut item.value, fn_name, capture_names);
+                }
+                append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
+            }
             RustStmt::While { cond, body } => {
                 append_recursive_capture_args_to_expr(cond, fn_name, capture_names);
                 append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
@@ -1473,7 +1479,8 @@ fn try_lower_simple_match_stmt(
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
     let lowered_subject = try_lower_leaf_or_name_expr(subject)?;
-    let subject_is_borrowed_name = matches!(subject, HirExpr::Name { name, .. } if bindings.borrowed_params.contains(name));
+    let subject_is_borrowed_name =
+        matches!(subject, HirExpr::Name { name, .. } if bindings.borrowed_params.contains(name));
     let lowered_arms = arms
         .iter()
         .map(|arm| {
@@ -1492,8 +1499,8 @@ fn try_lower_simple_match_stmt(
             if subject_is_borrowed_name {
                 let copy_captures = collect_copy_capture_names(&arm.pattern);
                 if !copy_captures.is_empty() {
-                    lowered_guard = lowered_guard
-                        .map(|guard| deref_guard_copy_captures(guard, &copy_captures));
+                    lowered_guard =
+                        lowered_guard.map(|guard| deref_guard_copy_captures(guard, &copy_captures));
                 }
             }
             let guard = match (auto_guard, lowered_guard) {
@@ -1689,11 +1696,7 @@ fn try_lower_union_class_match_pattern(
 fn is_copy_capture_type(ty: &Type) -> bool {
     matches!(
         resolve_alias_type(ty),
-        Type::Int
-            | Type::LiteralInt(_)
-            | Type::Float
-            | Type::Bool
-            | Type::LiteralBool(_)
+        Type::Int | Type::LiteralInt(_) | Type::Float | Type::Bool | Type::LiteralBool(_)
     )
 }
 
@@ -1764,9 +1767,9 @@ fn deref_guard_copy_captures(expr: RustExpr, captures: &HashSet<String>) -> Rust
             mutable,
             expr: Box::new(deref_guard_copy_captures(*expr, captures)),
         },
-        RustExpr::Deref(expr) => RustExpr::Deref(Box::new(deref_guard_copy_captures(
-            *expr, captures,
-        ))),
+        RustExpr::Deref(expr) => {
+            RustExpr::Deref(Box::new(deref_guard_copy_captures(*expr, captures)))
+        }
         RustExpr::Cast { expr, ty } => RustExpr::Cast {
             expr: Box::new(deref_guard_copy_captures(*expr, captures)),
             ty,

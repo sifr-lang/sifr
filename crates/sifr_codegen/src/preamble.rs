@@ -1521,6 +1521,13 @@ mod tests {
             RustStmt::For { iter, body, .. } | RustStmt::While { cond: iter, body } => {
                 count_raw_in_expr(iter) + body.iter().map(count_raw_in_stmt).sum::<usize>()
             }
+            RustStmt::With { items, body } => {
+                items
+                    .iter()
+                    .map(|item| count_raw_in_expr(&item.value))
+                    .sum::<usize>()
+                    + body.iter().map(count_raw_in_stmt).sum::<usize>()
+            }
             RustStmt::Loop { body } | RustStmt::Block(body) => {
                 body.iter().map(count_raw_in_stmt).sum()
             }

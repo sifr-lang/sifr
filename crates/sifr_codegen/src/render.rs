@@ -400,6 +400,42 @@ impl Renderer {
                 self.dedent();
                 self.writeln("}");
             }
+            RustStmt::With { items, body } => {
+                self.writeln("{");
+                self.indent();
+                for (idx, item) in items.iter().enumerate() {
+                    let value = Self::render_expr_string(&item.value);
+                    if item.has_cm {
+                        let Some(class_name) = item.class_name.as_ref() else {
+                            panic!("with-item missing class_name for context manager rendering");
+                        };
+                        let ctx_name = format!("__ctx_{idx}");
+                        let guard_type = format!("__WithGuard{idx}");
+                        let guard_var = format!("__guard_{idx}");
+                        self.writeln(&format!("let mut {ctx_name} = {value};"));
+                        self.writeln(&format!("struct {guard_type} {{ ctx: {class_name} }}"));
+                        self.writeln(&format!("impl Drop for {guard_type} {{"));
+                        self.indent();
+                        self.writeln("fn drop(&mut self) { self.ctx.__exit__(); }");
+                        self.dedent();
+                        self.writeln("}");
+                        self.writeln(&format!(
+                            "let mut {guard_var} = {guard_type} {{ ctx: {ctx_name} }};"
+                        ));
+                        self.writeln(&format!(
+                            "let {} = {guard_var}.ctx.__enter__();",
+                            item.binding
+                        ));
+                    } else {
+                        self.writeln(&format!("let {} = {value};", item.binding));
+                    }
+                }
+                for stmt in body {
+                    self.render_stmt(stmt);
+                }
+                self.dedent();
+                self.writeln("}");
+            }
             RustStmt::While { cond, body } => {
                 self.writeln(&format!("while {} {{", Self::render_expr_string(cond)));
                 self.indent();

@@ -113,6 +113,16 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             }
             removed
         }
+        RustStmt::With { items, body } => {
+            let mut removed = 0usize;
+            for item in items {
+                removed += optimize_expr(&mut item.value);
+            }
+            for stmt in body {
+                removed += optimize_stmt(stmt);
+            }
+            removed
+        }
         RustStmt::While { cond, body } => {
             let mut removed = optimize_expr(cond);
             for stmt in body {

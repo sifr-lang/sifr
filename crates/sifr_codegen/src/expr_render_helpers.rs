@@ -157,11 +157,7 @@ impl RustEmitter {
         self.emit_rust_expr(&crate::RustExpr::FormatMacro {
             name,
             format_str: format_str.to_string(),
-            args: args
-                .iter()
-                .cloned()
-                .map(crate::RustExpr::RawCode)
-                .collect(),
+            args: args.iter().cloned().map(crate::RustExpr::RawCode).collect(),
         });
     }
 
@@ -478,6 +474,21 @@ impl RustEmitter {
                     .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
                     .collect(),
             },
+            crate::RustStmt::With { items, body } => crate::RustStmt::With {
+                items: items
+                    .into_iter()
+                    .map(|item| crate::RustWithItem {
+                        binding: item.binding,
+                        value: self.rewrite_stdlib_constant_idents_in_expr(item.value),
+                        has_cm: item.has_cm,
+                        class_name: item.class_name,
+                    })
+                    .collect(),
+                body: body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+            },
             crate::RustStmt::While { cond, body } => crate::RustStmt::While {
                 cond: self.rewrite_stdlib_constant_idents_in_expr(cond),
                 body: body
@@ -561,54 +572,51 @@ impl RustEmitter {
         };
 
         let class_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        let method_params: Option<Vec<(Type, ParamConvention)>> = if let Type::Class {
-            name, methods, ..
-        } = class_ty
-        {
-            self.func_signatures
-                .get(&format!("{name}::{method}"))
-                .map(|(params, _)| params.clone())
-                .or_else(|| {
-                    methods
-                        .iter()
-                        .find(|(method_name, _)| method_name == method)
-                        .map(|(_, fty)| {
-                            let self_offset = usize::from(
+        let method_params: Option<Vec<(Type, ParamConvention)>> =
+            if let Type::Class { name, methods, .. } = class_ty {
+                self.func_signatures
+                    .get(&format!("{name}::{method}"))
+                    .map(|(params, _)| params.clone())
+                    .or_else(|| {
+                        methods
+                            .iter()
+                            .find(|(method_name, _)| method_name == method)
+                            .map(|(_, fty)| {
+                                let self_offset = usize::from(
+                                    fty.params
+                                        .first()
+                                        .is_some_and(|(param_name, _, _)| param_name == "self"),
+                                );
                                 fty.params
-                                    .first()
-                                    .is_some_and(|(param_name, _, _)| param_name == "self"),
-                            );
-                            fty.params
-                                .iter()
-                                .skip(self_offset)
-                                .map(|(_, ty, conv)| (ty.clone(), *conv))
-                                .collect::<Vec<_>>()
-                        })
-                })
-        } else {
-            None
-        };
+                                    .iter()
+                                    .skip(self_offset)
+                                    .map(|(_, ty, conv)| (ty.clone(), *conv))
+                                    .collect::<Vec<_>>()
+                            })
+                    })
+            } else {
+                None
+            };
 
         let mut rendered_args = Vec::with_capacity(args.len());
         for (idx, arg) in args.iter().enumerate() {
-            let mut rendered_arg = if let Some(lowered_arg) =
-                crate::try_lower_leaf_or_name_expr_result(arg)?
-            {
-                let rewritten = self.rewrite_stdlib_constant_idents_in_expr(lowered_arg);
-                crate::render_expr(&rewritten)
-            } else {
-                let saved_stats = self.lowering_stats;
-                let Some(rendered) = self.try_render_structured_expr(arg)? else {
-                    if suppress_self_field_clone
-                        && self.pending_self_field_clone_suppression > suppression_prev
-                    {
-                        self.pending_self_field_clone_suppression -= 1;
-                    }
-                    return Ok(false);
+            let mut rendered_arg =
+                if let Some(lowered_arg) = crate::try_lower_leaf_or_name_expr_result(arg)? {
+                    let rewritten = self.rewrite_stdlib_constant_idents_in_expr(lowered_arg);
+                    crate::render_expr(&rewritten)
+                } else {
+                    let saved_stats = self.lowering_stats;
+                    let Some(rendered) = self.try_render_structured_expr(arg)? else {
+                        if suppress_self_field_clone
+                            && self.pending_self_field_clone_suppression > suppression_prev
+                        {
+                            self.pending_self_field_clone_suppression -= 1;
+                        }
+                        return Ok(false);
+                    };
+                    self.lowering_stats = saved_stats;
+                    rendered
                 };
-                self.lowering_stats = saved_stats;
-                rendered
-            };
 
             if let Some(params) = method_params.as_ref() {
                 if let Some((param_ty, convention)) = params.get(idx) {
@@ -672,8 +680,7 @@ impl RustEmitter {
                     .collect(),
             });
         }
-        if suppress_self_field_clone
-            && self.pending_self_field_clone_suppression > suppression_prev
+        if suppress_self_field_clone && self.pending_self_field_clone_suppression > suppression_prev
         {
             self.pending_self_field_clone_suppression -= 1;
         }
@@ -915,9 +922,11 @@ impl RustEmitter {
             let mut result_error_coerce_target: Option<String> = None;
             if let Some(param_ty) = param_ty_for_arg.as_ref() {
                 let mut arg_rendered_for_adapter = crate::render_expr(&arg_expr);
-                if let Some(adapted) =
-                    self.try_build_callable_adapter_closure(arg, param_ty, &arg_rendered_for_adapter)
-                {
+                if let Some(adapted) = self.try_build_callable_adapter_closure(
+                    arg,
+                    param_ty,
+                    &arg_rendered_for_adapter,
+                ) {
                     arg_rendered_for_adapter = adapted;
                     arg_expr = crate::RustExpr::RawCode(arg_rendered_for_adapter);
                 }
@@ -937,8 +946,8 @@ impl RustEmitter {
                     let param_err_ty =
                         crate::render_type(&crate::sifr_type_to_rust_type(param_err));
                     let arg_err_ty = crate::render_type(&crate::sifr_type_to_rust_type(arg_err));
-                    let ok_compatible = matches!(param_ok.as_ref(), Type::TypeVar(_))
-                        || param_ok_ty == arg_ok_ty;
+                    let ok_compatible =
+                        matches!(param_ok.as_ref(), Type::TypeVar(_)) || param_ok_ty == arg_ok_ty;
                     if ok_compatible
                         && param_err_ty != arg_err_ty
                         && can_construct_error_from_message(&param_err_ty)
@@ -1004,10 +1013,9 @@ impl RustEmitter {
                         {
                             let enum_name = resolved_param.union_enum_name();
                             if should_clone_for_own {
-                                arg_expr =
-                                    crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(
-                                        Box::new(arg_expr),
-                                    )));
+                                arg_expr = crate::RustExpr::Clone(Box::new(
+                                    crate::RustExpr::Paren(Box::new(arg_expr)),
+                                ));
                             } else if matches!(
                                 convention_for_arg,
                                 Some(ParamConvention::Borrow | ParamConvention::MutBorrow)
@@ -1041,9 +1049,8 @@ impl RustEmitter {
                 }
             }
             if should_clone_for_own {
-                arg_expr = crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
-                    arg_expr,
-                ))));
+                arg_expr =
+                    crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(arg_expr))));
             } else if matches!(
                 convention_for_arg,
                 Some(ParamConvention::Borrow | ParamConvention::MutBorrow)
@@ -1216,9 +1223,7 @@ impl RustEmitter {
                     return Ok(false);
                 };
                 let call_return_ty = if let HirExpr::Call { func, .. } = arg {
-                    self.func_signatures
-                        .get(func)
-                        .map(|(_, ret)| ret.clone())
+                    self.func_signatures.get(func).map(|(_, ret)| ret.clone())
                 } else {
                     None
                 };
@@ -1360,9 +1365,9 @@ impl RustEmitter {
                                     .any(|member| member.union_variant_name() == variant_name);
                                 let has_all_members = members.iter().all(|needed_member| {
                                     let needed_variant = needed_member.union_variant_name();
-                                    candidate_members.iter().any(|member| {
-                                        member.union_variant_name() == needed_variant
-                                    })
+                                    candidate_members
+                                        .iter()
+                                        .any(|member| member.union_variant_name() == needed_variant)
                                 });
                                 if has_variant && has_all_members {
                                     Some(candidate.clone())
@@ -1466,8 +1471,7 @@ impl RustEmitter {
             let mut rhs_cmp = rhs_wrapped;
             let mut string_as_str_applied = false;
 
-            let is_comparison_op =
-                matches!(lowered_op, "==" | "!=" | "<" | "<=" | ">" | ">=");
+            let is_comparison_op = matches!(lowered_op, "==" | "!=" | "<" | "<=" | ">" | ">=");
             if is_comparison_op
                 && option_inner_type(lhs_expr.ty()).is_some()
                 && option_inner_type(rhs_expr.ty()).is_none()
@@ -1541,25 +1545,29 @@ impl RustEmitter {
                     } else {
                         crate::RustExpr::RawCode(format!("{target_err_ty}::new"))
                     };
-                    self.emit_rust_expr(&crate::RustExpr::Try(Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(inner_expr))),
-                        method: "map_err".to_string(),
-                        args: vec![crate::RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "__e".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(crate::RustExpr::FnCall {
-                                func: Box::new(ctor_func),
-                                args: vec![crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Ident("__e".to_string())),
-                                    method: "to_string".to_string(),
-                                    args: vec![],
+                    self.emit_rust_expr(&crate::RustExpr::Try(Box::new(
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(inner_expr))),
+                            method: "map_err".to_string(),
+                            args: vec![crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "__e".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
                                 }],
-                            }),
-                            is_move: false,
-                        }],
-                    })));
+                                body: Box::new(crate::RustExpr::FnCall {
+                                    func: Box::new(ctor_func),
+                                    args: vec![crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Ident(
+                                            "__e".to_string(),
+                                        )),
+                                        method: "to_string".to_string(),
+                                        args: vec![],
+                                    }],
+                                }),
+                                is_move: false,
+                            }],
+                        },
+                    )));
                     return Ok(true);
                 }
             }
@@ -1669,8 +1677,7 @@ impl RustEmitter {
                     && !crate::helpers::is_option_type(arg.ty())
                     && !matches!(arg, HirExpr::NoneLiteral);
                 should_wrap_option_box = should_wrap_option
-                    && (param_ty.rust_type().starts_with("Option<Box<")
-                        || is_recursive_ctor_field);
+                    && (param_ty.rust_type().starts_with("Option<Box<") || is_recursive_ctor_field);
                 let mut prefix = String::new();
                 let prev_output = std::mem::take(&mut self.output);
                 self.emit_borrow_prefix_for_name(
@@ -2212,14 +2219,12 @@ impl RustEmitter {
         let rendered_op = if op == "//" { "/" } else { op };
         if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::BigInt) {
             if matches!(left, HirExpr::Name { .. } | HirExpr::FieldAccess { .. }) {
-                left_expr = crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
-                    left_expr,
-                ))));
+                left_expr =
+                    crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(left_expr))));
             }
             if matches!(right, HirExpr::Name { .. } | HirExpr::FieldAccess { .. }) {
-                right_expr = crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
-                    right_expr,
-                ))));
+                right_expr =
+                    crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(right_expr))));
             }
             self.emit_rust_expr(&crate::RustExpr::Paren(Box::new(crate::RustExpr::BinOp {
                 left: Box::new(left_expr),
@@ -2412,7 +2417,9 @@ impl RustEmitter {
                                 cond: Box::new(crate::RustExpr::BinOp {
                                     left: Box::new(crate::RustExpr::Ident(index_name.clone())),
                                     op: "<".to_string(),
-                                    right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                                    right: Box::new(crate::RustExpr::Literal(
+                                        crate::RustLiteral::Int(0),
+                                    )),
                                 }),
                                 then_expr: Box::new(crate::RustExpr::Cast {
                                     expr: Box::new(crate::RustExpr::BinOp {
@@ -2478,7 +2485,9 @@ impl RustEmitter {
                                 cond: Box::new(crate::RustExpr::BinOp {
                                     left: Box::new(crate::RustExpr::Ident(index_name.clone())),
                                     op: "<".to_string(),
-                                    right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                                    right: Box::new(crate::RustExpr::Literal(
+                                        crate::RustLiteral::Int(0),
+                                    )),
                                 }),
                                 then_expr: Box::new(crate::RustExpr::Cast {
                                     expr: Box::new(crate::RustExpr::BinOp {
@@ -2768,7 +2777,9 @@ impl RustEmitter {
                     rendered.push_str("} _i += _step; } }");
                     rendered.push_str("; _result }");
                 } else {
-                    rendered.push_str("_s.chars().skip(_start).take(_stop - _start).collect::<String>() }");
+                    rendered.push_str(
+                        "_s.chars().skip(_start).take(_stop - _start).collect::<String>() }",
+                    );
                 }
                 self.emit_rust_expr(&crate::RustExpr::RawCode(rendered));
                 Ok(true)
@@ -2818,9 +2829,8 @@ impl RustEmitter {
                     rendered.push_str("let mut _result = Vec::new(); ");
                     rendered.push_str("if _step > 0 { let mut _i = _start; ");
                     rendered.push_str("while _i < _stop { ");
-                    rendered.push_str(
-                        "if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } ",
-                    );
+                    rendered
+                        .push_str("if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } ");
                     rendered.push_str("_i += _step as usize; } }");
                     rendered.push_str(" else { let mut _i = _start as i64; ");
                     rendered.push_str("let _stop_i = _stop as i64; while _i > _stop_i { ");

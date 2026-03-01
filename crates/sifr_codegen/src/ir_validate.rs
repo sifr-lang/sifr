@@ -187,6 +187,14 @@ fn validate_no_raw_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>) {
                 validate_no_raw_stmt(stmt, issues);
             }
         }
+        RustStmt::With { items, body } => {
+            for item in items {
+                validate_no_raw_expr(&item.value, issues);
+            }
+            for stmt in body {
+                validate_no_raw_stmt(stmt, issues);
+            }
+        }
         RustStmt::While { cond, body } => {
             validate_no_raw_expr(cond, issues);
             for stmt in body {
@@ -525,6 +533,14 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
         }
         RustStmt::For { iter, body, .. } => {
             validate_expr(iter, issues, in_function);
+            for stmt in body {
+                validate_stmt(stmt, issues, in_function);
+            }
+        }
+        RustStmt::With { items, body } => {
+            for item in items {
+                validate_expr(&item.value, issues, in_function);
+            }
             for stmt in body {
                 validate_stmt(stmt, issues, in_function);
             }

@@ -125,6 +125,10 @@ pub enum RustStmt {
         iter: RustExpr,
         body: Vec<RustStmt>,
     },
+    With {
+        items: Vec<RustWithItem>,
+        body: Vec<RustStmt>,
+    },
     While {
         cond: RustExpr,
         body: Vec<RustStmt>,
@@ -142,6 +146,14 @@ pub enum RustStmt {
     Continue,
     Block(Vec<RustStmt>),
     RawCode(String),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RustWithItem {
+    pub binding: String,
+    pub value: RustExpr,
+    pub has_cm: bool,
+    pub class_name: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

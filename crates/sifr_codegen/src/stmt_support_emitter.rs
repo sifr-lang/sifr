@@ -1153,6 +1153,17 @@ impl RustEmitter {
                     None
                 };
                 (vec![RustStmt::Return(lowered_return)], true)
+            } else if let HirStmt::Raise { value } = stmt {
+                let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
+                    return Ok(None);
+                };
+                (
+                    vec![RustStmt::Return(Some(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
+                        args: vec![lowered],
+                    }))],
+                    true,
+                )
             } else if let HirStmt::If {
                 condition,
                 then_body,
@@ -1192,6 +1203,11 @@ impl RustEmitter {
                     }],
                     true,
                 )
+            } else if let HirStmt::With { items, body } = stmt {
+                let Some(lowered_with) = self.try_lower_with_stmt_for_ir(items, body)? else {
+                    return Ok(None);
+                };
+                (vec![lowered_with], true)
             } else {
                 return Ok(None);
             };
@@ -1224,6 +1240,49 @@ impl RustEmitter {
             return Ok(Some(crate::RustExpr::RawCode(rendered_expr)));
         }
         self.lower_rendered_expr_for_ir(condition)
+    }
+
+    fn try_lower_with_stmt_for_ir(
+        &mut self,
+        items: &[(String, HirExpr, bool)],
+        body: &[HirStmt],
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let mut lowered_items = Vec::with_capacity(items.len());
+        for (var, value, has_cm) in items {
+            let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
+                return Ok(None);
+            };
+            let binding = if crate::helpers::stmts_reference_var(body, var)
+                || items
+                    .iter()
+                    .any(|(other_var, _, _)| other_var != var && other_var.contains(var))
+            {
+                var.clone()
+            } else {
+                format!("_{var}")
+            };
+            let class_name = if *has_cm {
+                let Type::Class { name, .. } = value.ty() else {
+                    return Ok(None);
+                };
+                Some(name.clone())
+            } else {
+                None
+            };
+            lowered_items.push(crate::RustWithItem {
+                binding,
+                value: lowered_value,
+                has_cm: *has_cm,
+                class_name,
+            });
+        }
+        let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+            return Ok(None);
+        };
+        Ok(Some(RustStmt::With {
+            items: lowered_items,
+            body: lowered_body,
+        }))
     }
 
     fn try_lower_borrowed_name_compare_condition_for_ir(
@@ -2410,93 +2469,10 @@ impl RustEmitter {
         let HirStmt::With { items, body } = stmt else {
             return Ok(false);
         };
-
-        let output_len = self.output.len();
-        self.write_indent();
-        self.write("{\n");
-        self.indent += 1;
-
-        for (idx, (var, value, has_cm)) in items.iter().enumerate() {
-            let ctx_name = format!("__ctx_{idx}");
-            let guard_type = format!("__WithGuard{idx}");
-            let guard_var = format!("__guard_{idx}");
-            if *has_cm {
-                let Type::Class {
-                    name: class_name, ..
-                } = value.ty()
-                else {
-                    self.indent -= 1;
-                    self.output.truncate(output_len);
-                    return Ok(false);
-                };
-
-                self.write_indent();
-                self.write("let mut ");
-                self.write(&ctx_name);
-                self.write(" = ");
-                if !self.try_emit_structured_expr(value)? {
-                    self.indent -= 1;
-                    self.output.truncate(output_len);
-                    return Ok(false);
-                }
-                self.write(";\n");
-
-                self.write_indent();
-                self.write(&format!("struct {guard_type} {{ ctx: {class_name} }}\n"));
-                self.write_indent();
-                self.write(&format!("impl Drop for {guard_type} {{\n"));
-                self.indent += 1;
-                self.write_indent();
-                self.write("fn drop(&mut self) { self.ctx.__exit__(); }\n");
-                self.indent -= 1;
-                self.write_indent();
-                self.write("}\n");
-
-                self.write_indent();
-                self.write(&format!(
-                    "let mut {guard_var} = {guard_type} {{ ctx: {ctx_name} }};\n"
-                ));
-
-                self.write_indent();
-                if crate::helpers::stmts_reference_var(body, var)
-                    || items
-                        .iter()
-                        .any(|(other_var, _, _)| other_var != var && other_var.contains(var))
-                {
-                    self.write("let ");
-                    self.write(var);
-                } else {
-                    self.write("let _");
-                    self.write(var);
-                }
-                self.write(" = ");
-                self.write(&guard_var);
-                self.write(".ctx.__enter__();\n");
-            } else {
-                self.write_indent();
-                if crate::helpers::stmts_reference_var(body, var) {
-                    self.write("let ");
-                    self.write(var);
-                } else {
-                    self.write("let _");
-                    self.write(var);
-                }
-                self.write(" = ");
-                if !self.try_emit_structured_expr(value)? {
-                    self.indent -= 1;
-                    self.output.truncate(output_len);
-                    return Ok(false);
-                }
-                self.write(";\n");
-            }
-        }
-
-        for body_stmt in body {
-            self.emit_stmt(body_stmt);
-        }
-        self.indent -= 1;
-        self.write_indent();
-        self.write("}\n");
+        let Some(lowered_with) = self.try_lower_with_stmt_for_ir(items, body)? else {
+            return Ok(false);
+        };
+        self.emit_rust_stmt_with_current_indent(&lowered_with);
         Ok(true)
     }
 
