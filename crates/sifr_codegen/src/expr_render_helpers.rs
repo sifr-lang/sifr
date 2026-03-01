@@ -1623,17 +1623,15 @@ impl RustEmitter {
         &mut self,
         elements: &[HirExpr],
     ) -> Result<bool, crate::CodegenError> {
-        let mut rendered_elements = Vec::with_capacity(elements.len());
+        let mut lowered_elements = Vec::with_capacity(elements.len());
         for element in elements {
-            let saved_stats = self.lowering_stats;
-            let Some(rendered) = self.try_render_structured_expr(element)? else {
+            let Some(lowered) = self.lower_stmt_expr_for_ir(element)? else {
                 return Ok(false);
             };
-            self.lowering_stats = saved_stats;
-            rendered_elements.push(rendered);
+            lowered_elements.push(lowered);
         }
 
-        self.write(&format!("vec![{}]", rendered_elements.join(", ")));
+        self.emit_rust_expr(&crate::RustExpr::Vec(lowered_elements));
         Ok(true)
     }
 
