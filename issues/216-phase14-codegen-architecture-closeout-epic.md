@@ -668,3 +668,16 @@ Latest validation loop (2026-03-02, Pass AK):
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
 - Re-audit evidence after this loop:
 - `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites reduced `7 -> 5`.
+
+Latest validation loop (2026-03-02, Pass AL):
+- Continued IR-first cleanup in `expr_render_helpers.rs` with root-cause removal of the remaining string-backed constructor/isinstance emission path.
+- `try_emit_structured_constructor_call_expr` now lowers args as typed IR, applies borrow conventions with typed IR (`Ref`/`Clone`), and applies `Option`/`Option<Box<_>>` wrapping using typed IR function calls (`Some`, `Box::new`) instead of rendered-string argument assembly and `RustExpr::RawCode`.
+- `isinstance` union branch now emits a typed IR block + `IfLet` tree, removing `matches!(...)` macro arg `RawCode` construction.
+- removed now-unused `try_render_structured_expr` helper (string-capture path) from `expr_render_helpers.rs`.
+- moved borrow-prefix decision reuse to typed helper visibility (`borrow_prefix_for_name` is now `pub(crate)`), and `apply_borrow_prefix_expr` now uses it directly (no output capture).
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+- Re-audit evidence after this loop:
+- `expr_render_helpers.rs` no longer constructs `RustExpr::RawCode(...)` for production emission paths (remaining single `RawCode` occurrence is a defensive panic arm in AST rewrite traversal).

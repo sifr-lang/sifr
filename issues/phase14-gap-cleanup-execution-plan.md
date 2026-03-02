@@ -986,3 +986,15 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 1. `function_emitter.rs` (`51`) -> migrate function/generator body emission to IR statements/expressions.
 2. `class_method_emitter.rs` (`70`) -> migrate constructor/method assembly to IR using shared lowering helpers.
 3. `class_emitter.rs` (`93`) -> migrate class/type/display impl assembly to IR item trees.
+
+### Validation rerun (2026-03-02, Pass AL)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`457` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. migrated constructor-call lowering in `expr_render_helpers.rs` from rendered-string arg assembly to typed IR arg lowering (borrow convention, clone, option wrapping, `Box::new` all emitted as IR)
+6. migrated union `isinstance` lowering in `expr_render_helpers.rs` from `matches!` `RawCode` macro args to structured typed IR block + `IfLet`
+7. removed now-unused string-capture helper `try_render_structured_expr` from `expr_render_helpers.rs`
+8. changed `borrow_prefix_for_name` visibility to `pub(crate)` and rewired typed borrow-prefix application to avoid output-capture string flow
+9. Re-audit totals after this slice: `expr_render_helpers.rs` production `RustExpr::RawCode` construction sites removed (remaining single `RawCode` mention is a defensive panic arm)

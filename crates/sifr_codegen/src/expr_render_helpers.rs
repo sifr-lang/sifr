@@ -784,23 +784,6 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_render_structured_expr(
-        &mut self,
-        expr: &HirExpr,
-    ) -> Result<Option<String>, crate::CodegenError> {
-        let saved_output = std::mem::take(&mut self.output);
-        let rendered = match self.try_emit_structured_expr(expr) {
-            Ok(true) => Some(std::mem::take(&mut self.output)),
-            Ok(false) => None,
-            Err(err) => {
-                self.output = saved_output;
-                return Err(err);
-            }
-        };
-        self.output = saved_output;
-        Ok(rendered)
-    }
-
     pub(crate) fn try_lower_structured_field_access_expr(
         &mut self,
         object: &HirExpr,
@@ -920,14 +903,10 @@ impl RustEmitter {
             let mut should_box_protocol = false;
             let mut result_error_coerce_target: Option<String> = None;
             if let Some(param_ty) = param_ty_for_arg.as_ref() {
-                let mut arg_rendered_for_adapter = crate::render_expr(&arg_expr);
-                if let Some(adapted) = self.try_build_callable_adapter_closure(
-                    arg,
-                    param_ty,
-                    &arg_rendered_for_adapter,
-                ) {
-                    arg_rendered_for_adapter = adapted;
-                    arg_expr = crate::RustExpr::RawCode(arg_rendered_for_adapter);
+                if let Some(adapted) =
+                    self.try_build_callable_adapter_closure(arg, param_ty, arg_expr.clone())
+                {
+                    arg_expr = adapted;
                 }
                 let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
                 should_wrap_option = crate::helpers::is_option_type(resolved_param)
@@ -1100,8 +1079,8 @@ impl RustEmitter {
         &self,
         arg: &HirExpr,
         param_ty: &Type,
-        rendered_arg: &str,
-    ) -> Option<String> {
+        callee_expr: crate::RustExpr,
+    ) -> Option<crate::RustExpr> {
         let Type::Callable(_, expected_conventions, _) =
             crate::resolve_alias_type_for_plain_call(param_ty)
         else {
@@ -1126,44 +1105,53 @@ impl RustEmitter {
             return None;
         }
 
-        let mut closure = String::new();
-        closure.push('|');
+        let mut params = Vec::with_capacity(provided_params.len());
+        let mut call_args = Vec::with_capacity(provided_params.len());
         for idx in 0..provided_params.len() {
-            if idx > 0 {
-                closure.push_str(", ");
-            }
-            closure.push_str("__arg");
-            closure.push_str(&idx.to_string());
+            params.push(crate::RustParam::Named {
+                name: format!("__arg{idx}"),
+                ty: crate::RustType::Named("_".to_string()),
+            });
         }
-        closure.push_str("| ");
-        closure.push_str(rendered_arg);
-        closure.push('(');
+
         for (idx, ((_, provided), expected)) in provided_params
             .iter()
             .zip(expected_conventions.iter())
             .enumerate()
         {
-            if idx > 0 {
-                closure.push_str(", ");
-            }
             let arg_name = format!("__arg{idx}");
             let adapted = match (expected, provided) {
                 (ParamConvention::Borrow | ParamConvention::MutBorrow, ParamConvention::Own) => {
-                    format!("({arg_name}).clone()")
+                    crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
+                        crate::RustExpr::Ident(arg_name),
+                    ))))
                 }
-                (ParamConvention::Own, ParamConvention::Borrow) => format!("&{arg_name}"),
-                (ParamConvention::Own, ParamConvention::MutBorrow) => {
-                    format!("&mut {arg_name}")
-                }
-                (ParamConvention::Borrow, ParamConvention::MutBorrow) => {
-                    format!("&*{arg_name}")
-                }
-                _ => arg_name,
+                (ParamConvention::Own, ParamConvention::Borrow) => crate::RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(crate::RustExpr::Ident(arg_name)),
+                },
+                (ParamConvention::Own, ParamConvention::MutBorrow) => crate::RustExpr::Ref {
+                    mutable: true,
+                    expr: Box::new(crate::RustExpr::Ident(arg_name)),
+                },
+                (ParamConvention::Borrow, ParamConvention::MutBorrow) => crate::RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
+                        arg_name,
+                    )))),
+                },
+                _ => crate::RustExpr::Ident(arg_name),
             };
-            closure.push_str(&adapted);
+            call_args.push(adapted);
         }
-        closure.push(')');
-        Some(closure)
+        Some(crate::RustExpr::Closure {
+            params,
+            body: Box::new(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Paren(Box::new(callee_expr))),
+                args: call_args,
+            }),
+            is_move: false,
+        })
     }
 
     pub(crate) fn try_emit_structured_plain_call(
@@ -1364,11 +1352,10 @@ impl RustEmitter {
                         )));
                         return Ok(true);
                     }
-                    let saved_stats = self.lowering_stats;
-                    let Some(object_rendered) = self.try_render_structured_expr(object)? else {
+                    let Some(object_lowered) = self.try_lower_expr_for_structured_emit(object)?
+                    else {
                         return Ok(false);
                     };
-                    self.lowering_stats = saved_stats;
                     let preferred_enum_name = resolved_object_ty.union_enum_name();
                     let variant_name = target_ty.union_variant_name();
                     let enum_name = if self.union_enums.contains_key(&preferred_enum_name) {
@@ -1394,12 +1381,31 @@ impl RustEmitter {
                             })
                             .unwrap_or(preferred_enum_name)
                     };
-                    self.emit_rust_expr(&crate::RustExpr::MacroCall {
-                        name: "matches".to_string(),
-                        args: vec![
-                            crate::RustExpr::RawCode(object_rendered),
-                            crate::RustExpr::RawCode(format!("{enum_name}::{variant_name}(..)")),
+                    self.emit_rust_expr(&crate::RustExpr::Block {
+                        stmts: vec![
+                            crate::RustStmt::Let {
+                                mutable: true,
+                                name: "__sifr_isinstance_match".to_string(),
+                                ty: Some(crate::RustType::Bool),
+                                value: crate::RustExpr::Literal(crate::RustLiteral::Bool(false)),
+                            },
+                            crate::RustStmt::IfLet {
+                                pattern: format!("{enum_name}::{variant_name}(..)"),
+                                expr: object_lowered,
+                                then_body: vec![crate::RustStmt::Assign {
+                                    target: crate::RustExpr::Ident(
+                                        "__sifr_isinstance_match".to_string(),
+                                    ),
+                                    value: crate::RustExpr::Literal(crate::RustLiteral::Bool(
+                                        true,
+                                    )),
+                                }],
+                                else_body: None,
+                            },
                         ],
+                        expr: Some(Box::new(crate::RustExpr::Ident(
+                            "__sifr_isinstance_match".to_string(),
+                        ))),
                     });
                     return Ok(true);
                 }
@@ -1681,14 +1687,12 @@ impl RustEmitter {
             return Ok(false);
         }
 
-        let mut rendered_args = Vec::with_capacity(args.len());
+        let mut lowered_args = Vec::with_capacity(args.len());
         for (idx, arg) in args.iter().enumerate() {
-            let saved_stats = self.lowering_stats;
-            let Some(rendered) = self.try_render_structured_expr(arg)? else {
+            let Some(lowered) = self.try_lower_expr_for_structured_emit(arg)? else {
                 return Ok(false);
             };
-            self.lowering_stats = saved_stats;
-            let mut rendered_arg = rendered;
+            let mut lowered_arg = lowered;
             let mut should_wrap_option = false;
             let mut should_wrap_option_box = false;
             let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty }
@@ -1711,9 +1715,7 @@ impl RustEmitter {
                     && !matches!(arg, HirExpr::NoneLiteral);
                 should_wrap_option_box = should_wrap_option
                     && (param_ty.rust_type().starts_with("Option<Box<") || is_recursive_ctor_field);
-                let mut prefix = String::new();
-                let prev_output = std::mem::take(&mut self.output);
-                self.emit_borrow_prefix_for_name(
+                lowered_arg = self.apply_borrow_prefix_expr(
                     *convention,
                     arg.ty(),
                     Some(param_ty),
@@ -1721,25 +1723,40 @@ impl RustEmitter {
                         HirExpr::Name { name, .. } => Some(name.as_str()),
                         _ => None,
                     },
+                    lowered_arg,
                 );
-                prefix.push_str(&self.output);
-                self.output = prev_output;
-                if !prefix.is_empty() {
-                    rendered_arg = format!("{prefix}({rendered_arg})");
-                } else if *convention == ParamConvention::Own && borrowed_name_arg {
-                    rendered_arg = format!("({rendered_arg}).clone()");
+                if *convention == ParamConvention::Own && borrowed_name_arg {
+                    lowered_arg = crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(
+                        Box::new(lowered_arg),
+                    )));
                 }
             } else if matches!(arg, HirExpr::Name { .. }) {
-                rendered_arg = format!("({rendered_arg}).clone()");
+                lowered_arg = crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
+                    lowered_arg,
+                ))));
             }
             if should_wrap_option {
                 if should_wrap_option_box {
-                    rendered_arg = format!("Some(Box::new({rendered_arg}))");
+                    lowered_arg = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "Some".to_string(),
+                        ])),
+                        args: vec![crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "Box".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![lowered_arg],
+                        }],
+                    };
                 } else {
-                    rendered_arg = format!("Some({rendered_arg})");
+                    lowered_arg = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                        args: vec![lowered_arg],
+                    };
                 }
             }
-            rendered_args.push(rendered_arg);
+            lowered_args.push(lowered_arg);
         }
 
         self.emit_rust_expr(&crate::RustExpr::FnCall {
@@ -1747,10 +1764,7 @@ impl RustEmitter {
                 class_name.to_string(),
                 "new".to_string(),
             ])),
-            args: rendered_args
-                .into_iter()
-                .map(crate::RustExpr::RawCode)
-                .collect(),
+            args: lowered_args,
         });
         Ok(true)
     }
@@ -2033,17 +2047,12 @@ impl RustEmitter {
         arg_name: Option<&str>,
         lowered_expr: crate::RustExpr,
     ) -> crate::RustExpr {
-        let mut prefix = String::new();
-        let prev_output = std::mem::take(&mut self.output);
-        self.emit_borrow_prefix_for_name(convention, arg_ty, param_ty, arg_name);
-        prefix.push_str(&self.output);
-        self.output = prev_output;
-        match prefix.as_str() {
-            "&" => crate::RustExpr::Ref {
+        match self.borrow_prefix_for_name(convention, arg_ty, param_ty, arg_name) {
+            Some("&") => crate::RustExpr::Ref {
                 mutable: false,
                 expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),
             },
-            "&mut " => crate::RustExpr::Ref {
+            Some("&mut ") => crate::RustExpr::Ref {
                 mutable: true,
                 expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),
             },
@@ -3185,7 +3194,7 @@ impl RustEmitter {
         if let HirExpr::Lambda { params, body, .. } = expr {
             let body_expr = match self.try_lower_expr_for_structured_emit(body) {
                 Ok(Some(lowered)) => lowered,
-                _ => crate::RustExpr::RawCode(self.render_expr_via_direct_emit(body)),
+                _ => panic!("lambda body lowering failed in strict IR emission path"),
             };
             self.emit_rust_expr(&crate::RustExpr::Closure {
                 params: params

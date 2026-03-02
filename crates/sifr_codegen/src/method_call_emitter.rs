@@ -127,7 +127,7 @@ impl RustEmitter {
         None
     }
 
-    fn borrow_prefix_for_name(
+    pub(crate) fn borrow_prefix_for_name(
         &self,
         convention: ParamConvention,
         arg_ty: &Type,
