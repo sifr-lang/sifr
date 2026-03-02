@@ -829,3 +829,19 @@ Latest validation loop (2026-03-02, Pass AX):
   - `cargo test -q -p sifr_codegen --lib --tests` -> pass (`445` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AY):
+- Continued IR-first cleanup by removing the remaining non-capture output path in `RustEmitter` helper plumbing:
+  - `output_helpers.rs`:
+    - removed direct string output helper methods (`write`, `emit_line`, `write_indent`) from `RustEmitter`.
+    - `emit_rust_stmt_with_current_indent` now hard-requires active statement capture and panics otherwise (no fallback render-to-output branch).
+    - `emit_rust_expr` now hard-panics to block direct expression string emission and enforce typed IR attachment to statements/items.
+- updated `lib_codegen_tests.rs` tests that previously exercised `emit_expr -> output string` to assert strict typed lowering via `try_lower_registry_expr_strict` + renderer.
+- Re-audit evidence after this loop:
+  - no production `self.write(...)`/`self.writeln(...)` callsites remain in `crates/sifr_codegen/src`.
+  - `output_helpers.rs` no longer contains direct render-to-output fallback logic for statements.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen test_emit_expr_prefers_structured_name_path` -> pass (`1` passed).
+  - `cargo test -q -p sifr_codegen test_emit_expr_borrowed_compare_is_structured` -> pass (`1` passed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

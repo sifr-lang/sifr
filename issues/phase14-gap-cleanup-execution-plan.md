@@ -1118,3 +1118,15 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 6. deleted dead direct-output borrow-prefix emitters from `method_call_emitter.rs`
 7. re-audit evidence: `rg -n "RawCode|SynItem" crates/sifr_codegen/src` -> no matches
 8. `self.output` references now remain only in renderer/output sink layers (`output_helpers.rs`, `render.rs`) plus one test-source assertion
+
+### Validation rerun (2026-03-02, Pass AY)
+
+1. `cargo test -q -p sifr_codegen test_emit_expr_prefers_structured_name_path` -> pass (`1` passed)
+2. `cargo test -q -p sifr_codegen test_emit_expr_borrowed_compare_is_structured` -> pass (`1` passed)
+3. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+4. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+5. IR-first cleanup this loop:
+6. removed direct string helper methods from `RustEmitter` output helpers (`write`, `emit_line`, `write_indent`)
+7. hardened `emit_rust_stmt_with_current_indent` to IR-capture-only behavior (panic when capture stack is not active)
+8. hardened `emit_rust_expr` to panic (forbid direct expression string emission path)
+9. updated `lib_codegen_tests.rs` expression-path tests to validate strict typed lowering (`try_lower_registry_expr_strict` + renderer) instead of emitter output-string assertions

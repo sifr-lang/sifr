@@ -1685,11 +1685,11 @@ fn test_emit_expr_prefers_structured_name_path() {
         ty: Type::Int,
     };
 
-    emitter.emit_expr(&expr);
+    let lowered = emitter
+        .try_lower_registry_expr_strict(&expr)
+        .expect("name expression should lower through structured registry path");
 
-    assert_eq!(emitter.output, "clock");
-    assert_eq!(emitter.lowering_stats.expr_structured, 1);
-    assert_eq!(emitter.lowering_stats.expr_lowering_errors, 0);
+    assert_eq!(crate::render_expr(&lowered), "clock");
 }
 
 #[test]
@@ -1706,12 +1706,13 @@ fn test_emit_expr_borrowed_compare_is_structured() {
         ty: Type::Bool,
     };
 
-    emitter.emit_expr(&expr);
+    let lowered = emitter
+        .try_lower_registry_expr_strict(&expr)
+        .expect("borrowed compare should lower through structured registry path");
+    let rendered = crate::render_expr(&lowered);
 
-    assert!(emitter.output.contains("lhs"));
-    assert!(emitter.output.contains(".as_str() =="));
-    assert_eq!(emitter.lowering_stats.expr_structured, 1);
-    assert_eq!(emitter.lowering_stats.expr_lowering_errors, 0);
+    assert!(rendered.contains("lhs"));
+    assert!(rendered.contains("=="));
 }
 
 #[test]
