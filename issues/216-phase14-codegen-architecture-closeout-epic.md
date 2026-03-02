@@ -646,3 +646,14 @@ Latest validation loop (2026-03-02, Pass AI):
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
 - Re-audit evidence after this loop:
 - `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites reduced `13 -> 8`.
+
+Latest validation loop (2026-03-02, Pass AJ):
+- Continued IR-first cleanup in `expr_render_helpers.rs` compare lowering:
+- `try_emit_structured_compare_expr` no longer builds rendered string chains for compare sequences; now emits typed IR compare chain (`RustExpr::BinOp`) including option wrapping and string `as_str()` normalization paths.
+- no `RustExpr::RawCode` emission remains in this compare path.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+- Re-audit evidence after this loop:
+- `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites reduced `8 -> 7`.

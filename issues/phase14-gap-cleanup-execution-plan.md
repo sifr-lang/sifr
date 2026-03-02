@@ -77,6 +77,13 @@ Completion evidence:
 42. `./scripts/run_all_tests.sh` -> pass (`394` e2e pass tests completed, `0` failed)
 43. full recursive demo sweep remains stable: `TOTAL=91`, `FAILS=5` (same expected non-runnable/intentional files only)
 44. `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites: `13 -> 8` (current tree)
+45. continuation slice in same loop:
+46. `try_emit_structured_compare_expr` in `expr_render_helpers.rs` migrated from rendered string chain + `RustExpr::RawCode` emission to typed IR compare/bool chain construction (`RustExpr::BinOp` + `RustLiteral::Bool` for `is`/`is not` none-none cases).
+47. validation for continuation compare slice:
+48. `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed)
+49. `./scripts/run_all_tests.sh` -> pass (`394` e2e pass tests completed, `0` failed)
+50. full recursive demo sweep remains stable: `TOTAL=91`, `FAILS=5` (same expected non-runnable/intentional files only)
+51. `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites after compare migration: `8 -> 7`
 
 ### Next Loop To-Do (Ordered)
 

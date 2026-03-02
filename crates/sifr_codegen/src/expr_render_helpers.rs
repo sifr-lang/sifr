@@ -1429,22 +1429,18 @@ impl RustEmitter {
             return Ok(false);
         }
 
+        let Some(mut lhs_expr_ir) = self.try_lower_expr_for_structured_emit(left)? else {
+            return Ok(false);
+        };
         let mut lhs_expr = left;
-        let mut rendered_chain = String::new();
+        let mut chain_expr: Option<crate::RustExpr> = None;
         for (idx, op) in ops.iter().enumerate() {
             let Some(rhs_expr) = comparators.get(idx) else {
                 return Ok(false);
             };
-            let lhs_saved_stats = self.lowering_stats;
-            let Some(lhs_rendered) = self.try_render_structured_expr(lhs_expr)? else {
+            let Some(rhs_expr_ir) = self.try_lower_expr_for_structured_emit(rhs_expr)? else {
                 return Ok(false);
             };
-            self.lowering_stats = lhs_saved_stats;
-            let rhs_saved_stats = self.lowering_stats;
-            let Some(rhs_rendered) = self.try_render_structured_expr(rhs_expr)? else {
-                return Ok(false);
-            };
-            self.lowering_stats = rhs_saved_stats;
             let lowered_op = match op.as_str() {
                 "==" | "!=" | "<" | "<=" | ">" | ">=" => op.as_str(),
                 "is" => "==",
@@ -1463,29 +1459,22 @@ impl RustEmitter {
                     Type::None
                 );
             if (op == "is" || op == "is not") && lhs_none_like && rhs_none_like {
-                if idx > 0 {
-                    rendered_chain.push_str(" && ");
-                }
-                rendered_chain.push_str(if op == "is" { "true" } else { "false" });
+                let pair_expr = crate::RustExpr::Literal(crate::RustLiteral::Bool(op == "is"));
+                chain_expr = Some(if let Some(prev) = chain_expr {
+                    crate::RustExpr::BinOp {
+                        left: Box::new(crate::RustExpr::Paren(Box::new(prev))),
+                        op: "&&".to_string(),
+                        right: Box::new(crate::RustExpr::Paren(Box::new(pair_expr))),
+                    }
+                } else {
+                    pair_expr
+                });
+                lhs_expr_ir = rhs_expr_ir;
                 lhs_expr = rhs_expr;
                 continue;
             }
-            if idx > 0 {
-                rendered_chain.push_str(" && ");
-            }
-            let lhs_wrapped = if lhs_rendered.contains(" as ") {
-                format!("({lhs_rendered})")
-            } else {
-                lhs_rendered
-            };
-            let rhs_wrapped = if rhs_rendered.contains(" as ") {
-                format!("({rhs_rendered})")
-            } else {
-                rhs_rendered
-            };
-
-            let mut lhs_cmp = lhs_wrapped;
-            let mut rhs_cmp = rhs_wrapped;
+            let mut lhs_cmp = lhs_expr_ir.clone();
+            let mut rhs_cmp = rhs_expr_ir.clone();
             let mut string_as_str_applied = false;
 
             let is_comparison_op = matches!(lowered_op, "==" | "!=" | "<" | "<=" | ">" | ">=");
@@ -1494,16 +1483,30 @@ impl RustEmitter {
                 && option_inner_type(rhs_expr.ty()).is_none()
                 && !rhs_none_like
             {
-                rhs_cmp = format!("Some({rhs_cmp})");
+                rhs_cmp = crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                    args: vec![rhs_cmp],
+                };
             } else if is_comparison_op
                 && option_inner_type(lhs_expr.ty()).is_none()
                 && option_inner_type(rhs_expr.ty()).is_some()
                 && !lhs_none_like
             {
-                lhs_cmp = format!("Some({lhs_cmp})");
+                lhs_cmp = crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                    args: vec![lhs_cmp],
+                };
             } else if is_string_like_type(lhs_expr.ty()) && is_string_like_type(rhs_expr.ty()) {
-                lhs_cmp = format!("({lhs_cmp}).as_str()");
-                rhs_cmp = format!("({rhs_cmp}).as_str()");
+                lhs_cmp = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lhs_cmp))),
+                    method: "as_str".to_string(),
+                    args: vec![],
+                };
+                rhs_cmp = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(rhs_cmp))),
+                    method: "as_str".to_string(),
+                    args: vec![],
+                };
                 string_as_str_applied = true;
             }
 
@@ -1519,21 +1522,40 @@ impl RustEmitter {
                         &self.mut_borrowed_params,
                     ) && is_string_like_type(lhs_expr.ty())))
             {
-                lhs_cmp = format!("({lhs_cmp}).as_str()");
-                rhs_cmp = format!("({rhs_cmp}).as_str()");
+                lhs_cmp = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lhs_cmp))),
+                    method: "as_str".to_string(),
+                    args: vec![],
+                };
+                rhs_cmp = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(rhs_cmp))),
+                    method: "as_str".to_string(),
+                    args: vec![],
+                };
             }
 
-            rendered_chain.push('(');
-            rendered_chain.push_str(&lhs_cmp);
-            rendered_chain.push(' ');
-            rendered_chain.push_str(lowered_op);
-            rendered_chain.push(' ');
-            rendered_chain.push_str(&rhs_cmp);
-            rendered_chain.push(')');
+            let pair_expr = crate::RustExpr::BinOp {
+                left: Box::new(lhs_cmp),
+                op: lowered_op.to_string(),
+                right: Box::new(rhs_cmp),
+            };
+            chain_expr = Some(if let Some(prev) = chain_expr {
+                crate::RustExpr::BinOp {
+                    left: Box::new(crate::RustExpr::Paren(Box::new(prev))),
+                    op: "&&".to_string(),
+                    right: Box::new(crate::RustExpr::Paren(Box::new(pair_expr))),
+                }
+            } else {
+                pair_expr
+            });
+            lhs_expr_ir = rhs_expr_ir;
             lhs_expr = rhs_expr;
         }
 
-        self.emit_rust_expr(&crate::RustExpr::RawCode(rendered_chain));
+        let Some(chain_expr) = chain_expr else {
+            return Ok(false);
+        };
+        self.emit_rust_expr(&chain_expr);
         Ok(true)
     }
 
