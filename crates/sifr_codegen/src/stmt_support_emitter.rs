@@ -263,6 +263,11 @@ impl RustEmitter {
         if let Some(lowered) = self.try_lower_registry_expr_result(expr)? {
             return Ok(Some(lowered));
         }
+        if let HirExpr::Call { func, args, .. } = expr {
+            if func == "print" {
+                return self.lower_print_call_expr_for_ir(args);
+            }
+        }
         if let HirExpr::FieldAccess { object, field, ty } = expr {
             if let Some(lowered) = self.try_lower_structured_field_access_expr(object, field, ty)? {
                 return Ok(Some(lowered));
@@ -327,6 +332,10 @@ impl RustEmitter {
             }
             if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(func, args) {
                 return Ok(Some(lowered_builtin));
+            }
+            if let Some(lowered_plain) = self.try_lower_registry_plain_call_with_signature(func, args)
+            {
+                return Ok(Some(lowered_plain));
             }
             if func == "str" && args.is_empty() {
                 return Ok(Some(crate::RustExpr::FnCall {
@@ -829,6 +838,105 @@ impl RustEmitter {
             }));
         }
         crate::try_lower_leaf_or_name_expr_result(expr)
+    }
+
+    fn lower_print_call_expr_for_ir(
+        &mut self,
+        args: &[HirExpr],
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if args.is_empty() {
+            return Ok(Some(crate::RustExpr::MacroCall {
+                name: "println".to_string(),
+                args: vec![],
+            }));
+        }
+
+        if args.len() == 1 {
+            let arg = &args[0];
+            if let HirExpr::StringLiteral(value) = arg {
+                let escaped = value
+                    .replace('\\', "\\\\")
+                    .replace('"', "\\\"")
+                    .replace('{', "{{")
+                    .replace('}', "}}");
+                return Ok(Some(crate::RustExpr::FormatMacro {
+                    name: "println".to_string(),
+                    format_str: escaped,
+                    args: vec![],
+                }));
+            }
+            if let HirExpr::FString { parts, .. } = arg {
+                let mut format_str = String::new();
+                let mut lowered_args = Vec::new();
+                for part in parts {
+                    match part {
+                        HirFStringPart::Literal(text) => {
+                            format_str.push_str(&text.replace('{', "{{").replace('}', "}}"));
+                        }
+                        HirFStringPart::Expr(inner) => {
+                            let Some(lowered_inner) = self.lower_stmt_expr_for_ir(inner)? else {
+                                return Ok(None);
+                            };
+                            format_str.push_str("{}");
+                            lowered_args.push(lowered_inner);
+                        }
+                    }
+                }
+                return Ok(Some(crate::RustExpr::FormatMacro {
+                    name: "println".to_string(),
+                    format_str,
+                    args: lowered_args,
+                }));
+            }
+
+            let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
+                return Ok(None);
+            };
+            let format_str = if Self::uses_debug_display_format_for_ir(arg.ty()) {
+                "{:?}"
+            } else {
+                "{}"
+            };
+            return Ok(Some(crate::RustExpr::FormatMacro {
+                name: "println".to_string(),
+                format_str: format_str.to_string(),
+                args: vec![lowered_arg],
+            }));
+        }
+
+        if let HirExpr::StringLiteral(fmt) = &args[0] {
+            let mut lowered_args = Vec::with_capacity(args.len().saturating_sub(1));
+            for arg in args.iter().skip(1) {
+                let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
+                    return Ok(None);
+                };
+                lowered_args.push(lowered_arg);
+            }
+            return Ok(Some(crate::RustExpr::FormatMacro {
+                name: "println".to_string(),
+                format_str: fmt.clone(),
+                args: lowered_args,
+            }));
+        }
+
+        let mut format_parts = Vec::with_capacity(args.len());
+        let mut lowered_args = Vec::with_capacity(args.len());
+        for arg in args {
+            let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
+                return Ok(None);
+            };
+            lowered_args.push(lowered_arg);
+            format_parts.push(if Self::uses_debug_display_format_for_ir(arg.ty()) {
+                "{:?}"
+            } else {
+                "{}"
+            });
+        }
+        Ok(Some(crate::RustExpr::FormatMacro {
+            name: "println".to_string(),
+            format_str: format_parts.join(" "),
+            args: lowered_args,
+        }))
     }
 
     fn object_name_expr_for_ir(object: &str) -> crate::RustExpr {

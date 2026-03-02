@@ -138,26 +138,37 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
     ) -> bool {
+        let Some(lowered) =
+            self.try_lower_registry_method_call_expr(object_ty, object, method, args)
+        else {
+            return false;
+        };
+        self.write_registry_expr(&lowered);
+        true
+    }
+
+    pub(crate) fn try_lower_registry_method_call_expr(
+        &mut self,
+        object_ty: &Type,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+    ) -> Option<crate::RustExpr> {
         let is_deque_data_field = self.is_deque_data_field(object);
-        let Some(object_expr) = self.try_lower_registry_expr_strict(object) else {
-            return false;
-        };
-        let Some(mut arg_exprs) = self.try_lower_registry_exprs_strict(args) else {
-            return false;
-        };
+        let object_expr = self.try_lower_registry_expr_strict(object)?;
+        let mut arg_exprs = self.try_lower_registry_exprs_strict(args)?;
 
         if matches!(object_ty, Type::List(_))
             && matches!(method, "append" | "appendleft")
             && !args.is_empty()
+            && matches!(args[0].ty(), Type::TypeVar(_))
         {
             // Clone TypeVar list args to avoid move issues.
-            if matches!(args[0].ty(), Type::TypeVar(_)) {
-                arg_exprs[0] = crate::RustExpr::MethodCall {
-                    receiver: Box::new(arg_exprs[0].clone()),
-                    method: "clone".to_string(),
-                    args: vec![],
-                };
-            }
+            arg_exprs[0] = crate::RustExpr::MethodCall {
+                receiver: Box::new(arg_exprs[0].clone()),
+                method: "clone".to_string(),
+                args: vec![],
+            };
         }
 
         if matches!(object_ty, Type::List(_)) && method == "insert" && args.len() >= 2 {
@@ -178,17 +189,14 @@ impl RustEmitter {
             }
         }
 
-        let Some(lowered) = methods::lower_method_with_context(
+        let lowered = methods::lower_method_with_context(
             object_ty,
             method,
             &object_expr,
             &arg_exprs,
             is_deque_data_field,
-        ) else {
-            return false;
-        };
-        self.write_registry_expr(&lowered.expr);
-        true
+        )?;
+        Some(lowered.expr)
     }
 
     pub(crate) fn try_lower_registry_exprs_strict(
@@ -1403,7 +1411,7 @@ impl RustEmitter {
         }
     }
 
-    fn try_lower_registry_plain_call_with_signature(
+    pub(crate) fn try_lower_registry_plain_call_with_signature(
         &mut self,
         func: &str,
         args: &[HirExpr],

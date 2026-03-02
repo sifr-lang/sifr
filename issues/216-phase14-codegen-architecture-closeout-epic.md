@@ -578,3 +578,16 @@ Latest validation loop (2026-03-01, Pass AD):
 - `./scripts/run_all_tests.sh` -> pass (including e2e pass suite `394/394`).
 - Re-audit evidence after this loop: direct `self.write(...) = 214` in `crates/sifr_codegen/src` (unchanged), remaining files:
 - `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).
+
+Latest validation loop (2026-03-01, Pass AE):
+- Exposed reusable registry method-call IR lowerer (`try_lower_registry_method_call_expr`) and registry plain-call signature lowerer (`try_lower_registry_plain_call_with_signature`) for statement-path integration.
+- Integrated statement-path call lowering updates in `stmt_support_emitter.rs`:
+- `print(...)` call lowering now emits structured `println!` IR (`MacroCall`/`FormatMacro`) instead of generic function-call IR in statement contexts.
+- statement call lowering now consults signature-aware registry plain-call lowering before generic path.
+- Kept loop iterator semantics stable by not globally switching method-call lowering in `lower_stmt_expr_for_ir` (regression was detected and fixed in-loop before final validation).
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- Full runnable demo sweep `demos/*.sifr` -> pass (`83/83`).
+- `./scripts/run_all_tests.sh` -> pass (including e2e pass suite `394/394`).
+- Re-audit evidence after this loop: direct `self.write(...) = 214` in `crates/sifr_codegen/src` (unchanged), remaining files:
+- `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).
