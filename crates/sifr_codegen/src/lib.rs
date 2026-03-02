@@ -53,7 +53,7 @@ use helpers::{
     collect_mutated_vars_with_sigs, is_hashable_type_codegen, module_uses_bigint,
     type_contains_typevar,
 };
-use ir_imports::collect_import_needs_from_items;
+use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
 pub(crate) use lib_support::{
@@ -406,20 +406,24 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if !preamble_items.is_empty() {
         assembled_body_items.extend(preamble_items.clone());
     }
-    if !stdlib_preamble.is_empty() {
-        emitter.push_syn_items_from_source(&stdlib_preamble, "stdlib preamble assembly");
-    }
     if !emitter.body_items.is_empty() {
         assembled_body_items.extend(emitter.body_items.clone());
     }
     assert_output_drained(&emitter.output, "generate_rust_with_stdlib");
 
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
-    let needs_hashmap = body_import_needs.collections.needs_hashmap;
-    let needs_hashset = body_import_needs.collections.needs_hashset;
-    let needs_vecdeque = body_import_needs.collections.needs_vecdeque;
-    let needs_bigint = body_import_needs.runtime.needs_bigint;
-    let needs_mutex = needs_file_handles || needs_logging || body_import_needs.runtime.needs_mutex;
+    let stdlib_import_needs = collect_import_needs_from_source(&stdlib_preamble);
+    let needs_hashmap =
+        body_import_needs.collections.needs_hashmap || stdlib_import_needs.collections.needs_hashmap;
+    let needs_hashset =
+        body_import_needs.collections.needs_hashset || stdlib_import_needs.collections.needs_hashset;
+    let needs_vecdeque = body_import_needs.collections.needs_vecdeque
+        || stdlib_import_needs.collections.needs_vecdeque;
+    let needs_bigint = body_import_needs.runtime.needs_bigint || stdlib_import_needs.runtime.needs_bigint;
+    let needs_mutex = needs_file_handles
+        || needs_logging
+        || body_import_needs.runtime.needs_mutex
+        || stdlib_import_needs.runtime.needs_mutex;
 
     let mut import_items: Vec<RustItem> = Vec::new();
     if needs_hashmap {
@@ -458,8 +462,8 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
 
     let mut file_items: Vec<RustItem> = Vec::new();
-    file_items.extend(import_items);
-    file_items.extend(assembled_body_items);
+    file_items.extend(import_items.clone());
+    file_items.extend(assembled_body_items.clone());
     remove_trivial_clones_in_items(&mut file_items);
     let file_issues = validate_items(&file_items);
     assert!(
@@ -471,8 +475,34 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             .collect::<Vec<_>>()
             .join(" | ")
     );
-    let rust_file = RustFile { items: file_items };
-    let rust_source = Renderer::new().render_file(&rust_file);
+    let rust_source = if stdlib_preamble.trim().is_empty() {
+        let rust_file = RustFile { items: file_items };
+        Renderer::new().render_file(&rust_file)
+    } else {
+        if syn::parse_file(&stdlib_preamble).is_err() {
+            panic!("failed to parse stdlib preamble boundary as Rust source");
+        }
+        let mut source = String::new();
+        if !import_items.is_empty() {
+            let import_source = Renderer::new().render_file(&RustFile {
+                items: import_items.clone(),
+            });
+            source.push_str(import_source.trim_end());
+            source.push_str("\n\n");
+        }
+        source.push_str(stdlib_preamble.trim_end());
+        if !assembled_body_items.is_empty() {
+            let body_source = Renderer::new().render_file(&RustFile {
+                items: assembled_body_items.clone(),
+            });
+            if !body_source.trim().is_empty() {
+                source.push_str("\n\n");
+                source.push_str(body_source.trim_end());
+            }
+        }
+        source.push('\n');
+        source
+    };
 
     // Add transitive dependencies from stdlib modules
     let mut all_used_modules = emitter.used_stdlib_modules.clone();

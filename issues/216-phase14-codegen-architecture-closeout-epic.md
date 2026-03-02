@@ -794,3 +794,22 @@ Latest validation loop (2026-03-02, Pass AV):
   - `cargo test -q -p sifr_codegen` -> pass (`446` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AW):
+- Continued IR-first cleanup by removing opaque `SynItem` from production IR.
+- removed `RustItem::SynItem` from `rust_ir.rs` and propagated structural updates across:
+  - `module_body.rs`
+  - `render.rs`
+  - `ir_imports.rs`
+  - `ir_optimize.rs`
+  - `ir_validate.rs`
+  - `preamble.rs`
+  - `lib.rs`
+  - `lib_codegen_tests.rs`
+- stdlib preamble is now handled as an explicit external-source boundary string in `lib.rs` (imports are computed by combining structural IR import-needs and source-scan import-needs), while user/module emission remains item-first IR.
+- Re-audit evidence after this loop:
+  - `rg -n "SynItem\\(" crates/sifr_codegen/src` -> no matches.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

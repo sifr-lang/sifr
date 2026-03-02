@@ -277,7 +277,6 @@ impl Renderer {
                 ));
             }
             RustItem::Attr(attr) => self.emit_line(attr),
-            RustItem::SynItem(code) => self.write_syn_item(code),
         }
     }
 
@@ -937,12 +936,6 @@ impl Renderer {
         }
     }
 
-    fn write_syn_item(&mut self, code: &str) {
-        self.append(code);
-        if !code.ends_with('\n') {
-            let _ = self.output.write_char('\n');
-        }
-    }
 }
 
 impl Default for Renderer {
@@ -1319,38 +1312,6 @@ mod tests {
 
         let rendered = render_expr(&expr);
         assert_eq!(rendered, "write!(f, \"{}\", v)");
-    }
-
-    #[test]
-    fn syn_item_passthrough_for_items() {
-        let items = vec![
-            RustItem::SynItem("fn passthrough() {\n    println!(\"ok\");\n}".to_string()),
-            RustItem::Fn {
-                name: "main".to_string(),
-                visibility: Visibility::Private,
-                type_params: vec![],
-                params: vec![],
-                ret: None,
-                body: vec![RustStmt::Expr(RustExpr::FormatMacro {
-                    name: "println".to_string(),
-                    format_str: "line".to_string(),
-                    args: vec![],
-                })],
-                is_async: false,
-            },
-        ];
-
-        let rendered_items = render_items(&items);
-
-        assert_snapshot!(rendered_items, @r###"
-        fn passthrough() {
-            println!("ok");
-        }
-
-        fn main() {
-            println!("line");
-        }
-        "###);
     }
 
     #[test]

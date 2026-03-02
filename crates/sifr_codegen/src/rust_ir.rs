@@ -74,7 +74,6 @@ pub enum RustItem {
         value: RustExpr,
     },
     Attr(String),
-    SynItem(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]

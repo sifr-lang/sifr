@@ -6,7 +6,6 @@ pub(crate) enum IrValidationKind {
     DuplicateStructField,
     EmptyFunctionBody,
     ReturnOutsideFunction,
-    InvalidSynItem,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -93,14 +92,6 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
         RustItem::Const { ty, value, .. } | RustItem::Static { ty, value, .. } => {
             validate_type(ty, issues);
             validate_expr(value, issues, false);
-        }
-        RustItem::SynItem(code) => {
-            if syn::parse_str::<syn::Item>(code).is_err() {
-                issues.push(IrValidationIssue {
-                    kind: IrValidationKind::InvalidSynItem,
-                    message: "syn-backed item failed to parse".to_string(),
-                });
-            }
         }
     }
 }

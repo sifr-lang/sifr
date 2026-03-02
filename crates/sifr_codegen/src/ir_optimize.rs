@@ -16,8 +16,7 @@ fn optimize_item(item: &mut RustItem) -> usize {
     match item {
         RustItem::Use(_)
         | RustItem::UseAlias { .. }
-        | RustItem::Attr(_)
-        | RustItem::SynItem(_) => 0,
+        | RustItem::Attr(_) => 0,
         RustItem::Struct { .. } | RustItem::TupleStruct { .. } => 0,
         RustItem::Enum { variants, .. } => {
             let mut removed = 0usize;

@@ -28,10 +28,23 @@ pub(crate) fn collect_import_needs_from_items(items: &[RustItem]) -> IrImportNee
     needs
 }
 
+pub(crate) fn collect_import_needs_from_source(source: &str) -> IrImportNeeds {
+    let mut needs = IrImportNeeds::default();
+    if source.trim().is_empty() {
+        return needs;
+    }
+    if let Ok(file) = syn::parse_file(source) {
+        let mut collector = SynImportNeedsCollector { needs: &mut needs };
+        collector.visit_file(&file);
+        return needs;
+    }
+    scan_named_text(source, &mut needs);
+    needs
+}
+
 fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
     match item {
         RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => {}
-        RustItem::SynItem(code) => collect_from_syn_item_code(code, needs),
         RustItem::Struct { fields, .. } => {
             for (_, ty) in fields {
                 collect_type(ty, needs);
@@ -341,24 +354,12 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
     }
 }
 
-fn collect_from_syn_item_code(code: &str, needs: &mut IrImportNeeds) {
-    let item = syn::parse_str::<syn::Item>(code).unwrap_or_else(|err| {
-        panic!("invalid syn-backed item in structural import pass: {err}; code:\n{code}")
-    });
-    collect_from_syn_item(&item, needs);
-}
-
 fn collect_from_type_text(text: &str, needs: &mut IrImportNeeds) {
     if let Ok(ty) = syn::parse_str::<syn::Type>(text) {
         collect_from_syn_type(&ty, needs);
         return;
     }
     scan_named_text(text, needs);
-}
-
-fn collect_from_syn_item(item: &syn::Item, needs: &mut IrImportNeeds) {
-    let mut collector = SynImportNeedsCollector { needs };
-    collector.visit_item(item);
 }
 
 fn collect_from_syn_type(ty: &syn::Type, needs: &mut IrImportNeeds) {

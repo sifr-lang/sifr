@@ -1899,7 +1899,6 @@ fn test_module_body_flows_through_assembled_body_items() {
     assert!(!module_body_src.contains("self.push_syn_items_from_source(&emitted"));
     assert!(module_body_src.contains("self.emit_class(class, module, module_public);"));
     assert!(module_body_src.contains("self.emit_function(func, module_public, test_mode);"));
-    assert!(module_body_src.contains("self.body_items.push(RustItem::SynItem(rendered));"));
     assert!(!module_body_src.contains("self.output.push('\\n');"));
     assert!(lib_src.contains("if !emitter.body_items.is_empty() {"));
 }
