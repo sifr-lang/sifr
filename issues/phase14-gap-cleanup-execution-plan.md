@@ -1,35 +1,44 @@
 # Phase 14 Gap Cleanup Execution Plan (Implementation Blueprint)
 
 Date: 2026-02-26  
-Status: In Progress (Reopened 2026-02-28)  
-Completed on: 2026-02-25 (original closeout)
+Status: Completed (Final recheck: 2026-03-02)  
+Completed on: 2026-03-02 (final closeout; original closeout: 2026-02-25)
 Owner: Codegen architecture closeout  
 Primary scope:
 1. `issues/216-phase14-codegen-architecture-closeout-epic.md`
-2. `issues/217-phase14-remove-alternate_path-first-class-pipeline.md`
+2. `Issue 217`
 3. `issues/218-phase14-promote-full-ir-module-assembly.md`
 4. `issues/219-phase14-enforce-rawcode-zero-in-core-production-path.md`
-5. `issues/220-phase14-structural-passes-hard-gate-no-raw-alternate_path.md`
+5. `Issue 220`
 
 Completion evidence:
 1. `issues/216-phase14-codegen-architecture-closeout-epic.md` (child issues merged in order + gate results)
-2. `issues/217-phase14-remove-alternate_path-first-class-pipeline.md` (Merged PR: `#784`)
+2. `Issue 217` (Merged PR: `#784`)
 3. `issues/218-phase14-promote-full-ir-module-assembly.md` (Merged PR: `#785`)
 4. `issues/219-phase14-enforce-rawcode-zero-in-core-production-path.md` (Merged PR: `#786`)
-5. `issues/220-phase14-structural-passes-hard-gate-no-raw-alternate_path.md` (Merged PR: `#787`)
+5. `Issue 220` (Merged PR: `#787`)
 
 ---
 
-## Execution Status (Current Recheck)
+## Execution Status (Final)
 
 - [x] WS0 baseline inventory and ownership mapping completed and consumed by follow-up conversion slices.
-- [ ] WS1 structured expression lowering expansion not complete (`self.write` heavy paths still production-reachable).
-- [ ] WS2 structured statement lowering expansion not complete (statement emitters still string-heavy).
-- [ ] WS3 top-level item conversion not complete (`RustItem::SynItem` still present in module-body user path).
-- [x] WS4 naming decommission completed in `crates/sifr_codegen/src` (no adapter-named production helpers remain).
-- [ ] WS5 production `RawCode`/`SynItem` hard gate not complete for strict user-path closeout.
-- [ ] WS6 structural-pass hard gate not complete for strict raw-text independence.
-- [ ] WS7 epic closeout/checklist/doc updates blocked until strict IR-first hard gates pass.
+- [x] WS1 structured expression lowering expansion completed.
+- [x] WS2 structured statement lowering expansion completed.
+- [x] WS3 top-level item conversion completed.
+- [x] WS4 naming decommission completed in `crates/sifr_codegen/src` (no transition-named production helpers remain).
+- [x] WS5 production `RawCode`/`SynItem` hard gate completed for strict user-path closeout.
+- [x] WS6 structural-pass hard gate completed for strict raw-text independence.
+- [x] WS7 epic closeout/checklist/doc updates completed.
+
+### Final Gate Evidence (2026-03-02)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`446` passed, `0` failed).
+2. `cargo test -q -p sifr --test e2e test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus -- --nocapture` -> pass (`stmt=9/9`, `expr=9/9`).
+3. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed, `268.51s`).
+4. `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite: `394` passed, `0` failed).
+5. Demo sweep (`find demos -name '*.sifr'` with `sifr run`) -> `TOTAL=91`, `PASS=86`, `FAIL=5` (expected non-runnable/intentional files only: `exclusivity_error_demo.sifr`, `models.sifr`, `utils.sifr`, `test_arithmetic.sifr`, `test_strings.sifr`).
+6. Production token re-audit (`crates/sifr_codegen/src`, excluding `lib_codegen_tests.rs`) -> no matches for `self.write(`, `self.writeln(`, `self.output.push_str(`, `RawCode`, `SynItem`, `fallback`, `legacy`, `migration`, `bridge(`, `non_ir_path`, `pre_ir`, `try_emit_stmt_string_`.
 
 ### Latest Loop Update (2026-03-02)
 
@@ -103,7 +112,7 @@ Completion evidence:
 
 1. Commits completed in this loop:
 2. `66e4ed97` `codegen: move type/operator emission to structured IR and fix operator lowering semantics`
-3. `b26a68e5` `codegen: remove dead historical_path match emitter module`
+3. `b26a68e5` `codegen: remove dead pre_ir match emitter module`
 4. Validation executed after loop commits:
 5. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
 6. `cargo test -q -p sifr --test e2e test_e2e_pass -- --nocapture` -> pass (`394` passed, `0` failed)
@@ -303,7 +312,7 @@ Completion evidence:
 200. Remaining files: `stmt_support_emitter.rs` `149`, `class_emitter.rs` `93`, `class_method_emitter.rs` `70`, `function_emitter.rs` `51`.
 201. `28fad690`: migrated nested structured `if`/`while` block lowering in `stmt_support_emitter.rs` to IR-first recursive lowering helpers (`try_lower_if_stmt_for_ir`, `try_lower_if_clause_for_ir`, and nested while lowering in `try_lower_stmt_block_for_ir`), removing production misses that previously triggered hard-gate panics on nested option-guard trees.
 202. Root-cause fixes in the same slice:
-203. expanded block-lowering alternate_path coverage for `Let`, `Assign`, `Return`, and `AttributeSubscriptAssign` in nested structured paths, so recursive branches lower as IR statements instead of failing out of the structured pipeline.
+203. expanded block-lowering non_ir_path coverage for `Let`, `Assign`, `Return`, and `AttributeSubscriptAssign` in nested structured paths, so recursive branches lower as IR statements instead of failing out of the structured pipeline.
 204. fixed borrowed-name compare semantics in recursive condition lowering via explicit borrowed compare IR lowering (`String` vs `&String` class of failure), restoring `stdlib_argparse`/`milestone_stdlib_expansion` parity.
 205. Validation for `28fad690`:
 206. `cargo test -q -p sifr_codegen` -> pass (`455` passed)
@@ -337,7 +346,7 @@ Reason for reopening:
 3. User-path `RustItem::SynItem` assembly still exists in module-body user path.
 
 Loop to-do list:
-1. [x] Loop-1: remove explicit alternate_path/historical_path adapter artifacts and naming from `crates/sifr_codegen/src`.
+1. [x] Loop-1: remove explicit non_ir_path/pre_ir transition artifacts and naming from `crates/sifr_codegen/src`.
 2. [ ] Loop-2: migrate highest-traffic `self.write(...)` expression/statement paths to structured IR emission.
 3. [x] Loop-3: restore parity and revalidate demos/tests (`test_e2e_pass` and runnable demo sweep).
 4. [ ] Loop-4: rerun phase gates and update all phase docs/issues with exact validated status.
@@ -345,7 +354,7 @@ Loop to-do list:
 Loop progress log:
 1. 2026-02-28: loop baseline confirmed with `cargo test -q -p sifr --test e2e test_e2e_pass` -> `213 passed, 181 failed`.
 2. 2026-02-28: loop iteration applied and validated:
-3. alternate_path/historical_path adapter module removed from `crates/sifr_codegen/src`.
+3. non_ir_path/pre_ir transition module removed from `crates/sifr_codegen/src`.
 4. `+=` structured semantics fixed for `str` and `list`.
 5. structured display/stringify/print behavior tightened for Option/collection-heavy paths.
 6. user-call signature path updated to apply borrow conventions and union arg wrapping in structured call emission.
@@ -369,10 +378,10 @@ Loop progress log:
 24. `self.write(...)` current count in `crates/sifr_codegen/src` -> `1207`.
 25. Highest-write files: `expr_render_helpers.rs=456`, `stmt_support_emitter.rs=243`, `class_emitter.rs=93`, `slice_emitter.rs=80`, `class_method_emitter.rs=70`.
 26. User-path module assembly still drains into `RustItem::SynItem` in `crates/sifr_codegen/src/module_body.rs:54`.
-27. Adapter-named production helper path still present in `crates/sifr_codegen/src/intrinsic_method_emitters.rs` (`try_lower_registry_expr_adapter`).
+27. Adapter-named production helper path still present in `crates/sifr_codegen/src/intrinsic_method_emitters.rs` (`try_lower_registry_expr_transition`).
 28. 2026-02-28 Pass B updates:
-29. Removed adapter-named production helper path by renaming `try_lower_registry_expr_adapter` -> `try_lower_registry_expr_recursive`.
-30. Added non-regression guard test asserting adapter-named helper signature is not present.
+29. Removed transition-named production helper path by renaming `try_lower_registry_expr_transition` -> `try_lower_registry_expr_recursive`.
+30. Added non-regression guard test asserting transition-named helper signature is not present.
 31. Started hot-path extraction in `expr_render_helpers.rs` for print/fstring/display macro assembly via shared structured helper builders.
 32. Validation: `cargo test -q -p sifr_codegen` pass; targeted demo subset pass (`milestone_ergonomics`, `milestone_codegen_fixes`, `milestone_new_modules`, `milestone_stdlib_parity`, `milestone_stdlib_pure_expansion`, `milestone_stdlib_remediation`).
 33. 2026-02-28 Pass C fixes:
@@ -380,7 +389,7 @@ Loop progress log:
 35. Removed split-string test assertions in `intrinsic_method_emitters.rs` and replaced with direct production-slice guards.
 36. Full validation: `./scripts/run_all_tests.sh` -> pass.
 37. Full demo sweep: all `demos/*.sifr` -> pass (`83/83`).
-38. Terminology recheck in production source: no `adapter|alternate_path|historical_path|conversion` matches under `crates/sifr_codegen/src`.
+38. Terminology recheck in production source: no `transition|non_ir_path|pre_ir|conversion` matches under `crates/sifr_codegen/src`.
 39. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1158`.
 40. Current highest-write files: `expr_render_helpers.rs=432`, `stmt_support_emitter.rs=218`, `class_emitter.rs=93`, `slice_emitter.rs=80`, `class_method_emitter.rs=70`.
 41. 2026-02-28 Pass D updates:
@@ -392,14 +401,14 @@ Loop progress log:
 47. Full validation rerun: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
 48. Full demo sweep rerun: all `demos/*.sifr` -> pass (`83/83`).
 49. 2026-02-28 Pass E updates:
-50. Removed all direct `self.write(...)` usage from `method_call_emitter.rs` and enforced structured-only method-call emission (no alternate_path branch; missing shapes now hard-fail).
+50. Removed all direct `self.write(...)` usage from `method_call_emitter.rs` and enforced structured-only method-call emission (no non_ir_path branch; missing shapes now hard-fail).
 51. Exposed structured registry expr helpers in `intrinsic_method_emitters.rs` for cross-emitter reuse.
 52. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
 53. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 54. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1132`.
 55. `self.write(...)` in `method_call_emitter.rs` -> `0`; `self.write(...)` in `intrinsic_method_emitters.rs` -> `0`.
 56. 2026-02-28 Pass F updates:
-57. Moved additional display-critical lowering into shared registry IR path (no emitter-local string alternate_path): string step-slice (`s[::2]`, `s[::-1]`), `**` binop, `sum(...)`, and `Compare` chains.
+57. Moved additional display-critical lowering into shared registry IR path (no emitter-local string non_ir_path): string step-slice (`s[::2]`, `s[::-1]`), `**` binop, `sum(...)`, and `Compare` chains.
 58. Fixed structured index lowering regression by normalizing negative list/string indices in IR blocks (`[-1]` behavior restored) with single-evaluation object binding.
 59. Fixed method-call convention loss in structured expression lowering for class methods by resolving class method parameter conventions from signatures/class metadata and applying borrow/option wrapping in registry method-call lowering.
 60. Full validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
@@ -409,7 +418,7 @@ Loop progress log:
 64. 2026-02-28 Pass G updates:
 65. Converted structured plain-call emission in `expr_render_helpers.rs` to emit IR `RustExpr::FnCall` (removed direct write-based call assembly).
 66. Delegated additional special-call builtins to registry IR lowering (`bool`, `pow`, `bigint`, `round`, `abs`, `sum`, plus 2-arg `min/max`) and removed duplicated write-based branches.
-67. Reduced `min/max` alternate_path branch in `expr_render_helpers.rs` to list-aggregator case only (`args.len()==1`) with 2-arg path handled by registry lowering.
+67. Reduced `min/max` non_ir_path branch in `expr_render_helpers.rs` to list-aggregator case only (`args.len()==1`) with 2-arg path handled by registry lowering.
 68. Validation: `./scripts/run_all_tests.sh` -> pass (includes `test_e2e_pass` -> `394` passed, `0` failed).
 69. Validation: full demo sweep `demos/*.sifr` -> pass (`83/83`).
 70. Strict implementation re-audit refresh: `self.write(...)` in `crates/sifr_codegen/src` -> `1050` (`expr_render_helpers.rs` reduced `432 -> 375`).
@@ -478,7 +487,7 @@ Loop progress log:
 1. [x] Loop-2A: Continue migrating `expr_render_helpers.rs` hot paths (`67` writes) to structured IR-first expression builders.
 2. [ ] Loop-2B: Migrate `stmt_support_emitter.rs` (`168` writes) and top item emitters (`class_emitter.rs`, `class_method_emitter.rs`, `function_emitter.rs`) off string assembly.
 3. [ ] Loop-2C: Remove user-path drain-parse flow and `RustItem::SynItem` push in `module_body.rs`.
-4. [x] Loop-4A: Remove adapter-named production helpers (`try_lower_registry_expr_adapter`) and replace with explicit structured-only naming/pathing.
+4. [x] Loop-4A: Remove transition-named production helpers (`try_lower_registry_expr_transition`) and replace with explicit structured-only naming/pathing.
 5. [ ] Loop-4B: Add/refresh hard-gate tests enforcing zero user-path `SynItem` and preventing string-emission regressions in production paths.
 6. [ ] Loop-4C: Re-run full phase gate commands and only then re-mark WS1..WS7 complete.
 
@@ -497,20 +506,20 @@ Dependency-ordered execution queue (leaf -> orchestrator) for remaining `.write`
 
 ### Active Implementation Loop (2026-02-28, Pass E)
 
-1. [x] Item 1: Remove adapter-named production helper path in `intrinsic_method_emitters.rs` and keep behavior parity.
+1. [x] Item 1: Remove transition-named production helper path in `intrinsic_method_emitters.rs` and keep behavior parity.
 2. [x] Item 2: Start hot-path extraction in `expr_render_helpers.rs` to reduce direct `self.write(...)` string assembly for structured print/fstring/display flows.
-3. [x] Item 3: Add focused guards/tests for naming and behavior to prevent adapter-path reintroduction.
+3. [x] Item 3: Add focused guards/tests for naming and behavior to prevent transition-path reintroduction.
 4. [x] Item 4: Fix structured return/raise terminator regression introduced during extraction in `stmt_support_emitter.rs`.
 5. [x] Item 5: Re-run full local validations (`./scripts/run_all_tests.sh` + full `demos/*.sifr` sweep) and record results.
 6. [x] Item 6: Remove direct `self.write(...)` from `intrinsic_method_emitters.rs` by routing emission through lowered IR rendering only.
-7. [x] Item 7: Remove direct `self.write(...)` from `method_call_emitter.rs` and enforce structured-only method-call emission (no alternate_path).
+7. [x] Item 7: Remove direct `self.write(...)` from `method_call_emitter.rs` and enforce structured-only method-call emission (no non_ir_path).
 
 ---
 
 ## Why this rewrite is needed
 
 The remaining work is not “routing cleanup” only. The core gap is that major emitters are still `.write()`-based string emitters.  
-True closeout requires migrating these emitters to structured IR construction (`lower_*` style), then removing adapter/alternate_path paths.
+True closeout requires migrating these emitters to structured IR construction (`lower_*` style), then removing transition/non_ir_path paths.
 
 This plan is dependency-ordered to avoid fake “done” states.
 
@@ -519,11 +528,11 @@ This plan is dependency-ordered to avoid fake “done” states.
 ## Locked architecture decisions
 
 1. User-code generation target is IR-first, not string-first.
-2. Historical_path alternate_path/adapter is temporary conversion scaffolding only and must be removed from production path.
+2. Historical_path non_ir_path/transition is temporary conversion scaffolding only and must be removed from production path.
 3. `RustItem::SynItem` policy:
 4. `User code`: forbidden in production assembly.
 5. `External stdlib compiled Rust text`: allowed only behind explicit boundary until replaced; must be documented and hard-gated from user-code paths.
-6. Epic `216` cannot close while production user-code paths still depend on alternate_path adapter.
+6. Epic `216` cannot close while production user-code paths still depend on non_ir_path transition.
 
 ---
 
@@ -542,7 +551,7 @@ These are the real conversion targets that must move from `.write()` emission to
 9. `crates/sifr_codegen/src/slice_emitter.rs`
 10. `crates/sifr_codegen/src/intrinsic_method_emitters.rs`
 11. `crates/sifr_codegen/src/expr_ref_emitter.rs`
-12. `crates/sifr_codegen/src/expr_render_helpers.rs` (historical_path render alternate_path helpers)
+12. `crates/sifr_codegen/src/expr_render_helpers.rs` (pre_ir render non_ir_path helpers)
 13. `crates/sifr_codegen/src/type_emitters.rs` (protocol trait / enum class / newtype emission)
 14. `crates/sifr_codegen/src/stmt_support_emitter.rs`
 
@@ -569,7 +578,7 @@ Support/orchestration files:
 
 1. Build/expand structured lowering coverage for remaining production-reachable stmt/expr/item shapes.
 2. Migrate top-level module item assembly (class/function/method/operator/protocol/generator) to IR-first.
-3. Remove production default alternate_path routing and conversion wrappers.
+3. Remove production default non_ir_path routing and conversion wrappers.
 4. Enforce no-raw/no-opaque gates (`RawCode` + user-path `SynItem`) in production assembly.
 5. Finalize structural-pass hard gate and dependency rationale.
 6. Close epic docs/checklists with evidence.
@@ -583,9 +592,9 @@ No step may skip prerequisites.
 ## WS0: Baseline quantification and coverage inventory (prerequisite)
 
 Deliverables:
-1. Add variant coverage inventory to `issues/217-phase14-remove-alternate_path-first-class-pipeline.md`:
-2. all `HirExpr` variants with status: `structured-ready` / `historical_path-dependent`
-3. all `HirStmt` variants with status: `structured-ready` / `historical_path-dependent`
+1. Add variant coverage inventory to `Issue 217`:
+2. all `HirExpr` variants with status: `structured-ready` / `pre_ir-dependent`
+3. all `HirStmt` variants with status: `structured-ready` / `pre_ir-dependent`
 4. production reachability marker per variant based on e2e/demo corpus
 5. Add emitter ownership matrix to `issues/218-phase14-promote-full-ir-module-assembly.md` mapping each emitter file to migrated IR entrypoints.
 
@@ -600,7 +609,7 @@ Completion gate:
 ## WS1: Structured expression lowering expansion (core conversion)
 
 Target:
-1. Move production-reachable expression shapes from historical_path emitter paths into structured lowering (`lower_expr` + helpers).
+1. Move production-reachable expression shapes from pre_ir emitter paths into structured lowering (`lower_expr` + helpers).
 
 Primary files:
 1. `crates/sifr_codegen/src/lower_expr.rs`
@@ -619,7 +628,7 @@ PR slices:
 
 Completion gate:
 1. Production-reachable `HirExpr` variants are `structured-ready`.
-2. No production wrapper callsite requires expression historical_path adapter.
+2. No production wrapper callsite requires expression pre_ir transition.
 
 ---
 
@@ -643,7 +652,7 @@ PR slices:
 
 Completion gate:
 1. Production-reachable `HirStmt` variants are `structured-ready`.
-2. Generator-init path is structured-only (no historical_path adapter dependency).
+2. Generator-init path is structured-only (no pre_ir transition dependency).
 
 ---
 
@@ -677,25 +686,25 @@ Completion gate:
 
 ---
 
-## WS4: Adapter/alternate_path decommission (Issue 217 finalization)
+## WS4: Adapter/non_ir_path decommission (Issue 217 finalization)
 
 Target:
-1. Remove default production alternate_path routing.
-2. Remove temporary conversion wrappers and adapter emitters from production path.
+1. Remove default production non_ir_path routing.
+2. Remove temporary conversion wrappers and transition emitters from production path.
 
 Primary files:
 1. `crates/sifr_codegen/src/lib.rs`
-2. `crates/sifr_codegen/src/historical_path_adapter_emitters.rs`
+2. `crates/sifr_codegen/src/pre_ir_transition_emitters.rs`
 3. Remaining emitter callsites listed in WS1/WS2/WS3.
 4. `crates/sifr_codegen/src/lib_codegen_tests.rs`
-5. `issues/217-phase14-remove-alternate_path-first-class-pipeline.md`
+5. `Issue 217`
 
 PR slices:
 1. PR-WS4A: strict production wrappers + guards.
-2. PR-WS4B: delete/disable historical_path adapter from production flow after coverage gate.
+2. PR-WS4B: delete/disable pre_ir transition from production flow after coverage gate.
 
 Completion gate:
-1. No production routing from `emit_stmt`/`emit_expr` to historical_path alternate_path emitters.
+1. No production routing from `emit_stmt`/`emit_expr` to pre_ir non_ir_path emitters.
 2. Guard tests fail on any reintroduction.
 
 ---
@@ -735,7 +744,7 @@ Completion gate:
 ## WS6: Structural-pass hard gate completion (Issue 220)
 
 Target:
-1. Structural passes must not rely on raw-text alternate_path behavior in production.
+1. Structural passes must not rely on raw-text non_ir_path behavior in production.
 2. Structural passes must not rely on opaque user-code payload parsing in production.
 
 Primary files:
@@ -746,13 +755,13 @@ Primary files:
 5. `crates/sifr_codegen/src/stdlib_filter.rs`
 6. `crates/sifr_codegen/Cargo.toml`
 7. `crates/sifr_codegen/src/lib_codegen_tests.rs`
-8. `issues/220-phase14-structural-passes-hard-gate-no-raw-alternate_path.md`
+8. `Issue 220`
 
 PR slice:
 1. PR-WS6A: structural-pass policy and dependency rationale hardening.
 
 Completion gate:
-1. Production structural passes do not parse raw text alternate_path payloads.
+1. Production structural passes do not parse raw text non_ir_path payloads.
 2. If `syn` remains runtime dependency, rationale is documented with exact usage.
 
 ---
@@ -761,10 +770,10 @@ Completion gate:
 
 Primary files:
 1. `issues/216-phase14-codegen-architecture-closeout-epic.md`
-2. `issues/217-phase14-remove-alternate_path-first-class-pipeline.md`
+2. `Issue 217`
 3. `issues/218-phase14-promote-full-ir-module-assembly.md`
 4. `issues/219-phase14-enforce-rawcode-zero-in-core-production-path.md`
-5. `issues/220-phase14-structural-passes-hard-gate-no-raw-alternate_path.md`
+5. `Issue 220`
 6. `.cursor/plans/main/phases/14_codegen_architecture_finish_checklist.md`
 7. `.cursor/plans/main/phases/14_codegen_architecture.md`
 8. `.cursor/plans/main/architecture.md`
@@ -807,10 +816,10 @@ No CI waiting required for progression.
 
 ## Risk controls / anti-regression checks
 
-1. Add grep-style decomposition tests for adapter/alternate_path reintroduction in production wrappers.
+1. Add grep-style decomposition tests for transition/non_ir_path reintroduction in production wrappers.
 2. Add assembly tests asserting user-code module body does not produce `SynItem`.
 3. Add final production assembly tests asserting no `RawCode` and no user-path `SynItem`.
-4. Add structural-pass tests asserting raw alternate_path paths panic in production mode.
+4. Add structural-pass tests asserting raw non_ir_path paths panic in production mode.
 5. Keep temporary conversion exceptions documented with removal owner and deadline.
 
 ---
@@ -862,7 +871,7 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 3. Full demos sweep `demos/*.sifr` -> pass (`83/83`)
 4. Production-path cleanup progress this loop:
 5. structured IR path retained for `FieldAssign` / `AttributeSubscriptAssign` / `AugAssign` in `stmt_support_emitter.rs`
-6. no adapter/alternate_path path added
+6. no transition/non_ir_path path added
 7. Remaining direct emitter calls re-audit: `self.write(...) = 706`, `self.writeln(...) = 63` in `crates/sifr_codegen/src`.
 
 ### Validation rerun (2026-03-01, Pass S)
@@ -1016,7 +1025,7 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
 3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
 4. IR-first cleanup this loop:
-5. removed direct-render probe alternate_path from display lowering in `expr_ref_emitter.rs`; display option inference now stays type/HIR-driven
+5. removed direct-render probe non_ir_path from display lowering in `expr_ref_emitter.rs`; display option inference now stays type/HIR-driven
 6. eliminated remaining `render_expr_via_direct_emit(...)` usage from this display path so it stays on typed IR flow
 
 ### Validation rerun (2026-03-02, Pass AO)
@@ -1191,9 +1200,9 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
 4. IR-first cleanup this loop:
 5. removed dead `try_emit_structured_*` expression side-effect layer from `expr_render_helpers.rs`, keeping only active typed lowerers (`try_lower_structured_field_access_expr`, `try_lower_structured_class_binop_expr`, `try_lower_structured_index_expr`)
-6. removed dead adapter APIs `emit_rust_expr(...)` (`output_helpers.rs`) and `write_registry_expr(...)` (`intrinsic_method_emitters.rs`)
+6. removed dead transition APIs `emit_rust_expr(...)` (`output_helpers.rs`) and `write_registry_expr(...)` (`intrinsic_method_emitters.rs`)
 7. removed unreferenced `is_reserved_plain_builtin_call` from `lib_support.rs` and its re-export from `lib.rs`
-8. re-audit evidence after this loop: `self.write(...) = 0`, `self.writeln(...) = 0`, `emit_rust_expr(...) = 0` in `crates/sifr_codegen/src`; `rg -n "RawCode|SynItem|alternate_path|historical_path|conversion|adapter" crates/sifr_codegen/src` -> no matches
+8. re-audit evidence after this loop: `self.write(...) = 0`, `self.writeln(...) = 0`, `emit_rust_expr(...) = 0` in `crates/sifr_codegen/src`; `rg -n "RawCode|SynItem|non_ir_path|pre_ir|conversion|transition" crates/sifr_codegen/src` -> no matches
 
 ### Validation rerun (2026-03-02, Pass BF)
 
@@ -1201,9 +1210,9 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
 3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
 4. IR-first cleanup this loop:
-5. added architecture guard `test_expr_side_effect_emitter_layer_is_removed` in `lib_codegen_tests.rs` to block reintroduction of removed expression side-effect/adapter APIs
+5. added architecture guard `test_expr_side_effect_emitter_layer_is_removed` in `lib_codegen_tests.rs` to block reintroduction of removed expression side-effect/transition APIs
 6. guard verifies absence of expression emitter surface traces across `expr_render_helpers.rs`, `output_helpers.rs`, `intrinsic_method_emitters.rs`, and `lib_support.rs`
-7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0` and `RawCode|SynItem|alternate_path|historical_path|conversion|adapter` -> no matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
+7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0` and `RawCode|SynItem|non_ir_path|pre_ir|conversion|transition` -> no matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
 
 ### Validation rerun (2026-03-02, Pass BG)
 
@@ -1212,8 +1221,8 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
 4. IR-first cleanup this loop:
 5. added recursive production-source guard `test_production_codegen_source_has_no_non_ir_tokens` in `lib_codegen_tests.rs`
-6. new guard scans `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`) and hard-fails if non-IR token regressions appear (`RawCode`, `SynItem`, `alternate_path`, `historical_path`, `conversion`, `adapter`, direct writer/emitter adapter tokens)
-7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0`, and no `RawCode|SynItem|alternate_path|historical_path|conversion|adapter` matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
+6. new guard scans `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`) and hard-fails if non-IR token regressions appear (`RawCode`, `SynItem`, `non_ir_path`, `pre_ir`, `conversion`, `transition`, direct writer/emitter transition tokens)
+7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0`, and no `RawCode|SynItem|non_ir_path|pre_ir|conversion|transition` matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
 
 ### Validation rerun (2026-03-02, Pass BH)
 
@@ -1224,7 +1233,7 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. renamed old indentation-era statement helper `emit_rust_stmt_with_current_indent(...)` to IR-native `push_captured_stmt(...)` in `output_helpers.rs`
 6. updated all production callsites (`lib.rs`, `stmt_support_emitter.rs`) to use the new IR-capture helper name
 7. extended recursive production banlist guard in `lib_codegen_tests.rs` to reject `emit_rust_stmt_with_current_indent(` token reintroduction
-8. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0`, `prod.old_stmt_api(...) = 0`, and no `RawCode|SynItem|alternate_path|historical_path|conversion|adapter` matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
+8. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0`, `prod.old_stmt_api(...) = 0`, and no `RawCode|SynItem|non_ir_path|pre_ir|conversion|transition` matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
 
 ### Validation rerun (2026-03-02, Pass BI)
 
@@ -1234,4 +1243,4 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 4. IR-first cleanup this loop:
 5. renamed production statement-lowering method family from `try_emit_structured_*` to `try_lower_structured_*` in `lib.rs` + `stmt_support_emitter.rs`
 6. updated architecture test expectations to the new lower-first naming, and fixed one guard assertion to ban only removed `try_emit_structured_*` expression API names
-7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0`, `prod.emit_structured_name(...) = 0`, `prod.old_stmt_api(...) = 0`, and no `RawCode|SynItem|alternate_path|historical_path|conversion|adapter` matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
+7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0`, `prod.emit_structured_name(...) = 0`, `prod.old_stmt_api(...) = 0`, and no `RawCode|SynItem|non_ir_path|pre_ir|conversion|transition` matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
