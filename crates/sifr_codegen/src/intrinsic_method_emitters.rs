@@ -204,22 +204,6 @@ impl RustEmitter {
         true
     }
 
-    pub(crate) fn try_emit_method_via_registry(
-        &mut self,
-        object_ty: &Type,
-        object: &HirExpr,
-        method: &str,
-        args: &[HirExpr],
-    ) -> bool {
-        let Some(lowered) =
-            self.try_lower_registry_method_call_expr(object_ty, object, method, args)
-        else {
-            return false;
-        };
-        self.write_registry_expr(&lowered);
-        true
-    }
-
     pub(crate) fn try_lower_registry_method_call_expr(
         &mut self,
         object_ty: &Type,

@@ -907,3 +907,24 @@ Latest validation loop (2026-03-02, Pass BB):
   - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BC):
+- Continued IR-first cleanup by pruning dead method-call side-effect emission plumbing.
+- `expr_render_helpers.rs`:
+  - removed dead `try_emit_structured_method_call(...)` side-effect emission path.
+- `method_call_emitter.rs`:
+  - removed dead registry/class/generic method-call emit wrappers and associated internal helpers.
+  - retained only shared, still-used helpers:
+    - `borrow_prefix_for_name(...)`
+    - `is_generator_call(...)`
+- `intrinsic_method_emitters.rs`:
+  - removed dead `try_emit_method_via_registry(...)` emitter wrapper.
+- cleanup follow-up:
+  - removed now-unused imports caused by this prune (`MUTATING_METHODS` in `expr_render_helpers.rs`, `is_self_field_access_expr` re-export in `lib.rs`).
+- Re-audit evidence after this loop:
+  - no production references remain for removed method-call side-effect emit wrappers.
+  - production call-site behavior continues through typed lowering paths only.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`444` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

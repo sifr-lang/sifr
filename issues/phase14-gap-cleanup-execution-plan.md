@@ -1162,3 +1162,14 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. removed dead expression side-effect emit helpers from `expr_ref_emitter.rs` (`emit_parenthesized_expr`, key/str/compare/bytes/collection emitters, `emit_display_expr`)
 6. retained pure typed lowering helpers (`lower_ref_expr_or_panic`, `lower_display_expr`) as canonical tree-walk expression-reference flow
 7. removed remaining writer-style API surface in this module that had no production callsites
+
+### Validation rerun (2026-03-02, Pass BC)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`444` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed dead `try_emit_structured_method_call` side-effect path from `expr_render_helpers.rs`
+6. pruned dead method-call emit wrappers from `method_call_emitter.rs`, keeping only shared helpers used by active typed lowering (`borrow_prefix_for_name`, `is_generator_call`)
+7. removed dead registry emitter wrapper `try_emit_method_via_registry` from `intrinsic_method_emitters.rs`
+8. cleaned now-unused imports introduced by this pruning (`MUTATING_METHODS`, `is_self_field_access_expr`)
