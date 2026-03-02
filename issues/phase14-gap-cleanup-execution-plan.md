@@ -67,6 +67,16 @@ Completion evidence:
 32. `self.write(...)` -> `0`
 33. `self.writeln(...)` -> `0`
 34. `self.output.push_str(...)` -> `0`
+35. current loop continuation (IR-only lowering slice in `expr_render_helpers.rs`):
+36. structured method-call emission now builds typed IR args (`RustExpr`) directly instead of rendering args to strings and wrapping with `RustExpr::RawCode`.
+37. removed string-based `map_err` coercion assembly in plain-call signature adaptation; now emits typed `MethodCall(map_err, Closure(...))` IR.
+38. migrated structured `Ok/Err` wrap emission and walrus emission to typed IR values (no `RawCode` payload wrapper in these branches).
+39. `try_lower_expr_for_structured_emit` now falls back to strict registry lowering instead of rendering to string and wrapping `RustExpr::RawCode`.
+40. validation for this continuation slice:
+41. `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed)
+42. `./scripts/run_all_tests.sh` -> pass (`394` e2e pass tests completed, `0` failed)
+43. full recursive demo sweep remains stable: `TOTAL=91`, `FAILS=5` (same expected non-runnable/intentional files only)
+44. `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites: `13 -> 8` (current tree)
 
 ### Next Loop To-Do (Ordered)
 

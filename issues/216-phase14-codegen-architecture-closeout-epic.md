@@ -633,3 +633,16 @@ Latest validation loop (2026-03-02, Pass AH):
 - direct `self.write(...) = 0` in `crates/sifr_codegen/src`.
 - direct `self.writeln(...) = 0` in `crates/sifr_codegen/src`.
 - direct `self.output.push_str(...) = 0` in `crates/sifr_codegen/src`.
+
+Latest validation loop (2026-03-02, Pass AI):
+- Continued IR-first cleanup in `expr_render_helpers.rs` with root-cause removal of string-backed argument/value lowering paths:
+- structured method-call emission now lowers arguments to typed IR nodes directly (removed rendered-arg string pipeline and `RawCode` arg wrapping).
+- plain-call signature `Result` error coercion now emits typed IR `map_err` closure instead of string interpolation into `RustExpr::RawCode`.
+- structured `Ok/Err` wrapper emission and walrus emission now consume typed lowered IR values instead of rendered-string `RawCode`.
+- `try_lower_expr_for_structured_emit` now falls back to strict registry lowering (typed IR) rather than rendering expression strings into `RawCode`.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+- Re-audit evidence after this loop:
+- `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites reduced `13 -> 8`.
