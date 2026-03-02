@@ -968,3 +968,21 @@ Latest validation loop (2026-03-02, Pass BE):
   - `cargo test -q -p sifr_codegen` -> pass (`444` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BF):
+- Continued IR-first hardening by adding architecture guards to prevent reintroduction of deleted expression side-effect/bridge APIs:
+  - `lib_codegen_tests.rs`:
+    - added `test_expr_side_effect_emitter_layer_is_removed` asserting absence of:
+      - expression-side-effect emitter surface in `expr_render_helpers.rs` (`try_emit_structured_*` / f-string side-effect helper traces),
+      - direct expression-emission helper traces in `output_helpers.rs`,
+      - registry write-bridge helper trace in `intrinsic_method_emitters.rs`,
+      - reserved plain builtin helper trace in `lib_support.rs`.
+- Re-audit evidence after this loop (production source only):
+  - `prod.self.write(...) = 0`
+  - `prod.self.writeln(...) = 0`
+  - `prod.emit_rust_expr(...) = 0`
+  - `rg -n "RawCode|SynItem|fallback|legacy|migration|bridge" crates/sifr_codegen/src --glob '!**/lib_codegen_tests.rs'` -> no matches.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

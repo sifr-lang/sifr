@@ -1194,3 +1194,13 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 6. removed dead bridge APIs `emit_rust_expr(...)` (`output_helpers.rs`) and `write_registry_expr(...)` (`intrinsic_method_emitters.rs`)
 7. removed unreferenced `is_reserved_plain_builtin_call` from `lib_support.rs` and its re-export from `lib.rs`
 8. re-audit evidence after this loop: `self.write(...) = 0`, `self.writeln(...) = 0`, `emit_rust_expr(...) = 0` in `crates/sifr_codegen/src`; `rg -n "RawCode|SynItem|fallback|legacy|migration|bridge" crates/sifr_codegen/src` -> no matches
+
+### Validation rerun (2026-03-02, Pass BF)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`445` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. added architecture guard `test_expr_side_effect_emitter_layer_is_removed` in `lib_codegen_tests.rs` to block reintroduction of removed expression side-effect/bridge APIs
+6. guard verifies absence of expression emitter surface traces across `expr_render_helpers.rs`, `output_helpers.rs`, `intrinsic_method_emitters.rs`, and `lib_support.rs`
+7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0` and `RawCode|SynItem|fallback|legacy|migration|bridge` -> no matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)

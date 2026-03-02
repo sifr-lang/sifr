@@ -1889,6 +1889,20 @@ fn test_generator_init_emission_is_structured_only() {
 }
 
 #[test]
+fn test_expr_side_effect_emitter_layer_is_removed() {
+    let expr_render_helpers_src = include_str!("expr_render_helpers.rs");
+    let output_helpers_src = include_str!("output_helpers.rs");
+    let intrinsic_emitters_src = include_str!("intrinsic_method_emitters.rs");
+    let lib_support_src = include_str!("lib_support.rs");
+
+    assert!(!expr_render_helpers_src.contains("fn try_emit_structured_"));
+    assert!(!expr_render_helpers_src.contains("emit_fstring_macro("));
+    assert!(!output_helpers_src.contains("expression string emission is forbidden"));
+    assert!(!intrinsic_emitters_src.contains("write_registry_expr"));
+    assert!(!lib_support_src.contains("reserved_plain_builtin"));
+}
+
+#[test]
 fn test_round_parenthesizes_cast_receiver() {
     let module = HirModule {
         functions: vec![HirFunction {
