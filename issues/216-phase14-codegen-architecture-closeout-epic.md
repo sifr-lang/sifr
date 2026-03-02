@@ -729,3 +729,13 @@ Latest validation loop (2026-03-02, Pass AQ):
 - `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AR):
+- Continued IR-first cleanup in string method lowerers:
+- removed final `crate::render_expr(...)` production usage from `methods/string.rs` borrow-shaping helper and replaced with typed IR shape checks (`Ref` / `as_str` / wrapper recursion).
+- removed string interpolation for width formatting in `ljust/rjust/zfill`; these now pass typed `usize` cast arg via positional width format (`{:<1$}`, `{:>1$}`, `{:0>1$}`) instead of synthetic `Ident(\"width = ...\")`.
+- updated string method lowering expectations in `methods/mod.rs` to match the typed positional-width IR rendering.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

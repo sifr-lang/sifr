@@ -281,21 +281,21 @@ mod tests {
             lower_method(&Type::Str, "ljust", "s", &["5".to_string()]).expect("ljust lowers");
         assert_eq!(
             render_expr(&ljust.expr),
-            "format!(\"{:<width$}\", s, width = 5 as usize)"
+            "format!(\"{:<1$}\", s, 5 as usize)"
         );
 
         let rjust =
             lower_method(&Type::Str, "rjust", "s", &["5".to_string()]).expect("rjust lowers");
         assert_eq!(
             render_expr(&rjust.expr),
-            "format!(\"{:>width$}\", s, width = 5 as usize)"
+            "format!(\"{:>1$}\", s, 5 as usize)"
         );
 
         let zfill =
             lower_method(&Type::Str, "zfill", "s", &["5".to_string()]).expect("zfill lowers");
         assert_eq!(
             render_expr(&zfill.expr),
-            "format!(\"{:0>width$}\", s, width = 5 as usize)"
+            "format!(\"{:0>1$}\", s, 5 as usize)"
         );
 
         let list_clear = lower_method(&Type::List(Box::new(Type::Int)), "clear", "xs", &[])

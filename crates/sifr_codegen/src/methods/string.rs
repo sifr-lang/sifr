@@ -33,8 +33,15 @@ fn lower_trim_to_string(
 }
 
 fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
-    let rendered = crate::render_expr(arg);
-    rendered.ends_with(".as_str()") || rendered.starts_with('&')
+    match arg {
+        RustExpr::Ref { .. } => true,
+        RustExpr::MethodCall { method, .. } => method == "as_str",
+        RustExpr::Paren(inner)
+        | RustExpr::Try(inner)
+        | RustExpr::Await(inner)
+        | RustExpr::Clone(inner) => is_already_borrowed_rendered_expr(inner),
+        _ => false,
+    }
 }
 
 fn render_borrowed_arg_expr(arg: &RustExpr) -> RustExpr {
@@ -645,10 +652,13 @@ pub(super) fn lower_ljust(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
     }
     Some(RustExpr::FormatMacro {
         name: "format".to_string(),
-        format_str: "{:<width$}".to_string(),
+        format_str: "{:<1$}".to_string(),
         args: vec![
             object.clone(),
-            RustExpr::Ident(format!("width = {} as usize", crate::render_expr(&args[0]))),
+            RustExpr::Cast {
+                expr: Box::new(args[0].clone()),
+                ty: RustType::Named("usize".to_string()),
+            },
         ],
     })
 }
@@ -659,10 +669,13 @@ pub(super) fn lower_rjust(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
     }
     Some(RustExpr::FormatMacro {
         name: "format".to_string(),
-        format_str: "{:>width$}".to_string(),
+        format_str: "{:>1$}".to_string(),
         args: vec![
             object.clone(),
-            RustExpr::Ident(format!("width = {} as usize", crate::render_expr(&args[0]))),
+            RustExpr::Cast {
+                expr: Box::new(args[0].clone()),
+                ty: RustType::Named("usize".to_string()),
+            },
         ],
     })
 }
@@ -673,10 +686,13 @@ pub(super) fn lower_zfill(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
     }
     Some(RustExpr::FormatMacro {
         name: "format".to_string(),
-        format_str: "{:0>width$}".to_string(),
+        format_str: "{:0>1$}".to_string(),
         args: vec![
             object.clone(),
-            RustExpr::Ident(format!("width = {} as usize", crate::render_expr(&args[0]))),
+            RustExpr::Cast {
+                expr: Box::new(args[0].clone()),
+                ty: RustType::Named("usize".to_string()),
+            },
         ],
     })
 }
