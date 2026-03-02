@@ -720,3 +720,12 @@ Latest validation loop (2026-03-02, Pass AP):
 - `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AQ):
+- Continued IR-first cleanup in registry method lowerers:
+- removed `crate::render_expr(...)` string inspection from `methods/set.rs`, `methods/list.rs`, and `methods/dict.rs` borrow-shaping helpers.
+- borrow detection now uses typed IR shape checks only (`RustExpr::Ref` / `MethodCall { method: "as_str" }` plus recursive wrapper unwrapping), eliminating string parsing from these production lowering paths.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

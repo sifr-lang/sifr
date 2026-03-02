@@ -3,8 +3,15 @@
 use crate::{RustExpr, RustParam, RustType};
 
 fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
-    let rendered = crate::render_expr(arg);
-    rendered.ends_with(".as_str()") || rendered.starts_with('&')
+    match arg {
+        RustExpr::Ref { .. } => true,
+        RustExpr::MethodCall { method, .. } => method == "as_str",
+        RustExpr::Paren(inner)
+        | RustExpr::Try(inner)
+        | RustExpr::Await(inner)
+        | RustExpr::Clone(inner) => is_already_borrowed_rendered_expr(inner),
+        _ => false,
+    }
 }
 
 fn render_key_arg_expr(arg: &RustExpr) -> RustExpr {
