@@ -21,55 +21,36 @@ pub(crate) struct IrRuntimeImportNeeds {
 }
 
 pub(crate) fn collect_import_needs_from_items(items: &[RustItem]) -> IrImportNeeds {
-    collect_import_needs_from_items_with_raw_mode(items, false)
-}
-
-#[cfg(test)]
-pub(crate) fn collect_import_needs_from_items_allow_raw(items: &[RustItem]) -> IrImportNeeds {
-    collect_import_needs_from_items_with_raw_mode(items, true)
-}
-
-fn collect_import_needs_from_items_with_raw_mode(
-    items: &[RustItem],
-    allow_raw: bool,
-) -> IrImportNeeds {
     let mut needs = IrImportNeeds::default();
     for item in items {
-        collect_item(item, &mut needs, allow_raw);
+        collect_item(item, &mut needs);
     }
     needs
 }
 
-fn collect_item(item: &RustItem, needs: &mut IrImportNeeds, allow_raw: bool) {
+fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
     match item {
         RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => {}
         RustItem::SynItem(code) => collect_from_syn_item_code(code, needs),
-        RustItem::RawCode(code) => {
-            if allow_raw {
-                collect_from_raw_item_code(code, needs);
-            } else {
-                raw_import_in_production_forbidden("item RawCode");
-            }
-        }
         RustItem::Struct { fields, .. } => {
             for (_, ty) in fields {
-                collect_type(ty, needs, allow_raw);
+                collect_type(ty, needs);
             }
         }
-        RustItem::TupleStruct { inner, .. } => collect_type(inner, needs, allow_raw),
+        RustItem::TupleStruct { inner, .. } => collect_type(inner, needs),
         RustItem::Enum { variants, .. } => {
             for variant in variants {
                 for (_, ty) in &variant.fields {
-                    collect_type(ty, needs, allow_raw);
+                    collect_type(ty, needs);
                 }
                 if let Some(expr) = &variant.value {
-                    collect_expr(expr, needs, allow_raw);
+                    collect_expr(expr, needs);
                 }
             }
         }
         RustItem::Trait { methods, .. } | RustItem::Impl { items: methods, .. } => {
             for method in methods {
-                collect_item(method, needs, allow_raw);
+                collect_item(method, needs);
             }
         }
         RustItem::Fn {
@@ -77,59 +58,52 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds, allow_raw: bool) {
         } => {
             for param in params {
                 if let RustParam::Named { ty, .. } = param {
-                    collect_type(ty, needs, allow_raw);
+                    collect_type(ty, needs);
                 }
             }
             if let Some(ret_ty) = ret {
-                collect_type(ret_ty, needs, allow_raw);
+                collect_type(ret_ty, needs);
             }
             for stmt in body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
         }
         RustItem::TraitMethodSig { params, ret, .. } => {
             for param in params {
                 if let RustParam::Named { ty, .. } = param {
-                    collect_type(ty, needs, allow_raw);
+                    collect_type(ty, needs);
                 }
             }
             if let Some(ret_ty) = ret {
-                collect_type(ret_ty, needs, allow_raw);
+                collect_type(ret_ty, needs);
             }
         }
-        RustItem::TypeAlias { ty, .. } => collect_type(ty, needs, allow_raw),
+        RustItem::TypeAlias { ty, .. } => collect_type(ty, needs),
         RustItem::Const { ty, value, .. } | RustItem::Static { ty, value, .. } => {
-            collect_type(ty, needs, allow_raw);
-            collect_expr(value, needs, allow_raw);
+            collect_type(ty, needs);
+            collect_expr(value, needs);
         }
     }
 }
 
-fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds, allow_raw: bool) {
+fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
     match stmt {
         RustStmt::Let { ty, value, .. } => {
             if let Some(ty) = ty {
-                collect_type(ty, needs, allow_raw);
+                collect_type(ty, needs);
             }
-            collect_expr(value, needs, allow_raw);
+            collect_expr(value, needs);
         }
-        RustStmt::LetPattern { value, .. } => collect_expr(value, needs, allow_raw),
+        RustStmt::LetPattern { value, .. } => collect_expr(value, needs),
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
-            collect_expr(target, needs, allow_raw);
-            collect_expr(value, needs, allow_raw);
+            collect_expr(target, needs);
+            collect_expr(value, needs);
         }
-        RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => collect_expr(expr, needs, allow_raw),
+        RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => collect_expr(expr, needs),
         RustStmt::Assert { cond, msg } => {
-            collect_expr(cond, needs, allow_raw);
+            collect_expr(cond, needs);
             if let Some(msg) = msg {
-                collect_expr(msg, needs, allow_raw);
-            }
-        }
-        RustStmt::RawCode(code) => {
-            if allow_raw {
-                collect_from_raw_stmt_code(code, needs);
-            } else {
-                raw_import_in_production_forbidden("statement RawCode");
+                collect_expr(msg, needs);
             }
         }
         RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => {}
@@ -138,13 +112,13 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds, allow_raw: bool) {
             then_body,
             else_body,
         } => {
-            collect_expr(cond, needs, allow_raw);
+            collect_expr(cond, needs);
             for stmt in then_body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
             if let Some(else_body) = else_body {
                 for stmt in else_body {
-                    collect_stmt(stmt, needs, allow_raw);
+                    collect_stmt(stmt, needs);
                 }
             }
         }
@@ -154,50 +128,50 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds, allow_raw: bool) {
             else_body,
             ..
         } => {
-            collect_expr(expr, needs, allow_raw);
+            collect_expr(expr, needs);
             for stmt in then_body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
             if let Some(else_body) = else_body {
                 for stmt in else_body {
-                    collect_stmt(stmt, needs, allow_raw);
+                    collect_stmt(stmt, needs);
                 }
             }
         }
         RustStmt::Match { expr, arms } => {
-            collect_expr(expr, needs, allow_raw);
+            collect_expr(expr, needs);
             for arm in arms {
                 if let Some(guard) = &arm.guard {
-                    collect_expr(guard, needs, allow_raw);
+                    collect_expr(guard, needs);
                 }
                 for stmt in &arm.body {
-                    collect_stmt(stmt, needs, allow_raw);
+                    collect_stmt(stmt, needs);
                 }
             }
         }
         RustStmt::For { iter, body, .. } => {
-            collect_expr(iter, needs, allow_raw);
+            collect_expr(iter, needs);
             for stmt in body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
         }
         RustStmt::With { items, body } => {
             for item in items {
-                collect_expr(&item.value, needs, allow_raw);
+                collect_expr(&item.value, needs);
             }
             for stmt in body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
         }
         RustStmt::While { cond, body } => {
-            collect_expr(cond, needs, allow_raw);
+            collect_expr(cond, needs);
             for stmt in body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
         }
         RustStmt::Loop { body } | RustStmt::Block(body) => {
             for stmt in body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
         }
         RustStmt::LocalFn {
@@ -205,30 +179,23 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds, allow_raw: bool) {
         } => {
             for param in params {
                 match param {
-                    RustParam::Named { ty, .. } => collect_type(ty, needs, allow_raw),
+                    RustParam::Named { ty, .. } => collect_type(ty, needs),
                     RustParam::SelfParam { .. } | RustParam::SelfValue => {}
                 }
             }
             if let Some(ret) = ret {
-                collect_type(ret, needs, allow_raw);
+                collect_type(ret, needs);
             }
             for stmt in body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
         }
     }
 }
 
-fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds, allow_raw: bool) {
+fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
     match expr {
         RustExpr::Literal(_) => {}
-        RustExpr::RawCode(code) => {
-            if allow_raw {
-                collect_from_raw_expr_code(code, needs);
-            } else {
-                raw_import_in_production_forbidden(&format!("expression RawCode: {code}"));
-            }
-        }
         RustExpr::Ident(name) => mark_symbol(name, needs),
         RustExpr::Path(segments) => {
             if let Some(first) = segments.first() {
@@ -236,15 +203,15 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds, allow_raw: bool) {
             }
         }
         RustExpr::MethodCall { receiver, args, .. } => {
-            collect_expr(receiver, needs, allow_raw);
+            collect_expr(receiver, needs);
             for arg in args {
-                collect_expr(arg, needs, allow_raw);
+                collect_expr(arg, needs);
             }
         }
         RustExpr::FnCall { func, args } => {
-            collect_expr(func, needs, allow_raw);
+            collect_expr(func, needs);
             for arg in args {
-                collect_expr(arg, needs, allow_raw);
+                collect_expr(arg, needs);
             }
         }
         RustExpr::MacroCall { args, .. }
@@ -252,49 +219,49 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds, allow_raw: bool) {
         | RustExpr::Tuple(args)
         | RustExpr::Array(args) => {
             for arg in args {
-                collect_expr(arg, needs, allow_raw);
+                collect_expr(arg, needs);
             }
         }
         RustExpr::FormatMacro { args, .. } => {
             for arg in args {
-                collect_expr(arg, needs, allow_raw);
+                collect_expr(arg, needs);
             }
         }
         RustExpr::BinOp { left, right, .. } => {
-            collect_expr(left, needs, allow_raw);
-            collect_expr(right, needs, allow_raw);
+            collect_expr(left, needs);
+            collect_expr(right, needs);
         }
         RustExpr::UnaryOp { operand, .. }
         | RustExpr::Deref(operand)
         | RustExpr::Clone(operand)
         | RustExpr::Try(operand)
         | RustExpr::Paren(operand)
-        | RustExpr::Await(operand) => collect_expr(operand, needs, allow_raw),
-        RustExpr::Field { expr, .. } => collect_expr(expr, needs, allow_raw),
+        | RustExpr::Await(operand) => collect_expr(operand, needs),
+        RustExpr::Field { expr, .. } => collect_expr(expr, needs),
         RustExpr::Index { expr, index } => {
-            collect_expr(expr, needs, allow_raw);
-            collect_expr(index, needs, allow_raw);
+            collect_expr(expr, needs);
+            collect_expr(index, needs);
         }
         RustExpr::Slice { expr, start, stop } => {
-            collect_expr(expr, needs, allow_raw);
+            collect_expr(expr, needs);
             if let Some(start) = start {
-                collect_expr(start, needs, allow_raw);
+                collect_expr(start, needs);
             }
             if let Some(stop) = stop {
-                collect_expr(stop, needs, allow_raw);
+                collect_expr(stop, needs);
             }
         }
-        RustExpr::Ref { expr, .. } => collect_expr(expr, needs, allow_raw),
+        RustExpr::Ref { expr, .. } => collect_expr(expr, needs),
         RustExpr::Cast { expr, ty } => {
-            collect_expr(expr, needs, allow_raw);
-            collect_type(ty, needs, allow_raw);
+            collect_expr(expr, needs);
+            collect_type(ty, needs);
         }
         RustExpr::Block { stmts, expr } => {
             for stmt in stmts {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
             if let Some(expr) = expr {
-                collect_expr(expr, needs, allow_raw);
+                collect_expr(expr, needs);
             }
         }
         RustExpr::If {
@@ -302,91 +269,76 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds, allow_raw: bool) {
             then_expr,
             else_expr,
         } => {
-            collect_expr(cond, needs, allow_raw);
-            collect_expr(then_expr, needs, allow_raw);
+            collect_expr(cond, needs);
+            collect_expr(then_expr, needs);
             if let Some(else_expr) = else_expr {
-                collect_expr(else_expr, needs, allow_raw);
+                collect_expr(else_expr, needs);
             }
         }
         RustExpr::Match { expr, arms } => {
-            collect_expr(expr, needs, allow_raw);
+            collect_expr(expr, needs);
             for arm in arms {
                 if let Some(guard) = &arm.guard {
-                    collect_expr(guard, needs, allow_raw);
+                    collect_expr(guard, needs);
                 }
                 for stmt in &arm.body {
-                    collect_stmt(stmt, needs, allow_raw);
+                    collect_stmt(stmt, needs);
                 }
             }
         }
-        RustExpr::Closure { body, .. } => collect_expr(body, needs, allow_raw),
+        RustExpr::Closure { body, .. } => collect_expr(body, needs),
         RustExpr::ClosureBlock { body, .. } => {
             for stmt in body {
-                collect_stmt(stmt, needs, allow_raw);
+                collect_stmt(stmt, needs);
             }
         }
         RustExpr::StructInit { fields, .. } => {
             for (_, value) in fields {
-                collect_expr(value, needs, allow_raw);
+                collect_expr(value, needs);
             }
         }
         RustExpr::Range { start, end } => {
-            collect_expr(start, needs, allow_raw);
-            collect_expr(end, needs, allow_raw);
+            collect_expr(start, needs);
+            collect_expr(end, needs);
         }
     }
 }
 
-fn collect_type(ty: &RustType, needs: &mut IrImportNeeds, allow_raw: bool) {
+fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
     match ty {
         RustType::I64 | RustType::F64 | RustType::Bool | RustType::String_ | RustType::Unit => {}
-        RustType::RawCode(code) => {
-            if allow_raw {
-                collect_from_raw_type_code(code, needs);
-            } else {
-                raw_import_in_production_forbidden("type RawCode");
-            }
-        }
         RustType::Vec(inner)
         | RustType::HashSet(inner)
         | RustType::VecDeque(inner)
         | RustType::Option(inner) => {
-            collect_type(inner, needs, allow_raw);
+            collect_type(inner, needs);
         }
         RustType::HashMap(k, v) | RustType::Result(k, v) => {
-            collect_type(k, needs, allow_raw);
-            collect_type(v, needs, allow_raw);
+            collect_type(k, needs);
+            collect_type(v, needs);
         }
         RustType::Tuple(items) => {
             for item in items {
-                collect_type(item, needs, allow_raw);
+                collect_type(item, needs);
             }
         }
-        RustType::Ref { inner, .. } => collect_type(inner, needs, allow_raw),
+        RustType::Ref { inner, .. } => collect_type(inner, needs),
         RustType::Named(name) => collect_from_type_text(name, needs),
         RustType::DynTrait(name) => collect_from_type_text(&format!("dyn {name}"), needs),
         RustType::Impl(name) => collect_from_type_text(&format!("impl {name}"), needs),
         RustType::Generic { base, params } => {
             mark_symbol(base, needs);
             for param in params {
-                collect_type(param, needs, allow_raw);
+                collect_type(param, needs);
             }
         }
         RustType::Fn { params, ret } => {
             for param in params {
-                collect_type(param, needs, allow_raw);
+                collect_type(param, needs);
             }
-            collect_type(ret, needs, allow_raw);
+            collect_type(ret, needs);
         }
     }
-}
-
-fn collect_from_raw_item_code(code: &str, needs: &mut IrImportNeeds) {
-    if let Ok(file) = syn::parse_file(code) {
-        collect_from_syn_file(&file, needs);
-        return;
-    }
-    scan_named_text(code, needs);
 }
 
 fn collect_from_syn_item_code(code: &str, needs: &mut IrImportNeeds) {
@@ -394,30 +346,6 @@ fn collect_from_syn_item_code(code: &str, needs: &mut IrImportNeeds) {
         panic!("invalid syn-backed item in structural import pass: {err}; code:\n{code}")
     });
     collect_from_syn_item(&item, needs);
-}
-
-fn collect_from_raw_stmt_code(code: &str, needs: &mut IrImportNeeds) {
-    if let Ok(stmt) = syn::parse_str::<syn::Stmt>(code) {
-        collect_from_syn_stmt(&stmt, needs);
-        return;
-    }
-    scan_named_text(code, needs);
-}
-
-fn collect_from_raw_expr_code(code: &str, needs: &mut IrImportNeeds) {
-    if let Ok(expr) = syn::parse_str::<syn::Expr>(code) {
-        collect_from_syn_expr(&expr, needs);
-        return;
-    }
-    scan_named_text(code, needs);
-}
-
-fn collect_from_raw_type_code(code: &str, needs: &mut IrImportNeeds) {
-    if let Ok(ty) = syn::parse_str::<syn::Type>(code) {
-        collect_from_syn_type(&ty, needs);
-        return;
-    }
-    scan_named_text(code, needs);
 }
 
 fn collect_from_type_text(text: &str, needs: &mut IrImportNeeds) {
@@ -428,24 +356,9 @@ fn collect_from_type_text(text: &str, needs: &mut IrImportNeeds) {
     scan_named_text(text, needs);
 }
 
-fn collect_from_syn_file(file: &syn::File, needs: &mut IrImportNeeds) {
-    let mut collector = SynImportNeedsCollector { needs };
-    collector.visit_file(file);
-}
-
 fn collect_from_syn_item(item: &syn::Item, needs: &mut IrImportNeeds) {
     let mut collector = SynImportNeedsCollector { needs };
     collector.visit_item(item);
-}
-
-fn collect_from_syn_stmt(stmt: &syn::Stmt, needs: &mut IrImportNeeds) {
-    let mut collector = SynImportNeedsCollector { needs };
-    collector.visit_stmt(stmt);
-}
-
-fn collect_from_syn_expr(expr: &syn::Expr, needs: &mut IrImportNeeds) {
-    let mut collector = SynImportNeedsCollector { needs };
-    collector.visit_expr(expr);
 }
 
 fn collect_from_syn_type(ty: &syn::Type, needs: &mut IrImportNeeds) {
@@ -493,10 +406,6 @@ fn scan_named_text(text: &str, needs: &mut IrImportNeeds) {
         }
         i += 1;
     }
-}
-
-fn raw_import_in_production_forbidden(context: &str) -> ! {
-    panic!("RawCode is forbidden in production structural import pass ({context})")
 }
 
 fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
@@ -591,44 +500,4 @@ mod tests {
         assert!(!needs.runtime.needs_bigint);
     }
 
-    #[test]
-    fn collects_symbols_from_raw_code_items() {
-        let items = vec![RustItem::RawCode(
-            "fn demo(m: HashMap<String, i64>) -> BigInt { \
-             let _s: HashSet<String> = HashSet::new(); \
-             let _q: VecDeque<i64> = VecDeque::new(); \
-             let _m = Mutex::new(1); \
-             BigInt::from(1) \
-            }"
-            .to_string(),
-        )];
-        let needs = collect_import_needs_from_items_allow_raw(&items);
-        assert!(needs.collections.needs_hashmap);
-        assert!(needs.collections.needs_hashset);
-        assert!(needs.collections.needs_vecdeque);
-        assert!(needs.runtime.needs_mutex);
-        assert!(needs.runtime.needs_bigint);
-    }
-
-    #[test]
-    fn ignores_fully_qualified_symbols_in_raw_code() {
-        let items = vec![RustItem::RawCode(
-            "fn demo() { let _ = std::collections::HashMap::<String, i64>::new(); \
-             let _ = num_bigint::BigInt::from(1); \
-             let _ = std::sync::Mutex::new(1); }"
-                .to_string(),
-        )];
-        let needs = collect_import_needs_from_items_allow_raw(&items);
-        assert!(!needs.collections.needs_hashmap);
-        assert!(!needs.collections.needs_hashset);
-        assert!(!needs.collections.needs_vecdeque);
-        assert!(!needs.runtime.needs_mutex);
-        assert!(!needs.runtime.needs_bigint);
-    }
-
-    #[test]
-    #[should_panic(expected = "RawCode is forbidden in production structural import pass")]
-    fn production_mode_panics_on_raw_item() {
-        let _ = collect_import_needs_from_items(&[RustItem::RawCode("fn demo() {}".to_string())]);
-    }
 }

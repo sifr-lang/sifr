@@ -17,8 +17,7 @@ fn optimize_item(item: &mut RustItem) -> usize {
         RustItem::Use(_)
         | RustItem::UseAlias { .. }
         | RustItem::Attr(_)
-        | RustItem::SynItem(_)
-        | RustItem::RawCode(_) => 0,
+        | RustItem::SynItem(_) => 0,
         RustItem::Struct { .. } | RustItem::TupleStruct { .. } => 0,
         RustItem::Enum { variants, .. } => {
             let mut removed = 0usize;
@@ -60,7 +59,7 @@ fn optimize_stmt(stmt: &mut RustStmt) -> usize {
         RustStmt::Assert { cond, msg } => {
             optimize_expr(cond) + msg.as_mut().map(optimize_expr).unwrap_or(0)
         }
-        RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue | RustStmt::RawCode(_) => 0,
+        RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => 0,
         RustStmt::If {
             cond,
             then_body,
@@ -159,7 +158,7 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
             }
             removed
         }
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::RawCode(_) => 0,
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
         RustExpr::MethodCall { receiver, args, .. } => {
             let mut removed = optimize_expr(receiver);
             for arg in args {

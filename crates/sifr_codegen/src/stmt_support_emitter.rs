@@ -3344,9 +3344,6 @@ impl RustEmitter {
 
     fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
         match expr {
-            crate::RustExpr::RawCode(code) => panic!(
-                "RawCode iterator-shape probing is not allowed in strict IR path: {code}"
-            ),
             crate::RustExpr::MethodCall {
                 receiver, method, ..
             } => {
@@ -3782,9 +3779,6 @@ impl RustEmitter {
                 RustStmt::Expr(lowered_expr) => self.emit_rust_stmt_with_current_indent(
                     &crate::RustStmt::Expr(lowered_expr.clone()),
                 ),
-                RustStmt::RawCode(_) => {
-                    panic!("RawCode statement reached core production emission path");
-                }
                 _ => self.emit_rust_stmt_with_current_indent(lowered_stmt),
             }
         }

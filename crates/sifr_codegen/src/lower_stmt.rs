@@ -879,10 +879,7 @@ fn append_recursive_capture_args_to_stmts(
             RustStmt::LocalFn { body, .. } => {
                 append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
             }
-            RustStmt::Return(None)
-            | RustStmt::Break
-            | RustStmt::Continue
-            | RustStmt::RawCode(_) => {}
+            RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => {}
         }
     }
 }
@@ -998,7 +995,7 @@ fn append_recursive_capture_args_to_expr(
             append_recursive_capture_args_to_expr(start, fn_name, capture_names);
             append_recursive_capture_args_to_expr(end, fn_name, capture_names);
         }
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::RawCode(_) => {}
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => {}
     }
 }
 
@@ -6210,9 +6207,6 @@ mod tests {
                 ..
             } if name == "maybe_x" && method == "unwrap"
         ));
-        assert!(lowered
-            .iter()
-            .all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
     }
 
     #[test]
@@ -7232,9 +7226,6 @@ mod tests {
             lowered[0],
             RustStmt::Let { ref name, .. } if name == "_star_tmp"
         ));
-        assert!(lowered
-            .iter()
-            .all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
     }
 
     #[test]
@@ -7502,9 +7493,6 @@ mod tests {
                 ..
             } if pattern == "Err(_e)" && expr_name == "__sifr_try_res"
         ));
-        assert!(lowered
-            .iter()
-            .all(|stmt| !matches!(stmt, RustStmt::RawCode(_))));
     }
 
     #[test]

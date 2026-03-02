@@ -277,7 +277,7 @@ impl Renderer {
                 ));
             }
             RustItem::Attr(attr) => self.emit_line(attr),
-            RustItem::SynItem(code) | RustItem::RawCode(code) => self.write_raw_top_level(code),
+            RustItem::SynItem(code) => self.write_syn_item(code),
         }
     }
 
@@ -499,7 +499,6 @@ impl Renderer {
                 self.dedent();
                 self.emit_line("}");
             }
-            RustStmt::RawCode(code) => self.write_raw_stmt(code),
         }
     }
 
@@ -624,7 +623,6 @@ impl Renderer {
             ),
             RustType::DynTrait(name) => format!("dyn {name}"),
             RustType::Impl(name) => format!("impl {name}"),
-            RustType::RawCode(code) => code.clone(),
         }
     }
 
@@ -826,7 +824,6 @@ impl Renderer {
                 Self::render_expr_string(start),
                 Self::render_expr_string(end)
             ),
-            RustExpr::RawCode(code) => code.clone(),
         }
     }
 
@@ -940,19 +937,10 @@ impl Renderer {
         }
     }
 
-    fn write_raw_top_level(&mut self, code: &str) {
+    fn write_syn_item(&mut self, code: &str) {
         self.append(code);
         if !code.ends_with('\n') {
             let _ = self.output.write_char('\n');
-        }
-    }
-
-    fn write_raw_stmt(&mut self, code: &str) {
-        for line in code.lines() {
-            self.emit_line(line);
-        }
-        if code.is_empty() {
-            self.emit_line("");
         }
     }
 }
@@ -1334,22 +1322,25 @@ mod tests {
     }
 
     #[test]
-    fn raw_code_passthrough_for_items_stmts_and_exprs() {
+    fn syn_item_passthrough_for_items() {
         let items = vec![
-            RustItem::RawCode("fn passthrough() {\n    println!(\"ok\");\n}".to_string()),
+            RustItem::SynItem("fn passthrough() {\n    println!(\"ok\");\n}".to_string()),
             RustItem::Fn {
                 name: "main".to_string(),
                 visibility: Visibility::Private,
                 type_params: vec![],
                 params: vec![],
                 ret: None,
-                body: vec![RustStmt::RawCode("println!(\"line\");".to_string())],
+                body: vec![RustStmt::Expr(RustExpr::FormatMacro {
+                    name: "println".to_string(),
+                    format_str: "line".to_string(),
+                    args: vec![],
+                })],
                 is_async: false,
             },
         ];
 
         let rendered_items = render_items(&items);
-        let rendered_expr = render_expr(&RustExpr::RawCode("custom_expr()".to_string()));
 
         assert_snapshot!(rendered_items, @r###"
         fn passthrough() {
@@ -1360,14 +1351,6 @@ mod tests {
             println!("line");
         }
         "###);
-        assert_snapshot!(rendered_expr, @"custom_expr()");
-    }
-
-    #[test]
-    fn render_items_raw_code_only_returns_input() {
-        let raw = "mod generated {\n    pub fn helper() {}\n}\n";
-        let rendered = render_items(&[RustItem::RawCode(raw.to_string())]);
-        assert_eq!(rendered, raw);
     }
 
     #[test]

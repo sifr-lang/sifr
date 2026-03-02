@@ -1388,7 +1388,6 @@ fn file_handle_readlines_method() -> RustItem {
 mod tests {
     use super::*;
     use crate::render_items;
-    use std::collections::BTreeSet;
 
     fn count_raw_in_type(ty: &RustType) -> usize {
         match ty {
@@ -1404,7 +1403,6 @@ mod tests {
             RustType::Generic { params, .. } | RustType::Fn { params, .. } => {
                 params.iter().map(count_raw_in_type).sum()
             }
-            RustType::RawCode(_) => 1,
             _ => 0,
         }
     }
@@ -1471,7 +1469,6 @@ mod tests {
                 fields.iter().map(|(_, v)| count_raw_in_expr(v)).sum()
             }
             RustExpr::Range { start, end } => count_raw_in_expr(start) + count_raw_in_expr(end),
-            RustExpr::RawCode(_) => 1,
         }
     }
 
@@ -1547,7 +1544,6 @@ mod tests {
                     + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
                     + body.iter().map(count_raw_in_stmt).sum::<usize>()
             }
-            RustStmt::RawCode(_) => 1,
         }
     }
 
@@ -1600,7 +1596,6 @@ mod tests {
             }
             RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => 0,
             RustItem::SynItem(_) => 0,
-            RustItem::RawCode(_) => 1,
         }
     }
 
@@ -1653,33 +1648,12 @@ mod tests {
     }
 
     #[test]
-    fn preamble_rawcode_is_zero() {
+    fn preamble_structural_count_is_zero() {
         let mut all = build_io_error_items();
         all.extend(build_file_handle_infra_items());
         all.extend(build_file_handle_struct_items());
         all.extend(build_logging_items());
-        let total_raw: usize = all.iter().map(count_raw_in_item).sum();
-        assert_eq!(
-            total_raw, 0,
-            "expected preamble RawCode count to be zero, got {total_raw}"
-        );
-
-        let mut raw_method_names = BTreeSet::new();
-        for item in build_file_handle_struct_items() {
-            if let RustItem::Impl { items, .. } = item {
-                for method in items {
-                    if let RustItem::Fn { name, body, .. } = method {
-                        if body.iter().any(|stmt| match stmt {
-                            RustStmt::Return(Some(RustExpr::RawCode(_))) => true,
-                            _ => false,
-                        }) {
-                            raw_method_names.insert(name);
-                        }
-                    }
-                }
-            }
-        }
-        let expected: BTreeSet<String> = BTreeSet::new();
-        assert_eq!(raw_method_names, expected);
+        let total_structural_violations: usize = all.iter().map(count_raw_in_item).sum();
+        assert_eq!(total_structural_violations, 0);
     }
 }

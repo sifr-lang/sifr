@@ -1085,3 +1085,14 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. removed test-only `lower_expr_raw`, `lower_item_raw`, and `lower_stmt_raw` constructors
 6. removed associated placeholder tests that only verified `RawCode` construction
 7. migrated `intrinsics/mod.rs` test arg helper from `RustExpr::RawCode` mapping to typed test arg parsing
+
+### Validation rerun (2026-03-02, Pass AV)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`446` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed `RawCode` variants from `rust_ir.rs` and completed full structural propagation in renderer/import/validation/optimizer/lowering passes
+6. removed all remaining `RawCode` references from `crates/sifr_codegen/src` production and test code
+7. removed redundant raw-code gate wiring from `entrypoints.rs`/`lib.rs`; `validate_items` remains the structural validation gate
+8. re-audit evidence: `rg -n "RawCode" crates/sifr_codegen` -> no matches

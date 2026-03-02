@@ -75,7 +75,6 @@ pub enum RustItem {
     },
     Attr(String),
     SynItem(String),
-    RawCode(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -145,7 +144,6 @@ pub enum RustStmt {
     Break,
     Continue,
     Block(Vec<RustStmt>),
-    RawCode(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -248,7 +246,6 @@ pub enum RustExpr {
         start: Box<RustExpr>,
         end: Box<RustExpr>,
     },
-    RawCode(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -291,7 +288,6 @@ pub enum RustType {
     },
     DynTrait(String),
     Impl(String),
-    RawCode(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -508,25 +504,4 @@ mod tests {
         }
     }
 
-    #[test]
-    fn supports_raw_code_escape_hatch_on_all_levels() {
-        let file = RustFile {
-            items: vec![
-                RustItem::RawCode("fn helper() {}".to_string()),
-                RustItem::Fn {
-                    name: "main".to_string(),
-                    visibility: Visibility::Private,
-                    type_params: vec![],
-                    params: vec![],
-                    ret: None,
-                    body: vec![RustStmt::RawCode("println!(\"ok\");".to_string())],
-                    is_async: false,
-                },
-            ],
-        };
-        let expr = RustExpr::RawCode("some_expr()".to_string());
-
-        assert_eq!(file.items.len(), 2);
-        assert!(matches!(expr, RustExpr::RawCode(_)));
-    }
 }

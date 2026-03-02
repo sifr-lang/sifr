@@ -715,13 +715,11 @@ mod tests {
         assert_eq!(sha.required_crate, Some("sha2"));
         assert!(render_expr(&sha.expr).contains("<sha2::Sha256 as sha2::Digest>::digest"));
         assert!(render_expr(&sha.expr).contains(".as_bytes()"));
-        assert!(!matches!(sha.expr, RustExpr::RawCode(_)));
 
         let md5 = lower_intrinsic("md5", &["payload".to_string()]).expect("md5");
         assert_eq!(md5.required_crate, Some("md5"));
         assert!(render_expr(&md5.expr).contains("md5::compute"));
         assert!(render_expr(&md5.expr).contains(".as_bytes()"));
-        assert!(!matches!(md5.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
@@ -799,7 +797,6 @@ mod tests {
         let exit = lower_intrinsic("sys_exit", &["code".to_string()]).expect("sys_exit");
         assert!(render_expr(&exit.expr).contains("std::process::exit("));
         assert!(render_expr(&exit.expr).contains("as i32"));
-        assert!(!matches!(exit.expr, RustExpr::RawCode(_)));
 
         let version = lower_intrinsic("sys_version", &[]).expect("sys_version");
         assert_eq!(render_expr(&version.expr), "\"sifr 0.1.0\".to_string()");
@@ -973,32 +970,26 @@ mod tests {
         let sha1 = lower_intrinsic("sha1", &["s".to_string()]).expect("sha1");
         assert_eq!(sha1.required_crate, Some("sha1"));
         assert!(render_expr(&sha1.expr).contains("<sha1::Sha1 as sha1::Digest>::digest"));
-        assert!(!matches!(sha1.expr, RustExpr::RawCode(_)));
 
         let sha512 = lower_intrinsic("sha512", &["s".to_string()]).expect("sha512");
         assert_eq!(sha512.required_crate, Some("sha2"));
         assert!(render_expr(&sha512.expr).contains("<sha2::Sha512 as sha2::Digest>::digest"));
-        assert!(!matches!(sha512.expr, RustExpr::RawCode(_)));
 
         let sha224 = lower_intrinsic("sha224", &["s".to_string()]).expect("sha224");
         assert_eq!(sha224.required_crate, Some("sha2"));
         assert!(render_expr(&sha224.expr).contains("<sha2::Sha224 as sha2::Digest>::digest"));
-        assert!(!matches!(sha224.expr, RustExpr::RawCode(_)));
 
         let sha384 = lower_intrinsic("sha384", &["s".to_string()]).expect("sha384");
         assert_eq!(sha384.required_crate, Some("sha2"));
         assert!(render_expr(&sha384.expr).contains("<sha2::Sha384 as sha2::Digest>::digest"));
-        assert!(!matches!(sha384.expr, RustExpr::RawCode(_)));
 
         let blake2b = lower_intrinsic("blake2b", &["s".to_string()]).expect("blake2b");
         assert_eq!(blake2b.required_crate, Some("blake2"));
         assert!(render_expr(&blake2b.expr).contains("Blake2b512"));
-        assert!(!matches!(blake2b.expr, RustExpr::RawCode(_)));
 
         let blake2s = lower_intrinsic("blake2s", &["s".to_string()]).expect("blake2s");
         assert_eq!(blake2s.required_crate, Some("blake2"));
         assert!(render_expr(&blake2s.expr).contains("Blake2s256"));
-        assert!(!matches!(blake2s.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
@@ -1006,57 +997,44 @@ mod tests {
         let remainder =
             lower_intrinsic("remainder", &["x".to_string(), "y".to_string()]).expect("remainder");
         assert!(render_expr(&remainder.expr).contains("__abs_frac < 0.5"));
-        assert!(!matches!(remainder.expr, RustExpr::RawCode(_)));
 
         let dist = lower_intrinsic("dist", &["p".to_string(), "q".to_string()]).expect("dist");
         assert!(render_expr(&dist.expr).contains("__p.len() != __q.len()"));
-        assert!(!matches!(dist.expr, RustExpr::RawCode(_)));
 
         let fsum = lower_intrinsic("fsum", &["vals".to_string()]).expect("fsum");
         assert!(render_expr(&fsum.expr).contains("__sum + __comp"));
-        assert!(!matches!(fsum.expr, RustExpr::RawCode(_)));
 
         let sumprod =
             lower_intrinsic("sumprod", &["a".to_string(), "b".to_string()]).expect("sumprod");
         assert!(render_expr(&sumprod.expr).contains("__p.len().min(__q.len())"));
-        assert!(!matches!(sumprod.expr, RustExpr::RawCode(_)));
 
         let ldexp = lower_intrinsic("ldexp", &["m".to_string(), "e".to_string()]).expect("ldexp");
         assert!(render_expr(&ldexp.expr).contains("(2.0 as f64).powi"));
-        assert!(!matches!(ldexp.expr, RustExpr::RawCode(_)));
 
         let modf = lower_intrinsic("modf", &["x".to_string()]).expect("modf");
         assert!(render_expr(&modf.expr).contains("__x.is_nan()"));
-        assert!(!matches!(modf.expr, RustExpr::RawCode(_)));
 
         let ulp = lower_intrinsic("ulp", &["x".to_string()]).expect("ulp");
         assert!(render_expr(&ulp.expr).contains("__x.is_infinite()"));
-        assert!(!matches!(ulp.expr, RustExpr::RawCode(_)));
 
         let nextafter =
             lower_intrinsic("nextafter", &["x".to_string(), "y".to_string()]).expect("nextafter");
         assert!(render_expr(&nextafter.expr).contains("__x == __y"));
-        assert!(!matches!(nextafter.expr, RustExpr::RawCode(_)));
 
         let erf = lower_intrinsic("erf", &["x".to_string()]).expect("erf");
         assert!(render_expr(&erf.expr).contains("__x >= 0.0"));
-        assert!(!matches!(erf.expr, RustExpr::RawCode(_)));
 
         let erfc = lower_intrinsic("erfc", &["x".to_string()]).expect("erfc");
         assert!(render_expr(&erfc.expr).contains("2.0 - __r"));
-        assert!(!matches!(erfc.expr, RustExpr::RawCode(_)));
 
         let frexp = lower_intrinsic("frexp", &["x".to_string()]).expect("frexp");
         assert!(render_expr(&frexp.expr).contains("__x == 0.0"));
-        assert!(!matches!(frexp.expr, RustExpr::RawCode(_)));
 
         let gamma = lower_intrinsic("gamma", &["x".to_string()]).expect("gamma");
         assert!(render_expr(&gamma.expr).contains("__x <= 0.0"));
-        assert!(!matches!(gamma.expr, RustExpr::RawCode(_)));
 
         let lgamma = lower_intrinsic("lgamma", &["x".to_string()]).expect("lgamma");
         assert!(render_expr(&lgamma.expr).contains("__r.exp()"));
-        assert!(!matches!(lgamma.expr, RustExpr::RawCode(_)));
     }
 
     #[test]
@@ -1075,7 +1053,6 @@ mod tests {
 
         let close = lower_intrinsic("file_close", &["hid".to_string()]).expect("file_close");
         assert!(render_expr(&close.expr).contains("__SIFR_FILE_HANDLES"));
-        assert!(!matches!(close.expr, RustExpr::RawCode(_)));
 
         let builtin_open =
             lower_intrinsic("builtin_open", &["path".to_string(), "mode".to_string()])
@@ -1086,11 +1063,9 @@ mod tests {
         let set_level =
             lower_intrinsic("set_global_level", &["n".to_string()]).expect("set_global_level");
         assert!(render_expr(&set_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
-        assert!(!matches!(set_level.expr, RustExpr::RawCode(_)));
 
         let get_level = lower_intrinsic("get_global_level", &[]).expect("get_global_level");
         assert!(render_expr(&get_level.expr).contains("__SIFR_GLOBAL_LOG_LEVEL"));
-        assert!(!matches!(get_level.expr, RustExpr::RawCode(_)));
     }
 
     #[test]

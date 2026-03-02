@@ -2246,6 +2246,5 @@ mod tests {
         assert_eq!(helper_defs, 3, "unexpected registry expr helper set");
         assert!(!prod_src.contains("lower_registry_expr_with_string_path"));
         assert!(!prod_src.contains("render_expr_via_string_only("));
-        assert!(!prod_src.contains("RustExpr::RawCode("));
     }
 }

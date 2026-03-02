@@ -55,7 +55,7 @@ use helpers::{
 };
 use ir_imports::collect_import_needs_from_items;
 use ir_optimize::remove_trivial_clones_in_items;
-use ir_validate::{validate_items, validate_no_raw_code};
+use ir_validate::validate_items;
 pub(crate) use lib_support::{
     assert_output_drained, is_reserved_plain_builtin_call, is_self_field_access_expr,
     resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
@@ -471,16 +471,6 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
             .collect::<Vec<_>>()
             .join(" | ")
     );
-    let raw_issues = validate_no_raw_code(&file_items);
-    assert!(
-        raw_issues.is_empty(),
-        "codegen raw-code gate failed (assembled file): {}",
-        raw_issues
-            .iter()
-            .map(|issue| issue.message.as_str())
-            .collect::<Vec<_>>()
-            .join(" | ")
-    );
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
 
@@ -591,17 +581,6 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
             "codegen IR validation failed (multi module file `{}`): {}",
             module_name,
             file_issues
-                .iter()
-                .map(|issue| issue.message.as_str())
-                .collect::<Vec<_>>()
-                .join(" | ")
-        );
-        let raw_issues = validate_no_raw_code(&file_items);
-        assert!(
-            raw_issues.is_empty(),
-            "codegen raw-code gate failed (multi module file `{}`): {}",
-            module_name,
-            raw_issues
                 .iter()
                 .map(|issue| issue.message.as_str())
                 .collect::<Vec<_>>()

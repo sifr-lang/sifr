@@ -1811,10 +1811,6 @@ fn test_capture_structured_stmts_collects_ir_without_output_writes() {
 #[test]
 fn test_union_display_impl_uses_structured_ir() {
     let union_src = include_str!("union_type_helpers.rs");
-    assert!(!union_src.contains("RustType::RawCode(\"&mut std::fmt::Formatter<'_>\""));
-    assert!(!union_src.contains("RustType::RawCode(\"std::fmt::Result\""));
-    assert!(!union_src.contains("RustStmt::RawCode(match_lines)"));
-    assert!(!union_src.contains("RustExpr::RawCode(format!(\"\\\"{fmt_spec}\\\"\"))"));
     assert!(union_src.contains("RustType::Ref {"));
     assert!(union_src.contains("RustStmt::Match {"));
     assert!(union_src.contains("RustExpr::Literal(RustLiteral::Str(fmt_spec.to_string()))"));
@@ -1883,7 +1879,6 @@ fn test_module_constants_flow_through_assembled_body_items() {
     assert!(module_constants_src
         .contains("structured module constant emission missing for production path"));
     assert!(!module_constants_src.contains("push_syn_items_from_source"));
-    assert!(!module_constants_src.contains("RustItem::RawCode"));
     assert!(!module_constants_src.contains("render_items(&[item])"));
 
     assert!(entrypoints_src.contains("if !emitter.body_items.is_empty() {"));
@@ -1893,7 +1888,6 @@ fn test_module_constants_flow_through_assembled_body_items() {
     );
     assert!(!entrypoints_src.contains("if !emitter.output.is_empty() {"));
     assert!(!lib_src.contains("if !emitter.output.is_empty() {"));
-    assert!(!lib_src.contains("RustItem::RawCode(stdlib_preamble.clone())"));
 }
 
 #[test]

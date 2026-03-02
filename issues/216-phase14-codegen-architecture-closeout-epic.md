@@ -773,3 +773,24 @@ Latest validation loop (2026-03-02, Pass AU):
 - `cargo test -q -p sifr_codegen` -> pass (`454` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AV):
+- Continued IR-only cleanup with zero `RawCode` usage in codegen IR and passes.
+- removed `RawCode` variants from core IR and propagated structural updates across:
+  - `render.rs`
+  - `ir_imports.rs`
+  - `ir_validate.rs`
+  - `ir_optimize.rs`
+  - `lower_stmt.rs`
+  - `expr_render_helpers.rs`
+  - `stmt_support_emitter.rs`
+  - `preamble.rs`
+  - `entrypoints.rs`
+  - `lib.rs`
+- removed remaining `RawCode` references from crate tests (`intrinsics/mod.rs`, `lib_codegen_tests.rs`, `intrinsic_method_emitters.rs`) and updated assertions to IR-structural checks only.
+- Re-audit evidence after this loop:
+  - `rg -n "RawCode" crates/sifr_codegen` -> no matches.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`446` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

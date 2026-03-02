@@ -2,7 +2,7 @@ use super::{CodegenResult, HirModule, Renderer, RustEmitter, RustFile, RustItem,
 use crate::assert_output_drained;
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::ir_optimize::remove_trivial_clones_in_items;
-use crate::ir_validate::{validate_items, validate_no_raw_code};
+use crate::ir_validate::validate_items;
 
 /// Generate Rust source code from a HIR module.
 pub fn generate_rust(module: &HirModule) -> String {
@@ -73,16 +73,6 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         file_issues.is_empty(),
         "codegen IR validation failed (test file): {}",
         file_issues
-            .iter()
-            .map(|issue| issue.message.as_str())
-            .collect::<Vec<_>>()
-            .join(" | ")
-    );
-    let raw_issues = validate_no_raw_code(&file_items);
-    assert!(
-        raw_issues.is_empty(),
-        "codegen raw-code gate failed (test file): {}",
-        raw_issues
             .iter()
             .map(|issue| issue.message.as_str())
             .collect::<Vec<_>>()
