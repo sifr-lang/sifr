@@ -31,6 +31,35 @@ Completion evidence:
 - [ ] WS6 structural-pass hard gate not complete for strict raw-text independence.
 - [ ] WS7 epic closeout/checklist/doc updates blocked until strict IR-first hard gates pass.
 
+### Latest Loop Update (2026-03-02)
+
+1. Commit completed in this loop:
+2. `f01f56b8` `codegen: continue IR-first cleanup and fix option index/print lowering`
+3. Root fixes landed:
+4. moved structured index emission onto IR-lowered path (`try_emit_structured_index_expr` now emits lowered IR node, no raw string index assembly path).
+5. expanded structured index lowering to handle optional container receivers and tuple indexing with type-driven unwrap behavior.
+6. fixed IR print lowering for option-typed values in statement path (`println` single/multi arg option branches now map through `map_or("None", ...)` IR).
+7. fixed stdlib constant-ident rewrite collision on method receivers (`e.line()` no longer rewritten to `std::f64::consts::E.line()`).
+8. Validation executed:
+9. `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed)
+10. `./scripts/run_all_tests.sh` -> pass (`394` e2e pass tests completed, `394` passed, `0` failed)
+11. full demo sweep (`find demos -name '*.sifr'` with `sifr run`) -> `91` scanned, `86` runnable pass, `5` expected non-runnable/intentional:
+12. `demos/milestone_borrow_hardening_demo/exclusivity_error_demo.sifr` (intentional borrow-check failure demo)
+13. `demos/milestone_imports_demo/models.sifr` (module file; no `main`)
+14. `demos/milestone_imports_demo/utils.sifr` (module file; no `main`)
+15. `demos/milestone_test_runner_demo/test_arithmetic.sifr` (test fixture; no `main`)
+16. `demos/milestone_test_runner_demo/test_strings.sifr` (test fixture; no `main`)
+17. Emission inventory refresh (current tree):
+18. `self.write(...)` in `crates/sifr_codegen/src` -> `0`
+19. `self.writeln(...)` in `crates/sifr_codegen/src` -> `68` (`render.rs` only)
+20. `self.output.push_str(...)` in `crates/sifr_codegen/src` -> `9` (`output_helpers.rs`, `render.rs`, and one test assertion)
+
+### Next Loop To-Do (Ordered)
+
+1. `crates/sifr_codegen/src/render.rs`: migrate line-oriented renderer methods to pure node-returning render functions so statement/item emission no longer depends on mutable `writeln` calls.
+2. `crates/sifr_codegen/src/output_helpers.rs`: remove mutable output append helpers that are no longer needed after renderer migration.
+3. `crates/sifr_codegen/src/lib_codegen_tests.rs`: tighten inventory assertions to guard against reintroducing direct string emission helpers in production paths.
+
 ### Latest Loop Update (2026-03-01)
 
 1. Commits completed in this loop:

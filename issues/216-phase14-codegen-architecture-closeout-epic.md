@@ -591,3 +591,21 @@ Latest validation loop (2026-03-01, Pass AE):
 - `./scripts/run_all_tests.sh` -> pass (including e2e pass suite `394/394`).
 - Re-audit evidence after this loop: direct `self.write(...) = 214` in `crates/sifr_codegen/src` (unchanged), remaining files:
 - `class_emitter.rs` (`93`), `class_method_emitter.rs` (`70`), `function_emitter.rs` (`51`).
+
+Latest validation loop (2026-03-02, Pass AF):
+- Landed `f01f56b8`: continued IR-first cleanup with root-cause fixes in structured index/print lowering.
+- Root fixes in this slice:
+- removed the raw-string structured index emission path; `try_emit_structured_index_expr` now emits only the IR-lowered expression.
+- expanded `try_lower_structured_index_expr` for option-receiver container indexing + tuple indexing with result-type unwrap behavior.
+- fixed statement-path `print(...)` IR lowering for option-typed arguments (`map_or("None", ...)`) to avoid `Option<T>: Display` compile errors in demos/e2e.
+- fixed stdlib-constant identifier rewrite on method receivers (exception variable `e` no longer rewritten into `std::f64::consts::E` when used as receiver).
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> `91` scanned, `86` runnable pass, `5` expected non-runnable/intentional:
+- `demos/milestone_borrow_hardening_demo/exclusivity_error_demo.sifr` (intentional type error demo).
+- `demos/milestone_imports_demo/models.sifr` and `demos/milestone_imports_demo/utils.sifr` (module files, no `main`).
+- `demos/milestone_test_runner_demo/test_arithmetic.sifr` and `demos/milestone_test_runner_demo/test_strings.sifr` (test fixtures, no `main`).
+- Re-audit evidence after this loop:
+- direct `self.write(...) = 0` in `crates/sifr_codegen/src`.
+- remaining direct string-emitter helper is `self.writeln(...) = 68` (all in `render.rs`).
