@@ -27,7 +27,7 @@ impl Renderer {
             let keeps_tight_spacing = matches!(item, RustItem::Attr(_));
             if idx + 1 < file.items.len() && !self.output.ends_with("\n\n") && !keeps_tight_spacing
             {
-                self.output.push('\n');
+                let _ = self.output.write_char('\n');
             }
         }
         self.output.clone()
@@ -35,9 +35,9 @@ impl Renderer {
 
     pub fn render_item(&mut self, item: &RustItem) {
         match item {
-            RustItem::Use(path) => self.writeln(&format!("use {};", path.join("::"))),
+            RustItem::Use(path) => self.emit_line(&format!("use {};", path.join("::"))),
             RustItem::UseAlias { path, alias } => {
-                self.writeln(&format!("use {} as {};", path.join("::"), alias));
+                self.emit_line(&format!("use {} as {};", path.join("::"), alias));
             }
             RustItem::Struct {
                 name,
@@ -46,21 +46,21 @@ impl Renderer {
                 fields,
             } => {
                 self.render_derives(derives);
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{}struct {} {{",
                     Self::render_visibility(visibility),
                     name
                 ));
                 self.indent();
                 for (field_name, field_ty) in fields {
-                    self.writeln(&format!(
+                    self.emit_line(&format!(
                         "{}: {},",
                         field_name,
                         Self::render_type_string(field_ty)
                     ));
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustItem::TupleStruct {
                 name,
@@ -69,7 +69,7 @@ impl Renderer {
                 inner,
             } => {
                 self.render_derives(derives);
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{}struct {}({});",
                     Self::render_visibility(visibility),
                     name,
@@ -85,9 +85,9 @@ impl Renderer {
             } => {
                 self.render_derives(derives);
                 if let Some(repr_name) = repr {
-                    self.writeln(&format!("#[repr({repr_name})]"));
+                    self.emit_line(&format!("#[repr({repr_name})]"));
                 }
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{}enum {} {{",
                     Self::render_visibility(visibility),
                     name
@@ -115,10 +115,10 @@ impl Renderer {
                     } else {
                         variant.name.clone()
                     };
-                    self.writeln(&format!("{rendered},"));
+                    self.emit_line(&format!("{rendered},"));
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustItem::Trait {
                 name,
@@ -131,7 +131,7 @@ impl Renderer {
                 } else {
                     format!(": {}", supertraits.join(" + "))
                 };
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{}trait {}{} {{",
                     Self::render_visibility(visibility),
                     name,
@@ -142,7 +142,7 @@ impl Renderer {
                     self.render_item(method);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustItem::Impl {
                 target,
@@ -171,13 +171,13 @@ impl Renderer {
                 } else {
                     format!("impl{generics} {target} {{")
                 };
-                self.writeln(&head);
+                self.emit_line(&head);
                 self.indent();
                 for impl_item in items {
                     self.render_item(impl_item);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustItem::Fn {
                 name,
@@ -217,7 +217,7 @@ impl Renderer {
                     .map(|t| format!(" -> {}", Self::render_type_string(t)))
                     .unwrap_or_default();
 
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{}{}fn {}{}({}){} {{",
                     Self::render_visibility(visibility),
                     async_prefix,
@@ -231,7 +231,7 @@ impl Renderer {
                     self.render_stmt(stmt);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustItem::TraitMethodSig { name, params, ret } => {
                 let params = params
@@ -243,10 +243,10 @@ impl Renderer {
                     .as_ref()
                     .map(|t| format!(" -> {}", Self::render_type_string(t)))
                     .unwrap_or_default();
-                self.writeln(&format!("fn {name}({params}){ret};"));
+                self.emit_line(&format!("fn {name}({params}){ret};"));
             }
             RustItem::TypeAlias { name, ty } => {
-                self.writeln(&format!("type {name} = {};", Self::render_type_string(ty)));
+                self.emit_line(&format!("type {name} = {};", Self::render_type_string(ty)));
             }
             RustItem::Const {
                 name,
@@ -254,7 +254,7 @@ impl Renderer {
                 ty,
                 value,
             } => {
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{}const {}: {} = {};",
                     Self::render_visibility(visibility),
                     name,
@@ -268,7 +268,7 @@ impl Renderer {
                 ty,
                 value,
             } => {
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{}static {}: {} = {};",
                     Self::render_visibility(visibility),
                     name,
@@ -276,7 +276,7 @@ impl Renderer {
                     Self::render_expr_string(value)
                 ));
             }
-            RustItem::Attr(attr) => self.writeln(attr),
+            RustItem::Attr(attr) => self.emit_line(attr),
             RustItem::SynItem(code) | RustItem::RawCode(code) => self.write_raw_top_level(code),
         }
     }
@@ -294,71 +294,71 @@ impl Renderer {
                     .as_ref()
                     .map(|t| format!(": {}", Self::render_type_string(t)))
                     .unwrap_or_default();
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "let {mutability}{name}{ty} = {};",
                     Self::render_expr_string(value)
                 ));
             }
             RustStmt::LetPattern { pattern, value } => {
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "let {pattern} = {};",
                     Self::render_expr_string(value)
                 ));
             }
             RustStmt::Assign { target, value } => {
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{} = {};",
                     Self::render_expr_string(target),
                     Self::render_expr_string(value)
                 ));
             }
             RustStmt::AugAssign { target, op, value } => {
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "{} {}= {};",
                     Self::render_expr_string(target),
                     op,
                     Self::render_expr_string(value)
                 ));
             }
-            RustStmt::Expr(expr) => self.writeln(&format!("{};", Self::render_expr_string(expr))),
+            RustStmt::Expr(expr) => self.emit_line(&format!("{};", Self::render_expr_string(expr))),
             RustStmt::Assert { cond, msg: None } => {
-                self.writeln(&format!("assert!({});", Self::render_expr_string(cond)));
+                self.emit_line(&format!("assert!({});", Self::render_expr_string(cond)));
             }
             RustStmt::Assert {
                 cond,
                 msg: Some(msg),
             } => {
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "assert!({}, \"{{}}\", {});",
                     Self::render_expr_string(cond),
                     Self::render_expr_string(msg)
                 ));
             }
             RustStmt::Return(Some(expr)) => {
-                self.writeln(&format!("return {};", Self::render_expr_string(expr)));
+                self.emit_line(&format!("return {};", Self::render_expr_string(expr)));
             }
-            RustStmt::Return(None) => self.writeln("return;"),
+            RustStmt::Return(None) => self.emit_line("return;"),
             RustStmt::If {
                 cond,
                 then_body,
                 else_body,
             } => {
-                self.writeln(&format!("if {} {{", Self::render_expr_string(cond)));
+                self.emit_line(&format!("if {} {{", Self::render_expr_string(cond)));
                 self.indent();
                 for stmt in then_body {
                     self.render_stmt(stmt);
                 }
                 self.dedent();
                 if let Some(else_body) = else_body {
-                    self.writeln("} else {");
+                    self.emit_line("} else {");
                     self.indent();
                     for stmt in else_body {
                         self.render_stmt(stmt);
                     }
                     self.dedent();
-                    self.writeln("}");
+                    self.emit_line("}");
                 } else {
-                    self.writeln("}");
+                    self.emit_line("}");
                 }
             }
             RustStmt::IfLet {
@@ -367,7 +367,7 @@ impl Renderer {
                 then_body,
                 else_body,
             } => {
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "if let {} = {} {{",
                     pattern,
                     Self::render_expr_string(expr)
@@ -378,26 +378,26 @@ impl Renderer {
                 }
                 self.dedent();
                 if let Some(else_body) = else_body {
-                    self.writeln("} else {");
+                    self.emit_line("} else {");
                     self.indent();
                     for stmt in else_body {
                         self.render_stmt(stmt);
                     }
                     self.dedent();
-                    self.writeln("}");
+                    self.emit_line("}");
                 } else {
-                    self.writeln("}");
+                    self.emit_line("}");
                 }
             }
             RustStmt::Match { expr, arms } => {
-                self.writeln(&format!("match {} {{", Self::render_expr_string(expr)));
+                self.emit_line(&format!("match {} {{", Self::render_expr_string(expr)));
                 self.indent();
                 self.render_match_arms(arms);
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustStmt::For { var, iter, body } => {
-                self.writeln(&format!(
+                self.emit_line(&format!(
                     "for {var} in {} {{",
                     Self::render_expr_string(iter)
                 ));
@@ -406,10 +406,10 @@ impl Renderer {
                     self.render_stmt(stmt);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustStmt::With { items, body } => {
-                self.writeln("{");
+                self.emit_line("{");
                 self.indent();
                 for (idx, item) in items.iter().enumerate() {
                     let value = Self::render_expr_string(&item.value);
@@ -420,47 +420,47 @@ impl Renderer {
                         let ctx_name = format!("__ctx_{idx}");
                         let guard_type = format!("__WithGuard{idx}");
                         let guard_var = format!("__guard_{idx}");
-                        self.writeln(&format!("let mut {ctx_name} = {value};"));
-                        self.writeln(&format!("struct {guard_type} {{ ctx: {class_name} }}"));
-                        self.writeln(&format!("impl Drop for {guard_type} {{"));
+                        self.emit_line(&format!("let mut {ctx_name} = {value};"));
+                        self.emit_line(&format!("struct {guard_type} {{ ctx: {class_name} }}"));
+                        self.emit_line(&format!("impl Drop for {guard_type} {{"));
                         self.indent();
-                        self.writeln("fn drop(&mut self) { self.ctx.__exit__(); }");
+                        self.emit_line("fn drop(&mut self) { self.ctx.__exit__(); }");
                         self.dedent();
-                        self.writeln("}");
-                        self.writeln(&format!(
+                        self.emit_line("}");
+                        self.emit_line(&format!(
                             "let mut {guard_var} = {guard_type} {{ ctx: {ctx_name} }};"
                         ));
-                        self.writeln(&format!(
+                        self.emit_line(&format!(
                             "let {} = {guard_var}.ctx.__enter__();",
                             item.binding
                         ));
                     } else {
-                        self.writeln(&format!("let {} = {value};", item.binding));
+                        self.emit_line(&format!("let {} = {value};", item.binding));
                     }
                 }
                 for stmt in body {
                     self.render_stmt(stmt);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustStmt::While { cond, body } => {
-                self.writeln(&format!("while {} {{", Self::render_expr_string(cond)));
+                self.emit_line(&format!("while {} {{", Self::render_expr_string(cond)));
                 self.indent();
                 for stmt in body {
                     self.render_stmt(stmt);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustStmt::Loop { body } => {
-                self.writeln("loop {");
+                self.emit_line("loop {");
                 self.indent();
                 for stmt in body {
                     self.render_stmt(stmt);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustStmt::LocalFn {
                 name,
@@ -474,30 +474,30 @@ impl Renderer {
                     .collect::<Vec<_>>()
                     .join(", ");
                 if let Some(ret) = ret {
-                    self.writeln(&format!(
+                    self.emit_line(&format!(
                         "fn {name}({rendered_params}) -> {} {{",
                         Self::render_type_string(ret)
                     ));
                 } else {
-                    self.writeln(&format!("fn {name}({rendered_params}) {{"));
+                    self.emit_line(&format!("fn {name}({rendered_params}) {{"));
                 }
                 self.indent();
                 for stmt in body {
                     self.render_stmt(stmt);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
-            RustStmt::Break => self.writeln("break;"),
-            RustStmt::Continue => self.writeln("continue;"),
+            RustStmt::Break => self.emit_line("break;"),
+            RustStmt::Continue => self.emit_line("continue;"),
             RustStmt::Block(stmts) => {
-                self.writeln("{");
+                self.emit_line("{");
                 self.indent();
                 for stmt in stmts {
                     self.render_stmt(stmt);
                 }
                 self.dedent();
-                self.writeln("}");
+                self.emit_line("}");
             }
             RustStmt::RawCode(code) => self.write_raw_stmt(code),
         }
@@ -512,17 +512,19 @@ impl Renderer {
     }
 
     fn append(&mut self, s: &str) {
-        self.output.push_str(s);
+        let _ = write!(self.output, "{s}");
     }
 
-    fn writeln(&mut self, s: &str) {
+    fn emit_line(&mut self, s: &str) {
         self.write_indent();
         self.append(s);
-        self.output.push('\n');
+        let _ = self.output.write_char('\n');
     }
 
     fn write_indent(&mut self) {
-        self.output.push_str(&"    ".repeat(self.indent));
+        for _ in 0..self.indent {
+            let _ = write!(self.output, "    ");
+        }
     }
 
     fn indent(&mut self) {
@@ -542,7 +544,7 @@ impl Renderer {
 
     fn render_derives(&mut self, derives: &[String]) {
         if !derives.is_empty() {
-            self.writeln(&format!("#[derive({})]", derives.join(", ")));
+            self.emit_line(&format!("#[derive({})]", derives.join(", ")));
         }
     }
 
@@ -906,7 +908,7 @@ impl Renderer {
         if let Some(expr) = trailing_expr {
             renderer.write_indent();
             renderer.append(&Self::render_expr_string(expr));
-            renderer.output.push('\n');
+            let _ = renderer.output.write_char('\n');
         }
         renderer.dedent();
         renderer.append("}");
@@ -920,29 +922,29 @@ impl Renderer {
                 .as_ref()
                 .map(|g| format!(" if {}", Self::render_expr_string(g)))
                 .unwrap_or_default();
-            self.writeln(&format!("{}{} => {{", arm.pattern, guard));
+            self.emit_line(&format!("{}{} => {{", arm.pattern, guard));
             self.indent();
             for stmt in &arm.body {
                 self.render_stmt(stmt);
             }
             self.dedent();
-            self.writeln("},");
+            self.emit_line("},");
         }
     }
 
     fn write_raw_top_level(&mut self, code: &str) {
         self.append(code);
         if !code.ends_with('\n') {
-            self.output.push('\n');
+            let _ = self.output.write_char('\n');
         }
     }
 
     fn write_raw_stmt(&mut self, code: &str) {
         for line in code.lines() {
-            self.writeln(line);
+            self.emit_line(line);
         }
         if code.is_empty() {
-            self.writeln("");
+            self.emit_line("");
         }
     }
 }

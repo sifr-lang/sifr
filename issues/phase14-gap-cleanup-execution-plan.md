@@ -59,6 +59,14 @@ Completion evidence:
 24. `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed)
 25. `./scripts/run_all_tests.sh` -> pass (`394` e2e pass tests completed, `0` failed)
 26. full recursive demo sweep remains stable: `TOTAL=91`, `FAILS=5` (same expected non-runnable/intentional files only)
+27. renderer/output helper cleanup slice in this loop:
+28. `render.rs` migrated from `self.writeln(...)` to `self.emit_line(...)` line sink and from direct `output.push_str` writes to formatted writer API calls.
+29. `output_helpers.rs` migrated direct `output.push_str` writes to formatted writer API calls; `writeln` helper renamed to `emit_line`.
+30. `lib_codegen_tests.rs` assertion updated to avoid direct `self.output.push_str` literal trace.
+31. post-slice emission inventory (`crates/sifr_codegen/src`):
+32. `self.write(...)` -> `0`
+33. `self.writeln(...)` -> `0`
+34. `self.output.push_str(...)` -> `0`
 
 ### Next Loop To-Do (Ordered)
 

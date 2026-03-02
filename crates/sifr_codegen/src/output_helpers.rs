@@ -1,12 +1,13 @@
 use crate::RustEmitter;
+use std::fmt::Write as _;
 
 impl RustEmitter {
     pub(super) fn write(&mut self, s: &str) {
-        self.output.push_str(s);
+        let _ = write!(self.output, "{s}");
     }
 
     pub(super) fn emit_rust_expr(&mut self, expr: &crate::RustExpr) {
-        self.output.push_str(&crate::render_expr(expr));
+        let _ = write!(self.output, "{}", crate::render_expr(expr));
     }
 
     pub(super) fn emit_rust_stmt_with_current_indent(&mut self, stmt: &crate::RustStmt) {
@@ -16,25 +17,25 @@ impl RustEmitter {
         }
         let rendered = crate::render_stmts(std::slice::from_ref(stmt));
         if self.indent == 0 {
-            self.output.push_str(&rendered);
+            let _ = write!(self.output, "{rendered}");
             return;
         }
         for line in rendered.lines() {
             self.write_indent();
-            self.output.push_str(line);
-            self.output.push('\n');
+            let _ = write!(self.output, "{line}");
+            let _ = self.output.write_char('\n');
         }
     }
 
-    pub(super) fn writeln(&mut self, s: &str) {
+    pub(super) fn emit_line(&mut self, s: &str) {
         self.write_indent();
-        self.output.push_str(s);
-        self.output.push('\n');
+        let _ = write!(self.output, "{s}");
+        let _ = self.output.write_char('\n');
     }
 
     pub(super) fn write_indent(&mut self) {
         for _ in 0..self.indent {
-            self.output.push_str("    ");
+            let _ = write!(self.output, "    ");
         }
     }
 }

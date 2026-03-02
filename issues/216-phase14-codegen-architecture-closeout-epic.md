@@ -619,3 +619,17 @@ Latest validation loop (2026-03-02, Pass AG):
 - `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> `91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AH):
+- Landed renderer/output sink cleanup for the remaining direct string helper traces:
+- `render.rs`: `self.writeln(...)` replaced with `self.emit_line(...)`, and direct `output.push_str` writes replaced with formatted writer API usage.
+- `output_helpers.rs`: direct `output.push_str` writes replaced with formatted writer API usage; helper renamed from `writeln` to `emit_line`.
+- `lib_codegen_tests.rs`: removed direct `self.output.push_str` assertion literal trace.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+- Re-audit evidence after this loop:
+- direct `self.write(...) = 0` in `crates/sifr_codegen/src`.
+- direct `self.writeln(...) = 0` in `crates/sifr_codegen/src`.
+- direct `self.output.push_str(...) = 0` in `crates/sifr_codegen/src`.
