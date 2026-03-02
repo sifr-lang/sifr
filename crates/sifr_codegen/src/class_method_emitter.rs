@@ -9,17 +9,8 @@ use sifr_hir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
-    fn lower_class_stmt_strict(&mut self, stmt: &HirStmt, context: &str) -> Vec<RustStmt> {
-        let output_len = self.output.len();
+    fn lower_class_stmt_strict(&mut self, stmt: &HirStmt, _context: &str) -> Vec<RustStmt> {
         let lowered = self.capture_structured_stmts(|inner| inner.emit_stmt(stmt));
-        if self.output.len() > output_len {
-            let emitted = self.output[output_len..].to_string();
-            self.output.truncate(output_len);
-            panic!(
-                "string statement emission leaked during class method IR emission ({context}): {}",
-                emitted.trim()
-            );
-        }
         lowered
     }
 

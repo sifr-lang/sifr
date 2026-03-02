@@ -141,16 +141,7 @@ impl RustEmitter {
 
         let mut body = Vec::new();
         for stmt in &str_func.body {
-            let output_len = self.output.len();
             let lowered = self.capture_structured_stmts(|inner| inner.emit_stmt(stmt));
-            if self.output.len() > output_len {
-                let emitted = self.output[output_len..].to_string();
-                self.output.truncate(output_len);
-                panic!(
-                    "string statement emission leaked during __str__ display IR emission: {}",
-                    emitted.trim()
-                );
-            }
             body.extend(lowered);
         }
 

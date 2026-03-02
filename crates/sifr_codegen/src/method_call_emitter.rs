@@ -286,31 +286,6 @@ impl RustEmitter {
         );
     }
 
-    /// Emit `&` or `&mut` prefix for a function argument based on parameter convention.
-    /// Copy types never get a borrow prefix (they're passed by value),
-    /// unless the parameter type is a `TypeVar` (generic), in which case we always borrow.
-    pub(crate) fn emit_borrow_prefix(
-        &mut self,
-        convention: ParamConvention,
-        arg_ty: &Type,
-        param_ty: Option<&Type>,
-    ) {
-        self.emit_borrow_prefix_for_name(convention, arg_ty, param_ty, None);
-    }
-
-    pub(crate) fn emit_borrow_prefix_for_name(
-        &mut self,
-        convention: ParamConvention,
-        arg_ty: &Type,
-        param_ty: Option<&Type>,
-        arg_name: Option<&str>,
-    ) {
-        if let Some(prefix) = self.borrow_prefix_for_name(convention, arg_ty, param_ty, arg_name) {
-            for ch in prefix.chars() {
-                self.output.push(ch);
-            }
-        }
-    }
 }
 
 #[cfg(test)]

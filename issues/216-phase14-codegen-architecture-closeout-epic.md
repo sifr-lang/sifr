@@ -813,3 +813,19 @@ Latest validation loop (2026-03-02, Pass AW):
   - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AX):
+- Continued IR-first cleanup by tightening structured-capture strictness and reducing non-renderer output state usage.
+- removed per-call output-leak slicing checks from:
+  - `class_emitter.rs`
+  - `function_emitter.rs`
+  - `class_method_emitter.rs`
+- added a hard guard in `output_helpers.rs` that panics if any string emission (`write`/`emit_rust_expr`/`emit_line`/`write_indent`) occurs while structured statement capture is active.
+- removed dead direct-output borrow-prefix emitters from `method_call_emitter.rs` (`emit_borrow_prefix*`), keeping call-lowering on typed IR flow.
+- Re-audit evidence after this loop:
+  - `rg -n "RawCode|SynItem" crates/sifr_codegen/src` -> no matches.
+  - `self.output` references are now constrained to renderer/output sink layers (`output_helpers.rs`, `render.rs`) plus one test-source assertion line.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen --lib --tests` -> pass (`445` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

@@ -1107,3 +1107,14 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 6. removed user/module `SynItem` insertion helper from `module_body.rs`
 7. rewired `lib.rs` stdlib preamble handling to an explicit external-source boundary (outside IR items) and combined structural IR + source-scan import-needs calculation
 8. re-audit evidence: `rg -n "SynItem\\(" crates/sifr_codegen/src` -> no matches
+
+### Validation rerun (2026-03-02, Pass AX)
+
+1. `cargo test -q -p sifr_codegen --lib --tests` -> pass (`445` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed output-leak slicing checks from class/function/class-method strict lowerers and replaced this with a centralized capture-time hard panic guard in `output_helpers.rs`
+6. deleted dead direct-output borrow-prefix emitters from `method_call_emitter.rs`
+7. re-audit evidence: `rg -n "RawCode|SynItem" crates/sifr_codegen/src` -> no matches
+8. `self.output` references now remain only in renderer/output sink layers (`output_helpers.rs`, `render.rs`) plus one test-source assertion
