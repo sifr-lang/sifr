@@ -711,3 +711,12 @@ Latest validation loop (2026-03-02, Pass AO):
 - `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AP):
+- Continued IR-first cleanup in expression/string-render bridge removal:
+- removed `render_expr_via_direct_emit(...)` from `expr_render_helpers.rs`; `render_expr_with_lowered_path` now enforces strict registry IR lowering only and panics when lowering is missing.
+- removed remaining string-shape probing fallback from statement iterator analysis: `is_iterator_like_expr_for_ir` now panics on `RustExpr::RawCode` instead of inspecting string snippets.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

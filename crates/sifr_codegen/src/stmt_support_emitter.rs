@@ -3344,14 +3344,9 @@ impl RustEmitter {
 
     fn is_iterator_like_expr_for_ir(expr: &crate::RustExpr) -> bool {
         match expr {
-            crate::RustExpr::RawCode(code) => {
-                code.contains(".into_iter()")
-                    || code.contains(".map(")
-                    || code.contains(".filter(")
-                    || code.contains(".zip(")
-                    || code.contains(".chain(")
-                    || code.contains(".enumerate(")
-            }
+            crate::RustExpr::RawCode(code) => panic!(
+                "RawCode iterator-shape probing is not allowed in strict IR path: {code}"
+            ),
             crate::RustExpr::MethodCall {
                 receiver, method, ..
             } => {

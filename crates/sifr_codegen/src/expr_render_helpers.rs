@@ -126,17 +126,6 @@ fn is_borrowed_string_name_expr(
 }
 
 impl RustEmitter {
-    pub(super) fn render_expr_via_direct_emit(&mut self, expr: &HirExpr) -> String {
-        let saved_output = std::mem::take(&mut self.output);
-        let saved_indent = self.indent;
-        self.indent = 0;
-        self.emit_expr(expr);
-        let result = std::mem::take(&mut self.output);
-        self.output = saved_output;
-        self.indent = saved_indent;
-        result.trim().to_string()
-    }
-
     fn write_format_macro_call(
         &mut self,
         macro_name: &str,
@@ -160,14 +149,12 @@ impl RustEmitter {
     }
 
     pub(super) fn render_expr_with_lowered_path(&mut self, expr: &HirExpr) -> String {
-        match self.try_lower_registry_expr_result(expr) {
-            Ok(Some(lowered_expr)) => crate::render_expr(&lowered_expr),
-            Ok(None) => self.render_expr_via_direct_emit(expr),
-            Err(_) => {
-                self.lowering_stats.expr_lowering_errors += 1;
-                self.render_expr_via_direct_emit(expr)
-            }
-        }
+        let Some(lowered_expr) = self.try_lower_registry_expr_strict(expr) else {
+            panic!(
+                "strict IR rendering path missing for expression: {expr:?}"
+            );
+        };
+        crate::render_expr(&lowered_expr)
     }
 
     pub(super) fn rewrite_stdlib_constant_idents_in_expr(
