@@ -2979,29 +2979,6 @@ fn collect_string_concat_parts_hir<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a Hi
 }
 
 impl RustEmitter {
-    pub(super) fn emit_lambda_untyped(&mut self, expr: &HirExpr) {
-        if let HirExpr::Lambda { params, body, .. } = expr {
-            let body_expr = match self.try_lower_expr_for_structured_emit(body) {
-                Ok(Some(lowered)) => lowered,
-                _ => panic!("lambda body lowering failed in strict IR emission path"),
-            };
-            self.emit_rust_expr(&crate::RustExpr::Closure {
-                params: params
-                    .iter()
-                    .map(|param| crate::RustParam::Named {
-                        name: param.name.clone(),
-                        ty: crate::RustType::Named("_".to_string()),
-                    })
-                    .collect(),
-                body: Box::new(body_expr),
-                is_move: false,
-            });
-        } else {
-            // Not a lambda, emit as-is
-            self.emit_expr(expr);
-        }
-    }
-
     pub(super) fn emit_fstring_macro(&mut self, macro_name: &str, parts: &[HirFStringPart]) {
         let mut format_str = String::new();
         let mut exprs: Vec<&HirExpr> = Vec::new();

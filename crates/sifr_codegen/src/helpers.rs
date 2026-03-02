@@ -1,4 +1,4 @@
-use super::{IsNoneUnionMatch, IsinstanceUnionMatch, ModuleFuncSignatures, RustEmitter};
+use super::{IsNoneUnionMatch, IsinstanceUnionMatch, ModuleFuncSignatures};
 use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -1302,20 +1302,5 @@ pub(super) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
         }
         HirExpr::Lambda { body, .. } => expr_calls_function(body, func_name),
         _ => false,
-    }
-}
-
-impl RustEmitter {
-    /// Emit a `BigInt` expression, cloning if it's a variable name (to avoid move).
-    pub(super) fn emit_expr_with_bigint_clone(&mut self, expr: &HirExpr) {
-        match expr {
-            HirExpr::Name { .. } | HirExpr::FieldAccess { .. } => {
-                let lowered = crate::try_lower_leaf_or_name_expr_result(expr)
-                    .expect("bigint clone source lowering should not fail")
-                    .expect("bigint clone source must lower to structured RustExpr");
-                self.emit_rust_expr(&crate::RustExpr::Clone(Box::new(lowered)));
-            }
-            _ => self.emit_expr(expr),
-        }
     }
 }

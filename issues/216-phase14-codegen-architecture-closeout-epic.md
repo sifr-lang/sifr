@@ -864,3 +864,25 @@ Latest validation loop (2026-03-02, Pass AZ):
   - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BA):
+- Continued IR-first cleanup by deleting dead expression-side-effect orchestration and obsolete string-backend modules:
+  - removed `try_emit_structured_expr(...)` and `emit_expr(...)` wrappers from `lib.rs`.
+  - removed obsolete module wiring from `lib.rs`: `mod expr_emitter;` and `mod stmt_emitter;`.
+  - deleted dead files:
+    - `crates/sifr_codegen/src/expr_emitter.rs`
+    - `crates/sifr_codegen/src/stmt_emitter.rs`
+- removed now-dead helper emission code paths:
+  - removed `emit_expr_with_bigint_clone` from `helpers.rs`.
+  - removed `emit_lambda_untyped` from `expr_render_helpers.rs` (unused side-effect emitter path).
+- updated architecture guards in `lib_codegen_tests.rs` to enforce the stricter contract:
+  - no `emit_expr` wrapper in `lib.rs`.
+  - no `expr_emitter` / `stmt_emitter` module linkage.
+  - `emit_stmt` remains the only production orchestration wrapper for structured statement lowering.
+- Re-audit evidence after this loop:
+  - no `emit_expr(` callsites remain in production code paths.
+  - no `emit_expr_string_backend` / `emit_stmt_string_backend` traces remain in source modules.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

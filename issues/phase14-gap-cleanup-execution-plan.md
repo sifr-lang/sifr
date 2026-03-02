@@ -1141,3 +1141,14 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 6. removed output-drain contract helper `assert_output_drained` from `lib_support.rs` and deleted all production callsites (`lib.rs`, `entrypoints.rs`)
 7. updated unreachable string-backend panic helpers in `stmt_emitter.rs` / `expr_emitter.rs` to avoid removed indentation state
 8. updated `lib_codegen_tests.rs` architecture guards to assert absence of `emitter.output`/`assert_output_drained(...)` plumbing in production assembly paths
+
+### Validation rerun (2026-03-02, Pass BA)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`445` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed dead expression-side-effect orchestration from `lib.rs` (`try_emit_structured_expr`, `emit_expr`)
+6. removed obsolete module wiring (`mod expr_emitter`, `mod stmt_emitter`) and deleted corresponding dead files
+7. removed dead helper side-effect emitters (`emit_expr_with_bigint_clone` in `helpers.rs`, `emit_lambda_untyped` in `expr_render_helpers.rs`)
+8. updated `lib_codegen_tests.rs` architecture guards to enforce absence of `emit_expr` wrapper and deleted string-backend modules
