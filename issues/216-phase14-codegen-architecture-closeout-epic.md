@@ -749,3 +749,14 @@ Latest validation loop (2026-03-02, Pass AS):
 - `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AT):
+- Continued IR-first cleanup in expr rendering helpers and tests:
+- removed `render_expr_with_lowered_path` from `expr_render_helpers.rs` (non-sink helper path that rendered lowered exprs to strings).
+- migrated affected tests in `lib_codegen_tests.rs` to a strict helper built on `try_lower_registry_expr_strict` + renderer call, preserving strict IR-only lowering assertions without reintroducing helper fallback paths.
+- Re-audit evidence after this loop:
+- production `crate::render_expr(...)` callsites now reduced to output sink usage only (`output_helpers.rs`).
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

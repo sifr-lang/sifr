@@ -500,10 +500,17 @@ fn test_empty_print() {
     );
 }
 
+fn render_strict_lowered_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> String {
+    let Some(lowered_expr) = emitter.try_lower_registry_expr_strict(expr) else {
+        panic!("strict IR rendering path missing for expression: {expr:?}");
+    };
+    crate::render_expr(&lowered_expr)
+}
+
 #[test]
 fn test_expr_to_string_leaf_rendering() {
     let mut emitter = RustEmitter::new();
-    let int_code = emitter.render_expr_with_lowered_path(&HirExpr::IntLiteral(7));
+    let int_code = render_strict_lowered_expr(&mut emitter, &HirExpr::IntLiteral(7));
     assert_eq!(int_code, "7 as i64");
 
     let bool_op = HirExpr::BoolOp {
@@ -511,7 +518,7 @@ fn test_expr_to_string_leaf_rendering() {
         values: vec![HirExpr::BoolLiteral(true), HirExpr::BoolLiteral(false)],
         ty: Type::Bool,
     };
-    let bool_code = emitter.render_expr_with_lowered_path(&bool_op);
+    let bool_code = render_strict_lowered_expr(&mut emitter, &bool_op);
     assert_eq!(bool_code, "true && false");
 }
 
@@ -529,7 +536,7 @@ fn test_render_expr_lowering_rewrites_stdlib_constant_idents() {
         ty: Type::Float,
     };
 
-    let code = emitter.render_expr_with_lowered_path(&expr);
+    let code = render_strict_lowered_expr(&mut emitter, &expr);
     assert!(code.contains("std::f64::consts::PI"));
     assert!(!code.contains("pi +"));
 }
@@ -550,7 +557,7 @@ fn test_render_expr_lowering_rewrites_module_constant_ident() {
         ty: Type::Int,
     };
 
-    let code = emitter.render_expr_with_lowered_path(&expr);
+    let code = render_strict_lowered_expr(&mut emitter, &expr);
     assert!(code.contains("LIMIT +"));
 }
 
@@ -566,7 +573,7 @@ fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
         ty: Type::Str,
     };
 
-    let code = emitter.render_expr_with_lowered_path(&expr);
+    let code = render_strict_lowered_expr(&mut emitter, &expr);
     assert_eq!(code, "__const_greeting()");
 }
 

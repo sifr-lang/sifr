@@ -148,15 +148,6 @@ impl RustEmitter {
             .map(|lowered| self.rewrite_stdlib_constant_idents_in_expr(lowered)))
     }
 
-    pub(super) fn render_expr_with_lowered_path(&mut self, expr: &HirExpr) -> String {
-        let Some(lowered_expr) = self.try_lower_registry_expr_strict(expr) else {
-            panic!(
-                "strict IR rendering path missing for expression: {expr:?}"
-            );
-        };
-        crate::render_expr(&lowered_expr)
-    }
-
     pub(super) fn rewrite_stdlib_constant_idents_in_expr(
         &self,
         expr: crate::RustExpr,
