@@ -1726,7 +1726,7 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
     assert!(!lib_src.contains("should_force_stmt_string_path"));
     assert!(!lib_src.contains("should_force_expr_string_path"));
     assert!(!lib_src.contains("fn emit_expr(&mut self, expr: &HirExpr) {"));
-    assert!(!lib_src.contains("fn try_emit_structured_expr("));
+    assert!(!lib_src.contains("fn try_lower_structured_expr("));
 
     let emit_stmt_start = lib_src
         .find("fn emit_stmt(&mut self, stmt: &HirStmt) {")
@@ -1881,7 +1881,7 @@ fn test_module_body_flows_through_assembled_body_items() {
 fn test_generator_init_emission_is_structured_only() {
     let stmt_support_src = include_str!("stmt_support_emitter.rs");
     assert!(stmt_support_src.contains("match self.lower_stmt_expr_for_ir(value)"));
-    assert!(stmt_support_src.contains("match self.try_emit_structured_stmt(stmt)"));
+    assert!(stmt_support_src.contains("match self.try_lower_structured_stmt(stmt)"));
     assert!(!stmt_support_src.contains("self.try_emit_expr_string_"));
     assert!(!stmt_support_src.contains("self.try_emit_stmt_string_"));
     assert!(!stmt_support_src.contains("self.emit_expr(value);"));

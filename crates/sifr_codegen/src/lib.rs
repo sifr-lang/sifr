@@ -992,7 +992,7 @@ impl RustEmitter {
         self.emit_module_body(module, module_public, test_mode);
     }
 
-    pub(crate) fn try_emit_structured_stmt(
+    pub(crate) fn try_lower_structured_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -1120,57 +1120,57 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_field_assign_stmt(stmt)? {
+        if self.try_lower_structured_field_assign_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_attribute_subscript_assign_stmt(stmt)? {
+        if self.try_lower_structured_attribute_subscript_assign_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_return_stmt(stmt)? {
+        if self.try_lower_structured_return_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_raise_stmt(stmt)? {
+        if self.try_lower_structured_raise_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_if_stmt(stmt)? {
+        if self.try_lower_structured_if_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_while_stmt(stmt)? {
+        if self.try_lower_structured_while_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_for_stmt(stmt)? {
+        if self.try_lower_structured_for_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_with_stmt(stmt)? {
+        if self.try_lower_structured_with_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_try_except_stmt(stmt) {
+        if self.try_lower_structured_try_except_stmt(stmt) {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_assert_stmt(stmt)? {
+        if self.try_lower_structured_assert_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_emit_structured_aug_assign_stmt(stmt)? {
+        if self.try_lower_structured_aug_assign_stmt(stmt)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
@@ -1206,7 +1206,7 @@ impl RustEmitter {
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;
         }
-        match self.try_emit_structured_stmt(stmt) {
+        match self.try_lower_structured_stmt(stmt) {
             Ok(true) => {}
             Ok(false) => {
                 panic!("structured statement emission missing for production path: {stmt:?}");

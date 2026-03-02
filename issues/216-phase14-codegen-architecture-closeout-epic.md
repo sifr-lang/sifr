@@ -1022,3 +1022,22 @@ Latest validation loop (2026-03-02, Pass BH):
   - `cargo test -q -p sifr_codegen` -> pass (`446` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BI):
+- Continued IR-first cleanup by removing remaining emitter-era naming from production statement-lowering APIs:
+  - renamed production statement pipeline methods from `try_emit_structured_*` to `try_lower_structured_*` in:
+    - `lib.rs`
+    - `stmt_support_emitter.rs`
+  - updated internal callsites and architecture test expectations accordingly.
+  - fixed a guard regression where a test accidentally banned valid `try_lower_structured_*` helper names in `expr_render_helpers.rs`; the guard now correctly bans only removed `try_emit_structured_*` expression APIs.
+- Re-audit evidence after this loop (production source only):
+  - `prod.self.write(...) = 0`
+  - `prod.self.writeln(...) = 0`
+  - `prod.emit_rust_expr(...) = 0`
+  - `prod.emit_structured_name(...) = 0` for `try_emit_structured_*`
+  - `prod.old_stmt_api(...) = 0` for `emit_rust_stmt_with_current_indent(...)`
+  - no matches for `RawCode|SynItem|fallback|legacy|migration|bridge` in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`).
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`446` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

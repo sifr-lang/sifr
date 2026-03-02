@@ -3731,7 +3731,7 @@ impl RustEmitter {
                     value: lowered_value,
                 });
             }
-            _ => match self.try_emit_structured_stmt(stmt) {
+            _ => match self.try_lower_structured_stmt(stmt) {
                 Ok(true) => {}
                 Ok(false) | Err(_) => {
                     panic!(
@@ -3780,7 +3780,7 @@ impl RustEmitter {
         self.loop_else_stack.last().copied().unwrap_or(false)
     }
 
-    pub(crate) fn try_emit_structured_return_stmt(
+    pub(crate) fn try_lower_structured_return_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -3930,7 +3930,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_emit_structured_raise_stmt(
+    pub(crate) fn try_lower_structured_raise_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -3947,7 +3947,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_emit_structured_if_stmt(
+    pub(crate) fn try_lower_structured_if_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -4199,7 +4199,7 @@ impl RustEmitter {
         preferred.to_string()
     }
 
-    pub(crate) fn try_emit_structured_while_stmt(
+    pub(crate) fn try_lower_structured_while_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -4232,7 +4232,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_emit_structured_for_stmt(
+    pub(crate) fn try_lower_structured_for_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -4311,7 +4311,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_emit_structured_with_stmt(
+    pub(crate) fn try_lower_structured_with_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -4325,7 +4325,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_emit_structured_try_except_stmt(&mut self, stmt: &HirStmt) -> bool {
+    pub(crate) fn try_lower_structured_try_except_stmt(&mut self, stmt: &HirStmt) -> bool {
         let HirStmt::TryExcept { body, handlers, .. } = stmt else {
             return false;
         };
@@ -4584,7 +4584,7 @@ impl RustEmitter {
         Ok(Some(current_else.unwrap_or_default()))
     }
 
-    pub(crate) fn try_emit_structured_field_assign_stmt(
+    pub(crate) fn try_lower_structured_field_assign_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -4644,7 +4644,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_emit_structured_attribute_subscript_assign_stmt(
+    pub(crate) fn try_lower_structured_attribute_subscript_assign_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -4689,7 +4689,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_emit_structured_assert_stmt(
+    pub(crate) fn try_lower_structured_assert_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
@@ -4715,7 +4715,7 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_emit_structured_aug_assign_stmt(
+    pub(crate) fn try_lower_structured_aug_assign_stmt(
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
