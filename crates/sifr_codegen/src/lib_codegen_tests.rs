@@ -1903,6 +1903,58 @@ fn test_expr_side_effect_emitter_layer_is_removed() {
 }
 
 #[test]
+fn test_production_codegen_source_has_no_non_ir_tokens() {
+    let src_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let banned_tokens = [
+        "RawCode",
+        "SynItem",
+        "fallback",
+        "legacy",
+        "migration",
+        "bridge",
+        "self.write(",
+        "self.writeln(",
+        "emit_rust_expr(",
+        "write_registry_expr(",
+    ];
+
+    let mut stack = vec![src_root];
+    let mut violations = Vec::new();
+    while let Some(dir) = stack.pop() {
+        let entries = std::fs::read_dir(&dir)
+            .unwrap_or_else(|e| panic!("failed to read source dir {}: {e}", dir.display()));
+        for entry in entries {
+            let path = entry
+                .unwrap_or_else(|e| panic!("failed to read directory entry in {}: {e}", dir.display()))
+                .path();
+            if path.is_dir() {
+                stack.push(path);
+                continue;
+            }
+            if path.extension().and_then(|ext| ext.to_str()) != Some("rs") {
+                continue;
+            }
+            if path.file_name().and_then(|name| name.to_str()) == Some("lib_codegen_tests.rs") {
+                continue;
+            }
+            let content = std::fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("failed to read {}: {e}", path.display()));
+            for token in banned_tokens {
+                if content.contains(token) {
+                    violations.push(format!("{} contains forbidden token `{token}`", path.display()));
+                }
+            }
+        }
+    }
+
+    assert!(
+        violations.is_empty(),
+        "production codegen source contains forbidden non-IR tokens:\n{}",
+        violations.join("\n")
+    );
+}
+
+#[test]
 fn test_round_parenthesizes_cast_receiver() {
     let module = HirModule {
         functions: vec![HirFunction {

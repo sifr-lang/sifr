@@ -1204,3 +1204,13 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. added architecture guard `test_expr_side_effect_emitter_layer_is_removed` in `lib_codegen_tests.rs` to block reintroduction of removed expression side-effect/bridge APIs
 6. guard verifies absence of expression emitter surface traces across `expr_render_helpers.rs`, `output_helpers.rs`, `intrinsic_method_emitters.rs`, and `lib_support.rs`
 7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0` and `RawCode|SynItem|fallback|legacy|migration|bridge` -> no matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)
+
+### Validation rerun (2026-03-02, Pass BG)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`446` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. added recursive production-source guard `test_production_codegen_source_has_no_non_ir_tokens` in `lib_codegen_tests.rs`
+6. new guard scans `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`) and hard-fails if non-IR token regressions appear (`RawCode`, `SynItem`, `fallback`, `legacy`, `migration`, `bridge`, direct writer/emitter bridge tokens)
+7. production re-audit evidence after this loop: `prod.self.write(...) = 0`, `prod.self.writeln(...) = 0`, `prod.emit_rust_expr(...) = 0`, and no `RawCode|SynItem|fallback|legacy|migration|bridge` matches in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`)

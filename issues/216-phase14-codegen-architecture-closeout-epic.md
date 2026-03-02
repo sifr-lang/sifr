@@ -986,3 +986,20 @@ Latest validation loop (2026-03-02, Pass BF):
   - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BG):
+- Continued IR-first hardening by adding a recursive production-source banlist gate for non-IR token regressions:
+  - `lib_codegen_tests.rs`:
+    - added `test_production_codegen_source_has_no_non_ir_tokens`.
+    - recursively scans `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`) and fails on any of:
+      - `RawCode`, `SynItem`, `fallback`, `legacy`, `migration`, `bridge`,
+      - `self.write(`, `self.writeln(`, `emit_rust_expr(`, `write_registry_expr(`.
+- Re-audit evidence after this loop (production source only):
+  - `prod.self.write(...) = 0`
+  - `prod.self.writeln(...) = 0`
+  - `prod.emit_rust_expr(...) = 0`
+  - no matches for `RawCode|SynItem|fallback|legacy|migration|bridge` in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`).
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`446` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
