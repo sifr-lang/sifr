@@ -58,36 +58,6 @@ pub(crate) fn try_lower_leaf_or_name_expr_result(
     Ok(None)
 }
 
-pub(crate) fn is_reserved_plain_builtin_call(func: &str) -> bool {
-    matches!(
-        func,
-        "print"
-            | "isinstance"
-            | "str"
-            | "pow"
-            | "abs"
-            | "hash"
-            | "round"
-            | "repr"
-            | "int"
-            | "bigint"
-            | "float"
-            | "bool"
-            | "min"
-            | "max"
-            | "sum"
-            | "sorted"
-            | "reversed"
-            | "enumerate"
-            | "zip"
-            | "any"
-            | "all"
-            | "map"
-            | "filter"
-            | "builtin_open"
-    )
-}
-
 pub(crate) fn expr_uses_borrowed_param(
     expr: &HirExpr,
     borrowed_params: &HashSet<String>,

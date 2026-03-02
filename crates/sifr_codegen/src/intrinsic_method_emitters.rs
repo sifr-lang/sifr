@@ -126,10 +126,6 @@ fn registry_ensure_some_box_inner(expr: RustExpr) -> RustExpr {
 }
 
 impl RustEmitter {
-    pub(crate) fn write_registry_expr(&mut self, expr: &crate::RustExpr) {
-        self.emit_rust_expr(expr);
-    }
-
     /// Check if a name is a stdlib constant.
     pub(crate) fn is_stdlib_constant(&self, name: &str) -> bool {
         matches!(name, "pi" | "e" | "tau" | "inf" | "nan")

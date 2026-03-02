@@ -55,8 +55,7 @@ use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_sour
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
 pub(crate) use lib_support::{
-    is_reserved_plain_builtin_call, resolve_alias_type_for_plain_call,
-    try_lower_leaf_or_name_expr_result,
+    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
 };
 use sifr_hir::{HirExpr, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};

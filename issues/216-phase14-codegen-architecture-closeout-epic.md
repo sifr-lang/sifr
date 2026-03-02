@@ -947,3 +947,24 @@ Latest validation loop (2026-03-02, Pass BD):
   - `cargo test -q -p sifr_codegen` -> pass (`444` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BE):
+- Continued IR-first cleanup by deleting the remaining dead expression side-effect emitter layer and its bridge APIs:
+  - `expr_render_helpers.rs`:
+    - removed all dead `try_emit_structured_*` expression side-effect methods.
+    - removed dead helper stack used only by that layer (`try_lower_expr_for_structured_emit`, callable/dict/string-emit helpers, f-string side-effect helper).
+    - kept only actively-used typed lowering APIs (`try_lower_structured_field_access_expr`, `try_lower_structured_class_binop_expr`, `try_lower_structured_index_expr`) and identifier rewrite/lowering utilities.
+  - `output_helpers.rs`:
+    - removed dead `emit_rust_expr(...)` API entirely (no direct expression-emission surface remains).
+  - `intrinsic_method_emitters.rs`:
+    - removed dead `write_registry_expr(...)` bridge wrapper.
+  - `lib.rs` / `lib_support.rs`:
+    - removed dead `is_reserved_plain_builtin_call` re-export and function (unreferenced after emitter-layer deletion).
+- Re-audit evidence after this loop:
+  - `self.write(...) = 0`, `self.writeln(...) = 0`, `emit_rust_expr(...) = 0` in `crates/sifr_codegen/src`.
+  - `rg -n "RawCode|SynItem" crates/sifr_codegen/src` -> no matches.
+  - `rg -n "fallback|legacy|migration|bridge" crates/sifr_codegen/src` -> no matches.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`444` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

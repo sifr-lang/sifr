@@ -1183,3 +1183,14 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. removed dead intrinsic-side-effect emit wrappers from `intrinsic_method_emitters.rs` (`emit_intrinsic_call`, `try_emit_intrinsic_via_registry`, `emit_registry_plain_call_expr`, `emit_stdlib_constant`)
 6. updated intrinsic emitter contract test to assert wrapper-layer absence in production source section
 7. removed dead stmt helper `emit_borrowed_return_name_clone_expr` from `stmt_support_emitter.rs`
+
+### Validation rerun (2026-03-02, Pass BE)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`444` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed dead `try_emit_structured_*` expression side-effect layer from `expr_render_helpers.rs`, keeping only active typed lowerers (`try_lower_structured_field_access_expr`, `try_lower_structured_class_binop_expr`, `try_lower_structured_index_expr`)
+6. removed dead bridge APIs `emit_rust_expr(...)` (`output_helpers.rs`) and `write_registry_expr(...)` (`intrinsic_method_emitters.rs`)
+7. removed unreferenced `is_reserved_plain_builtin_call` from `lib_support.rs` and its re-export from `lib.rs`
+8. re-audit evidence after this loop: `self.write(...) = 0`, `self.writeln(...) = 0`, `emit_rust_expr(...) = 0` in `crates/sifr_codegen/src`; `rg -n "RawCode|SynItem|fallback|legacy|migration|bridge" crates/sifr_codegen/src` -> no matches
