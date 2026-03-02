@@ -1075,3 +1075,13 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. removed `render_expr_with_lowered_path` from `expr_render_helpers.rs`
 6. migrated affected test callsites in `lib_codegen_tests.rs` to strict-lowered rendering helper (`try_lower_registry_expr_strict` + render)
 7. production `crate::render_expr(...)` callsites reduced to output sink usage only
+
+### Validation rerun (2026-03-02, Pass AU)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`454` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed test-only `lower_expr_raw`, `lower_item_raw`, and `lower_stmt_raw` constructors
+6. removed associated placeholder tests that only verified `RawCode` construction
+7. migrated `intrinsics/mod.rs` test arg helper from `RustExpr::RawCode` mapping to typed test arg parsing

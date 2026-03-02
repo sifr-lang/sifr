@@ -29,11 +29,6 @@ fn is_allowed_plain_call(func: &str) -> bool {
     ALLOWED_PLAIN_CALLS.with(|calls| calls.borrow().iter().any(|name| name == func))
 }
 
-#[cfg(test)]
-pub fn lower_expr_raw(raw: &str) -> Result<RustExpr, CodegenError> {
-    Ok(RustExpr::RawCode(raw.to_string()))
-}
-
 pub fn try_lower_leaf_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
     validate_leaf_expr_shape(expr)?;
     Ok(try_lower_leaf_expr(expr))
@@ -1383,12 +1378,6 @@ fn normalize_simple_numeric_scalar_type(ty: &Type) -> Option<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn lowers_raw_expr_placeholder() {
-        let expr = lower_expr_raw("a + b").expect("placeholder lower should succeed");
-        assert!(matches!(expr, RustExpr::RawCode(_)));
-    }
 
     #[test]
     fn lowers_leaf_expr_variants() {

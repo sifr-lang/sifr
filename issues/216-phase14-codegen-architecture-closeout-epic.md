@@ -760,3 +760,16 @@ Latest validation loop (2026-03-02, Pass AT):
 - `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AU):
+- Continued RawCode eradication in test scaffolding:
+- removed test-only raw placeholder constructors:
+  - `lower_expr_raw` from `lower_expr.rs`
+  - `lower_item_raw` from `lower_item.rs`
+  - `lower_stmt_raw` from `lower_stmt.rs`
+- removed associated placeholder tests that only asserted `RawCode` construction.
+- replaced `intrinsics/mod.rs` test helper argument mapping from `RustExpr::RawCode` to typed test arg parsing (`Int`/`Float`/`Path`/`Ident`) so intrinsic lowering tests stay IR-typed.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`454` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

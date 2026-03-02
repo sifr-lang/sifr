@@ -302,11 +302,28 @@ mod tests {
     use super::*;
     use crate::render_expr;
 
+    fn parse_test_arg(rendered: &str) -> RustExpr {
+        if let Ok(v) = rendered.parse::<i64>() {
+            return RustExpr::Literal(crate::RustLiteral::Int(v));
+        }
+        if let Ok(v) = rendered.parse::<f64>() {
+            return RustExpr::Literal(crate::RustLiteral::Float(v));
+        }
+        if rendered.contains("::")
+            && rendered
+                .split("::")
+                .all(|segment| !segment.is_empty() && segment.chars().all(|c| c == '_' || c.is_ascii_alphanumeric()))
+        {
+            return RustExpr::Path(rendered.split("::").map(str::to_string).collect());
+        }
+        RustExpr::Ident(rendered.to_string())
+    }
+
     fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<LoweredIntrinsic> {
         let args = rendered_args
             .iter()
             .cloned()
-            .map(RustExpr::RawCode)
+            .map(|arg| parse_test_arg(&arg))
             .collect::<Vec<_>>();
         super::lower_intrinsic(name, &args)
     }

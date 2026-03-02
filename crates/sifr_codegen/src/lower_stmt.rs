@@ -15,11 +15,6 @@ use sifr_hir::{
 use sifr_type_system::Type;
 use std::collections::HashSet;
 
-#[cfg(test)]
-pub fn lower_stmt_raw(raw: &str) -> Result<Vec<RustStmt>, CodegenError> {
-    Ok(vec![RustStmt::RawCode(raw.to_string())])
-}
-
 pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
     match stmt {
         HirStmt::Expr { expr } => crate::is_leaf_expr_candidate(expr),
@@ -3019,13 +3014,6 @@ fn normalize_augassign_op(op: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn lowers_raw_stmt_placeholder() {
-        let stmts = lower_stmt_raw("let x = 1;").expect("placeholder lower should succeed");
-        assert_eq!(stmts.len(), 1);
-        assert!(matches!(stmts[0], RustStmt::RawCode(_)));
-    }
 
     #[test]
     fn lowers_leaf_expression_statement() {
