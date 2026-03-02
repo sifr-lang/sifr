@@ -3710,14 +3710,6 @@ impl RustEmitter {
         }))
     }
 
-    pub(super) fn emit_borrowed_return_name_clone_expr(&mut self, value: &HirExpr) -> bool {
-        let Some(clone_expr) = self.borrowed_return_name_clone_expr_for_ir(value) else {
-            return false;
-        };
-        self.emit_rust_expr(&clone_expr);
-        true
-    }
-
     /// Emit a generator initialization statement (always mutable for closure capture)
     pub(super) fn emit_generator_init_stmt(&mut self, stmt: &HirStmt) {
         match stmt {

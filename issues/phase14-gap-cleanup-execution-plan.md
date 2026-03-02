@@ -1173,3 +1173,13 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 6. pruned dead method-call emit wrappers from `method_call_emitter.rs`, keeping only shared helpers used by active typed lowering (`borrow_prefix_for_name`, `is_generator_call`)
 7. removed dead registry emitter wrapper `try_emit_method_via_registry` from `intrinsic_method_emitters.rs`
 8. cleaned now-unused imports introduced by this pruning (`MUTATING_METHODS`, `is_self_field_access_expr`)
+
+### Validation rerun (2026-03-02, Pass BD)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`444` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed dead intrinsic-side-effect emit wrappers from `intrinsic_method_emitters.rs` (`emit_intrinsic_call`, `try_emit_intrinsic_via_registry`, `emit_registry_plain_call_expr`, `emit_stdlib_constant`)
+6. updated intrinsic emitter contract test to assert wrapper-layer absence in production source section
+7. removed dead stmt helper `emit_borrowed_return_name_clone_expr` from `stmt_support_emitter.rs`

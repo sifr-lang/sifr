@@ -928,3 +928,22 @@ Latest validation loop (2026-03-02, Pass BC):
   - `cargo test -q -p sifr_codegen` -> pass (`444` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BD):
+- Continued IR-first cleanup by removing dead intrinsic-side-effect emit wrappers and an unused stmt-side-effect helper:
+  - `intrinsic_method_emitters.rs`:
+    - removed dead wrappers:
+      - `emit_intrinsic_call(...)`
+      - `try_emit_intrinsic_via_registry(...)`
+      - `emit_registry_plain_call_expr(...)`
+      - `emit_stdlib_constant(...)`
+    - updated internal contract test to assert wrapper-layer absence in production section.
+  - `stmt_support_emitter.rs`:
+    - removed dead `emit_borrowed_return_name_clone_expr(...)` side-effect helper.
+- Re-audit evidence after this loop:
+  - no production callsites remain for removed intrinsic wrapper emit APIs.
+  - structured intrinsic behavior remains via typed lowering (`try_lower_registry_*`) paths.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`444` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

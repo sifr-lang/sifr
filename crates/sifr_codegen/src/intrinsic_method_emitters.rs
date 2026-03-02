@@ -136,74 +136,6 @@ impl RustEmitter {
             && self.intrinsic_functions.contains(name)
     }
 
-    /// Emit a stdlib constant value.
-    pub(crate) fn emit_stdlib_constant(&mut self, name: &str) {
-        let lowered = match name {
-            "pi" => crate::RustExpr::Path(vec![
-                "std".to_string(),
-                "f64".to_string(),
-                "consts".to_string(),
-                "PI".to_string(),
-            ]),
-            "e" => crate::RustExpr::Path(vec![
-                "std".to_string(),
-                "f64".to_string(),
-                "consts".to_string(),
-                "E".to_string(),
-            ]),
-            "tau" => crate::RustExpr::Path(vec![
-                "std".to_string(),
-                "f64".to_string(),
-                "consts".to_string(),
-                "TAU".to_string(),
-            ]),
-            "inf" => crate::RustExpr::Path(vec!["f64".to_string(), "INFINITY".to_string()]),
-            "nan" => crate::RustExpr::Path(vec!["f64".to_string(), "NAN".to_string()]),
-            _ => crate::RustExpr::Ident(name.to_string()),
-        };
-        self.write_registry_expr(&lowered);
-    }
-
-    fn emit_registry_plain_call_expr(&mut self, func: &str, args: &[HirExpr]) {
-        let lowered_args = self
-            .try_lower_registry_exprs_strict(args)
-            .unwrap_or_else(|| {
-                panic!("structured intrinsic-call lowering missing for args: {args:?}")
-            });
-        let lowered = if func.contains("::") {
-            crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Path(
-                    func.split("::").map(str::to_string).collect(),
-                )),
-                args: lowered_args,
-            }
-        } else {
-            crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Ident(func.to_string())),
-                args: lowered_args,
-            }
-        };
-        self.write_registry_expr(&lowered);
-    }
-
-    /// Emit an intrinsic function call with the correct Rust code.
-    pub(crate) fn emit_intrinsic_call(&mut self, func: &str, args: &[HirExpr]) {
-        if self.try_emit_intrinsic_via_registry(func, args) {
-            return;
-        }
-
-        // Unknown intrinsic name: still lower and emit as a normal call expression.
-        self.emit_registry_plain_call_expr(func, args);
-    }
-
-    pub(crate) fn try_emit_intrinsic_via_registry(&mut self, func: &str, args: &[HirExpr]) -> bool {
-        let Some(lowered_expr) = self.try_lower_registry_intrinsic_call_expr(func, args) else {
-            return false;
-        };
-        self.write_registry_expr(&lowered_expr);
-        true
-    }
-
     pub(crate) fn try_lower_registry_method_call_expr(
         &mut self,
         object_ty: &Type,
@@ -2200,16 +2132,11 @@ impl RustEmitter {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn emit_intrinsic_call_has_no_pre_registry_match_dispatch() {
+    fn intrinsic_emit_wrapper_layer_is_absent() {
         let src = include_str!("intrinsic_method_emitters.rs");
-        let start = src
-            .find("pub(crate) fn emit_intrinsic_call")
-            .expect("emit_intrinsic_call should exist");
-        let end = src
-            .find("pub(crate) fn try_emit_intrinsic_via_registry")
-            .expect("try_emit_intrinsic_via_registry should exist");
-        let emit_block = &src[start..end];
-        assert!(!emit_block.contains("match func"));
+        let prod_src = src.split("\n#[cfg(test)]").next().unwrap_or(src);
+        assert!(!prod_src.contains("pub(crate) fn emit_intrinsic_call("));
+        assert!(!prod_src.contains("pub(crate) fn try_emit_intrinsic_via_registry("));
     }
 
     #[test]
