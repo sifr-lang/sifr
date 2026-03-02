@@ -53,6 +53,12 @@ Completion evidence:
 18. `self.write(...)` in `crates/sifr_codegen/src` -> `0`
 19. `self.writeln(...)` in `crates/sifr_codegen/src` -> `68` (`render.rs` only)
 20. `self.output.push_str(...)` in `crates/sifr_codegen/src` -> `9` (`output_helpers.rs`, `render.rs`, and one test assertion)
+21. follow-up commit in same loop: `bfcfbf5f` (`codegen: lower structured single-arg print to typed IR`)
+22. follow-up scope: removed `RustExpr::RawCode` single-arg print branch in `expr_render_helpers.rs` and lowered it through typed IR (`try_lower_registry_expr_strict` + structured `map_or`/`FormatMacro`).
+23. follow-up validation:
+24. `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed)
+25. `./scripts/run_all_tests.sh` -> pass (`394` e2e pass tests completed, `0` failed)
+26. full recursive demo sweep remains stable: `TOTAL=91`, `FAILS=5` (same expected non-runnable/intentional files only)
 
 ### Next Loop To-Do (Ordered)
 

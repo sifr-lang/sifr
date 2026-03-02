@@ -609,3 +609,13 @@ Latest validation loop (2026-03-02, Pass AF):
 - Re-audit evidence after this loop:
 - direct `self.write(...) = 0` in `crates/sifr_codegen/src`.
 - remaining direct string-emitter helper is `self.writeln(...) = 68` (all in `render.rs`).
+
+Latest validation loop (2026-03-02, Pass AG):
+- Landed `bfcfbf5f`: migrated single-argument structured `print` lowering in `expr_render_helpers.rs` from `RawCode` string payloads to typed IR expression lowering (`try_lower_registry_expr_strict` + IR `map_or`/`FormatMacro` composition).
+- Scope:
+- removed `RustExpr::RawCode` usage in this branch for option and non-option single-arg print emission.
+- preserved option display behavior with IR `map_or("None".to_string(), |__v| format!(...))`.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> `91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files.
