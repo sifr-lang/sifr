@@ -657,3 +657,14 @@ Latest validation loop (2026-03-02, Pass AJ):
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
 - Re-audit evidence after this loop:
 - `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites reduced `8 -> 7`.
+
+Latest validation loop (2026-03-02, Pass AK):
+- Continued IR-first cleanup in slice emission:
+- replaced `try_emit_structured_slice_expr` string-builder path in `expr_render_helpers.rs` with strict typed registry lowering of a constructed `HirExpr::Slice`.
+- updated `lib.rs` structured slice callsite to pass the slice result type through to the slice emitter.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+- Re-audit evidence after this loop:
+- `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites reduced `7 -> 5`.

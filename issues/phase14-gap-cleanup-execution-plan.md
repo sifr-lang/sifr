@@ -84,6 +84,14 @@ Completion evidence:
 49. `./scripts/run_all_tests.sh` -> pass (`394` e2e pass tests completed, `0` failed)
 50. full recursive demo sweep remains stable: `TOTAL=91`, `FAILS=5` (same expected non-runnable/intentional files only)
 51. `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites after compare migration: `8 -> 7`
+52. additional continuation slice:
+53. `try_emit_structured_slice_expr` in `expr_render_helpers.rs` now emits strictly typed IR by delegating to strict registry slice lowering (constructed `HirExpr::Slice` + `try_lower_registry_expr_strict`) instead of the large rendered string builder path.
+54. `lib.rs` structured slice dispatch updated to pass slice result type into the structured slice emitter.
+55. validation for this continuation slice:
+56. `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed)
+57. `./scripts/run_all_tests.sh` -> pass (`394` e2e pass tests completed, `0` failed)
+58. full recursive demo sweep remains stable: `TOTAL=91`, `FAILS=5` (same expected non-runnable/intentional files only)
+59. `expr_render_helpers.rs` `RustExpr::RawCode(...)` sites after slice migration: `7 -> 5`
 
 ### Next Loop To-Do (Ordered)
 

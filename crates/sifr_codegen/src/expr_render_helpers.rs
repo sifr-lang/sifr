@@ -2726,180 +2726,24 @@ impl RustEmitter {
         start: Option<&HirExpr>,
         stop: Option<&HirExpr>,
         step: Option<&HirExpr>,
+        result_ty: &Type,
     ) -> Result<bool, crate::CodegenError> {
         let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
         if !matches!(object_ty, Type::Str | Type::List(_)) {
             return Ok(false);
         }
-
-        let saved_stats = self.lowering_stats;
-        let Some(object_rendered) = self.try_render_structured_expr(object)? else {
+        let slice_expr = HirExpr::Slice {
+            object: Box::new(object.clone()),
+            start: start.cloned().map(Box::new),
+            stop: stop.cloned().map(Box::new),
+            step: step.cloned().map(Box::new),
+            ty: result_ty.clone(),
+        };
+        let Some(lowered_slice) = self.try_lower_registry_expr_strict(&slice_expr) else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
-
-        let start_rendered = if let Some(start) = start {
-            let saved_stats = self.lowering_stats;
-            let Some(rendered) = self.try_render_structured_expr(start)? else {
-                return Ok(false);
-            };
-            self.lowering_stats = saved_stats;
-            Some(rendered)
-        } else {
-            None
-        };
-
-        let stop_rendered = if let Some(stop) = stop {
-            let saved_stats = self.lowering_stats;
-            let Some(rendered) = self.try_render_structured_expr(stop)? else {
-                return Ok(false);
-            };
-            self.lowering_stats = saved_stats;
-            Some(rendered)
-        } else {
-            None
-        };
-
-        let step_rendered = if let Some(step) = step {
-            let saved_stats = self.lowering_stats;
-            let Some(rendered) = self.try_render_structured_expr(step)? else {
-                return Ok(false);
-            };
-            self.lowering_stats = saved_stats;
-            Some(rendered)
-        } else {
-            None
-        };
-
-        match object_ty {
-            Type::Str => {
-                let mut rendered = String::new();
-                rendered.push_str("{ let _s = &(");
-                rendered.push_str(&object_rendered);
-                rendered.push_str("); let _len = _s.chars().count() as i64; ");
-                if let Some(step_rendered) = &step_rendered {
-                    rendered.push_str("let _step = ");
-                    rendered.push_str(step_rendered);
-                    rendered.push_str("; ");
-                }
-
-                rendered.push_str("let _start = ");
-                if let Some(start_rendered) = &start_rendered {
-                    rendered.push_str("{ let _sv = ");
-                    rendered.push_str(start_rendered);
-                    rendered.push_str(
-                        "; if _sv < 0 { ((_len + _sv).max(0)) as usize } else { (_sv.min(_len)) as usize } }",
-                    );
-                } else if step_rendered.is_some() {
-                    rendered.push_str("if _step > 0 { 0 } else { (_len - 1) as usize }");
-                } else {
-                    rendered.push_str("0_usize");
-                }
-                rendered.push_str("; ");
-
-                rendered.push_str("let _stop = ");
-                if let Some(stop_rendered) = &stop_rendered {
-                    rendered.push_str("{ let _ev = ");
-                    rendered.push_str(stop_rendered);
-                    rendered.push_str(
-                        "; if _ev < 0 { ((_len + _ev).max(0)) as usize } else { (_ev.min(_len)) as usize } }",
-                    );
-                } else if step_rendered.is_some() {
-                    rendered.push_str(
-                        "if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }",
-                    );
-                } else {
-                    rendered.push_str("_len as usize");
-                }
-                rendered.push_str("; ");
-
-                if step_rendered.is_some() {
-                    rendered.push_str("let mut _chars: Vec<char> = _s.chars().collect(); ");
-                    rendered.push_str("let mut _result = String::new(); ");
-                    rendered.push_str("if _step > 0 { let mut _i = _start; ");
-                    rendered.push_str("while _i < _stop { ");
-                    rendered.push_str("if let Some(&_ch) = _chars.get(_i) { _result.push(_ch); } ");
-                    rendered.push_str("_i += _step as usize; } }");
-                    rendered.push_str(" else { let mut _i = _start as i64; ");
-                    rendered.push_str("let _stop_i = _stop as i64; while _i > _stop_i { ");
-                    rendered.push_str("if _i >= 0 { ");
-                    rendered.push_str(
-                        "if let Some(&_ch) = _chars.get(_i as usize) { _result.push(_ch); } ",
-                    );
-                    rendered.push_str("} _i += _step; } }");
-                    rendered.push_str("; _result }");
-                } else {
-                    rendered.push_str(
-                        "_s.chars().skip(_start).take(_stop - _start).collect::<String>() }",
-                    );
-                }
-                self.emit_rust_expr(&crate::RustExpr::RawCode(rendered));
-                Ok(true)
-            }
-            Type::List(_) => {
-                let mut rendered = String::new();
-                rendered.push_str("{ let _v = &(");
-                rendered.push_str(&object_rendered);
-                rendered.push_str("); let _len = _v.len() as i64; ");
-                if let Some(step_rendered) = &step_rendered {
-                    rendered.push_str("let _step = ");
-                    rendered.push_str(step_rendered);
-                    rendered.push_str("; ");
-                }
-
-                rendered.push_str("let _start = ");
-                if let Some(start_rendered) = &start_rendered {
-                    rendered.push_str("{ let _s = ");
-                    rendered.push_str(start_rendered);
-                    rendered.push_str(
-                        "; if _s < 0 { ((_len + _s).max(0)) as usize } else { (_s.min(_len)) as usize } }",
-                    );
-                } else if step_rendered.is_some() {
-                    rendered.push_str("if _step > 0 { 0 } else { (_len - 1) as usize }");
-                } else {
-                    rendered.push_str("0_usize");
-                }
-                rendered.push_str("; ");
-
-                rendered.push_str("let _stop = ");
-                if let Some(stop_rendered) = &stop_rendered {
-                    rendered.push_str("{ let _e = ");
-                    rendered.push_str(stop_rendered);
-                    rendered.push_str(
-                        "; if _e < 0 { ((_len + _e).max(0)) as usize } else { (_e.min(_len)) as usize } }",
-                    );
-                } else if step_rendered.is_some() {
-                    rendered.push_str(
-                        "if _step > 0 { _len as usize } else { 0_usize.wrapping_sub(1) }",
-                    );
-                } else {
-                    rendered.push_str("_len as usize");
-                }
-                rendered.push_str("; ");
-
-                if step_rendered.is_some() {
-                    rendered.push_str("let mut _result = Vec::new(); ");
-                    rendered.push_str("if _step > 0 { let mut _i = _start; ");
-                    rendered.push_str("while _i < _stop { ");
-                    rendered
-                        .push_str("if let Some(_el) = _v.get(_i) { _result.push(_el.clone()); } ");
-                    rendered.push_str("_i += _step as usize; } }");
-                    rendered.push_str(" else { let mut _i = _start as i64; ");
-                    rendered.push_str("let _stop_i = _stop as i64; while _i > _stop_i { ");
-                    rendered.push_str("if _i >= 0 { ");
-                    rendered.push_str(
-                        "if let Some(_el) = _v.get(_i as usize) { _result.push(_el.clone()); } ",
-                    );
-                    rendered.push_str("} _i += _step; } }");
-                    rendered.push_str("; _result }");
-                } else {
-                    rendered.push_str("_v[_start.._stop].to_vec() }");
-                }
-                self.emit_rust_expr(&crate::RustExpr::RawCode(rendered));
-                Ok(true)
-            }
-            _ => Ok(false),
-        }
+        self.emit_rust_expr(&lowered_slice);
+        Ok(true)
     }
 
     pub(crate) fn try_emit_structured_string_concat_expr(

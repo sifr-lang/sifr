@@ -1331,7 +1331,7 @@ impl RustEmitter {
             start,
             stop,
             step,
-            ..
+            ty,
         } = expr
         {
             if self.try_emit_structured_slice_expr(
@@ -1339,6 +1339,7 @@ impl RustEmitter {
                 start.as_deref(),
                 stop.as_deref(),
                 step.as_deref(),
+                ty,
             )? {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;
