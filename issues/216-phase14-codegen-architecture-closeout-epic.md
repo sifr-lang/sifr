@@ -886,3 +886,24 @@ Latest validation loop (2026-03-02, Pass BA):
   - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BB):
+- Continued IR-first cleanup by deleting dead expression side-effect emit helpers from `expr_ref_emitter.rs`.
+- removed unreferenced `emit_*` writer-style methods that previously emitted directly through registry/output paths:
+  - `emit_parenthesized_expr`
+  - `emit_key_ref_expr`
+  - `emit_str_ref_expr`
+  - `emit_expr_as_str_ref`
+  - `emit_expr_for_compare`
+  - `emit_expr_with_parens_for_compare`
+  - `emit_expr_as_bytes`
+  - `emit_collection_expr`
+  - `emit_display_expr`
+- kept pure lowering helpers (`lower_ref_expr_or_panic`, `lower_display_expr`) as the canonical IR-first path for display/value lowering.
+- Re-audit evidence after this loop:
+  - no remaining callsites for removed `expr_ref_emitter` side-effect emit methods.
+  - expression reference handling now stays on typed lowering helpers instead of writer-style APIs.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
