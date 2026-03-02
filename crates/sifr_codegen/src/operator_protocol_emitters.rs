@@ -252,7 +252,10 @@ impl RustEmitter {
                     call_args.push(RustExpr::Ident(param.name.clone()));
                 }
                 let delegated_call = RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![class.name.clone(), method.name.clone()])),
+                    func: Box::new(RustExpr::Path(vec![
+                        class.name.clone(),
+                        method.name.clone(),
+                    ])),
                     args: call_args,
                 };
                 impl_items.push(RustItem::Fn {
@@ -393,9 +396,7 @@ impl RustEmitter {
                 Some(vec![RustStmt::Expr(lowered_expr)])
             }
             HirStmt::Return { value } => {
-                let lowered = value
-                    .as_ref()
-                    .map(|expr| self.lower_operator_expr_ir(expr));
+                let lowered = value.as_ref().map(|expr| self.lower_operator_expr_ir(expr));
                 match lowered {
                     Some(Some(expr)) => Some(vec![RustStmt::Return(Some(expr))]),
                     Some(None) => None,
@@ -591,81 +592,49 @@ impl RustEmitter {
 
     fn lower_operator_for_iter_ir(&mut self, iter: &HirExpr) -> Option<RustExpr> {
         let lowered_iter = self.lower_operator_expr_ir(iter)?;
-        if let HirExpr::MethodCall {
-            object,
-            method,
-            args,
-            ..
-        } = iter
-        {
-            if args.is_empty()
-                && method == "keys"
-                && matches!(
-                    Self::resolve_alias_type_for_operator_loop_iter(object.ty()),
-                    Type::Dict(_, _)
-                )
-            {
-                return Some(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "cloned".to_string(),
-                    args: vec![],
-                });
-            }
-            if args.is_empty()
-                && method == "values"
-                && matches!(
-                    Self::resolve_alias_type_for_operator_loop_iter(object.ty()),
-                    Type::Dict(_, _)
-                )
-            {
-                return Some(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "cloned".to_string(),
-                    args: vec![],
-                });
-            }
-        }
-        Some(match Self::resolve_alias_type_for_operator_loop_iter(iter.ty()) {
-            Type::List(_) => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "iter".to_string(),
-                    args: vec![],
-                }),
-                method: "cloned".to_string(),
-                args: vec![],
-            },
-            Type::Dict(_, _) => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "keys".to_string(),
-                    args: vec![],
-                }),
-                method: "cloned".to_string(),
-                args: vec![],
-            },
-            Type::Str => RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_iter),
-                    method: "chars".to_string(),
-                    args: vec![],
-                }),
-                method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "c".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("c".to_string())),
-                        method: "to_string".to_string(),
+        Some(
+            match Self::resolve_alias_type_for_operator_loop_iter(iter.ty()) {
+                Type::List(_) => RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(lowered_iter),
+                        method: "iter".to_string(),
                         args: vec![],
                     }),
-                    is_move: false,
-                }],
+                    method: "cloned".to_string(),
+                    args: vec![],
+                },
+                Type::Dict(_, _) => RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(lowered_iter),
+                        method: "keys".to_string(),
+                        args: vec![],
+                    }),
+                    method: "cloned".to_string(),
+                    args: vec![],
+                },
+                Type::Str => RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(lowered_iter),
+                        method: "chars".to_string(),
+                        args: vec![],
+                    }),
+                    method: "map".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![RustParam::Named {
+                            name: "c".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("c".to_string())),
+                            method: "to_string".to_string(),
+                            args: vec![],
+                        }),
+                        is_move: false,
+                    }],
+                },
+                _ => lowered_iter,
             },
-            _ => lowered_iter,
-        })
+        )
     }
 
     fn detect_option_truthiness_alias_for_operator(expr: &HirExpr) -> Option<String> {
@@ -698,7 +667,10 @@ impl RustEmitter {
         if let Some(lowered) = self.lower_stmt_expr_for_ir(expr).ok().flatten() {
             return Some(self.rewrite_stdlib_constant_idents_in_expr(lowered));
         }
-        if let Some(lowered) = crate::try_lower_leaf_or_name_expr_result(expr).ok().flatten() {
+        if let Some(lowered) = crate::try_lower_leaf_or_name_expr_result(expr)
+            .ok()
+            .flatten()
+        {
             return Some(self.rewrite_stdlib_constant_idents_in_expr(lowered));
         }
         match expr {
@@ -727,7 +699,11 @@ impl RustEmitter {
                 left, op, right, ..
             } => Some(RustExpr::BinOp {
                 left: Box::new(self.lower_operator_expr_ir(left)?),
-                op: if op == "//" { "/".to_string() } else { op.clone() },
+                op: if op == "//" {
+                    "/".to_string()
+                } else {
+                    op.clone()
+                },
                 right: Box::new(self.lower_operator_expr_ir(right)?),
             }),
             HirExpr::BoolOp { op, values, .. } => {

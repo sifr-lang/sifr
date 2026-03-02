@@ -122,5 +122,25 @@ impl RustEmitter {
             self.func_signatures
                 .insert(func.name.clone(), (params, func.return_type.clone()));
         }
+        for class in &module.classes {
+            for method in &class.methods {
+                let params = method
+                    .params
+                    .iter()
+                    .map(|param| {
+                        let convention = if method.name == "new" {
+                            sifr_type_system::ParamConvention::Own
+                        } else {
+                            param.convention
+                        };
+                        (param.ty.clone(), convention)
+                    })
+                    .collect::<Vec<_>>();
+                self.func_signatures.insert(
+                    format!("{}::{}", class.name, method.name),
+                    (params, method.return_type.clone()),
+                );
+            }
+        }
     }
 }

@@ -86,8 +86,11 @@ impl RustEmitter {
         if let Some(lowered) = self.try_lower_registry_expr_strict(expr) {
             return lowered;
         }
-        if let HirExpr::Index { object, index, .. } = expr {
-            match self.try_lower_structured_index_expr(object, index) {
+        if let HirExpr::Index {
+            object, index, ty, ..
+        } = expr
+        {
+            match self.try_lower_structured_index_expr(object, index, ty) {
                 Ok(Some(lowered)) => return lowered,
                 Ok(None) => {}
                 Err(err) => {

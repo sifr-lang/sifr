@@ -1081,10 +1081,13 @@ impl RustEmitter {
             let lowered_value = if let Some(clone_expr) = lowered_value {
                 clone_expr
             } else {
-                let Some(lowered) = self.lower_rendered_expr_for_ir(value)? else {
+                if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                    lowered
+                } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
+                    lowered
+                } else {
                     return Ok(false);
-                };
-                lowered
+                }
             };
 
             self.emit_rust_stmt_with_current_indent(&RustStmt::Let {
@@ -1103,7 +1106,11 @@ impl RustEmitter {
         }
 
         if let HirStmt::Assign { name, value } = stmt {
-            let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
+            let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                lowered
+            } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
+                lowered
+            } else {
                 return Ok(false);
             };
             self.emit_rust_stmt_with_current_indent(&RustStmt::Assign {
@@ -1170,18 +1177,28 @@ impl RustEmitter {
             return Ok(true);
         }
         if let HirStmt::Expr { expr } = stmt {
-            let output_len = self.output.len();
-            if self.try_emit_structured_expr(expr)? {
-                let emitted_expr = self.output[output_len..].to_string();
-                self.output.truncate(output_len);
-                self.emit_rust_stmt_with_current_indent(&RustStmt::Expr(RustExpr::RawCode(
-                    emitted_expr,
-                )));
+            if let Some(lowered_expr) = self.try_lower_stmt_expr_statement_only(expr)? {
+                self.lowering_stats.expr_total += 1;
+                self.lowering_stats.expr_candidate_total += 1;
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                let rewritten = self.rewrite_stdlib_constant_idents_in_expr(lowered_expr);
+                self.emit_rust_stmt_with_current_indent(&RustStmt::Expr(rewritten));
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
                 return Ok(true);
             }
-            self.output.truncate(output_len);
+            if let Some(lowered_expr) = self.lower_stmt_expr_for_ir(expr)? {
+                self.lowering_stats.expr_total += 1;
+                self.lowering_stats.expr_candidate_total += 1;
+                self.lowering_stats.expr_structured += 1;
+                self.lowering_stats.expr_candidate_structured += 1;
+                let rewritten = self.rewrite_stdlib_constant_idents_in_expr(lowered_expr);
+                self.emit_rust_stmt_with_current_indent(&RustStmt::Expr(rewritten));
+                self.lowering_stats.stmt_structured += 1;
+                self.lowering_stats.stmt_candidate_structured += 1;
+                return Ok(true);
+            }
         }
         Ok(false)
     }
@@ -1302,7 +1319,7 @@ impl RustEmitter {
                 self.lowering_stats.expr_candidate_structured += 1;
                 return Ok(true);
             }
-            if let Some(lowered_expr) = self.try_lower_structured_index_expr(object, index)? {
+            if let Some(lowered_expr) = self.try_lower_structured_index_expr(object, index, ty)? {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;
                 self.emit_rust_expr(&lowered_expr);

@@ -328,5 +328,4 @@ mod tests {
         assert!(!emit_block.contains("match (obj_ty, method)"));
         assert!(!emit_block.contains("tuple.count() not fully supported"));
     }
-
 }

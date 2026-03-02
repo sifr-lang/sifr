@@ -1896,7 +1896,53 @@ fn try_lower_simple_for_stmt(
 }
 
 fn try_lower_simple_for_iter_expr(iter: &HirExpr) -> Option<RustExpr> {
+    fn is_collect_call_expr(expr: &RustExpr) -> bool {
+        match expr {
+            RustExpr::MethodCall { method, .. } => {
+                method == "collect" || method.starts_with("collect::<")
+            }
+            RustExpr::Paren(inner) => is_collect_call_expr(inner),
+            _ => false,
+        }
+    }
+
+    fn normalize_for_iter_expr(expr: RustExpr) -> RustExpr {
+        match expr {
+            RustExpr::MethodCall {
+                receiver,
+                method,
+                args,
+            } => {
+                let normalized_receiver = Box::new(normalize_for_iter_expr(*receiver));
+                let normalized_args = args
+                    .into_iter()
+                    .map(normalize_for_iter_expr)
+                    .collect::<Vec<_>>();
+
+                if method == "cloned"
+                    && normalized_args.is_empty()
+                    && is_collect_call_expr(&normalized_receiver)
+                {
+                    return *normalized_receiver;
+                }
+
+                RustExpr::MethodCall {
+                    receiver: normalized_receiver,
+                    method,
+                    args: normalized_args,
+                }
+            }
+            RustExpr::Paren(inner) => RustExpr::Paren(Box::new(normalize_for_iter_expr(*inner))),
+            RustExpr::Try(inner) => RustExpr::Try(Box::new(normalize_for_iter_expr(*inner))),
+            RustExpr::Await(inner) => RustExpr::Await(Box::new(normalize_for_iter_expr(*inner))),
+            RustExpr::Deref(inner) => RustExpr::Deref(Box::new(normalize_for_iter_expr(*inner))),
+            RustExpr::Clone(inner) => RustExpr::Clone(Box::new(normalize_for_iter_expr(*inner))),
+            other => other,
+        }
+    }
+
     let lowered_iter = try_lower_leaf_or_name_expr(iter)?;
+    let lowered_iter = normalize_for_iter_expr(lowered_iter);
     Some(match resolve_alias_type(iter.ty()) {
         Type::List(_) => RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
@@ -2084,12 +2130,13 @@ fn try_lower_simple_condition_test_expr(
     if let Some(lowered) = try_lower_borrowed_typevar_compare_condition(expr, borrowed_params) {
         return Some(lowered);
     }
-    if let Some(lowered) = try_lower_structured_compare_condition_expr(expr) {
-        return Some(lowered);
-    }
-    // Preserve borrowed-param comparison semantics (e.g. `&String == String`).
+    // Borrowed-name comparisons require context-sensitive ownership rewrites.
+    // Defer them to the structured stmt emitter path.
     if expr_uses_borrowed_name(expr, borrowed_params) {
         return None;
+    }
+    if let Some(lowered) = try_lower_structured_compare_condition_expr(expr) {
+        return Some(lowered);
     }
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
@@ -2142,6 +2189,23 @@ fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExp
         lowered_left = RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
             args: vec![lowered_left],
+        };
+    } else if matches!(
+        resolve_alias_type(left.ty()),
+        Type::Str | Type::LiteralStr(_)
+    ) && matches!(
+        resolve_alias_type(rhs_expr.ty()),
+        Type::Str | Type::LiteralStr(_)
+    ) {
+        lowered_left = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(lowered_left))),
+            method: "as_str".to_string(),
+            args: vec![],
+        };
+        lowered_right = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(lowered_right))),
+            method: "as_str".to_string(),
+            args: vec![],
         };
     }
     Some(RustExpr::BinOp {

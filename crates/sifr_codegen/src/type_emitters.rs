@@ -133,7 +133,9 @@ impl RustEmitter {
                 params: vec![RustParam::SelfParam { mutable: false }],
                 ret: Some(RustType::I64),
                 body: vec![RustStmt::Return(Some(RustExpr::Cast {
-                    expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident("self".to_string())))),
+                    expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                        "self".to_string(),
+                    )))),
                     ty: RustType::I64,
                 }))],
                 is_async: false,
@@ -209,19 +211,19 @@ impl RustEmitter {
                 type_params: Vec::new(),
                 params: vec![RustParam::SelfParam { mutable: false }],
                 ret: Some(crate::sifr_type_to_rust_type(inner)),
-                body: vec![RustStmt::Return(Some(if inner.ownership()
-                    == sifr_type_system::OwnershipKind::Copy
-                {
-                    RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident("self".to_string())),
-                        field: "0".to_string(),
-                    }
-                } else {
-                    RustExpr::Clone(Box::new(RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident("self".to_string())),
-                        field: "0".to_string(),
-                    }))
-                }))],
+                body: vec![RustStmt::Return(Some(
+                    if inner.ownership() == sifr_type_system::OwnershipKind::Copy {
+                        RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field: "0".to_string(),
+                        }
+                    } else {
+                        RustExpr::Clone(Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field: "0".to_string(),
+                        }))
+                    },
+                ))],
                 is_async: false,
             },
         ];
@@ -273,7 +275,11 @@ impl RustEmitter {
         });
     }
 
-    fn lower_type_emitter_method_item(&mut self, method: &HirFunction, module_public: bool) -> RustItem {
+    fn lower_type_emitter_method_item(
+        &mut self,
+        method: &HirFunction,
+        module_public: bool,
+    ) -> RustItem {
         let visibility = if module_public {
             Visibility::Pub
         } else {

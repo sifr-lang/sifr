@@ -226,7 +226,7 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds, allow_raw: bool) {
             if allow_raw {
                 collect_from_raw_expr_code(code, needs);
             } else {
-                raw_import_in_production_forbidden("expression RawCode");
+                raw_import_in_production_forbidden(&format!("expression RawCode: {code}"));
             }
         }
         RustExpr::Ident(name) => mark_symbol(name, needs),

@@ -86,17 +86,25 @@ pub(super) fn lower_assert_almost_eq(args: &[RustExpr]) -> Option<RustExpr> {
             name: "assert".to_string(),
             args: vec![
                 RustExpr::BinOp {
-                    left: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::BinOp {
-                            left: Box::new(RustExpr::Ident("__lhs".to_string())),
-                            op: "-".to_string(),
-                            right: Box::new(RustExpr::Ident("__rhs".to_string())),
-                        }),
-                        method: "abs".to_string(),
-                        args: vec![],
+                    left: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::Ident("__lhs".to_string())),
+                        op: "==".to_string(),
+                        right: Box::new(RustExpr::Ident("__rhs".to_string())),
                     }),
-                    op: "<".to_string(),
-                    right: Box::new(RustExpr::Ident("__tol".to_string())),
+                    op: "||".to_string(),
+                    right: Box::new(RustExpr::BinOp {
+                        left: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__lhs".to_string())),
+                                op: "-".to_string(),
+                                right: Box::new(RustExpr::Ident("__rhs".to_string())),
+                            }),
+                            method: "abs".to_string(),
+                            args: vec![],
+                        }),
+                        op: "<=".to_string(),
+                        right: Box::new(RustExpr::Ident("__tol".to_string())),
+                    }),
                 },
                 RustExpr::Literal(RustLiteral::Str(
                     "assert_almost_eq failed: {} != {} (tolerance {})".to_string(),

@@ -206,7 +206,12 @@ impl RustEmitter {
                 method,
                 args,
             } => crate::RustExpr::MethodCall {
-                receiver: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*receiver)),
+                receiver: Box::new(match receiver.as_ref() {
+                    crate::RustExpr::Ident(name) if self.is_stdlib_constant(name) => {
+                        crate::RustExpr::Ident(name.clone())
+                    }
+                    _ => self.rewrite_stdlib_constant_idents_in_expr(*receiver),
+                }),
                 method,
                 args: args
                     .into_iter()
@@ -248,10 +253,18 @@ impl RustEmitter {
                 op,
                 operand: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*operand)),
             },
-            crate::RustExpr::Field { expr, field } => crate::RustExpr::Field {
-                expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
-                field,
-            },
+            crate::RustExpr::Field { expr, field } => {
+                let rewritten_expr = match expr.as_ref() {
+                    crate::RustExpr::Ident(name) if self.is_stdlib_constant(name) => {
+                        crate::RustExpr::Ident(name.clone())
+                    }
+                    _ => self.rewrite_stdlib_constant_idents_in_expr(*expr),
+                };
+                crate::RustExpr::Field {
+                    expr: Box::new(rewritten_expr),
+                    field,
+                }
+            }
             crate::RustExpr::Index { expr, index } => crate::RustExpr::Index {
                 expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
                 index: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*index)),
@@ -369,8 +382,8 @@ impl RustEmitter {
             },
             crate::RustExpr::Literal(lit) => crate::RustExpr::Literal(lit),
             crate::RustExpr::Path(path) => crate::RustExpr::Path(path),
-            crate::RustExpr::RawCode(_) => {
-                panic!("RawCode expression reached core production rewrite path")
+            crate::RustExpr::RawCode(code) => {
+                panic!("RawCode expression reached core production rewrite path: {code}")
             }
         }
     }
@@ -1475,13 +1488,13 @@ impl RustEmitter {
             if is_comparison_op
                 && option_inner_type(lhs_expr.ty()).is_some()
                 && option_inner_type(rhs_expr.ty()).is_none()
-                && !matches!(rhs_expr, HirExpr::NoneLiteral)
+                && !rhs_none_like
             {
                 rhs_cmp = format!("Some({rhs_cmp})");
             } else if is_comparison_op
                 && option_inner_type(lhs_expr.ty()).is_none()
                 && option_inner_type(rhs_expr.ty()).is_some()
-                && !matches!(lhs_expr, HirExpr::NoneLiteral)
+                && !lhs_none_like
             {
                 lhs_cmp = format!("Some({lhs_cmp})");
             } else if is_string_like_type(lhs_expr.ty()) && is_string_like_type(rhs_expr.ty()) {
@@ -2330,233 +2343,9 @@ impl RustEmitter {
         &mut self,
         object: &HirExpr,
         index: &HirExpr,
+        result_ty: &Type,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        if !matches!(object_ty, Type::Dict(_, _) | Type::List(_) | Type::Str) {
-            return Ok(None);
-        }
-
-        let suppress_self_field_clone = matches!(object, HirExpr::FieldAccess { object: inner, .. }
-            if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"))
-            && self.pending_self_field_clone_suppression == 0;
-        if suppress_self_field_clone {
-            self.pending_self_field_clone_suppression += 1;
-        }
-
-        let lowered_object = if let HirExpr::FieldAccess {
-            object: inner,
-            field,
-            ty,
-        } = object
-        {
-            self.try_lower_structured_field_access_expr(inner, field, ty)?
-        } else {
-            crate::try_lower_leaf_or_name_expr_result(object)?
-        };
-
-        let Some(lowered_object) = lowered_object else {
-            if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {
-                self.pending_self_field_clone_suppression -= 1;
-            }
-            return Ok(None);
-        };
-
-        let Some(lowered_index) = crate::try_lower_leaf_or_name_expr_result(index)? else {
-            if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {
-                self.pending_self_field_clone_suppression -= 1;
-            }
-            return Ok(None);
-        };
-
-        let lowered_expr = match object_ty {
-            Type::Dict(_, _) => {
-                let key_arg = if let HirExpr::StringLiteral(value) = index {
-                    crate::RustExpr::Ident(format!("{value:?}"))
-                } else {
-                    crate::RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(lowered_index),
-                    }
-                };
-                crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_object),
-                        method: "get".to_string(),
-                        args: vec![key_arg],
-                    }),
-                    method: "cloned".to_string(),
-                    args: vec![],
-                }
-            }
-            Type::List(_) => {
-                let object_name = "__sifr_index_list".to_string();
-                let index_name = "__sifr_index_i".to_string();
-                let normalized_name = "__sifr_index_norm".to_string();
-                crate::RustExpr::Block {
-                    stmts: vec![
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: object_name.clone(),
-                            ty: None,
-                            value: crate::RustExpr::Ref {
-                                mutable: false,
-                                expr: Box::new(lowered_object),
-                            },
-                        },
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: index_name.clone(),
-                            ty: None,
-                            value: lowered_index,
-                        },
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: normalized_name.clone(),
-                            ty: None,
-                            value: crate::RustExpr::If {
-                                cond: Box::new(crate::RustExpr::BinOp {
-                                    left: Box::new(crate::RustExpr::Ident(index_name.clone())),
-                                    op: "<".to_string(),
-                                    right: Box::new(crate::RustExpr::Literal(
-                                        crate::RustLiteral::Int(0),
-                                    )),
-                                }),
-                                then_expr: Box::new(crate::RustExpr::Cast {
-                                    expr: Box::new(crate::RustExpr::BinOp {
-                                        left: Box::new(crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::MethodCall {
-                                                receiver: Box::new(crate::RustExpr::Ident(
-                                                    object_name.clone(),
-                                                )),
-                                                method: "len".to_string(),
-                                                args: vec![],
-                                            }),
-                                            ty: crate::RustType::I64,
-                                        }),
-                                        op: "+".to_string(),
-                                        right: Box::new(crate::RustExpr::Ident(index_name.clone())),
-                                    }),
-                                    ty: crate::RustType::Named("usize".to_string()),
-                                }),
-                                else_expr: Some(Box::new(crate::RustExpr::Cast {
-                                    expr: Box::new(crate::RustExpr::Ident(index_name)),
-                                    ty: crate::RustType::Named("usize".to_string()),
-                                })),
-                            },
-                        },
-                    ],
-                    expr: Some(Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident(object_name)),
-                            method: "get".to_string(),
-                            args: vec![crate::RustExpr::Ident(normalized_name)],
-                        }),
-                        method: "cloned".to_string(),
-                        args: vec![],
-                    })),
-                }
-            }
-            Type::Str => {
-                let object_name = "__sifr_index_str".to_string();
-                let index_name = "__sifr_index_i".to_string();
-                let normalized_name = "__sifr_index_norm".to_string();
-                crate::RustExpr::Block {
-                    stmts: vec![
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: object_name.clone(),
-                            ty: None,
-                            value: crate::RustExpr::Ref {
-                                mutable: false,
-                                expr: Box::new(lowered_object),
-                            },
-                        },
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: index_name.clone(),
-                            ty: None,
-                            value: lowered_index,
-                        },
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: normalized_name.clone(),
-                            ty: None,
-                            value: crate::RustExpr::If {
-                                cond: Box::new(crate::RustExpr::BinOp {
-                                    left: Box::new(crate::RustExpr::Ident(index_name.clone())),
-                                    op: "<".to_string(),
-                                    right: Box::new(crate::RustExpr::Literal(
-                                        crate::RustLiteral::Int(0),
-                                    )),
-                                }),
-                                then_expr: Box::new(crate::RustExpr::Cast {
-                                    expr: Box::new(crate::RustExpr::BinOp {
-                                        left: Box::new(crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::MethodCall {
-                                                receiver: Box::new(crate::RustExpr::MethodCall {
-                                                    receiver: Box::new(crate::RustExpr::Ident(
-                                                        object_name.clone(),
-                                                    )),
-                                                    method: "chars".to_string(),
-                                                    args: vec![],
-                                                }),
-                                                method: "count".to_string(),
-                                                args: vec![],
-                                            }),
-                                            ty: crate::RustType::I64,
-                                        }),
-                                        op: "+".to_string(),
-                                        right: Box::new(crate::RustExpr::Ident(index_name.clone())),
-                                    }),
-                                    ty: crate::RustType::Named("usize".to_string()),
-                                }),
-                                else_expr: Some(Box::new(crate::RustExpr::Cast {
-                                    expr: Box::new(crate::RustExpr::Ident(index_name)),
-                                    ty: crate::RustType::Named("usize".to_string()),
-                                })),
-                            },
-                        },
-                    ],
-                    expr: Some(Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Ident(object_name)),
-                                method: "chars".to_string(),
-                                args: vec![],
-                            }),
-                            method: "nth".to_string(),
-                            args: vec![crate::RustExpr::Ident(normalized_name)],
-                        }),
-                        method: "map".to_string(),
-                        args: vec![crate::RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "c".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            }),
-                            is_move: false,
-                        }],
-                    })),
-                }
-            }
-            _ => unreachable!(),
-        };
-
-        Ok(Some(lowered_expr))
-    }
-
-    pub(crate) fn try_emit_structured_index_expr(
-        &mut self,
-        object: &HirExpr,
-        index: &HirExpr,
-        result_ty: &Type,
-    ) -> Result<bool, crate::CodegenError> {
-        let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        let result_is_option = crate::helpers::is_option_type(result_ty);
         let option_inner_ty = if let Type::Union(members) = object_ty {
             let mut inner = None;
             for member in members {
@@ -2574,15 +2363,22 @@ impl RustEmitter {
         } else {
             None
         };
-        if !matches!(
+        let index_base_ty = if matches!(
             object_ty,
             Type::Dict(_, _) | Type::List(_) | Type::Str | Type::Tuple(_)
-        ) && !matches!(
+        ) {
+            Some(object_ty)
+        } else if matches!(
             option_inner_ty,
             Some(Type::Dict(_, _) | Type::List(_) | Type::Str)
         ) {
-            return Ok(false);
-        }
+            option_inner_ty
+        } else {
+            None
+        };
+        let Some(index_base_ty) = index_base_ty else {
+            return Ok(None);
+        };
 
         let suppress_self_field_clone = matches!(object, HirExpr::FieldAccess { object: inner, .. }
             if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"))
@@ -2591,80 +2387,318 @@ impl RustEmitter {
             self.pending_self_field_clone_suppression += 1;
         }
 
-        let saved_stats = self.lowering_stats;
-        let Some(object_rendered) = self.try_render_structured_expr(object)? else {
-            if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {
-                self.pending_self_field_clone_suppression -= 1;
+        let lowered = (|| -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+            let lowered_object = if let HirExpr::FieldAccess {
+                object: inner,
+                field,
+                ty,
+            } = object
+            {
+                self.try_lower_structured_field_access_expr(inner, field, ty)?
+            } else {
+                crate::try_lower_leaf_or_name_expr_result(object)?
+            };
+            let lowered_object = match lowered_object {
+                Some(expr) => expr,
+                None => match self.try_lower_registry_expr_strict(object) {
+                    Some(expr) => expr,
+                    None => return Ok(None),
+                },
+            };
+
+            let lowered_index = match crate::try_lower_leaf_or_name_expr_result(index)? {
+                Some(expr) => expr,
+                None => match self.try_lower_registry_expr_strict(index) {
+                    Some(expr) => expr,
+                    None => return Ok(None),
+                },
+            };
+
+            let build_inner_index = |container_expr: crate::RustExpr| -> Option<crate::RustExpr> {
+                let lowered_expr = match index_base_ty {
+                    Type::Dict(key_ty, _) => {
+                        let key_is_string_like = matches!(
+                            crate::resolve_alias_type_for_plain_call(key_ty.as_ref()),
+                            Type::Str | Type::LiteralStr(_)
+                        );
+                        let key_arg = if let HirExpr::StringLiteral(value) = index {
+                            crate::RustExpr::Ident(format!("{value:?}"))
+                        } else if key_is_string_like {
+                            crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                    lowered_index.clone(),
+                                ))),
+                                method: "as_str".to_string(),
+                                args: vec![],
+                            }
+                        } else {
+                            crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(lowered_index.clone()),
+                            }
+                        };
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(container_expr),
+                                method: "get".to_string(),
+                                args: vec![key_arg],
+                            }),
+                            method: "cloned".to_string(),
+                            args: vec![],
+                        }
+                    }
+                    Type::List(_) => {
+                        let object_name = "__sifr_index_list".to_string();
+                        let index_name = "__sifr_index_i".to_string();
+                        let normalized_name = "__sifr_index_norm".to_string();
+                        crate::RustExpr::Block {
+                            stmts: vec![
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: object_name.clone(),
+                                    ty: None,
+                                    value: crate::RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(container_expr),
+                                    },
+                                },
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: index_name.clone(),
+                                    ty: None,
+                                    value: lowered_index.clone(),
+                                },
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: normalized_name.clone(),
+                                    ty: None,
+                                    value: crate::RustExpr::If {
+                                        cond: Box::new(crate::RustExpr::BinOp {
+                                            left: Box::new(crate::RustExpr::Ident(
+                                                index_name.clone(),
+                                            )),
+                                            op: "<".to_string(),
+                                            right: Box::new(crate::RustExpr::Literal(
+                                                crate::RustLiteral::Int(0),
+                                            )),
+                                        }),
+                                        then_expr: Box::new(crate::RustExpr::Cast {
+                                            expr: Box::new(crate::RustExpr::BinOp {
+                                                left: Box::new(crate::RustExpr::Cast {
+                                                    expr: Box::new(crate::RustExpr::MethodCall {
+                                                        receiver: Box::new(crate::RustExpr::Ident(
+                                                            object_name.clone(),
+                                                        )),
+                                                        method: "len".to_string(),
+                                                        args: vec![],
+                                                    }),
+                                                    ty: crate::RustType::I64,
+                                                }),
+                                                op: "+".to_string(),
+                                                right: Box::new(crate::RustExpr::Ident(
+                                                    index_name.clone(),
+                                                )),
+                                            }),
+                                            ty: crate::RustType::Named("usize".to_string()),
+                                        }),
+                                        else_expr: Some(Box::new(crate::RustExpr::Cast {
+                                            expr: Box::new(crate::RustExpr::Ident(index_name)),
+                                            ty: crate::RustType::Named("usize".to_string()),
+                                        })),
+                                    },
+                                },
+                            ],
+                            expr: Some(Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::Ident(object_name)),
+                                    method: "get".to_string(),
+                                    args: vec![crate::RustExpr::Ident(normalized_name)],
+                                }),
+                                method: "cloned".to_string(),
+                                args: vec![],
+                            })),
+                        }
+                    }
+                    Type::Str => {
+                        let object_name = "__sifr_index_str".to_string();
+                        let index_name = "__sifr_index_i".to_string();
+                        let normalized_name = "__sifr_index_norm".to_string();
+                        crate::RustExpr::Block {
+                            stmts: vec![
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: object_name.clone(),
+                                    ty: None,
+                                    value: crate::RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(container_expr),
+                                    },
+                                },
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: index_name.clone(),
+                                    ty: None,
+                                    value: lowered_index.clone(),
+                                },
+                                crate::RustStmt::Let {
+                                    mutable: false,
+                                    name: normalized_name.clone(),
+                                    ty: None,
+                                    value: crate::RustExpr::If {
+                                        cond: Box::new(crate::RustExpr::BinOp {
+                                            left: Box::new(crate::RustExpr::Ident(
+                                                index_name.clone(),
+                                            )),
+                                            op: "<".to_string(),
+                                            right: Box::new(crate::RustExpr::Literal(
+                                                crate::RustLiteral::Int(0),
+                                            )),
+                                        }),
+                                        then_expr: Box::new(crate::RustExpr::Cast {
+                                            expr: Box::new(crate::RustExpr::BinOp {
+                                                left: Box::new(crate::RustExpr::Cast {
+                                                    expr: Box::new(crate::RustExpr::MethodCall {
+                                                        receiver: Box::new(
+                                                            crate::RustExpr::MethodCall {
+                                                                receiver: Box::new(
+                                                                    crate::RustExpr::Ident(
+                                                                        object_name.clone(),
+                                                                    ),
+                                                                ),
+                                                                method: "chars".to_string(),
+                                                                args: vec![],
+                                                            },
+                                                        ),
+                                                        method: "count".to_string(),
+                                                        args: vec![],
+                                                    }),
+                                                    ty: crate::RustType::I64,
+                                                }),
+                                                op: "+".to_string(),
+                                                right: Box::new(crate::RustExpr::Ident(
+                                                    index_name.clone(),
+                                                )),
+                                            }),
+                                            ty: crate::RustType::Named("usize".to_string()),
+                                        }),
+                                        else_expr: Some(Box::new(crate::RustExpr::Cast {
+                                            expr: Box::new(crate::RustExpr::Ident(index_name)),
+                                            ty: crate::RustType::Named("usize".to_string()),
+                                        })),
+                                    },
+                                },
+                            ],
+                            expr: Some(Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::MethodCall {
+                                    receiver: Box::new(crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Ident(object_name)),
+                                        method: "chars".to_string(),
+                                        args: vec![],
+                                    }),
+                                    method: "nth".to_string(),
+                                    args: vec![crate::RustExpr::Ident(normalized_name)],
+                                }),
+                                method: "map".to_string(),
+                                args: vec![crate::RustExpr::Closure {
+                                    params: vec![crate::RustParam::Named {
+                                        name: "c".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(crate::RustExpr::MethodCall {
+                                        receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
+                                        method: "to_string".to_string(),
+                                        args: vec![],
+                                    }),
+                                    is_move: false,
+                                }],
+                            })),
+                        }
+                    }
+                    Type::Tuple(elements) => {
+                        let HirExpr::IntLiteral(idx) = index else {
+                            return None;
+                        };
+                        let Ok(idx) = usize::try_from(*idx) else {
+                            return None;
+                        };
+                        if idx >= elements.len() {
+                            return None;
+                        }
+                        crate::RustExpr::Field {
+                            expr: Box::new(container_expr),
+                            field: idx.to_string(),
+                        }
+                    }
+                    _ => return None,
+                };
+                Some(lowered_expr)
+            };
+
+            if let Some(inner_ty) = option_inner_ty {
+                if !matches!(inner_ty, Type::Dict(_, _) | Type::List(_) | Type::Str) {
+                    return Ok(None);
+                }
+                let Some(inner_expr) = build_inner_index(crate::RustExpr::Ident("__v".to_string()))
+                else {
+                    return Ok(None);
+                };
+                let option_expr = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),
+                        method: "as_ref".to_string(),
+                        args: vec![],
+                    }),
+                    method: "and_then".to_string(),
+                    args: vec![crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__v".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(inner_expr),
+                        is_move: false,
+                    }],
+                };
+                if crate::helpers::is_option_type(result_ty) {
+                    return Ok(Some(option_expr));
+                }
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(option_expr))),
+                    method: "unwrap".to_string(),
+                    args: vec![],
+                }));
             }
-            return Ok(false);
-        };
-        self.lowering_stats = saved_stats;
+
+            let Some(lowered_expr) = build_inner_index(lowered_object) else {
+                return Ok(None);
+            };
+            if crate::helpers::is_option_type(result_ty) || matches!(index_base_ty, Type::Tuple(_))
+            {
+                return Ok(Some(lowered_expr));
+            }
+            Ok(Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),
+                method: "unwrap".to_string(),
+                args: vec![],
+            }))
+        })();
+
         if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {
             self.pending_self_field_clone_suppression -= 1;
         }
+        lowered
+    }
 
-        let saved_stats = self.lowering_stats;
-        let Some(index_rendered) = self.try_render_structured_expr(index)? else {
+    pub(crate) fn try_emit_structured_index_expr(
+        &mut self,
+        object: &HirExpr,
+        index: &HirExpr,
+        result_ty: &Type,
+    ) -> Result<bool, crate::CodegenError> {
+        let Some(lowered_expr) = self.try_lower_structured_index_expr(object, index, result_ty)?
+        else {
             return Ok(false);
         };
-        self.lowering_stats = saved_stats;
-
-        if let Some(inner_ty) = option_inner_ty {
-            let option_index_expr = match inner_ty {
-                Type::Dict(_, _) => {
-                    let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
-                    format!("__v.get({key_lookup_arg}).cloned()")
-                }
-                Type::List(_) => format!("__v.get(({index_rendered}) as usize).cloned()"),
-                Type::Str => {
-                    format!("__v.chars().nth(({index_rendered}) as usize).map(|c| c.to_string())")
-                }
-                _ => return Ok(false),
-            };
-            self.emit_rust_expr(&crate::RustExpr::RawCode(format!(
-                "({object_rendered}).as_ref().and_then(|__v| {option_index_expr})"
-            )));
-            return Ok(true);
-        }
-
-        let rendered_index_expr = match object_ty {
-            Type::Tuple(elements) => {
-                let HirExpr::IntLiteral(idx) = index else {
-                    return Ok(false);
-                };
-                let Ok(idx) = usize::try_from(*idx) else {
-                    return Ok(false);
-                };
-                if idx >= elements.len() {
-                    return Ok(false);
-                }
-                format!("({object_rendered}).{idx}")
-            }
-            Type::Dict(_, _) => {
-                let key_lookup_arg = self.render_dict_key_lookup_arg(index, &index_rendered);
-                if result_is_option {
-                    format!("{object_rendered}.get({key_lookup_arg}).cloned()")
-                } else {
-                    format!("{object_rendered}[{key_lookup_arg}].clone()")
-                }
-            }
-            Type::List(_) => {
-                if result_is_option {
-                    format!("{object_rendered}.get(({index_rendered}) as usize).cloned()")
-                } else {
-                    format!("{object_rendered}[({index_rendered}) as usize].clone()")
-                }
-            }
-            Type::Str => {
-                if result_is_option {
-                    format!("{object_rendered}.chars().nth(({index_rendered}) as usize).map(|c| c.to_string())")
-                } else {
-                    format!("{object_rendered}.chars().nth(({index_rendered}) as usize).unwrap().to_string()")
-                }
-            }
-            _ => return Ok(false),
-        };
-        self.emit_rust_expr(&crate::RustExpr::RawCode(rendered_index_expr));
+        self.emit_rust_expr(&lowered_expr);
         Ok(true)
     }
 

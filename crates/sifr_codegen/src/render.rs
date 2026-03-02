@@ -24,7 +24,9 @@ impl Renderer {
         self.indent = 0;
         for (idx, item) in file.items.iter().enumerate() {
             self.render_item(item);
-            if idx + 1 < file.items.len() && !self.output.ends_with("\n\n") {
+            let keeps_tight_spacing = matches!(item, RustItem::Attr(_));
+            if idx + 1 < file.items.len() && !self.output.ends_with("\n\n") && !keeps_tight_spacing
+            {
                 self.output.push('\n');
             }
         }
@@ -840,6 +842,13 @@ impl Renderer {
         // `write!` / `writeln!` require the format string as a literal token
         // (second argument after the destination writer), not a `String`.
         if matches!(name, "write" | "writeln") && idx == 1 {
+            if let RustExpr::Literal(RustLiteral::Str(value)) = arg {
+                return format!("\"{}\"", value.escape_default());
+            }
+        }
+        // `assert!`/`assert_eq!`/`assert_ne!` message format arguments must be
+        // literal tokens, not owned `String` expressions.
+        if matches!(name, "assert" | "assert_eq" | "assert_ne") {
             if let RustExpr::Literal(RustLiteral::Str(value)) = arg {
                 return format!("\"{}\"", value.escape_default());
             }
