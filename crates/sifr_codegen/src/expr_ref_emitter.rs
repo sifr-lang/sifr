@@ -276,7 +276,7 @@ impl RustEmitter {
     /// Emit an expression suitable for use inside format!/println! contexts.
     /// Wraps Option<T> expressions so they display as the inner value or "None".
     /// Omits `.to_string()` on string literals since format macros accept &str.
-    pub(super) fn emit_display_expr(&mut self, expr: &HirExpr) {
+    pub(super) fn lower_display_expr(&mut self, expr: &HirExpr) -> crate::RustExpr {
         let inferred_option_inner = if let Some(inner) = display_option_inner_type(expr) {
             Some(inner)
         } else if matches!(
@@ -326,23 +326,25 @@ impl RustEmitter {
                     },
                 ],
             };
-            self.write_registry_expr(&lowered);
+            lowered
         } else if let HirExpr::StringLiteral(val) = expr {
             // In display contexts, string literals don't need .to_string()
-            self.write_registry_expr(&crate::RustExpr::Literal(crate::RustLiteral::Str(
-                val.clone(),
-            )));
+            crate::RustExpr::Literal(crate::RustLiteral::Str(val.clone()))
         } else if uses_debug_display_format(expr.ty()) {
             // Collections use Debug-style formatting in display contexts.
             let lowered = self.lower_ref_expr_or_panic(expr, "display debug expr");
-            self.write_registry_expr(&crate::RustExpr::FormatMacro {
+            crate::RustExpr::FormatMacro {
                 name: "format".to_string(),
                 format_str: "{:?}".to_string(),
                 args: vec![lowered],
-            });
+            }
         } else {
-            let lowered = self.lower_ref_expr_or_panic(expr, "display expr");
-            self.write_registry_expr(&lowered);
+            self.lower_ref_expr_or_panic(expr, "display expr")
         }
+    }
+
+    pub(super) fn emit_display_expr(&mut self, expr: &HirExpr) {
+        let lowered = self.lower_display_expr(expr);
+        self.write_registry_expr(&lowered);
     }
 }

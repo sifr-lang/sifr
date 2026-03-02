@@ -137,27 +137,17 @@ impl RustEmitter {
         result.trim().to_string()
     }
 
-    fn capture_emitted_fragment<F>(&mut self, emit: F) -> String
-    where
-        F: FnOnce(&mut Self),
-    {
-        let saved_output = std::mem::take(&mut self.output);
-        emit(self);
-        let fragment = std::mem::take(&mut self.output);
-        self.output = saved_output;
-        fragment
-    }
-
-    fn render_display_expr_fragment(&mut self, expr: &HirExpr) -> String {
-        self.capture_emitted_fragment(|emitter| emitter.emit_display_expr(expr))
-    }
-
-    fn write_format_macro_call(&mut self, macro_name: &str, format_str: &str, args: &[String]) {
+    fn write_format_macro_call(
+        &mut self,
+        macro_name: &str,
+        format_str: &str,
+        args: &[crate::RustExpr],
+    ) {
         let name = macro_name.trim_end_matches('!').to_string();
         self.emit_rust_expr(&crate::RustExpr::FormatMacro {
             name,
             format_str: format_str.to_string(),
-            args: args.iter().cloned().map(crate::RustExpr::RawCode).collect(),
+            args: args.to_vec(),
         });
     }
 
@@ -695,20 +685,20 @@ impl RustEmitter {
         }
         if args.len() > 1 {
             if let HirExpr::StringLiteral(fmt) = &args[0] {
-                let rendered_args = args
+                let lowered_args = args
                     .iter()
                     .skip(1)
-                    .map(|arg| self.render_display_expr_fragment(arg))
+                    .map(|arg| self.lower_display_expr(arg))
                     .collect::<Vec<_>>();
-                self.write_format_macro_call("println!", fmt, &rendered_args);
+                self.write_format_macro_call("println!", fmt, &lowered_args);
                 return Ok(true);
             }
             let format_str = (0..args.len()).map(|_| "{}").collect::<Vec<_>>().join(" ");
-            let rendered_args = args
+            let lowered_args = args
                 .iter()
-                .map(|arg| self.render_display_expr_fragment(arg))
+                .map(|arg| self.lower_display_expr(arg))
                 .collect::<Vec<_>>();
-            self.write_format_macro_call("println!", &format_str, &rendered_args);
+            self.write_format_macro_call("println!", &format_str, &lowered_args);
             return Ok(true);
         }
         let arg = &args[0];
@@ -3234,11 +3224,11 @@ impl RustEmitter {
                 }
             }
         }
-        let rendered_args = exprs
+        let lowered_args = exprs
             .iter()
-            .map(|expr| self.render_display_expr_fragment(expr))
+            .map(|expr| self.lower_display_expr(expr))
             .collect::<Vec<_>>();
-        self.write_format_macro_call(macro_name, &format_str, &rendered_args);
+        self.write_format_macro_call(macro_name, &format_str, &lowered_args);
     }
 }
 

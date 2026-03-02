@@ -681,3 +681,15 @@ Latest validation loop (2026-03-02, Pass AL):
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
 - Re-audit evidence after this loop:
 - `expr_render_helpers.rs` no longer constructs `RustExpr::RawCode(...)` for production emission paths (remaining single `RawCode` occurrence is a defensive panic arm in AST rewrite traversal).
+
+Latest validation loop (2026-03-02, Pass AM):
+- Continued IR-first cleanup in display/format emission:
+- introduced `lower_display_expr` in `expr_ref_emitter.rs` to produce typed display IR expressions directly (with existing option/debug behavior preserved), and rewired `emit_display_expr` to emit from this typed node.
+- removed string-capture display fragments from `expr_render_helpers.rs` (`capture_emitted_fragment`/`render_display_expr_fragment`) and changed `write_format_macro_call` to consume typed IR args.
+- migrated structured `print(...)` multi-arg and f-string macro arg lowering to use typed display IR args directly, removing `map(crate::RustExpr::RawCode)` format arg construction.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+- Re-audit evidence after this loop:
+- `expr_render_helpers.rs` no longer contains `map(crate::RustExpr::RawCode)` emission for `format!/println!` args; remaining `RustExpr::RawCode` mention stays a defensive panic arm only.

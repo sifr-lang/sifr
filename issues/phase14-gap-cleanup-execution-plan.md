@@ -998,3 +998,14 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 7. removed now-unused string-capture helper `try_render_structured_expr` from `expr_render_helpers.rs`
 8. changed `borrow_prefix_for_name` visibility to `pub(crate)` and rewired typed borrow-prefix application to avoid output-capture string flow
 9. Re-audit totals after this slice: `expr_render_helpers.rs` production `RustExpr::RawCode` construction sites removed (remaining single `RawCode` mention is a defensive panic arm)
+
+### Validation rerun (2026-03-02, Pass AM)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`457` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. added `lower_display_expr` in `expr_ref_emitter.rs` to produce typed display expressions for format contexts and rewired `emit_display_expr` to emit from that typed node
+6. removed string-capture display fragment helpers from `expr_render_helpers.rs` and changed `write_format_macro_call` to accept typed IR args
+7. migrated structured multi-arg `print(...)` and f-string macro arg lowering to typed IR display args (no `map(crate::RustExpr::RawCode)` path)
+8. Re-audit totals after this slice: format/println typed-arg emission path no longer uses `RustExpr::RawCode` construction in `expr_render_helpers.rs` (remaining `RawCode` mention there is the defensive panic arm)
