@@ -748,51 +748,55 @@ impl RustEmitter {
             return Ok(true);
         }
 
-        let Some(arg_rendered) = self.try_render_structured_expr(arg)? else {
+        let Some(lowered_arg) = self.try_lower_registry_expr_strict(arg) else {
             return Ok(false);
         };
-        let inferred_option_inner = if let Some(inner) = display_option_inner_type(arg) {
-            Some(inner)
-        } else if !matches!(
-            crate::resolve_alias_type_for_plain_call(arg.ty()),
-            Type::Str | Type::LiteralStr(_)
-        ) && arg_rendered.contains(".get(")
-            && arg_rendered.contains(").cloned()")
-        {
-            Some(Type::Unknown)
-        } else if !matches!(
-            crate::resolve_alias_type_for_plain_call(arg.ty()),
-            Type::Str | Type::LiteralStr(_)
-        ) && arg_rendered.contains(".chars().nth(")
-        {
-            Some(Type::Str)
-        } else {
-            None
-        };
-        if let Some(inner) = inferred_option_inner {
-            let formatter = if uses_debug_display_format(&inner) {
-                "format!(\"{:?}\", __v)"
+        if let Some(inner) = display_option_inner_type(arg) {
+            let option_format_str = if uses_debug_display_format(&inner) {
+                "{:?}".to_string()
             } else {
-                "format!(\"{}\", __v)"
+                "{}".to_string()
             };
             self.emit_rust_expr(&crate::RustExpr::FormatMacro {
                 name: "println".to_string(),
                 format_str: "{}".to_string(),
-                args: vec![crate::RustExpr::RawCode(format!(
-                    "({arg_rendered}).map_or(\"None\".to_string(), |__v| {formatter})"
-                ))],
+                args: vec![crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                    method: "map_or".to_string(),
+                    args: vec![
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
+                                "None".to_string(),
+                            ))),
+                            method: "to_string".to_string(),
+                            args: vec![],
+                        },
+                        crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__v".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::FormatMacro {
+                                name: "format".to_string(),
+                                format_str: option_format_str,
+                                args: vec![crate::RustExpr::Ident("__v".to_string())],
+                            }),
+                            is_move: false,
+                        },
+                    ],
+                }],
             });
         } else if uses_debug_display_format(arg.ty()) {
             self.emit_rust_expr(&crate::RustExpr::FormatMacro {
                 name: "println".to_string(),
                 format_str: "{:?}".to_string(),
-                args: vec![crate::RustExpr::RawCode(arg_rendered)],
+                args: vec![lowered_arg],
             });
         } else {
             self.emit_rust_expr(&crate::RustExpr::FormatMacro {
                 name: "println".to_string(),
                 format_str: "{}".to_string(),
-                args: vec![crate::RustExpr::RawCode(arg_rendered)],
+                args: vec![lowered_arg],
             });
         }
         Ok(true)
