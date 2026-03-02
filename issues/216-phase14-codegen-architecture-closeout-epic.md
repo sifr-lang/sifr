@@ -693,3 +693,12 @@ Latest validation loop (2026-03-02, Pass AM):
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
 - Re-audit evidence after this loop:
 - `expr_render_helpers.rs` no longer contains `map(crate::RustExpr::RawCode)` emission for `format!/println!` args; remaining `RustExpr::RawCode` mention stays a defensive panic arm only.
+
+Latest validation loop (2026-03-02, Pass AN):
+- Continued IR-first cleanup in display-path fallback removal:
+- removed direct-render probe fallback from `expr_ref_emitter.rs` display lowering; `lower_display_expr` now relies on structured type/HIR-based option-inner inference only.
+- this removes remaining `render_expr_via_direct_emit(...)` usage in `expr_ref_emitter.rs` display path and keeps display lowering on typed IR-only flow.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

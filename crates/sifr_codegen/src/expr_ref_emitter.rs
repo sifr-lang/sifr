@@ -285,14 +285,7 @@ impl RustEmitter {
         ) {
             None
         } else {
-            let probe = self.render_expr_via_direct_emit(expr);
-            if probe.contains(".get(") && probe.contains(").cloned()") {
-                Some(Type::Unknown)
-            } else if probe.contains(".chars().nth(") {
-                Some(Type::Str)
-            } else {
-                None
-            }
+            None
         };
         if let Some(inner) = inferred_option_inner {
             let lowered = self.lower_ref_expr_or_panic(expr, "display option expr");

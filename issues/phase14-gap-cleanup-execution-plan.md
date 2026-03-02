@@ -1009,3 +1009,12 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 6. removed string-capture display fragment helpers from `expr_render_helpers.rs` and changed `write_format_macro_call` to accept typed IR args
 7. migrated structured multi-arg `print(...)` and f-string macro arg lowering to typed IR display args (no `map(crate::RustExpr::RawCode)` path)
 8. Re-audit totals after this slice: format/println typed-arg emission path no longer uses `RustExpr::RawCode` construction in `expr_render_helpers.rs` (remaining `RawCode` mention there is the defensive panic arm)
+
+### Validation rerun (2026-03-02, Pass AN)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`457` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed direct-render probe fallback from display lowering in `expr_ref_emitter.rs`; display option inference now stays type/HIR-driven
+6. eliminated remaining `render_expr_via_direct_emit(...)` usage from this display path so it stays on typed IR flow
