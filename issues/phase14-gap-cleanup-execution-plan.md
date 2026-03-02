@@ -1130,3 +1130,14 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 7. hardened `emit_rust_stmt_with_current_indent` to IR-capture-only behavior (panic when capture stack is not active)
 8. hardened `emit_rust_expr` to panic (forbid direct expression string emission path)
 9. updated `lib_codegen_tests.rs` expression-path tests to validate strict typed lowering (`try_lower_registry_expr_strict` + renderer) instead of emitter output-string assertions
+
+### Validation rerun (2026-03-02, Pass AZ)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`445` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed dead `RustEmitter` output state (`output`, `indent`) from `lib.rs`
+6. removed output-drain contract helper `assert_output_drained` from `lib_support.rs` and deleted all production callsites (`lib.rs`, `entrypoints.rs`)
+7. updated unreachable string-backend panic helpers in `stmt_emitter.rs` / `expr_emitter.rs` to avoid removed indentation state
+8. updated `lib_codegen_tests.rs` architecture guards to assert absence of `emitter.output`/`assert_output_drained(...)` plumbing in production assembly paths

@@ -57,8 +57,8 @@ use ir_imports::{collect_import_needs_from_items, collect_import_needs_from_sour
 use ir_optimize::remove_trivial_clones_in_items;
 use ir_validate::validate_items;
 pub(crate) use lib_support::{
-    assert_output_drained, is_reserved_plain_builtin_call, is_self_field_access_expr,
-    resolve_alias_type_for_plain_call, try_lower_leaf_or_name_expr_result,
+    is_reserved_plain_builtin_call, is_self_field_access_expr, resolve_alias_type_for_plain_call,
+    try_lower_leaf_or_name_expr_result,
 };
 use sifr_hir::{HirExpr, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
@@ -409,8 +409,6 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     if !emitter.body_items.is_empty() {
         assembled_body_items.extend(emitter.body_items.clone());
     }
-    assert_output_drained(&emitter.output, "generate_rust_with_stdlib");
-
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
     let stdlib_import_needs = collect_import_needs_from_source(&stdlib_preamble);
     let needs_hashmap =
@@ -569,7 +567,6 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
         if !emitter.body_items.is_empty() {
             assembled_items.extend(emitter.body_items.clone());
         }
-        assert_output_drained(&emitter.output, "generate_rust_multi");
         let import_needs = collect_import_needs_from_items(&assembled_items);
 
         let mut import_items: Vec<RustItem> = Vec::new();
@@ -829,8 +826,6 @@ edition = "2021"
 }
 
 struct RustEmitter {
-    output: String,
-    indent: usize,
     collection_needs: CollectionNeeds,
     runtime_needs: RuntimeNeeds,
     /// Track union enum types that need to be defined (name -> member types)
@@ -940,8 +935,6 @@ struct EmissionContext {
 impl RustEmitter {
     fn new() -> Self {
         Self {
-            output: String::new(),
-            indent: 0,
             collection_needs: CollectionNeeds::default(),
             runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),

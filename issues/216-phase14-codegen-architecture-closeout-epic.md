@@ -845,3 +845,22 @@ Latest validation loop (2026-03-02, Pass AY):
   - `cargo test -q -p sifr_codegen test_emit_expr_borrowed_compare_is_structured` -> pass (`1` passed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AZ):
+- Continued IR-first cleanup by removing dead emitter output state and residual output-contract plumbing:
+  - removed `output` and `indent` fields from `RustEmitter` in `lib.rs`.
+  - removed `assert_output_drained` helper from `lib_support.rs`.
+  - removed `assert_output_drained` callsites from:
+    - `lib.rs` (`generate_rust_with_stdlib`, `generate_rust_multi`)
+    - `entrypoints.rs` (`generate_rust_test`)
+  - updated unreachable string-backend panic paths in `stmt_emitter.rs` and `expr_emitter.rs` to stop referencing deleted indentation state.
+- updated architecture guard tests in `lib_codegen_tests.rs` to enforce the new contract:
+  - no `emitter.output`/`assert_output_drained(...)` wiring in production assembly paths.
+  - assembly remains IR item/stmt based and rendered only through `Renderer`.
+- Re-audit evidence after this loop:
+  - `RustEmitter` no longer owns mutable output-buffer/indent string state.
+  - remaining output string ownership is isolated to `render.rs` renderer sink only.
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`445` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

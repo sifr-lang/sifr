@@ -3,13 +3,6 @@ use sifr_hir::HirExpr;
 use sifr_type_system::Type;
 use std::collections::HashSet;
 
-pub(crate) fn assert_output_drained(output: &str, context: &str) {
-    assert!(
-        output.trim().is_empty(),
-        "codegen output contract violation in {context}: residual top-level output detected"
-    );
-}
-
 pub(crate) fn is_self_field_access_expr(expr: &HirExpr) -> bool {
     if let HirExpr::FieldAccess { object, .. } = expr {
         return matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self");
