@@ -1417,7 +1417,10 @@ mod tests {
                 func: receiver,
                 args,
             } => count_raw_in_expr(receiver) + args.iter().map(count_raw_in_expr).sum::<usize>(),
-            RustExpr::MacroCall { args, .. } | RustExpr::Vec(args) | RustExpr::Tuple(args) => {
+            RustExpr::MacroCall { args, .. }
+            | RustExpr::Vec(args)
+            | RustExpr::Tuple(args)
+            | RustExpr::Array(args) => {
                 args.iter().map(count_raw_in_expr).sum()
             }
             RustExpr::FormatMacro { args, .. } => args.iter().map(count_raw_in_expr).sum(),

@@ -323,6 +323,12 @@ impl RustEmitter {
                     .map(|item| self.rewrite_stdlib_constant_idents_in_expr(item))
                     .collect(),
             ),
+            crate::RustExpr::Array(items) => crate::RustExpr::Array(
+                items
+                    .into_iter()
+                    .map(|item| self.rewrite_stdlib_constant_idents_in_expr(item))
+                    .collect(),
+            ),
             crate::RustExpr::Vec(items) => crate::RustExpr::Vec(
                 items
                     .into_iter()

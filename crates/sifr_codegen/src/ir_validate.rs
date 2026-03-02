@@ -246,6 +246,7 @@ fn validate_no_raw_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>) {
         }
         RustExpr::MacroCall { args, .. }
         | RustExpr::Tuple(args)
+        | RustExpr::Array(args)
         | RustExpr::Vec(args)
         | RustExpr::FormatMacro { args, .. } => {
             for arg in args {
@@ -593,7 +594,10 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
                 validate_expr(arg, issues, in_function);
             }
         }
-        RustExpr::MacroCall { args, .. } | RustExpr::Tuple(args) | RustExpr::Vec(args) => {
+        RustExpr::MacroCall { args, .. }
+        | RustExpr::Tuple(args)
+        | RustExpr::Array(args)
+        | RustExpr::Vec(args) => {
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }

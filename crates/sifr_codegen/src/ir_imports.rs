@@ -247,7 +247,10 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds, allow_raw: bool) {
                 collect_expr(arg, needs, allow_raw);
             }
         }
-        RustExpr::MacroCall { args, .. } | RustExpr::Vec(args) | RustExpr::Tuple(args) => {
+        RustExpr::MacroCall { args, .. }
+        | RustExpr::Vec(args)
+        | RustExpr::Tuple(args)
+        | RustExpr::Array(args) => {
             for arg in args {
                 collect_expr(arg, needs, allow_raw);
             }

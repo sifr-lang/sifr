@@ -1055,3 +1055,13 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 5. removed remaining `crate::render_expr(...)` production usage in `methods/string.rs` borrow detection and replaced with typed IR shape checks
 6. migrated `ljust/rjust/zfill` width emission from synthetic string `Ident(\"width = ...\")` to typed positional-width format args with explicit `usize` cast
 7. updated `methods/mod.rs` assertions for the new positional-width typed rendering output
+
+### Validation rerun (2026-03-02, Pass AS)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`457` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. added typed `RustExpr::Array` support across IR/render/import/validate/optimize/lowering stacks
+6. migrated dict/set literal lowering in `lower_expr.rs` from rendered-string array assembly to typed IR arrays while preserving `HashMap::from([..])` / `HashSet::from([..])` output shape
+7. removed `crate::render_expr(...)` usage from that `lower_expr.rs` production path

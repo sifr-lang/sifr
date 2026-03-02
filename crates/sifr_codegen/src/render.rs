@@ -802,6 +802,14 @@ impl Renderer {
                     format!("({rendered})")
                 }
             }
+            RustExpr::Array(values) => format!(
+                "[{}]",
+                values
+                    .iter()
+                    .map(Self::render_expr_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
             RustExpr::Vec(values) => format!(
                 "vec![{}]",
                 values

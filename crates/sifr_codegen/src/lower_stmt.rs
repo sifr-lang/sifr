@@ -986,7 +986,10 @@ fn append_recursive_capture_args_to_expr(
                 append_recursive_capture_args_to_expr(field_value, fn_name, capture_names);
             }
         }
-        RustExpr::Tuple(items) | RustExpr::Vec(items) | RustExpr::MacroCall { args: items, .. } => {
+        RustExpr::Tuple(items)
+        | RustExpr::Array(items)
+        | RustExpr::Vec(items)
+        | RustExpr::MacroCall { args: items, .. } => {
             for item in items {
                 append_recursive_capture_args_to_expr(item, fn_name, capture_names);
             }

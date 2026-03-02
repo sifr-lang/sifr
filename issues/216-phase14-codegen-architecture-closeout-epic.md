@@ -739,3 +739,13 @@ Latest validation loop (2026-03-02, Pass AR):
 - `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AS):
+- Continued IR-first cleanup for typed collection literals:
+- introduced typed IR `RustExpr::Array(Vec<RustExpr>)` in `rust_ir.rs` and renderer/validation/import/optimization/lowering support across `render.rs`, `expr_render_helpers.rs`, `lower_stmt.rs`, `preamble.rs`, `ir_imports.rs`, `ir_optimize.rs`, and `ir_validate.rs`.
+- migrated `lower_expr` dict/set literal lowering from rendered-string array assembly to typed IR arrays while preserving `HashMap::from([..])` / `HashSet::from([..])` output form.
+- removed the remaining `crate::render_expr(...)` production usage from `lower_expr.rs` dict/set literal assembly path.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

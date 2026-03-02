@@ -174,7 +174,10 @@ fn optimize_expr(expr: &mut RustExpr) -> usize {
             }
             removed
         }
-        RustExpr::MacroCall { args, .. } | RustExpr::Tuple(args) | RustExpr::Vec(args) => {
+        RustExpr::MacroCall { args, .. }
+        | RustExpr::Tuple(args)
+        | RustExpr::Array(args)
+        | RustExpr::Vec(args) => {
             let mut removed = 0usize;
             for arg in args {
                 removed += optimize_expr(arg);

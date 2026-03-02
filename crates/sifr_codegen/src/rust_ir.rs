@@ -239,6 +239,7 @@ pub enum RustExpr {
         fields: Vec<(String, RustExpr)>,
     },
     Tuple(Vec<RustExpr>),
+    Array(Vec<RustExpr>),
     Vec(Vec<RustExpr>),
     Try(Box<RustExpr>),
     Await(Box<RustExpr>),

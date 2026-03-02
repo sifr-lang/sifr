@@ -746,11 +746,7 @@ fn try_lower_simple_dict_literal_expr(
     for (key, value) in keys.iter().zip(values.iter()) {
         let lowered_key = try_lower_leaf_or_name_expr(key)?;
         let lowered_value = try_lower_leaf_or_name_expr(value)?;
-        entries.push(format!(
-            "({}, {})",
-            crate::render_expr(&lowered_key),
-            crate::render_expr(&lowered_value)
-        ));
+        entries.push(RustExpr::Tuple(vec![lowered_key, lowered_value]));
     }
 
     Some(RustExpr::FnCall {
@@ -758,14 +754,14 @@ fn try_lower_simple_dict_literal_expr(
             "HashMap".to_string(),
             "from".to_string(),
         ])),
-        args: vec![RustExpr::Ident(format!("[{}]", entries.join(", ")))],
+        args: vec![RustExpr::Array(entries)],
     })
 }
 
 fn try_lower_simple_set_literal_expr(elements: &[HirExpr], _ty: &Type) -> Option<RustExpr> {
     let mut lowered_elements = Vec::with_capacity(elements.len());
     for element in elements {
-        lowered_elements.push(crate::render_expr(&try_lower_leaf_or_name_expr(element)?));
+        lowered_elements.push(try_lower_leaf_or_name_expr(element)?);
     }
 
     Some(RustExpr::FnCall {
@@ -773,10 +769,7 @@ fn try_lower_simple_set_literal_expr(elements: &[HirExpr], _ty: &Type) -> Option
             "HashSet".to_string(),
             "from".to_string(),
         ])),
-        args: vec![RustExpr::Ident(format!(
-            "[{}]",
-            lowered_elements.join(", ")
-        ))],
+        args: vec![RustExpr::Array(lowered_elements)],
     })
 }
 
@@ -3310,7 +3303,7 @@ mod tests {
             lowered,
             RustExpr::FnCall { func, args }
                 if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["HashMap".to_string(), "from".to_string()])
-                    && matches!(args.first(), Some(RustExpr::Ident(entries)) if entries.starts_with("[("))
+                    && matches!(args.first(), Some(RustExpr::Array(entries)) if !entries.is_empty())
         ));
     }
 
@@ -3365,7 +3358,7 @@ mod tests {
             lowered,
             RustExpr::FnCall { func, args }
                 if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["HashSet".to_string(), "from".to_string()])
-                    && matches!(args.first(), Some(RustExpr::Ident(entries)) if entries.starts_with("["))
+                    && matches!(args.first(), Some(RustExpr::Array(entries)) if !entries.is_empty())
         ));
     }
 
