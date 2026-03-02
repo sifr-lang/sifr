@@ -1003,3 +1003,22 @@ Latest validation loop (2026-03-02, Pass BG):
   - `cargo test -q -p sifr_codegen` -> pass (`446` passed, `0` failed).
   - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
   - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass BH):
+- Continued IR-first cleanup by removing old indentation-era statement helper naming from production source:
+  - `output_helpers.rs`:
+    - renamed `emit_rust_stmt_with_current_indent(...)` to `push_captured_stmt(...)` to reflect pure IR-capture semantics.
+  - updated all production callsites in:
+    - `lib.rs`
+    - `stmt_support_emitter.rs`
+  - extended recursive banlist guard in `lib_codegen_tests.rs` to reject reintroduction of `emit_rust_stmt_with_current_indent(` token.
+- Re-audit evidence after this loop (production source only):
+  - `prod.self.write(...) = 0`
+  - `prod.self.writeln(...) = 0`
+  - `prod.emit_rust_expr(...) = 0`
+  - `prod.old_stmt_api(...) = 0` for `emit_rust_stmt_with_current_indent(...)`
+  - no matches for `RawCode|SynItem|fallback|legacy|migration|bridge` in `crates/sifr_codegen/src` (excluding `lib_codegen_tests.rs`).
+- Validation evidence:
+  - `cargo test -q -p sifr_codegen` -> pass (`446` passed, `0` failed).
+  - `./scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`).
+  - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

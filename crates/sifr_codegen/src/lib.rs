@@ -1089,7 +1089,7 @@ impl RustEmitter {
                 }
             };
 
-            self.emit_rust_stmt_with_current_indent(&RustStmt::Let {
+            self.push_captured_stmt(&RustStmt::Let {
                 mutable: self.mutated_vars.contains(name),
                 name: name.clone(),
                 ty: if is_generic_class {
@@ -1112,7 +1112,7 @@ impl RustEmitter {
             } else {
                 return Ok(false);
             };
-            self.emit_rust_stmt_with_current_indent(&RustStmt::Assign {
+            self.push_captured_stmt(&RustStmt::Assign {
                 target: RustExpr::Ident(name.clone()),
                 value: lowered_value,
             });
@@ -1182,7 +1182,7 @@ impl RustEmitter {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;
                 let rewritten = self.rewrite_stdlib_constant_idents_in_expr(lowered_expr);
-                self.emit_rust_stmt_with_current_indent(&RustStmt::Expr(rewritten));
+                self.push_captured_stmt(&RustStmt::Expr(rewritten));
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
                 return Ok(true);
@@ -1193,7 +1193,7 @@ impl RustEmitter {
                 self.lowering_stats.expr_structured += 1;
                 self.lowering_stats.expr_candidate_structured += 1;
                 let rewritten = self.rewrite_stdlib_constant_idents_in_expr(lowered_expr);
-                self.emit_rust_stmt_with_current_indent(&RustStmt::Expr(rewritten));
+                self.push_captured_stmt(&RustStmt::Expr(rewritten));
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
                 return Ok(true);

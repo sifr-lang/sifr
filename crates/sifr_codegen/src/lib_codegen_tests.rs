@@ -1915,6 +1915,7 @@ fn test_production_codegen_source_has_no_non_ir_tokens() {
         "self.write(",
         "self.writeln(",
         "emit_rust_expr(",
+        "emit_rust_stmt_with_current_indent(",
         "write_registry_expr(",
     ];
 

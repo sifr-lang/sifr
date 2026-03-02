@@ -3724,7 +3724,7 @@ impl RustEmitter {
                         );
                     }
                 };
-                self.emit_rust_stmt_with_current_indent(&crate::RustStmt::Let {
+                self.push_captured_stmt(&crate::RustStmt::Let {
                     mutable: true,
                     name: name.clone(),
                     ty: Some(crate::sifr_type_to_rust_type(ty)),
@@ -3750,7 +3750,7 @@ impl RustEmitter {
                     name,
                     ty,
                     value,
-                } => self.emit_rust_stmt_with_current_indent(&crate::RustStmt::Let {
+                } => self.push_captured_stmt(&crate::RustStmt::Let {
                     mutable: *mutable,
                     name: name.clone(),
                     ty: ty.clone(),
@@ -3768,10 +3768,10 @@ impl RustEmitter {
                         value.clone()
                     },
                 }),
-                RustStmt::Expr(lowered_expr) => self.emit_rust_stmt_with_current_indent(
+                RustStmt::Expr(lowered_expr) => self.push_captured_stmt(
                     &crate::RustStmt::Expr(lowered_expr.clone()),
                 ),
-                _ => self.emit_rust_stmt_with_current_indent(lowered_stmt),
+                _ => self.push_captured_stmt(lowered_stmt),
             }
         }
     }
@@ -3796,7 +3796,7 @@ impl RustEmitter {
                 else {
                     return Ok(false);
                 };
-                self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                self.push_captured_stmt(&RustStmt::Return(Some(
                     crate::RustExpr::MacroCall {
                         name: "write".to_string(),
                         args: vec![
@@ -3854,7 +3854,7 @@ impl RustEmitter {
                 } else {
                     lowered_return_value
                 };
-                self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                self.push_captured_stmt(&RustStmt::Return(Some(
                     crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                         args: vec![try_payload],
@@ -3868,7 +3868,7 @@ impl RustEmitter {
             else {
                 return Ok(false);
             };
-            self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(lowered_return_value)));
+            self.push_captured_stmt(&RustStmt::Return(Some(lowered_return_value)));
             return Ok(true);
         }
 
@@ -3879,7 +3879,7 @@ impl RustEmitter {
                 .copied()
                 .unwrap_or(false);
             if wrap_option {
-                self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                self.push_captured_stmt(&RustStmt::Return(Some(
                     crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                         args: vec![crate::RustExpr::FnCall {
@@ -3899,7 +3899,7 @@ impl RustEmitter {
                     }
                 });
                 if direct_result_none {
-                    self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                    self.push_captured_stmt(&RustStmt::Return(Some(
                         crate::RustExpr::FnCall {
                             func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                             args: vec![crate::RustExpr::FnCall {
@@ -3909,7 +3909,7 @@ impl RustEmitter {
                         },
                     )));
                 } else {
-                    self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+                    self.push_captured_stmt(&RustStmt::Return(Some(
                         crate::RustExpr::FnCall {
                             func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                             args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
@@ -3918,14 +3918,14 @@ impl RustEmitter {
                 }
             }
         } else if self.emission_ctx.in_display_impl {
-            self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(
+            self.push_captured_stmt(&RustStmt::Return(Some(
                 crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                     args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
                 },
             )));
         } else {
-            self.emit_rust_stmt_with_current_indent(&RustStmt::Return(None));
+            self.push_captured_stmt(&RustStmt::Return(None));
         }
         Ok(true)
     }
@@ -3940,7 +3940,7 @@ impl RustEmitter {
         let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(false);
         };
-        self.emit_rust_stmt_with_current_indent(&RustStmt::Return(Some(crate::RustExpr::FnCall {
+        self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
             func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
             args: vec![lowered],
         })));
@@ -3992,13 +3992,13 @@ impl RustEmitter {
                         return Ok(false);
                     };
 
-                    self.emit_rust_stmt_with_current_indent(&RustStmt::Let {
+                    self.push_captured_stmt(&RustStmt::Let {
                         mutable: false,
                         name: name.clone(),
                         ty: None,
                         value: lowered_value,
                     });
-                    self.emit_rust_stmt_with_current_indent(&RustStmt::If {
+                    self.push_captured_stmt(&RustStmt::If {
                         cond: lowered_cond,
                         then_body: lowered_then_body,
                         else_body: None,
@@ -4096,7 +4096,7 @@ impl RustEmitter {
                 let Some(root) = nested_else.and_then(|stmts| stmts.into_iter().next()) else {
                     return Ok(false);
                 };
-                self.emit_rust_stmt_with_current_indent(&root);
+                self.push_captured_stmt(&root);
                 return Ok(true);
             }
         }
@@ -4162,7 +4162,7 @@ impl RustEmitter {
                     });
                 }
 
-                self.emit_rust_stmt_with_current_indent(&RustStmt::Match {
+                self.push_captured_stmt(&RustStmt::Match {
                     expr: RustExpr::Ident(var_name),
                     arms,
                 });
@@ -4179,7 +4179,7 @@ impl RustEmitter {
         else {
             return Ok(false);
         };
-        self.emit_rust_stmt_with_current_indent(&lowered_if_stmt);
+        self.push_captured_stmt(&lowered_if_stmt);
         Ok(true)
     }
 
@@ -4225,7 +4225,7 @@ impl RustEmitter {
         let Some(lowered_body) = lowered_body else {
             return Ok(false);
         };
-        self.emit_rust_stmt_with_current_indent(&RustStmt::While {
+        self.push_captured_stmt(&RustStmt::While {
             cond: lowered_cond,
             body: lowered_body,
         });
@@ -4277,7 +4277,7 @@ impl RustEmitter {
             let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)? else {
                 return Ok(false);
             };
-            self.emit_rust_stmt_with_current_indent(&RustStmt::Block(vec![
+            self.push_captured_stmt(&RustStmt::Block(vec![
                 RustStmt::Let {
                     mutable: true,
                     name: "_broke".to_string(),
@@ -4303,7 +4303,7 @@ impl RustEmitter {
             return Ok(true);
         }
 
-        self.emit_rust_stmt_with_current_indent(&RustStmt::For {
+        self.push_captured_stmt(&RustStmt::For {
             var,
             iter: lowered_iter,
             body: lowered_body,
@@ -4321,7 +4321,7 @@ impl RustEmitter {
         let Some(lowered_with) = self.try_lower_with_stmt_for_ir(items, body)? else {
             return Ok(false);
         };
-        self.emit_rust_stmt_with_current_indent(&lowered_with);
+        self.push_captured_stmt(&lowered_with);
         Ok(true)
     }
 
@@ -4335,7 +4335,7 @@ impl RustEmitter {
             Err(_) => return false,
         };
         for lowered_stmt in lowered {
-            self.emit_rust_stmt_with_current_indent(&lowered_stmt);
+            self.push_captured_stmt(&lowered_stmt);
         }
         true
     }
@@ -4708,7 +4708,7 @@ impl RustEmitter {
         } else {
             None
         };
-        self.emit_rust_stmt_with_current_indent(&RustStmt::Assert {
+        self.push_captured_stmt(&RustStmt::Assert {
             cond: lowered_test,
             msg: lowered_msg,
         });
