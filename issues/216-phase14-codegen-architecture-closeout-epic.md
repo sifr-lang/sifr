@@ -702,3 +702,12 @@ Latest validation loop (2026-03-02, Pass AN):
 - `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
 - `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
 - Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.
+
+Latest validation loop (2026-03-02, Pass AO):
+- Continued IR-first cleanup by removing force-render guard scaffolding from `expr_render_helpers.rs`.
+- `try_lower_registry_expr_result` now relies directly on structured leaf lowering + stdlib-ident rewrite (no `should_force_render_guard` branch to intentionally return `None`).
+- removed now-dead guard helper logic (`render_expr_contains_force_guard_name`, `render_expr_uses_borrowed_param`, and associated constant helper) to keep lowering path clean and typed.
+- Validation evidence:
+- `cargo test -q -p sifr_codegen` -> pass (`457` passed, `0` failed).
+- `./scripts/run_all_tests.sh` -> pass (`394/394` e2e pass suite).
+- Full recursive demo sweep (`demos/**/*.sifr`) -> stable: `91` scanned, `86` runnable pass; same `5` expected non-runnable/intentional files.

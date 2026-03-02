@@ -1018,3 +1018,12 @@ Additional validation rerun for this plan-doc update is executed locally and rec
 4. IR-first cleanup this loop:
 5. removed direct-render probe fallback from display lowering in `expr_ref_emitter.rs`; display option inference now stays type/HIR-driven
 6. eliminated remaining `render_expr_via_direct_emit(...)` usage from this display path so it stays on typed IR flow
+
+### Validation rerun (2026-03-02, Pass AO)
+
+1. `cargo test -q -p sifr_codegen` -> pass (`457` passed)
+2. `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes e2e pass suite `394/394`)
+3. Full recursive demos sweep `demos/**/*.sifr` -> stable (`91` scanned, `86` runnable pass, same `5` expected non-runnable/intentional files)
+4. IR-first cleanup this loop:
+5. removed `should_force_render_guard` branching from `expr_render_helpers.rs` so registry expr-result lowering no longer intentionally drops to render guard
+6. deleted now-dead render-guard helper graph (`render_expr_contains_force_guard_name` and borrowed-param guard helper) from `expr_render_helpers.rs`
