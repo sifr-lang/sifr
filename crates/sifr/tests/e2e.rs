@@ -2313,6 +2313,13 @@ fn test_failure_summary_is_grouped_and_order_stable() {
             status: Err("FAIL [b_build]: Rust compilation failed. Check build log: /tmp/log".to_string()),
         },
         FixtureExecution {
+            name: "c_plan".to_string(),
+            status: Err(
+                "FAIL [c_plan]: failed to generate grouped crate source: bad crate layout"
+                    .to_string(),
+            ),
+        },
+        FixtureExecution {
             name: "ok_case".to_string(),
             status: Ok(()),
         },
@@ -2325,8 +2332,30 @@ fn test_failure_summary_is_grouped_and_order_stable() {
     let second = format_failures("new", &reversed);
     assert_eq!(first, second);
     assert!(first.contains("[compile] 1 failure(s)"));
+    assert!(first.contains("[planning] 1 failure(s)"));
     assert!(first.contains("[build] 1 failure(s)"));
     assert!(first.contains("[run] 1 failure(s)"));
+}
+
+#[test]
+fn test_failure_group_stage_classification_contract() {
+    assert_eq!(
+        failure_group("FAIL [x]: sifr compilation failed:\n  err"),
+        "compile"
+    );
+    assert_eq!(
+        failure_group("FAIL [x]: failed to generate grouped crate source: err"),
+        "planning"
+    );
+    assert_eq!(
+        failure_group("FAIL [x]: Rust compilation failed. Check build log: /tmp/log"),
+        "build"
+    );
+    assert_eq!(
+        failure_group("FAIL [x]: binary exited with error:\nboom"),
+        "run"
+    );
+    assert_eq!(failure_group("FAIL [x]: unknown condition"), "other");
 }
 
 #[test]

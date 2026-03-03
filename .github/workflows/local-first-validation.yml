@@ -11,6 +11,7 @@ jobs:
   local-first-profiles:
     name: local-first-${{ matrix.profile }}
     runs-on: ubuntu-24.04
+    # PRs run only quick for fast feedback; full/stress run on push and manual workflows.
     if: github.event_name != 'pull_request' || matrix.profile == 'quick'
     strategy:
       fail-fast: true
