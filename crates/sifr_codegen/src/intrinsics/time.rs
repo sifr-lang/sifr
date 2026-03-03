@@ -294,7 +294,7 @@ pub(super) fn lower_localtime(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_time_strptime_compat(args: &[RustExpr]) -> Option<RustExpr> {
+pub(super) fn lower_time_strptime_parts(args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 2 {
         return None;
     }
@@ -471,7 +471,7 @@ pub(super) fn lower_time_strptime_compat(args: &[RustExpr]) -> Option<RustExpr> 
     })
 }
 
-pub(super) fn lower_time_gmtime_compat(args: &[RustExpr]) -> Option<RustExpr> {
+pub(super) fn lower_time_gmtime_parts(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
@@ -608,7 +608,7 @@ pub(super) fn lower_time_gmtime_compat(args: &[RustExpr]) -> Option<RustExpr> {
     })
 }
 
-pub(super) fn lower_time_localtime_compat(args: &[RustExpr]) -> Option<RustExpr> {
+pub(super) fn lower_time_localtime_parts(args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }

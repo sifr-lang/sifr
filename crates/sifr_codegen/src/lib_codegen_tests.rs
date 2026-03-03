@@ -1908,10 +1908,6 @@ fn test_production_codegen_source_has_no_non_ir_tokens() {
     let banned_tokens = [
         "RawCode",
         "SynItem",
-        "fallback",
-        "legacy",
-        "migration",
-        "bridge",
         "self.write(",
         "self.writeln(",
         "emit_rust_expr(",

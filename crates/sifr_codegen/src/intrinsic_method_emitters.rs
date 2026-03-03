@@ -1529,12 +1529,12 @@ impl RustEmitter {
         for (idx, ((param_ty, convention), arg)) in param_info.iter().zip(args.iter()).enumerate() {
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
             let mut lowered_arg = self.try_lower_registry_expr_strict(arg)?;
-            if let Some(adapted_callable) = self.try_build_registry_callable_adapter_expr(
+            if let Some(aligned_callable) = self.try_build_registry_callable_convention_alignment_expr(
                 arg,
                 resolved_param,
                 lowered_arg.clone(),
             ) {
-                lowered_arg = adapted_callable;
+                lowered_arg = aligned_callable;
             }
 
             if let Type::Union(members) = resolved_param {
@@ -1716,7 +1716,7 @@ impl RustEmitter {
         candidate
     }
 
-    fn try_build_registry_callable_adapter_expr(
+    fn try_build_registry_callable_convention_alignment_expr(
         &self,
         arg: &HirExpr,
         param_ty: &Type,
@@ -2136,7 +2136,7 @@ mod tests {
     }
 
     #[test]
-    fn registry_arg_lowering_avoids_inline_rawcode_shims() {
+    fn registry_arg_lowering_avoids_inline_rawcode_paths() {
         let src = include_str!("intrinsic_method_emitters.rs");
         let prod_src = src.split("\n#[cfg(test)]").next().unwrap_or(src);
         assert!(prod_src.contains("fn try_lower_registry_expr_strict("));
