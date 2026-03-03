@@ -55,3 +55,8 @@ status: done (2026-03-03, PR #795)
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/793 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/794 (merged)
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/795 (merged)
+
+## Reviewer Follow-up
+- External review pass 1 output: `reviews/phase15-review.md`
+- Remediation PR: https://github.com/yaseralnajjar/sifr/pull/797 (merged)
+- External review pass 2 output: `reviews/phase15-production-grade-review.md`

@@ -19,13 +19,18 @@ Gate mapping rule:
 - `PHASE-DEMO`: `cargo run -q -p sifr -- run <phase_demo_path>`
 - `FULL-SUITE`: `./scripts/run_all_tests.sh`
 
+## Immediate Demo Path Declarations
+- Phase 15: `demos/milestone_15_3_signoff_snapshot_demo.sifr`
+- Phase 16: `demos/phase16_exit_demo.sifr`
+- Phases 17-36: declare `phase_demo_path` in the owning phase execution checklist before phase kickoff.
+
 ## Phase 15 Contract
 - Entry criteria: Phase 14 is completed and phase-review findings are available.
 - Exit criteria: Canonical source of truth is approved and locked for execution.
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 15 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 15 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `cargo run -q -p sifr -- run demos/milestone_15_3_signoff_snapshot_demo.sifr`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 16 Contract
@@ -34,7 +39,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 16 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 16 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `cargo run -q -p sifr -- run demos/phase16_exit_demo.sifr`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 17 Contract

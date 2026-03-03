@@ -6,6 +6,9 @@ Make local parallel testing the authoritative quality gate and ensure CI mirrors
 ## Depends on
 - Phase 15
 
+## Phase Demo Path
+- `demos/phase16_exit_demo.sifr`
+
 ## Milestones
 
 ### milestone_16_1: Parallel Test Profiles
