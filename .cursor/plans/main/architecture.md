@@ -1,5 +1,11 @@
 # Sifr Compiler -- Architecture
 
+## Execution Plan Source of Truth
+
+- Authoritative phase sequencing for current execution is tracked in [`roadmap.md`](./roadmap.md), starting at **Phase 14** through **Phase 29**.
+- Historical references in this architecture document may mention legacy phase numbering from earlier roadmap versions.
+- When phase-number conflicts exist, follow [`roadmap.md`](./roadmap.md) and the matching files under [`phases/`](./phases/).
+
 ## Vision
 
 Sifr is a compiled programming language that uses Python syntax with enforced static typing. It compiles Python-like source code to Rust source code, which is then compiled by `rustc` into native binaries. Assignment uses move semantics (like Rust), while function parameters are borrow-by-default with opt-in `mut` (mutable borrow) and `own` (ownership transfer). Types are strict with an opt-in `Any` escape hatch (like TypeScript's strict mode).
