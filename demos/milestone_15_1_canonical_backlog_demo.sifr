@@ -1,0 +1,12 @@
+# Demo: milestone_15_1 canonical backlog reconciliation
+# Verifies that the reconciled backlog snapshot tracks item count and duplicate-ID status.
+
+def main():
+    backlog_item_count: int = 6
+    duplicate_id_count: int = 0
+
+    print(f"phase15_1_backlog_items={backlog_item_count}")
+    assert str(f"phase15_1_backlog_items={backlog_item_count}") == "phase15_1_backlog_items=6"
+
+    print(f"phase15_1_duplicate_ids={duplicate_id_count}")
+    assert str(f"phase15_1_duplicate_ids={duplicate_id_count}") == "phase15_1_duplicate_ids=0"

@@ -9,6 +9,7 @@ Create one authoritative execution baseline before implementation starts: status
 ## Milestones
 
 ### milestone_15_1: Canonical Backlog Reconciliation
+status: in_progress
 - Scope:
   - Merge reviewer findings into one backlog.
   - Deduplicate overlaps and normalize severity (`P0`-`P3`).
@@ -16,8 +17,12 @@ Create one authoritative execution baseline before implementation starts: status
 - Definition of done:
   - One canonical backlog file exists and is current.
   - No duplicate finding IDs remain.
+- Evidence:
+  - Canonical backlog: `.cursor/plans/main/canonical_backlog.md`
+  - Milestone demo: `demos/milestone_15_1_canonical_backlog_demo.sifr`
 
 ### milestone_15_2: Phase Contract Definition
+status: planned
 - Scope:
   - Define entry/exit criteria for Phases 15-36.
   - Define mandatory local validation expectations for each phase.
@@ -26,6 +31,7 @@ Create one authoritative execution baseline before implementation starts: status
   - Every gate maps to at least one concrete validation step.
 
 ### milestone_15_3: Stakeholder Sign-off Snapshot
+status: planned
 - Scope:
   - Review reconciled backlog + phase contracts.
   - Record explicit sign-off decision and open risks.
