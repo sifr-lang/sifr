@@ -1,19 +1,19 @@
 # Phase 16 Execution Checklist (Local-First Test Platform Foundation)
 
-Status: in progress (started 2026-03-03)
+Status: completed (2026-03-03)
 Owner: phase_16 execution loop
 Reference phase doc: `.cursor/plans/main/phases/16_local_first_test_platform_foundation.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 
 ## Global Gates (apply to every part)
-- [ ] Scope remains constrained to the current part definition-of-done
-- [ ] Root cause addressed (no superficial workaround/fallback)
-- [ ] Milestone quality-contract checks include at least one positive-path and one negative-path validation
-- [ ] Full local suite passes: `./scripts/run_all_tests.sh`
-- [ ] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Scope remains constrained to the current part definition-of-done
+- [x] Root cause addressed (no superficial workaround/fallback)
+- [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
+- [x] Full local suite passes: `./scripts/run_all_tests.sh`
+- [x] Milestone demo runs successfully before opening each part PR
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_16_1 Parallel Test Profiles
 status: done (2026-03-03, PR #806)
@@ -57,7 +57,7 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m16_2_deterministic_reporting_demo.sifr` -> `m16_2 deterministic reporting demo: ok`.
 
 ## Part 3: milestone_16_3 CI-Parity and Smoke Hardening
-status: in review (PR #808)
+status: done (2026-03-03, PR #808)
 
 - [x] Wire CI to run exact local scripts and flags
 - [x] Add always-on smoke fuzz/property jobs
@@ -66,7 +66,7 @@ status: in review (PR #808)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc, checklist, and roadmap
 
 Validation evidence:
@@ -78,7 +78,7 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/806 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/807 (merged)
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/808 (open)
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/808 (merged)
 
 ## Reviewer Follow-up
 - External review pass 1 output: pending
