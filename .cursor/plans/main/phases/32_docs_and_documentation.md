@@ -37,11 +37,11 @@ Establish a production-grade documentation layer (developer, user, and operation
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 32 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 32 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_32_1` (Documentation Information Architecture): validation goals cover: Define canonical docs structure for language, compiler internals, stdlib, CLI, packaging, and operations; Remove duplicated/contradictory guidance and centralize source-of-truth ownership. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_32_2` (Reference and Contract Documentation): validation goals cover: Publish versioned references for CLI behavior, diagnostics, package workflows, and phase contracts; Document expected compatibility/stability guarantees for users and contributors. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_32_3` (Documentation Quality Gates): validation goals cover: Add local docs validation for link integrity, required sections, and drift checks against phase files; Ensure docs checks are runnable in local `quick/full/stress` workflows. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Core documentation is canonical, navigable, and quality-gated for ongoing phase execution and release usage.
 
 ## Exit Gate
 - Core documentation is canonical, navigable, and quality-gated for ongoing phase execution and release usage.

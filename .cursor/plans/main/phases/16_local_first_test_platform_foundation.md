@@ -38,11 +38,11 @@ Make local parallel testing the authoritative quality gate and ensure CI mirrors
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 16 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 16 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_16_1` (Parallel Test Profiles): validation goals cover: Define local profiles: `quick`, `full`, `stress`; Make profile execution parallel-safe and reproducible. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_16_2` (Deterministic Reporting): validation goals cover: Stabilize output ordering, summary format, and failure grouping; Ensure reruns produce equivalent reports. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_16_3` (CI-Parity and Smoke Hardening): validation goals cover: Wire CI to run exact local scripts and flags; Add always-on smoke fuzz/property jobs. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Local parallel validation is trusted as primary, with CI parity confirmed.
 
 ## Exit Gate
 - Local parallel validation is trusted as primary, with CI parity confirmed.

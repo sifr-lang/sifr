@@ -34,11 +34,11 @@ Close known type-soundness holes before stable release promotion.
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 22 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 22 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_22_1` (TypeVar Constraint Enforcement): validation goals cover: Replace permissive TypeVar assignability with bound/constraint validation. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_22_2` (Inheritance and Variance Corrections): validation goals cover: Implement multi-level inheritance assignability; Remove special-case inheritance hacks; Enforce invariance on mutable collections. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_22_3` (Optional Arithmetic Soundness): validation goals cover: Eliminate unsound optional arithmetic acceptance in type checking. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Critical type-system soundness issues are resolved and regression-covered.
 
 ## Exit Gate
 - Critical type-system soundness issues are resolved and regression-covered.

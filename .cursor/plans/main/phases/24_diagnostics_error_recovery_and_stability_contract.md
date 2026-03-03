@@ -35,11 +35,11 @@ Deliver production-quality diagnostics with recovery and explicit stability guar
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 24 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 24 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_24_1` (Span and Diagnostic Schema Quality): validation goals cover: Thread precise spans through frontend/codegen errors; Standardize stable diagnostic codes/categories. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_24_2` (Bounded Multi-Error Recovery): validation goals cover: Add parser/type-check recovery to report multiple actionable errors; Control error cascades with bounded recovery policy. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_24_3` (Stability Contract Finalization): validation goals cover: Define documented exit codes, CLI flag stability/versioning, and diagnostic-text policy; Convert remaining user-triggerable panics to diagnostics. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Compiler diagnostics are stable, span-accurate, recovery-capable, and panic-free on user input.
 
 ## Exit Gate
 - Compiler diagnostics are stable, span-accurate, recovery-capable, and panic-free on user input.

@@ -33,11 +33,11 @@ Ensure generated runtime code does not encode avoidable panic behavior for norma
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 23 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 23 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_23_1` (Remove Data-Dependent `unwrap/expect`): validation goals cover: Replace generated data-dependent unwrap/expect with explicit safe propagation. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_23_2` (Indexing and Semantics Parity Fixes): validation goals cover: Correct negative indexing and related parity semantics. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_23_3` (Defaults and Panic-to-Diagnostic Conversion): validation goals cover: Preserve non-literal default argument semantics; Replace remaining user-triggerable panic/assert codegen paths with diagnostics. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Generated code semantics are safe-by-default for supported language behavior.
 
 ## Exit Gate
 - Generated code semantics are safe-by-default for supported language behavior.
