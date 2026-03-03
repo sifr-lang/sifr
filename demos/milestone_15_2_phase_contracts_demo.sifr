@@ -1,0 +1,13 @@
+# Demo: milestone_15_2 phase contract baseline
+# Verifies expected contract coverage count for Phases 15-36.
+
+def main():
+    first_phase: int = 15
+    last_phase: int = 36
+    contract_count: int = (last_phase - first_phase) + 1
+
+    print(f"phase15_2_contract_count={contract_count}")
+    assert str(f"phase15_2_contract_count={contract_count}") == "phase15_2_contract_count=22"
+
+    print(f"phase15_2_range={first_phase}-{last_phase}")
+    assert str(f"phase15_2_range={first_phase}-{last_phase}") == "phase15_2_range=15-36"

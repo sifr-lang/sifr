@@ -15,7 +15,7 @@ Loop per part: Work -> Validate -> Demo -> PR -> Review -> Merge -> Mark Done
 - [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_15_1 Canonical Backlog Reconciliation
-status: in_progress
+status: done (2026-03-03, PR #793)
 
 - [x] Build one canonical backlog file with deduplicated IDs
 - [x] Normalize severity to `P0`-`P3`
@@ -23,19 +23,19 @@ status: in_progress
 - [x] Add demo file `demos/milestone_15_1_canonical_backlog_demo.sifr`
 - [x] Run milestone demo
 - [x] Run full local suite (waived by user for docs-only phase scope)
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge (https://github.com/yaseralnajjar/sifr/pull/793)
+- [x] Mark part complete in phase doc and this checklist
 
 ## Part 2: milestone_15_2 Phase Contract Definition
-status: pending
+status: in_progress
 
-- [ ] Define entry criteria for every phase (`15`-`36`)
-- [ ] Define exit criteria for every phase (`15`-`36`)
-- [ ] Define mandatory local validation steps for every phase (`15`-`36`)
-- [ ] Ensure every phase gate maps to at least one concrete validation command
-- [ ] Add demo file `demos/milestone_15_2_phase_contracts_demo.sifr`
-- [ ] Run milestone demo
-- [ ] Run full local suite
+- [x] Define entry criteria for every phase (`15`-`36`)
+- [x] Define exit criteria for every phase (`15`-`36`)
+- [x] Define mandatory local validation steps for every phase (`15`-`36`)
+- [x] Ensure every phase gate maps to at least one concrete validation command
+- [x] Add demo file `demos/milestone_15_2_phase_contracts_demo.sifr`
+- [x] Run milestone demo
+- [x] Run full local suite (waived by user for docs-only phase scope)
 - [ ] Open PR, review, and merge
 - [ ] Mark part complete in phase doc and this checklist
 
@@ -52,6 +52,6 @@ status: pending
 - [ ] Mark phase complete in all planning docs
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/793 (merged)
 - Part 2: pending
 - Part 3: pending
