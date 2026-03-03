@@ -6,7 +6,7 @@ This phase changes Sifr's function parameter passing from move-by-default to bor
 
 ## milestone_borrow_default: Borrow-by-Default Parameter Passing
 
-status: pending
+status: superseded by Phase 10 (historical reference only)
 
 **Goal:** Change Sifr's function parameter passing from move-by-default to borrow-by-default. Function arguments are immutably borrowed by default (`&T`), with opt-in `mut` (mutable borrow, `&mut T`) and `own` (ownership transfer, `T`) keywords. Copy types (`int`, `float`, `bool`) always pass by value. This unifies the existing two-tier system where built-in functions borrow (via a hardcoded `borrows_args` list) and user-defined functions move.
 
@@ -120,7 +120,7 @@ When a parameter is borrowed (`&T`), code inside the function body needs adjustm
 
 ## milestone_borrow_hardening: Borrow Exclusivity and Diagnostics
 
-status: pending
+status: superseded by Phase 10 (historical reference only)
 
 **Goal:** Harden the borrow-by-default model with exclusivity enforcement, clear error messages, comprehensive tests, and stdlib updates. This milestone ensures the ownership model is production-ready and documented before async/concurrency features are built on top.
 
