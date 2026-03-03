@@ -34,3 +34,6 @@ Status: active baseline for Phases 16-36
 | `DG-15-002` | `BL-15-003` | Test-only carve-out risk appeared in both review files; retained once with shared source attribution. |
 
 No duplicate canonical IDs remain in this backlog.
+
+## Validation Command
+- `python scripts/validate_phase15_backlog.py`
