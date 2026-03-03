@@ -1,14 +1,14 @@
-# Phase 15: Local-First Test Platform Foundation
+# Phase 16: Local-First Test Platform Foundation
 
 ## Objective
 Make local parallel testing the authoritative quality gate and ensure CI mirrors it exactly.
 
 ## Depends on
-- Phase 14
+- Phase 15
 
 ## Milestones
 
-### milestone_15_1: Parallel Test Profiles
+### milestone_16_1: Parallel Test Profiles
 - Scope:
   - Define local profiles: `quick`, `full`, `stress`.
   - Make profile execution parallel-safe and reproducible.
@@ -16,7 +16,7 @@ Make local parallel testing the authoritative quality gate and ensure CI mirrors
   - Profiles run reliably on developer machines.
   - Profile purpose and runtime envelope are documented.
 
-### milestone_15_2: Deterministic Reporting
+### milestone_16_2: Deterministic Reporting
 - Scope:
   - Stabilize output ordering, summary format, and failure grouping.
   - Ensure reruns produce equivalent reports.
@@ -24,7 +24,7 @@ Make local parallel testing the authoritative quality gate and ensure CI mirrors
   - Identical inputs produce deterministic pass/fail summaries.
   - Failure reports are actionable and not order-noisy.
 
-### milestone_15_3: CI-Parity and Smoke Hardening
+### milestone_16_3: CI-Parity and Smoke Hardening
 - Scope:
   - Wire CI to run exact local scripts and flags.
   - Add always-on smoke fuzz/property jobs.

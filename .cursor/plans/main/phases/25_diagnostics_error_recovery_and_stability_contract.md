@@ -1,28 +1,28 @@
-# Phase 24: Diagnostics, Error Recovery, Stability Contract, Panic-to-Diagnostic
+# Phase 25: Diagnostics, Error Recovery, Stability Contract, Panic-to-Diagnostic
 
 ## Objective
 Deliver production-quality diagnostics with recovery and explicit stability guarantees.
 
 ## Depends on
-- Phase 23
+- Phase 24
 
 ## Milestones
 
-### milestone_24_1: Span and Diagnostic Schema Quality
+### milestone_25_1: Span and Diagnostic Schema Quality
 - Scope:
   - Thread precise spans through frontend/codegen errors.
   - Standardize stable diagnostic codes/categories.
 - Definition of done:
   - Diagnostics include accurate source locations and stable codes.
 
-### milestone_24_2: Bounded Multi-Error Recovery
+### milestone_25_2: Bounded Multi-Error Recovery
 - Scope:
   - Add parser/type-check recovery to report multiple actionable errors.
   - Control error cascades with bounded recovery policy.
 - Definition of done:
   - Compiler reports multiple useful errors without crash storms.
 
-### milestone_24_3: Stability Contract Finalization
+### milestone_25_3: Stability Contract Finalization
 - Scope:
   - Define documented exit codes, CLI flag stability/versioning, and diagnostic-text policy.
   - Convert remaining user-triggerable panics to diagnostics.

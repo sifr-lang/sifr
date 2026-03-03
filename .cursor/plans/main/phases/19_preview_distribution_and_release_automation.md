@@ -1,28 +1,28 @@
-# Phase 18: Preview Distribution and Release Automation (`alpha`/`beta`)
+# Phase 19: Preview Distribution and Release Automation (`alpha`/`beta`)
 
 ## Objective
 Ship preview channels early for adoption while keeping stable GA promotion gated for later phases.
 
 ## Depends on
-- Phase 17
+- Phase 18
 
 ## Milestones
 
-### milestone_18_1: Installer and Channel Resolution
+### milestone_19_1: Installer and Channel Resolution
 - Scope:
   - Implement install entrypoint (`curl -fsSL https://sifr.sh/install | bash`).
   - Support `SIFR_CHANNEL`/`--channel` and explicit `--version` pinning.
 - Definition of done:
   - Installer resolves `alpha`/`beta`/`stable` channel metadata correctly.
 
-### milestone_18_2: Artifact and Manifest Pipeline
+### milestone_19_2: Artifact and Manifest Pipeline
 - Scope:
   - Publish multi-platform artifacts with checksums/signatures.
   - Maintain channel manifest pointers.
 - Definition of done:
   - Installer validates checksums and installs matching artifacts.
 
-### milestone_18_3: Agentic Preview Release Command
+### milestone_19_3: Agentic Preview Release Command
 - Scope:
   - Add `/create-new-version` workflow for preview release automation.
   - Support dry-run and real-run paths.

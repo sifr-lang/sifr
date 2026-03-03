@@ -1,4 +1,4 @@
-# Phase 14: Baseline Reconciliation
+# Phase 15: Baseline Reconciliation
 
 ## Objective
 Create one authoritative execution baseline before implementation starts: status truth, deduplicated findings, and signed acceptance criteria for all next phases.
@@ -8,7 +8,7 @@ Create one authoritative execution baseline before implementation starts: status
 
 ## Milestones
 
-### milestone_14_1: Canonical Backlog Reconciliation
+### milestone_15_1: Canonical Backlog Reconciliation
 - Scope:
   - Merge reviewer findings into one backlog.
   - Deduplicate overlaps and normalize severity (`P0`-`P3`).
@@ -17,7 +17,7 @@ Create one authoritative execution baseline before implementation starts: status
   - One canonical backlog file exists and is current.
   - No duplicate finding IDs remain.
 
-### milestone_14_2: Phase Contract Definition
+### milestone_15_2: Phase Contract Definition
 - Scope:
   - Define entry/exit criteria for Phases 15-29.
   - Define mandatory local validation expectations for each phase.
@@ -25,7 +25,7 @@ Create one authoritative execution baseline before implementation starts: status
   - Every phase has explicit completion gates.
   - Every gate maps to at least one concrete validation step.
 
-### milestone_14_3: Stakeholder Sign-off Snapshot
+### milestone_15_3: Stakeholder Sign-off Snapshot
 - Scope:
   - Review reconciled backlog + phase contracts.
   - Record explicit sign-off decision and open risks.
