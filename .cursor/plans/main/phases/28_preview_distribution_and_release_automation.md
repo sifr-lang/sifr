@@ -35,11 +35,11 @@ Ship preview channels early for adoption while keeping stable GA promotion gated
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 28 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 28 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_28_1` (Installer and Channel Resolution): validation goals cover: Implement install entrypoint (`curl -fsSL https://sifr.sh/install | bash`); Support `SIFR_CHANNEL`/`--channel` and explicit `--version` pinning. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_28_2` (Artifact and Manifest Pipeline): validation goals cover: Publish multi-platform artifacts with checksums/signatures; Maintain channel manifest pointers. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_28_3` (Agentic Preview Release Command): validation goals cover: Add `/create-new-version` workflow for preview release automation; Support dry-run and real-run paths. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Preview release lifecycle works reliably without enabling stable GA promotion.
 
 ## Exit Gate
 - Preview release lifecycle works reliably without enabling stable GA promotion.

@@ -48,11 +48,13 @@ Deliver the web framework with typed extractors, then land platform expansion tr
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 35 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 35 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_35_1` (Web Framework Core): validation goals cover: Routing, middleware, lifecycle/shutdown, and base request/response pipeline. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_35_2` (Typed Extractors and Request Validation): validation goals cover: `Json`/`Path`/`Query`/`Form` extractor behavior; Validation and error mapping via Phase 33 model contract. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_35_3` (Production Web Baseline): validation goals cover: Logging/tracing, config, and operational hooks for production readiness. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_35_4` (Data/ML Track (Scoped)): validation goals cover: Initial data processing and ML inference workflows on top of web/model foundations. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_35_5` (Interoperability Track (Scoped)): validation goals cover: Initial FFI/interoperability boundary model and safety constraints. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Web, data/ML, and interoperability MVP tracks are delivered without violating reliability/stability contracts.
 
 ## Exit Gate
 - Web, data/ML, and interoperability MVP tracks are delivered without violating reliability/stability contracts.

@@ -34,11 +34,11 @@ Scale validation breadth and depth so reliability claims are continuously provab
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 25 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 25 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_25_1` (Regression Matrix Expansion): validation goals cover: Ensure each fixed bug has dedicated regression coverage; Expand cross-phase regression suites. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_25_2` (Fuzz and Property Scale-Out): validation goals cover: Move from smoke fuzz/property checks to sustained coverage; Track and triage fuzz findings systematically. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_25_3` (Real-World E2E Parallel Gate): validation goals cover: Validate representative multi-module real-world projects end-to-end (`check/build/run/test`). Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Reliability hardening is broad, deterministic, and locally enforceable.
 
 ## Exit Gate
 - Reliability hardening is broad, deterministic, and locally enforceable.

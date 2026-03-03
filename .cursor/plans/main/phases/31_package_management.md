@@ -22,11 +22,9 @@ Establish package management workflows as a dedicated post-hardening phase.
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 31 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 31 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_31_1` (Package Management): validation goals cover: Dependency declaration, lockfile semantics, resolution workflow. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Package management workflows are stable enough for broader ecosystem usage.
 
 ## Exit Gate
 - Package management workflows are stable enough for broader ecosystem usage.

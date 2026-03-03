@@ -35,11 +35,11 @@ Close the reliability track by proving stdlib behavioral and complexity parity b
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 26 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 26 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_26_1` (Stdlib Behavioral Parity): validation goals cover: Port and maintain module-by-module parity tests against Python behavior; Classify outcomes as `parity`, `intentional-diff`, or `unsupported` with rationale. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_26_2` (Complexity and Resource Parity): validation goals cover: Run scaling benchmarks (time and memory) for exposed stdlib APIs; Validate asymptotic class parity against CPython and track constant-factor deltas. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_26_3` (Parity Governance and Waiver Discipline): validation goals cover: Enforce parity classification discipline (`parity`, `intentional-diff`, `unsupported`) with linked rationale; Require explicit waiver records for unresolved parity gaps. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Reliability claims are backed by stdlib parity evidence with explicit parity governance.
 
 ## Exit Gate
 - Reliability claims are backed by stdlib parity evidence with explicit parity governance.

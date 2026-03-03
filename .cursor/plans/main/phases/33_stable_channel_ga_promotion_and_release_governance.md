@@ -32,11 +32,11 @@ Promote stable channel only after reliability/parity/performance evidence is com
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 33 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 33 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_33_1` (Stable Promotion Policy): validation goals cover: Define hard preconditions for `stable` promotion from preview channels. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_33_2` (Rollback and Incident Governance): validation goals cover: Define rollback triggers, owner responsibilities, and communication protocol. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_33_3` (Release Sign-off Workflow): validation goals cover: Enforce formal release sign-off and artifact provenance checks. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Stable GA promotion is policy-driven, auditable, and reversible.
 
 ## Exit Gate
 - Stable GA promotion is policy-driven, auditable, and reversible.

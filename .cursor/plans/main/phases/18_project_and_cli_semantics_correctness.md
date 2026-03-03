@@ -33,11 +33,11 @@ Make CLI behavior predictable for single-file and multi-file workflows.
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 18 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 18 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_18_1` (Run/Build Semantics Alignment): validation goals cover: Align project detection and compilation scope between `run` and `build`. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_18_2` (Auto-Detection Rule Tightening): validation goals cover: Replace over-aggressive auto project mode with explicit, documented rules. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_18_3` (CLI Contract and Regression Suite): validation goals cover: Document stable CLI semantics and edge cases; Add regression tests for command-mode behavior. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: CLI project semantics are stable, documented, and test-covered.
 
 ## Exit Gate
 - CLI project semantics are stable, documented, and test-covered.

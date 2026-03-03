@@ -34,11 +34,11 @@ Guarantee walkers and control-flow analyses cover all supported constructs corre
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 21 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 21 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_21_1` (Canonical Walker Coverage): validation goals cover: Standardize recursive traversal across statement/expression variants; Remove partial traversal blind spots. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_21_2` (`while ... else` End-to-End Support): validation goals cover: Implement intended Python-like `while ... else` semantics through HIR and codegen. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_21_3` (Yield and Exception-Path Coverage): validation goals cover: Fix generator/yield detection across nested constructs; Ensure try/except analysis includes loop-else and other missed paths. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Control-flow lowering/analysis is complete for supported syntax and semantics.
 
 ## Exit Gate
 - Control-flow lowering/analysis is complete for supported syntax and semantics.

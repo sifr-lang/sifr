@@ -46,11 +46,12 @@ Introduce a dedicated typed model layer with validation semantics, stable error 
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 34 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 34 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_34_1` (Typed Model Core): validation goals cover: Class-to-model mapping with field metadata and defaults; Optional/union/list/dict model handling; Baseline serialization/deserialization (`dumps`/`loads`). Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_34_2` (Validation Engine): validation goals cover: Strict vs coercion modes; Nested model validation and collection constraints; Field/model validator hooks with deterministic order. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_34_3` (Error Model and Diagnostics Contract): validation goals cover: Structured validation errors (path, code, message, context); Stable parse/validation error-code contract. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_34_4` (Parity and Compatibility Matrix): validation goals cover: Feature matrix per capability: `parity`, `intentional-diff`, `unsupported`; Port representative pydantic behavior tests. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Typed model + validation layer is stable, test-covered, and consumable by web extractors without redesign.
 
 ## Exit Gate
 - Typed model + validation layer is stable, test-covered, and consumable by web extractors without redesign.

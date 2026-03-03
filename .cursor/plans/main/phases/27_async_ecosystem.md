@@ -142,8 +142,10 @@ status: pending
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 27 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 27 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_async_core` (Async Runtime Core): validation goals cover this milestone goal: Add the minimum viable async language support: `async def`/`await` syntax, Tokio runtime auto-bundling, and basic task spawning. This is the foundational compiler feature that all other async milestones build on. Include negative-path goals that catch regressions against this behavior.
+  - `milestone_typed_serde_core` (Typed Serialization (Core)): validation goals cover this milestone goal: Web-independent typed serialization. This does NOT include web extractors — those are delivered in a later web phase. Typed serde is kept in the async phase to make typed payload handling available early. Include negative-path goals that catch regressions against this behavior.
+  - `milestone_async_sync` (Async Synchronization Primitives): validation goals cover this milestone goal: Add cross-task synchronization primitives and Send/Sync checking at spawn boundaries. These are needed for production async code but are not required for basic async functionality. Include negative-path goals that catch regressions against this behavior.
+  - `milestone_async_advanced` (Advanced Async Features): validation goals cover this milestone goal: Add advanced async features that build on the core runtime and sync primitives. These are powerful but not needed for basic async applications. Include negative-path goals that catch regressions against this behavior.
+  - Exit-gate evidence explicitly demonstrates: Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.
+

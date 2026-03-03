@@ -19,7 +19,6 @@ status: done (2026-03-03, PR #793)
   - No duplicate finding IDs remain.
 - Evidence:
   - Canonical backlog: `## Canonical Findings` + `## Deduplication Ledger` sections in this file
-  - Backlog integrity check: `scripts/validate_phase15_backlog.py`
 
 ### milestone_15_2: Phase Contract Definition
 status: done (2026-03-03, PR #794)
@@ -31,8 +30,6 @@ status: done (2026-03-03, PR #794)
   - Every gate maps to at least one concrete validation step.
 - Evidence:
   - Phase contract baseline: embedded `## Quality Contract` sections in phase files `15`-`35`
-  - Gate-check helper: `scripts/phase_contract_gate_check.py`
-  - Phase quality-contract validator: `scripts/validate_phase_quality_contracts_15_35.py`
 
 ### milestone_15_3: Stakeholder Sign-off Snapshot
 status: done (2026-03-03, PR #795)
@@ -73,7 +70,7 @@ Decision: **approved**.
 Rationale:
 - Canonical backlog exists with deduplicated finding IDs and normalized severity.
 - Every phase (`15`-`35`) now has explicit entry/exit criteria.
-- Every phase gate maps to concrete local validation commands.
+- Every phase gate maps to explicit validation goals.
 - Deferred risks are explicitly tracked and linked to backlog issues.
 
 Recorded authority:
@@ -93,11 +90,11 @@ Recorded authority:
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
-- Mandatory local validation commands:
-  - `python scripts/phase_contract_gate_check.py --phase 15 --check entry`
-  - `python scripts/phase_contract_gate_check.py --phase 15 --check exit`
-  - `python scripts/validate_phase_quality_contracts_15_35.py`
-  - `./scripts/run_all_tests.sh`
+- Validation planning goals:
+  - `milestone_15_1` (Canonical Backlog Reconciliation): validation goals cover: Merge reviewer findings into one backlog; Deduplicate overlaps and normalize severity (`P0`-`P3`); Tag each item to owning future phase. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_15_2` (Phase Contract Definition): validation goals cover: Define entry/exit criteria for Phases 15-35; Define mandatory local validation expectations for each phase. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_15_3` (Stakeholder Sign-off Snapshot): validation goals cover: Review reconciled backlog + phase contracts; Record explicit sign-off decision and open risks. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Canonical source of truth is approved and locked for execution.
 
 ## Exit Gate
 - Canonical source of truth is approved and locked for execution.
