@@ -34,6 +34,7 @@ Scale validation breadth and depth so reliability claims are continuously provab
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
+  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_25_1` (Regression Matrix Expansion): validation goals cover: Ensure each fixed bug has dedicated regression coverage; Expand cross-phase regression suites. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_25_2` (Fuzz and Property Scale-Out): validation goals cover: Move from smoke fuzz/property checks to sustained coverage; Track and triage fuzz findings systematically. Include negative-path goals that catch regressions against these guarantees.

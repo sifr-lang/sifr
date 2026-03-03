@@ -46,6 +46,7 @@ Introduce a dedicated typed model layer with validation semantics, stable error 
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
+  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_34_1` (Typed Model Core): validation goals cover: Class-to-model mapping with field metadata and defaults; Optional/union/list/dict model handling; Baseline serialization/deserialization (`dumps`/`loads`). Include negative-path goals that catch regressions against these guarantees.
   - `milestone_34_2` (Validation Engine): validation goals cover: Strict vs coercion modes; Nested model validation and collection constraints; Field/model validator hooks with deterministic order. Include negative-path goals that catch regressions against these guarantees.

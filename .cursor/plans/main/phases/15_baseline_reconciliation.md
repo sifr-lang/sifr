@@ -90,6 +90,7 @@ Recorded authority:
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
+  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_15_1` (Canonical Backlog Reconciliation): validation goals cover: Merge reviewer findings into one backlog; Deduplicate overlaps and normalize severity (`P0`-`P3`); Tag each item to owning future phase. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_15_2` (Phase Contract Definition): validation goals cover: Define entry/exit criteria for Phases 15-35; Define mandatory local validation expectations for each phase. Include negative-path goals that catch regressions against these guarantees.
