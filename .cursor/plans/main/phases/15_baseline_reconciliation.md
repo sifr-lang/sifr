@@ -9,7 +9,7 @@ Create one authoritative execution baseline before implementation starts: status
 ## Milestones
 
 ### milestone_15_1: Canonical Backlog Reconciliation
-status: in_progress
+status: done (2026-03-03, PR #793)
 - Scope:
   - Merge reviewer findings into one backlog.
   - Deduplicate overlaps and normalize severity (`P0`-`P3`).
@@ -22,13 +22,17 @@ status: in_progress
   - Milestone demo: `demos/milestone_15_1_canonical_backlog_demo.sifr`
 
 ### milestone_15_2: Phase Contract Definition
-status: planned
+status: in_progress
 - Scope:
   - Define entry/exit criteria for Phases 15-36.
   - Define mandatory local validation expectations for each phase.
 - Definition of done:
   - Every phase has explicit completion gates.
   - Every gate maps to at least one concrete validation step.
+- Evidence:
+  - Phase contract baseline: `.cursor/plans/main/phase_contracts_15_36.md`
+  - Gate-check helper: `scripts/phase_contract_gate_check.py`
+  - Milestone demo: `demos/milestone_15_2_phase_contracts_demo.sifr`
 
 ### milestone_15_3: Stakeholder Sign-off Snapshot
 status: planned
