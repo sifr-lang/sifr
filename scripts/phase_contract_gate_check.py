@@ -31,6 +31,14 @@ def parse_phase_statuses(roadmap_path: Path) -> dict[int, str]:
     return statuses
 
 
+def require_phase_file_exists(phase: int) -> None:
+    matches = list(Path(".cursor/plans/main/phases").glob(f"{phase:02d}_*.md"))
+    if not matches:
+        raise SystemExit(
+            f"gate-check failed: no phase file found for phase {phase} in .cursor/plans/main/phases"
+        )
+
+
 def require_completed(statuses: dict[int, str], phase: int) -> None:
     status = statuses.get(phase)
     if status != "completed":
@@ -55,6 +63,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    require_phase_file_exists(args.phase)
     statuses = parse_phase_statuses(Path(args.roadmap))
     if args.check == "entry":
         prior_phase = 14 if args.phase == 15 else args.phase - 1
