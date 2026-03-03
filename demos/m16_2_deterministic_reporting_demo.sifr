@@ -1,0 +1,16 @@
+# Phase 16 / milestone_16_2 demo:
+# deterministic ordering and summary-ready grouping behavior.
+
+def join_labels(labels: list[str]) -> str:
+    out: str = ""
+    for label in labels:
+        if out == "":
+            out = label
+        else:
+            out = out + "," + label
+    return out
+
+def main():
+    groups: list[str] = ["build", "compile", "run"]
+    assert join_labels(groups) == "build,compile,run"
+    print("m16_2 deterministic reporting demo: ok")

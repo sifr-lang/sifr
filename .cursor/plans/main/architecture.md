@@ -946,6 +946,7 @@ cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile quick   # Fast local-first profile
 ./scripts/run_all_tests.sh --profile full    # Authoritative local-first gate
 ./scripts/run_all_tests.sh --profile stress  # High-contention local parity profile
+./scripts/check_e2e_report_determinism.sh --profile quick  # Stable e2e report signature across reruns
 cargo test -p sifr_python_parser              # Parser snapshots
 cargo test -p sifr_type_system -- mdtest      # Type checker markdown tests
 cargo test -p sifr_codegen                    # Codegen snapshots

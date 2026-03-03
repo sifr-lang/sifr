@@ -1658,7 +1658,7 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
             )
         })
         .collect::<Vec<_>>();
-    build_timing.sort_by(|left, right| right.1.cmp(&left.1));
+    build_timing.sort_by(|left, right| right.1.cmp(&left.1).then_with(|| left.0.cmp(&right.0)));
     let top_build = build_timing.iter().take(3).cloned().collect::<Vec<_>>();
 
     let mut run_timing = run_outcomes
@@ -1672,7 +1672,7 @@ fn run_new_pass_suite(config: &RunnerConfig) -> PassReport {
             )
         })
         .collect::<Vec<_>>();
-    run_timing.sort_by(|left, right| right.1.cmp(&left.1));
+    run_timing.sort_by(|left, right| right.1.cmp(&left.1).then_with(|| left.0.cmp(&right.0)));
     let top_run = run_timing.iter().take(3).cloned().collect::<Vec<_>>();
 
     let summarize_groups = |groups: &[(String, u128, usize, bool)]| {
@@ -1754,26 +1754,89 @@ fn compare_pass_reports(legacy: &PassReport, fresh: &PassReport) -> Result<(), S
     ))
 }
 
-fn format_failures(_kind: &str, cases: &[FixtureExecution]) -> String {
-    let mut failures = Vec::new();
-    for case in cases {
-        if let Err(reason) = &case.status {
-            failures.push(reason.clone());
-        }
+fn failure_group(reason: &str) -> &'static str {
+    if reason.contains("sifr compilation failed") {
+        "compile"
+    } else if reason.contains("failed to generate grouped crate source") {
+        "planning"
+    } else if reason.contains("Rust compilation failed")
+        || reason.contains("build log:")
+        || reason.contains("missing batch artifact")
+    {
+        "build"
+    } else if reason.contains("stdout mismatch") || reason.contains("binary exited with error") {
+        "run"
+    } else {
+        "other"
     }
+}
+
+fn indent_multiline(text: &str, indent: &str) -> String {
+    text.lines()
+        .map(|line| format!("{indent}{line}"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn format_failures(kind: &str, cases: &[FixtureExecution]) -> String {
+    let mut failures = cases
+        .iter()
+        .filter_map(|case| {
+            case.status.as_ref().err().map(|reason| {
+                (
+                    case.name.clone(),
+                    failure_group(reason).to_string(),
+                    reason.clone(),
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+
     if failures.is_empty() {
         return String::new();
     }
 
+    failures.sort_by(|left, right| {
+        left.1
+            .cmp(&right.1)
+            .then_with(|| left.0.cmp(&right.0))
+            .then_with(|| left.2.cmp(&right.2))
+    });
+
+    let mut grouped: BTreeMap<String, Vec<(String, String)>> = BTreeMap::new();
+    for (name, group, reason) in failures {
+        grouped.entry(group).or_default().push((name, reason));
+    }
+
     let passed = cases.iter().filter(|case| case.status.is_ok()).count();
     let failed = cases.len().saturating_sub(passed);
+    let mut sections = Vec::new();
+    for (group, entries) in grouped {
+        let mut rows = Vec::new();
+        for (name, reason) in entries {
+            rows.push(format!("- [{}]\n{}", name, indent_multiline(&reason, "  ")));
+        }
+        sections.push(format!(
+            "[{group}] {} failure(s)\n{}",
+            rows.len(),
+            rows.join("\n")
+        ));
+    }
+
     format!(
-        "{} E2E pass test(s) failed:\n\n{}\n\n({} passed, {} failed)",
-        failures.len(),
-        failures.join("\n\n"),
-        passed,
-        failed
+        "{kind} E2E pass failures ({passed} passed, {failed} failed)\n\n{}",
+        sections.join("\n\n")
     )
+}
+
+fn report_signature(kind: &str, report: &PassReport) -> String {
+    let summary = format_failures(kind, &report.cases);
+    deterministic_hash(&format!(
+        "{kind}|{}|{}|{}",
+        report.cases.len(),
+        report.passed_count(),
+        summary
+    ))
 }
 
 fn assert_report(label: &str, report: &PassReport) {
@@ -1789,6 +1852,10 @@ fn test_e2e_pass() {
             let report = run_legacy_pass_suite();
             assert_report("legacy", &report);
             eprintln!(
+                "[sifr-e2e] report_signature={}",
+                report_signature("legacy", &report)
+            );
+            eprintln!(
                 "  {} pass tests completed ({} passed, {} failed)",
                 report.cases.len(),
                 report.passed_count(),
@@ -1798,6 +1865,10 @@ fn test_e2e_pass() {
         RunnerMode::New => {
             let report = run_new_pass_suite(&config);
             assert_report("new", &report);
+            eprintln!(
+                "[sifr-e2e] report_signature={}",
+                report_signature("new", &report)
+            );
             eprintln!(
                 "  {} pass tests completed ({} passed, {} failed)",
                 report.cases.len(),
@@ -1811,6 +1882,14 @@ fn test_e2e_pass() {
             compare_pass_reports(&legacy, &fresh).expect("new runner mismatch");
             assert_report("legacy", &legacy);
             assert_report("new", &fresh);
+            eprintln!(
+                "[sifr-e2e] report_signature_legacy={}",
+                report_signature("legacy", &legacy)
+            );
+            eprintln!(
+                "[sifr-e2e] report_signature_new={}",
+                report_signature("new", &fresh)
+            );
             eprintln!(
                 "  compare mode pass tests completed ({} pass in legacy/new)\n    legacy: {} pass, {} fail\n    new: {} pass, {} fail",
                 legacy.cases.len(),
@@ -2215,6 +2294,101 @@ fn test_expectation_parsing_contract() {
     assert_eq!(
         extract_expect_errors(&source),
         vec!["issue-1".to_string(), "issue-2".to_string()]
+    );
+}
+
+#[test]
+fn test_failure_summary_is_grouped_and_order_stable() {
+    let cases = vec![
+        FixtureExecution {
+            name: "z_run".to_string(),
+            status: Err("FAIL [z_run]: stdout mismatch\n  expected: \"a\"\n  actual:   \"b\"".to_string()),
+        },
+        FixtureExecution {
+            name: "a_compile".to_string(),
+            status: Err("FAIL [a_compile]: sifr compilation failed:\n  unknown symbol".to_string()),
+        },
+        FixtureExecution {
+            name: "b_build".to_string(),
+            status: Err("FAIL [b_build]: Rust compilation failed. Check build log: /tmp/log".to_string()),
+        },
+        FixtureExecution {
+            name: "ok_case".to_string(),
+            status: Ok(()),
+        },
+    ];
+
+    let mut reversed = cases.clone();
+    reversed.reverse();
+
+    let first = format_failures("new", &cases);
+    let second = format_failures("new", &reversed);
+    assert_eq!(first, second);
+    assert!(first.contains("[compile] 1 failure(s)"));
+    assert!(first.contains("[build] 1 failure(s)"));
+    assert!(first.contains("[run] 1 failure(s)"));
+}
+
+#[test]
+fn test_report_signature_is_order_invariant() {
+    let cases = vec![
+        FixtureExecution {
+            name: "case_b".to_string(),
+            status: Err("FAIL [case_b]: binary exited with error:\nboom".to_string()),
+        },
+        FixtureExecution {
+            name: "case_a".to_string(),
+            status: Err("FAIL [case_a]: sifr compilation failed:\n  error".to_string()),
+        },
+        FixtureExecution {
+            name: "case_ok".to_string(),
+            status: Ok(()),
+        },
+    ];
+    let report = PassReport {
+        cases: cases.clone(),
+    };
+
+    let mut shuffled = cases;
+    shuffled.swap(0, 1);
+    let report_shuffled = PassReport { cases: shuffled };
+
+    assert_eq!(
+        report_signature("new", &report),
+        report_signature("new", &report_shuffled)
+    );
+}
+
+#[test]
+fn test_report_signature_changes_on_failure_delta() {
+    let base = PassReport {
+        cases: vec![
+            FixtureExecution {
+                name: "case_a".to_string(),
+                status: Err("FAIL [case_a]: sifr compilation failed:\n  err-a".to_string()),
+            },
+            FixtureExecution {
+                name: "case_ok".to_string(),
+                status: Ok(()),
+            },
+        ],
+    };
+    let changed = PassReport {
+        cases: vec![
+            FixtureExecution {
+                name: "case_a".to_string(),
+                status: Err("FAIL [case_a]: sifr compilation failed:\n  err-b".to_string()),
+            },
+            FixtureExecution {
+                name: "case_ok".to_string(),
+                status: Ok(()),
+            },
+        ],
+    };
+
+    assert_ne!(
+        report_signature("new", &base),
+        report_signature("new", &changed)
     );
 }
 
