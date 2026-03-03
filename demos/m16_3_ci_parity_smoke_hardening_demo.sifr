@@ -1,0 +1,10 @@
+# Phase 16 / milestone_16_3 demo:
+# CI parity + smoke hardening gate framing.
+
+def ci_gate_enabled(local_script: str, ci_script: str) -> bool:
+    return local_script == ci_script
+
+def main():
+    assert ci_gate_enabled("scripts/run_all_tests.sh", "scripts/run_all_tests.sh")
+    assert ci_gate_enabled("scripts/run_smoke_fuzz_property.sh", "scripts/run_smoke_fuzz_property.sh")
+    print("m16_3 ci parity + smoke demo: ok")

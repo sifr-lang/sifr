@@ -2392,6 +2392,68 @@ fn test_report_signature_changes_on_failure_delta() {
     );
 }
 
+fn smoke_rand_next(seed: &mut u64) -> u64 {
+    // xorshift64* for deterministic smoke fuzz/property generation.
+    *seed ^= *seed << 13;
+    *seed ^= *seed >> 7;
+    *seed ^= *seed << 17;
+    *seed
+}
+
+fn smoke_ascii(seed: &mut u64, max_len: usize) -> String {
+    let len = (smoke_rand_next(seed) as usize) % max_len.max(1);
+    let mut output = String::with_capacity(len);
+    for _ in 0..len {
+        let bucket = (smoke_rand_next(seed) % 8) as u8;
+        let ch = match bucket {
+            0 => '\n',
+            1 => '#',
+            2 => ':',
+            3 => ' ',
+            _ => (b'a' + (smoke_rand_next(seed) % 26) as u8) as char,
+        };
+        output.push(ch);
+    }
+    output
+}
+
+#[test]
+fn test_smoke_property_deterministic_hash_contract() {
+    let mut seed = 0x5A17_C9D3_12EF_0042u64;
+    let mut unique = BTreeSet::new();
+    for _ in 0..256 {
+        let sample = smoke_ascii(&mut seed, 64);
+        let hash_a = deterministic_hash(&sample);
+        let hash_b = deterministic_hash(&sample);
+        assert_eq!(hash_a, hash_b);
+        assert_eq!(hash_a.len(), 16);
+        assert!(hash_a.chars().all(|ch| ch.is_ascii_hexdigit()));
+        unique.insert(hash_a);
+    }
+    assert!(unique.len() > 200, "hash entropy smoke check regressed");
+}
+
+#[test]
+fn test_smoke_fuzz_expectation_extractors_no_panic() {
+    let mut seed = 0xBADC_0FFE_EE11_2233u64;
+    for _ in 0..512 {
+        let mut sample = smoke_ascii(&mut seed, 120);
+        if (smoke_rand_next(&mut seed) & 1) == 0 {
+            sample.push_str("\n# expect-stdout: ok");
+        }
+        if (smoke_rand_next(&mut seed) & 1) == 0 {
+            sample.push_str("\n# expect-stderr: err");
+        }
+        if (smoke_rand_next(&mut seed) & 1) == 0 {
+            sample.push_str("\n# expect-error: issue");
+        }
+
+        let _ = extract_expect_stdout(&sample);
+        let _ = extract_expect_stderr(&sample);
+        let _ = extract_expect_errors(&sample);
+    }
+}
+
 #[test]
 fn test_fixture_discovery_is_deterministic() {
     let root = env::temp_dir().join(format!(

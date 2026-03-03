@@ -35,7 +35,7 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m16_1_parallel_test_profiles_demo.sifr` -> `m16_1 profile demo: ok`.
 
 ## Part 2: milestone_16_2 Deterministic Reporting
-status: in review (PR #807)
+status: done (2026-03-03, PR #807)
 
 - [x] Stabilize output ordering
 - [x] Stabilize summary format
@@ -45,7 +45,7 @@ status: in review (PR #807)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
@@ -57,22 +57,28 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m16_2_deterministic_reporting_demo.sifr` -> `m16_2 deterministic reporting demo: ok`.
 
 ## Part 3: milestone_16_3 CI-Parity and Smoke Hardening
-status: pending
+status: in review (PR #808)
 
-- [ ] Wire CI to run exact local scripts and flags
-- [ ] Add always-on smoke fuzz/property jobs
-- [ ] Confirm CI/local command parity is documented
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
+- [x] Wire CI to run exact local scripts and flags
+- [x] Add always-on smoke fuzz/property jobs
+- [x] Confirm CI/local command parity is documented
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
 - [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc, checklist, and roadmap
+- [x] Mark part complete in phase doc, checklist, and roadmap
+
+Validation evidence:
+- Positive path: `bash scripts/run_smoke_fuzz_property.sh` -> pass.
+- Positive path: `bash scripts/run_all_tests.sh --profile full` -> pass.
+- Negative path: `bash scripts/run_smoke_fuzz_property.sh --bad` -> exits `2` with usage error.
+- Milestone demo: `cargo run -q -p sifr -- run demos/m16_3_ci_parity_smoke_hardening_demo.sifr` -> `m16_3 ci parity + smoke demo: ok`.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/806 (merged)
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/807 (open)
-- Part 3: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/807 (merged)
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/808 (open)
 
 ## Reviewer Follow-up
 - External review pass 1 output: pending
