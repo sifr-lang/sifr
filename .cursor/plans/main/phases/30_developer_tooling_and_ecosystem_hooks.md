@@ -1,14 +1,14 @@
-# Phase 29: Developer Tooling and Ecosystem Hooks
+# Phase 30: Developer Tooling and Ecosystem Hooks
 
 ## Objective
 Enable core developer tooling integration as a dedicated phase immediately after performance hardening.
 
 ## Depends on
-- Phase 28
+- Phase 29
 
 ## Milestones
 
-### milestone_29_1: Developer Tooling and Ecosystem Hooks
+### milestone_30_1: Developer Tooling and Ecosystem Hooks
 - Scope:
   - LSP/formatter/linter/doc hooks aligned with new phase contracts.
 - Definition of done:
