@@ -29,9 +29,9 @@ status: done (2026-03-03, PR #793)
 ## Part 2: milestone_15_2 Phase Contract Definition
 status: done (2026-03-03, PR #794)
 
-- [x] Define entry criteria for every phase (`15`-`36`)
-- [x] Define exit criteria for every phase (`15`-`36`)
-- [x] Define mandatory local validation steps for every phase (`15`-`36`)
+- [x] Define entry criteria for every phase (`15`-`35`)
+- [x] Define exit criteria for every phase (`15`-`35`)
+- [x] Define mandatory local validation steps for every phase (`15`-`35`)
 - [x] Ensure every phase gate maps to at least one concrete validation command
 - [x] Add demo file `demos/milestone_15_2_phase_contracts_demo.sifr`
 - [x] Run milestone demo

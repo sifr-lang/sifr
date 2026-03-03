@@ -1,11 +1,11 @@
-# Phase Contracts (15-36)
+# Phase Contracts (15-35)
 
 Last updated: 2026-03-03  
 Owner: Phase 15 (`milestone_15_2`)  
 Status: active
 
 ## Contract Intent
-This document defines explicit phase entry criteria, exit criteria, and mandatory local validation commands for Phases `15` through `36`.
+This document defines explicit phase entry criteria, exit criteria, and mandatory local validation commands for Phases `15` through `35`.
 
 Gate mapping rule:
 - Every entry gate maps to at least one concrete command.
@@ -16,7 +16,7 @@ Gate mapping rule:
 ## Command Baseline
 - `ENTRY-CHECK`: `python scripts/phase_contract_gate_check.py --phase <N> --check entry`
 - `EXIT-CHECK`: `python scripts/phase_contract_gate_check.py --phase <N> --check exit`
-- `MILESTONE-REGISTRY-CHECK`: `python scripts/validate_milestone_registry_15_36.py`
+- `MILESTONE-REGISTRY-CHECK`: `python scripts/validate_milestone_registry_15_35.py`
 - `FULL-SUITE`: `./scripts/run_all_tests.sh`
 
 ## Phase 15 Contract
@@ -25,7 +25,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 15 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 15 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 16 Contract
@@ -34,7 +34,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 16 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 16 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 17 Contract
@@ -43,7 +43,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 17 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 17 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 18 Contract
@@ -52,7 +52,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 18 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 18 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 19 Contract
@@ -61,7 +61,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 19 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 19 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 20 Contract
@@ -70,7 +70,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 20 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 20 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 21 Contract
@@ -79,7 +79,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 21 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 21 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 22 Contract
@@ -88,7 +88,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 22 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 22 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 23 Contract
@@ -97,7 +97,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 23 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 23 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 24 Contract
@@ -106,7 +106,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 24 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 24 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 25 Contract
@@ -115,7 +115,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 25 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 25 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 26 Contract
@@ -124,7 +124,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 26 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 26 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 27 Contract
@@ -133,7 +133,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 27 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 27 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 28 Contract
@@ -142,7 +142,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 28 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 28 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 29 Contract
@@ -151,7 +151,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 29 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 29 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 30 Contract
@@ -160,7 +160,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 30 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 30 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 31 Contract
@@ -169,7 +169,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 31 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 31 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 32 Contract
@@ -178,7 +178,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 32 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 32 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 33 Contract
@@ -187,7 +187,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 33 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 33 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 34 Contract
@@ -196,7 +196,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 34 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 34 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 35 Contract
@@ -205,14 +205,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 35 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 35 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
+  - `python scripts/validate_milestone_registry_15_35.py`
   - `./scripts/run_all_tests.sh`
 
-## Phase 36 Contract
-- Entry criteria: Phase 35 is completed and scoped platform expansion tracks are available.
-- Exit criteria: Data and ML workflows are usable end-to-end without regressing prior phase guarantees.
-- Entry validation: `python scripts/phase_contract_gate_check.py --phase 36 --check entry`
-- Exit validation:
-  - `python scripts/phase_contract_gate_check.py --phase 36 --check exit`
-  - `python scripts/validate_milestone_registry_15_36.py`
-  - `./scripts/run_all_tests.sh`
+## Deferred Scope Note
+- Phase 36 is intentionally excluded from this Phase 15 contract baseline.

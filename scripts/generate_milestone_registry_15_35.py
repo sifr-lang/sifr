@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate milestone coverage registry for phases 15-36."""
+"""Generate milestone coverage registry for phases 15-35."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 PHASE_DIR = Path(".cursor/plans/main/phases")
-OUTPUT_PATH = Path(".cursor/plans/main/milestone_registry_15_36.md")
+OUTPUT_PATH = Path(".cursor/plans/main/milestone_registry_15_35.md")
 
 
 @dataclass
@@ -105,7 +105,7 @@ def parse_phase_file(path: Path) -> tuple[str, list[Milestone]]:
 
 def main() -> None:
     out: list[str] = []
-    out.append("# Milestone Registry (Phases 15-36)")
+    out.append("# Milestone Registry (Phases 15-35)")
     out.append("")
     out.append("Last updated: 2026-03-03")
     out.append("Owner: Phase 15 (`milestone_15_2` detail closure)")
@@ -113,19 +113,19 @@ def main() -> None:
     out.append("")
     out.append("## Purpose")
     out.append(
-        "This registry guarantees that every milestone across phases 15-36 is explicitly tracked with scope and definition-of-done snapshots."
+        "This registry guarantees that every milestone across phases 15-35 is explicitly tracked with scope and definition-of-done snapshots."
     )
     out.append("")
     out.append("Mandatory local validation contract per milestone:")
     out.append(
         "- `python scripts/phase_contract_gate_check.py --phase <N> --check entry`"
     )
-    out.append("- `python scripts/validate_milestone_registry_15_36.py`")
+    out.append("- `python scripts/validate_milestone_registry_15_35.py`")
     out.append("- `./scripts/run_all_tests.sh`")
     out.append("")
 
     total = 0
-    for phase in range(15, 37):
+    for phase in range(15, 36):
         phase_file = next(PHASE_DIR.glob(f"{phase:02d}_*.md"))
         phase_title, milestones = parse_phase_file(phase_file)
         total += len(milestones)
@@ -143,7 +143,7 @@ def main() -> None:
 
     out.append("## Coverage Summary")
     out.append(f"- Total milestones tracked: `{total}`")
-    out.append("- Validation command: `python scripts/validate_milestone_registry_15_36.py`")
+    out.append("- Validation command: `python scripts/validate_milestone_registry_15_35.py`")
     out.append("")
 
     OUTPUT_PATH.write_text("\n".join(out) + "\n")

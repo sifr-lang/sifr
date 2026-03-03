@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate milestone registry coverage for phases 15-36."""
+"""Validate milestone registry coverage for phases 15-35."""
 
 from __future__ import annotations
 
@@ -7,13 +7,13 @@ import re
 from pathlib import Path
 
 PHASE_DIR = Path(".cursor/plans/main/phases")
-REGISTRY_PATH = Path(".cursor/plans/main/milestone_registry_15_36.md")
+REGISTRY_PATH = Path(".cursor/plans/main/milestone_registry_15_35.md")
 
 
 def source_milestones() -> set[str]:
     ids: set[str] = set()
     pattern = re.compile(r"^(##|###)\s+(milestone_[^:\n]+):")
-    for phase in range(15, 37):
+    for phase in range(15, 36):
         phase_file = next(PHASE_DIR.glob(f"{phase:02d}_*.md"))
         for line in phase_file.read_text().splitlines():
             m = pattern.match(line)

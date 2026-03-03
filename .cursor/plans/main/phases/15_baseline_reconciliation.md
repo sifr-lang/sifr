@@ -25,16 +25,16 @@ status: done (2026-03-03, PR #793)
 ### milestone_15_2: Phase Contract Definition
 status: done (2026-03-03, PR #794)
 - Scope:
-  - Define entry/exit criteria for Phases 15-36.
+  - Define entry/exit criteria for Phases 15-35.
   - Define mandatory local validation expectations for each phase.
 - Definition of done:
   - Every phase has explicit completion gates.
   - Every gate maps to at least one concrete validation step.
 - Evidence:
-  - Phase contract baseline: `.cursor/plans/main/phase_contracts_15_36.md`
-  - Milestone registry baseline: `.cursor/plans/main/milestone_registry_15_36.md`
+  - Phase contract baseline: `.cursor/plans/main/phase_contracts_15_35.md`
+  - Milestone registry baseline: `.cursor/plans/main/milestone_registry_15_35.md`
   - Gate-check helper: `scripts/phase_contract_gate_check.py`
-  - Milestone registry validator: `scripts/validate_milestone_registry_15_36.py`
+  - Milestone registry validator: `scripts/validate_milestone_registry_15_35.py`
   - Milestone demo: `demos/milestone_15_2_phase_contracts_demo.sifr`
 
 ### milestone_15_3: Stakeholder Sign-off Snapshot
