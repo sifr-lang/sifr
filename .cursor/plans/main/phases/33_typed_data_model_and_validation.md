@@ -1,6 +1,6 @@
 # Phase 33: Typed Data Model and Validation (Pydantic-Parity Track)
 
-> Note: Needs more planning before execution (scope boundaries, parity target depth, and acceptance gates are still draft-level).
+> Note: Needs more planning before execution (which pydantic subset to target, scope boundaries, parity target depth, and acceptance gates are still draft-level).
 
 ## Objective
 Introduce a dedicated typed model layer with validation semantics, stable error behavior, and explicit pydantic-parity boundaries.

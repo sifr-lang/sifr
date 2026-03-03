@@ -1,7 +1,5 @@
 # Phase 29: Performance Benchmarking and Budgets
 
-> Note: This file is restored intentionally as a compiler-performance planning draft and needs numbering/alignment planning with the active roadmap sequence.
-
 ## Objective
 Establish and enforce compiler-focused performance budgets (compile-time, compiler memory, and check/build latency).
 

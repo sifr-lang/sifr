@@ -1,5 +1,7 @@
 # Phase 34: Web Framework and Platform Expansion
 
+> Note: Needs more planning before execution (which fastapi subset to target, scope boundaries, parity target depth, and acceptance gates are still draft-level).
+
 ## Objective
 Deliver the web framework with typed extractors, then land platform expansion tracks (data/ML and interoperability) under a single bounded feature phase.
 

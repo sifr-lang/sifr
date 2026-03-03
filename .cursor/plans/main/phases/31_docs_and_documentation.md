@@ -1,6 +1,6 @@
 # Phase 31: Docs and Documentation
 
-> Note: Needs more planning before execution (scope boundaries, ownership model, and acceptance gates are still draft-level).
+> Note: Needs more planning before execution (doc tooling, doc structure, scope boundaries, ownership model, and acceptance gates are still draft-level).
 
 ## Objective
 Establish a production-grade documentation layer (developer, user, and operations) so packaging and release governance rest on clear, versioned contracts.
