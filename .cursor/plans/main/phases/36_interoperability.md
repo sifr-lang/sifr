@@ -1,7 +1,7 @@
-# Phase 36: Interoperability Expansion
+# Phase 36: Interoperability
 
 ## Objective
-Resume interoperability expansion after typed model, package, tooling, and web foundations are stable.
+Deliver interoperability capabilities after typed model, package, tooling, and web foundations are stable.
 
 ## Depends on
 - Phase 35
@@ -15,4 +15,4 @@ Resume interoperability expansion after typed model, package, tooling, and web f
   - Interop workflows are documented, test-covered, and safe-gated.
 
 ## Exit Gate
-- Interoperability expansion is stable and governed by existing quality gates.
+- Interoperability is stable and governed by existing quality gates.

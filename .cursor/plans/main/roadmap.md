@@ -41,7 +41,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 33 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [33_typed_data_model_and_validation.md](./phases/33_typed_data_model_and_validation.md) | Dedicated typed model/validation layer |
 | 34 | Web Framework and Typed Extractors | planned | [34_web_framework_and_typed_extractors.md](./phases/34_web_framework_and_typed_extractors.md) | Web stack with model-driven request validation/extractors |
 | 35 | Data Science and ML | planned | [35_data_science_ml.md](./phases/35_data_science_ml.md) | Data and ML workflows on top of core platform |
-| 36 | Interoperability Expansion | planned | [36_interoperability_expansion.md](./phases/36_interoperability_expansion.md) | FFI expansion on top of stabilized foundations |
+| 36 | Interoperability | planned | [36_interoperability.md](./phases/36_interoperability.md) | FFI capabilities on top of stabilized foundations |
 
 ## Milestone Index (Clear Milestones)
 
