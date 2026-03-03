@@ -8,6 +8,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint-and-format:
+    name: lint-and-format
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # Advisory until legacy workspace lint debt is burned down in follow-up phases.
+      - name: Rustfmt check (advisory)
+        continue-on-error: true
+        run: cargo fmt --check
+      - name: Clippy workspace (advisory)
+        continue-on-error: true
+        run: cargo clippy --workspace -- -D warnings
+
   local-first-profiles:
     name: local-first-${{ matrix.profile }}
     runs-on: ubuntu-24.04

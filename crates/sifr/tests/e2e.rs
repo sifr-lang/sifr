@@ -2302,7 +2302,9 @@ fn test_failure_summary_is_grouped_and_order_stable() {
     let cases = vec![
         FixtureExecution {
             name: "z_run".to_string(),
-            status: Err("FAIL [z_run]: stdout mismatch\n  expected: \"a\"\n  actual:   \"b\"".to_string()),
+            status: Err(
+                "FAIL [z_run]: stdout mismatch\n  expected: \"a\"\n  actual:   \"b\"".to_string(),
+            ),
         },
         FixtureExecution {
             name: "a_compile".to_string(),
@@ -2310,7 +2312,9 @@ fn test_failure_summary_is_grouped_and_order_stable() {
         },
         FixtureExecution {
             name: "b_build".to_string(),
-            status: Err("FAIL [b_build]: Rust compilation failed. Check build log: /tmp/log".to_string()),
+            status: Err(
+                "FAIL [b_build]: Rust compilation failed. Check build log: /tmp/log".to_string(),
+            ),
         },
         FixtureExecution {
             name: "c_plan".to_string(),
@@ -2480,6 +2484,22 @@ fn test_smoke_fuzz_expectation_extractors_no_panic() {
         let _ = extract_expect_stdout(&sample);
         let _ = extract_expect_stderr(&sample);
         let _ = extract_expect_errors(&sample);
+    }
+}
+
+#[test]
+fn test_smoke_expectation_extractors_unicode_inputs() {
+    let samples = [
+        "# expect-stdout: مرحبا\n# expect-stderr: λάθος\n# expect-error: ошибка",
+        "# expect-stdout: こんにちは世界\n# expect-error: 错误",
+        "# expect-stderr: emoji-😀\nplain-text",
+        "no-directives-🧪",
+    ];
+
+    for sample in samples {
+        let _ = extract_expect_stdout(sample);
+        let _ = extract_expect_stderr(sample);
+        let _ = extract_expect_errors(sample);
     }
 }
 

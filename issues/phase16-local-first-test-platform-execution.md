@@ -81,7 +81,7 @@ Validation evidence:
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/808 (merged)
 
 ## Reviewer Follow-up
-- External review pass 1 output: pending
-- Remediation PR (pass 1): pending
-- External review pass 2 output: pending
+- External review pass 1 output: `reviews/phase16-review.md`
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/810 (merged)
+- External review pass 2 output: `reviews/phase16-production-grade-review.md`
 - Remediation PR (pass 2): pending
