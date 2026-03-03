@@ -33,6 +33,7 @@ Ensure generated runtime code does not encode avoidable panic behavior for norma
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
+  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_23_1` (Remove Data-Dependent `unwrap/expect`): validation goals cover: Replace generated data-dependent unwrap/expect with explicit safe propagation. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_23_2` (Indexing and Semantics Parity Fixes): validation goals cover: Correct negative indexing and related parity semantics. Include negative-path goals that catch regressions against these guarantees.

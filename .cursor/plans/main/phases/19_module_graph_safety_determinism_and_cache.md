@@ -33,6 +33,7 @@ Make multi-module compilation dependency-safe, deterministic, and efficient for 
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
+  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_19_1` (Dependency-Safe Module Ordering): validation goals cover: Introduce topological ordering for module compilation; Add cycle diagnostics with actionable context. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_19_2` (Deterministic Assembly): validation goals cover: Remove nondeterministic HashMap-order behavior from module assembly/output. Include negative-path goals that catch regressions against these guarantees.

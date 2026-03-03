@@ -35,6 +35,7 @@ Deliver production-quality diagnostics with recovery and explicit stability guar
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
+  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_24_1` (Span and Diagnostic Schema Quality): validation goals cover: Thread precise spans through frontend/codegen errors; Standardize stable diagnostic codes/categories. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_24_2` (Bounded Multi-Error Recovery): validation goals cover: Add parser/type-check recovery to report multiple actionable errors; Control error cascades with bounded recovery policy. Include negative-path goals that catch regressions against these guarantees.

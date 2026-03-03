@@ -4,7 +4,7 @@
 
 ---
 
-## milestone_async_core: Async Runtime Core
+### milestone_27_1: Async Runtime Core
 
 status: pending
 
@@ -25,9 +25,9 @@ status: pending
 - HIR: new `HirAwait` node. Async functions produce `Future` types.
 - Type checker: `await` on a non-`Future` type is a compile error. `Result` auto-unwrap inside `try` blocks works across `.await` boundaries.
 - Codegen: `async def` emits `async fn`. `await` emits `.await`. Main function with async calls gets `#[tokio::main]`.
-- Send-bound diagnostics: `sifr.task.spawn` requires the spawned closure to be `Send + 'static`. The compiler must translate `rustc`'s Send-bound errors into Sifr-level diagnostics (e.g., "type X cannot be sent between tasks because field Y is not Send") rather than leaking raw Rust error messages. Full Send/Sync checking infrastructure is deferred to `milestone_async_sync`, but the spawn boundary must produce clear Sifr diagnostics from day one.
+- Send-bound diagnostics: `sifr.task.spawn` requires the spawned closure to be `Send + 'static`. The compiler must translate `rustc`'s Send-bound errors into Sifr-level diagnostics (e.g., "type X cannot be sent between tasks because field Y is not Send") rather than leaking raw Rust error messages. Full Send/Sync checking infrastructure is deferred to `milestone_27_3`, but the spawn boundary must produce clear Sifr diagnostics from day one.
 
-### Definition of Done (milestone_async_core)
+### Definition of Done (milestone_27_1)
 
 - `async def` compiles to Rust `async fn`
 - `await` compiles to `.await`
@@ -44,13 +44,13 @@ status: pending
 
 ---
 
-## milestone_typed_serde_core: Typed Serialization (Core)
+### milestone_27_2: Typed Serialization (Core)
 
 status: pending
 
 **Goal:** Web-independent typed serialization. This does NOT include web extractors — those are delivered in a later web phase. Typed serde is kept in the async phase to make typed payload handling available early.
 
-**Depends on:** milestone_async_core (async runtime must exist for async-compatible serde patterns; generics from Phase 13 enable `loads(s, T)`)
+**Depends on:** milestone_27_1 (async runtime must exist for async-compatible serde patterns; generics from Phase 13 enable `loads(s, T)`)
 
 ### Work Items
 
@@ -60,7 +60,7 @@ status: pending
 - Nested classes, lists, dicts, optionals, unions serialize correctly
 - E2E tests for typed JSON roundtrip independent of any web framework
 
-### Definition of Done (milestone_typed_serde_core)
+### Definition of Done (milestone_27_2)
 
 - Classes auto-derive `Serialize`/`Deserialize` — no manual annotation needed
 - `dumps(obj)` serializes any class to JSON string
@@ -73,13 +73,13 @@ status: pending
 
 ---
 
-## milestone_async_sync: Async Synchronization Primitives
+### milestone_27_3: Async Synchronization Primitives
 
 status: pending
 
 **Goal:** Add cross-task synchronization primitives and Send/Sync checking at spawn boundaries. These are needed for production async code but are not required for basic async functionality.
 
-**Depends on:** milestone_async_core (sync primitives are fundamental concurrency tools independent of networking; they depend only on the async runtime)
+**Depends on:** milestone_27_1 (sync primitives are fundamental concurrency tools independent of networking; they depend only on the async runtime)
 
 ### Work Items
 
@@ -89,7 +89,7 @@ status: pending
 - Send/Sync checking at spawn boundaries: when a value is sent to `sifr.task.spawn`, the compiler verifies the value is `Send`. If not, it emits a clear error explaining which field is not sendable (leverages borrow-by-default from Phase 10)
 - Async closures captured across `.await` are checked for `Send + 'static`
 
-### Definition of Done (milestone_async_sync)
+### Definition of Done (milestone_27_3)
 
 - `sifr.sync.Lock` works for shared mutable state across tasks
 - `sifr.sync.Channel` works for typed message passing between tasks
@@ -103,13 +103,13 @@ status: pending
 
 ---
 
-## milestone_async_advanced: Advanced Async Features
+### milestone_27_4: Advanced Async Features
 
 status: pending
 
 **Goal:** Add advanced async features that build on the core runtime and sync primitives. These are powerful but not needed for basic async applications.
 
-**Depends on:** milestone_async_sync (sync primitives must exist for advanced patterns)
+**Depends on:** milestone_27_3 (sync primitives must exist for advanced patterns)
 
 ### Work Items
 
@@ -117,7 +117,7 @@ status: pending
 - Async generators — `yield` inside `async def` produces async iterators
 - Async comprehensions — `[await x async for x in stream]`
 
-### Definition of Done (milestone_async_advanced)
+### Definition of Done (milestone_27_4)
 
 - `async with` works for async context managers
 - Async generators (`yield` in `async def`) produce async iterators
@@ -131,10 +131,10 @@ status: pending
 
 ## Milestone Ordering
 
-- **milestone_async_core first:** The async runtime must exist before anything else. This is the minimum viable async — `async def`/`await`, Tokio, basic task spawning.
-- **milestone_typed_serde_core second:** Typed serialization is web-independent and stays in this phase.
-- **milestone_async_sync third:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking depend only on the async runtime.
-- **milestone_async_advanced last:** Advanced features (async with, async generators, async comprehensions) build on everything above.
+- **milestone_27_1 first:** The async runtime must exist before anything else. This is the minimum viable async — `async def`/`await`, Tokio, basic task spawning.
+- **milestone_27_2 second:** Typed serialization is web-independent and stays in this phase.
+- **milestone_27_3 third:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking depend only on the async runtime.
+- **milestone_27_4 last:** Advanced features (async with, async generators, async comprehensions) build on everything above.
 
 ## Quality Contract
 - Entry criteria: Phase 26 is completed and codegen architecture from Phase 14 remains intact.
@@ -144,8 +144,8 @@ status: pending
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_async_core` (Async Runtime Core): validation goals cover `async def`/`await` lowering, Tokio auto-bundling, `sifr.task` spawn/sleep/timeout behavior, and try/except auto-unwrap across await points. Include negative-path goals for invalid `await` usage and non-`Send` spawn boundaries with Sifr-level diagnostics.
-  - `milestone_typed_serde_core` (Typed Serialization (Core)): validation goals cover auto-derive `Serialize`/`Deserialize`, typed `dumps`/`loads` behavior, and nested/union/optional collection roundtrip correctness. Include negative-path goals for wrong-type payloads and missing required fields.
-  - `milestone_async_sync` (Async Synchronization Primitives): validation goals cover `sifr.sync.Lock`, `sifr.sync.Channel`, and `sifr.sync.Semaphore` semantics plus Send/Sync enforcement at spawn boundaries. Include negative-path goals for non-sendable captures and async-closure boundary violations.
-  - `milestone_async_advanced` (Advanced Async Features): validation goals cover `async with` context manager flow, async generator semantics, and async comprehension compilation behavior. Include negative-path goals for invalid async-context usage and iterator contract regressions.
+  - `milestone_27_1` (Async Runtime Core): validation goals cover `async def`/`await` lowering, Tokio auto-bundling, `sifr.task` spawn/sleep/timeout behavior, and try/except auto-unwrap across await points. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_27_2` (Typed Serialization (Core)): validation goals cover auto-derive `Serialize`/`Deserialize`, typed `dumps`/`loads` behavior, and nested/union/optional collection roundtrip correctness. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_27_3` (Async Synchronization Primitives): validation goals cover `sifr.sync.Lock`, `sifr.sync.Channel`, and `sifr.sync.Semaphore` semantics plus Send/Sync enforcement at spawn boundaries. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_27_4` (Advanced Async Features): validation goals cover `async with` context manager flow, async generator semantics, and async comprehension compilation behavior. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.

@@ -35,6 +35,7 @@ Ship preview channels early for adoption while keeping stable GA promotion gated
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
+  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_28_1` (Installer and Channel Resolution): validation goals cover: Implement install entrypoint (`curl -fsSL https://sifr.sh/install | bash`); Support `SIFR_CHANNEL`/`--channel` and explicit `--version` pinning. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_28_2` (Artifact and Manifest Pipeline): validation goals cover: Publish multi-platform artifacts with checksums/signatures; Maintain channel manifest pointers. Include negative-path goals that catch regressions against these guarantees.

@@ -34,6 +34,7 @@ Close known type-soundness holes before stable release promotion.
 - Milestone quality checks:
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
+  - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_22_1` (TypeVar Constraint Enforcement): validation goals cover: Replace permissive TypeVar assignability with bound/constraint validation. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_22_2` (Inheritance and Variance Corrections): validation goals cover: Implement multi-level inheritance assignability; Remove special-case inheritance hacks; Enforce invariance on mutable collections. Include negative-path goals that catch regressions against these guarantees.
