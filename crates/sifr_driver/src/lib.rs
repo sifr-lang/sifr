@@ -12,7 +12,7 @@ use sifr_codegen::{
 };
 use sifr_hir::{
     lower_module, lower_module_stdlib_with_externals, lower_module_with_externals, ExternalDefs,
-    HirModule,
+    HirModule, LoweringResult,
 };
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -557,13 +557,14 @@ pub enum CompileResultFull {
     },
 }
 
-/// Compile Sifr source code to Rust source code, returning stdlib metadata.
-pub fn compile_with_metadata(source: &str) -> CompileResultFull {
+struct FrontendCompiled {
+    stdlib: StdlibCompiled,
+    lowering_result: LoweringResult,
+}
+
+fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompileError>> {
     // Phase 0: Compile embedded stdlib .sifr files
-    let stdlib_compiled = match compile_stdlib() {
-        Ok(compiled) => compiled,
-        Err(errors) => return CompileResultFull::Errors { errors },
-    };
+    let stdlib_compiled = compile_stdlib()?;
 
     // Phase 1: Parse
     let parsed = match parse_module(source) {
@@ -577,17 +578,15 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
                         phase: CompilePhase::Parse,
                     })
                     .collect();
-                return CompileResultFull::Errors { errors };
+                return Err(errors);
             }
             parsed
         }
         Err(e) => {
-            return CompileResultFull::Errors {
-                errors: vec![CompileError {
-                    message: format!("failed to parse: {e}"),
-                    phase: CompilePhase::Parse,
-                }],
-            };
+            return Err(vec![CompileError {
+                message: format!("failed to parse: {e}"),
+                phase: CompilePhase::Parse,
+            }]);
         }
     };
 
@@ -602,12 +601,17 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
                     phase: CompilePhase::TypeCheck,
                 })
                 .collect();
-            return CompileResultFull::Errors {
-                errors: compile_errors,
-            };
+            return Err(compile_errors);
         }
     };
 
+    Ok(FrontendCompiled {
+        stdlib: stdlib_compiled,
+        lowering_result,
+    })
+}
+
+fn emit_frontend_diagnostics(lowering_result: &LoweringResult) {
     // Print reveal_type diagnostics to stderr
     for diag in &lowering_result.reveal_types {
         write_stderr_line(diag);
@@ -617,9 +621,20 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     for warning in &lowering_result.warnings {
         write_stderr_line(warning);
     }
+}
+
+/// Compile Sifr source code to Rust source code, returning stdlib metadata.
+pub fn compile_with_metadata(source: &str) -> CompileResultFull {
+    let frontend = match compile_frontend(source) {
+        Ok(frontend) => frontend,
+        Err(errors) => return CompileResultFull::Errors { errors },
+    };
+
+    emit_frontend_diagnostics(&frontend.lowering_result);
 
     // Phase 3: Generate Rust code with stdlib code
-    let codegen_result = generate_rust_with_stdlib(&lowering_result.module, &stdlib_compiled.code);
+    let codegen_result =
+        generate_rust_with_stdlib(&frontend.lowering_result.module, &frontend.stdlib.code);
 
     CompileResultFull::Success {
         rust_source: codegen_result.rust_source,
@@ -631,9 +646,12 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
 
 /// Type-check only (no code generation).
 pub fn check(source: &str) -> Vec<CompileError> {
-    match compile(source) {
-        CompileResult::Success { .. } => vec![],
-        CompileResult::Errors { errors } => errors,
+    match compile_frontend(source) {
+        Ok(frontend) => {
+            emit_frontend_diagnostics(&frontend.lowering_result);
+            vec![]
+        }
+        Err(errors) => errors,
     }
 }
 
@@ -1223,6 +1241,19 @@ def main():
         let errors = check(source);
         assert!(!errors.is_empty());
         assert!(errors.iter().any(|e| e.message.contains("type mismatch")));
+    }
+
+    #[test]
+    fn test_check_only_reports_frontend_phases() {
+        let source = r#"
+def main():
+    x: int = "hello"
+"#;
+        let errors = check(source);
+        assert!(!errors.is_empty());
+        assert!(errors
+            .iter()
+            .all(|e| matches!(e.phase, CompilePhase::Parse | CompilePhase::TypeCheck)));
     }
 
     #[test]

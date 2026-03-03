@@ -1,0 +1,10 @@
+# milestone_17_1 demo
+# Validates that frontend type-checking succeeds on a normal typed program.
+
+def identity(x: int) -> int:
+    return x
+
+def main():
+    value: int = identity(17)
+    print("m17_1 frontend-only check path demo:")
+    print(value)

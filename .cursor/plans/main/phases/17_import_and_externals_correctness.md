@@ -9,11 +9,17 @@ Fix import/external resolution correctness across `check`, `run`, `build`, and `
 ## Milestones
 
 ### milestone_17_1: Frontend-Only Check Path
+status: done (2026-03-04, PR #813)
 - Scope:
   - Ensure `check` stops after frontend/type phases.
   - Remove codegen/runtime coupling from check flow.
 - Definition of done:
   - `check` no longer triggers full code generation.
+- Evidence:
+  - `check` now runs dedicated frontend/type-only lowering via `compile_frontend` instead of routing through `compile` codegen.
+  - Frontend diagnostics printing is centralized and reused for both `check` and `compile`.
+  - Regression guard: `test_check_only_reports_frontend_phases` in `crates/sifr_driver/src/lib.rs`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m17_1_frontend_only_check_path_demo.sifr`.
 
 ### milestone_17_2: Non-Main Externals Resolution
 - Scope:
