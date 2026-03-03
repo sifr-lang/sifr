@@ -11,18 +11,13 @@ Gate mapping rule:
 - Every entry gate maps to at least one concrete command.
 - Every exit gate maps to at least one concrete command.
 - A phase is complete only when its exit validations pass and roadmap status is updated to `completed`.
-- Every phase must declare a concrete `phase_demo_path` in its execution checklist before phase closure; `<phase_demo_path>` is a required placeholder until that declaration exists.
+- Milestone quality/coverage checks must be satisfied before phase closure (see milestone registry validation command).
 
 ## Command Baseline
 - `ENTRY-CHECK`: `python scripts/phase_contract_gate_check.py --phase <N> --check entry`
 - `EXIT-CHECK`: `python scripts/phase_contract_gate_check.py --phase <N> --check exit`
-- `PHASE-DEMO`: `cargo run -q -p sifr -- run <phase_demo_path>`
+- `MILESTONE-REGISTRY-CHECK`: `python scripts/validate_milestone_registry_15_36.py`
 - `FULL-SUITE`: `./scripts/run_all_tests.sh`
-
-## Immediate Demo Path Declarations
-- Phase 15: `demos/milestone_15_3_signoff_snapshot_demo.sifr`
-- Phase 16: `demos/phase16_exit_demo.sifr`
-- Phases 17-36: declare `phase_demo_path` in the owning phase execution checklist before phase kickoff.
 
 ## Phase 15 Contract
 - Entry criteria: Phase 14 is completed and phase-review findings are available.
@@ -30,7 +25,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 15 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 15 --check exit`
-  - `cargo run -q -p sifr -- run demos/milestone_15_3_signoff_snapshot_demo.sifr`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 16 Contract
@@ -39,7 +34,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 16 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 16 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase16_exit_demo.sifr`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 17 Contract
@@ -48,7 +43,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 17 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 17 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 18 Contract
@@ -57,7 +52,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 18 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 18 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 19 Contract
@@ -66,7 +61,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 19 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 19 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 20 Contract
@@ -75,7 +70,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 20 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 20 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 21 Contract
@@ -84,7 +79,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 21 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 21 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 22 Contract
@@ -93,7 +88,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 22 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 22 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 23 Contract
@@ -102,7 +97,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 23 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 23 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 24 Contract
@@ -111,7 +106,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 24 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 24 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 25 Contract
@@ -120,7 +115,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 25 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 25 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 26 Contract
@@ -129,7 +124,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 26 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 26 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 27 Contract
@@ -138,7 +133,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 27 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 27 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 28 Contract
@@ -147,7 +142,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 28 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 28 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 29 Contract
@@ -156,7 +151,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 29 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 29 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 30 Contract
@@ -165,7 +160,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 30 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 30 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 31 Contract
@@ -174,7 +169,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 31 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 31 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 32 Contract
@@ -183,7 +178,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 32 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 32 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 33 Contract
@@ -192,7 +187,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 33 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 33 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 34 Contract
@@ -201,7 +196,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 34 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 34 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 35 Contract
@@ -210,7 +205,7 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 35 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 35 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
 
 ## Phase 36 Contract
@@ -219,5 +214,5 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 36 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 36 --check exit`
-  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `python scripts/validate_milestone_registry_15_36.py`
   - `./scripts/run_all_tests.sh`
