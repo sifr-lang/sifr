@@ -9,7 +9,7 @@ Fix import/external resolution correctness across `check`, `run`, `build`, and `
 ## Milestones
 
 ### milestone_17_1: Frontend-Only Check Path
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #813)
 - Scope:
   - Ensure `check` stops after frontend/type phases.
   - Remove codegen/runtime coupling from check flow.

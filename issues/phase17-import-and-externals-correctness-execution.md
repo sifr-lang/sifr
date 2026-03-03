@@ -16,7 +16,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_17_1 Frontend-Only Check Path
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #813)
 
 - [x] Ensure `check` stops after frontend/type phases
 - [x] Remove codegen/runtime coupling from check flow
@@ -24,7 +24,7 @@ status: done (2026-03-04, PR #TBD)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
@@ -58,6 +58,6 @@ status: pending
 - [ ] Mark part complete in phase doc and this checklist
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (open)
 - Part 2: pending
 - Part 3: pending
