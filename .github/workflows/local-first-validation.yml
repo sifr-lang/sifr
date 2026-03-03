@@ -1,0 +1,41 @@
+name: local-first-validation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  local-first-profiles:
+    name: local-first-${{ matrix.profile }}
+    runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request' || matrix.profile == 'quick'
+    strategy:
+      fail-fast: true
+      matrix:
+        profile: [quick, full, stress]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run local-first profile
+        run: bash scripts/run_all_tests.sh --profile "${{ matrix.profile }}"
+
+  smoke-fuzz-property:
+    name: smoke-fuzz-property
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run smoke fuzz/property checks
+        run: bash scripts/run_smoke_fuzz_property.sh
+
+  deterministic-report-signature:
+    name: deterministic-report-signature
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify deterministic report signature
+        run: bash scripts/check_e2e_report_determinism.sh --profile quick

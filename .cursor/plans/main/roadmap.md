@@ -34,7 +34,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | # | Phase | Status | Phase File | Unlocks |
 |---|---|---|---|---|
 | 15 | Baseline Reconciliation | completed | [15_baseline_reconciliation.md](./phases/15_baseline_reconciliation.md) | One canonical source of truth and signed execution contract |
-| 16 | Local-First Test Platform Foundation | planned | [16_local_first_test_platform_foundation.md](./phases/16_local_first_test_platform_foundation.md) | Deterministic local parallel validation as primary gate |
+| 16 | Local-First Test Platform Foundation | completed | [16_local_first_test_platform_foundation.md](./phases/16_local_first_test_platform_foundation.md) | Deterministic local parallel validation as primary gate |
 | 17 | Import and Externals Correctness | planned | [17_import_and_externals_correctness.md](./phases/17_import_and_externals_correctness.md) | Correct import behavior across `check/run/build/test` |
 | 18 | Project and CLI Semantics Correctness | planned | [18_project_and_cli_semantics_correctness.md](./phases/18_project_and_cli_semantics_correctness.md) | Predictable project-mode CLI behavior |
 | 19 | Module Graph Safety, Determinism, and Cache | planned | [19_module_graph_safety_determinism_and_cache.md](./phases/19_module_graph_safety_determinism_and_cache.md) | Deterministic multi-module builds and faster local loops |
