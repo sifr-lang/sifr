@@ -1,7 +1,7 @@
 # Phase 15 Canonical Backlog Issues
 
 Status: open backlog register
-Source of truth: `.cursor/plans/main/canonical_backlog.md`
+Source of truth: `.cursor/plans/main/phases/15_baseline_reconciliation.md`
 
 ## phase15-BL-15-001
 - Canonical finding ID: `BL-15-001`

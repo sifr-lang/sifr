@@ -40,5 +40,17 @@ Introduce a dedicated typed model layer with validation semantics, stable error 
 - Definition of done:
   - Target pydantic subset is explicit and regression-locked.
 
+## Quality Contract
+- Entry criteria: Phase 33 is completed and release governance is active.
+- Exit criteria: Typed model + validation layer is stable, test-covered, and consumable by web extractors without redesign.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 34 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 34 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Typed model + validation layer is stable, test-covered, and consumable by web extractors without redesign.

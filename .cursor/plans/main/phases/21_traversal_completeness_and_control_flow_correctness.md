@@ -28,5 +28,17 @@ Guarantee walkers and control-flow analyses cover all supported constructs corre
 - Definition of done:
   - No known missed traversal paths in generator/error analysis.
 
+## Quality Contract
+- Entry criteria: Phase 20 is completed and HIR decomposition guardrails are active.
+- Exit criteria: Control-flow lowering/analysis is complete for supported syntax and semantics.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 21 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 21 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Control-flow lowering/analysis is complete for supported syntax and semantics.

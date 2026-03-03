@@ -32,5 +32,17 @@ Make local parallel testing the authoritative quality gate and ensure CI mirrors
   - CI and local commands are 1:1.
   - Smoke fuzz/property checks run in default validation flow.
 
+## Quality Contract
+- Entry criteria: Phase 15 is completed and canonical backlog/contracts are finalized.
+- Exit criteria: Local parallel validation is trusted as primary, with CI parity confirmed.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 16 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 16 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Local parallel validation is trusted as primary, with CI parity confirmed.

@@ -29,5 +29,17 @@ Ship preview channels early for adoption while keeping stable GA promotion gated
 - Definition of done:
   - Preview release flow is repeatable end-to-end for `alpha`/`beta`.
 
+## Quality Contract
+- Entry criteria: Phase 27 is completed and async/runtime ecosystem primitives are stable.
+- Exit criteria: Preview release lifecycle works reliably without enabling stable GA promotion.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 28 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 28 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Preview release lifecycle works reliably without enabling stable GA promotion.

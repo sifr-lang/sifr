@@ -28,5 +28,17 @@ Decompose oversized HIR files into focused modules without changing behavior, an
 - Definition of done:
   - Guardrails are documented and enforced in local/CI checks where practical.
 
+## Quality Contract
+- Entry criteria: Phase 19 is completed and module graph determinism is enforced.
+- Exit criteria: HIR layer is materially more maintainable with regression-safe modular structure.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 20 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 20 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - HIR layer is materially more maintainable with regression-safe modular structure.

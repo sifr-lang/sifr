@@ -18,9 +18,8 @@ status: done (2026-03-03, PR #793)
   - One canonical backlog file exists and is current.
   - No duplicate finding IDs remain.
 - Evidence:
-  - Canonical backlog: `.cursor/plans/main/canonical_backlog.md`
+  - Canonical backlog: `## Canonical Findings` + `## Deduplication Ledger` sections in this file
   - Backlog integrity check: `scripts/validate_phase15_backlog.py`
-  - Milestone demo: `demos/milestone_15_1_canonical_backlog_demo.sifr`
 
 ### milestone_15_2: Phase Contract Definition
 status: done (2026-03-03, PR #794)
@@ -31,11 +30,9 @@ status: done (2026-03-03, PR #794)
   - Every phase has explicit completion gates.
   - Every gate maps to at least one concrete validation step.
 - Evidence:
-  - Phase contract baseline: `.cursor/plans/main/phase_contracts_15_35.md`
-  - Milestone registry baseline: `.cursor/plans/main/milestone_registry_15_35.md`
+  - Phase contract baseline: embedded `## Quality Contract` sections in phase files `15`-`35`
   - Gate-check helper: `scripts/phase_contract_gate_check.py`
-  - Milestone registry validator: `scripts/validate_milestone_registry_15_35.py`
-  - Milestone demo: `demos/milestone_15_2_phase_contracts_demo.sifr`
+  - Phase quality-contract validator: `scripts/validate_phase_quality_contracts_15_35.py`
 
 ### milestone_15_3: Stakeholder Sign-off Snapshot
 status: done (2026-03-03, PR #795)
@@ -46,9 +43,61 @@ status: done (2026-03-03, PR #795)
   - Sign-off recorded in plan docs.
   - Any deferred risks are linked to backlog issues.
 - Evidence:
-  - Sign-off snapshot: `.cursor/plans/main/phase15_signoff_snapshot.md`
+  - Sign-off snapshot: `## Sign-off Snapshot` section in this file
   - Backlog issue register: `issues/phase15-canonical-backlog-issues.md`
-  - Milestone demo: `demos/milestone_15_3_signoff_snapshot_demo.sifr`
+
+## Canonical Findings
+
+| ID | Title | Severity | Owning Phase | Source(s) | Backlog Issue | Status |
+|---|---|---|---|---|---|---|
+| `BL-15-001` | Demo sweep evidence must be reproducible via explicit command/script reference | `P2` | Phase 16 | `reviews/phase14-review.md` section 4.2 | [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-001](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-001) | open |
+| `BL-15-002` | Validation evidence should annotate test-count drift and timing variance to avoid ambiguity in phase closeout artifacts | `P3` | Phase 24 | `reviews/phase14-review.md` section 2.1, section 4.3 | [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-002](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-002) | open |
+| `BL-15-003` | Test-only carve-out (`RawCode`/`SynItem`) must remain isolated from production paths with explicit guardrails | `P1` | Phase 20 | `reviews/phase14-review.md` section 4.1, `reviews/phase14-production-grade-review.md` section 2.3 | [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-003](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-003) | open |
+| `BL-15-004` | Production banlist and structured-lowering gates must stay enforced in local-first validation loops | `P1` | Phase 25 | `reviews/phase14-production-grade-review.md` sections 3.1, 3.3 | [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-004](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-004) | open |
+| `BL-15-005` | E2E timing budgets need explicit baseline and regression thresholds | `P2` | Phase 29 | `reviews/phase14-production-grade-review.md` section 5.3 | [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-005](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-005) | open |
+| `BL-15-006` | Deferred planning gaps for Phases 36 and 37 require explicit closure criteria before track completion | `P2` | Phase 35 | `.cursor/plans/main/roadmap.md` deferred planning drafts | [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-006](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-006) | open |
+
+## Deduplication Ledger
+
+| Duplicate Group | Merged Into | Notes |
+|---|---|---|
+| `DG-15-001` | `BL-15-002` | Test-count variance and timing variance appeared as separate review notes; normalized as one evidence-quality contract item. |
+| `DG-15-002` | `BL-15-003` | Test-only carve-out risk appeared in both review files; retained once with shared source attribution. |
+
+No duplicate canonical IDs remain in this backlog.
+
+## Sign-off Snapshot
+
+Decision: **approved**.
+
+Rationale:
+- Canonical backlog exists with deduplicated finding IDs and normalized severity.
+- Every phase (`15`-`35`) now has explicit entry/exit criteria.
+- Every phase gate maps to concrete local validation commands.
+- Deferred risks are explicitly tracked and linked to backlog issues.
+
+Recorded authority:
+- Repository execution owner workflow instruction for Phase 15 on 2026-03-03.
+
+## Deferred Risks (Linked)
+- `BL-15-001` -> [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-001](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-001)
+- `BL-15-002` -> [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-002](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-002)
+- `BL-15-003` -> [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-003](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-003)
+- `BL-15-004` -> [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-004](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-004)
+- `BL-15-005` -> [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-005](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-005)
+- `BL-15-006` -> [/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-006](/issues/phase15-canonical-backlog-issues.md#phase15-bl-15-006)
+
+## Quality Contract
+- Entry criteria: Phase 14 is completed and phase-review findings are available.
+- Exit criteria: Canonical source of truth is approved and locked for execution.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 15 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 15 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
 
 ## Exit Gate
 - Canonical source of truth is approved and locked for execution.
