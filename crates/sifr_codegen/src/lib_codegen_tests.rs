@@ -779,6 +779,72 @@ fn test_generate_rust_multi_exports_non_main_items() {
 }
 
 #[test]
+fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
+    let main_module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "helper".to_string(),
+                    args: vec![],
+                    ty: Type::Float,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "utils".to_string(),
+            names: vec!["helper".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let utils_module = HirModule {
+        functions: vec![HirFunction {
+            name: "helper".to_string(),
+            params: vec![],
+            return_type: Type::Float,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Call {
+                    func: "sqrt".to_string(),
+                    args: vec![HirExpr::FloatLiteral(9.0)],
+                    ty: Type::Float,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["sqrt".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
+    let utils_rs = files
+        .get("utils")
+        .expect("utils module should be generated");
+    assert!(
+        !utils_rs.contains("use crate::sifr"),
+        "stdlib imports must not render crate::sifr.* use paths in multi-module output"
+    );
+}
+
+#[test]
 fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
     let int_list_ty = Type::List(Box::new(Type::Int));
     let module = HirModule {
@@ -1922,7 +1988,9 @@ fn test_production_codegen_source_has_no_non_ir_tokens() {
             .unwrap_or_else(|e| panic!("failed to read source dir {}: {e}", dir.display()));
         for entry in entries {
             let path = entry
-                .unwrap_or_else(|e| panic!("failed to read directory entry in {}: {e}", dir.display()))
+                .unwrap_or_else(|e| {
+                    panic!("failed to read directory entry in {}: {e}", dir.display())
+                })
                 .path();
             if path.is_dir() {
                 stack.push(path);
@@ -1938,7 +2006,10 @@ fn test_production_codegen_source_has_no_non_ir_tokens() {
                 .unwrap_or_else(|e| panic!("failed to read {}: {e}", path.display()));
             for token in banned_tokens {
                 if content.contains(token) {
-                    violations.push(format!("{} contains forbidden token `{token}`", path.display()));
+                    violations.push(format!(
+                        "{} contains forbidden token `{token}`",
+                        path.display()
+                    ));
                 }
             }
         }

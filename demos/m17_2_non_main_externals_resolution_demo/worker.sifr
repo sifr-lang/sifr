@@ -1,0 +1,5 @@
+# non-main module importing stdlib and exporting a local function
+from sifr.math import floor
+
+def call() -> int:
+    return floor(3.9)

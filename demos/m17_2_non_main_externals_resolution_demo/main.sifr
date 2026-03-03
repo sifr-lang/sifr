@@ -1,0 +1,6 @@
+# milestone_17_2 demo main module
+from worker import call
+
+def main():
+    print("m17_2 non-main externals demo:")
+    print(call())
