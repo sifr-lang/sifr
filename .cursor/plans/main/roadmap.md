@@ -4,7 +4,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 
 ## Scope Note
 - Historical language-building phases (1-14) are preserved in existing phase docs.
-- Active execution sequencing starts at **Phase 15** and runs through **Phase 36**.
+- Active execution sequencing starts at **Phase 15** and runs through **Phase 37**.
 
 ## Global Rules (from Phase 16 onward)
 - Sequential execution only (one phase at a time).
@@ -37,11 +37,12 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 29 | Performance Benchmarking and Budgets | planned | [29_performance_benchmarking_and_budgets.md](./phases/29_performance_benchmarking_and_budgets.md) | Enforced compile/runtime performance budgets |
 | 30 | Developer Tooling and Ecosystem Hooks | planned | [30_developer_tooling_and_ecosystem_hooks.md](./phases/30_developer_tooling_and_ecosystem_hooks.md) | Tooling hooks aligned with phase contracts |
 | 31 | Package Management | planned | [31_package_management.md](./phases/31_package_management.md) | Deterministic dependency and lockfile workflows |
-| 32 | Stable Channel GA Promotion and Release Governance | planned | [32_stable_channel_ga_promotion_and_release_governance.md](./phases/32_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
-| 33 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [33_typed_data_model_and_validation.md](./phases/33_typed_data_model_and_validation.md) | Dedicated typed model/validation layer |
-| 34 | Web Framework and Typed Extractors | planned | [34_web_framework_and_typed_extractors.md](./phases/34_web_framework_and_typed_extractors.md) | Web stack with model-driven request validation/extractors |
-| 35 | Data Science and ML | planned | [35_data_science_ml.md](./phases/35_data_science_ml.md) | Data and ML workflows on top of core platform |
-| 36 | Interoperability | planned | [36_interoperability.md](./phases/36_interoperability.md) | FFI capabilities on top of stabilized foundations |
+| 32 | Docs and Documentation | planned | [32_docs_and_documentation.md](./phases/32_docs_and_documentation.md) | Canonical versioned docs and local docs quality gates |
+| 33 | Stable Channel GA Promotion and Release Governance | planned | [33_stable_channel_ga_promotion_and_release_governance.md](./phases/33_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
+| 34 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [34_typed_data_model_and_validation.md](./phases/34_typed_data_model_and_validation.md) | Dedicated typed model/validation layer |
+| 35 | Web Framework and Typed Extractors | planned | [35_web_framework_and_typed_extractors.md](./phases/35_web_framework_and_typed_extractors.md) | Web stack with model-driven request validation/extractors |
+| 36 | Data Science and ML | planned | [36_data_science_ml.md](./phases/36_data_science_ml.md) | Data and ML workflows on top of core platform |
+| 37 | Interoperability | planned | [37_interoperability.md](./phases/37_interoperability.md) | FFI capabilities on top of stabilized foundations |
 
 ## Milestone Index (Clear Milestones)
 
@@ -128,27 +129,32 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - `milestone_31_1` Package Management
 
 ### Phase 32
-- `milestone_32_1` Stable Promotion Policy
-- `milestone_32_2` Rollback and Incident Governance
-- `milestone_32_3` Release Sign-off Workflow
+- `milestone_32_1` Documentation Information Architecture
+- `milestone_32_2` Reference and Contract Documentation
+- `milestone_32_3` Documentation Quality Gates
 
 ### Phase 33
-- `milestone_33_1` Typed Model Core
-- `milestone_33_2` Validation Engine
-- `milestone_33_3` Error Model and Diagnostics Contract
-- `milestone_33_4` Parity and Compatibility Matrix
+- `milestone_33_1` Stable Promotion Policy
+- `milestone_33_2` Rollback and Incident Governance
+- `milestone_33_3` Release Sign-off Workflow
 
 ### Phase 34
-- `milestone_34_1` Web Framework Core
-- `milestone_34_2` Typed Extractors and Request Validation
-- `milestone_34_3` Production Web Baseline
+- `milestone_34_1` Typed Model Core
+- `milestone_34_2` Validation Engine
+- `milestone_34_3` Error Model and Diagnostics Contract
+- `milestone_34_4` Parity and Compatibility Matrix
 
 ### Phase 35
-- `milestone_35_1` Data Processing
-- `milestone_35_2` ML Inference
+- `milestone_35_1` Web Framework Core
+- `milestone_35_2` Typed Extractors and Request Validation
+- `milestone_35_3` Production Web Baseline
 
 ### Phase 36
-- `milestone_36_1` Interoperability (FFI)
+- `milestone_36_1` Data Processing
+- `milestone_36_2` ML Inference
+
+### Phase 37
+- `milestone_37_1` Interoperability (FFI)
 
 ## Dependency Chain
 
@@ -170,11 +176,12 @@ flowchart LR
     p28 --> p29["Phase 29\nPerformance Budgets"]
     p29 --> p30["Phase 30\nDeveloper Tooling"]
     p30 --> p31["Phase 31\nPackage Management"]
-    p31 --> p32["Phase 32\nStable GA Governance"]
-    p32 --> p33["Phase 33\nTyped Data Model + Validation"]
-    p33 --> p34["Phase 34\nWeb Framework + Typed Extractors"]
-    p34 --> p35["Phase 35\nData Science + ML"]
-    p35 --> p36["Phase 36\nInteroperability"]
+    p31 --> p32["Phase 32\nDocs and Documentation"]
+    p32 --> p33["Phase 33\nStable GA Governance"]
+    p33 --> p34["Phase 34\nTyped Data Model + Validation"]
+    p34 --> p35["Phase 35\nWeb Framework + Typed Extractors"]
+    p35 --> p36["Phase 36\nData Science + ML"]
+    p36 --> p37["Phase 37\nInteroperability"]
 ```
 
 ## Execution Discipline

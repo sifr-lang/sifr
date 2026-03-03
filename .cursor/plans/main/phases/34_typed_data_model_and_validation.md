@@ -1,14 +1,14 @@
-# Phase 33: Typed Data Model and Validation (Pydantic-Parity Track)
+# Phase 34: Typed Data Model and Validation (Pydantic-Parity Track)
 
 ## Objective
 Introduce a dedicated typed model layer with validation semantics, stable error behavior, and explicit pydantic-parity boundaries.
 
 ## Depends on
-- Phase 32
+- Phase 33
 
 ## Milestones
 
-### milestone_33_1: Typed Model Core
+### milestone_34_1: Typed Model Core
 - Scope:
   - Class-to-model mapping with field metadata and defaults.
   - Optional/union/list/dict model handling.
@@ -16,7 +16,7 @@ Introduce a dedicated typed model layer with validation semantics, stable error 
 - Definition of done:
   - Typed model core is usable independent of async/web runtime concerns.
 
-### milestone_33_2: Validation Engine
+### milestone_34_2: Validation Engine
 - Scope:
   - Strict vs coercion modes.
   - Nested model validation and collection constraints.
@@ -24,14 +24,14 @@ Introduce a dedicated typed model layer with validation semantics, stable error 
 - Definition of done:
   - Validation behavior is deterministic, testable, and documented.
 
-### milestone_33_3: Error Model and Diagnostics Contract
+### milestone_34_3: Error Model and Diagnostics Contract
 - Scope:
   - Structured validation errors (path, code, message, context).
   - Stable parse/validation error-code contract.
 - Definition of done:
   - Validation failures produce stable, structured, and actionable errors.
 
-### milestone_33_4: Parity and Compatibility Matrix
+### milestone_34_4: Parity and Compatibility Matrix
 - Scope:
   - Feature matrix per capability: `parity`, `intentional-diff`, `unsupported`.
   - Port representative pydantic behavior tests.

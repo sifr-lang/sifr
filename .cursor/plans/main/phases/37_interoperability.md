@@ -1,14 +1,14 @@
-# Phase 36: Interoperability
+# Phase 37: Interoperability
 
 ## Objective
 Deliver interoperability capabilities after typed model, package, tooling, and web foundations are stable.
 
 ## Depends on
-- Phase 35
+- Phase 36
 
 ## Milestones
 
-### milestone_36_1: Interoperability (FFI)
+### milestone_37_1: Interoperability (FFI)
 - Scope:
   - Rust/C FFI boundary model, safety constraints, and diagnostics.
 - Definition of done:
