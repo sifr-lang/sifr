@@ -1,18 +1,18 @@
 # Phase 15 Execution Checklist (Baseline Reconciliation)
 
-Status: In Progress
+Status: Completed (2026-03-03)
 Owner: phase_15 execution loop
 Reference phase doc: `.cursor/plans/main/phases/15_baseline_reconciliation.md`
 
 Loop per part: Work -> Validate -> Demo -> PR -> Review -> Merge -> Mark Done
 
 ## Global Gates (apply to every part)
-- [ ] Scope remains constrained to the current part definition-of-done
-- [ ] Root cause addressed (no superficial workaround/fallback)
-- [ ] Milestone demo runs with `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr` (waivable for docs-only parts)
-- [ ] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` (waivable for docs-only parts)
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Scope remains constrained to the current part definition-of-done
+- [x] Root cause addressed (no superficial workaround/fallback)
+- [x] Milestone demo runs with `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr` (waivable for docs-only parts)
+- [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` (waivable for docs-only parts)
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_15_1 Canonical Backlog Reconciliation
 status: done (2026-03-03, PR #793)
@@ -40,7 +40,7 @@ status: done (2026-03-03, PR #794)
 - [x] Mark part complete in phase doc and this checklist
 
 ## Part 3: milestone_15_3 Stakeholder Sign-off Snapshot
-status: in_progress
+status: done (2026-03-03, PR #795)
 
 - [x] Record sign-off decision over reconciled backlog + phase contracts
 - [x] Capture deferred risks with links to backlog issues
@@ -48,10 +48,10 @@ status: in_progress
 - [x] Add demo file `demos/milestone_15_3_signoff_snapshot_demo.sifr`
 - [x] Run milestone demo
 - [x] Run full local suite (waived by user for docs-only phase scope)
-- [ ] Open PR, review, and merge
-- [ ] Mark phase complete in all planning docs
+- [x] Open PR, review, and merge (https://github.com/yaseralnajjar/sifr/pull/795)
+- [x] Mark phase complete in all planning docs
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/793 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/794 (merged)
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/795 (merged)

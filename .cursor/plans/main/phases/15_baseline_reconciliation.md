@@ -35,7 +35,7 @@ status: done (2026-03-03, PR #794)
   - Milestone demo: `demos/milestone_15_2_phase_contracts_demo.sifr`
 
 ### milestone_15_3: Stakeholder Sign-off Snapshot
-status: in_progress
+status: done (2026-03-03, PR #795)
 - Scope:
   - Review reconciled backlog + phase contracts.
   - Record explicit sign-off decision and open risks.
