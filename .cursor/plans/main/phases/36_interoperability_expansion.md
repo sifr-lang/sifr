@@ -1,0 +1,18 @@
+# Phase 35: Interoperability Expansion
+
+## Objective
+Resume interoperability expansion after typed model, package, tooling, and web foundations are stable.
+
+## Depends on
+- Phase 34
+
+## Milestones
+
+### milestone_35_1: Interoperability (FFI)
+- Scope:
+  - Rust/C FFI boundary model, safety constraints, and diagnostics.
+- Definition of done:
+  - Interop workflows are documented, test-covered, and safe-gated.
+
+## Exit Gate
+- Interoperability expansion is stable and governed by existing quality gates.
