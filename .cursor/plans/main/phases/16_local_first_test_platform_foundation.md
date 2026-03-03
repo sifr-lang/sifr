@@ -38,7 +38,7 @@ status: done (2026-03-03, PR #807)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m16_2_deterministic_reporting_demo.sifr`.
 
 ### milestone_16_3: CI-Parity and Smoke Hardening
-status: done (2026-03-03, PR pending merge)
+status: done (2026-03-03, PR #808)
 - Scope:
   - Wire CI to run exact local scripts and flags.
   - Add always-on smoke fuzz/property jobs.

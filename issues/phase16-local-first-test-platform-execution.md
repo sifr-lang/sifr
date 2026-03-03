@@ -57,7 +57,7 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m16_2_deterministic_reporting_demo.sifr` -> `m16_2 deterministic reporting demo: ok`.
 
 ## Part 3: milestone_16_3 CI-Parity and Smoke Hardening
-status: in review (PR pending merge)
+status: in review (PR #808)
 
 - [x] Wire CI to run exact local scripts and flags
 - [x] Add always-on smoke fuzz/property jobs
@@ -78,7 +78,7 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/806 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/807 (merged)
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/808 (open)
 
 ## Reviewer Follow-up
 - External review pass 1 output: pending
