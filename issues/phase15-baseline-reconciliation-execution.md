@@ -58,5 +58,7 @@ status: done (2026-03-03, PR #795)
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase15-review.md`
-- Remediation PR: https://github.com/yaseralnajjar/sifr/pull/797 (merged)
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/797 (merged)
 - External review pass 2 output: `reviews/phase15-production-grade-review.md`
+- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/798 (merged)
+- Milestone coverage closure: https://github.com/yaseralnajjar/sifr/pull/799 (merged)
