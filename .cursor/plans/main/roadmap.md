@@ -92,5 +92,6 @@ flowchart LR
 - Merge decisions are based on local gate evidence first, CI second.
 
 ## Deferred Planning Drafts (Need Alignment)
+- Phase 37 is intentionally excluded from the main execution table until post-Phase-35 planning lock.
 - [36_data_science_ml.md](./phases/36_data_science_ml.md) (needs more planning)
 - [37_interoperability.md](./phases/37_interoperability.md) (needs more planning)

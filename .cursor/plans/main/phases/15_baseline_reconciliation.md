@@ -19,6 +19,7 @@ status: done (2026-03-03, PR #793)
   - No duplicate finding IDs remain.
 - Evidence:
   - Canonical backlog: `.cursor/plans/main/canonical_backlog.md`
+  - Backlog integrity check: `scripts/validate_phase15_backlog.py`
   - Milestone demo: `demos/milestone_15_1_canonical_backlog_demo.sifr`
 
 ### milestone_15_2: Phase Contract Definition

@@ -11,12 +11,13 @@ Gate mapping rule:
 - Every entry gate maps to at least one concrete command.
 - Every exit gate maps to at least one concrete command.
 - A phase is complete only when its exit validations pass and roadmap status is updated to `completed`.
+- Every phase must declare a concrete `phase_demo_path` in its execution checklist before phase closure; `<phase_demo_path>` is a required placeholder until that declaration exists.
 
 ## Command Baseline
 - `ENTRY-CHECK`: `python scripts/phase_contract_gate_check.py --phase <N> --check entry`
 - `EXIT-CHECK`: `python scripts/phase_contract_gate_check.py --phase <N> --check exit`
-- `PHASE-DEMO`: `cargo run -q -p sifr -- run demos/phase<N>_exit_demo.sifr`
-- `FULL-SUITE`: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- `PHASE-DEMO`: `cargo run -q -p sifr -- run <phase_demo_path>`
+- `FULL-SUITE`: `./scripts/run_all_tests.sh`
 
 ## Phase 15 Contract
 - Entry criteria: Phase 14 is completed and phase-review findings are available.
@@ -24,8 +25,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 15 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 15 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase15_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 16 Contract
 - Entry criteria: Phase 15 is completed and canonical backlog/contracts are finalized.
@@ -33,8 +34,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 16 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 16 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase16_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 17 Contract
 - Entry criteria: Phase 16 is completed and deterministic local profiles are in place.
@@ -42,8 +43,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 17 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 17 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase17_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 18 Contract
 - Entry criteria: Phase 17 is completed and import/external behavior is stable.
@@ -51,8 +52,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 18 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 18 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase18_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 19 Contract
 - Entry criteria: Phase 18 is completed and project-mode semantics are stable.
@@ -60,8 +61,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 19 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 19 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase19_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 20 Contract
 - Entry criteria: Phase 19 is completed and module graph determinism is enforced.
@@ -69,8 +70,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 20 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 20 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase20_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 21 Contract
 - Entry criteria: Phase 20 is completed and HIR decomposition guardrails are active.
@@ -78,8 +79,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 21 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 21 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase21_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 22 Contract
 - Entry criteria: Phase 21 is completed and traversal/control-flow behavior is stable.
@@ -87,8 +88,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 22 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 22 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase22_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 23 Contract
 - Entry criteria: Phase 22 is completed and type-system soundness baseline is met.
@@ -96,8 +97,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 23 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 23 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase23_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 24 Contract
 - Entry criteria: Phase 23 is completed and runtime-safe codegen invariants are active.
@@ -105,8 +106,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 24 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 24 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase24_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 25 Contract
 - Entry criteria: Phase 24 is completed and diagnostic stability contract is in place.
@@ -114,8 +115,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 25 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 25 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase25_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 26 Contract
 - Entry criteria: Phase 25 is completed and verification hardening is active.
@@ -123,8 +124,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 26 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 26 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase26_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 27 Contract
 - Entry criteria: Phase 26 is completed and codegen architecture from Phase 14 remains intact.
@@ -132,8 +133,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 27 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 27 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase27_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 28 Contract
 - Entry criteria: Phase 27 is completed and async/runtime ecosystem primitives are stable.
@@ -141,8 +142,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 28 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 28 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase28_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 29 Contract
 - Entry criteria: Phase 28 is completed and preview artifacts are reproducible.
@@ -150,8 +151,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 29 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 29 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase29_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 30 Contract
 - Entry criteria: Phase 29 is completed and performance budgets are enforced.
@@ -159,8 +160,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 30 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 30 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase30_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 31 Contract
 - Entry criteria: Phase 30 is completed and tooling contracts are stable.
@@ -168,8 +169,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 31 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 31 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase31_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 32 Contract
 - Entry criteria: Phase 31 is completed and package workflows are deterministic.
@@ -177,8 +178,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 32 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 32 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase32_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 33 Contract
 - Entry criteria: Phase 32 is completed and release-facing documentation is canonical.
@@ -186,8 +187,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 33 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 33 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase33_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 34 Contract
 - Entry criteria: Phase 33 is completed and release governance is active.
@@ -195,8 +196,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 34 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 34 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase34_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 35 Contract
 - Entry criteria: Phase 34 is completed and typed data model contracts are stable.
@@ -204,8 +205,8 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 35 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 35 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase35_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
 
 ## Phase 36 Contract
 - Entry criteria: Phase 35 is completed and scoped platform expansion tracks are available.
@@ -213,5 +214,5 @@ Gate mapping rule:
 - Entry validation: `python scripts/phase_contract_gate_check.py --phase 36 --check entry`
 - Exit validation:
   - `python scripts/phase_contract_gate_check.py --phase 36 --check exit`
-  - `cargo run -q -p sifr -- run demos/phase36_exit_demo.sifr`
-  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+  - `cargo run -q -p sifr -- run <phase_demo_path>`
+  - `./scripts/run_all_tests.sh`
