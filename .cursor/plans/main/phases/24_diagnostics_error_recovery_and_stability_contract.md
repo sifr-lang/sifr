@@ -29,5 +29,17 @@ Deliver production-quality diagnostics with recovery and explicit stability guar
 - Definition of done:
   - Stability policy is explicit and enforced by tests/docs.
 
+## Quality Contract
+- Entry criteria: Phase 23 is completed and runtime-safe codegen invariants are active.
+- Exit criteria: Compiler diagnostics are stable, span-accurate, recovery-capable, and panic-free on user input.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 24 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 24 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Compiler diagnostics are stable, span-accurate, recovery-capable, and panic-free on user input.

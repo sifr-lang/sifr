@@ -135,3 +135,15 @@ status: pending
 - **milestone_typed_serde_core second:** Typed serialization is web-independent and stays in this phase.
 - **milestone_async_sync third:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking depend only on the async runtime.
 - **milestone_async_advanced last:** Advanced features (async with, async generators, async comprehensions) build on everything above.
+
+## Quality Contract
+- Entry criteria: Phase 26 is completed and codegen architecture from Phase 14 remains intact.
+- Exit criteria: Async runtime core, typed serialization core, sync primitives, and advanced async features are all delivered with regression coverage.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 27 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 27 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`

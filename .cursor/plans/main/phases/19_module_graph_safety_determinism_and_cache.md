@@ -27,5 +27,17 @@ Make multi-module compilation dependency-safe, deterministic, and efficient for 
 - Definition of done:
   - Repeated local runs avoid redundant stdlib recompilation.
 
+## Quality Contract
+- Entry criteria: Phase 18 is completed and project-mode semantics are stable.
+- Exit criteria: Multi-module builds are deterministic, cycle-safe, and faster in local iteration.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 19 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 19 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Multi-module builds are deterministic, cycle-safe, and faster in local iteration.

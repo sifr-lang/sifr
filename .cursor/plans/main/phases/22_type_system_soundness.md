@@ -28,5 +28,17 @@ Close known type-soundness holes before stable release promotion.
 - Definition of done:
   - Optional arithmetic requires explicit safe handling.
 
+## Quality Contract
+- Entry criteria: Phase 21 is completed and traversal/control-flow behavior is stable.
+- Exit criteria: Critical type-system soundness issues are resolved and regression-covered.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 22 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 22 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Critical type-system soundness issues are resolved and regression-covered.

@@ -27,5 +27,17 @@ Ensure generated runtime code does not encode avoidable panic behavior for norma
 - Definition of done:
   - Runtime/codegen semantics are safe and diagnostic-driven.
 
+## Quality Contract
+- Entry criteria: Phase 22 is completed and type-system soundness baseline is met.
+- Exit criteria: Generated code semantics are safe-by-default for supported language behavior.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 23 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 23 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Generated code semantics are safe-by-default for supported language behavior.

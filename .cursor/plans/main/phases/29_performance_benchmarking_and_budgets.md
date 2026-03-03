@@ -26,5 +26,17 @@ Establish and enforce compiler-focused performance budgets (compile-time, compil
 - Definition of done:
   - Regressions fail gates unless approved waiver exists.
 
+## Quality Contract
+- Entry criteria: Phase 28 is completed and preview artifacts are reproducible.
+- Exit criteria: Performance regressions are systematically detected and controlled.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 29 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 29 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Performance regressions are systematically detected and controlled.

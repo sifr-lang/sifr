@@ -42,5 +42,17 @@ Deliver the web framework with typed extractors, then land platform expansion tr
 - Definition of done:
   - Interop MVP workflows are documented, test-covered, and quality-gated.
 
+## Quality Contract
+- Entry criteria: Phase 34 is completed and typed data model contracts are stable.
+- Exit criteria: Web, data/ML, and interoperability MVP tracks are delivered without violating reliability/stability contracts.
+- Milestone quality checks:
+  - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Validation evidence must be recorded in the phase execution checklist issue before merge.
+- Mandatory local validation commands:
+  - `python scripts/phase_contract_gate_check.py --phase 35 --check entry`
+  - `python scripts/phase_contract_gate_check.py --phase 35 --check exit`
+  - `python scripts/validate_phase_quality_contracts_15_35.py`
+  - `./scripts/run_all_tests.sh`
+
 ## Exit Gate
 - Web, data/ML, and interoperability MVP tracks are delivered without violating reliability/stability contracts.

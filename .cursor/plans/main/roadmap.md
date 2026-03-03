@@ -27,8 +27,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - No user-triggerable compiler panics.
 - No data-dependent emitted `.unwrap()`/`.expect()` in generated user runtime paths.
 - Scoped fix-back (`N+1` discovering defect in `N`) is allowed only if minimal, documented, regression-tested, and revalidated.
-- Phase entry/exit gates and mandatory local validation commands are defined in [`phase_contracts_15_35.md`](./phase_contracts_15_35.md).
-- Milestone-level scope/DoD coverage is tracked in [`milestone_registry_15_35.md`](./milestone_registry_15_35.md).
+- Phase entry/exit gates, milestone quality checks, and mandatory local validation commands are embedded in each phase file (`15`-`35`) under `## Quality Contract`.
 
 ## Reliability Track (Phase 15-26)
 
