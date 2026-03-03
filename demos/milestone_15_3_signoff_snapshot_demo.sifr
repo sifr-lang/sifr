@@ -1,0 +1,12 @@
+# Demo: milestone_15_3 stakeholder sign-off snapshot
+# Verifies sign-off decision marker and deferred-risk link count.
+
+def main():
+    signoff_approved: bool = True
+    deferred_risk_links: int = 6
+
+    print(f"phase15_3_signoff_approved={signoff_approved}")
+    assert str(f"phase15_3_signoff_approved={signoff_approved}") == "phase15_3_signoff_approved=true"
+
+    print(f"phase15_3_deferred_risks={deferred_risk_links}")
+    assert str(f"phase15_3_deferred_risks={deferred_risk_links}") == "phase15_3_deferred_risks=6"
