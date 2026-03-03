@@ -26,13 +26,15 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 const E2E_CACHE_DIR: &str = "target/sifr_e2e_cache";
 const E2E_CACHE_MANIFEST: &str = "manifest.json";
 const E2E_CACHE_SCHEMA_VERSION: u32 = 1;
-const E2E_CACHE_ENV_ALLOWLIST: [&str; 6] = [
+const E2E_CACHE_ENV_ALLOWLIST: [&str; 8] = [
     "RUSTFLAGS",
     "CARGO_ENCODED_RUSTFLAGS",
     "RUSTC_WRAPPER",
+    "SIFR_E2E_PROFILE",
     "SIFR_E2E_RUNNER_MODE",
     "SIFR_E2E_NEW_RUNNER",
     "SIFR_E2E_LEGACY_RUNNER",
+    "SIFR_E2E_CACHE_DIR",
 ];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -280,6 +282,13 @@ fn parse_positive_usize(value: Option<&str>, default: usize) -> usize {
     }
 }
 
+fn cache_root_from_env(raw: Option<&str>) -> PathBuf {
+    match raw.map(str::trim).filter(|value| !value.is_empty()) {
+        Some(value) => PathBuf::from(value),
+        None => Path::new(E2E_CACHE_DIR).to_path_buf(),
+    }
+}
+
 fn runner_config() -> Result<RunnerConfig, String> {
     let mode = parse_runner_mode_from_env(
         env::var("SIFR_E2E_RUNNER_MODE").ok().as_deref(),
@@ -313,6 +322,7 @@ fn runner_config() -> Result<RunnerConfig, String> {
             .and_then(|raw| parse_bool_env(raw).ok()),
         Some(true)
     );
+    let cache_root = cache_root_from_env(env::var("SIFR_E2E_CACHE_DIR").ok().as_deref());
 
     Ok(RunnerConfig {
         mode,
@@ -322,7 +332,7 @@ fn runner_config() -> Result<RunnerConfig, String> {
         cargo_build_jobs,
         cache: CacheConfig {
             enabled: cache_enabled,
-            root: Path::new(E2E_CACHE_DIR).to_path_buf(),
+            root: cache_root,
         },
     })
 }
@@ -2163,6 +2173,26 @@ fn test_runner_mode_resolution() {
         RunnerMode::Legacy
     ));
     assert!(parse_runner_mode_from_env(Some("legacy"), Some("1"), Some("1")).is_err());
+}
+
+#[test]
+fn test_cache_root_from_env_resolution() {
+    assert_eq!(
+        cache_root_from_env(None),
+        Path::new(E2E_CACHE_DIR).to_path_buf()
+    );
+    assert_eq!(
+        cache_root_from_env(Some("")),
+        Path::new(E2E_CACHE_DIR).to_path_buf()
+    );
+    assert_eq!(
+        cache_root_from_env(Some("   ")),
+        Path::new(E2E_CACHE_DIR).to_path_buf()
+    );
+    assert_eq!(
+        cache_root_from_env(Some("target/custom_cache_root")),
+        PathBuf::from("target/custom_cache_root")
+    );
 }
 
 #[test]

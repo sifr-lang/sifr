@@ -1,0 +1,21 @@
+# Phase 16 / milestone_16_1 demo:
+# The local-first validation platform defines three explicit profiles:
+# quick, full, stress.
+
+def profile_weight(profile: str) -> int:
+    if profile == "quick":
+        return 1
+    if profile == "full":
+        return 2
+    if profile == "stress":
+        return 3
+    return 0
+
+def main():
+    quick: int = profile_weight("quick")
+    full: int = profile_weight("full")
+    stress: int = profile_weight("stress")
+
+    assert quick < full
+    assert full < stress
+    print("m16_1 profile demo: ok")

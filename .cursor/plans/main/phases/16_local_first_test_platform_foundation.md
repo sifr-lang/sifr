@@ -9,12 +9,18 @@ Make local parallel testing the authoritative quality gate and ensure CI mirrors
 ## Milestones
 
 ### milestone_16_1: Parallel Test Profiles
+status: done (2026-03-03, PR #806)
 - Scope:
   - Define local profiles: `quick`, `full`, `stress`.
   - Make profile execution parallel-safe and reproducible.
 - Definition of done:
   - Profiles run reliably on developer machines.
   - Profile purpose and runtime envelope are documented.
+- Evidence:
+  - Profile contracts and runtime envelopes are implemented in `scripts/run_e2e_pass.sh`.
+  - Local-first profile entrypoint is implemented in `scripts/run_all_tests.sh --profile <quick|full|stress>`.
+  - Profile-specific cache roots are enforced through `SIFR_E2E_CACHE_DIR` wiring in `crates/sifr/tests/e2e.rs`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m16_1_parallel_test_profiles_demo.sifr`.
 
 ### milestone_16_2: Deterministic Reporting
 - Scope:
