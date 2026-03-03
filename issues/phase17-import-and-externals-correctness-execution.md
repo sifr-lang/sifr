@@ -34,7 +34,7 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m17_1_frontend_only_check_path_demo.sifr` -> prints `m17_1 frontend-only check path demo:` and `17`.
 
 ## Part 2: milestone_17_2 Non-Main Externals Resolution
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #814)
 
 - [x] Resolve stdlib/local externals in non-main modules
 - [x] Ensure multi-file projects type-check consistently
@@ -42,7 +42,7 @@ status: done (2026-03-04, PR #TBD)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
@@ -66,5 +66,5 @@ status: pending
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (merged)
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/814 (open)
 - Part 3: pending

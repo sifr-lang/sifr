@@ -22,7 +22,7 @@ status: done (2026-03-04, PR #813)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m17_1_frontend_only_check_path_demo.sifr`.
 
 ### milestone_17_2: Non-Main Externals Resolution
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #814)
 - Scope:
   - Resolve stdlib/local externals in non-main modules.
   - Ensure multi-file projects type-check consistently.
