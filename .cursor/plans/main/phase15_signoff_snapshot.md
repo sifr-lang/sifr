@@ -6,7 +6,7 @@ Status: approved for execution handoff to Phase 16
 
 ## Inputs Reviewed
 - `.cursor/plans/main/canonical_backlog.md`
-- `.cursor/plans/main/phase_contracts_15_36.md`
+- `.cursor/plans/main/phase_contracts_15_35.md`
 - `issues/phase15-canonical-backlog-issues.md`
 
 ## Sign-off Decision
@@ -14,7 +14,7 @@ Decision: **approved**.
 
 Rationale:
 - Canonical backlog exists with deduplicated finding IDs and normalized severity.
-- Every phase (`15`-`36`) now has explicit entry/exit criteria.
+- Every phase (`15`-`35`) now has explicit entry/exit criteria.
 - Every phase gate maps to concrete local validation commands.
 - Deferred risks are explicitly tracked and linked to backlog issues.
 

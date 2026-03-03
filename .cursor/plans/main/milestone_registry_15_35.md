@@ -1,15 +1,15 @@
-# Milestone Registry (Phases 15-36)
+# Milestone Registry (Phases 15-35)
 
 Last updated: 2026-03-03
 Owner: Phase 15 (`milestone_15_2` detail closure)
 Status: active
 
 ## Purpose
-This registry guarantees that every milestone across phases 15-36 is explicitly tracked with scope and definition-of-done snapshots.
+This registry guarantees that every milestone across phases 15-35 is explicitly tracked with scope and definition-of-done snapshots.
 
 Mandatory local validation contract per milestone:
 - `python scripts/phase_contract_gate_check.py --phase <N> --check entry`
-- `python scripts/validate_milestone_registry_15_36.py`
+- `python scripts/validate_milestone_registry_15_35.py`
 - `./scripts/run_all_tests.sh`
 
 ## Phase 15: Baseline Reconciliation
@@ -18,7 +18,7 @@ Source: `.cursor/plans/main/phases/15_baseline_reconciliation.md`
 | Milestone | Scope Snapshot | Definition-of-Done Snapshot |
 |---|---|---|
 | `milestone_15_1` (Canonical Backlog Reconciliation) | Merge reviewer findings into one backlog.; Deduplicate overlaps and normalize severity (P0-P3).; Tag each item to owning future phase. | One canonical backlog file exists and is current.; No duplicate finding IDs remain. |
-| `milestone_15_2` (Phase Contract Definition) | Define entry/exit criteria for Phases 15-36.; Define mandatory local validation expectations for each phase. | Every phase has explicit completion gates.; Every gate maps to at least one concrete validation step. |
+| `milestone_15_2` (Phase Contract Definition) | Define entry/exit criteria for Phases 15-35.; Define mandatory local validation expectations for each phase. | Every phase has explicit completion gates.; Every gate maps to at least one concrete validation step. |
 | `milestone_15_3` (Stakeholder Sign-off Snapshot) | Review reconciled backlog + phase contracts.; Record explicit sign-off decision and open risks. | Sign-off recorded in plan docs.; Any deferred risks are linked to backlog issues. |
 
 ## Phase 16: Local-First Test Platform Foundation
@@ -201,15 +201,7 @@ Source: `.cursor/plans/main/phases/35_web_framework_and_platform_expansion.md`
 | `milestone_35_4` (Data/ML Track (Scoped)) | Initial data processing and ML inference workflows on top of web/model foundations. | Data/ML MVP workflows are validated with regression coverage. |
 | `milestone_35_5` (Interoperability Track (Scoped)) | Initial FFI/interoperability boundary model and safety constraints. | Interop MVP workflows are documented, test-covered, and quality-gated. |
 
-## Phase 36: Data Science and ML
-Source: `.cursor/plans/main/phases/36_data_science_ml.md`
-
-| Milestone | Scope Snapshot | Definition-of-Done Snapshot |
-|---|---|---|
-| `milestone_36_1` (Data Processing) | DataFrame workflows (CSV/Parquet I/O, transformations, aggregations).; Batch/lazy execution ergonomics suitable for Sifr data workloads. | Data processing workflows are stable and regression-covered. |
-| `milestone_36_2` (ML Inference) | Model loading/inference runtime and typed input/output paths.; Tensor/array primitives needed for inference workloads. | ML inference paths are functional and test-covered. |
-
 ## Coverage Summary
-- Total milestones tracked: `65`
-- Validation command: `python scripts/validate_milestone_registry_15_36.py`
+- Total milestones tracked: `63`
+- Validation command: `python scripts/validate_milestone_registry_15_35.py`
 
