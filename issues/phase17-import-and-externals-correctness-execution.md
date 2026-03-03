@@ -34,16 +34,23 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m17_1_frontend_only_check_path_demo.sifr` -> prints `m17_1 frontend-only check path demo:` and `17`.
 
 ## Part 2: milestone_17_2 Non-Main Externals Resolution
-status: pending
+status: done (2026-03-04, PR #TBD)
 
-- [ ] Resolve stdlib/local externals in non-main modules
-- [ ] Ensure multi-file projects type-check consistently
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
+- [x] Resolve stdlib/local externals in non-main modules
+- [x] Ensure multi-file projects type-check consistently
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
 - [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m17_2_non_main_externals_resolution_demo/main.sifr` -> prints `m17_2 non-main externals demo:` and `3`.
+- Positive path: `cargo test -q -p sifr_driver` -> pass (includes non-main stdlib/local dependency tests).
+- Positive path: `cargo test -q -p sifr_codegen test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules` -> pass.
+- Negative path: `cargo run -q -p sifr -- run <project_with_non_main_importing_missing_module>/main.sifr` -> exits `1` with `[worker] unknown module 'missing_mod'`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_17_3 Test and Constant Import Parity
 status: pending
@@ -58,6 +65,6 @@ status: pending
 - [ ] Mark part complete in phase doc and this checklist
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (open)
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (merged)
 - Part 2: pending
 - Part 3: pending

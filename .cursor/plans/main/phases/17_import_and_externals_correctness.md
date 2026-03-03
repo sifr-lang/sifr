@@ -22,11 +22,21 @@ status: done (2026-03-04, PR #813)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m17_1_frontend_only_check_path_demo.sifr`.
 
 ### milestone_17_2: Non-Main Externals Resolution
+status: done (2026-03-04, PR #TBD)
 - Scope:
   - Resolve stdlib/local externals in non-main modules.
   - Ensure multi-file projects type-check consistently.
 - Definition of done:
   - Non-main modules can import stdlib/local modules correctly.
+- Evidence:
+  - Project lowering now uses dependency-aware retries with shared external definitions in `collect_project_hir_modules`.
+  - Non-main modules are lowered through `lower_module_with_externals` (instead of isolated `lower_module`) so stdlib/local imports resolve consistently.
+  - Multi-module codegen now skips invalid `use crate::sifr.*` emission for stdlib imports.
+  - Regression guards:
+    - `test_collect_project_modules_allows_non_main_stdlib_imports` (`crates/sifr_driver/src/lib.rs`)
+    - `test_collect_project_modules_resolves_non_main_local_dependencies` (`crates/sifr_driver/src/lib.rs`)
+    - `test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules` (`crates/sifr_codegen/src/lib_codegen_tests.rs`)
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m17_2_non_main_externals_resolution_demo/main.sifr`.
 
 ### milestone_17_3: Test and Constant Import Parity
 - Scope:

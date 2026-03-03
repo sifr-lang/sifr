@@ -16,7 +16,7 @@ use sifr_hir::{
 };
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -655,6 +655,175 @@ pub fn check(source: &str) -> Vec<CompileError> {
     }
 }
 
+fn lower_project_module(
+    module_name: &str,
+    stmts: &[sifr_python_ast::Stmt],
+    external_defs: &ExternalDefs,
+) -> Result<LoweringResult, Vec<CompileError>> {
+    let result = match lower_module_with_externals(stmts, external_defs) {
+        Ok(result) => result,
+        Err(errors) => {
+            let compile_errors: Vec<CompileError> = errors
+                .into_iter()
+                .map(|e| CompileError {
+                    message: format!("[{}] {}", module_name, e.message),
+                    phase: CompilePhase::TypeCheck,
+                })
+                .collect();
+            return Err(compile_errors);
+        }
+    };
+    Ok(result)
+}
+
+fn collect_module_exports(module_name: &str, module: &HirModule, external_defs: &mut ExternalDefs) {
+    let mut fn_exports = HashMap::new();
+    let mut class_exports = HashMap::new();
+
+    for func in &module.functions {
+        if !func.name.starts_with('_') {
+            let params: Vec<(String, Type, ParamConvention)> = func
+                .params
+                .iter()
+                .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                .collect();
+            fn_exports.insert(
+                func.name.clone(),
+                FunctionType {
+                    params,
+                    return_type: Box::new(func.return_type.clone()),
+                },
+            );
+        }
+    }
+
+    for class in &module.classes {
+        if !class.name.starts_with('_') {
+            // Extract method types from the class
+            let mut methods: Vec<(String, FunctionType)> = class
+                .methods
+                .iter()
+                .filter(|m| m.name != "new") // Skip constructor
+                .map(|m| {
+                    let params: Vec<(String, Type, ParamConvention)> = m
+                        .params
+                        .iter()
+                        .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                        .collect();
+                    (
+                        m.name.clone(),
+                        FunctionType {
+                            params,
+                            return_type: Box::new(m.return_type.clone()),
+                        },
+                    )
+                })
+                .collect();
+            // Include operator dunder methods so imported classes support operator overloading
+            for (dunder_name, op_func) in &class.operator_impls {
+                let params: Vec<(String, Type, ParamConvention)> = op_func
+                    .params
+                    .iter()
+                    .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                    .collect();
+                methods.push((
+                    dunder_name.clone(),
+                    FunctionType {
+                        params,
+                        return_type: Box::new(op_func.return_type.clone()),
+                    },
+                ));
+            }
+            let class_ty = Type::Class {
+                name: class.name.clone(),
+                fields: class.fields.clone(),
+                methods,
+                parent_class: None,
+            };
+            class_exports.insert(class.name.clone(), class_ty);
+        }
+    }
+
+    external_defs
+        .functions
+        .insert(module_name.to_string(), fn_exports);
+    external_defs
+        .classes
+        .insert(module_name.to_string(), class_exports);
+}
+
+fn collect_project_hir_modules(
+    parsed_modules: &HashMap<String, Vec<sifr_python_ast::Stmt>>,
+    mut external_defs: ExternalDefs,
+) -> Result<HashMap<String, HirModule>, Vec<CompileError>> {
+    let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
+    let mut pending_non_main: BTreeSet<String> = parsed_modules
+        .keys()
+        .filter(|module_name| module_name.as_str() != "main")
+        .cloned()
+        .collect();
+
+    while !pending_non_main.is_empty() {
+        let mut lowered_this_pass = Vec::new();
+
+        for module_name in &pending_non_main {
+            let Some(stmts) = parsed_modules.get(module_name) else {
+                continue;
+            };
+            match lower_project_module(module_name, stmts, &external_defs) {
+                Ok(result) => {
+                    collect_module_exports(module_name, &result.module, &mut external_defs);
+                    hir_modules.insert(module_name.clone(), result.module);
+                    lowered_this_pass.push(module_name.clone());
+                }
+                Err(errors) => {
+                    let has_unknown_module = errors
+                        .iter()
+                        .any(|e| e.message.contains("unknown module '"));
+                    if !has_unknown_module {
+                        return Err(errors);
+                    }
+                }
+            }
+        }
+
+        if lowered_this_pass.is_empty() {
+            if let Some(module_name) = pending_non_main.iter().next() {
+                let Some(stmts) = parsed_modules.get(module_name) else {
+                    return Err(vec![CompileError {
+                        message: format!("[{module_name}] module was not parsed"),
+                        phase: CompilePhase::Build,
+                    }]);
+                };
+                let errors = lower_project_module(module_name, stmts, &external_defs)
+                    .err()
+                    .unwrap_or_else(|| {
+                        vec![CompileError {
+                            message: format!(
+                                "[{module_name}] module dependency resolution made no progress"
+                            ),
+                            phase: CompilePhase::TypeCheck,
+                        }]
+                    });
+                return Err(errors);
+            }
+            break;
+        }
+
+        for module_name in lowered_this_pass {
+            pending_non_main.remove(&module_name);
+        }
+    }
+
+    // Lower main module with full external definitions from lowered dependencies.
+    if let Some(main_stmts) = parsed_modules.get("main") {
+        let result = lower_project_module("main", main_stmts, &external_defs)?;
+        hir_modules.insert("main".to_string(), result.module);
+    }
+
+    Ok(hir_modules)
+}
+
 /// Compile a multi-file project and build a native binary.
 /// `main_file` is the path to the main .sifr file. Other .sifr files in the same
 /// directory are compiled as modules.
@@ -717,123 +886,8 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     // Phase 1.5: Compile embedded stdlib .sifr files
     let stdlib_compiled = compile_stdlib()?;
 
-    // Phase 2: Lower non-main modules first to collect their exports
-    let mut external_defs = stdlib_compiled.defs;
-    let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
-
-    // First, lower all non-main modules
-    for (module_name, stmts) in &parsed_modules {
-        if module_name == "main" {
-            continue;
-        }
-        let result = match lower_module(stmts) {
-            Ok(result) => result,
-            Err(errors) => {
-                let compile_errors: Vec<CompileError> = errors
-                    .into_iter()
-                    .map(|e| CompileError {
-                        message: format!("[{}] {}", module_name, e.message),
-                        phase: CompilePhase::TypeCheck,
-                    })
-                    .collect();
-                return Err(compile_errors);
-            }
-        };
-
-        // Collect exports for this module
-        let mut fn_exports = HashMap::new();
-        let mut class_exports = HashMap::new();
-
-        for func in &result.module.functions {
-            if !func.name.starts_with('_') {
-                let params: Vec<(String, Type, ParamConvention)> = func
-                    .params
-                    .iter()
-                    .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                    .collect();
-                fn_exports.insert(
-                    func.name.clone(),
-                    FunctionType {
-                        params,
-                        return_type: Box::new(func.return_type.clone()),
-                    },
-                );
-            }
-        }
-
-        for class in &result.module.classes {
-            if !class.name.starts_with('_') {
-                // Extract method types from the class
-                let mut methods: Vec<(String, FunctionType)> = class
-                    .methods
-                    .iter()
-                    .filter(|m| m.name != "new") // Skip constructor
-                    .map(|m| {
-                        let params: Vec<(String, Type, ParamConvention)> = m
-                            .params
-                            .iter()
-                            .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                            .collect();
-                        (
-                            m.name.clone(),
-                            FunctionType {
-                                params,
-                                return_type: Box::new(m.return_type.clone()),
-                            },
-                        )
-                    })
-                    .collect();
-                // Include operator dunder methods so imported classes support operator overloading
-                for (dunder_name, op_func) in &class.operator_impls {
-                    let params: Vec<(String, Type, ParamConvention)> = op_func
-                        .params
-                        .iter()
-                        .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                        .collect();
-                    methods.push((
-                        dunder_name.clone(),
-                        FunctionType {
-                            params,
-                            return_type: Box::new(op_func.return_type.clone()),
-                        },
-                    ));
-                }
-                let class_ty = Type::Class {
-                    name: class.name.clone(),
-                    fields: class.fields.clone(),
-                    methods,
-                    parent_class: None,
-                };
-                class_exports.insert(class.name.clone(), class_ty);
-            }
-        }
-
-        external_defs
-            .functions
-            .insert(module_name.clone(), fn_exports);
-        external_defs
-            .classes
-            .insert(module_name.clone(), class_exports);
-        hir_modules.insert(module_name.clone(), result.module);
-    }
-
-    // Then, lower main module with external definitions
-    if let Some(main_stmts) = parsed_modules.get("main") {
-        let result = match lower_module_with_externals(main_stmts, &external_defs) {
-            Ok(result) => result,
-            Err(errors) => {
-                let compile_errors: Vec<CompileError> = errors
-                    .into_iter()
-                    .map(|e| CompileError {
-                        message: format!("[main] {}", e.message),
-                        phase: CompilePhase::TypeCheck,
-                    })
-                    .collect();
-                return Err(compile_errors);
-            }
-        };
-        hir_modules.insert("main".to_string(), result.module);
-    }
+    // Phase 2: Lower modules with stdlib + local external definitions.
+    let hir_modules = collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)?;
 
     // Phase 3: Generate Rust code
     let module_refs: Vec<(&str, &HirModule)> = hir_modules
@@ -1191,6 +1245,16 @@ fn generate_test_runner_cargo_toml(
 mod tests {
     use super::*;
 
+    fn parse_suite(source: &str) -> Vec<sifr_python_ast::Stmt> {
+        let parsed = parse_module(source).unwrap_or_else(|e| panic!("parse failed: {e}"));
+        assert!(
+            parsed.is_valid(),
+            "invalid test source: {:?}",
+            parsed.errors()
+        );
+        parsed.into_suite()
+    }
+
     #[test]
     fn test_compile_hello_world() {
         let source = r#"
@@ -1265,6 +1329,82 @@ def main():
 "#;
         let errors = check(source);
         assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_collect_project_modules_allows_non_main_stdlib_imports() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from helper import area_like
+
+def main():
+    print(area_like(2.0))
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "helper".to_string(),
+            parse_suite(
+                r#"
+from sifr.math import pi
+
+def area_like(r: float) -> float:
+    return r * pi
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .expect("project lowering should resolve non-main stdlib imports");
+        assert!(result.contains_key("main"));
+        assert!(result.contains_key("helper"));
+    }
+
+    #[test]
+    fn test_collect_project_modules_resolves_non_main_local_dependencies() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from a_consumer import fetch
+
+def main():
+    print(fetch())
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "a_consumer".to_string(),
+            parse_suite(
+                r#"
+from z_provider import value
+
+def fetch() -> int:
+    return value()
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "z_provider".to_string(),
+            parse_suite(
+                r#"
+def value() -> int:
+    return 41
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .expect("project lowering should resolve non-main local imports");
+        assert!(result.contains_key("main"));
+        assert!(result.contains_key("a_consumer"));
+        assert!(result.contains_key("z_provider"));
     }
 
     #[test]

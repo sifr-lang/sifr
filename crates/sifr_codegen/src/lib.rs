@@ -408,13 +408,14 @@ pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -
     }
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);
     let stdlib_import_needs = collect_import_needs_from_source(&stdlib_preamble);
-    let needs_hashmap =
-        body_import_needs.collections.needs_hashmap || stdlib_import_needs.collections.needs_hashmap;
-    let needs_hashset =
-        body_import_needs.collections.needs_hashset || stdlib_import_needs.collections.needs_hashset;
+    let needs_hashmap = body_import_needs.collections.needs_hashmap
+        || stdlib_import_needs.collections.needs_hashmap;
+    let needs_hashset = body_import_needs.collections.needs_hashset
+        || stdlib_import_needs.collections.needs_hashset;
     let needs_vecdeque = body_import_needs.collections.needs_vecdeque
         || stdlib_import_needs.collections.needs_vecdeque;
-    let needs_bigint = body_import_needs.runtime.needs_bigint || stdlib_import_needs.runtime.needs_bigint;
+    let needs_bigint =
+        body_import_needs.runtime.needs_bigint || stdlib_import_needs.runtime.needs_bigint;
     let needs_mutex = needs_file_handles
         || needs_logging
         || body_import_needs.runtime.needs_mutex
@@ -539,19 +540,26 @@ pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, St
 
         // For non-main modules, add imports as `use` statements
         for import in &module.imports {
+            // Stdlib/intrinsic imports are lowered through registry/preamble paths.
+            // Emitting Rust `use crate::sifr.*` paths is invalid.
+            if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
+                continue;
+            }
+            let mut module_path = vec!["crate".to_string()];
+            module_path.extend(import.module.split('.').map(str::to_string));
             for name in &import.names {
                 // Check if this name has an alias
                 if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
+                    let mut alias_path = module_path.clone();
+                    alias_path.push(name.clone());
                     module_import_items.push(RustItem::UseAlias {
-                        path: vec!["crate".to_string(), import.module.clone(), name.clone()],
+                        path: alias_path,
                         alias: alias.clone(),
                     });
                 } else {
-                    module_import_items.push(RustItem::Use(vec![
-                        "crate".to_string(),
-                        import.module.clone(),
-                        name.clone(),
-                    ]));
+                    let mut import_path = module_path.clone();
+                    import_path.push(name.clone());
+                    module_import_items.push(RustItem::Use(import_path));
                 }
             }
         }
@@ -1217,7 +1225,6 @@ impl RustEmitter {
             }
         }
     }
-
 }
 
 pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
