@@ -1,7 +1,9 @@
 # Phase 29: Performance Benchmarking and Budgets
 
+> Note: This file is restored intentionally as a compiler-performance planning draft and needs numbering/alignment planning with the active roadmap sequence.
+
 ## Objective
-Establish and enforce system-level performance budgets for compiler and generated programs.
+Establish and enforce compiler-focused performance budgets (compile-time, compiler memory, and check/build latency).
 
 ## Depends on
 - Phase 28
@@ -10,13 +12,13 @@ Establish and enforce system-level performance budgets for compiler and generate
 
 ### milestone_29_1: Baseline Benchmark Suite
 - Scope:
-  - Define compile-time, memory, and runtime benchmark suites.
+  - Define compiler benchmark suites for `check`, `build`, and incremental local loops.
 - Definition of done:
   - Baselines are versioned and reproducible locally.
 
 ### milestone_29_2: Budget and Threshold Policy
 - Scope:
-  - Set regression thresholds and waiver process.
+  - Set compiler regression thresholds and waiver process.
 - Definition of done:
   - Performance budget policy is documented and testable.
 

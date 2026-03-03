@@ -1,5 +1,7 @@
 # Phase 36: Data Science and ML
 
+> Note: Needs more planning before execution (scope boundaries, dependencies, and acceptance gates are still draft-level).
+
 ## Objective
 Add data science and ML capabilities after the web framework phase, while preserving existing reliability and diagnostics guarantees.
 

@@ -1,20 +1,20 @@
-# Phase 24: Type-System Soundness
+# Phase 22: Type-System Soundness
 
 ## Objective
 Close known type-soundness holes before stable release promotion.
 
 ## Depends on
-- Phase 23
+- Phase 21
 
 ## Milestones
 
-### milestone_24_1: TypeVar Constraint Enforcement
+### milestone_22_1: TypeVar Constraint Enforcement
 - Scope:
   - Replace permissive TypeVar assignability with bound/constraint validation.
 - Definition of done:
   - Generic code is type-checked against declared constraints.
 
-### milestone_24_2: Inheritance and Variance Corrections
+### milestone_22_2: Inheritance and Variance Corrections
 - Scope:
   - Implement multi-level inheritance assignability.
   - Remove special-case inheritance hacks.
@@ -22,7 +22,7 @@ Close known type-soundness holes before stable release promotion.
 - Definition of done:
   - Subtyping and mutable variance behavior are sound.
 
-### milestone_24_3: Optional Arithmetic Soundness
+### milestone_22_3: Optional Arithmetic Soundness
 - Scope:
   - Eliminate unsound optional arithmetic acceptance in type checking.
 - Definition of done:

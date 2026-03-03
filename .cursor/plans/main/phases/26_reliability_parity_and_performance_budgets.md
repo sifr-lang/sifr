@@ -1,7 +1,7 @@
-# Phase 26: Reliability Parity and Performance Budgets
+# Phase 26: Reliability Parity (Stdlib)
 
 ## Objective
-Close the reliability track by proving stdlib parity and enforcing measurable performance budgets before feature expansion.
+Close the reliability track by proving stdlib behavioral and complexity parity before feature expansion.
 
 ## Depends on
 - Phase 25
@@ -22,12 +22,12 @@ Close the reliability track by proving stdlib parity and enforcing measurable pe
 - Definition of done:
   - Asymptotic parity is verified; constant-factor regressions are budgeted or waived explicitly.
 
-### milestone_26_3: Global Performance Budget Enforcement
+### milestone_26_3: Parity Governance and Waiver Discipline
 - Scope:
-  - Define compile-time, memory, and runtime benchmark suites and thresholds.
-  - Add local/CI enforcement gates with waiver protocol.
+  - Enforce parity classification discipline (`parity`, `intentional-diff`, `unsupported`) with linked rationale.
+  - Require explicit waiver records for unresolved parity gaps.
 - Definition of done:
-  - Performance regressions are caught automatically unless approved waiver exists.
+  - No unresolved parity gaps exist without documented waiver and owner.
 
 ## Exit Gate
-- Reliability claims are backed by stdlib parity evidence and enforced performance budgets.
+- Reliability claims are backed by stdlib parity evidence with explicit parity governance.

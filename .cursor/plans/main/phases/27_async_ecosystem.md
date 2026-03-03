@@ -1,4 +1,4 @@
-# Phase 17: Async and Ecosystem Foundation
+# Phase 27: Async and Ecosystem Foundation
 
 **Why now:** Safety is solid, ownership model is proven, stdlib is deep and fully generic (Phase 13). The type system is complete — generics, pattern matching, enums, and auto-init are all in place. The codegen architecture is sound (Phase 14) — all new async codegen patterns will be built on structured IR, not string templates. The async runtime can be built on a stable, expressive foundation where generic types, exhaustive error handling, and clean class definitions are available from day one.
 

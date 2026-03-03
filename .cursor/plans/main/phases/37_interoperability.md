@@ -1,5 +1,7 @@
 # Phase 37: Interoperability
 
+> Note: Needs more planning before execution (interop model, safety contract depth, and release gating are still draft-level).
+
 ## Objective
 Deliver interoperability capabilities after typed model, package, tooling, and web foundations are stable.
 

@@ -43,7 +43,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 23 | Runtime-Safe Codegen Semantics | planned | [23_runtime_safe_codegen_semantics.md](./phases/23_runtime_safe_codegen_semantics.md) | Panic-safe generated runtime paths |
 | 24 | Diagnostics, Error Recovery, Stability Contract, Panic-to-Diagnostic | planned | [24_diagnostics_error_recovery_and_stability_contract.md](./phases/24_diagnostics_error_recovery_and_stability_contract.md) | Production-grade diagnostics and stability guarantees |
 | 25 | Verification Hardening | planned | [25_verification_hardening.md](./phases/25_verification_hardening.md) | Broad reliability evidence via regressions/fuzz/E2E |
-| 26 | Reliability Parity and Performance Budgets | planned | [26_reliability_parity_and_performance_budgets.md](./phases/26_reliability_parity_and_performance_budgets.md) | Stdlib parity evidence and enforced performance budgets |
+| 26 | Reliability Parity (Stdlib) | planned | [26_reliability_parity_and_performance_budgets.md](./phases/26_reliability_parity_and_performance_budgets.md) | Stdlib parity evidence and governed parity waivers |
 
 ## Feature Track (Phase 27-34)
 
@@ -72,7 +72,7 @@ flowchart LR
     p22 --> p23["Phase 23\nRuntime-Safe Codegen"]
     p23 --> p24["Phase 24\nDiagnostics + Recovery"]
     p24 --> p25["Phase 25\nVerification Hardening"]
-    p25 --> p26["Phase 26\nParity + Performance Budgets"]
+    p25 --> p26["Phase 26\nStdlib Parity Closeout"]
     p26 --> p27["Phase 27\nAsync and Ecosystem"]
     p27 --> p28["Phase 28\nPreview Distribution"]
     p28 --> p29["Phase 29\nDeveloper Tooling"]
@@ -87,3 +87,8 @@ flowchart LR
 - A phase is complete only when its exit gate is met.
 - Any scoped fix-back must be recorded in both affected phase docs.
 - Merge decisions are based on local gate evidence first, CI second.
+
+## Deferred Planning Drafts (Need Alignment)
+- [29_performance_benchmarking_and_budgets.md](./phases/29_performance_benchmarking_and_budgets.md) (compiler-performance draft; needs numbering alignment with active track)
+- [36_data_science_ml.md](./phases/36_data_science_ml.md) (needs more planning)
+- [37_interoperability.md](./phases/37_interoperability.md) (needs more planning)
