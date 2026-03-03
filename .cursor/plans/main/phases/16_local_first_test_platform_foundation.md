@@ -9,7 +9,7 @@ Make local parallel testing the authoritative quality gate and ensure CI mirrors
 ## Milestones
 
 ### milestone_16_1: Parallel Test Profiles
-status: done (2026-03-03, PR pending merge)
+status: done (2026-03-03, PR #806)
 - Scope:
   - Define local profiles: `quick`, `full`, `stress`.
   - Make profile execution parallel-safe and reproducible.

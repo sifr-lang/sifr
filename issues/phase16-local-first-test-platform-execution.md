@@ -16,7 +16,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_16_1 Parallel Test Profiles
-status: in review (PR pending merge)
+status: in review (PR #806)
 
 - [x] Define local profiles: `quick`, `full`, `stress`
 - [x] Make profile execution parallel-safe and reproducible
@@ -62,7 +62,7 @@ status: pending
 - [ ] Mark part complete in phase doc, checklist, and roadmap
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/806 (open)
 - Part 2: pending
 - Part 3: pending
 
