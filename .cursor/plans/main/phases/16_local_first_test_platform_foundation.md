@@ -23,7 +23,7 @@ status: done (2026-03-03, PR #806)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m16_1_parallel_test_profiles_demo.sifr`.
 
 ### milestone_16_2: Deterministic Reporting
-status: done (2026-03-03, PR pending merge)
+status: done (2026-03-03, PR #807)
 - Scope:
   - Stabilize output ordering, summary format, and failure grouping.
   - Ensure reruns produce equivalent reports.

@@ -35,7 +35,7 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m16_1_parallel_test_profiles_demo.sifr` -> `m16_1 profile demo: ok`.
 
 ## Part 2: milestone_16_2 Deterministic Reporting
-status: in review (PR pending merge)
+status: in review (PR #807)
 
 - [x] Stabilize output ordering
 - [x] Stabilize summary format
@@ -71,7 +71,7 @@ status: pending
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/806 (merged)
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/807 (open)
 - Part 3: pending
 
 ## Reviewer Follow-up
