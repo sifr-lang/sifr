@@ -36,9 +36,9 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 28 | Stdlib Parity (Behavior + Complexity) | planned | [28_stdlib_parity_behavior_and_complexity.md](./phases/28_stdlib_parity_behavior_and_complexity.md) | Module-level behavior + complexity parity vs CPython |
 | 29 | Performance Benchmarking and Budgets | planned | [29_performance_benchmarking_and_budgets.md](./phases/29_performance_benchmarking_and_budgets.md) | Enforced compile/runtime performance budgets |
 | 30 | Developer Tooling and Ecosystem Hooks | planned | [30_developer_tooling_and_ecosystem_hooks.md](./phases/30_developer_tooling_and_ecosystem_hooks.md) | Tooling hooks aligned with phase contracts |
-| 31 | Stable Channel GA Promotion and Release Governance | planned | [31_stable_channel_ga_promotion_and_release_governance.md](./phases/31_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
-| 32 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [32_typed_data_model_and_validation.md](./phases/32_typed_data_model_and_validation.md) | Dedicated typed model/validation layer |
-| 33 | Package Management | planned | [33_package_management.md](./phases/33_package_management.md) | Deterministic dependency and lockfile workflows |
+| 31 | Package Management | planned | [31_package_management.md](./phases/31_package_management.md) | Deterministic dependency and lockfile workflows |
+| 32 | Stable Channel GA Promotion and Release Governance | planned | [32_stable_channel_ga_promotion_and_release_governance.md](./phases/32_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
+| 33 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [33_typed_data_model_and_validation.md](./phases/33_typed_data_model_and_validation.md) | Dedicated typed model/validation layer |
 | 34 | Web Framework and Typed Extractors | planned | [34_web_framework_and_typed_extractors.md](./phases/34_web_framework_and_typed_extractors.md) | Web stack with model-driven request validation/extractors |
 | 35 | Data Science and ML | planned | [35_data_science_ml.md](./phases/35_data_science_ml.md) | Data and ML workflows on top of core platform |
 | 36 | Interoperability Expansion | planned | [36_interoperability_expansion.md](./phases/36_interoperability_expansion.md) | FFI expansion on top of stabilized foundations |
@@ -125,18 +125,18 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - `milestone_30_1` Developer Tooling and Ecosystem Hooks
 
 ### Phase 31
-- `milestone_31_1` Stable Promotion Policy
-- `milestone_31_2` Rollback and Incident Governance
-- `milestone_31_3` Release Sign-off Workflow
+- `milestone_31_1` Package Management
 
 ### Phase 32
-- `milestone_32_1` Typed Model Core
-- `milestone_32_2` Validation Engine
-- `milestone_32_3` Error Model and Diagnostics Contract
-- `milestone_32_4` Parity and Compatibility Matrix
+- `milestone_32_1` Stable Promotion Policy
+- `milestone_32_2` Rollback and Incident Governance
+- `milestone_32_3` Release Sign-off Workflow
 
 ### Phase 33
-- `milestone_33_1` Package Management
+- `milestone_33_1` Typed Model Core
+- `milestone_33_2` Validation Engine
+- `milestone_33_3` Error Model and Diagnostics Contract
+- `milestone_33_4` Parity and Compatibility Matrix
 
 ### Phase 34
 - `milestone_34_1` Web Framework Core
@@ -169,9 +169,9 @@ flowchart LR
     p27 --> p28["Phase 28\nStdlib Parity + Complexity"]
     p28 --> p29["Phase 29\nPerformance Budgets"]
     p29 --> p30["Phase 30\nDeveloper Tooling"]
-    p30 --> p31["Phase 31\nStable GA Governance"]
-    p31 --> p32["Phase 32\nTyped Data Model + Validation"]
-    p32 --> p33["Phase 33\nPackage Management"]
+    p30 --> p31["Phase 31\nPackage Management"]
+    p31 --> p32["Phase 32\nStable GA Governance"]
+    p32 --> p33["Phase 33\nTyped Data Model + Validation"]
     p33 --> p34["Phase 34\nWeb Framework + Typed Extractors"]
     p34 --> p35["Phase 35\nData Science + ML"]
     p35 --> p36["Phase 36\nInteroperability"]
