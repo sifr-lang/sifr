@@ -28,6 +28,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - No data-dependent emitted `.unwrap()`/`.expect()` in generated user runtime paths.
 - Scoped fix-back (`N+1` discovering defect in `N`) is allowed only if minimal, documented, regression-tested, and revalidated.
 - Phase entry/exit gates and mandatory local validation commands are defined in [`phase_contracts_15_36.md`](./phase_contracts_15_36.md).
+- Milestone-level scope/DoD coverage is tracked in [`milestone_registry_15_36.md`](./milestone_registry_15_36.md).
 
 ## Reliability Track (Phase 15-26)
 
