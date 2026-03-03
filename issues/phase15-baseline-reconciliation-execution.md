@@ -27,7 +27,7 @@ status: done (2026-03-03, PR #793)
 - [x] Mark part complete in phase doc and this checklist
 
 ## Part 2: milestone_15_2 Phase Contract Definition
-status: in_progress
+status: done (2026-03-03, PR #794)
 
 - [x] Define entry criteria for every phase (`15`-`36`)
 - [x] Define exit criteria for every phase (`15`-`36`)
@@ -36,22 +36,22 @@ status: in_progress
 - [x] Add demo file `demos/milestone_15_2_phase_contracts_demo.sifr`
 - [x] Run milestone demo
 - [x] Run full local suite (waived by user for docs-only phase scope)
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge (https://github.com/yaseralnajjar/sifr/pull/794)
+- [x] Mark part complete in phase doc and this checklist
 
 ## Part 3: milestone_15_3 Stakeholder Sign-off Snapshot
-status: pending
+status: in_progress
 
-- [ ] Record sign-off decision over reconciled backlog + phase contracts
-- [ ] Capture deferred risks with links to backlog issues
-- [ ] Update roadmap and phase status to reflect Phase 15 completion
-- [ ] Add demo file `demos/milestone_15_3_signoff_snapshot_demo.sifr`
-- [ ] Run milestone demo
-- [ ] Run full local suite
+- [x] Record sign-off decision over reconciled backlog + phase contracts
+- [x] Capture deferred risks with links to backlog issues
+- [x] Update roadmap and phase status to reflect Phase 15 completion
+- [x] Add demo file `demos/milestone_15_3_signoff_snapshot_demo.sifr`
+- [x] Run milestone demo
+- [x] Run full local suite (waived by user for docs-only phase scope)
 - [ ] Open PR, review, and merge
 - [ ] Mark phase complete in all planning docs
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/793 (merged)
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/794 (merged)
 - Part 3: pending
