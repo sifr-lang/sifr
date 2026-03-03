@@ -1,0 +1,26 @@
+# Phase 35: Data Science and ML
+
+## Objective
+Add data science and ML capabilities after the web framework phase, while preserving existing reliability and diagnostics guarantees.
+
+## Depends on
+- Phase 34
+
+## Milestones
+
+### milestone_35_1: Data Processing
+- Scope:
+  - DataFrame workflows (CSV/Parquet I/O, transformations, aggregations).
+  - Batch/lazy execution ergonomics suitable for Sifr data workloads.
+- Definition of done:
+  - Data processing workflows are stable and regression-covered.
+
+### milestone_35_2: ML Inference
+- Scope:
+  - Model loading/inference runtime and typed input/output paths.
+  - Tensor/array primitives needed for inference workloads.
+- Definition of done:
+  - ML inference paths are functional and test-covered.
+
+## Exit Gate
+- Data and ML workflows are usable end-to-end without regressing prior phase guarantees.

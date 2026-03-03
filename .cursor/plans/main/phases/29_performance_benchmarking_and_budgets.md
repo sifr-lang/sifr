@@ -1,26 +1,26 @@
-# Phase 28: Performance Benchmarking and Budgets
+# Phase 29: Performance Benchmarking and Budgets
 
 ## Objective
 Establish and enforce system-level performance budgets for compiler and generated programs.
 
 ## Depends on
-- Phase 27
+- Phase 28
 
 ## Milestones
 
-### milestone_28_1: Baseline Benchmark Suite
+### milestone_29_1: Baseline Benchmark Suite
 - Scope:
   - Define compile-time, memory, and runtime benchmark suites.
 - Definition of done:
   - Baselines are versioned and reproducible locally.
 
-### milestone_28_2: Budget and Threshold Policy
+### milestone_29_2: Budget and Threshold Policy
 - Scope:
   - Set regression thresholds and waiver process.
 - Definition of done:
   - Performance budget policy is documented and testable.
 
-### milestone_28_3: Enforcement Integration
+### milestone_29_3: Enforcement Integration
 - Scope:
   - Add local and CI gates for benchmark regressions.
 - Definition of done:

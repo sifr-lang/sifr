@@ -1,11 +1,11 @@
 # Phase 34: Web Framework and Typed Extractors
 
 ## Objective
-Build web framework capabilities with typed extractor/validation flows that directly consume the Phase 31 model system.
+Build web framework capabilities with typed extractor/validation flows that directly consume the Phase 32 model system.
 
 ## Depends on
-- Phase 16
-- Phase 31
+- Phase 33
+- Phase 32
 
 ## Milestones
 
@@ -18,7 +18,7 @@ Build web framework capabilities with typed extractor/validation flows that dire
 ### milestone_34_2: Typed Extractors and Request Validation
 - Scope:
   - `Json`/`Path`/`Query`/`Form` extractor behavior.
-  - Validation and error mapping via Phase 31 model contract.
+  - Validation and error mapping via Phase 32 model contract.
 - Definition of done:
   - Extractors enforce typed validation with consistent error responses.
 

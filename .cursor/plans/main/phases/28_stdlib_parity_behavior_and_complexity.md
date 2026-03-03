@@ -1,27 +1,27 @@
-# Phase 27: Stdlib Parity (Behavior + Complexity)
+# Phase 28: Stdlib Parity (Behavior + Complexity)
 
 ## Objective
 Prove module-by-module stdlib parity against Python behavior and complexity expectations.
 
 ## Depends on
-- Phase 26
+- Phase 27
 
 ## Milestones
 
-### milestone_27_1: Python Test Porting by Module
+### milestone_28_1: Python Test Porting by Module
 - Scope:
   - Port upstream Python stdlib tests module-by-module (adapted for Sifr syntax/runtime).
 - Definition of done:
   - Each targeted stdlib module has a maintained parity test suite.
 
-### milestone_27_2: Behavioral Parity Classification
+### milestone_28_2: Behavioral Parity Classification
 - Scope:
   - Classify each test/API as `parity`, `intentional-diff`, or `unsupported`.
   - Require explicit rationale for non-parity cases.
 - Definition of done:
   - Per-module parity matrix is published and current.
 
-### milestone_27_3: Complexity and Resource Audit vs CPython
+### milestone_28_3: Complexity and Resource Audit vs CPython
 - Scope:
   - Run scaling benchmarks for exposed stdlib APIs (time + memory).
   - Compare asymptotic class and constant-factor deltas against CPython baselines.

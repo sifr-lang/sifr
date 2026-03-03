@@ -1,4 +1,4 @@
-# Async and Ecosystem Foundation
+# Phase 17: Async and Ecosystem Foundation
 
 **Why now:** Safety is solid, ownership model is proven, stdlib is deep and fully generic (Phase 13). The type system is complete — generics, pattern matching, enums, and auto-init are all in place. The codegen architecture is sound (Phase 14) — all new async codegen patterns will be built on structured IR, not string templates. The async runtime can be built on a stable, expressive foundation where generic types, exhaustive error handling, and clean class definitions are available from day one.
 
@@ -48,7 +48,7 @@ status: pending
 
 status: pending
 
-**Goal:** Web-independent typed serialization. This does NOT include web extractors — those depend on the web framework and are delivered in Phase 15. Typed serde is placed before networking because the HTTP client benefits from typed response parsing from day one.
+**Goal:** Web-independent typed serialization. This does NOT include web extractors — those are delivered in a later web phase. Typed serde is kept in the async phase to make typed payload handling available early.
 
 **Depends on:** milestone_async_core (async runtime must exist for async-compatible serde patterns; generics from Phase 13 enable `loads(s, T)`)
 
@@ -70,33 +70,6 @@ status: pending
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - E2E pass tests: typed_json_roundtrip, nested_class_serde, union_serde, optional_serde
 - E2E fail tests: json_parse_wrong_type, missing_required_field
-
----
-
-## milestone_networking_stdlib: Networking Standard Library
-
-status: pending
-
-**Goal:** Add networking-related stdlib modules that depend on the async runtime. The HTTP client can use typed serde for response parsing since `milestone_typed_serde_core` is now complete.
-
-**Depends on:** milestone_typed_serde_core (typed serde enables typed HTTP response parsing)
-
-### Modules
-
-- `sifr.subprocess` — async Popen API (extends the sync `run()` from Phase 11's `milestone_new_modules` with async process management)
-- `sifr.socket` — TCP/UDP sockets (async)
-- `sifr.http` — HTTP client (wraps `reqwest`), returns typed responses via `loads(response_body, T)`
-- `sifr.url` — URL parsing
-
-### Definition of Done (milestone_networking_stdlib)
-
-- Each networking module compiles and works with async I/O
-- All fallible operations return `Result` or `Option`
-- `sifr.http` supports typed JSON response parsing via `loads`
-- All existing E2E tests still pass (no regressions)
-- `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
-- E2E pass tests: subprocess_async, socket_tcp, http_get, http_typed_response, url_parse
-- Integration with the async runtime (tokio) is seamless
 
 ---
 
@@ -159,7 +132,6 @@ status: pending
 ## Milestone Ordering
 
 - **milestone_async_core first:** The async runtime must exist before anything else. This is the minimum viable async — `async def`/`await`, Tokio, basic task spawning.
-- **milestone_typed_serde_core second:** Typed serialization is web-independent and doesn't need networking. Placing it before networking means the HTTP client can return typed responses from day one.
-- **milestone_networking_stdlib third:** Networking modules (HTTP, sockets, subprocess async) depend on the async runtime and benefit from typed serde for response parsing.
-- **milestone_async_sync fourth:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking depend only on the async runtime, not on networking. They are fundamental concurrency tools needed for production async code.
-- **milestone_async_advanced last:** Advanced features (async with, async generators, async comprehensions) build on everything above and are not needed for the web stack.
+- **milestone_typed_serde_core second:** Typed serialization is web-independent and stays in this phase.
+- **milestone_async_sync third:** Synchronization primitives (Lock, Channel, Semaphore) and Send/Sync checking depend only on the async runtime.
+- **milestone_async_advanced last:** Advanced features (async with, async generators, async comprehensions) build on everything above.

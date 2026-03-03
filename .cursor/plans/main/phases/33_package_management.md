@@ -1,14 +1,14 @@
-# Phase 32: Package Management Expansion
+# Phase 33: Package Management
 
 ## Objective
-Establish package management workflows as a dedicated post-hardening expansion phase.
+Establish package management workflows as a dedicated post-hardening phase.
 
 ## Depends on
-- Phase 31
+- Phase 32
 
 ## Milestones
 
-### milestone_32_1: Package Management
+### milestone_33_1: Package Management
 - Scope:
   - Dependency declaration, lockfile semantics, resolution workflow.
 - Definition of done:

@@ -1,26 +1,26 @@
-# Phase 29: Stable Channel GA Promotion and Release Governance
+# Phase 31: Stable Channel GA Promotion and Release Governance
 
 ## Objective
 Promote stable channel only after reliability/parity/performance evidence is complete and governed.
 
 ## Depends on
-- Phase 28
+- Phase 30
 
 ## Milestones
 
-### milestone_29_1: Stable Promotion Policy
+### milestone_31_1: Stable Promotion Policy
 - Scope:
   - Define hard preconditions for `stable` promotion from preview channels.
 - Definition of done:
   - Promotion checklist is documented and mandatory.
 
-### milestone_29_2: Rollback and Incident Governance
+### milestone_31_2: Rollback and Incident Governance
 - Scope:
   - Define rollback triggers, owner responsibilities, and communication protocol.
 - Definition of done:
   - Rollback path is tested and documented.
 
-### milestone_29_3: Release Sign-off Workflow
+### milestone_31_3: Release Sign-off Workflow
 - Scope:
   - Enforce formal release sign-off and artifact provenance checks.
 - Definition of done:

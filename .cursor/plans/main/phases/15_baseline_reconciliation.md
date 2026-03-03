@@ -19,7 +19,7 @@ Create one authoritative execution baseline before implementation starts: status
 
 ### milestone_15_2: Phase Contract Definition
 - Scope:
-  - Define entry/exit criteria for Phases 15-29.
+  - Define entry/exit criteria for Phases 15-36.
   - Define mandatory local validation expectations for each phase.
 - Definition of done:
   - Every phase has explicit completion gates.

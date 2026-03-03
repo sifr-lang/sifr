@@ -1,27 +1,27 @@
-# Phase 21: HIR Decomposition and Maintainability Hardening
+# Phase 22: HIR Decomposition and Maintainability Hardening
 
 ## Objective
 Decompose oversized HIR files into focused modules without changing behavior, and prevent future regrowth.
 
 ## Depends on
-- Phase 20
+- Phase 21
 
 ## Milestones
 
-### milestone_21_1: Split `lower.rs`
+### milestone_22_1: Split `lower.rs`
 - Scope:
   - Extract lowering concerns into coherent submodules (imports, statements, expressions, typing hooks, diagnostics).
   - Preserve current semantics and test outcomes.
 - Definition of done:
   - `lower.rs` is split into maintainable units with no behavior drift.
 
-### milestone_21_2: Split `stdlib.rs`
+### milestone_22_2: Split `stdlib.rs`
 - Scope:
   - Partition stdlib metadata/registration logic into focused modules.
 - Definition of done:
   - `stdlib.rs` is modularized with equivalent behavior.
 
-### milestone_21_3: Anti-Regrowth Guardrails
+### milestone_22_3: Anti-Regrowth Guardrails
 - Scope:
   - Add file-size and module-boundary conventions.
   - Add review checklist items for new lowering additions.
