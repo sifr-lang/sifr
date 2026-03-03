@@ -57,8 +57,8 @@ cd "${SCRIPT_DIR}/.."
 
 echo "Running local-first validation"
 echo "  profile=${PROFILE}"
-echo "Running unit tests (cargo test -p sifr)"
-cargo test -p sifr
+echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
+cargo test -p sifr -- --skip test_e2e_pass
 
 echo "Running e2e pass suite"
 bash "${SCRIPT_DIR}/run_e2e_pass.sh" --profile "${PROFILE}" "${FORWARD_ARGS[@]}"

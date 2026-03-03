@@ -16,7 +16,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_16_1 Parallel Test Profiles
-status: in review (PR #806)
+status: done (2026-03-03, PR #806)
 
 - [x] Define local profiles: `quick`, `full`, `stress`
 - [x] Make profile execution parallel-safe and reproducible
@@ -25,7 +25,7 @@ status: in review (PR #806)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
@@ -35,18 +35,26 @@ Validation evidence:
 - Milestone demo: `cargo run -q -p sifr -- run demos/m16_1_parallel_test_profiles_demo.sifr` -> `m16_1 profile demo: ok`.
 
 ## Part 2: milestone_16_2 Deterministic Reporting
-status: pending
+status: in review (PR pending merge)
 
-- [ ] Stabilize output ordering
-- [ ] Stabilize summary format
-- [ ] Stabilize failure grouping
-- [ ] Ensure reruns produce equivalent reports
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
+- [x] Stabilize output ordering
+- [x] Stabilize summary format
+- [x] Stabilize failure grouping
+- [x] Ensure reruns produce equivalent reports
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
 - [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -p sifr --test e2e test_failure_summary_is_grouped_and_order_stable -- --nocapture` -> pass.
+- Positive path: `cargo test -p sifr --test e2e test_report_signature_is_order_invariant -- --nocapture` -> pass.
+- Positive path: `bash scripts/check_e2e_report_determinism.sh --profile quick` -> pass (`deterministic report signature confirmed`).
+- Negative path: `cargo test -p sifr --test e2e test_report_signature_changes_on_failure_delta -- --nocapture` -> pass (asserts signature changes on report delta).
+- Negative path: `bash scripts/check_e2e_report_determinism.sh --profile invalid` -> exits `2` with profile validation error.
+- Milestone demo: `cargo run -q -p sifr -- run demos/m16_2_deterministic_reporting_demo.sifr` -> `m16_2 deterministic reporting demo: ok`.
 
 ## Part 3: milestone_16_3 CI-Parity and Smoke Hardening
 status: pending
@@ -62,7 +70,7 @@ status: pending
 - [ ] Mark part complete in phase doc, checklist, and roadmap
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/806 (open)
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/806 (merged)
 - Part 2: pending
 - Part 3: pending
 

@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: scripts/check_e2e_report_determinism.sh [--profile <quick|full|stress>] [--help]
+
+Run the e2e pass suite twice and assert the emitted report signature is identical.
+EOF
+}
+
+PROFILE="quick"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --profile)
+      PROFILE="${2:-}"
+      shift 2
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
+
+case "${PROFILE}" in
+  quick|full|stress)
+    ;;
+  *)
+    echo "unsupported profile: ${PROFILE}" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${SCRIPT_DIR}/.."
+
+extract_signature() {
+  local run_id="$1"
+  local log_file
+  log_file="$(mktemp "${TMPDIR:-/tmp}/sifr-e2e-determinism-${run_id}.XXXXXX")"
+
+  (
+    cd "${REPO_ROOT}"
+    bash "${SCRIPT_DIR}/run_e2e_pass.sh" --profile "${PROFILE}"
+  ) 2>&1 | tee "${log_file}" >/dev/null
+
+  local signature
+  signature="$(
+    grep -Eo '\[sifr-e2e\] report_signature=[0-9a-f]+' "${log_file}" \
+      | tail -n1 \
+      | sed 's/.*=//'
+  )"
+  if [[ -z "${signature}" ]]; then
+    echo "missing report signature in run ${run_id}; see ${log_file}" >&2
+    exit 1
+  fi
+
+  echo "${signature}"
+}
+
+echo "Running deterministic-report check"
+echo "  profile=${PROFILE}"
+
+SIG_A="$(extract_signature run1)"
+SIG_B="$(extract_signature run2)"
+
+if [[ "${SIG_A}" != "${SIG_B}" ]]; then
+  echo "report signature mismatch: run1=${SIG_A}, run2=${SIG_B}" >&2
+  exit 1
+fi
+
+echo "deterministic report signature confirmed: ${SIG_A}"

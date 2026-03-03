@@ -23,12 +23,19 @@ status: done (2026-03-03, PR #806)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m16_1_parallel_test_profiles_demo.sifr`.
 
 ### milestone_16_2: Deterministic Reporting
+status: done (2026-03-03, PR pending merge)
 - Scope:
   - Stabilize output ordering, summary format, and failure grouping.
   - Ensure reruns produce equivalent reports.
 - Definition of done:
   - Identical inputs produce deterministic pass/fail summaries.
   - Failure reports are actionable and not order-noisy.
+- Evidence:
+  - Deterministic tie-break ordering for slowest-group reporting is enforced in `crates/sifr/tests/e2e.rs`.
+  - Failure summaries are grouped by stage (`compile`, `planning`, `build`, `run`, `other`) with deterministic ordering.
+  - Stable `report_signature` output is emitted per e2e pass run (`[sifr-e2e] report_signature=...`).
+  - Rerun-equivalence command is provided by `scripts/check_e2e_report_determinism.sh`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m16_2_deterministic_reporting_demo.sifr`.
 
 ### milestone_16_3: CI-Parity and Smoke Hardening
 - Scope:
