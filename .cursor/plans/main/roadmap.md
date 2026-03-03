@@ -53,8 +53,8 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 28 | Preview Distribution and Release Automation (`alpha`/`beta`) | planned | [28_preview_distribution_and_release_automation.md](./phases/28_preview_distribution_and_release_automation.md) | Early adopter distribution with controlled preview channels |
 | 29 | Performance Benchmarking and Budgets | planned | [29_performance_benchmarking_and_budgets.md](./phases/29_performance_benchmarking_and_budgets.md) | Compiler performance baselines, thresholds, and enforcement gates |
 | 30 | Developer Tooling and Ecosystem Hooks | planned | [30_developer_tooling_and_ecosystem_hooks.md](./phases/30_developer_tooling_and_ecosystem_hooks.md) | Tooling hooks aligned with phase contracts |
-| 31 | Package Management | planned | [31_package_management.md](./phases/31_package_management.md) | Deterministic dependency and lockfile workflows |
-| 32 | Docs and Documentation | planned | [32_docs_and_documentation.md](./phases/32_docs_and_documentation.md) | Canonical versioned docs and local docs quality gates |
+| 31 | Package Management | draft | [31_package_management.md](./phases/31_package_management.md) | Deterministic dependency and lockfile workflows |
+| 32 | Docs and Documentation | draft | [32_docs_and_documentation.md](./phases/32_docs_and_documentation.md) | Canonical versioned docs and local docs quality gates |
 | 33 | Stable Channel GA Promotion and Release Governance | planned | [33_stable_channel_ga_promotion_and_release_governance.md](./phases/33_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
 | 34 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [34_typed_data_model_and_validation.md](./phases/34_typed_data_model_and_validation.md) | Dedicated typed model/validation layer |
 | 35 | Web Framework and Platform Expansion | planned | [35_web_framework_and_platform_expansion.md](./phases/35_web_framework_and_platform_expansion.md) | Web stack plus scoped data/ML and interoperability expansion |
