@@ -68,6 +68,14 @@ status: done (2026-03-05, PR #828)
   - Import-form support matrix is explicitly documented in phase/docs and reflected by deterministic compiler behavior.
   - Unsupported or non-activating forms fail or downgrade with explicit, stable diagnostics (no implicit heuristics).
   - Regression suite includes positive/negative coverage for all supported and unsupported import forms.
+- Canonical import-form matrix:
+  - `from x import ...` (level `0`, qualified module): supported; activates project/module resolution in all execution modes.
+  - `from .x import ...` (level `1`, qualified module): supported; activates project/module resolution in all execution modes.
+  - `from ..x import ...` (level `>1`): unsupported; frontend error `unsupported relative import level <n>; only one leading dot is supported`.
+  - `from . import ...` (bare relative, no module): unsupported; frontend error `unsupported bare relative import; expected module name after '.'`.
+  - `import x`: unsupported; frontend error `unsupported import statement; use 'from x import <name>'`.
+  - `from typing import ...` (level `0`): non-activating for local module resolution; handled as typing support import.
+  - `from enum import ...` (level `0`): non-activating for local module resolution; handled as enum support import.
 - Evidence:
   - Lowering now rejects unsupported import forms with explicit diagnostics:
     - multi-level relative imports (`level > 1`)

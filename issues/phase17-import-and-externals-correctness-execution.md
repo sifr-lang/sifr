@@ -83,6 +83,7 @@ status: done (2026-03-05, PR #828)
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
+- Documentation path: explicit canonical import-form matrix recorded in `.cursor/plans/main/phases/17_import_and_externals_correctness.md` under milestone `17_4`.
 - Positive path: `cargo run -q -p sifr -- run demos/m17_4_import_form_semantics_closure_demo/main.sifr` -> prints `m17_4 import-form semantics demo:` and `17`.
 - Positive path: `cargo test -q -p sifr_driver` -> pass (includes import-form semantics regression tests).
 - Negative path: `cargo run -q -p sifr -- check demos/m17_4_import_form_semantics_closure_demo/negative_cases/unsupported_import_statement.sifr` -> exits `1` with `unsupported import statement`.
@@ -127,3 +128,7 @@ Validation evidence:
 - Pass-4 outcome: no new confirmed defects; phase remains production-ready against updated quality-contract checks.
 - Additional verification command:
   - `cargo test -q -p sifr_driver test_compose_test_runner_lib_is_test_scoped`
+- External review pass 5 output: `reviews/phase17-review-3.md`
+- Remediation PR (pass 5): https://github.com/yaseralnajjar/sifr/pull/829
+- Pass-5 remediation summary:
+  - Added explicit canonical import-form matrix table under milestone `17_4` to satisfy the quality-contract requirement for documented supported/unsupported/non-activating forms.
