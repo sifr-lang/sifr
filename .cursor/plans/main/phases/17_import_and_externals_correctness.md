@@ -60,7 +60,7 @@ status: done (2026-03-04, PR #815)
   - Milestone demo: `cargo run -q -p sifr -- test demos/m17_3_test_and_constant_import_parity_demo`.
 
 ### milestone_17_4: Import-Form Semantics Closure
-status: planned (added 2026-03-05)
+status: done (2026-03-05, PR #828)
 - Scope:
   - Define canonical compiler semantics for import forms: `from x import ...`, `from .x import ...`, `from ..x import ...`, `from . import ...`, and `import x`.
   - Ensure import-form behavior is explicit and consistent in `check`, `run`, `build`, and `test` pipelines (not only CLI mode detection).
@@ -68,6 +68,17 @@ status: planned (added 2026-03-05)
   - Import-form support matrix is explicitly documented in phase/docs and reflected by deterministic compiler behavior.
   - Unsupported or non-activating forms fail or downgrade with explicit, stable diagnostics (no implicit heuristics).
   - Regression suite includes positive/negative coverage for all supported and unsupported import forms.
+- Evidence:
+  - Lowering now rejects unsupported import forms with explicit diagnostics:
+    - multi-level relative imports (`level > 1`)
+    - bare relative imports (`from . import ...`)
+    - regular import statements (`import x`)
+  - Absolute-only typing/enum skip rules are now level-aware so relative imports do not silently bypass import semantics.
+  - Regression guards in `crates/sifr_driver/src/lib.rs`:
+    - `test_check_reports_unsupported_multi_level_relative_import`
+    - `test_check_reports_unsupported_bare_relative_import`
+    - `test_check_reports_unsupported_import_statement`
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m17_4_import_form_semantics_closure_demo/main.sifr`.
 
 ## Quality Contract
 - Entry criteria: Phase 16 is completed and deterministic local profiles are in place.

@@ -1437,6 +1437,48 @@ def main():
     }
 
     #[test]
+    fn test_check_reports_unsupported_multi_level_relative_import() {
+        let source = r#"
+from ..helper import value
+
+def main():
+    print(value())
+"#;
+        let errors = check(source);
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("unsupported relative import level 2")));
+    }
+
+    #[test]
+    fn test_check_reports_unsupported_bare_relative_import() {
+        let source = r#"
+from . import helper
+
+def main():
+    print(helper)
+"#;
+        let errors = check(source);
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("unsupported bare relative import")));
+    }
+
+    #[test]
+    fn test_check_reports_unsupported_import_statement() {
+        let source = r#"
+import helper
+
+def main():
+    print("ok")
+"#;
+        let errors = check(source);
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("unsupported import statement 'import helper'")));
+    }
+
+    #[test]
     fn test_collect_project_modules_allows_non_main_stdlib_imports() {
         let mut parsed_modules = HashMap::new();
         parsed_modules.insert(
