@@ -9,7 +9,7 @@ Make CLI behavior predictable for single-file and multi-file workflows.
 ## Milestones
 
 ### milestone_18_1: Run/Build Semantics Alignment
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #818)
 - Scope:
   - Align project detection and compilation scope between `run` and `build`.
 - Definition of done:

@@ -16,14 +16,14 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_18_1 Run/Build Semantics Alignment
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #818)
 
 - [x] Align project detection and compilation scope between `run` and `build`
 - [x] Positive-path validation recorded
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
@@ -59,6 +59,6 @@ status: pending
 - [ ] Mark part complete in phase doc and this checklist
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (open)
 - Part 2: pending
 - Part 3: pending
