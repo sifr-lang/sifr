@@ -457,16 +457,23 @@ except DbError as e:
 - **Library code:** define a domain error class (e.g., `class ConfigError(Error)`) and wrap internal errors at API boundaries. Callers only see the domain error type.
 - **Stdlib functions:** return `Result[T, SpecificError]` using the built-in error classes. For example, `read_text(path)` returns `Result[str, IOError]`, `int(s)` returns `Result[int, ParseError]`.
 
-### 4. Package Resolver and Reproducibility (milestone_imports/milestone_package_mgmt)
+### 4. Package Resolver and Reproducibility (milestone_imports/milestone_cli_semantics/milestone_package_mgmt)
 
-This contract is split across two milestones: milestone_imports (multi-file compilation and imports) and milestone_package_mgmt (package management with dependency resolution). milestone_imports lands in the Language Foundations phase; milestone_package_mgmt lands in its own Package Management phase (Phase 18).
+This contract is split across three milestones: milestone_imports (multi-file compilation and import semantics), milestone_cli_semantics (CLI project-mode activation semantics), and milestone_package_mgmt (package management with dependency resolution). milestone_imports maps to Phase 17 (Import and Externals Correctness), milestone_cli_semantics maps to Phase 18 (Project and CLI Semantics Correctness), and milestone_package_mgmt lands in Phase 31 (Package Management).
 
 **Contract (milestone_imports -- imports and modules):**
 
 - **Import cycle detection:** the compiler builds a dependency graph of modules during compilation. Cycles are a compile-time error with a clear diagnostic showing the cycle path.
 - `**__init__.sifr` semantics:** defines the public API of a package. Symbols not re-exported from `__init__.sifr` are private to the package. No side effects on import (unlike Python's `__init__.py`).
+- **Import-form matrix is explicit:** behavior for `from x import ...`, `from .x import ...`, `from ..x import ...`, `from . import ...`, and `import x` is explicitly defined as supported, unsupported, or non-activating with stable diagnostics.
 - **Import caching:** each module is compiled exactly once per compilation. The driver maintains a module cache keyed by canonical path.
 - **Multi-file diagnostics:** error messages show correct source file and line numbers across module boundaries.
+
+**Contract (milestone_cli_semantics -- CLI project-mode activation):**
+
+- **Resolver trigger matrix:** project-mode activation rules are explicit for `from` imports, relative import levels, bare relative imports, and regular `import` statements.
+- **Run/build equivalence:** `run` and `build` use the same resolver and produce equivalent mode selection and error-class outcomes for identical inputs.
+- **Contract synchronization:** resolver behavior, regression tests, and CLI semantics documentation must remain aligned.
 
 **Contract (milestone_package_mgmt -- package management):**
 

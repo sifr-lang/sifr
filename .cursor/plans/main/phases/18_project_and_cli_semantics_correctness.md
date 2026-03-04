@@ -4,6 +4,7 @@
 Make CLI behavior predictable for single-file and multi-file workflows.
 
 Status: completed (2026-03-04)
+Follow-up planning extension: added milestone_18_4 (2026-03-05)
 
 ## Depends on
 - Phase 17
@@ -50,6 +51,17 @@ status: done (2026-03-04, PR #820)
     - invalid-source and missing-module single-file fallback.
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_3_cli_contract_and_regression_suite_demo.sifr`.
 
+### milestone_18_4: CLI Resolver Trigger-Matrix Closure
+status: planned (added 2026-03-05)
+- Scope:
+  - Define canonical CLI project-mode activation semantics for `from x import ...`, relative import levels, bare relative imports, and regular `import x`.
+  - Build on milestone_18_3 regression coverage by requiring explicit trigger-matrix definitions for every covered import form.
+  - Ensure run/build resolver behavior is deterministic, explicit, and contract-synchronized with docs/tests.
+- Definition of done:
+  - A full trigger matrix exists for all import forms and is documented in the CLI semantics contract.
+  - Resolver behavior for each form is regression-protected with positive and negative tests.
+  - Run/build mode resolution remains equivalent for identical inputs across all matrix cases.
+
 ## Quality Contract
 - Entry criteria: Phase 17 is completed and import/external behavior is stable.
 - Exit criteria: CLI project semantics are stable, documented, and test-covered.
@@ -58,13 +70,15 @@ status: done (2026-03-04, PR #820)
   - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
   - All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - CLI project-mode trigger rules must be captured as an explicit import-form matrix and synchronized between implementation, tests, and CLI contract docs.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_18_1` (Run/Build Semantics Alignment): validation goals cover: Align project detection and compilation scope between `run` and `build`. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_18_2` (Auto-Detection Rule Tightening): validation goals cover: Replace over-aggressive auto project mode with explicit, documented rules. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_18_3` (CLI Contract and Regression Suite): validation goals cover: Document stable CLI semantics and edge cases; Add regression tests for command-mode behavior. Include negative-path goals that catch regressions against these guarantees.
-  - Exit-gate evidence explicitly demonstrates: CLI project semantics are stable, documented, and test-covered.
+  - `milestone_18_4` (CLI Resolver Trigger-Matrix Closure): validation goals cover: Define project-mode trigger behavior for `from`/relative/bare-relative/`import` forms; Keep run/build behavior equivalent across all matrix entries. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: CLI project semantics are stable, documented, and test-covered, including the trigger matrix.
 
 ## Exit Gate
-- CLI project semantics are stable, documented, and test-covered.
+- CLI project semantics are stable, documented, and test-covered, with an explicit and regression-protected trigger matrix.

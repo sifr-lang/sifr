@@ -4,6 +4,7 @@
 Fix import/external resolution correctness across `check`, `run`, `build`, and `test` pipelines.
 
 Status: completed (2026-03-04)
+Follow-up planning extension: added milestone_17_4 (2026-03-05)
 
 ## Depends on
 - Phase 16
@@ -58,6 +59,16 @@ status: done (2026-03-04, PR #815)
   - Test codegen now emits local-module `use crate::<module>::<name>` imports in test mode (`crates/sifr_codegen/src/entrypoints.rs`).
   - Milestone demo: `cargo run -q -p sifr -- test demos/m17_3_test_and_constant_import_parity_demo`.
 
+### milestone_17_4: Import-Form Semantics Closure
+status: planned (added 2026-03-05)
+- Scope:
+  - Define canonical compiler semantics for import forms: `from x import ...`, `from .x import ...`, `from ..x import ...`, `from . import ...`, and `import x`.
+  - Ensure import-form behavior is explicit and consistent in `check`, `run`, `build`, and `test` pipelines (not only CLI mode detection).
+- Definition of done:
+  - Import-form support matrix is explicitly documented in phase/docs and reflected by deterministic compiler behavior.
+  - Unsupported or non-activating forms fail or downgrade with explicit, stable diagnostics (no implicit heuristics).
+  - Regression suite includes positive/negative coverage for all supported and unsupported import forms.
+
 ## Quality Contract
 - Entry criteria: Phase 16 is completed and deterministic local profiles are in place.
 - Exit criteria: Import semantics are correct and consistent in all execution modes.
@@ -66,13 +77,15 @@ status: done (2026-03-04, PR #815)
   - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
   - All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
+  - Import-form semantics must be covered by an explicit matrix (supported, unsupported, and non-activating forms) with deterministic outcomes and no implicit behavior.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_17_1` (Frontend-Only Check Path): validation goals cover: Ensure `check` stops after frontend/type phases; Remove codegen/runtime coupling from check flow. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_17_2` (Non-Main Externals Resolution): validation goals cover: Resolve stdlib/local externals in non-main modules; Ensure multi-file projects type-check consistently. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_17_3` (Test and Constant Import Parity): validation goals cover: Align `sifr test` import behavior with regular compilation; Support local-module constant imports in externals model. Include negative-path goals that catch regressions against these guarantees.
-  - Exit-gate evidence explicitly demonstrates: Import semantics are correct and consistent in all execution modes.
+  - `milestone_17_4` (Import-Form Semantics Closure): validation goals cover: Define canonical semantics for `from`/relative/bare-relative/`import` forms; Ensure consistent behavior and diagnostics across `check/run/build/test`. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Import semantics are correct and consistent in all execution modes, including the import-form matrix.
 
 ## Exit Gate
-- Import semantics are correct and consistent in all execution modes.
+- Import semantics are correct and consistent in all execution modes, with an explicit and regression-protected import-form matrix.
