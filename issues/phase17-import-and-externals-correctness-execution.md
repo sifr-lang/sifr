@@ -129,6 +129,6 @@ Validation evidence:
 - Additional verification command:
   - `cargo test -q -p sifr_driver test_compose_test_runner_lib_is_test_scoped`
 - External review pass 5 output: `reviews/phase17-review-3.md`
-- Remediation PR (pass 5): https://github.com/yaseralnajjar/sifr/pull/TBD
+- Remediation PR (pass 5): https://github.com/yaseralnajjar/sifr/pull/829
 - Pass-5 remediation summary:
   - Added explicit canonical import-form matrix table under milestone `17_4` to satisfy the quality-contract requirement for documented supported/unsupported/non-activating forms.
