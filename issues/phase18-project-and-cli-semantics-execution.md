@@ -74,7 +74,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 4: milestone_18_4 CLI Resolver Trigger-Matrix Closure
-status: done (2026-03-05, PR #TBD)
+status: done (2026-03-05, PR #831)
 
 - [x] Define canonical trigger-matrix semantics for `from`/relative/bare-relative/`import` forms
 - [x] Synchronize trigger matrix across implementation, tests, and CLI contract docs
@@ -98,7 +98,7 @@ Validation evidence:
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (merged)
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/820 (merged)
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/TBD
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/831 (merged)
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase18-review.md`

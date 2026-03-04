@@ -52,7 +52,7 @@ status: done (2026-03-04, PR #820)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_3_cli_contract_and_regression_suite_demo.sifr`.
 
 ### milestone_18_4: CLI Resolver Trigger-Matrix Closure
-status: done (2026-03-05, PR #TBD)
+status: done (2026-03-05, PR #831)
 - Scope:
   - Define canonical CLI project-mode activation semantics for `from x import ...`, relative import levels, bare relative imports, and regular `import x`.
   - Build on milestone_18_3 regression coverage by requiring explicit trigger-matrix definitions for every covered import form.
