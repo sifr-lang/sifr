@@ -86,7 +86,8 @@ status: done (2026-03-05, PR #828)
     - `test_check_reports_unsupported_multi_level_relative_import`
     - `test_check_reports_unsupported_bare_relative_import`
     - `test_check_reports_unsupported_import_statement`
-  - Milestone demo: `cargo run -q -p sifr -- run demos/m17_4_import_form_semantics_closure_demo/main.sifr`.
+    - `test_collect_project_modules_supports_single_level_relative_import`
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m17_4_import_form_semantics_closure_demo/main.sifr` (uses supported `from .helper import value`).
 
 ## Quality Contract
 - Entry criteria: Phase 16 is completed and deterministic local profiles are in place.

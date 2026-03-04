@@ -1479,6 +1479,37 @@ def main():
     }
 
     #[test]
+    fn test_collect_project_modules_supports_single_level_relative_import() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from .helper import value
+
+def main():
+    print(value())
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "helper".to_string(),
+            parse_suite(
+                r#"
+def value() -> int:
+    return 42
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .expect("single-level relative imports should resolve in project lowering");
+        assert!(result.hir_modules.contains_key("main"));
+        assert!(result.hir_modules.contains_key("helper"));
+    }
+
+    #[test]
     fn test_collect_project_modules_allows_non_main_stdlib_imports() {
         let mut parsed_modules = HashMap::new();
         parsed_modules.insert(
