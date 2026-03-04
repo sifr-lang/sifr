@@ -1,6 +1,6 @@
 # Phase 17 Execution Checklist (Import and Externals Correctness)
 
-Status: in progress (2026-03-04)
+Status: completed (2026-03-04)
 Owner: phase_17 execution loop
 Reference phase doc: `.cursor/plans/main/phases/17_import_and_externals_correctness.md`
 
@@ -74,4 +74,14 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/814 (merged)
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/815 (open)
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/815 (merged)
+
+## Reviewer Follow-up
+- External review pass 1 output: `reviews/phase17-review.md`
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/816 (open)
+- Triage outcome: reviewer findings were based on pre-merge code and were validated as already fixed by PRs #813, #814, and #815.
+- Validation commands used during triage:
+  - `cargo test -q -p sifr_driver test_check_only_reports_frontend_phases`
+  - `cargo test -q -p sifr_driver test_run_tests_resolves_local_imports_and_constants`
+  - `cargo test -q -p sifr_codegen test_generate_rust_test_emits_local_module_import_uses`
+  - `cargo test -q -p sifr_codegen test_generate_rust_multi_exports_non_main_items`
