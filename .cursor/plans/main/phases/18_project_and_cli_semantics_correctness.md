@@ -9,10 +9,15 @@ Make CLI behavior predictable for single-file and multi-file workflows.
 ## Milestones
 
 ### milestone_18_1: Run/Build Semantics Alignment
+status: done (2026-03-04, PR #818)
 - Scope:
   - Align project detection and compilation scope between `run` and `build`.
 - Definition of done:
   - Equivalent project inputs yield equivalent resolution behavior.
+- Evidence:
+  - Shared CLI compilation mode resolver (`resolve_compilation_mode`) now drives both `cmd_run` and `cmd_build` in `crates/sifr/src/main.rs`.
+  - Added resolver regression tests: `test_resolve_compilation_mode_project_for_main_with_siblings` and `test_resolve_compilation_mode_single_file_for_non_main_entry`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m18_1_run_build_semantics_alignment_demo/main.sifr`.
 
 ### milestone_18_2: Auto-Detection Rule Tightening
 - Scope:
