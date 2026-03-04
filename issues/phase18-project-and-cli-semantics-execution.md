@@ -55,7 +55,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_18_3 CLI Contract and Regression Suite
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #820)
 
 - [x] Document stable CLI semantics and edge cases
 - [x] Add regression tests for command-mode behavior
@@ -63,7 +63,7 @@ status: done (2026-03-04, PR #TBD)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
@@ -76,4 +76,4 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (merged)
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/820 (open)

@@ -33,7 +33,7 @@ status: done (2026-03-04, PR #819)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_2_auto_detection_rule_tightening_demo/main.sifr`.
 
 ### milestone_18_3: CLI Contract and Regression Suite
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #820)
 - Scope:
   - Document stable CLI semantics and edge cases.
   - Add regression tests for command-mode behavior.
