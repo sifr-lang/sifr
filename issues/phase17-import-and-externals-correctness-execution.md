@@ -78,6 +78,7 @@ Validation evidence:
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase17-review.md`
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/816 (open)
 - Triage outcome: reviewer findings were based on pre-merge code and were validated as already fixed by PRs #813, #814, and #815.
 - Validation commands used during triage:
   - `cargo test -q -p sifr_driver test_check_only_reports_frontend_phases`
