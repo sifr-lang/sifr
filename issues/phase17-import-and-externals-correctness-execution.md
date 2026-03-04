@@ -53,7 +53,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_17_3 Test and Constant Import Parity
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #815)
 
 - [x] Align `sifr test` import behavior with regular compilation
 - [x] Support local-module constant imports in externals model
@@ -61,7 +61,7 @@ status: done (2026-03-04, PR #TBD)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
@@ -74,4 +74,4 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/814 (merged)
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/815 (open)

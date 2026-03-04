@@ -41,7 +41,7 @@ status: done (2026-03-04, PR #814)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m17_2_non_main_externals_resolution_demo/main.sifr`.
 
 ### milestone_17_3: Test and Constant Import Parity
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #815)
 - Scope:
   - Align `sifr test` import behavior with regular compilation.
   - Support local-module constant imports in externals model.
