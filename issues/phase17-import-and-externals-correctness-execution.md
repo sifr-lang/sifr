@@ -93,3 +93,12 @@ Validation evidence:
   - `cargo test -q -p sifr_driver test_run_tests_resolves_local_imports_and_constants`
   - `cargo test -q -p sifr_codegen test_generate_rust_test_emits_local_module_import_uses`
   - `cargo test -q -p sifr_codegen test_generate_rust_multi_exports_non_main_items`
+- External review pass 3 output: `reviews/phase17-review-2.md`
+- Remediation PR (pass 3): https://github.com/yaseralnajjar/sifr/pull/824
+- Pass-3 remediation summary:
+  - Scoped generated test-runner `lib.rs` to `cfg(test)` to eliminate non-test build unused-import/dead-code warnings without changing runtime behavior.
+  - Added negative-path regression coverage for non-main unknown-module imports and cyclic/no-progress module lowering.
+- Validation commands used during pass-3 remediation:
+  - `cargo test -q -p sifr_driver`
+  - `cargo run -q -p sifr -- test demos/m17_3_test_and_constant_import_parity_demo`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
