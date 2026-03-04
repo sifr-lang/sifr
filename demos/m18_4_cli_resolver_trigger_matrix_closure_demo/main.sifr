@@ -1,0 +1,5 @@
+from .helper import value
+
+def main():
+    print("m18_4 resolver trigger matrix demo:")
+    print(value())

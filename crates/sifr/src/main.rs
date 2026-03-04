@@ -334,6 +334,20 @@ mod tests {
     }
 
     #[test]
+    fn test_resolve_compilation_mode_single_file_for_regular_import_with_local_module() {
+        let dir = mktemp_dir("regular_import_local_module");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(&main, "import helper\n\ndef main():\n    print(\"ok\")\n")
+            .expect("main file should be written");
+        std::fs::write(&helper, "def value() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn test_resolve_compilation_mode_single_file_for_invalid_main_source() {
         let dir = mktemp_dir("invalid_main");
         let main = dir.join("main.sifr");
@@ -514,6 +528,84 @@ mod tests {
         let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
         let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
         assert_eq!(run_messages, build_messages);
+
+        let _ = std::fs::remove_dir_all(run_out);
+        let _ = std::fs::remove_dir_all(build_out);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_compile_entrypoint_error_consistency_for_import_statement() {
+        let dir = mktemp_dir("entrypoint_import_statement");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(&main, "import helper\n\ndef main():\n    print(\"ok\")\n")
+            .expect("main file should be written");
+        std::fs::write(&helper, "def value() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        let run_out = mktemp_dir("run_path_import_statement");
+        let build_out = mktemp_dir("build_path_import_statement");
+        let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
+        let build_err =
+            compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
+        let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
+        let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
+        assert_eq!(run_messages, build_messages);
+        assert!(run_messages
+            .iter()
+            .any(|m| m.contains("unsupported import statement 'import helper'")));
+
+        let _ = std::fs::remove_dir_all(run_out);
+        let _ = std::fs::remove_dir_all(build_out);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_compile_entrypoint_error_consistency_for_bare_relative_import() {
+        let dir = mktemp_dir("entrypoint_bare_relative");
+        let main = dir.join("main.sifr");
+        std::fs::write(&main, "from . import helper\n\ndef main():\n    print(helper)\n")
+            .expect("main file should be written");
+
+        let run_out = mktemp_dir("run_path_bare_relative");
+        let build_out = mktemp_dir("build_path_bare_relative");
+        let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
+        let build_err =
+            compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
+        let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
+        let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
+        assert_eq!(run_messages, build_messages);
+        assert!(run_messages
+            .iter()
+            .any(|m| m.contains("unsupported bare relative import")));
+
+        let _ = std::fs::remove_dir_all(run_out);
+        let _ = std::fs::remove_dir_all(build_out);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_compile_entrypoint_error_consistency_for_multi_level_relative_import() {
+        let dir = mktemp_dir("entrypoint_multi_level_relative");
+        let main = dir.join("main.sifr");
+        std::fs::write(
+            &main,
+            "from ..helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+
+        let run_out = mktemp_dir("run_path_multi_level_relative");
+        let build_out = mktemp_dir("build_path_multi_level_relative");
+        let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
+        let build_err =
+            compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
+        let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
+        let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
+        assert_eq!(run_messages, build_messages);
+        assert!(run_messages
+            .iter()
+            .any(|m| m.contains("unsupported relative import level 2")));
 
         let _ = std::fs::remove_dir_all(run_out);
         let _ = std::fs::remove_dir_all(build_out);
