@@ -78,9 +78,17 @@ Validation evidence:
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase17-review.md`
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/816 (open)
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/816 (merged)
 - Triage outcome: reviewer findings were based on pre-merge code and were validated as already fixed by PRs #813, #814, and #815.
 - Validation commands used during triage:
+  - `cargo test -q -p sifr_driver test_check_only_reports_frontend_phases`
+  - `cargo test -q -p sifr_driver test_run_tests_resolves_local_imports_and_constants`
+  - `cargo test -q -p sifr_codegen test_generate_rust_test_emits_local_module_import_uses`
+  - `cargo test -q -p sifr_codegen test_generate_rust_multi_exports_non_main_items`
+- External review pass 2 output: `reviews/phase17-production-grade-review.md`
+- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/817 (open)
+- Pass-2 triage outcome: production-grade review findings were also stale against current `origin/main` and validated as already fixed by PRs #813, #814, #815.
+- Validation commands used during pass-2 triage:
   - `cargo test -q -p sifr_driver test_check_only_reports_frontend_phases`
   - `cargo test -q -p sifr_driver test_run_tests_resolves_local_imports_and_constants`
   - `cargo test -q -p sifr_codegen test_generate_rust_test_emits_local_module_import_uses`
