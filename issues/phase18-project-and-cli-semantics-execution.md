@@ -35,16 +35,24 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 2: milestone_18_2 Auto-Detection Rule Tightening
-status: pending
+status: done (2026-03-04, PR #819)
 
-- [ ] Replace over-aggressive auto project mode with explicit, documented rules
-- [ ] Ensure nearby scratch files do not unexpectedly break single-file runs
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Replace over-aggressive auto project mode with explicit, documented rules
+- [x] Ensure nearby scratch files do not unexpectedly break single-file runs
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m18_2_auto_detection_rule_tightening_demo/main.sifr` -> prints `m18_2 auto-detection demo:` and `3` despite invalid neighboring `scratch.sifr`.
+- Positive path: `cargo run -q -p sifr -- build demos/m18_2_auto_detection_rule_tightening_demo/main.sifr -o <tmp_output_dir>` -> succeeds in single-file mode.
+- Positive path: `cargo test -q -p sifr test_resolve_compilation_mode_` -> pass.
+- Negative path: `cargo run -q -p sifr -- run <tmp_project_with_main_importing_local_helper_and_invalid_helper>/main.sifr` -> exits `1` with parse error in `helper`.
+- Negative path: `cargo run -q -p sifr -- build <tmp_project_with_main_importing_local_helper_and_invalid_helper>/main.sifr -o <tmp_output_dir>` -> exits `1` with parse error in `helper`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_18_3 CLI Contract and Regression Suite
 status: pending
@@ -59,6 +67,6 @@ status: pending
 - [ ] Mark part complete in phase doc and this checklist
 
 ## PR Log
-- Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (open)
-- Part 2: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (merged)
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (open)
 - Part 3: pending
