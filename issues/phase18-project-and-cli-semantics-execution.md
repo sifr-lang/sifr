@@ -76,4 +76,13 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (merged)
-- Part 3: https://github.com/yaseralnajjar/sifr/pull/820 (open)
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/820 (merged)
+
+## Reviewer Follow-up
+- External review pass 1 output: `reviews/phase18-review.md`
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/TBD
+- Pass-1 triage + actions:
+  - Added explicit resolver regression tests for `typing`, `enum`, and package-like `__init__.sifr` imports.
+  - Expanded CLI contract docs to cover unsupported package-style auto-detect and parse/read fallback behavior.
+- Validation commands used for pass-1 remediation:
+  - `cargo test -q -p sifr test_resolve_compilation_mode_`

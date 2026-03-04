@@ -18,8 +18,10 @@ Rules are evaluated in order:
 Notes:
 
 - Stdlib imports (for example `from sifr.math import floor`) do not enable project mode.
+- `from typing import ...` and `from enum import ...` do not enable project mode.
 - Invalid `main.sifr` source does not enable project mode.
 - Missing local-module files do not enable project mode.
+- Package-style imports via `pkg/__init__.sifr` are not part of project-mode auto-detect.
 
 ## Command Behavior Matrix
 
@@ -36,3 +38,4 @@ Notes:
 - A neighboring invalid `scratch.sifr` file must not break `run/build` when `main.sifr` has no local imports.
 - Local import parse/type errors in actual project mode must fail both `run` and `build` consistently.
 - `run` and `build` must use the same mode resolver for identical input paths.
+- If `main.sifr` cannot be read or parsed during mode resolution, resolver falls back to single-file mode.

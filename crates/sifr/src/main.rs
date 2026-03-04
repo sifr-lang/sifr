@@ -344,4 +344,59 @@ mod tests {
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
         let _ = std::fs::remove_dir_all(dir);
     }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_typing_import() {
+        let dir = mktemp_dir("typing_import");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from typing import List\n\ndef main():\n    values: List[int] = [1]\n    print(values)\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_enum_import() {
+        let dir = mktemp_dir("enum_import");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from enum import Enum\n\ndef main():\n    print(\"ok\")\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_package_init_import() {
+        let dir = mktemp_dir("pkg_import");
+        let main = dir.join("main.sifr");
+        let pkg_dir = dir.join("pkg");
+        std::fs::create_dir_all(&pkg_dir).expect("pkg dir should be created");
+        std::fs::write(
+            &main,
+            "from pkg import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(
+            pkg_dir.join("__init__.sifr"),
+            "def value() -> int:\n    return 1\n",
+        )
+        .expect("pkg init should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }
