@@ -55,6 +55,12 @@ enum Commands {
     },
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CompilationMode {
+    SingleFile,
+    Project,
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -64,6 +70,30 @@ fn main() {
         Commands::Check { file } => cmd_check(&file),
         Commands::Emit { file } => cmd_emit(&file),
         Commands::Test { dir } => cmd_test(&dir),
+    }
+}
+
+fn resolve_compilation_mode(file: &Path) -> CompilationMode {
+    let is_project_entry = file.file_stem().is_some_and(|stem| stem == "main")
+        && if let Some(parent) = file.parent() {
+            if let Ok(entries) = std::fs::read_dir(parent) {
+                entries
+                    .flatten()
+                    .filter(|e| e.path().extension().is_some_and(|ext| ext == "sifr"))
+                    .filter(|e| e.path() != file)
+                    .count()
+                    > 0
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+
+    if is_project_entry {
+        CompilationMode::Project
+    } else {
+        CompilationMode::SingleFile
     }
 }
 
@@ -82,9 +112,15 @@ fn read_source(file: &Path) -> String {
 }
 
 fn cmd_build(file: &Path, output: &Path) {
-    let source = read_source(file);
+    let result = match resolve_compilation_mode(file) {
+        CompilationMode::Project => build_project(file, output),
+        CompilationMode::SingleFile => {
+            let source = read_source(file);
+            build(&source, output)
+        }
+    };
 
-    match build(&source, output) {
+    match result {
         Ok(binary_path) => {
             let _ = writeln!(
                 io::stderr(),
@@ -103,30 +139,12 @@ fn cmd_build(file: &Path, output: &Path) {
 
 fn cmd_run(file: &Path) {
     let temp_dir = std::env::temp_dir().join("sifr_run");
-
-    // Check if this is a multi-file project:
-    // The file must be named main.sifr AND there must be other .sifr files in the same directory
-    let is_multi_file = file.file_stem().is_some_and(|stem| stem == "main")
-        && if let Some(parent) = file.parent() {
-            if let Ok(entries) = std::fs::read_dir(parent) {
-                entries
-                    .flatten()
-                    .filter(|e| e.path().extension().is_some_and(|ext| ext == "sifr"))
-                    .filter(|e| e.path() != file)
-                    .count()
-                    > 0
-            } else {
-                false
-            }
-        } else {
-            false
-        };
-
-    let result = if is_multi_file {
-        build_project(file, &temp_dir)
-    } else {
-        let source = read_source(file);
-        build(&source, &temp_dir)
+    let result = match resolve_compilation_mode(file) {
+        CompilationMode::Project => build_project(file, &temp_dir),
+        CompilationMode::SingleFile => {
+            let source = read_source(file);
+            build(&source, &temp_dir)
+        }
     };
 
     match result {
@@ -198,5 +216,50 @@ fn cmd_emit(file: &Path) {
             }
             process::exit(1);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn mktemp_dir(name: &str) -> PathBuf {
+        let unique = format!(
+            "sifr_cli_mode_{name}_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&dir).expect("temp dir should be created");
+        dir
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_project_for_main_with_siblings() {
+        let dir = mktemp_dir("project");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(&main, "def main():\n    pass\n").expect("main file should be written");
+        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::Project);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_non_main_entry() {
+        let dir = mktemp_dir("single");
+        let app = dir.join("app.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(&app, "def main():\n    pass\n").expect("app file should be written");
+        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&app), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
     }
 }
