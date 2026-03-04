@@ -35,7 +35,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 2: milestone_18_2 Auto-Detection Rule Tightening
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #819)
 
 - [x] Replace over-aggressive auto project mode with explicit, documented rules
 - [x] Ensure nearby scratch files do not unexpectedly break single-file runs
@@ -43,7 +43,7 @@ status: done (2026-03-04, PR #TBD)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 - [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
@@ -68,5 +68,5 @@ status: pending
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (merged)
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (open)
 - Part 3: pending

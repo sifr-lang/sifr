@@ -20,7 +20,7 @@ status: done (2026-03-04, PR #818)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_1_run_build_semantics_alignment_demo/main.sifr`.
 
 ### milestone_18_2: Auto-Detection Rule Tightening
-status: done (2026-03-04, PR #TBD)
+status: done (2026-03-04, PR #819)
 - Scope:
   - Replace over-aggressive auto project mode with explicit, documented rules.
 - Definition of done:
