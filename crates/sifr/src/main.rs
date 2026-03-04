@@ -6,7 +6,7 @@
 //!   sifr check <file.sifr>    Type-check only
 //!   sifr emit <file.sifr>     Show generated Rust code
 use clap::{Parser, Subcommand};
-use sifr_driver::{build, build_project, check, compile, run_tests, CompileResult};
+use sifr_driver::{build, build_project, check, compile, run_tests, CompileError, CompileResult};
 use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
 use std::io::{self, Write};
@@ -133,13 +133,7 @@ fn read_source(file: &Path) -> String {
 }
 
 fn cmd_build(file: &Path, output: &Path) {
-    let result = match resolve_compilation_mode(file) {
-        CompilationMode::Project => build_project(file, output),
-        CompilationMode::SingleFile => {
-            let source = read_source(file);
-            build(&source, output)
-        }
-    };
+    let result = compile_entrypoint(file, output);
 
     match result {
         Ok(binary_path) => {
@@ -160,13 +154,7 @@ fn cmd_build(file: &Path, output: &Path) {
 
 fn cmd_run(file: &Path) {
     let temp_dir = std::env::temp_dir().join("sifr_run");
-    let result = match resolve_compilation_mode(file) {
-        CompilationMode::Project => build_project(file, &temp_dir),
-        CompilationMode::SingleFile => {
-            let source = read_source(file);
-            build(&source, &temp_dir)
-        }
-    };
+    let result = compile_entrypoint(file, &temp_dir);
 
     match result {
         Ok(binary_path) => {
@@ -236,6 +224,16 @@ fn cmd_emit(file: &Path) {
                 let _ = writeln!(io::stderr(), "{error}");
             }
             process::exit(1);
+        }
+    }
+}
+
+fn compile_entrypoint(file: &Path, output: &Path) -> Result<PathBuf, Vec<CompileError>> {
+    match resolve_compilation_mode(file) {
+        CompilationMode::Project => build_project(file, output),
+        CompilationMode::SingleFile => {
+            let source = read_source(file);
+            build(&source, output)
         }
     }
 }
@@ -397,6 +395,49 @@ mod tests {
         .expect("pkg init should be written");
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_project_for_relative_import_with_sibling() {
+        let dir = mktemp_dir("relative_import");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from .helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def value() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::Project);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_compile_entrypoint_error_consistency_for_project_mode() {
+        let dir = mktemp_dir("entrypoint_consistency");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def value(:\n").expect("helper file should be written");
+
+        let run_out = mktemp_dir("run_path");
+        let build_out = mktemp_dir("build_path");
+        let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
+        let build_err =
+            compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
+        let run_messages: Vec<String> = run_err.iter().map(ToString::to_string).collect();
+        let build_messages: Vec<String> = build_err.iter().map(ToString::to_string).collect();
+        assert_eq!(run_messages, build_messages);
+
+        let _ = std::fs::remove_dir_all(run_out);
+        let _ = std::fs::remove_dir_all(build_out);
         let _ = std::fs::remove_dir_all(dir);
     }
 }

@@ -22,6 +22,8 @@ Notes:
 - Invalid `main.sifr` source does not enable project mode.
 - Missing local-module files do not enable project mode.
 - Package-style imports via `pkg/__init__.sifr` are not part of project-mode auto-detect.
+- Relative imports such as `from .helper import value` enable project mode when `helper.sifr` exists in the same directory.
+- If a user creates local files with stdlib-like names, local files are treated as local modules by auto-detect.
 
 ## Command Behavior Matrix
 
