@@ -9,11 +9,11 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 ## Global Gates (apply to every part)
 - [x] Scope remains constrained to the current part definition-of-done
 - [x] Root cause addressed (no superficial workaround/fallback)
-- [ ] Milestone quality-contract checks include at least one positive-path and one negative-path validation
-- [ ] Full local suite passes: `./scripts/run_all_tests.sh`
-- [ ] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
+- [x] Full local suite passes: `./scripts/run_all_tests.sh`
+- [x] Milestone demo runs successfully before opening each part PR
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_17_1 Frontend-Only Check Path
 status: done (2026-03-04, PR #813)
@@ -53,18 +53,25 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_17_3 Test and Constant Import Parity
-status: pending
+status: done (2026-03-04, PR #815)
 
-- [ ] Align `sifr test` import behavior with regular compilation
-- [ ] Support local-module constant imports in externals model
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Align `sifr test` import behavior with regular compilation
+- [x] Support local-module constant imports in externals model
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- test demos/m17_3_test_and_constant_import_parity_demo` -> pass (`test_import_parity` passes).
+- Positive path: `cargo test -q -p sifr_driver` -> pass (includes `test_collect_project_modules_exports_local_constants` and `test_run_tests_resolves_local_imports_and_constants`).
+- Positive path: `cargo test -q -p sifr_codegen test_generate_rust_test_emits_local_module_import_uses` -> pass.
+- Negative path: `cargo run -q -p sifr -- test <tmp_dir_with_missing_imported_constant>` -> exits `1` with `module 'helper' has no member 'MISSING'`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (merged)
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/814 (open)
-- Part 3: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/814 (merged)
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/815 (open)

@@ -3,6 +3,8 @@
 ## Objective
 Fix import/external resolution correctness across `check`, `run`, `build`, and `test` pipelines.
 
+Status: completed (2026-03-04)
+
 ## Depends on
 - Phase 16
 
@@ -39,12 +41,19 @@ status: done (2026-03-04, PR #814)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m17_2_non_main_externals_resolution_demo/main.sifr`.
 
 ### milestone_17_3: Test and Constant Import Parity
+status: done (2026-03-04, PR #815)
 - Scope:
   - Align `sifr test` import behavior with regular compilation.
   - Support local-module constant imports in externals model.
 - Definition of done:
   - Test runner imports behave like compile pipeline.
   - Local constants import successfully across modules.
+- Evidence:
+  - Local-module constant exports are now registered in project externals (`collect_module_exports` in `crates/sifr_driver/src/lib.rs`).
+  - Local import resolution now treats constants as module-members (`externals.constants`) in `crates/sifr_hir/src/lower.rs`.
+  - `run_tests` now builds support-module externals and lowers test modules via `lower_module_with_externals`, aligning with project compilation flow.
+  - Test codegen now emits local-module `use crate::<module>::<name>` imports in test mode (`crates/sifr_codegen/src/entrypoints.rs`).
+  - Milestone demo: `cargo run -q -p sifr -- test demos/m17_3_test_and_constant_import_parity_demo`.
 
 ## Quality Contract
 - Entry criteria: Phase 16 is completed and deterministic local profiles are in place.

@@ -668,7 +668,8 @@ fn lower_module_impl(
 
                 // Check if the local module exists in externals before resolving
                 let has_local_module = externals.functions.contains_key(&module_name)
-                    || externals.classes.contains_key(&module_name);
+                    || externals.classes.contains_key(&module_name)
+                    || externals.constants.contains_key(&module_name);
                 if !has_local_module {
                     ctx.error(format!("unknown module '{module_name}'"));
                     continue;
@@ -723,8 +724,17 @@ fn lower_module_impl(
                                         let params: Vec<(String, Type)> = fields.clone();
                                         FunctionType::new(params, class_ty.clone())
                                     };
-                                    ctx.functions.insert(local, ft);
+                                    ctx.functions.insert(local.clone(), ft);
                                 }
+                                found = true;
+                            }
+                        }
+                    }
+                    // Look up in external constants
+                    if !found {
+                        if let Some(module_consts) = externals.constants.get(&module_name) {
+                            if let Some(const_ty) = module_consts.get(name) {
+                                ctx.scope.define(local.clone(), const_ty.clone());
                                 found = true;
                             }
                         }

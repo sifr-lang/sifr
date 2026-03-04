@@ -1,0 +1,5 @@
+# support module imported by tests
+BASE: int = 9
+
+def plus_one(x: int) -> int:
+    return x + 1
