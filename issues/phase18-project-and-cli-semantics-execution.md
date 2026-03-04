@@ -96,7 +96,7 @@ Validation evidence:
   - `cargo test -q -p sifr test_resolve_compilation_mode_`
   - `cargo test -q -p sifr test_compile_entrypoint_error_consistency_for_project_mode`
 - External review pass 3 output: `reviews/phase18-review-2.md`
-- Remediation PR (pass 3): https://github.com/yaseralnajjar/sifr/pull/TBD
+- Remediation PR (pass 3): https://github.com/yaseralnajjar/sifr/pull/826
 - Pass-3 remediation summary:
   - Added resolver regression test for relative import without sibling module to enforce single-file fallback.
   - Added resolver regression tests proving local `typing.sifr`/`enum.sifr` files do not activate project mode for stdlib-like imports.
