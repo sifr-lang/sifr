@@ -73,10 +73,32 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run <tmp_main_importing_missing_local_module_with_invalid_scratch>/main.sifr` -> exits `1` with `unknown module 'helper'`.
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
+## Part 4: milestone_18_4 CLI Resolver Trigger-Matrix Closure
+status: done (2026-03-05, PR #TBD)
+
+- [x] Define canonical trigger-matrix semantics for `from`/relative/bare-relative/`import` forms
+- [x] Synchronize trigger matrix across implementation, tests, and CLI contract docs
+- [x] Ensure run/build mode-resolution equivalence for matrix entries
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Documentation path: explicit resolver trigger matrix recorded in `docs/cli_command_semantics.md`.
+- Positive path: `cargo run -q -p sifr -- run demos/m18_4_cli_resolver_trigger_matrix_closure_demo/main.sifr` -> prints `m18_4 resolver trigger matrix demo:` and `18` (demo exercises supported `from .helper import value`).
+- Positive path: `cargo test -q -p sifr test_resolve_compilation_mode_` -> pass (includes regular import fallback + relative-import resolver matrix tests).
+- Positive path: `cargo test -q -p sifr test_compile_entrypoint_error_consistency_for_` -> pass (includes run/build consistency checks for project mode, regular import, bare relative, and multi-level relative).
+- Negative path: `cargo run -q -p sifr -- run demos/m18_4_cli_resolver_trigger_matrix_closure_demo/negative_cases/main_regular_import.sifr` -> exits `1` with `unsupported import statement`.
+- Negative path: `cargo run -q -p sifr -- run demos/m18_4_cli_resolver_trigger_matrix_closure_demo/negative_cases/main_bare_relative.sifr` -> exits `1` with `unsupported bare relative import`.
+- Negative path: `cargo run -q -p sifr -- run demos/m18_4_cli_resolver_trigger_matrix_closure_demo/negative_cases/main_multi_level_relative.sifr` -> exits `1` with `unsupported relative import level 2`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (merged)
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/820 (merged)
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/TBD
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase18-review.md`

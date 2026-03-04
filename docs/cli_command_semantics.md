@@ -25,7 +25,21 @@ Notes:
 - Relative imports such as `from .helper import value` enable project mode when `helper.sifr` exists in the same directory.
 - Multi-level relative imports (for example `from ..helper import value`) do not enable project mode.
 - Bare relative imports (for example `from . import value`) do not enable project mode.
+- Regular import statements (for example `import helper`) do not enable project mode.
 - Local files named `typing.sifr` or `enum.sifr` do not enable project mode; these names are treated as stdlib-like imports by auto-detect.
+
+## Resolver Trigger Matrix
+
+| Import form in `main.sifr` | Project-mode activation | Resolver mode | Expected compile result |
+|---|---|---|---|
+| `from helper import value` with `helper.sifr` sibling | yes | project | success (module resolved) |
+| `from .helper import value` with `helper.sifr` sibling | yes | project | success (module resolved) |
+| `from .helper import value` without `helper.sifr` sibling | no | single-file | error (`unknown module 'helper'`) |
+| `from ..helper import value` | no | single-file | error (`unsupported relative import level 2`) |
+| `from . import helper` | no | single-file | error (`unsupported bare relative import`) |
+| `import helper` | no | single-file | error (`unsupported import statement`) |
+| `from typing import List` | no | single-file | success (type-level import handling) |
+| `from enum import Enum` | no | single-file | success (type-level import handling) |
 
 ## Command Behavior Matrix
 

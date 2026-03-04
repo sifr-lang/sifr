@@ -52,7 +52,7 @@ status: done (2026-03-04, PR #820)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_3_cli_contract_and_regression_suite_demo.sifr`.
 
 ### milestone_18_4: CLI Resolver Trigger-Matrix Closure
-status: planned (added 2026-03-05)
+status: done (2026-03-05, PR #TBD)
 - Scope:
   - Define canonical CLI project-mode activation semantics for `from x import ...`, relative import levels, bare relative imports, and regular `import x`.
   - Build on milestone_18_3 regression coverage by requiring explicit trigger-matrix definitions for every covered import form.
@@ -61,6 +61,13 @@ status: planned (added 2026-03-05)
   - A full trigger matrix exists for all import forms and is documented in the CLI semantics contract.
   - Resolver behavior for each form is regression-protected with positive and negative tests.
   - Run/build mode resolution remains equivalent for identical inputs across all matrix cases.
+- Evidence:
+  - Resolver tests in `crates/sifr/src/main.rs` now include regular-import fallback and run/build consistency checks for:
+    - regular import (`import helper`)
+    - bare relative import (`from . import helper`)
+    - multi-level relative import (`from ..helper import value`)
+  - CLI contract docs now include an explicit resolver trigger matrix in `docs/cli_command_semantics.md`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m18_4_cli_resolver_trigger_matrix_closure_demo/main.sifr` (uses supported `from .helper import value`).
 
 ## Quality Contract
 - Entry criteria: Phase 17 is completed and import/external behavior is stable.

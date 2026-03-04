@@ -1,0 +1,4 @@
+from . import helper
+
+def main():
+    print(helper)

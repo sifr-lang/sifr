@@ -1,0 +1,4 @@
+import helper
+
+def main():
+    print("regular import should not activate project mode and should fail explicitly")
