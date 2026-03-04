@@ -317,4 +317,31 @@ mod tests {
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
         let _ = std::fs::remove_dir_all(dir);
     }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_missing_local_module() {
+        let dir = mktemp_dir("missing_local");
+        let main = dir.join("main.sifr");
+        std::fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_invalid_main_source() {
+        let dir = mktemp_dir("invalid_main");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(&main, "def main(:\n").expect("main file should be written");
+        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }

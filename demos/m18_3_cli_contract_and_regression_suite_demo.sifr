@@ -1,0 +1,5 @@
+# milestone_18_3 demo
+# CLI contract is regression-protected by resolver tests in crates/sifr/src/main.rs.
+
+def main():
+    print("m18_3 cli contract and regression suite demo")

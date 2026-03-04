@@ -115,6 +115,8 @@ cargo test
 
 For a deep dive into the compiler pipeline, type system, ownership model, and design decisions, see the [Architecture Document](.cursor/plans/main/architecture.md).
 
+For stable command-mode behavior and edge-case guarantees, see the [CLI Command Semantics Contract](docs/cli_command_semantics.md).
+
 ### Interactive Compiler Pipeline
 
 Want to see how a Sifr program travels from source text to a native binary?
