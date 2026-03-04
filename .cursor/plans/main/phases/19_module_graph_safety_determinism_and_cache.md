@@ -31,6 +31,9 @@ Make multi-module compilation dependency-safe, deterministic, and efficient for 
 - Entry criteria: Phase 18 is completed and project-mode semantics are stable.
 - Exit criteria: Multi-module builds are deterministic, cycle-safe, and faster in local iteration.
 - Milestone quality checks:
+  - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
+  - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
+  - All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.

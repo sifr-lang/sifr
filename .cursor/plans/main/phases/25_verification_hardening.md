@@ -32,6 +32,9 @@ Scale validation breadth and depth so reliability claims are continuously provab
 - Entry criteria: Phase 24 is completed and diagnostic stability contract is in place.
 - Exit criteria: Reliability hardening is broad, deterministic, and locally enforceable.
 - Milestone quality checks:
+  - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
+  - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
+  - All implementations must be production-grade compiler code: strict typing, deterministic behavior, explicit invariants, and unforgiving correctness standards, with architecture cleaned up toward the target design.
   - Every milestone in this phase must satisfy the scope and definition-of-done already documented in this file.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
