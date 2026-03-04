@@ -12,6 +12,8 @@ path = "src/main.rs"
 
 [dependencies]
 sifr_driver = { workspace = true }
+sifr_python_ast = { workspace = true }
+sifr_python_parser = { workspace = true }
 clap = { version = "4.5.3", features = ["derive"] }
 
 [dev-dependencies]

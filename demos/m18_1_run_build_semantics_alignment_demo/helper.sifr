@@ -1,0 +1,2 @@
+def msg() -> str:
+    return "aligned"

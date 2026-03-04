@@ -759,7 +759,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
             enum_variants: vec![],
         }],
         imports: vec![],
-        constants: vec![],
+        constants: vec![("ANSWER".to_string(), Type::Int, HirExpr::IntLiteral(7))],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
@@ -774,8 +774,75 @@ fn test_generate_rust_multi_exports_non_main_items() {
     assert!(!main_rs.contains("pub fn main("));
     assert!(utils_rs.contains("pub fn helper() -> i64"));
     assert!(utils_rs.contains("pub struct Thing"));
+    assert!(utils_rs.contains("pub const ANSWER: i64 = 7 as i64;"));
     assert!(utils_rs.contains("pub value: i64"));
     assert!(utils_rs.contains("pub fn new(value: i64) -> Self"));
+}
+
+#[test]
+fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
+    let main_module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "helper".to_string(),
+                    args: vec![],
+                    ty: Type::Float,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "utils".to_string(),
+            names: vec!["helper".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let utils_module = HirModule {
+        functions: vec![HirFunction {
+            name: "helper".to_string(),
+            params: vec![],
+            return_type: Type::Float,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Call {
+                    func: "sqrt".to_string(),
+                    args: vec![HirExpr::FloatLiteral(9.0)],
+                    ty: Type::Float,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["sqrt".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
+    let utils_rs = files
+        .get("utils")
+        .expect("utils module should be generated");
+    assert!(
+        !utils_rs.contains("use crate::sifr"),
+        "stdlib imports must not render crate::sifr.* use paths in multi-module output"
+    );
 }
 
 #[test]
@@ -939,6 +1006,42 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
     assert!(result.rust_source.contains("use num_bigint::BigInt;"));
     assert!(result.required_crates.contains("num-bigint"));
     assert!(result.required_crates.contains("num-traits"));
+}
+
+#[test]
+fn test_generate_rust_test_emits_local_module_import_uses() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "test_import".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "helper".to_string(),
+                    args: vec![],
+                    ty: Type::Int,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "support".to_string(),
+            names: vec!["helper".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_test(&module);
+    assert!(
+        generated.rust_source.contains("use crate::support::helper;"),
+        "test codegen should emit local module uses for imported names"
+    );
 }
 
 #[test]
@@ -1922,7 +2025,9 @@ fn test_production_codegen_source_has_no_non_ir_tokens() {
             .unwrap_or_else(|e| panic!("failed to read source dir {}: {e}", dir.display()));
         for entry in entries {
             let path = entry
-                .unwrap_or_else(|e| panic!("failed to read directory entry in {}: {e}", dir.display()))
+                .unwrap_or_else(|e| {
+                    panic!("failed to read directory entry in {}: {e}", dir.display())
+                })
                 .path();
             if path.is_dir() {
                 stack.push(path);
@@ -1938,7 +2043,10 @@ fn test_production_codegen_source_has_no_non_ir_tokens() {
                 .unwrap_or_else(|e| panic!("failed to read {}: {e}", path.display()));
             for token in banned_tokens {
                 if content.contains(token) {
-                    violations.push(format!("{} contains forbidden token `{token}`", path.display()));
+                    violations.push(format!(
+                        "{} contains forbidden token `{token}`",
+                        path.display()
+                    ));
                 }
             }
         }

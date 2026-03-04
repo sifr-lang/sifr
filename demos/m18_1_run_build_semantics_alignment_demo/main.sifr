@@ -1,0 +1,5 @@
+from helper import msg
+
+def main():
+    print("m18_1 run/build alignment demo:")
+    print(msg())

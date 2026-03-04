@@ -8,15 +8,15 @@
 
 use sifr_codegen::{
     generate_project, generate_project_with_deps_and_crates, generate_rust_multi,
-    generate_rust_test, generate_rust_with_stdlib, StdlibCode,
+    generate_rust_test, generate_rust_with_metadata, generate_rust_with_stdlib, StdlibCode,
 };
 use sifr_hir::{
-    lower_module, lower_module_stdlib_with_externals, lower_module_with_externals, ExternalDefs,
-    HirModule,
+    lower_module_stdlib_with_externals, lower_module_with_externals, ExternalDefs, HirModule,
+    LoweringResult,
 };
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -557,13 +557,14 @@ pub enum CompileResultFull {
     },
 }
 
-/// Compile Sifr source code to Rust source code, returning stdlib metadata.
-pub fn compile_with_metadata(source: &str) -> CompileResultFull {
+struct FrontendCompiled {
+    stdlib: StdlibCompiled,
+    lowering_result: LoweringResult,
+}
+
+fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompileError>> {
     // Phase 0: Compile embedded stdlib .sifr files
-    let stdlib_compiled = match compile_stdlib() {
-        Ok(compiled) => compiled,
-        Err(errors) => return CompileResultFull::Errors { errors },
-    };
+    let stdlib_compiled = compile_stdlib()?;
 
     // Phase 1: Parse
     let parsed = match parse_module(source) {
@@ -577,17 +578,15 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
                         phase: CompilePhase::Parse,
                     })
                     .collect();
-                return CompileResultFull::Errors { errors };
+                return Err(errors);
             }
             parsed
         }
         Err(e) => {
-            return CompileResultFull::Errors {
-                errors: vec![CompileError {
-                    message: format!("failed to parse: {e}"),
-                    phase: CompilePhase::Parse,
-                }],
-            };
+            return Err(vec![CompileError {
+                message: format!("failed to parse: {e}"),
+                phase: CompilePhase::Parse,
+            }]);
         }
     };
 
@@ -602,12 +601,17 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
                     phase: CompilePhase::TypeCheck,
                 })
                 .collect();
-            return CompileResultFull::Errors {
-                errors: compile_errors,
-            };
+            return Err(compile_errors);
         }
     };
 
+    Ok(FrontendCompiled {
+        stdlib: stdlib_compiled,
+        lowering_result,
+    })
+}
+
+fn emit_frontend_diagnostics(lowering_result: &LoweringResult) {
     // Print reveal_type diagnostics to stderr
     for diag in &lowering_result.reveal_types {
         write_stderr_line(diag);
@@ -617,9 +621,20 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
     for warning in &lowering_result.warnings {
         write_stderr_line(warning);
     }
+}
+
+/// Compile Sifr source code to Rust source code, returning stdlib metadata.
+pub fn compile_with_metadata(source: &str) -> CompileResultFull {
+    let frontend = match compile_frontend(source) {
+        Ok(frontend) => frontend,
+        Err(errors) => return CompileResultFull::Errors { errors },
+    };
+
+    emit_frontend_diagnostics(&frontend.lowering_result);
 
     // Phase 3: Generate Rust code with stdlib code
-    let codegen_result = generate_rust_with_stdlib(&lowering_result.module, &stdlib_compiled.code);
+    let codegen_result =
+        generate_rust_with_stdlib(&frontend.lowering_result.module, &frontend.stdlib.code);
 
     CompileResultFull::Success {
         rust_source: codegen_result.rust_source,
@@ -631,10 +646,200 @@ pub fn compile_with_metadata(source: &str) -> CompileResultFull {
 
 /// Type-check only (no code generation).
 pub fn check(source: &str) -> Vec<CompileError> {
-    match compile(source) {
-        CompileResult::Success { .. } => vec![],
-        CompileResult::Errors { errors } => errors,
+    match compile_frontend(source) {
+        Ok(frontend) => {
+            emit_frontend_diagnostics(&frontend.lowering_result);
+            vec![]
+        }
+        Err(errors) => errors,
     }
+}
+
+fn lower_project_module(
+    module_name: &str,
+    stmts: &[sifr_python_ast::Stmt],
+    external_defs: &ExternalDefs,
+) -> Result<LoweringResult, Vec<CompileError>> {
+    let result = match lower_module_with_externals(stmts, external_defs) {
+        Ok(result) => result,
+        Err(errors) => {
+            let compile_errors: Vec<CompileError> = errors
+                .into_iter()
+                .map(|e| CompileError {
+                    message: format!("[{}] {}", module_name, e.message),
+                    phase: CompilePhase::TypeCheck,
+                })
+                .collect();
+            return Err(compile_errors);
+        }
+    };
+    Ok(result)
+}
+
+fn collect_module_exports(module_name: &str, module: &HirModule, external_defs: &mut ExternalDefs) {
+    let mut fn_exports = HashMap::new();
+    let mut class_exports = HashMap::new();
+    let mut const_exports = HashMap::new();
+
+    for func in &module.functions {
+        if !func.name.starts_with('_') {
+            let params: Vec<(String, Type, ParamConvention)> = func
+                .params
+                .iter()
+                .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                .collect();
+            fn_exports.insert(
+                func.name.clone(),
+                FunctionType {
+                    params,
+                    return_type: Box::new(func.return_type.clone()),
+                },
+            );
+        }
+    }
+
+    for class in &module.classes {
+        if !class.name.starts_with('_') {
+            // Extract method types from the class
+            let mut methods: Vec<(String, FunctionType)> = class
+                .methods
+                .iter()
+                .filter(|m| m.name != "new") // Skip constructor
+                .map(|m| {
+                    let params: Vec<(String, Type, ParamConvention)> = m
+                        .params
+                        .iter()
+                        .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                        .collect();
+                    (
+                        m.name.clone(),
+                        FunctionType {
+                            params,
+                            return_type: Box::new(m.return_type.clone()),
+                        },
+                    )
+                })
+                .collect();
+            // Include operator dunder methods so imported classes support operator overloading
+            for (dunder_name, op_func) in &class.operator_impls {
+                let params: Vec<(String, Type, ParamConvention)> = op_func
+                    .params
+                    .iter()
+                    .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
+                    .collect();
+                methods.push((
+                    dunder_name.clone(),
+                    FunctionType {
+                        params,
+                        return_type: Box::new(op_func.return_type.clone()),
+                    },
+                ));
+            }
+            let class_ty = Type::Class {
+                name: class.name.clone(),
+                fields: class.fields.clone(),
+                methods,
+                parent_class: None,
+            };
+            class_exports.insert(class.name.clone(), class_ty);
+        }
+    }
+
+    for (name, ty, _) in &module.constants {
+        if !name.starts_with('_') {
+            const_exports.insert(name.clone(), ty.clone());
+        }
+    }
+
+    external_defs
+        .functions
+        .insert(module_name.to_string(), fn_exports);
+    external_defs
+        .classes
+        .insert(module_name.to_string(), class_exports);
+    external_defs
+        .constants
+        .insert(module_name.to_string(), const_exports);
+}
+
+struct ProjectLowering {
+    hir_modules: HashMap<String, HirModule>,
+    external_defs: ExternalDefs,
+}
+
+fn collect_project_hir_modules(
+    parsed_modules: &HashMap<String, Vec<sifr_python_ast::Stmt>>,
+    mut external_defs: ExternalDefs,
+) -> Result<ProjectLowering, Vec<CompileError>> {
+    let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
+    let mut pending_non_main: BTreeSet<String> = parsed_modules
+        .keys()
+        .filter(|module_name| module_name.as_str() != "main")
+        .cloned()
+        .collect();
+
+    while !pending_non_main.is_empty() {
+        let mut lowered_this_pass = Vec::new();
+
+        for module_name in &pending_non_main {
+            let Some(stmts) = parsed_modules.get(module_name) else {
+                continue;
+            };
+            match lower_project_module(module_name, stmts, &external_defs) {
+                Ok(result) => {
+                    collect_module_exports(module_name, &result.module, &mut external_defs);
+                    hir_modules.insert(module_name.clone(), result.module);
+                    lowered_this_pass.push(module_name.clone());
+                }
+                Err(errors) => {
+                    let has_unknown_module = errors
+                        .iter()
+                        .any(|e| e.message.contains("unknown module '"));
+                    if !has_unknown_module {
+                        return Err(errors);
+                    }
+                }
+            }
+        }
+
+        if lowered_this_pass.is_empty() {
+            if let Some(module_name) = pending_non_main.iter().next() {
+                let Some(stmts) = parsed_modules.get(module_name) else {
+                    return Err(vec![CompileError {
+                        message: format!("[{module_name}] module was not parsed"),
+                        phase: CompilePhase::Build,
+                    }]);
+                };
+                let errors = lower_project_module(module_name, stmts, &external_defs)
+                    .err()
+                    .unwrap_or_else(|| {
+                        vec![CompileError {
+                            message: format!(
+                                "[{module_name}] module dependency resolution made no progress"
+                            ),
+                            phase: CompilePhase::TypeCheck,
+                        }]
+                    });
+                return Err(errors);
+            }
+            break;
+        }
+
+        for module_name in lowered_this_pass {
+            pending_non_main.remove(&module_name);
+        }
+    }
+
+    // Lower main module with full external definitions from lowered dependencies.
+    if let Some(main_stmts) = parsed_modules.get("main") {
+        let result = lower_project_module("main", main_stmts, &external_defs)?;
+        hir_modules.insert("main".to_string(), result.module);
+    }
+
+    Ok(ProjectLowering {
+        hir_modules,
+        external_defs,
+    })
 }
 
 /// Compile a multi-file project and build a native binary.
@@ -699,123 +904,9 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     // Phase 1.5: Compile embedded stdlib .sifr files
     let stdlib_compiled = compile_stdlib()?;
 
-    // Phase 2: Lower non-main modules first to collect their exports
-    let mut external_defs = stdlib_compiled.defs;
-    let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
-
-    // First, lower all non-main modules
-    for (module_name, stmts) in &parsed_modules {
-        if module_name == "main" {
-            continue;
-        }
-        let result = match lower_module(stmts) {
-            Ok(result) => result,
-            Err(errors) => {
-                let compile_errors: Vec<CompileError> = errors
-                    .into_iter()
-                    .map(|e| CompileError {
-                        message: format!("[{}] {}", module_name, e.message),
-                        phase: CompilePhase::TypeCheck,
-                    })
-                    .collect();
-                return Err(compile_errors);
-            }
-        };
-
-        // Collect exports for this module
-        let mut fn_exports = HashMap::new();
-        let mut class_exports = HashMap::new();
-
-        for func in &result.module.functions {
-            if !func.name.starts_with('_') {
-                let params: Vec<(String, Type, ParamConvention)> = func
-                    .params
-                    .iter()
-                    .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                    .collect();
-                fn_exports.insert(
-                    func.name.clone(),
-                    FunctionType {
-                        params,
-                        return_type: Box::new(func.return_type.clone()),
-                    },
-                );
-            }
-        }
-
-        for class in &result.module.classes {
-            if !class.name.starts_with('_') {
-                // Extract method types from the class
-                let mut methods: Vec<(String, FunctionType)> = class
-                    .methods
-                    .iter()
-                    .filter(|m| m.name != "new") // Skip constructor
-                    .map(|m| {
-                        let params: Vec<(String, Type, ParamConvention)> = m
-                            .params
-                            .iter()
-                            .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                            .collect();
-                        (
-                            m.name.clone(),
-                            FunctionType {
-                                params,
-                                return_type: Box::new(m.return_type.clone()),
-                            },
-                        )
-                    })
-                    .collect();
-                // Include operator dunder methods so imported classes support operator overloading
-                for (dunder_name, op_func) in &class.operator_impls {
-                    let params: Vec<(String, Type, ParamConvention)> = op_func
-                        .params
-                        .iter()
-                        .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                        .collect();
-                    methods.push((
-                        dunder_name.clone(),
-                        FunctionType {
-                            params,
-                            return_type: Box::new(op_func.return_type.clone()),
-                        },
-                    ));
-                }
-                let class_ty = Type::Class {
-                    name: class.name.clone(),
-                    fields: class.fields.clone(),
-                    methods,
-                    parent_class: None,
-                };
-                class_exports.insert(class.name.clone(), class_ty);
-            }
-        }
-
-        external_defs
-            .functions
-            .insert(module_name.clone(), fn_exports);
-        external_defs
-            .classes
-            .insert(module_name.clone(), class_exports);
-        hir_modules.insert(module_name.clone(), result.module);
-    }
-
-    // Then, lower main module with external definitions
-    if let Some(main_stmts) = parsed_modules.get("main") {
-        let result = match lower_module_with_externals(main_stmts, &external_defs) {
-            Ok(result) => result,
-            Err(errors) => {
-                let compile_errors: Vec<CompileError> = errors
-                    .into_iter()
-                    .map(|e| CompileError {
-                        message: format!("[main] {}", e.message),
-                        phase: CompilePhase::TypeCheck,
-                    })
-                    .collect();
-                return Err(compile_errors);
-            }
-        };
-        hir_modules.insert("main".to_string(), result.module);
-    }
+    // Phase 2: Lower modules with stdlib + local external definitions.
+    let project_lowering = collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)?;
+    let hir_modules = project_lowering.hir_modules;
 
     // Phase 3: Generate Rust code
     let module_refs: Vec<(&str, &HirModule)> = hir_modules
@@ -1011,15 +1102,47 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
 /// Finds all `test_*.sifr` and `*_test.sifr` files, compiles them with
 /// `#[test]` attributes, and runs `cargo test`.
 pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
-    // Discover test files
+    // Discover test files and support modules from the same directory.
     let mut test_files: Vec<PathBuf> = Vec::new();
+    let mut support_modules: HashMap<String, Vec<sifr_python_ast::Stmt>> = HashMap::new();
     if let Ok(entries) = std::fs::read_dir(test_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.extension().is_some_and(|ext| ext == "sifr") {
-                let stem = path.file_stem().unwrap().to_string_lossy().to_string();
-                if stem.starts_with("test_") || stem.ends_with("_test") {
+                let module_name = path.file_stem().unwrap().to_string_lossy().to_string();
+                let source = std::fs::read_to_string(&path).map_err(|e| {
+                    vec![CompileError {
+                        message: format!("failed to read '{}': {}", path.display(), e),
+                        phase: CompilePhase::Build,
+                    }]
+                })?;
+                let parsed = match parse_module(&source) {
+                    Ok(parsed) => {
+                        if !parsed.is_valid() {
+                            let errors: Vec<CompileError> = parsed
+                                .errors()
+                                .iter()
+                                .map(|e| CompileError {
+                                    message: format!("[{}] {}", path.display(), e),
+                                    phase: CompilePhase::Parse,
+                                })
+                                .collect();
+                            return Err(errors);
+                        }
+                        parsed
+                    }
+                    Err(e) => {
+                        return Err(vec![CompileError {
+                            message: format!("[{}] failed to parse: {}", path.display(), e),
+                            phase: CompilePhase::Parse,
+                        }]);
+                    }
+                };
+
+                if module_name.starts_with("test_") || module_name.ends_with("_test") {
                     test_files.push(path);
+                } else {
+                    support_modules.insert(module_name, parsed.into_suite());
                 }
             }
         }
@@ -1033,45 +1156,70 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
 
     write_stderr_line(&format!("Found {} test file(s)", test_files.len()));
 
+    // Build project externals from non-test modules so test imports resolve like regular builds.
+    let stdlib_compiled = compile_stdlib()?;
+    let project_lowering = collect_project_hir_modules(&support_modules, stdlib_compiled.defs)?;
+    let project_externals = project_lowering.external_defs.clone();
+    let mut support_module_names: Vec<String> = project_lowering
+        .hir_modules
+        .keys()
+        .filter(|name| name.as_str() != "main")
+        .cloned()
+        .collect();
+    support_module_names.sort();
+    let support_module_refs: Vec<(&str, &HirModule)> = support_module_names
+        .iter()
+        .filter_map(|name| {
+            project_lowering
+                .hir_modules
+                .get(name)
+                .map(|module| (name.as_str(), module))
+        })
+        .collect();
+    let support_rust_files = generate_rust_multi(&support_module_refs);
+
     // Compile each test file and combine into a single Rust test binary
     let mut all_rust_code = String::new();
     let mut all_stdlib_modules = HashSet::new();
     let mut all_required_crates = HashSet::new();
 
+    for module_name in &support_module_names {
+        if let Some(module) = project_lowering.hir_modules.get(module_name) {
+            let support_codegen = generate_rust_with_metadata(module);
+            all_stdlib_modules.extend(support_codegen.used_stdlib_modules);
+            all_required_crates.extend(support_codegen.required_crates);
+        }
+    }
+
     for test_file in &test_files {
+        let module_name = test_file.file_stem().unwrap().to_string_lossy().to_string();
         let source = std::fs::read_to_string(test_file).map_err(|e| {
             vec![CompileError {
                 message: format!("failed to read '{}': {}", test_file.display(), e),
                 phase: CompilePhase::Build,
             }]
         })?;
-
-        // Parse
-        let parsed = match parse_module(&source) {
-            Ok(parsed) => {
-                if !parsed.is_valid() {
-                    let errors: Vec<CompileError> = parsed
-                        .errors()
-                        .iter()
-                        .map(|e| CompileError {
-                            message: format!("[{}] {}", test_file.display(), e),
-                            phase: CompilePhase::Parse,
-                        })
-                        .collect();
-                    return Err(errors);
-                }
-                parsed
-            }
-            Err(e) => {
-                return Err(vec![CompileError {
-                    message: format!("[{}] failed to parse: {}", test_file.display(), e),
+        let parsed = parse_module(&source).map_err(|e| {
+            vec![CompileError {
+                message: format!("[{}] failed to parse: {}", test_file.display(), e),
+                phase: CompilePhase::Parse,
+            }]
+        })?;
+        if !parsed.is_valid() {
+            let errors: Vec<CompileError> = parsed
+                .errors()
+                .iter()
+                .map(|e| CompileError {
+                    message: format!("[{}] {}", test_file.display(), e),
                     phase: CompilePhase::Parse,
-                }]);
-            }
-        };
+                })
+                .collect();
+            return Err(errors);
+        }
 
         // Lower to HIR
-        let lowering_result = match lower_module(parsed.suite()) {
+        let lowering_result =
+            match lower_project_module(&module_name, parsed.suite(), &project_externals) {
             Ok(result) => result,
             Err(errors) => {
                 let compile_errors: Vec<CompileError> = errors
@@ -1116,8 +1264,30 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         }]
     })?;
 
+    for module_name in &support_module_names {
+        if let Some(code) = support_rust_files.get(module_name) {
+            std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|e| {
+                vec![CompileError {
+                    message: format!("failed to write {module_name}.rs: {e}"),
+                    phase: CompilePhase::Build,
+                }]
+            })?;
+        }
+    }
+
+    let mut test_lib = String::new();
+    for module_name in &support_module_names {
+        test_lib.push_str("mod ");
+        test_lib.push_str(module_name);
+        test_lib.push_str(";\n");
+    }
+    if !support_module_names.is_empty() {
+        test_lib.push('\n');
+    }
+    test_lib.push_str(&all_rust_code);
+
     // Write the test source file as lib.rs (so cargo test finds #[test] functions)
-    std::fs::write(src_dir.join("lib.rs"), &all_rust_code).map_err(|e| {
+    std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|e| {
         vec![CompileError {
             message: format!("failed to write lib.rs: {e}"),
             phase: CompilePhase::Build,
@@ -1173,6 +1343,16 @@ fn generate_test_runner_cargo_toml(
 mod tests {
     use super::*;
 
+    fn parse_suite(source: &str) -> Vec<sifr_python_ast::Stmt> {
+        let parsed = parse_module(source).unwrap_or_else(|e| panic!("parse failed: {e}"));
+        assert!(
+            parsed.is_valid(),
+            "invalid test source: {:?}",
+            parsed.errors()
+        );
+        parsed.into_suite()
+    }
+
     #[test]
     fn test_compile_hello_world() {
         let source = r#"
@@ -1226,6 +1406,19 @@ def main():
     }
 
     #[test]
+    fn test_check_only_reports_frontend_phases() {
+        let source = r#"
+def main():
+    x: int = "hello"
+"#;
+        let errors = check(source);
+        assert!(!errors.is_empty());
+        assert!(errors
+            .iter()
+            .all(|e| matches!(e.phase, CompilePhase::Parse | CompilePhase::TypeCheck)));
+    }
+
+    #[test]
     fn test_check_valid_program() {
         let source = r#"
 def main():
@@ -1234,6 +1427,167 @@ def main():
 "#;
         let errors = check(source);
         assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_collect_project_modules_allows_non_main_stdlib_imports() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from helper import area_like
+
+def main():
+    print(area_like(2.0))
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "helper".to_string(),
+            parse_suite(
+                r#"
+from sifr.math import pi
+
+def area_like(r: float) -> float:
+    return r * pi
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .expect("project lowering should resolve non-main stdlib imports");
+        assert!(result.hir_modules.contains_key("main"));
+        assert!(result.hir_modules.contains_key("helper"));
+    }
+
+    #[test]
+    fn test_collect_project_modules_resolves_non_main_local_dependencies() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from a_consumer import fetch
+
+def main():
+    print(fetch())
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "a_consumer".to_string(),
+            parse_suite(
+                r#"
+from z_provider import value
+
+def fetch() -> int:
+    return value()
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "z_provider".to_string(),
+            parse_suite(
+                r#"
+def value() -> int:
+    return 41
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .expect("project lowering should resolve non-main local imports");
+        assert!(result.hir_modules.contains_key("main"));
+        assert!(result.hir_modules.contains_key("a_consumer"));
+        assert!(result.hir_modules.contains_key("z_provider"));
+    }
+
+    #[test]
+    fn test_collect_project_modules_exports_local_constants() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from consumer import get
+
+def main():
+    print(get())
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "consumer".to_string(),
+            parse_suite(
+                r#"
+from constants_mod import ANSWER
+
+def get() -> int:
+    return ANSWER
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "constants_mod".to_string(),
+            parse_suite(
+                r#"
+ANSWER: int = 42
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .expect("project lowering should resolve local constant imports");
+        let constants = result
+            .external_defs
+            .constants
+            .get("constants_mod")
+            .expect("constants module exports should exist");
+        assert_eq!(constants.get("ANSWER"), Some(&Type::Int));
+    }
+
+    #[test]
+    fn test_run_tests_resolves_local_imports_and_constants() {
+        let unique = format!(
+            "sifr_test_import_parity_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let test_dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+
+        std::fs::write(
+            test_dir.join("helper.sifr"),
+            r#"
+BASE: int = 9
+
+def plus_one(x: int) -> int:
+    return x + 1
+"#,
+        )
+        .expect("helper module should be written");
+        std::fs::write(
+            test_dir.join("test_imports.sifr"),
+            r#"
+from helper import BASE, plus_one
+
+def test_import_parity():
+    assert plus_one(BASE) == 10
+"#,
+        )
+        .expect("test module should be written");
+
+        let result = run_tests(&test_dir).expect("test runner should compile and execute");
+        assert!(result, "sifr test run should succeed");
+
+        let _ = std::fs::remove_dir_all(&test_dir);
     }
 
     #[test]
