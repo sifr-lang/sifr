@@ -80,7 +80,7 @@ Validation evidence:
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase18-review.md`
-- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/TBD
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/821 (open)
 - Pass-1 triage + actions:
   - Added explicit resolver regression tests for `typing`, `enum`, and package-like `__init__.sifr` imports.
   - Expanded CLI contract docs to cover unsupported package-style auto-detect and parse/read fallback behavior.
