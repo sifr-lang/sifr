@@ -106,3 +106,12 @@ Validation evidence:
   - `cargo run -q -p sifr -- run demos/m18_2_auto_detection_rule_tightening_demo/main.sifr`
   - `cargo run -q -p sifr -- run demos/m18_3_cli_contract_and_regression_suite_demo.sifr`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- External review pass 4 output: `reviews/phase18-production-grade-review-2.md`
+- Remediation PR (pass 4): https://github.com/yaseralnajjar/sifr/pull/TBD
+- Pass-4 remediation summary:
+  - Enforced resolver behavior that only single-dot relative imports are considered for local project auto-detect.
+  - Added resolver regression tests for multi-level relative imports and bare relative imports to prevent accidental project-mode activation.
+  - Updated CLI contract docs to explicitly document multi-level and bare-relative import behavior.
+- Validation commands used during pass-4 remediation:
+  - `cargo test -q -p sifr test_resolve_compilation_mode_`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`

@@ -103,6 +103,9 @@ fn has_local_project_imports(file: &Path) -> bool {
         let Stmt::ImportFrom(import_from) = stmt else {
             return false;
         };
+        if import_from.level > 1 {
+            return false;
+        }
         let Some(module) = &import_from.module else {
             return false;
         };
@@ -458,6 +461,34 @@ mod tests {
             "from .helper import value\n\ndef main():\n    print(value())\n",
         )
         .expect("main file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_multi_level_relative_import() {
+        let dir = mktemp_dir("relative_import_multi_level");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from ..helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def value() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_bare_relative_import() {
+        let dir = mktemp_dir("relative_import_bare");
+        let main = dir.join("main.sifr");
+        std::fs::write(&main, "from . import value\n\ndef main():\n    print(value)\n")
+            .expect("main file should be written");
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
         let _ = std::fs::remove_dir_all(dir);
