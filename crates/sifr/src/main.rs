@@ -361,6 +361,23 @@ mod tests {
     }
 
     #[test]
+    fn test_resolve_compilation_mode_single_file_for_typing_import_with_local_typing_file() {
+        let dir = mktemp_dir("typing_import_local_file");
+        let main = dir.join("main.sifr");
+        let typing_local = dir.join("typing.sifr");
+        std::fs::write(
+            &main,
+            "from typing import List\n\ndef main():\n    values: List[int] = [1]\n    print(values)\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&typing_local, "def local() -> int:\n    return 1\n")
+            .expect("typing file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn test_resolve_compilation_mode_single_file_for_enum_import() {
         let dir = mktemp_dir("enum_import");
         let main = dir.join("main.sifr");
@@ -372,6 +389,23 @@ mod tests {
         .expect("main file should be written");
         std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
             .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_enum_import_with_local_enum_file() {
+        let dir = mktemp_dir("enum_import_local_file");
+        let main = dir.join("main.sifr");
+        let enum_local = dir.join("enum.sifr");
+        std::fs::write(
+            &main,
+            "from enum import Enum\n\ndef main():\n    print(\"ok\")\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&enum_local, "def local() -> int:\n    return 1\n")
+            .expect("enum file should be written");
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
         let _ = std::fs::remove_dir_all(dir);
@@ -412,6 +446,20 @@ mod tests {
             .expect("helper file should be written");
 
         assert_eq!(resolve_compilation_mode(&main), CompilationMode::Project);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_relative_import_without_sibling() {
+        let dir = mktemp_dir("relative_import_missing_sibling");
+        let main = dir.join("main.sifr");
+        std::fs::write(
+            &main,
+            "from .helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
         let _ = std::fs::remove_dir_all(dir);
     }
 

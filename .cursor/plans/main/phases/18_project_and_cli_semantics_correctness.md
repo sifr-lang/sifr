@@ -30,6 +30,7 @@ status: done (2026-03-04, PR #819)
 - Evidence:
   - CLI project-mode detection now requires `main.sifr` with at least one resolvable local-module import (`has_local_project_imports`) instead of sibling-file count heuristics.
   - Added resolver regression tests for `main` without local imports and stdlib-only imports to keep single-file mode stable.
+  - Added explicit resolver regressions proving `typing.sifr`/`enum.sifr` local files do not activate project mode for stdlib-like imports.
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_2_auto_detection_rule_tightening_demo/main.sifr`.
 
 ### milestone_18_3: CLI Contract and Regression Suite
@@ -43,6 +44,7 @@ status: done (2026-03-04, PR #820)
   - Stable CLI behavior contract documented in `docs/cli_command_semantics.md` and linked from `README.md`.
   - Regression suite expanded in `crates/sifr/src/main.rs` for:
     - local-import project mode activation,
+    - relative-import single-file fallback when sibling module is missing,
     - stdlib-only/no-import single-file fallback,
     - invalid-source and missing-module single-file fallback.
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_3_cli_contract_and_regression_suite_demo.sifr`.
