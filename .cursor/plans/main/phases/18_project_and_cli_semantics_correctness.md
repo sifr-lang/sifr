@@ -20,10 +20,15 @@ status: done (2026-03-04, PR #818)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_1_run_build_semantics_alignment_demo/main.sifr`.
 
 ### milestone_18_2: Auto-Detection Rule Tightening
+status: done (2026-03-04, PR #TBD)
 - Scope:
   - Replace over-aggressive auto project mode with explicit, documented rules.
 - Definition of done:
   - Nearby scratch files do not unexpectedly break single-file runs.
+- Evidence:
+  - CLI project-mode detection now requires `main.sifr` with at least one resolvable local-module import (`has_local_project_imports`) instead of sibling-file count heuristics.
+  - Added resolver regression tests for `main` without local imports and stdlib-only imports to keep single-file mode stable.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m18_2_auto_detection_rule_tightening_demo/main.sifr`.
 
 ### milestone_18_3: CLI Contract and Regression Suite
 - Scope:

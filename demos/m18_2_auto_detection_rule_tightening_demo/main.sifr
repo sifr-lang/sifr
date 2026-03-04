@@ -1,0 +1,6 @@
+# no local imports: should stay in single-file mode
+from sifr.math import floor
+
+def main():
+    print("m18_2 auto-detection demo:")
+    print(floor(3.9))

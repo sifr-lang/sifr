@@ -7,6 +7,8 @@
 //!   sifr emit <file.sifr>     Show generated Rust code
 use clap::{Parser, Subcommand};
 use sifr_driver::{build, build_project, check, compile, run_tests, CompileResult};
+use sifr_python_ast::Stmt;
+use sifr_python_parser::parse_module;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process;
@@ -74,27 +76,46 @@ fn main() {
 }
 
 fn resolve_compilation_mode(file: &Path) -> CompilationMode {
-    let is_project_entry = file.file_stem().is_some_and(|stem| stem == "main")
-        && if let Some(parent) = file.parent() {
-            if let Ok(entries) = std::fs::read_dir(parent) {
-                entries
-                    .flatten()
-                    .filter(|e| e.path().extension().is_some_and(|ext| ext == "sifr"))
-                    .filter(|e| e.path() != file)
-                    .count()
-                    > 0
-            } else {
-                false
-            }
-        } else {
-            false
-        };
+    let is_project_entry =
+        file.file_stem().is_some_and(|stem| stem == "main") && has_local_project_imports(file);
 
     if is_project_entry {
         CompilationMode::Project
     } else {
         CompilationMode::SingleFile
     }
+}
+
+fn has_local_project_imports(file: &Path) -> bool {
+    let Some(parent) = file.parent() else {
+        return false;
+    };
+    let source = match std::fs::read_to_string(file) {
+        Ok(source) => source,
+        Err(_) => return false,
+    };
+    let parsed = match parse_module(&source) {
+        Ok(parsed) if parsed.is_valid() => parsed,
+        _ => return false,
+    };
+
+    parsed.suite().iter().any(|stmt| {
+        let Stmt::ImportFrom(import_from) = stmt else {
+            return false;
+        };
+        let Some(module) = &import_from.module else {
+            return false;
+        };
+        let module_name = module.to_string();
+        if module_name == "typing"
+            || module_name == "enum"
+            || module_name.starts_with("sifr.")
+            || module_name.starts_with("_sifr.")
+        {
+            return false;
+        }
+        parent.join(format!("{module_name}.sifr")).is_file()
+    })
 }
 
 fn read_source(file: &Path) -> String {
@@ -242,7 +263,11 @@ mod tests {
         let dir = mktemp_dir("project");
         let main = dir.join("main.sifr");
         let helper = dir.join("helper.sifr");
-        std::fs::write(&main, "def main():\n    pass\n").expect("main file should be written");
+        std::fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main file should be written");
         std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
             .expect("helper file should be written");
 
@@ -260,6 +285,36 @@ mod tests {
             .expect("helper file should be written");
 
         assert_eq!(resolve_compilation_mode(&app), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_main_without_local_imports() {
+        let dir = mktemp_dir("main_no_imports");
+        let main = dir.join("main.sifr");
+        let scratch = dir.join("scratch.sifr");
+        std::fs::write(&main, "def main():\n    print(\"ok\")\n")
+            .expect("main file should be written");
+        std::fs::write(&scratch, "def nope(:\n").expect("scratch file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_resolve_compilation_mode_single_file_for_stdlib_only_imports() {
+        let dir = mktemp_dir("main_stdlib_only");
+        let main = dir.join("main.sifr");
+        let helper = dir.join("helper.sifr");
+        std::fs::write(
+            &main,
+            "from sifr.math import floor\n\ndef main():\n    print(floor(3.9))\n",
+        )
+        .expect("main file should be written");
+        std::fs::write(&helper, "def helper() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+
+        assert_eq!(resolve_compilation_mode(&main), CompilationMode::SingleFile);
         let _ = std::fs::remove_dir_all(dir);
     }
 }
