@@ -72,7 +72,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 4: milestone_17_4 Import-Form Semantics Closure
-status: done (2026-03-05, PR #TBD)
+status: done (2026-03-05, PR #828)
 
 - [x] Define canonical semantics for `from`/relative/bare-relative/`import` forms
 - [x] Ensure explicit deterministic diagnostics for unsupported forms
@@ -94,7 +94,7 @@ Validation evidence:
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/814 (merged)
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/815 (merged)
-- Part 4: https://github.com/yaseralnajjar/sifr/pull/TBD
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/828 (merged)
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase17-review.md`

@@ -60,7 +60,7 @@ status: done (2026-03-04, PR #815)
   - Milestone demo: `cargo run -q -p sifr -- test demos/m17_3_test_and_constant_import_parity_demo`.
 
 ### milestone_17_4: Import-Form Semantics Closure
-status: done (2026-03-05, PR #TBD)
+status: done (2026-03-05, PR #828)
 - Scope:
   - Define canonical compiler semantics for import forms: `from x import ...`, `from .x import ...`, `from ..x import ...`, `from . import ...`, and `import x`.
   - Ensure import-form behavior is explicit and consistent in `check`, `run`, `build`, and `test` pipelines (not only CLI mode detection).
