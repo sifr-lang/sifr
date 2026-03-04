@@ -996,7 +996,7 @@ impl RustEmitter {
 
         self.prescan_module_metadata(module);
 
-        self.emit_module_constants(module);
+        self.emit_module_constants(module, module_public);
         self.emit_module_body(module, module_public, test_mode);
     }
 

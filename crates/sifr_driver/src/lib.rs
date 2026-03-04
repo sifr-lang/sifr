@@ -8,11 +8,11 @@
 
 use sifr_codegen::{
     generate_project, generate_project_with_deps_and_crates, generate_rust_multi,
-    generate_rust_test, generate_rust_with_stdlib, StdlibCode,
+    generate_rust_test, generate_rust_with_metadata, generate_rust_with_stdlib, StdlibCode,
 };
 use sifr_hir::{
-    lower_module, lower_module_stdlib_with_externals, lower_module_with_externals, ExternalDefs,
-    HirModule, LoweringResult,
+    lower_module_stdlib_with_externals, lower_module_with_externals, ExternalDefs, HirModule,
+    LoweringResult,
 };
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -679,6 +679,7 @@ fn lower_project_module(
 fn collect_module_exports(module_name: &str, module: &HirModule, external_defs: &mut ExternalDefs) {
     let mut fn_exports = HashMap::new();
     let mut class_exports = HashMap::new();
+    let mut const_exports = HashMap::new();
 
     for func in &module.functions {
         if !func.name.starts_with('_') {
@@ -744,18 +745,32 @@ fn collect_module_exports(module_name: &str, module: &HirModule, external_defs: 
         }
     }
 
+    for (name, ty, _) in &module.constants {
+        if !name.starts_with('_') {
+            const_exports.insert(name.clone(), ty.clone());
+        }
+    }
+
     external_defs
         .functions
         .insert(module_name.to_string(), fn_exports);
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
+    external_defs
+        .constants
+        .insert(module_name.to_string(), const_exports);
+}
+
+struct ProjectLowering {
+    hir_modules: HashMap<String, HirModule>,
+    external_defs: ExternalDefs,
 }
 
 fn collect_project_hir_modules(
     parsed_modules: &HashMap<String, Vec<sifr_python_ast::Stmt>>,
     mut external_defs: ExternalDefs,
-) -> Result<HashMap<String, HirModule>, Vec<CompileError>> {
+) -> Result<ProjectLowering, Vec<CompileError>> {
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
     let mut pending_non_main: BTreeSet<String> = parsed_modules
         .keys()
@@ -821,7 +836,10 @@ fn collect_project_hir_modules(
         hir_modules.insert("main".to_string(), result.module);
     }
 
-    Ok(hir_modules)
+    Ok(ProjectLowering {
+        hir_modules,
+        external_defs,
+    })
 }
 
 /// Compile a multi-file project and build a native binary.
@@ -887,7 +905,8 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     let stdlib_compiled = compile_stdlib()?;
 
     // Phase 2: Lower modules with stdlib + local external definitions.
-    let hir_modules = collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)?;
+    let project_lowering = collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)?;
+    let hir_modules = project_lowering.hir_modules;
 
     // Phase 3: Generate Rust code
     let module_refs: Vec<(&str, &HirModule)> = hir_modules
@@ -1083,15 +1102,47 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
 /// Finds all `test_*.sifr` and `*_test.sifr` files, compiles them with
 /// `#[test]` attributes, and runs `cargo test`.
 pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
-    // Discover test files
+    // Discover test files and support modules from the same directory.
     let mut test_files: Vec<PathBuf> = Vec::new();
+    let mut support_modules: HashMap<String, Vec<sifr_python_ast::Stmt>> = HashMap::new();
     if let Ok(entries) = std::fs::read_dir(test_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.extension().is_some_and(|ext| ext == "sifr") {
-                let stem = path.file_stem().unwrap().to_string_lossy().to_string();
-                if stem.starts_with("test_") || stem.ends_with("_test") {
+                let module_name = path.file_stem().unwrap().to_string_lossy().to_string();
+                let source = std::fs::read_to_string(&path).map_err(|e| {
+                    vec![CompileError {
+                        message: format!("failed to read '{}': {}", path.display(), e),
+                        phase: CompilePhase::Build,
+                    }]
+                })?;
+                let parsed = match parse_module(&source) {
+                    Ok(parsed) => {
+                        if !parsed.is_valid() {
+                            let errors: Vec<CompileError> = parsed
+                                .errors()
+                                .iter()
+                                .map(|e| CompileError {
+                                    message: format!("[{}] {}", path.display(), e),
+                                    phase: CompilePhase::Parse,
+                                })
+                                .collect();
+                            return Err(errors);
+                        }
+                        parsed
+                    }
+                    Err(e) => {
+                        return Err(vec![CompileError {
+                            message: format!("[{}] failed to parse: {}", path.display(), e),
+                            phase: CompilePhase::Parse,
+                        }]);
+                    }
+                };
+
+                if module_name.starts_with("test_") || module_name.ends_with("_test") {
                     test_files.push(path);
+                } else {
+                    support_modules.insert(module_name, parsed.into_suite());
                 }
             }
         }
@@ -1105,45 +1156,70 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
 
     write_stderr_line(&format!("Found {} test file(s)", test_files.len()));
 
+    // Build project externals from non-test modules so test imports resolve like regular builds.
+    let stdlib_compiled = compile_stdlib()?;
+    let project_lowering = collect_project_hir_modules(&support_modules, stdlib_compiled.defs)?;
+    let project_externals = project_lowering.external_defs.clone();
+    let mut support_module_names: Vec<String> = project_lowering
+        .hir_modules
+        .keys()
+        .filter(|name| name.as_str() != "main")
+        .cloned()
+        .collect();
+    support_module_names.sort();
+    let support_module_refs: Vec<(&str, &HirModule)> = support_module_names
+        .iter()
+        .filter_map(|name| {
+            project_lowering
+                .hir_modules
+                .get(name)
+                .map(|module| (name.as_str(), module))
+        })
+        .collect();
+    let support_rust_files = generate_rust_multi(&support_module_refs);
+
     // Compile each test file and combine into a single Rust test binary
     let mut all_rust_code = String::new();
     let mut all_stdlib_modules = HashSet::new();
     let mut all_required_crates = HashSet::new();
 
+    for module_name in &support_module_names {
+        if let Some(module) = project_lowering.hir_modules.get(module_name) {
+            let support_codegen = generate_rust_with_metadata(module);
+            all_stdlib_modules.extend(support_codegen.used_stdlib_modules);
+            all_required_crates.extend(support_codegen.required_crates);
+        }
+    }
+
     for test_file in &test_files {
+        let module_name = test_file.file_stem().unwrap().to_string_lossy().to_string();
         let source = std::fs::read_to_string(test_file).map_err(|e| {
             vec![CompileError {
                 message: format!("failed to read '{}': {}", test_file.display(), e),
                 phase: CompilePhase::Build,
             }]
         })?;
-
-        // Parse
-        let parsed = match parse_module(&source) {
-            Ok(parsed) => {
-                if !parsed.is_valid() {
-                    let errors: Vec<CompileError> = parsed
-                        .errors()
-                        .iter()
-                        .map(|e| CompileError {
-                            message: format!("[{}] {}", test_file.display(), e),
-                            phase: CompilePhase::Parse,
-                        })
-                        .collect();
-                    return Err(errors);
-                }
-                parsed
-            }
-            Err(e) => {
-                return Err(vec![CompileError {
-                    message: format!("[{}] failed to parse: {}", test_file.display(), e),
+        let parsed = parse_module(&source).map_err(|e| {
+            vec![CompileError {
+                message: format!("[{}] failed to parse: {}", test_file.display(), e),
+                phase: CompilePhase::Parse,
+            }]
+        })?;
+        if !parsed.is_valid() {
+            let errors: Vec<CompileError> = parsed
+                .errors()
+                .iter()
+                .map(|e| CompileError {
+                    message: format!("[{}] {}", test_file.display(), e),
                     phase: CompilePhase::Parse,
-                }]);
-            }
-        };
+                })
+                .collect();
+            return Err(errors);
+        }
 
         // Lower to HIR
-        let lowering_result = match lower_module(parsed.suite()) {
+        let lowering_result =
+            match lower_project_module(&module_name, parsed.suite(), &project_externals) {
             Ok(result) => result,
             Err(errors) => {
                 let compile_errors: Vec<CompileError> = errors
@@ -1188,8 +1264,30 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         }]
     })?;
 
+    for module_name in &support_module_names {
+        if let Some(code) = support_rust_files.get(module_name) {
+            std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|e| {
+                vec![CompileError {
+                    message: format!("failed to write {module_name}.rs: {e}"),
+                    phase: CompilePhase::Build,
+                }]
+            })?;
+        }
+    }
+
+    let mut test_lib = String::new();
+    for module_name in &support_module_names {
+        test_lib.push_str("mod ");
+        test_lib.push_str(module_name);
+        test_lib.push_str(";\n");
+    }
+    if !support_module_names.is_empty() {
+        test_lib.push('\n');
+    }
+    test_lib.push_str(&all_rust_code);
+
     // Write the test source file as lib.rs (so cargo test finds #[test] functions)
-    std::fs::write(src_dir.join("lib.rs"), &all_rust_code).map_err(|e| {
+    std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|e| {
         vec![CompileError {
             message: format!("failed to write lib.rs: {e}"),
             phase: CompilePhase::Build,
@@ -1360,8 +1458,8 @@ def area_like(r: float) -> float:
         let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
         let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
             .expect("project lowering should resolve non-main stdlib imports");
-        assert!(result.contains_key("main"));
-        assert!(result.contains_key("helper"));
+        assert!(result.hir_modules.contains_key("main"));
+        assert!(result.hir_modules.contains_key("helper"));
     }
 
     #[test]
@@ -1402,9 +1500,94 @@ def value() -> int:
         let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
         let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
             .expect("project lowering should resolve non-main local imports");
-        assert!(result.contains_key("main"));
-        assert!(result.contains_key("a_consumer"));
-        assert!(result.contains_key("z_provider"));
+        assert!(result.hir_modules.contains_key("main"));
+        assert!(result.hir_modules.contains_key("a_consumer"));
+        assert!(result.hir_modules.contains_key("z_provider"));
+    }
+
+    #[test]
+    fn test_collect_project_modules_exports_local_constants() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from consumer import get
+
+def main():
+    print(get())
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "consumer".to_string(),
+            parse_suite(
+                r#"
+from constants_mod import ANSWER
+
+def get() -> int:
+    return ANSWER
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "constants_mod".to_string(),
+            parse_suite(
+                r#"
+ANSWER: int = 42
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let result = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .expect("project lowering should resolve local constant imports");
+        let constants = result
+            .external_defs
+            .constants
+            .get("constants_mod")
+            .expect("constants module exports should exist");
+        assert_eq!(constants.get("ANSWER"), Some(&Type::Int));
+    }
+
+    #[test]
+    fn test_run_tests_resolves_local_imports_and_constants() {
+        let unique = format!(
+            "sifr_test_import_parity_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let test_dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+
+        std::fs::write(
+            test_dir.join("helper.sifr"),
+            r#"
+BASE: int = 9
+
+def plus_one(x: int) -> int:
+    return x + 1
+"#,
+        )
+        .expect("helper module should be written");
+        std::fs::write(
+            test_dir.join("test_imports.sifr"),
+            r#"
+from helper import BASE, plus_one
+
+def test_import_parity():
+    assert plus_one(BASE) == 10
+"#,
+        )
+        .expect("test module should be written");
+
+        let result = run_tests(&test_dir).expect("test runner should compile and execute");
+        assert!(result, "sifr test run should succeed");
+
+        let _ = std::fs::remove_dir_all(&test_dir);
     }
 
     #[test]

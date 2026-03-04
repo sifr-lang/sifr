@@ -759,7 +759,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
             enum_variants: vec![],
         }],
         imports: vec![],
-        constants: vec![],
+        constants: vec![("ANSWER".to_string(), Type::Int, HirExpr::IntLiteral(7))],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
@@ -774,6 +774,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
     assert!(!main_rs.contains("pub fn main("));
     assert!(utils_rs.contains("pub fn helper() -> i64"));
     assert!(utils_rs.contains("pub struct Thing"));
+    assert!(utils_rs.contains("pub const ANSWER: i64 = 7 as i64;"));
     assert!(utils_rs.contains("pub value: i64"));
     assert!(utils_rs.contains("pub fn new(value: i64) -> Self"));
 }
@@ -1005,6 +1006,42 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
     assert!(result.rust_source.contains("use num_bigint::BigInt;"));
     assert!(result.required_crates.contains("num-bigint"));
     assert!(result.required_crates.contains("num-traits"));
+}
+
+#[test]
+fn test_generate_rust_test_emits_local_module_import_uses() {
+    let module = HirModule {
+        functions: vec![HirFunction {
+            name: "test_import".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "helper".to_string(),
+                    args: vec![],
+                    ty: Type::Int,
+                },
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "support".to_string(),
+            names: vec!["helper".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let generated = generate_rust_test(&module);
+    assert!(
+        generated.rust_source.contains("use crate::support::helper;"),
+        "test codegen should emit local module uses for imported names"
+    );
 }
 
 #[test]

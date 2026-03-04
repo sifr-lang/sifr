@@ -24,7 +24,32 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     // Second pass: emit the actual code
     emitter.emit_module(module, false, true);
 
+    let mut module_import_items: Vec<RustItem> = Vec::new();
+    for import in &module.imports {
+        // Stdlib/intrinsic imports are lowered through registry/preamble paths.
+        if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
+            continue;
+        }
+        let mut module_path = vec!["crate".to_string()];
+        module_path.extend(import.module.split('.').map(str::to_string));
+        for name in &import.names {
+            if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
+                let mut alias_path = module_path.clone();
+                alias_path.push(name.clone());
+                module_import_items.push(RustItem::UseAlias {
+                    path: alias_path,
+                    alias: alias.clone(),
+                });
+            } else {
+                let mut import_path = module_path.clone();
+                import_path.push(name.clone());
+                module_import_items.push(RustItem::Use(import_path));
+            }
+        }
+    }
+
     let mut emitted_items: Vec<RustItem> = Vec::new();
+    emitted_items.extend(module_import_items);
     if !emitter.enum_items.is_empty() {
         emitted_items.extend(emitter.enum_items.clone());
     }
