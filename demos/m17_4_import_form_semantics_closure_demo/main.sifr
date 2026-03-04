@@ -1,4 +1,4 @@
-from helper import value
+from .helper import value
 
 def main():
     print("m17_4 import-form semantics demo:")

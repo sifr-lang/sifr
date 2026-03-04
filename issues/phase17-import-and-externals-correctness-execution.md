@@ -84,7 +84,7 @@ status: done (2026-03-05, PR #828)
 
 Validation evidence:
 - Documentation path: explicit canonical import-form matrix recorded in `.cursor/plans/main/phases/17_import_and_externals_correctness.md` under milestone `17_4`.
-- Positive path: `cargo run -q -p sifr -- run demos/m17_4_import_form_semantics_closure_demo/main.sifr` -> prints `m17_4 import-form semantics demo:` and `17`.
+- Positive path: `cargo run -q -p sifr -- run demos/m17_4_import_form_semantics_closure_demo/main.sifr` -> prints `m17_4 import-form semantics demo:` and `17` (demo exercises supported `from .helper import value`).
 - Positive path: `cargo test -q -p sifr_driver` -> pass (includes import-form semantics regression tests).
 - Negative path: `cargo run -q -p sifr -- check demos/m17_4_import_form_semantics_closure_demo/negative_cases/unsupported_import_statement.sifr` -> exits `1` with `unsupported import statement`.
 - Negative path: `cargo run -q -p sifr -- check demos/m17_4_import_form_semantics_closure_demo/negative_cases/unsupported_bare_relative.sifr` -> exits `1` with `unsupported bare relative import`.
@@ -132,3 +132,8 @@ Validation evidence:
 - Remediation PR (pass 5): https://github.com/yaseralnajjar/sifr/pull/829
 - Pass-5 remediation summary:
   - Added explicit canonical import-form matrix table under milestone `17_4` to satisfy the quality-contract requirement for documented supported/unsupported/non-activating forms.
+- External review pass 6 output: `reviews/phase17-production-grade-review-3.md`
+- Remediation PR (pass 6): https://github.com/yaseralnajjar/sifr/pull/830
+- Pass-6 remediation summary:
+  - Added explicit positive-path coverage for supported level-1 relative imports via `test_collect_project_modules_supports_single_level_relative_import`.
+  - Updated milestone `17_4` demo to use supported relative form `from .helper import value`.
