@@ -133,7 +133,7 @@ Validation evidence:
 - Pass-5 remediation summary:
   - Added explicit canonical import-form matrix table under milestone `17_4` to satisfy the quality-contract requirement for documented supported/unsupported/non-activating forms.
 - External review pass 6 output: `reviews/phase17-production-grade-review-3.md`
-- Remediation PR (pass 6): https://github.com/yaseralnajjar/sifr/pull/TBD
+- Remediation PR (pass 6): https://github.com/yaseralnajjar/sifr/pull/830
 - Pass-6 remediation summary:
   - Added explicit positive-path coverage for supported level-1 relative imports via `test_collect_project_modules_supports_single_level_relative_import`.
   - Updated milestone `17_4` demo to use supported relative form `from .helper import value`.
