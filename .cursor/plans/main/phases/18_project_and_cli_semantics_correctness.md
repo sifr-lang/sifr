@@ -3,6 +3,8 @@
 ## Objective
 Make CLI behavior predictable for single-file and multi-file workflows.
 
+Status: completed (2026-03-04)
+
 ## Depends on
 - Phase 17
 
@@ -31,11 +33,19 @@ status: done (2026-03-04, PR #819)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m18_2_auto_detection_rule_tightening_demo/main.sifr`.
 
 ### milestone_18_3: CLI Contract and Regression Suite
+status: done (2026-03-04, PR #820)
 - Scope:
   - Document stable CLI semantics and edge cases.
   - Add regression tests for command-mode behavior.
 - Definition of done:
   - CLI behavior contract exists and is regression-protected.
+- Evidence:
+  - Stable CLI behavior contract documented in `docs/cli_command_semantics.md` and linked from `README.md`.
+  - Regression suite expanded in `crates/sifr/src/main.rs` for:
+    - local-import project mode activation,
+    - stdlib-only/no-import single-file fallback,
+    - invalid-source and missing-module single-file fallback.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m18_3_cli_contract_and_regression_suite_demo.sifr`.
 
 ## Quality Contract
 - Entry criteria: Phase 17 is completed and import/external behavior is stable.

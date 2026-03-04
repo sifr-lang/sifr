@@ -1,6 +1,6 @@
 # Phase 18 Execution Checklist (Project and CLI Semantics Correctness)
 
-Status: in progress (2026-03-04)
+Status: completed (2026-03-04)
 Owner: phase_18 execution loop
 Reference phase doc: `.cursor/plans/main/phases/18_project_and_cli_semantics_correctness.md`
 
@@ -9,11 +9,11 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 ## Global Gates (apply to every part)
 - [x] Scope remains constrained to the current part definition-of-done
 - [x] Root cause addressed (no superficial workaround/fallback)
-- [ ] Milestone quality-contract checks include at least one positive-path and one negative-path validation
-- [ ] Full local suite passes: `./scripts/run_all_tests.sh`
-- [ ] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
+- [x] Full local suite passes: `./scripts/run_all_tests.sh`
+- [x] Milestone demo runs successfully before opening each part PR
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Part 1: milestone_18_1 Run/Build Semantics Alignment
 status: done (2026-03-04, PR #818)
@@ -55,18 +55,25 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_18_3 CLI Contract and Regression Suite
-status: pending
+status: done (2026-03-04, PR #820)
 
-- [ ] Document stable CLI semantics and edge cases
-- [ ] Add regression tests for command-mode behavior
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Document stable CLI semantics and edge cases
+- [x] Add regression tests for command-mode behavior
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m18_3_cli_contract_and_regression_suite_demo.sifr` -> prints `m18_3 cli contract and regression suite demo`.
+- Positive path: `cargo test -q -p sifr test_resolve_compilation_mode_` -> pass with command-mode resolver contract tests.
+- Positive path: docs contract published in `docs/cli_command_semantics.md` and linked in `README.md`.
+- Negative path: `cargo run -q -p sifr -- run <tmp_main_importing_missing_local_module_with_invalid_scratch>/main.sifr` -> exits `1` with `unknown module 'helper'`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/818 (merged)
-- Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (open)
-- Part 3: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/819 (merged)
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/820 (open)
