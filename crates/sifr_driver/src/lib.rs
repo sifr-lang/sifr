@@ -1275,16 +1275,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         }
     }
 
-    let mut test_lib = String::new();
-    for module_name in &support_module_names {
-        test_lib.push_str("mod ");
-        test_lib.push_str(module_name);
-        test_lib.push_str(";\n");
-    }
-    if !support_module_names.is_empty() {
-        test_lib.push('\n');
-    }
-    test_lib.push_str(&all_rust_code);
+    let test_lib = compose_test_runner_lib(&support_module_names, &all_rust_code);
 
     // Write the test source file as lib.rs (so cargo test finds #[test] functions)
     std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|e| {
@@ -1317,6 +1308,22 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     }
 
     Ok(output.status.success())
+}
+
+fn compose_test_runner_lib(support_module_names: &[String], all_rust_code: &str) -> String {
+    // Keep generated helper modules and imports test-scoped so cargo test's non-test
+    // library build does not emit irrelevant dead-code/unused warnings.
+    let mut test_lib = String::from("#![cfg(test)]\n\n");
+    for module_name in support_module_names {
+        test_lib.push_str("mod ");
+        test_lib.push_str(module_name);
+        test_lib.push_str(";\n");
+    }
+    if !support_module_names.is_empty() {
+        test_lib.push('\n');
+    }
+    test_lib.push_str(all_rust_code);
+    test_lib
 }
 
 fn generate_test_runner_cargo_toml(
@@ -1506,6 +1513,87 @@ def value() -> int:
     }
 
     #[test]
+    fn test_collect_project_modules_reports_unknown_module_in_non_main() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from helper import get
+
+def main():
+    print(get())
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "helper".to_string(),
+            parse_suite(
+                r#"
+from missing_mod import value
+
+def get() -> int:
+    return value()
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .err()
+            .expect("project lowering should fail when non-main imports missing module");
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("unknown module 'missing_mod'")));
+    }
+
+    #[test]
+    fn test_collect_project_modules_cycle_reports_error() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from a import value_a
+
+def main():
+    print(value_a())
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "a".to_string(),
+            parse_suite(
+                r#"
+from b import value_b
+
+def value_a() -> int:
+    return value_b()
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "b".to_string(),
+            parse_suite(
+                r#"
+from a import value_a
+
+def value_b() -> int:
+    return value_a()
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .err()
+            .expect("project lowering should fail when dependency graph makes no progress");
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("unknown module '")));
+    }
+
+    #[test]
     fn test_collect_project_modules_exports_local_constants() {
         let mut parsed_modules = HashMap::new();
         parsed_modules.insert(
@@ -1614,5 +1702,15 @@ def test_import_parity():
         let cargo_toml = generate_test_runner_cargo_toml(&stdlib_modules, &required_crates);
         assert!(cargo_toml.contains("serde_json = \"1\""));
         assert!(cargo_toml.contains("serde = { version = \"1\", features = [\"derive\"] }"));
+    }
+
+    #[test]
+    fn test_compose_test_runner_lib_is_test_scoped() {
+        let support_modules = vec!["helper".to_string()];
+        let all_rust_code = "#[test]\nfn smoke() {}\n";
+        let lib_source = compose_test_runner_lib(&support_modules, all_rust_code);
+        assert!(lib_source.starts_with("#![cfg(test)]"));
+        assert!(lib_source.contains("mod helper;"));
+        assert!(lib_source.contains("#[test]\nfn smoke() {}"));
     }
 }

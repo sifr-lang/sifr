@@ -37,6 +37,8 @@ status: done (2026-03-04, PR #814)
   - Regression guards:
     - `test_collect_project_modules_allows_non_main_stdlib_imports` (`crates/sifr_driver/src/lib.rs`)
     - `test_collect_project_modules_resolves_non_main_local_dependencies` (`crates/sifr_driver/src/lib.rs`)
+    - `test_collect_project_modules_reports_unknown_module_in_non_main` (`crates/sifr_driver/src/lib.rs`)
+    - `test_collect_project_modules_cycle_reports_error` (`crates/sifr_driver/src/lib.rs`)
     - `test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules` (`crates/sifr_codegen/src/lib_codegen_tests.rs`)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m17_2_non_main_externals_resolution_demo/main.sifr`.
 
@@ -52,6 +54,7 @@ status: done (2026-03-04, PR #815)
   - Local-module constant exports are now registered in project externals (`collect_module_exports` in `crates/sifr_driver/src/lib.rs`).
   - Local import resolution now treats constants as module-members (`externals.constants`) in `crates/sifr_hir/src/lower.rs`.
   - `run_tests` now builds support-module externals and lowers test modules via `lower_module_with_externals`, aligning with project compilation flow.
+  - Generated test-runner crate source is now explicitly test-scoped via `compose_test_runner_lib` so non-test cargo builds do not emit unused-import/dead-code noise.
   - Test codegen now emits local-module `use crate::<module>::<name>` imports in test mode (`crates/sifr_codegen/src/entrypoints.rs`).
   - Milestone demo: `cargo run -q -p sifr -- test demos/m17_3_test_and_constant_import_parity_demo`.
 
