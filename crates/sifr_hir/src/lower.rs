@@ -485,8 +485,24 @@ fn lower_module_impl(
     let mut imports = Vec::new();
     for stmt in stmts {
         if let Stmt::ImportFrom(import_from) = stmt {
-            if let Some(ref module) = import_from.module {
-                let module_name = module.to_string();
+            if import_from.level > 1 {
+                let module_name = import_from
+                    .module
+                    .as_ref()
+                    .map(ToString::to_string)
+                    .unwrap_or_else(|| "<none>".to_string());
+                ctx.error(format!(
+                    "unsupported relative import level {} for module '{module_name}'",
+                    import_from.level
+                ));
+                continue;
+            }
+            let Some(ref module) = import_from.module else {
+                ctx.error("unsupported bare relative import; use 'from <module> import ...'".to_string());
+                continue;
+            };
+            let module_name = module.to_string();
+            let is_absolute_import = import_from.level == 0;
                 let names: Vec<String> = import_from
                     .names
                     .iter()
@@ -514,18 +530,18 @@ fn lower_module_impl(
                 };
 
                 // Skip typing imports (TypeVar, Callable, etc.) - they are handled at the type level
-                if module_name == "typing" {
+                if is_absolute_import && module_name == "typing" {
                     continue;
                 }
 
                 // Skip enum imports (Enum is a built-in base class in Sifr)
-                if module_name == "enum" {
+                if is_absolute_import && module_name == "enum" {
                     continue;
                 }
 
                 // Block user imports of _sifr.* (internal intrinsics)
                 // Stdlib .sifr files are allowed to import from _sifr.*
-                if module_name.starts_with("_sifr.") {
+                if is_absolute_import && module_name.starts_with("_sifr.") {
                     if !ctx.allow_intrinsic_imports {
                         ctx.error(format!("cannot import from '{module_name}' — _sifr.* modules are internal compiler intrinsics"));
                         continue;
@@ -560,7 +576,7 @@ fn lower_module_impl(
                 // Check if this is a stdlib import (sifr.*)
                 // All sifr.* modules are now .sifr files compiled in the stdlib phase.
                 // Resolve from pre-compiled stdlib modules (via externals).
-                if module_name.starts_with("sifr.") {
+                if is_absolute_import && module_name.starts_with("sifr.") {
                     // Check if there's a pre-compiled stdlib .sifr module in externals
                     let stdlib_module_key = module_name.clone();
                     let has_module = externals.functions.contains_key(&stdlib_module_key)
@@ -749,6 +765,12 @@ fn lower_module_impl(
                     names,
                     aliases,
                 });
+        } else if let Stmt::Import(import_stmt) = stmt {
+            for alias in &import_stmt.names {
+                let module_name = alias.name.to_string();
+                ctx.error(format!(
+                    "unsupported import statement 'import {module_name}'; use 'from {module_name} import <name>'"
+                ));
             }
         }
     }
@@ -830,8 +852,17 @@ fn lower_module_impl(
 fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut LowerCtx) {
     for stmt in stmts {
         if let Stmt::ImportFrom(import_from) = stmt {
-            if let Some(ref module) = import_from.module {
-                let module_name = module.to_string();
+            if import_from.level > 1 {
+                continue;
+            }
+            let Some(ref module) = import_from.module else {
+                continue;
+            };
+            let module_name = module.to_string();
+            let is_absolute_import = import_from.level == 0;
+            if is_absolute_import && (module_name == "typing" || module_name == "enum") {
+                continue;
+            }
                 let names: Vec<String> = import_from
                     .names
                     .iter()
@@ -907,7 +938,6 @@ fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut Low
                         }
                     }
                 }
-            }
         }
     }
 }

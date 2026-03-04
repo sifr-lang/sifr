@@ -1,0 +1,4 @@
+import helper
+
+def main():
+    print("this should fail with explicit unsupported import-statement diagnostics")

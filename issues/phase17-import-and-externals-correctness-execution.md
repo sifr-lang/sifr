@@ -71,10 +71,30 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- test <tmp_dir_with_missing_imported_constant>` -> exits `1` with `module 'helper' has no member 'MISSING'`.
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
+## Part 4: milestone_17_4 Import-Form Semantics Closure
+status: done (2026-03-05, PR #TBD)
+
+- [x] Define canonical semantics for `from`/relative/bare-relative/`import` forms
+- [x] Ensure explicit deterministic diagnostics for unsupported forms
+- [x] Add positive/negative regression coverage
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run demos/m17_4_import_form_semantics_closure_demo/main.sifr` -> prints `m17_4 import-form semantics demo:` and `17`.
+- Positive path: `cargo test -q -p sifr_driver` -> pass (includes import-form semantics regression tests).
+- Negative path: `cargo run -q -p sifr -- check demos/m17_4_import_form_semantics_closure_demo/negative_cases/unsupported_import_statement.sifr` -> exits `1` with `unsupported import statement`.
+- Negative path: `cargo run -q -p sifr -- check demos/m17_4_import_form_semantics_closure_demo/negative_cases/unsupported_bare_relative.sifr` -> exits `1` with `unsupported bare relative import`.
+- Negative path: `cargo run -q -p sifr -- check demos/m17_4_import_form_semantics_closure_demo/negative_cases/unsupported_multi_relative.sifr` -> exits `1` with `unsupported relative import level 2`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/813 (merged)
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/814 (merged)
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/815 (merged)
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/TBD
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase17-review.md`
