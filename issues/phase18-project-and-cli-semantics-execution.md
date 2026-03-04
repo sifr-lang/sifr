@@ -95,3 +95,14 @@ Validation evidence:
 - Validation commands used for pass-2 remediation:
   - `cargo test -q -p sifr test_resolve_compilation_mode_`
   - `cargo test -q -p sifr test_compile_entrypoint_error_consistency_for_project_mode`
+- External review pass 3 output: `reviews/phase18-review-2.md`
+- Remediation PR (pass 3): https://github.com/yaseralnajjar/sifr/pull/TBD
+- Pass-3 remediation summary:
+  - Added resolver regression test for relative import without sibling module to enforce single-file fallback.
+  - Added resolver regression tests proving local `typing.sifr`/`enum.sifr` files do not activate project mode for stdlib-like imports.
+  - Corrected CLI contract note to match implemented semantics for stdlib-like local filenames.
+- Validation commands used during pass-3 remediation:
+  - `cargo test -q -p sifr test_resolve_compilation_mode_`
+  - `cargo run -q -p sifr -- run demos/m18_2_auto_detection_rule_tightening_demo/main.sifr`
+  - `cargo run -q -p sifr -- run demos/m18_3_cli_contract_and_regression_suite_demo.sifr`
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
