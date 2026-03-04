@@ -86,7 +86,7 @@ Validation evidence:
   - `cargo test -q -p sifr_codegen test_generate_rust_test_emits_local_module_import_uses`
   - `cargo test -q -p sifr_codegen test_generate_rust_multi_exports_non_main_items`
 - External review pass 2 output: `reviews/phase17-production-grade-review.md`
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/817 (open)
+- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/817 (merged)
 - Pass-2 triage outcome: production-grade review findings were also stale against current `origin/main` and validated as already fixed by PRs #813, #814, #815.
 - Validation commands used during pass-2 triage:
   - `cargo test -q -p sifr_driver test_check_only_reports_frontend_phases`

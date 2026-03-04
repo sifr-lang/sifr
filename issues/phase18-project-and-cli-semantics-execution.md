@@ -87,7 +87,7 @@ Validation evidence:
 - Validation commands used for pass-1 remediation:
   - `cargo test -q -p sifr test_resolve_compilation_mode_`
 - External review pass 2 output: `reviews/phase18-production-grade-review.md`
-- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/822 (open)
+- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/822 (merged)
 - Pass-2 triage + actions:
   - Added regression test for relative-import project-mode activation (`from .helper import ...` with sibling module).
   - Added regression test for run/build project-mode error consistency via shared `compile_entrypoint`.
