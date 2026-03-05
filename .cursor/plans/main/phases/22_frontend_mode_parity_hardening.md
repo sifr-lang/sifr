@@ -6,6 +6,15 @@ Eliminate semantic drift between `check`, `build`, `run`, and `test` by enforcin
 ## Depends on
 - Phase 21
 
+## Technical Context
+- Primary CLI mode wiring lives in `crates/sifr/src` and orchestration lives in `crates/sifr_driver`.
+- Frontend parity risk comes from mode-specific orchestration drift between `check`, `build`, `run`, and `test`.
+- This phase treats frontend behavior parity as mandatory for equivalent source/configuration across modes.
+- Allowed mode differences must be explicit and limited to mode intent:
+  - `check`: frontend analysis/type checking only (no artifact generation).
+  - `build`/`run`: artifact generation and execution concerns outside frontend analysis.
+  - `test`: test-root discovery and test execution concerns outside shared frontend analysis semantics.
+
 ## Milestones
 
 ### milestone_22_1: Canonical Frontend Entry Path
@@ -13,7 +22,7 @@ Eliminate semantic drift between `check`, `build`, `run`, and `test` by enforcin
   - Define one shared frontend orchestration path in `sifr_driver` used by all CLI modes (`check`, `build`, `run`, `test`).
   - Remove mode-specific lowering/resolution forks that can produce divergent behavior for equivalent inputs.
 - Definition of done:
-  - All modes call the same frontend analysis/resolution API with explicit mode flags only for allowed differences.
+  - All modes call the same frontend analysis/resolution API with explicit mode flags only for documented allowed differences.
 
 ### milestone_22_2: Project-Aware `check` Parity
 - Scope:

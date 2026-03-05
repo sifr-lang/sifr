@@ -6,6 +6,15 @@ Make project and test compilation graph-correct, deterministic, and isolated per
 ## Depends on
 - Phase 22
 
+## Technical Context
+- Project and test graph discovery/resolution behavior is orchestrated in `crates/sifr_driver`.
+- CLI run/build flow and temp workspace setup are wired through `crates/sifr/src` and `crates/sifr_driver`.
+- Import-closure in this phase means:
+  - Start from declared entry/test roots.
+  - Recursively resolve reachable local and stdlib module imports according to Sifr import semantics.
+  - Exclude unrelated sibling files that are not in the resolved import closure.
+- Invocation isolation in this phase means each command invocation uses an independent workspace path and cannot conflict with parallel invocations.
+
 ## Milestones
 
 ### milestone_23_1: Import-Closure Discovery

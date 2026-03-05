@@ -6,6 +6,14 @@ Consolidate HIR analysis into one canonical traversal/query architecture so emit
 ## Depends on
 - Phase 23
 
+## Technical Context
+- Canonical traversal/query helpers are maintained in `crates/sifr_codegen/src/helpers.rs`.
+- Remaining emitter-local analysis logic currently lives in `crates/sifr_codegen/src/stmt_support_emitter.rs` (notably `body_always_exits_stmt`-style behavior).
+- Phase 21 established traversal/control-flow correctness baseline; this phase consolidates analysis ownership so it no longer drifts across emitter-local implementations.
+- Canonical vs ad-hoc criteria for this phase:
+  - Canonical: analysis implemented in shared traversal/query modules with reusable interfaces.
+  - Ad-hoc: recursive analysis logic embedded directly in emitter/lowering modules for local use only.
+
 ## Milestones
 
 ### milestone_24_1: Canonical Traversal Layer Contract
@@ -24,7 +32,7 @@ Consolidate HIR analysis into one canonical traversal/query architecture so emit
 
 ### milestone_24_3: Control-Flow Effect Query Unification
 - Scope:
-  - Replace remaining ad-hoc `body_always_exits`-style logic with a shared control-flow effect query API.
+  - Replace remaining ad-hoc `body_always_exits_stmt`-style logic with a shared control-flow effect query API.
   - Introduce a canonical effect model (for example: fallthrough, always returns, always raises) and use it consistently across affected call sites.
 - Definition of done:
   - Exit-analysis behavior is computed through one shared query path with no local duplicates.
