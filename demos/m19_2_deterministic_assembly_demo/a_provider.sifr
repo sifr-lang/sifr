@@ -1,0 +1,2 @@
+def a() -> str:
+    return "A"

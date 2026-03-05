@@ -766,6 +766,7 @@ fn collect_module_exports(module_name: &str, module: &HirModule, external_defs: 
 struct ProjectLowering {
     hir_modules: HashMap<String, HirModule>,
     external_defs: ExternalDefs,
+    compile_order: Vec<String>,
 }
 
 struct ModuleDependencyGraph {
@@ -958,6 +959,38 @@ fn compute_module_compile_order(
     }])
 }
 
+fn ordered_non_main_module_names(
+    compile_order: &[String],
+    rust_files: &HashMap<String, String>,
+) -> Vec<String> {
+    compile_order
+        .iter()
+        .filter(|module_name| module_name.as_str() != "main")
+        .filter(|module_name| rust_files.contains_key(module_name.as_str()))
+        .cloned()
+        .collect()
+}
+
+fn assemble_project_main_rs(
+    compile_order: &[String],
+    rust_files: &HashMap<String, String>,
+) -> String {
+    let mut main_rs = String::new();
+    let ordered_non_main = ordered_non_main_module_names(compile_order, rust_files);
+    for module_name in &ordered_non_main {
+        main_rs.push_str("mod ");
+        main_rs.push_str(module_name);
+        main_rs.push_str(";\n");
+    }
+    if !ordered_non_main.is_empty() && rust_files.contains_key("main") {
+        main_rs.push('\n');
+    }
+    if let Some(main_code) = rust_files.get("main") {
+        main_rs.push_str(main_code);
+    }
+    main_rs
+}
+
 fn collect_project_hir_modules(
     parsed_modules: &HashMap<String, Vec<Stmt>>,
     mut external_defs: ExternalDefs,
@@ -965,21 +998,22 @@ fn collect_project_hir_modules(
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
     let compile_order = compute_module_compile_order(parsed_modules)?;
 
-    for module_name in compile_order {
+    for module_name in &compile_order {
         let Some(stmts) = parsed_modules.get(module_name.as_str()) else {
             return Err(vec![CompileError {
                 message: format!("[{module_name}] module was not parsed"),
                 phase: CompilePhase::Build,
             }]);
         };
-        let result = lower_project_module(&module_name, stmts, &external_defs)?;
-        collect_module_exports(&module_name, &result.module, &mut external_defs);
-        hir_modules.insert(module_name, result.module);
+        let result = lower_project_module(module_name, stmts, &external_defs)?;
+        collect_module_exports(module_name, &result.module, &mut external_defs);
+        hir_modules.insert(module_name.clone(), result.module);
     }
 
     Ok(ProjectLowering {
         hir_modules,
         external_defs,
+        compile_order,
     })
 }
 
@@ -1001,8 +1035,8 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     }
     sifr_files.sort();
 
-    // Read all source files
-    let mut sources: HashMap<String, String> = HashMap::new();
+    // Read all source files with deterministic ordering from sorted file paths.
+    let mut sources: Vec<(String, String)> = Vec::with_capacity(sifr_files.len());
     for file in &sifr_files {
         let module_name = file.file_stem().unwrap().to_string_lossy().to_string();
         let source = std::fs::read_to_string(file).map_err(|e| {
@@ -1011,7 +1045,7 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
                 phase: CompilePhase::Build,
             }]
         })?;
-        sources.insert(module_name, source);
+        sources.push((module_name, source));
     }
 
     // Phase 1: Parse all modules
@@ -1048,11 +1082,16 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
     // Phase 2: Lower modules with stdlib + local external definitions.
     let project_lowering = collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)?;
     let hir_modules = project_lowering.hir_modules;
+    let compile_order = project_lowering.compile_order;
 
     // Phase 3: Generate Rust code
-    let module_refs: Vec<(&str, &HirModule)> = hir_modules
+    let module_refs: Vec<(&str, &HirModule)> = compile_order
         .iter()
-        .map(|(name, module)| (name.as_str(), module))
+        .filter_map(|module_name| {
+            hir_modules
+                .get(module_name)
+                .map(|module| (module_name.as_str(), module))
+        })
         .collect();
     let rust_files = generate_rust_multi(&module_refs);
 
@@ -1085,25 +1124,8 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         }]
     })?;
 
-    // Write main.rs with mod declarations and main module code
-    let mut main_rs = String::new();
-
-    // Add mod declarations for non-main modules
-    for module_name in rust_files.keys() {
-        if module_name != "main" {
-            main_rs.push_str("mod ");
-            main_rs.push_str(module_name);
-            main_rs.push_str(";\n");
-        }
-    }
-    if rust_files.len() > 1 {
-        main_rs.push('\n');
-    }
-
-    // Add main module code
-    if let Some(main_code) = rust_files.get("main") {
-        main_rs.push_str(main_code);
-    }
+    // Write main.rs using deterministic module declaration ordering.
+    let main_rs = assemble_project_main_rs(&compile_order, &rust_files);
 
     std::fs::write(src_dir.join("main.rs"), &main_rs).map_err(|e| {
         vec![CompileError {
@@ -1112,16 +1134,17 @@ pub fn build_project(main_file: &Path, output_dir: &Path) -> Result<PathBuf, Vec
         }]
     })?;
 
-    // Write non-main module files
-    for (module_name, code) in &rust_files {
-        if module_name != "main" {
-            std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|e| {
-                vec![CompileError {
-                    message: format!("failed to write {module_name}.rs: {e}"),
-                    phase: CompilePhase::Build,
-                }]
-            })?;
-        }
+    // Write non-main module files in deterministic dependency-safe order.
+    for module_name in ordered_non_main_module_names(&compile_order, &rust_files) {
+        let Some(code) = rust_files.get(module_name.as_str()) else {
+            continue;
+        };
+        std::fs::write(src_dir.join(format!("{module_name}.rs")), code).map_err(|e| {
+            vec![CompileError {
+                message: format!("failed to write {module_name}.rs: {e}"),
+                phase: CompilePhase::Build,
+            }]
+        })?;
     }
 
     // Run cargo build
@@ -1771,6 +1794,30 @@ def value_provider() -> int:
                 "main".to_string()
             ]
         );
+    }
+
+    #[test]
+    fn test_assemble_project_main_rs_is_deterministic_against_hashmap_order() {
+        let compile_order = vec![
+            "provider".to_string(),
+            "consumer".to_string(),
+            "main".to_string(),
+        ];
+
+        let mut rust_files_a = HashMap::new();
+        rust_files_a.insert("main".to_string(), "fn main() {}\n".to_string());
+        rust_files_a.insert("consumer".to_string(), "pub fn c() {}\n".to_string());
+        rust_files_a.insert("provider".to_string(), "pub fn p() {}\n".to_string());
+
+        let mut rust_files_b = HashMap::new();
+        rust_files_b.insert("provider".to_string(), "pub fn p() {}\n".to_string());
+        rust_files_b.insert("main".to_string(), "fn main() {}\n".to_string());
+        rust_files_b.insert("consumer".to_string(), "pub fn c() {}\n".to_string());
+
+        let main_a = assemble_project_main_rs(&compile_order, &rust_files_a);
+        let main_b = assemble_project_main_rs(&compile_order, &rust_files_b);
+        assert_eq!(main_a, main_b);
+        assert_eq!(main_a, "mod provider;\nmod consumer;\n\nfn main() {}\n");
     }
 
     #[test]

@@ -1,0 +1,5 @@
+from consumer import joined
+
+def main():
+    print("m19_2 deterministic assembly demo:")
+    print(joined())

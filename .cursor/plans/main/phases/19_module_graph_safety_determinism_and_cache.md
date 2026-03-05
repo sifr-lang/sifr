@@ -3,7 +3,7 @@
 ## Objective
 Make multi-module compilation dependency-safe, deterministic, and efficient for repeated local loops.
 
-Status: in progress (milestone_19_1 done on 2026-03-05, PR #834)
+Status: in progress (milestone_19_1 done on 2026-03-05, PR #834; milestone_19_2 done on 2026-03-05, PR #835)
 
 ## Depends on
 - Phase 18
@@ -24,10 +24,16 @@ status: done (2026-03-05, PR #834)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m19_1_dependency_safe_module_ordering_demo/main.sifr`.
 
 ### milestone_19_2: Deterministic Assembly
+status: done (2026-03-05, PR #835)
 - Scope:
   - Remove nondeterministic HashMap-order behavior from module assembly/output.
 - Definition of done:
   - Repeated builds produce stable module output order.
+- Evidence:
+  - Project assembly now emits `main.rs` module declarations using deterministic dependency-safe compile order instead of `HashMap` key iteration.
+  - Non-main module file emission now follows deterministic ordered module names, preventing random output ordering drift.
+  - Regression test `test_assemble_project_main_rs_is_deterministic_against_hashmap_order` locks deterministic output against insertion-order variation.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m19_2_deterministic_assembly_demo/main.sifr`.
 
 ### milestone_19_3: Stdlib Cache for Local Loops
 - Scope:
