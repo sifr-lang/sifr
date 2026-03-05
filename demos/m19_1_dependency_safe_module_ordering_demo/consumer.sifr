@@ -1,0 +1,4 @@
+from provider import provided
+
+def value() -> int:
+    return provided()

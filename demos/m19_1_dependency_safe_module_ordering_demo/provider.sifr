@@ -1,0 +1,2 @@
+def provided() -> int:
+    return 19

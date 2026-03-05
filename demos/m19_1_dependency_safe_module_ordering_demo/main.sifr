@@ -1,0 +1,5 @@
+from consumer import value
+
+def main():
+    print("m19_1 dependency-safe module ordering demo:")
+    print(value())
