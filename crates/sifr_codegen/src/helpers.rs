@@ -1,5 +1,5 @@
 use super::{IsNoneUnionMatch, IsinstanceUnionMatch, ModuleFuncSignatures};
-use sifr_hir::{HirExpr, HirFStringPart, HirModule, HirStmt};
+use sifr_hir::{HirExpr, HirFStringPart, HirFunction, HirModule, HirPattern, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
@@ -37,6 +37,334 @@ pub(super) fn is_option_type(ty: &Type) -> bool {
         has_none && non_none.len() == 1
     } else {
         false
+    }
+}
+
+fn walk_hir_expr<F>(expr: &HirExpr, on_expr: &mut F)
+where
+    F: FnMut(&HirExpr),
+{
+    on_expr(expr);
+    match expr {
+        HirExpr::BinOp { left, right, .. } => {
+            walk_hir_expr(left, on_expr);
+            walk_hir_expr(right, on_expr);
+        }
+        HirExpr::UnaryOp { operand, .. }
+        | HirExpr::QuestionMark { expr: operand, .. }
+        | HirExpr::OkWrap { value: operand, .. }
+        | HirExpr::ErrWrap { value: operand, .. }
+        | HirExpr::WalrusExpr { value: operand, .. }
+        | HirExpr::FieldAccess {
+            object: operand, ..
+        } => {
+            walk_hir_expr(operand, on_expr);
+        }
+        HirExpr::Compare {
+            left, comparators, ..
+        } => {
+            walk_hir_expr(left, on_expr);
+            for comparator in comparators {
+                walk_hir_expr(comparator, on_expr);
+            }
+        }
+        HirExpr::BoolOp { values, .. }
+        | HirExpr::ListLiteral {
+            elements: values, ..
+        }
+        | HirExpr::SetLiteral {
+            elements: values, ..
+        }
+        | HirExpr::TupleLiteral {
+            elements: values, ..
+        } => {
+            for value in values {
+                walk_hir_expr(value, on_expr);
+            }
+        }
+        HirExpr::Call { args, .. }
+        | HirExpr::ConstructorCall { args, .. }
+        | HirExpr::SuperCall { args, .. } => {
+            for arg in args {
+                walk_hir_expr(arg, on_expr);
+            }
+        }
+        HirExpr::MethodCall { object, args, .. } => {
+            walk_hir_expr(object, on_expr);
+            for arg in args {
+                walk_hir_expr(arg, on_expr);
+            }
+        }
+        HirExpr::IfExpr {
+            condition,
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            walk_hir_expr(condition, on_expr);
+            walk_hir_expr(then_expr, on_expr);
+            walk_hir_expr(else_expr, on_expr);
+        }
+        HirExpr::RangeLiteral {
+            start, end, step, ..
+        } => {
+            walk_hir_expr(start, on_expr);
+            walk_hir_expr(end, on_expr);
+            if let Some(step) = step {
+                walk_hir_expr(step, on_expr);
+            }
+        }
+        HirExpr::DictLiteral { keys, values, .. } => {
+            for key in keys {
+                walk_hir_expr(key, on_expr);
+            }
+            for value in values {
+                walk_hir_expr(value, on_expr);
+            }
+        }
+        HirExpr::Index { object, index, .. } => {
+            walk_hir_expr(object, on_expr);
+            walk_hir_expr(index, on_expr);
+        }
+        HirExpr::ContainsOp {
+            element,
+            collection,
+            ..
+        } => {
+            walk_hir_expr(element, on_expr);
+            walk_hir_expr(collection, on_expr);
+        }
+        HirExpr::FString { parts, .. } => {
+            for part in parts {
+                if let HirFStringPart::Expr(expr) = part {
+                    walk_hir_expr(expr, on_expr);
+                }
+            }
+        }
+        HirExpr::Slice {
+            object,
+            start,
+            stop,
+            step,
+            ..
+        } => {
+            walk_hir_expr(object, on_expr);
+            if let Some(start) = start {
+                walk_hir_expr(start, on_expr);
+            }
+            if let Some(stop) = stop {
+                walk_hir_expr(stop, on_expr);
+            }
+            if let Some(step) = step {
+                walk_hir_expr(step, on_expr);
+            }
+        }
+        HirExpr::Lambda { body, .. } => walk_hir_expr(body, on_expr),
+        HirExpr::ListComp {
+            expr, generators, ..
+        }
+        | HirExpr::SetComp {
+            expr, generators, ..
+        } => {
+            walk_hir_expr(expr, on_expr);
+            for (_, iter, filter) in generators {
+                walk_hir_expr(iter, on_expr);
+                if let Some(filter) = filter {
+                    walk_hir_expr(filter, on_expr);
+                }
+            }
+        }
+        HirExpr::DictComp {
+            key_expr,
+            val_expr,
+            generators,
+            ..
+        } => {
+            walk_hir_expr(key_expr, on_expr);
+            walk_hir_expr(val_expr, on_expr);
+            for (_, iter, filter) in generators {
+                walk_hir_expr(iter, on_expr);
+                if let Some(filter) = filter {
+                    walk_hir_expr(filter, on_expr);
+                }
+            }
+        }
+        HirExpr::GeneratorExpr {
+            expr, iter, filter, ..
+        } => {
+            walk_hir_expr(expr, on_expr);
+            walk_hir_expr(iter, on_expr);
+            if let Some(filter) = filter {
+                walk_hir_expr(filter, on_expr);
+            }
+        }
+        HirExpr::Name { .. }
+        | HirExpr::IntLiteral(_)
+        | HirExpr::FloatLiteral(_)
+        | HirExpr::StringLiteral(_)
+        | HirExpr::BoolLiteral(_)
+        | HirExpr::NoneLiteral
+        | HirExpr::EnumVariant { .. } => {}
+    }
+}
+
+fn walk_hir_pattern<F>(pattern: &HirPattern, on_expr: &mut F)
+where
+    F: FnMut(&HirExpr),
+{
+    match pattern {
+        HirPattern::Literal { value } => walk_hir_expr(value, on_expr),
+        HirPattern::Or { patterns } | HirPattern::Tuple { elements: patterns } => {
+            for pattern in patterns {
+                walk_hir_pattern(pattern, on_expr);
+            }
+        }
+        HirPattern::Class { fields, .. } => {
+            for (_, pattern) in fields {
+                walk_hir_pattern(pattern, on_expr);
+            }
+        }
+        HirPattern::Wildcard
+        | HirPattern::Capture { .. }
+        | HirPattern::None
+        | HirPattern::Value { .. } => {}
+    }
+}
+
+fn walk_hir_stmt<FStmt, FExpr>(
+    stmt: &HirStmt,
+    descend_nested_functions: bool,
+    on_stmt: &mut FStmt,
+    on_expr: &mut FExpr,
+) where
+    FStmt: FnMut(&HirStmt),
+    FExpr: FnMut(&HirExpr),
+{
+    on_stmt(stmt);
+    match stmt {
+        HirStmt::Let { value, .. }
+        | HirStmt::Assign { value, .. }
+        | HirStmt::AugAssign { value, .. }
+        | HirStmt::AttributeAugAssign { value, .. }
+        | HirStmt::FieldAssign { value, .. }
+        | HirStmt::Raise { value }
+        | HirStmt::Yield { value } => walk_hir_expr(value, on_expr),
+        HirStmt::Return { value } => {
+            if let Some(value) = value {
+                walk_hir_expr(value, on_expr);
+            }
+        }
+        HirStmt::Expr { expr } => walk_hir_expr(expr, on_expr),
+        HirStmt::If {
+            condition,
+            then_body,
+            elif_clauses,
+            else_body,
+        } => {
+            walk_hir_expr(condition, on_expr);
+            walk_hir_stmts(then_body, descend_nested_functions, on_stmt, on_expr);
+            for (cond, body) in elif_clauses {
+                walk_hir_expr(cond, on_expr);
+                walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
+            }
+            if let Some(else_body) = else_body {
+                walk_hir_stmts(else_body, descend_nested_functions, on_stmt, on_expr);
+            }
+        }
+        HirStmt::While {
+            condition,
+            body,
+            else_body,
+        } => {
+            walk_hir_expr(condition, on_expr);
+            walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
+            if let Some(else_body) = else_body {
+                walk_hir_stmts(else_body, descend_nested_functions, on_stmt, on_expr);
+            }
+        }
+        HirStmt::For {
+            iter,
+            body,
+            else_body,
+            ..
+        } => {
+            walk_hir_expr(iter, on_expr);
+            walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
+            if let Some(else_body) = else_body {
+                walk_hir_stmts(else_body, descend_nested_functions, on_stmt, on_expr);
+            }
+        }
+        HirStmt::TupleUnpack { value, .. } | HirStmt::StarUnpack { value, .. } => {
+            walk_hir_expr(value, on_expr);
+        }
+        HirStmt::Assert { test, msg } => {
+            walk_hir_expr(test, on_expr);
+            if let Some(msg) = msg {
+                walk_hir_expr(msg, on_expr);
+            }
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
+            for handler in handlers {
+                walk_hir_stmts(&handler.body, descend_nested_functions, on_stmt, on_expr);
+            }
+        }
+        HirStmt::SubscriptAssign { index, value, .. }
+        | HirStmt::SubscriptAugAssign { index, value, .. }
+        | HirStmt::AttributeSubscriptAssign { index, value, .. } => {
+            walk_hir_expr(index, on_expr);
+            walk_hir_expr(value, on_expr);
+        }
+        HirStmt::NestedSubscriptAssign {
+            outer_index,
+            inner_index,
+            value,
+            ..
+        } => {
+            walk_hir_expr(outer_index, on_expr);
+            walk_hir_expr(inner_index, on_expr);
+            walk_hir_expr(value, on_expr);
+        }
+        HirStmt::Delete { object, index } => {
+            walk_hir_expr(object, on_expr);
+            walk_hir_expr(index, on_expr);
+        }
+        HirStmt::With { items, body } => {
+            for (_, expr, _) in items {
+                walk_hir_expr(expr, on_expr);
+            }
+            walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
+        }
+        HirStmt::NestedFunction { func } => {
+            if descend_nested_functions {
+                walk_hir_stmts(&func.body, true, on_stmt, on_expr);
+            }
+        }
+        HirStmt::Match { subject, arms, .. } => {
+            walk_hir_expr(subject, on_expr);
+            for arm in arms {
+                walk_hir_pattern(&arm.pattern, on_expr);
+                if let Some(guard) = &arm.guard {
+                    walk_hir_expr(guard, on_expr);
+                }
+                walk_hir_stmts(&arm.body, descend_nested_functions, on_stmt, on_expr);
+            }
+        }
+        HirStmt::Pass | HirStmt::Break | HirStmt::Continue => {}
+    }
+}
+
+fn walk_hir_stmts<FStmt, FExpr>(
+    stmts: &[HirStmt],
+    descend_nested_functions: bool,
+    on_stmt: &mut FStmt,
+    on_expr: &mut FExpr,
+) where
+    FStmt: FnMut(&HirStmt),
+    FExpr: FnMut(&HirExpr),
+{
+    for stmt in stmts {
+        walk_hir_stmt(stmt, descend_nested_functions, on_stmt, on_expr);
     }
 }
 
@@ -242,45 +570,58 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
             _ => false,
         }
     }
-    fn expr_has_bigint(expr: &HirExpr) -> bool {
-        type_has_bigint(expr.ty())
-    }
-    fn stmts_have_bigint(stmts: &[HirStmt]) -> bool {
-        stmts.iter().any(stmt_has_bigint)
-    }
-    fn stmt_has_bigint(stmt: &HirStmt) -> bool {
+    fn stmt_type_has_bigint(stmt: &HirStmt) -> bool {
         match stmt {
-            HirStmt::Let { ty, value, .. } => type_has_bigint(ty) || expr_has_bigint(value),
-            HirStmt::Return { value } => value.as_ref().map(expr_has_bigint).unwrap_or(false),
-            HirStmt::Expr { expr } => expr_has_bigint(expr),
-            HirStmt::If {
-                condition,
-                then_body,
-                else_body,
-                elif_clauses,
+            HirStmt::Let { ty, .. } => type_has_bigint(ty),
+            HirStmt::For { target_ty, .. } => type_has_bigint(target_ty),
+            HirStmt::TupleUnpack { targets, .. } => {
+                targets.iter().any(|(_, ty)| type_has_bigint(ty))
+            }
+            HirStmt::StarUnpack {
+                before,
+                star,
+                after,
                 ..
             } => {
-                expr_has_bigint(condition)
-                    || stmts_have_bigint(then_body)
-                    || else_body
-                        .as_ref()
-                        .map(|b| stmts_have_bigint(b))
-                        .unwrap_or(false)
-                    || elif_clauses.iter().any(|(_, b)| stmts_have_bigint(b))
+                before.iter().any(|(_, ty)| type_has_bigint(ty))
+                    || type_has_bigint(&star.1)
+                    || after.iter().any(|(_, ty)| type_has_bigint(ty))
             }
-            HirStmt::While { body, .. } => stmts_have_bigint(body),
-            HirStmt::For { body, .. } => stmts_have_bigint(body),
+            HirStmt::SubscriptAssign { object_ty, .. }
+            | HirStmt::NestedSubscriptAssign { object_ty, .. }
+            | HirStmt::SubscriptAugAssign { object_ty, .. } => type_has_bigint(object_ty),
+            HirStmt::AttributeSubscriptAssign { field_ty, .. } => type_has_bigint(field_ty),
+            HirStmt::Match { subject_ty, .. } => type_has_bigint(subject_ty),
+            HirStmt::NestedFunction { func } => {
+                func.params.iter().any(|param| type_has_bigint(&param.ty))
+                    || type_has_bigint(&func.return_type)
+            }
             _ => false,
         }
     }
-    for func in &module.functions {
+    fn function_uses_bigint(func: &HirFunction) -> bool {
         if type_has_bigint(&func.return_type) {
             return true;
         }
         if func.params.iter().any(|p| type_has_bigint(&p.ty)) {
             return true;
         }
-        if stmts_have_bigint(&func.body) {
+        let found = std::cell::Cell::new(false);
+        let mut on_stmt = |stmt: &HirStmt| {
+            if !found.get() && stmt_type_has_bigint(stmt) {
+                found.set(true);
+            }
+        };
+        let mut on_expr = |expr: &HirExpr| {
+            if !found.get() && type_has_bigint(expr.ty()) {
+                found.set(true);
+            }
+        };
+        walk_hir_stmts(&func.body, true, &mut on_stmt, &mut on_expr);
+        found.get()
+    }
+    for func in &module.functions {
+        if function_uses_bigint(func) {
             return true;
         }
     }
@@ -289,13 +630,7 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
             return true;
         }
         for method in &class.methods {
-            if type_has_bigint(&method.return_type) {
-                return true;
-            }
-            if method.params.iter().any(|p| type_has_bigint(&p.ty)) {
-                return true;
-            }
-            if stmts_have_bigint(&method.body) {
+            if function_uses_bigint(method) {
                 return true;
             }
         }
@@ -324,46 +659,43 @@ pub(super) fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec
 
 /// Check if a method body contains any field assignments or attribute augmented assignments (self.field = ... or self.field += ...).
 pub(super) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
-    stmts.iter().any(|s| match s {
-        HirStmt::FieldAssign { .. }
-        | HirStmt::AttributeAugAssign { .. }
-        | HirStmt::AttributeSubscriptAssign { .. } => true,
-        HirStmt::Expr { expr } => expr_contains_self_field_mutation(expr),
-        HirStmt::Return { value: Some(expr) } => expr_contains_self_field_mutation(expr),
-        HirStmt::Let { value, .. } => expr_contains_self_field_mutation(value),
-        HirStmt::If {
-            then_body,
-            elif_clauses,
-            else_body,
-            ..
-        } => {
-            body_contains_field_assign_codegen(then_body)
-                || elif_clauses
-                    .iter()
-                    .any(|(_, body)| body_contains_field_assign_codegen(body))
-                || else_body
-                    .as_ref()
-                    .is_some_and(|b| body_contains_field_assign_codegen(b))
+    let found = std::cell::Cell::new(false);
+    let mut on_stmt = |stmt: &HirStmt| {
+        if matches!(
+            stmt,
+            HirStmt::FieldAssign { .. }
+                | HirStmt::AttributeAugAssign { .. }
+                | HirStmt::AttributeSubscriptAssign { .. }
+        ) {
+            found.set(true);
         }
-        HirStmt::While { body, .. } | HirStmt::For { body, .. } => {
-            body_contains_field_assign_codegen(body)
+    };
+    let mut on_expr = |expr: &HirExpr| {
+        if !found.get() && is_self_field_mutating_method_call(expr) {
+            found.set(true);
         }
-        _ => false,
-    })
+    };
+    walk_hir_stmts(stmts, true, &mut on_stmt, &mut on_expr);
+    found.get()
 }
 
 /// Check if an expression contains a mutating method call on a self field (e.g., self.items.append(...)).
 pub(super) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
+    let mut found = false;
+    walk_hir_expr(expr, &mut |candidate| {
+        if !found && is_self_field_mutating_method_call(candidate) {
+            found = true;
+        }
+    });
+    found
+}
+
+fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::MethodCall { object, method, .. } => {
-            // Check if calling a mutating method on self.field
             let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
                 if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
-            if is_self_field && MUTATING_METHODS.contains(&method.as_str()) {
-                return true;
-            }
-            // Recurse into the object
-            expr_contains_self_field_mutation(object)
+            is_self_field && MUTATING_METHODS.contains(&method.as_str())
         }
         _ => false,
     }
@@ -1008,299 +1340,275 @@ pub(super) fn collect_referenced_vars_with_types_inner(
     stmts: &[HirStmt],
     refs: &mut HashMap<String, Type>,
 ) {
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Let { value, .. } => {
-                collect_typed_refs_in_expr(value, refs);
-            }
-            HirStmt::Assign { value, .. } => {
-                collect_typed_refs_in_expr(value, refs);
-            }
-            HirStmt::AugAssign { value, .. } => {
-                collect_typed_refs_in_expr(value, refs);
-            }
-            HirStmt::Return { value: Some(expr) } => {
-                collect_typed_refs_in_expr(expr, refs);
-            }
-            HirStmt::Expr { expr } => {
-                collect_typed_refs_in_expr(expr, refs);
-            }
-            HirStmt::If {
-                condition,
-                then_body,
-                elif_clauses,
-                else_body,
-            } => {
-                collect_typed_refs_in_expr(condition, refs);
-                collect_referenced_vars_with_types_inner(then_body, refs);
-                for (cond, body) in elif_clauses {
-                    collect_typed_refs_in_expr(cond, refs);
-                    collect_referenced_vars_with_types_inner(body, refs);
-                }
-                if let Some(body) = else_body {
-                    collect_referenced_vars_with_types_inner(body, refs);
-                }
-            }
-            HirStmt::While {
-                condition, body, ..
-            } => {
-                collect_typed_refs_in_expr(condition, refs);
-                collect_referenced_vars_with_types_inner(body, refs);
-            }
-            HirStmt::For { iter, body, .. } => {
-                collect_typed_refs_in_expr(iter, refs);
-                collect_referenced_vars_with_types_inner(body, refs);
-            }
-            HirStmt::FieldAssign { value, .. } => {
-                collect_typed_refs_in_expr(value, refs);
-            }
-            HirStmt::SubscriptAssign { index, value, .. } => {
-                collect_typed_refs_in_expr(index, refs);
-                collect_typed_refs_in_expr(value, refs);
-            }
-            _ => {}
+    let mut on_stmt = |_stmt: &HirStmt| {};
+    let mut on_expr = |expr: &HirExpr| {
+        if let HirExpr::Name { name, ty } = expr {
+            refs.entry(name.clone()).or_insert_with(|| ty.clone());
         }
-    }
+    };
+    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
 }
 
 pub(super) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
-    match expr {
-        HirExpr::Name { name, ty } => {
+    walk_hir_expr(expr, &mut |node| {
+        if let HirExpr::Name { name, ty } = node {
             refs.entry(name.clone()).or_insert_with(|| ty.clone());
         }
-        HirExpr::BinOp { left, right, .. } => {
-            collect_typed_refs_in_expr(left, refs);
-            collect_typed_refs_in_expr(right, refs);
-        }
-        HirExpr::BoolOp { values, .. } => {
-            for v in values {
-                collect_typed_refs_in_expr(v, refs);
-            }
-        }
-        HirExpr::UnaryOp { operand, .. } => {
-            collect_typed_refs_in_expr(operand, refs);
-        }
-        HirExpr::Compare {
-            left, comparators, ..
-        } => {
-            collect_typed_refs_in_expr(left, refs);
-            for c in comparators {
-                collect_typed_refs_in_expr(c, refs);
-            }
-        }
-        HirExpr::Call { args, .. } => {
-            for a in args {
-                collect_typed_refs_in_expr(a, refs);
-            }
-        }
-        HirExpr::MethodCall { object, args, .. } => {
-            collect_typed_refs_in_expr(object, refs);
-            for a in args {
-                collect_typed_refs_in_expr(a, refs);
-            }
-        }
-        HirExpr::Index { object, index, .. } => {
-            collect_typed_refs_in_expr(object, refs);
-            collect_typed_refs_in_expr(index, refs);
-        }
-        HirExpr::IfExpr {
-            condition,
-            then_expr,
-            else_expr,
-            ..
-        } => {
-            collect_typed_refs_in_expr(condition, refs);
-            collect_typed_refs_in_expr(then_expr, refs);
-            collect_typed_refs_in_expr(else_expr, refs);
-        }
-        HirExpr::ListLiteral { elements, .. }
-        | HirExpr::TupleLiteral { elements, .. }
-        | HirExpr::SetLiteral { elements, .. } => {
-            for e in elements {
-                collect_typed_refs_in_expr(e, refs);
-            }
-        }
-        HirExpr::DictLiteral { keys, values, .. } => {
-            for k in keys {
-                collect_typed_refs_in_expr(k, refs);
-            }
-            for v in values {
-                collect_typed_refs_in_expr(v, refs);
-            }
-        }
-        HirExpr::Lambda { body, .. } => {
-            collect_typed_refs_in_expr(body, refs);
-        }
-        _ => {}
-    }
+    });
 }
 
 /// Collect all variable names defined (let-bound) in a list of statements.
 /// Does NOT recurse into nested functions.
 pub(super) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String> {
     let mut defined = HashSet::new();
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Let { name, .. } => {
+    let mut on_stmt = |stmt: &HirStmt| match stmt {
+        HirStmt::Let { name, .. } => {
+            defined.insert(name.clone());
+        }
+        HirStmt::For { target, .. } => {
+            defined.insert(target.clone());
+        }
+        HirStmt::TupleUnpack { targets, .. } => {
+            for (name, _) in targets {
                 defined.insert(name.clone());
             }
-            HirStmt::For { target, body, .. } => {
-                defined.insert(target.clone());
-                // Also collect from body
-                defined.extend(collect_locally_defined_vars(body));
-            }
-            HirStmt::TupleUnpack { targets, .. } => {
-                for (name, _) in targets {
-                    defined.insert(name.clone());
-                }
-            }
-            HirStmt::If {
-                then_body,
-                elif_clauses,
-                else_body,
-                ..
-            } => {
-                defined.extend(collect_locally_defined_vars(then_body));
-                for (_, body) in elif_clauses {
-                    defined.extend(collect_locally_defined_vars(body));
-                }
-                if let Some(body) = else_body {
-                    defined.extend(collect_locally_defined_vars(body));
-                }
-            }
-            HirStmt::While { body, .. } => {
-                defined.extend(collect_locally_defined_vars(body));
-            }
-            HirStmt::NestedFunction { func } => {
-                // The nested function name itself is defined
-                defined.insert(func.name.clone());
-            }
-            _ => {}
         }
-    }
+        HirStmt::StarUnpack {
+            before,
+            star,
+            after,
+            ..
+        } => {
+            for (name, _) in before {
+                defined.insert(name.clone());
+            }
+            defined.insert(star.0.clone());
+            for (name, _) in after {
+                defined.insert(name.clone());
+            }
+        }
+        HirStmt::NestedFunction { func } => {
+            defined.insert(func.name.clone());
+        }
+        HirStmt::Match { arms, .. } => {
+            for arm in arms {
+                collect_capture_pattern_names(&arm.pattern, &mut defined);
+            }
+        }
+        _ => {}
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
     defined
+}
+
+fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<String>) {
+    match pattern {
+        HirPattern::Capture { name, .. } => {
+            defined.insert(name.clone());
+        }
+        HirPattern::Or { patterns } | HirPattern::Tuple { elements: patterns } => {
+            for pattern in patterns {
+                collect_capture_pattern_names(pattern, defined);
+            }
+        }
+        HirPattern::Class { fields, .. } => {
+            for (_, pattern) in fields {
+                collect_capture_pattern_names(pattern, defined);
+            }
+        }
+        HirPattern::Wildcard
+        | HirPattern::Literal { .. }
+        | HirPattern::None
+        | HirPattern::Value { .. } => {}
+    }
 }
 
 /// Check if a function body contains calls to a specific function name.
 pub(super) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Let { value, .. } => {
-                if expr_calls_function(value, func_name) {
-                    return true;
-                }
-            }
-            HirStmt::Assign { value, .. } => {
-                if expr_calls_function(value, func_name) {
-                    return true;
-                }
-            }
-            HirStmt::AugAssign { value, .. } => {
-                if expr_calls_function(value, func_name) {
-                    return true;
-                }
-            }
-            HirStmt::Return { value: Some(expr) } => {
-                if expr_calls_function(expr, func_name) {
-                    return true;
-                }
-            }
-            HirStmt::Expr { expr } => {
-                if expr_calls_function(expr, func_name) {
-                    return true;
-                }
-            }
-            HirStmt::If {
-                condition,
-                then_body,
-                elif_clauses,
-                else_body,
-            } => {
-                if expr_calls_function(condition, func_name) {
-                    return true;
-                }
-                if body_calls_function(then_body, func_name) {
-                    return true;
-                }
-                for (cond, body) in elif_clauses {
-                    if expr_calls_function(cond, func_name) {
-                        return true;
-                    }
-                    if body_calls_function(body, func_name) {
-                        return true;
-                    }
-                }
-                if let Some(body) = else_body {
-                    if body_calls_function(body, func_name) {
-                        return true;
-                    }
-                }
-            }
-            HirStmt::While {
-                condition, body, ..
-            } => {
-                if expr_calls_function(condition, func_name) {
-                    return true;
-                }
-                if body_calls_function(body, func_name) {
-                    return true;
-                }
-            }
-            HirStmt::For { body, .. } => {
-                if body_calls_function(body, func_name) {
-                    return true;
-                }
-            }
-            _ => {}
+    let mut found = false;
+    let mut on_stmt = |_stmt: &HirStmt| {};
+    let mut on_expr = |expr: &HirExpr| {
+        if found {
+            return;
         }
-    }
-    false
+        if let HirExpr::Call { func, .. } = expr {
+            if func == func_name {
+                found = true;
+            }
+        }
+    };
+    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    found
 }
 
 pub(super) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
-    match expr {
-        HirExpr::Call { func, args, .. } => {
+    let mut found = false;
+    walk_hir_expr(expr, &mut |node| {
+        if found {
+            return;
+        }
+        if let HirExpr::Call { func, .. } = node {
             if func == func_name {
-                return true;
+                found = true;
             }
-            args.iter().any(|a| expr_calls_function(a, func_name))
         }
-        HirExpr::BinOp { left, right, .. } => {
-            expr_calls_function(left, func_name) || expr_calls_function(right, func_name)
+    });
+    found
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sifr_hir::{HirExceptHandler, HirFunction, HirModule, HirParam, MethodKind};
+
+    fn mk_function(name: &str, body: Vec<HirStmt>) -> HirFunction {
+        HirFunction {
+            name: name.to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body,
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
         }
-        HirExpr::BoolOp { values, .. } => values.iter().any(|v| expr_calls_function(v, func_name)),
-        HirExpr::UnaryOp { operand, .. } => expr_calls_function(operand, func_name),
-        HirExpr::Compare {
-            left, comparators, ..
-        } => {
-            expr_calls_function(left, func_name)
-                || comparators
-                    .iter()
-                    .any(|c| expr_calls_function(c, func_name))
+    }
+
+    fn mk_module_with_main(body: Vec<HirStmt>) -> HirModule {
+        HirModule {
+            functions: vec![mk_function("main", body)],
+            classes: vec![],
+            imports: vec![],
+            constants: vec![],
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
         }
-        HirExpr::MethodCall { object, args, .. } => {
-            expr_calls_function(object, func_name)
-                || args.iter().any(|a| expr_calls_function(a, func_name))
-        }
-        HirExpr::IfExpr {
-            condition,
-            then_expr,
-            else_expr,
-            ..
-        } => {
-            expr_calls_function(condition, func_name)
-                || expr_calls_function(then_expr, func_name)
-                || expr_calls_function(else_expr, func_name)
-        }
-        HirExpr::Index { object, index, .. } => {
-            expr_calls_function(object, func_name) || expr_calls_function(index, func_name)
-        }
-        HirExpr::ListLiteral { elements, .. }
-        | HirExpr::TupleLiteral { elements, .. }
-        | HirExpr::SetLiteral { elements, .. } => {
-            elements.iter().any(|e| expr_calls_function(e, func_name))
-        }
-        HirExpr::Lambda { body, .. } => expr_calls_function(body, func_name),
-        _ => false,
+    }
+
+    #[test]
+    fn body_calls_function_detects_calls_in_for_else() {
+        let stmts = vec![HirStmt::For {
+            target: "i".to_string(),
+            target_ty: Type::Int,
+            iter: HirExpr::ListLiteral {
+                elements: vec![],
+                ty: Type::List(Box::new(Type::Int)),
+            },
+            body: vec![HirStmt::Pass],
+            else_body: Some(vec![HirStmt::Expr {
+                expr: HirExpr::Call {
+                    func: "rec".to_string(),
+                    args: vec![HirExpr::IntLiteral(1)],
+                    ty: Type::Int,
+                },
+            }]),
+        }];
+
+        assert!(body_calls_function(&stmts, "rec"));
+    }
+
+    #[test]
+    fn body_calls_function_ignores_nested_function_scope() {
+        let nested = HirFunction {
+            name: "inner".to_string(),
+            params: vec![HirParam {
+                name: "n".to_string(),
+                ty: Type::Int,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::Own,
+            }],
+            return_type: Type::Int,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::Call {
+                    func: "target".to_string(),
+                    args: vec![HirExpr::Name {
+                        name: "n".to_string(),
+                        ty: Type::Int,
+                    }],
+                    ty: Type::Int,
+                }),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        };
+        let stmts = vec![HirStmt::NestedFunction { func: nested }];
+
+        assert!(!body_calls_function(&stmts, "target"));
+    }
+
+    #[test]
+    fn collect_locally_defined_vars_includes_else_and_star_unpack() {
+        let stmts = vec![
+            HirStmt::For {
+                target: "item".to_string(),
+                target_ty: Type::Int,
+                iter: HirExpr::ListLiteral {
+                    elements: vec![],
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+                body: vec![HirStmt::Pass],
+                else_body: Some(vec![HirStmt::Let {
+                    name: "from_else".to_string(),
+                    ty: Type::Int,
+                    value: HirExpr::IntLiteral(1),
+                    is_mutable: true,
+                }]),
+            },
+            HirStmt::StarUnpack {
+                before: vec![("first".to_string(), Type::Int)],
+                star: ("rest".to_string(), Type::List(Box::new(Type::Int))),
+                after: vec![("last".to_string(), Type::Int)],
+                value: HirExpr::ListLiteral {
+                    elements: vec![HirExpr::IntLiteral(1)],
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+            },
+        ];
+
+        let defined = collect_locally_defined_vars(&stmts);
+        assert!(defined.contains("item"));
+        assert!(defined.contains("from_else"));
+        assert!(defined.contains("first"));
+        assert!(defined.contains("rest"));
+        assert!(defined.contains("last"));
+    }
+
+    #[test]
+    fn module_uses_bigint_detects_try_handler_branches() {
+        let module = mk_module_with_main(vec![HirStmt::TryExcept {
+            body: vec![HirStmt::Pass],
+            handlers: vec![HirExceptHandler {
+                error_type: Some("Error".to_string()),
+                error_resolved_type: None,
+                name: Some("e".to_string()),
+                body: vec![HirStmt::Let {
+                    name: "n".to_string(),
+                    ty: Type::BigInt,
+                    value: HirExpr::Call {
+                        func: "bigint".to_string(),
+                        args: vec![HirExpr::IntLiteral(3)],
+                        ty: Type::BigInt,
+                    },
+                    is_mutable: true,
+                }],
+            }],
+            body_error_types: vec!["Error".to_string()],
+        }]);
+
+        assert!(module_uses_bigint(&module));
+    }
+
+    #[test]
+    fn module_uses_bigint_false_without_bigint() {
+        let module = mk_module_with_main(vec![HirStmt::Let {
+            name: "x".to_string(),
+            ty: Type::Int,
+            value: HirExpr::IntLiteral(1),
+            is_mutable: true,
+        }]);
+
+        assert!(!module_uses_bigint(&module));
     }
 }
