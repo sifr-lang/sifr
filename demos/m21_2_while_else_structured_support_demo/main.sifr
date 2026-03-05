@@ -1,0 +1,17 @@
+# m21_2 while-else structured support demo
+# Demonstrates while-else behavior in borrowed-condition paths.
+
+def classify(items: list[int]) -> str:
+    result: str = 'init'
+    while items:
+        result = 'broke'
+        break
+    else:
+        result = 'else'
+    return result
+
+
+def main():
+    print('m21_2 while-else structured support demo:')
+    print(classify([]))
+    print(classify([1]))

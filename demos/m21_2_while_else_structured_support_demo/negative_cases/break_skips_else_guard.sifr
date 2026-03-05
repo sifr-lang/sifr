@@ -1,0 +1,9 @@
+# negative guard: else branch must not execute after break
+
+def main():
+    items: list[int] = [1]
+    while items:
+        break
+    else:
+        assert False, 'while-else regression: else ran after break'
+    print('ok')

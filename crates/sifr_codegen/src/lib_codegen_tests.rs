@@ -896,6 +896,72 @@ fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
 }
 
 #[test]
+fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
+    let list_ty = Type::List(Box::new(Type::Int));
+    let module = HirModule {
+        functions: vec![
+            HirFunction {
+                name: "iterate".to_string(),
+                params: vec![HirParam {
+                    name: "xs".to_string(),
+                    ty: list_ty.clone(),
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::Borrow,
+                }],
+                return_type: Type::None,
+                body: vec![HirStmt::While {
+                    condition: HirExpr::Name {
+                        name: "xs".to_string(),
+                        ty: list_ty.clone(),
+                    },
+                    body: vec![HirStmt::Break],
+                    else_body: Some(vec![HirStmt::Expr {
+                        expr: HirExpr::Call {
+                            func: "print".to_string(),
+                            args: vec![HirExpr::StringLiteral("empty".to_string())],
+                            ty: Type::None,
+                        },
+                    }]),
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+            HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::Expr {
+                    expr: HirExpr::Call {
+                        func: "iterate".to_string(),
+                        args: vec![HirExpr::ListLiteral {
+                            elements: vec![],
+                            ty: list_ty.clone(),
+                        }],
+                        ty: Type::None,
+                    },
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        ],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+    assert!(rust_code.contains("fn iterate(xs: &Vec<i64>)"));
+    assert!(rust_code.contains("let mut _broke: bool = false;"));
+    assert!(rust_code.contains("_broke = true;"));
+    assert!(rust_code.contains("if !(_broke) {"));
+}
+
+#[test]
 fn test_generate_rust_test_uses_explicit_test_mode_context() {
     let module = HirModule {
         functions: vec![
@@ -1039,7 +1105,9 @@ fn test_generate_rust_test_emits_local_module_import_uses() {
 
     let generated = generate_rust_test(&module);
     assert!(
-        generated.rust_source.contains("use crate::support::helper;"),
+        generated
+            .rust_source
+            .contains("use crate::support::helper;"),
         "test codegen should emit local module uses for imported names"
     );
 }

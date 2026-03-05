@@ -1,0 +1,11 @@
+# expect-stdout: empty
+
+def iterate(xs: list[int]) -> None:
+    while xs:
+        break
+    else:
+        print('empty')
+
+
+def main():
+    iterate([])

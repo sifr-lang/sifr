@@ -1,6 +1,6 @@
 # Phase 21 Execution Checklist (Traversal Completeness and Control-Flow Correctness)
 
-Status: in_progress (started 2026-03-05, part_1 completed)
+Status: in_progress (started 2026-03-05, part_1 and part_2 completed)
 Owner: phase_21 execution loop
 Reference phase doc: `.cursor/plans/main/phases/21_traversal_completeness_and_control_flow_correctness.md`
 
@@ -27,11 +27,11 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 2: milestone_21_2 `while ... else` End-to-End Support
-- [ ] Support `while ... else` in structured lowering paths (not only simple-path fast path)
-- [ ] Preserve Python-like semantics for break/non-break behavior across nested loops
-- [ ] Add milestone 21.2 positive demo
-- [ ] Add milestone 21.2 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Support `while ... else` in structured lowering paths (not only simple-path fast path)
+- [x] Preserve Python-like semantics for break/non-break behavior across nested loops
+- [x] Add milestone 21.2 positive demo
+- [x] Add milestone 21.2 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ### Part 3: milestone_21_3 Yield and Exception-Path Coverage
@@ -60,9 +60,28 @@ Validation evidence:
 - Negative path: `cargo test -q -p sifr_codegen body_calls_function_ignores_nested_function_scope` -> pass (guards against over-traversing nested function scopes).
 - Negative path: `cargo run -q -p sifr -- run demos/m21_1_canonical_walker_coverage_demo/negative_cases/typo_in_for_else_recursive_call.sifr` -> exits `1` with `type error: undefined function: 'recc'`.
 
+## Part 2: milestone_21_2 `while ... else` End-to-End Support
+status: done (2026-03-05, PR #850)
+
+- [x] Structured lowering supports `while ... else` for borrowed-condition and other non-simple paths
+- [x] Break-marker semantics preserved for break/non-break behavior
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_codegen test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker` -> pass.
+- Positive path: `cargo run -q -p sifr -- run /tmp/phase21_while_else_borrowed2.sifr` -> prints `empty` (previous panic path now supported).
+- Positive path: `cargo run -q -p sifr -- run demos/m21_2_while_else_structured_support_demo/main.sifr` -> prints `m21_2 while-else structured support demo:`, `else`, `broke`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m21_2_while_else_structured_support_demo/negative_cases/break_skips_else_guard.sifr` -> prints `ok` (fails if else executes after break).
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/849
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/850
 - Part 3: pending
 
 ## Reviewer Follow-up
