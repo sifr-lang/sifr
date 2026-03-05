@@ -16,7 +16,7 @@ pub(super) fn is_error_class_with_ctx(
     false
 }
 
-/// Check if a class definition has `(Error)` as its base class (legacy, for contexts without `error_types`).
+/// Check if a class definition has `(Error)` as its base class.
 pub(super) fn is_error_class(class_def: &StmtClassDef) -> bool {
     for base in class_def.bases() {
         if let Expr::Name(n) = base {
