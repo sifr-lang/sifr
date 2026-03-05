@@ -1,0 +1,721 @@
+use super::*;
+
+pub(super) fn register_builtins(ctx: &mut LowerCtx) {
+    // print() accepts any single argument and returns None
+    ctx.functions.insert(
+        "print".to_string(),
+        FunctionType::all_borrow(vec![("value".to_string(), Type::Any)], Type::None),
+    );
+
+    // Register built-in error classes.
+    // These are compiler built-ins (like int, str, bool) — available without imports.
+    // Error hierarchy: Error -> {IOError, ParseError, ValueError, ...}
+    //                  IOError -> {FileNotFoundError, PermissionError, ...}
+
+    // --- Base error class ---
+    {
+        let msg_fields = vec![("message".to_string(), Type::Str)];
+        let class_ty = Type::Class {
+            name: "Error".to_string(),
+            fields: msg_fields.clone(),
+            methods: vec![],
+            parent_class: None,
+        };
+        ctx.class_types
+            .insert("Error".to_string(), class_ty.clone());
+        ctx.error_types.insert("Error".to_string());
+        ctx.functions.insert(
+            "Error".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+
+    // --- Mid-level error classes (parent: Error) ---
+    // IOError has an extra `kind` field for subclass dispatch; constructor accepts only message
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("kind".to_string(), Type::Str),
+        ];
+        let class_ty = Type::Class {
+            name: "IOError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types
+            .insert("IOError".to_string(), class_ty.clone());
+        ctx.error_types.insert("IOError".to_string());
+        ctx.functions.insert(
+            "IOError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+    let other_mid_level_errors = [
+        "ParseError",
+        "ValueError",
+        "DivisionError",
+        "KeyError",
+        "OverflowError",
+    ];
+    for &error_name in &other_mid_level_errors {
+        let fields = vec![("message".to_string(), Type::Str)];
+        let class_ty = Type::Class {
+            name: error_name.to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types
+            .insert(error_name.to_string(), class_ty.clone());
+        ctx.error_types.insert(error_name.to_string());
+        ctx.functions.insert(
+            error_name.to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+
+    // --- IOError subclasses (parent: IOError) ---
+    let io_subclasses = [
+        "FileNotFoundError",
+        "PermissionError",
+        "FileExistsError",
+        "IsADirectoryError",
+        "NotADirectoryError",
+        "DirectoryNotEmptyError",
+    ];
+    for &error_name in &io_subclasses {
+        let fields = vec![("message".to_string(), Type::Str)];
+        let class_ty = Type::Class {
+            name: error_name.to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("IOError".to_string()),
+        };
+        ctx.class_types
+            .insert(error_name.to_string(), class_ty.clone());
+        ctx.error_types.insert(error_name.to_string());
+        ctx.functions.insert(
+            error_name.to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+
+    // --- JSONDecodeError (parent: Error, extra fields: line, column) ---
+    // Constructor accepts only message; line/column are populated by intrinsics
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("line".to_string(), Type::Int),
+            ("column".to_string(), Type::Int),
+        ];
+        let class_ty = Type::Class {
+            name: "JSONDecodeError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types
+            .insert("JSONDecodeError".to_string(), class_ty.clone());
+        ctx.error_types.insert("JSONDecodeError".to_string());
+        ctx.functions.insert(
+            "JSONDecodeError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+
+    // --- TOMLDecodeError (parent: Error, extra fields: line, column) ---
+    // Constructor accepts only message; line/column are populated by intrinsics
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("line".to_string(), Type::Int),
+            ("column".to_string(), Type::Int),
+        ];
+        let class_ty = Type::Class {
+            name: "TOMLDecodeError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types
+            .insert("TOMLDecodeError".to_string(), class_ty.clone());
+        ctx.error_types.insert("TOMLDecodeError".to_string());
+        ctx.functions.insert(
+            "TOMLDecodeError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+
+    // --- RegexError (parent: Error, extra field: detail) ---
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("detail".to_string(), Type::Str),
+        ];
+        let class_ty = Type::Class {
+            name: "RegexError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("Error".to_string()),
+        };
+        ctx.class_types
+            .insert("RegexError".to_string(), class_ty.clone());
+        ctx.error_types.insert("RegexError".to_string());
+        // Constructor accepts only message; detail is populated by intrinsics
+        ctx.functions.insert(
+            "RegexError".to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+
+    // Build error hierarchy for exhaustiveness checking
+    ctx.error_hierarchy.insert(
+        "IOError".to_string(),
+        vec![
+            "FileNotFoundError".to_string(),
+            "PermissionError".to_string(),
+            "FileExistsError".to_string(),
+            "IsADirectoryError".to_string(),
+            "NotADirectoryError".to_string(),
+            "DirectoryNotEmptyError".to_string(),
+        ],
+    );
+}
+
+pub(super) fn ast_convention_to_param(conv: AstParamConvention, ty: &Type) -> ParamConvention {
+    match conv {
+        AstParamConvention::Mut => ParamConvention::MutBorrow,
+        AstParamConvention::Own => ParamConvention::Own,
+        AstParamConvention::Default => {
+            // TypeVars (generics) default to Borrow since the concrete type is unknown
+            if matches!(ty, Type::TypeVar(_)) {
+                ParamConvention::Borrow
+            } else if ty.ownership() == OwnershipKind::Copy {
+                ParamConvention::Own
+            } else {
+                ParamConvention::Borrow
+            }
+        }
+    }
+}
+
+pub(super) fn extract_function_type(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> FunctionType {
+    let mut params: Vec<(String, Type, ParamConvention)> = Vec::new();
+
+    for param in &func.parameters.args {
+        let name = param.parameter.name.to_string();
+        let ty = if let Some(annotation) = &param.parameter.annotation {
+            resolve_annotation_expr(annotation, ctx)
+        } else {
+            ctx.error(format!(
+                "parameter '{}' in function '{}' is missing a type annotation",
+                name, func.name
+            ));
+            Type::Any
+        };
+        let conv = ast_convention_to_param(param.parameter.convention, &ty);
+        params.push((name, ty, conv));
+    }
+
+    // Vararg parameter (*args) -- becomes Vec<T>
+    if let Some(ref vararg) = func.parameters.vararg {
+        let name = vararg.name.to_string();
+        let elem_ty = if let Some(ref annotation) = vararg.annotation {
+            resolve_annotation_expr(annotation, ctx)
+        } else {
+            ctx.error(format!(
+                "vararg parameter '{}' in function '{}' is missing a type annotation",
+                name, func.name
+            ));
+            Type::Any
+        };
+        let list_ty = Type::List(Box::new(elem_ty));
+        let conv = ast_convention_to_param(vararg.convention, &list_ty);
+        params.push((name, list_ty, conv));
+    }
+
+    // Also include keyword-only parameters
+    for param in &func.parameters.kwonlyargs {
+        let name = param.parameter.name.to_string();
+        let ty = if let Some(annotation) = &param.parameter.annotation {
+            resolve_annotation_expr(annotation, ctx)
+        } else {
+            ctx.error(format!(
+                "parameter '{}' in function '{}' is missing a type annotation",
+                name, func.name
+            ));
+            Type::Any
+        };
+        let conv = ast_convention_to_param(param.parameter.convention, &ty);
+        params.push((name, ty, conv));
+    }
+
+    let return_type = if let Some(returns) = &func.returns {
+        resolve_annotation_expr(returns, ctx)
+    } else {
+        Type::Any // marker for "needs inference" -- will be inferred from body
+    };
+
+    FunctionType {
+        params,
+        return_type: Box::new(return_type),
+    }
+}
+
+pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
+    match expr {
+        Expr::Name(name) => {
+            // Check type variables first (e.g., T from TypeVar)
+            if ctx.type_vars.contains(name.id.as_str()) {
+                return Type::TypeVar(name.id.clone());
+            }
+            // Check type aliases first
+            if let Some(alias_ty) = ctx.scope.lookup_type_alias(&name.id) {
+                return alias_ty.clone();
+            }
+            // Check class types
+            if let Some(class_ty) = ctx.class_types.get(name.id.as_str()) {
+                return class_ty.clone();
+            }
+            resolve_type_annotation(&name.id).unwrap_or_else(|| {
+                ctx.error(format!("unknown type: '{}'", name.id));
+                Type::Any
+            })
+        }
+        Expr::NoneLiteral(_) => Type::None,
+        // Union type syntax: int | str (parsed as BinOp with BitOr)
+        Expr::BinOp(binop) if matches!(binop.op, Operator::BitOr) => {
+            let left = resolve_annotation_expr(&binop.left, ctx);
+            let right = resolve_annotation_expr(&binop.right, ctx);
+            make_union(vec![left, right])
+        }
+        // Literal string in type position: "GET" | "POST"
+        Expr::StringLiteral(s) => Type::LiteralStr(s.value.to_str().to_string()),
+        // Literal int in type position: 200 | 404
+        Expr::NumberLiteral(num) => {
+            if let Number::Int(i) = &num.value {
+                if let Some(val) = i.as_i64() {
+                    Type::LiteralInt(val)
+                } else {
+                    ctx.error("integer literal too large for type annotation".to_string());
+                    Type::Any
+                }
+            } else {
+                ctx.error("only integer literals are supported in type annotations".to_string());
+                Type::Any
+            }
+        }
+        // Literal bool in type position: True | False
+        Expr::BooleanLiteral(b) => Type::LiteralBool(b.value),
+        Expr::Subscript(sub) => {
+            // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
+            let base_name = if let Expr::Name(n) = sub.value.as_ref() {
+                n.id.clone()
+            } else {
+                ctx.error("unsupported type annotation base".to_string());
+                return Type::Any;
+            };
+            match base_name.as_str() {
+                "list" => {
+                    let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::List(Box::new(elem_ty))
+                }
+                "set" => {
+                    let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    Type::Set(Box::new(elem_ty))
+                }
+                "dict" => {
+                    // dict[K, V] -- the slice is a Tuple expression
+                    if let Expr::Tuple(tuple) = sub.slice.as_ref() {
+                        if tuple.elts.len() != 2 {
+                            ctx.error(
+                                "dict type annotation requires exactly 2 type parameters"
+                                    .to_string(),
+                            );
+                            return Type::Any;
+                        }
+                        let key_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
+                        let val_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
+                        Type::Dict(Box::new(key_ty), Box::new(val_ty))
+                    } else {
+                        ctx.error("dict type annotation requires [K, V] syntax".to_string());
+                        Type::Any
+                    }
+                }
+                "tuple" => {
+                    // tuple[A, B, ...] -- the slice is a Tuple expression
+                    if let Expr::Tuple(tuple) = sub.slice.as_ref() {
+                        let elem_types: Vec<Type> = tuple
+                            .elts
+                            .iter()
+                            .map(|e| resolve_annotation_expr(e, ctx))
+                            .collect();
+                        Type::Tuple(elem_types)
+                    } else {
+                        // Single-element tuple: tuple[int]
+                        let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
+                        Type::Tuple(vec![elem_ty])
+                    }
+                }
+                "Result" => {
+                    // Result[T, E] -- the slice is a Tuple expression
+                    if let Expr::Tuple(tuple) = sub.slice.as_ref() {
+                        if tuple.elts.len() != 2 {
+                            ctx.error(
+                                "Result type annotation requires exactly 2 type parameters"
+                                    .to_string(),
+                            );
+                            return Type::Any;
+                        }
+                        let ok_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
+                        let err_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
+                        // Enforce: E must be a class extending Error
+                        if !is_valid_error_type(&err_ty, ctx) {
+                            let err_name = format_type_name(&err_ty);
+                            ctx.error(format!(
+                                "`{}` is not a valid error type in Result — use a class extending Error, e.g. `Result[{}, ValueError]`",
+                                err_name,
+                                format_type_name(&ok_ty),
+                            ));
+                            return Type::Any;
+                        }
+                        Type::Result(Box::new(ok_ty), Box::new(err_ty))
+                    } else {
+                        ctx.error("Result type annotation requires [T, E] syntax".to_string());
+                        Type::Any
+                    }
+                }
+                "Option" => {
+                    // Option[T] -> T | None (sugar)
+                    let inner_ty = resolve_annotation_expr(&sub.slice, ctx);
+                    make_union(vec![inner_ty, Type::None])
+                }
+                "TypeGuard" => {
+                    // TypeGuard[T] -- type predicate return type
+
+                    // Store as the inner type; the function signature handler
+                    // will recognize TypeGuard and mark it as a type predicate
+                    resolve_annotation_expr(&sub.slice, ctx)
+                }
+                "Callable" => {
+                    // Callable[[param_types], return_type]
+                    // The slice is a Tuple of [List[param_types], return_type]
+                    if let Expr::Tuple(tuple) = sub.slice.as_ref() {
+                        if tuple.elts.len() != 2 {
+                            ctx.error("Callable type requires exactly 2 type parameters: [[param_types], return_type]".to_string());
+                            return Type::Any;
+                        }
+                        // First element should be a list of parameter types
+                        let param_types = if let Expr::List(list) = &tuple.elts[0] {
+                            list.elts
+                                .iter()
+                                .map(|e| resolve_annotation_expr(e, ctx))
+                                .collect::<Vec<_>>()
+                        } else {
+                            ctx.error("Callable parameter types must be a list: Callable[[int, str], bool]".to_string());
+                            return Type::Any;
+                        };
+                        let return_type = resolve_annotation_expr(&tuple.elts[1], ctx);
+                        let conventions = param_types
+                            .iter()
+                            .map(|ty| {
+                                if ty.ownership() == OwnershipKind::Copy {
+                                    ParamConvention::Own
+                                } else {
+                                    ParamConvention::Borrow
+                                }
+                            })
+                            .collect();
+                        Type::Callable(param_types, conventions, Box::new(return_type))
+                    } else {
+                        ctx.error(
+                            "Callable type requires [[param_types], return_type] syntax"
+                                .to_string(),
+                        );
+                        Type::Any
+                    }
+                }
+                _ => {
+                    // Check if it's a generic type alias (e.g., Pair[int])
+                    if let Some((alias_params, alias_body)) =
+                        ctx.scope.lookup_generic_type_alias(&base_name).cloned()
+                    {
+                        let type_args: Vec<Type> = match sub.slice.as_ref() {
+                            Expr::Tuple(tup) => tup
+                                .elts
+                                .iter()
+                                .map(|e| resolve_annotation_expr(e, ctx))
+                                .collect(),
+                            single => vec![resolve_annotation_expr(single, ctx)],
+                        };
+                        let mut bindings = HashMap::new();
+                        for (i, tp) in alias_params.iter().enumerate() {
+                            if let Some(arg) = type_args.get(i) {
+                                bindings.insert(tp.clone(), arg.clone());
+                            }
+                        }
+                        return substitute_type_vars(&alias_body, &bindings);
+                    }
+                    // Check if it's a generic class instantiation (e.g., Stack[int])
+                    if let Some(class_ty) = ctx.class_types.get(&base_name).cloned() {
+                        // Resolve type arguments and substitute into the class type
+                        let type_args: Vec<Type> = match sub.slice.as_ref() {
+                            Expr::Tuple(tup) => tup
+                                .elts
+                                .iter()
+                                .map(|e| resolve_annotation_expr(e, ctx))
+                                .collect(),
+                            single => vec![resolve_annotation_expr(single, ctx)],
+                        };
+                        // Build substitution map from class type params to concrete args
+                        if let Type::Class {
+                            ref fields,
+                            ref methods,
+                            ..
+                        } = class_ty
+                        {
+                            // Use declared type parameters (from class C[T]) when available,
+                            // falling back to scanning fields/methods for backward compatibility.
+                            let class_type_params: Vec<String> = ctx
+                                .class_declared_type_params
+                                .get(&base_name)
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    fields
+                                        .iter()
+                                        .flat_map(|(_, ty)| {
+                                            let mut vars = Vec::new();
+                                            collect_type_vars(ty, &mut vars);
+                                            vars
+                                        })
+                                        .chain(methods.iter().flat_map(|(_, ft)| {
+                                            let mut vars = Vec::new();
+                                            for (_, pt, _) in &ft.params {
+                                                collect_type_vars(pt, &mut vars);
+                                            }
+                                            collect_type_vars(&ft.return_type, &mut vars);
+                                            vars
+                                        }))
+                                        .collect::<std::collections::HashSet<_>>()
+                                        .into_iter()
+                                        .collect::<Vec<_>>()
+                                });
+                            if !class_type_params.is_empty() && !type_args.is_empty() {
+                                let mut bindings = HashMap::new();
+                                for (i, tp) in class_type_params.iter().enumerate() {
+                                    if let Some(arg) = type_args.get(i) {
+                                        bindings.insert(tp.clone(), arg.clone());
+                                    }
+                                }
+                                if !bindings.is_empty() {
+                                    let subst_fields: Vec<(String, Type)> = fields
+                                        .iter()
+                                        .map(|(n, t)| {
+                                            (n.clone(), substitute_type_vars(t, &bindings))
+                                        })
+                                        .collect();
+                                    let subst_methods: Vec<(String, FunctionType)> = methods
+                                        .iter()
+                                        .map(|(n, ft)| {
+                                            let subst_params: Vec<(String, Type, ParamConvention)> =
+                                                ft.params
+                                                    .iter()
+                                                    .map(|(pn, pt, pc)| {
+                                                        (
+                                                            pn.clone(),
+                                                            substitute_type_vars(pt, &bindings),
+                                                            *pc,
+                                                        )
+                                                    })
+                                                    .collect();
+                                            let subst_ret =
+                                                substitute_type_vars(&ft.return_type, &bindings);
+                                            (
+                                                n.clone(),
+                                                FunctionType {
+                                                    params: subst_params,
+                                                    return_type: Box::new(subst_ret),
+                                                },
+                                            )
+                                        })
+                                        .collect();
+                                    return Type::Class {
+                                        name: base_name.clone(),
+                                        fields: subst_fields,
+                                        methods: subst_methods,
+                                        parent_class: None,
+                                    };
+                                }
+                            }
+                        }
+                        class_ty
+                    } else {
+                        ctx.error(format!("unknown generic type: '{base_name}'"));
+                        Type::Any
+                    }
+                }
+            }
+        }
+        _ => {
+            ctx.error("unsupported type annotation expression".to_string());
+            Type::Any
+        }
+    }
+}
+
+pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Option<HirFunction> {
+    let ft = ctx.functions.get::<str>(func.name.as_ref())?.clone();
+
+    ctx.scope.push();
+
+    // Define parameters in scope, handling defaults
+    let mut params = Vec::new();
+
+    // Regular args
+    for (i, param_def) in func.parameters.args.iter().enumerate() {
+        let name = param_def.parameter.name.to_string();
+        let ty = ft
+            .params
+            .get(i)
+            .map(|(_, t, _)| t.clone())
+            .unwrap_or(Type::Any);
+        ctx.scope.define(name.clone(), ty.clone());
+
+        let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+
+        params.push(HirParam {
+            name,
+            ty,
+            default,
+            keyword_only: false,
+            convention,
+        });
+    }
+
+    // Vararg parameter (*args) -- becomes Vec<T>
+    if let Some(ref vararg) = func.parameters.vararg {
+        let name = vararg.name.to_string();
+        let regular_count = func.parameters.args.len();
+        let ty = ft
+            .params
+            .get(regular_count)
+            .map(|(_, t, _)| t.clone())
+            .unwrap_or(Type::Any);
+        ctx.scope.define(name.clone(), ty.clone());
+
+        let convention = ast_convention_to_param(vararg.convention, &ty);
+        params.push(HirParam {
+            name,
+            ty,
+            default: None,
+            keyword_only: false,
+            convention,
+        });
+    }
+
+    // Keyword-only args (after * separator)
+    let regular_count = func.parameters.args.len() + usize::from(func.parameters.vararg.is_some());
+    for (i, param_def) in func.parameters.kwonlyargs.iter().enumerate() {
+        let name = param_def.parameter.name.to_string();
+        let ty = ft
+            .params
+            .get(regular_count + i)
+            .map(|(_, t, _)| t.clone())
+            .unwrap_or(Type::Any);
+        ctx.scope.define(name.clone(), ty.clone());
+
+        let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
+
+        let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
+
+        params.push(HirParam {
+            name,
+            ty,
+            default,
+            keyword_only: true,
+            convention,
+        });
+    }
+
+    // Populate borrowed_params for escape analysis in lower_return / lower_let
+    // A param is "borrowed" (escape-unsafe) if its convention is Borrow and its type is Move.
+    // Exclude TypeVar parameters: generics are monomorphized by Rust and ownership is handled
+    // by the Rust compiler, not by Sifr's escape analysis.
+    ctx.borrowed_params.clear();
+    for param in &params {
+        if param.convention == ParamConvention::Borrow
+            && param.ty.ownership() == OwnershipKind::Move
+            && !matches!(param.ty, Type::TypeVar(_))
+        {
+            ctx.borrowed_params.insert(param.name.clone());
+        }
+    }
+
+    // Lower body
+    let body = lower_stmts(&func.body, &ft, ctx);
+
+    ctx.borrowed_params.clear();
+
+    ctx.scope.pop();
+
+    // Infer return type if not explicitly annotated (marked as Type::Any)
+    let inferred_return_type = if *ft.return_type == Type::Any && func.returns.is_none() {
+        let return_types = collect_return_types(&body);
+        if return_types.is_empty() {
+            Type::None // no return statements -> None
+        } else if return_types.len() == 1 {
+            return_types.into_iter().next().unwrap()
+        } else {
+            // Multiple return types -> union
+            let mut members: Vec<Type> = return_types.into_iter().collect();
+            members.sort_by_key(sifr_type_system::Type::display_name);
+            members.dedup();
+            if members.len() == 1 {
+                members.into_iter().next().unwrap()
+            } else {
+                Type::Union(members)
+            }
+        }
+    } else {
+        *ft.return_type
+    };
+
+    // Collect user-defined decorators (excluding classmethod/staticmethod)
+    let decorators: Vec<String> = func
+        .decorator_list
+        .iter()
+        .filter_map(|d| {
+            if let Expr::Name(n) = &d.expression {
+                let name = n.id.clone();
+                if name != "classmethod" && name != "staticmethod" {
+                    Some(name)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Collect type parameters for generic functions
+    let type_params = ctx
+        .generic_functions
+        .get::<str>(func.name.as_ref())
+        .cloned()
+        .unwrap_or_default();
+
+    Some(HirFunction {
+        name: func.name.to_string(),
+        params,
+        return_type: inferred_return_type,
+        body,
+        method_kind: MethodKind::Regular,
+        decorators,
+        type_params,
+    })
+}
+
