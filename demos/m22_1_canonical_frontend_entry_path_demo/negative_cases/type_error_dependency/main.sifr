@@ -1,0 +1,6 @@
+# negative path: frontend must report type mismatch from imported dependency module.
+
+from helper import adjusted
+
+def main():
+    print(adjusted(5))

@@ -1,0 +1,2 @@
+def adjusted(value: int) -> int:
+    return 'bad'

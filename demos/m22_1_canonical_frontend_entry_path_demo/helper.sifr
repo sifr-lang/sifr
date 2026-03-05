@@ -1,0 +1,4 @@
+from sifr.math import floor
+
+def adjusted(value: int) -> int:
+    return value + floor(2.9)

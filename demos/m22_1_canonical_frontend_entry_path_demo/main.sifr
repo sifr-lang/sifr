@@ -1,0 +1,8 @@
+# m22_1 canonical frontend entry path demo
+# Demonstrates project-mode frontend analysis with local and stdlib imports.
+
+from helper import adjusted
+
+def main():
+    print('m22_1 canonical frontend entry path demo:')
+    print(adjusted(5))
