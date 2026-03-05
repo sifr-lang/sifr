@@ -979,112 +979,29 @@ pub(super) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
 /// Check if a try body contains a return statement with a non-unit value.
 /// Used to determine if the try closure needs to return T instead of ().
 pub(super) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Return { value: Some(val) } => {
-                // A return with a non-None value
-                if !matches!(val, HirExpr::NoneLiteral) {
-                    return true;
-                }
+    let found = std::cell::Cell::new(false);
+    let mut on_stmt = |stmt: &HirStmt| {
+        if let HirStmt::Return { value: Some(val) } = stmt {
+            if !matches!(val, HirExpr::NoneLiteral) {
+                found.set(true);
             }
-            HirStmt::If {
-                then_body,
-                elif_clauses,
-                else_body,
-                ..
-            } => {
-                if try_body_has_value_return(then_body) {
-                    return true;
-                }
-                for (_, body) in elif_clauses {
-                    if try_body_has_value_return(body) {
-                        return true;
-                    }
-                }
-                if let Some(eb) = else_body {
-                    if try_body_has_value_return(eb) {
-                        return true;
-                    }
-                }
-            }
-            HirStmt::While { body, .. } => {
-                if try_body_has_value_return(body) {
-                    return true;
-                }
-            }
-            HirStmt::For { body, .. } => {
-                if try_body_has_value_return(body) {
-                    return true;
-                }
-            }
-            HirStmt::With { body, .. } => {
-                if try_body_has_value_return(body) {
-                    return true;
-                }
-            }
-            _ => {}
         }
-    }
-    false
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    found.get()
 }
 
 pub(super) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Yield { .. } => return true,
-            HirStmt::If {
-                then_body,
-                elif_clauses,
-                else_body,
-                ..
-            } => {
-                if body_contains_yield_inner(then_body) {
-                    return true;
-                }
-                for (_, body) in elif_clauses {
-                    if body_contains_yield_inner(body) {
-                        return true;
-                    }
-                }
-                if let Some(eb) = else_body {
-                    if body_contains_yield_inner(eb) {
-                        return true;
-                    }
-                }
-            }
-            HirStmt::While {
-                body, else_body, ..
-            } => {
-                if body_contains_yield_inner(body) {
-                    return true;
-                }
-                if let Some(eb) = else_body {
-                    if body_contains_yield_inner(eb) {
-                        return true;
-                    }
-                }
-            }
-            HirStmt::For {
-                body, else_body, ..
-            } => {
-                if body_contains_yield_inner(body) {
-                    return true;
-                }
-                if let Some(eb) = else_body {
-                    if body_contains_yield_inner(eb) {
-                        return true;
-                    }
-                }
-            }
-            HirStmt::With { body, .. } => {
-                if body_contains_yield_inner(body) {
-                    return true;
-                }
-            }
-            _ => {}
+    let found = std::cell::Cell::new(false);
+    let mut on_stmt = |stmt: &HirStmt| {
+        if matches!(stmt, HirStmt::Yield { .. }) {
+            found.set(true);
         }
-    }
-    false
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    found.get()
 }
 
 /// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
@@ -1573,6 +1490,67 @@ mod tests {
         assert!(defined.contains("first"));
         assert!(defined.contains("rest"));
         assert!(defined.contains("last"));
+    }
+
+    #[test]
+    fn body_contains_yield_detects_try_except_and_loop_else_paths() {
+        let stmts = vec![HirStmt::TryExcept {
+            body: vec![HirStmt::While {
+                condition: HirExpr::BoolLiteral(false),
+                body: vec![HirStmt::Pass],
+                else_body: Some(vec![HirStmt::Yield {
+                    value: HirExpr::IntLiteral(1),
+                }]),
+            }],
+            handlers: vec![HirExceptHandler {
+                error_type: Some("Error".to_string()),
+                error_resolved_type: None,
+                name: Some("e".to_string()),
+                body: vec![HirStmt::Yield {
+                    value: HirExpr::IntLiteral(2),
+                }],
+            }],
+            body_error_types: vec!["Error".to_string()],
+        }];
+
+        assert!(body_contains_yield_inner(&stmts));
+    }
+
+    #[test]
+    fn try_body_has_value_return_detects_loop_else_and_try_handler_returns() {
+        let stmts = vec![HirStmt::TryExcept {
+            body: vec![HirStmt::For {
+                target: "i".to_string(),
+                target_ty: Type::Int,
+                iter: HirExpr::ListLiteral {
+                    elements: vec![],
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+                body: vec![HirStmt::Pass],
+                else_body: Some(vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(9)),
+                }]),
+            }],
+            handlers: vec![HirExceptHandler {
+                error_type: Some("Error".to_string()),
+                error_resolved_type: None,
+                name: Some("e".to_string()),
+                body: vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(7)),
+                }],
+            }],
+            body_error_types: vec!["Error".to_string()],
+        }];
+
+        assert!(try_body_has_value_return(&stmts));
+    }
+
+    #[test]
+    fn try_body_has_value_return_ignores_return_none() {
+        let stmts = vec![HirStmt::Return {
+            value: Some(HirExpr::NoneLiteral),
+        }];
+        assert!(!try_body_has_value_return(&stmts));
     }
 
     #[test]

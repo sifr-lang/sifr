@@ -1,0 +1,23 @@
+# m21_3 yield/exception-path coverage demo
+# Demonstrates yield detection through try/except and loop-else paths.
+
+def gen(flag: bool) -> list[int]:
+    i: int = 0
+    try:
+        while i < 2:
+            if flag and i == 0:
+                break
+            yield i
+            i += 1
+        else:
+            yield 99
+    except Error as e:
+        yield 7
+
+
+def main():
+    print('m21_3 yield/exception-path coverage demo:')
+    for v in gen(False):
+        print(v)
+    for v in gen(True):
+        print(v)

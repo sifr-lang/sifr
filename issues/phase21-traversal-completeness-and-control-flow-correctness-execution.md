@@ -35,11 +35,11 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ### Part 3: milestone_21_3 Yield and Exception-Path Coverage
-- [ ] Fix yield/generator detection across nested constructs via canonical traversal
-- [ ] Ensure try/except analysis includes loop-else and other missed paths
-- [ ] Add milestone 21.3 positive demo
-- [ ] Add milestone 21.3 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Fix yield/generator detection across nested constructs via canonical traversal
+- [x] Ensure try/except analysis includes loop-else and other missed paths
+- [x] Add milestone 21.3 positive demo
+- [x] Add milestone 21.3 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_21_1 Canonical Walker Coverage
@@ -78,6 +78,27 @@ Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m21_2_while_else_structured_support_demo/main.sifr` -> prints `m21_2 while-else structured support demo:`, `else`, `broke`.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 - Negative path: `cargo run -q -p sifr -- run demos/m21_2_while_else_structured_support_demo/negative_cases/break_skips_else_guard.sifr` -> prints `ok` (fails if else executes after break).
+
+## Part 3: milestone_21_3 Yield and Exception-Path Coverage
+status: in_review_prep
+
+- [x] Generator/yield detection covers nested try/except and loop-else paths
+- [x] Try-body value-return analysis covers loop-else + handler branches
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_codegen body_contains_yield_detects_try_except_and_loop_else_paths` -> pass.
+- Positive path: `cargo test -q -p sifr_codegen try_body_has_value_return_detects_loop_else_and_try_handler_returns` -> pass.
+- Positive path: `cargo test -q -p sifr_codegen test_generate_rust_generator_try_except_uses_buffered_yield_path` -> pass.
+- Positive path: `cargo run -q -p sifr -- run /tmp/phase21_yield_tryexcept.sifr` -> prints `1` (previously failed with `_yields` missing).
+- Positive path: `cargo run -q -p sifr -- run demos/m21_3_yield_exception_path_coverage_demo/main.sifr` -> prints `m21_3 yield/exception-path coverage demo:`, `0`, `1`, `99`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m21_3_yield_exception_path_coverage_demo/negative_cases/undefined_in_except_yield.sifr` -> exits `1` with `type error: undefined variable: 'missing_value'`.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/849
