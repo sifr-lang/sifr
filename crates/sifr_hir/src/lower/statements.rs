@@ -1838,15 +1838,26 @@ pub(super) fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut 
         // Tuple unpacking: define each variable with its type from the tuple
         let names: Vec<&str> = target_name.split(',').collect();
         if let Type::Tuple(elem_types) = &elem_ty {
+            if elem_types.len() != names.len() {
+                ctx.error(format!(
+                    "for loop tuple target expects {} element(s), iterable yields {}",
+                    names.len(),
+                    elem_types.len()
+                ));
+                ctx.scope.pop();
+                return None;
+            }
             for (i, name) in names.iter().enumerate() {
-                let ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
+                let ty = elem_types[i].clone();
                 ctx.scope.define((*name).to_string(), ty);
             }
         } else {
-            // Fallback: define all as Any
-            for name in &names {
-                ctx.scope.define((*name).to_string(), Type::Any);
-            }
+            ctx.error(format!(
+                "for loop tuple target expects iterable elements of tuple type, got '{}'",
+                elem_ty.display_name()
+            ));
+            ctx.scope.pop();
+            return None;
         }
     } else {
         ctx.scope.define(target_name.clone(), elem_ty.clone());
@@ -1881,4 +1892,3 @@ pub(super) fn lower_for(for_stmt: &StmtFor, func_type: &FunctionType, ctx: &mut 
         else_body,
     })
 }
-

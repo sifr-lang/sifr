@@ -246,6 +246,7 @@ fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<CompileError>> {
         // Collect exports for this stdlib module
         let mut fn_exports = HashMap::new();
         let mut class_exports = HashMap::new();
+        let mut class_type_param_exports = HashMap::new();
 
         // Collect functions defined in the module (pure Sifr functions)
         for func in &result.module.functions {
@@ -358,6 +359,9 @@ fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<CompileError>> {
                     parent_class: None,
                 };
                 class_exports.insert(class.name.clone(), class_ty);
+                if !class.type_params.is_empty() {
+                    class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
+                }
                 // Track error types for cross-module import resolution
                 if class.is_error_type {
                     stdlib_defs.error_types.insert(class.name.clone());
@@ -492,6 +496,11 @@ fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<CompileError>> {
         stdlib_defs
             .classes
             .insert((*module_name).to_string(), class_exports);
+        if !class_type_param_exports.is_empty() {
+            stdlib_defs
+                .class_type_params
+                .insert((*module_name).to_string(), class_type_param_exports);
+        }
         if !const_exports.is_empty() {
             stdlib_defs
                 .constants
@@ -697,6 +706,7 @@ fn lower_project_module(
 fn collect_module_exports(module_name: &str, module: &HirModule, external_defs: &mut ExternalDefs) {
     let mut fn_exports = HashMap::new();
     let mut class_exports = HashMap::new();
+    let mut class_type_param_exports = HashMap::new();
     let mut const_exports = HashMap::new();
 
     for func in &module.functions {
@@ -760,6 +770,9 @@ fn collect_module_exports(module_name: &str, module: &HirModule, external_defs: 
                 parent_class: None,
             };
             class_exports.insert(class.name.clone(), class_ty);
+            if !class.type_params.is_empty() {
+                class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
+            }
         }
     }
 
@@ -775,6 +788,11 @@ fn collect_module_exports(module_name: &str, module: &HirModule, external_defs: 
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
+    if !class_type_param_exports.is_empty() {
+        external_defs
+            .class_type_params
+            .insert(module_name.to_string(), class_type_param_exports);
+    }
     external_defs
         .constants
         .insert(module_name.to_string(), const_exports);

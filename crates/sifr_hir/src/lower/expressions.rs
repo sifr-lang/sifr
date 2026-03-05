@@ -3395,4 +3395,41 @@ mod tests {
             .iter()
             .any(|e| e.message.contains("cannot unpack non-tuple")));
     }
+
+    #[test]
+    fn test_for_tuple_target_requires_tuple_elements() {
+        let result = lower_source(
+            "def main():\n    nums: list[int] = [1, 2, 3]\n    for a, b in nums:\n        print(a)\n",
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors.iter().any(|e| {
+            e.message
+                .contains("for loop tuple target expects iterable elements of tuple type")
+        }));
+    }
+
+    #[test]
+    fn test_generic_class_subscript_requires_declared_type_params() {
+        let result = lower_source(
+            "T = TypeVar(\"T\")\nclass LegacyBox:\n    value: T\ndef f(x: LegacyBox[int]) -> int:\n    return 1\n",
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("does not declare type parameters")));
+    }
+
+    #[test]
+    fn test_generic_class_subscript_arity_mismatch_errors() {
+        let result = lower_source(
+            "class Pair[T]:\n    left: T\n    right: T\ndef f(x: Pair[int, str]) -> int:\n    return 1\n",
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("expects 1 type argument(s), got 2")));
+    }
 }

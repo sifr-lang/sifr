@@ -475,78 +475,65 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                             ..
                         } = class_ty
                         {
-                            // Use declared type parameters (from class C[T]) when available,
-                            // falling back to scanning fields/methods for backward compatibility.
-                            let class_type_params: Vec<String> = ctx
+                            let class_type_params = ctx
                                 .class_declared_type_params
                                 .get(&base_name)
                                 .cloned()
-                                .unwrap_or_else(|| {
-                                    fields
-                                        .iter()
-                                        .flat_map(|(_, ty)| {
-                                            let mut vars = Vec::new();
-                                            collect_type_vars(ty, &mut vars);
-                                            vars
-                                        })
-                                        .chain(methods.iter().flat_map(|(_, ft)| {
-                                            let mut vars = Vec::new();
-                                            for (_, pt, _) in &ft.params {
-                                                collect_type_vars(pt, &mut vars);
-                                            }
-                                            collect_type_vars(&ft.return_type, &mut vars);
-                                            vars
-                                        }))
-                                        .collect::<std::collections::HashSet<_>>()
-                                        .into_iter()
-                                        .collect::<Vec<_>>()
-                                });
-                            if !class_type_params.is_empty() && !type_args.is_empty() {
+                                .unwrap_or_default();
+                            if !type_args.is_empty() {
+                                if class_type_params.is_empty() {
+                                    ctx.error(format!(
+                                        "class '{base_name}' does not declare type parameters; use `class {base_name}[T]: ...`"
+                                    ));
+                                    return Type::Any;
+                                }
+                                if class_type_params.len() != type_args.len() {
+                                    ctx.error(format!(
+                                        "generic class '{base_name}' expects {} type argument(s), got {}",
+                                        class_type_params.len(),
+                                        type_args.len()
+                                    ));
+                                    return Type::Any;
+                                }
                                 let mut bindings = HashMap::new();
-                                for (i, tp) in class_type_params.iter().enumerate() {
-                                    if let Some(arg) = type_args.get(i) {
-                                        bindings.insert(tp.clone(), arg.clone());
-                                    }
+                                for (tp, arg) in class_type_params.iter().zip(type_args.iter()) {
+                                    bindings.insert(tp.clone(), arg.clone());
                                 }
-                                if !bindings.is_empty() {
-                                    let subst_fields: Vec<(String, Type)> = fields
-                                        .iter()
-                                        .map(|(n, t)| {
-                                            (n.clone(), substitute_type_vars(t, &bindings))
-                                        })
-                                        .collect();
-                                    let subst_methods: Vec<(String, FunctionType)> = methods
-                                        .iter()
-                                        .map(|(n, ft)| {
-                                            let subst_params: Vec<(String, Type, ParamConvention)> =
-                                                ft.params
-                                                    .iter()
-                                                    .map(|(pn, pt, pc)| {
-                                                        (
-                                                            pn.clone(),
-                                                            substitute_type_vars(pt, &bindings),
-                                                            *pc,
-                                                        )
-                                                    })
-                                                    .collect();
-                                            let subst_ret =
-                                                substitute_type_vars(&ft.return_type, &bindings);
-                                            (
-                                                n.clone(),
-                                                FunctionType {
-                                                    params: subst_params,
-                                                    return_type: Box::new(subst_ret),
-                                                },
-                                            )
-                                        })
-                                        .collect();
-                                    return Type::Class {
-                                        name: base_name.clone(),
-                                        fields: subst_fields,
-                                        methods: subst_methods,
-                                        parent_class: None,
-                                    };
-                                }
+                                let subst_fields: Vec<(String, Type)> = fields
+                                    .iter()
+                                    .map(|(n, t)| (n.clone(), substitute_type_vars(t, &bindings)))
+                                    .collect();
+                                let subst_methods: Vec<(String, FunctionType)> = methods
+                                    .iter()
+                                    .map(|(n, ft)| {
+                                        let subst_params: Vec<(String, Type, ParamConvention)> = ft
+                                            .params
+                                            .iter()
+                                            .map(|(pn, pt, pc)| {
+                                                (
+                                                    pn.clone(),
+                                                    substitute_type_vars(pt, &bindings),
+                                                    *pc,
+                                                )
+                                            })
+                                            .collect();
+                                        let subst_ret =
+                                            substitute_type_vars(&ft.return_type, &bindings);
+                                        (
+                                            n.clone(),
+                                            FunctionType {
+                                                params: subst_params,
+                                                return_type: Box::new(subst_ret),
+                                            },
+                                        )
+                                    })
+                                    .collect();
+                                return Type::Class {
+                                    name: base_name.clone(),
+                                    fields: subst_fields,
+                                    methods: subst_methods,
+                                    parent_class: None,
+                                };
                             }
                         }
                         class_ty
@@ -718,4 +705,3 @@ pub(super) fn lower_function(func: &StmtFunctionDef, ctx: &mut LowerCtx) -> Opti
         type_params,
     })
 }
-

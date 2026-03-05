@@ -45,6 +45,14 @@ pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ct
                         if let Some(class_ty) = module_classes.get(name) {
                             if !ctx.class_types.contains_key(&local) {
                                 ctx.class_types.insert(local.clone(), class_ty.clone());
+                                if let Some(module_class_type_params) =
+                                    externals.class_type_params.get(&module_key)
+                                {
+                                    if let Some(type_params) = module_class_type_params.get(name) {
+                                        ctx.class_declared_type_params
+                                            .insert(local.clone(), type_params.clone());
+                                    }
+                                }
                                 // Register as error type if flagged
                                 if externals.error_types.contains(name) {
                                     ctx.error_types.insert(local.clone());

@@ -283,6 +283,9 @@ pub struct ExternalDefs {
         std::collections::HashMap<String, std::collections::HashMap<String, FunctionType>>,
     /// Map of `module_name` -> (`class_name` -> Type)
     pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
+    /// Map of `module_name` -> (`class_name` -> `type_param_names`)
+    pub class_type_params:
+        std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
     /// Map of `module_name` -> (`constant_name` -> Type)
     pub constants: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
     /// Set of class names that are error types (class Foo(Error)) across all modules
@@ -632,6 +635,16 @@ fn lower_module_impl(
                                 {
                                     if let Some(class_ty) = module_classes.get(name) {
                                         ctx.class_types.insert(local.clone(), class_ty.clone());
+                                        if let Some(module_class_type_params) =
+                                            externals.class_type_params.get(&stdlib_module_key)
+                                        {
+                                            if let Some(type_params) =
+                                                module_class_type_params.get(name)
+                                            {
+                                                ctx.class_declared_type_params
+                                                    .insert(local.clone(), type_params.clone());
+                                            }
+                                        }
                                         // Register as error type if flagged in external defs
                                         if externals.error_types.contains(name) {
                                             ctx.error_types.insert(local.clone());
@@ -729,6 +742,14 @@ fn lower_module_impl(
                         if let Some(module_classes) = externals.classes.get(&module_name) {
                             if let Some(class_ty) = module_classes.get(name) {
                                 ctx.class_types.insert(local.clone(), class_ty.clone());
+                                if let Some(module_class_type_params) =
+                                    externals.class_type_params.get(&module_name)
+                                {
+                                    if let Some(type_params) = module_class_type_params.get(name) {
+                                        ctx.class_declared_type_params
+                                            .insert(local.clone(), type_params.clone());
+                                    }
+                                }
                                 // Register as error type if flagged in external defs
                                 if externals.error_types.contains(name) {
                                     ctx.error_types.insert(local.clone());
