@@ -1,6 +1,6 @@
 # Phase 21 Execution Checklist (Traversal Completeness and Control-Flow Correctness)
 
-Status: in_progress (started 2026-03-05, part_1 and part_2 completed)
+Status: completed (2026-03-05)
 Owner: phase_21 execution loop
 Reference phase doc: `.cursor/plans/main/phases/21_traversal_completeness_and_control_flow_correctness.md`
 
@@ -13,7 +13,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - [x] Milestone demo runs successfully before opening each part PR
 - [x] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Full Phase 21 To-Do Plan
 
@@ -80,7 +80,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m21_2_while_else_structured_support_demo/negative_cases/break_skips_else_guard.sifr` -> prints `ok` (fails if else executes after break).
 
 ## Part 3: milestone_21_3 Yield and Exception-Path Coverage
-status: in_review_prep
+status: done (2026-03-05, PR #851)
 
 - [x] Generator/yield detection covers nested try/except and loop-else paths
 - [x] Try-body value-return analysis covers loop-else + handler branches
@@ -88,8 +88,8 @@ status: in_review_prep
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_codegen body_contains_yield_detects_try_except_and_loop_else_paths` -> pass.
@@ -103,7 +103,7 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/849
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/850
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/851
 
 ## Reviewer Follow-up
 - External review pass 1 output: pending
