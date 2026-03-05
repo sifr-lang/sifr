@@ -3,7 +3,7 @@
 ## Objective
 Make multi-module compilation dependency-safe, deterministic, and efficient for repeated local loops.
 
-Status: in progress (milestone_19_1 done on 2026-03-05, PR #834; milestone_19_2 done on 2026-03-05, PR #835)
+Status: completed (2026-03-05; milestone_19_1 PR #834, milestone_19_2 PR #835, milestone_19_3 PR #836)
 
 ## Depends on
 - Phase 18
@@ -36,10 +36,17 @@ status: done (2026-03-05, PR #835)
   - Milestone demo: `cargo run -q -p sifr -- run demos/m19_2_deterministic_assembly_demo/main.sifr`.
 
 ### milestone_19_3: Stdlib Cache for Local Loops
+status: done (2026-03-05, PR #836)
 - Scope:
   - Cache stdlib compilation artifacts for repeated check/test cycles.
 - Definition of done:
   - Repeated local runs avoid redundant stdlib recompilation.
+- Evidence:
+  - Driver stdlib compilation now routes through a single `OnceLock` cache (`get_or_init_stdlib_cache`) so repeated compilation flows reuse compiled stdlib artifacts.
+  - Added cache regressions in `crates/sifr_driver/src/lib.rs`:
+    - `test_get_or_init_stdlib_cache_reuses_successful_compilation`
+    - `test_get_or_init_stdlib_cache_reuses_error_without_fallback_rebuild`
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m19_3_stdlib_cache_local_loops_demo.sifr`.
 
 ## Quality Contract
 - Entry criteria: Phase 18 is completed and project-mode semantics are stable.

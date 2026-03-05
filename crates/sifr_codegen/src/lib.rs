@@ -139,7 +139,7 @@ pub struct LoweringStats {
 
 /// Compiled stdlib information for codegen.
 /// Contains per-module Rust code and intrinsic name sets.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct StdlibCode {
     /// Map of `module_name` -> compiled Rust source code for pure Sifr functions/constants
     pub module_rust_code: HashMap<String, String>,
