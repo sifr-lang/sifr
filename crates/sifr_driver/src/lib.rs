@@ -156,6 +156,8 @@ struct StdlibCompiled {
     code: StdlibCode,
 }
 
+// Process-local stdlib compilation cache. This intentionally avoids cross-process
+// persistence and de-duplicates repeated stdlib compilation within a single run.
 static STDLIB_COMPILED_CACHE: OnceLock<Result<StdlibCompiled, Vec<CompileError>>> = OnceLock::new();
 
 fn write_stderr_line(message: &str) {
