@@ -31,6 +31,7 @@ Guardrail enforcement command:
 - `python3 scripts/check_hir_maintainability_guardrails.py`
 
 `run_all_tests.sh` runs this check before unit/e2e validation.
+The CI workflow `.github/workflows/local-first-validation.yml` runs `run_all_tests.sh`, so the guardrail is enforced in CI as well.
 
 ## Review Checklist
 
