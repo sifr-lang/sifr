@@ -19,6 +19,7 @@ status: done (2026-03-05, PR #834)
   - Module compile order is dependency-correct and cycle-safe.
 - Evidence:
   - `collect_project_hir_modules` now lowers project modules using an explicit dependency graph and deterministic topological compile order.
+  - Dependency graph extraction intentionally follows Phase 18 import-form semantics by including only project-local `from <module> import ...` and level-1 relative imports (`from .module import ...`), while unsupported relative depths remain excluded from local graph edges.
   - Cycles are detected before lowering and reported as actionable diagnostics with the import chain path (for example, `a -> b -> a`).
   - Regression coverage added for dependency-safe ordering and cycle diagnostics in `crates/sifr_driver/src/lib.rs`.
   - Milestone demo: `cargo run -q -p sifr -- run demos/m19_1_dependency_safe_module_ordering_demo/main.sifr`.
@@ -42,7 +43,7 @@ status: done (2026-03-05, PR #836)
 - Definition of done:
   - Repeated local runs avoid redundant stdlib recompilation.
 - Evidence:
-  - Driver stdlib compilation now routes through a single `OnceLock` cache (`get_or_init_stdlib_cache`) so repeated compilation flows reuse compiled stdlib artifacts.
+  - Driver stdlib compilation now routes through a single process-local `OnceLock` cache (`get_or_init_stdlib_cache`) so repeated compilation flows reuse compiled stdlib artifacts within the same run.
   - Added cache regressions in `crates/sifr_driver/src/lib.rs`:
     - `test_get_or_init_stdlib_cache_reuses_successful_compilation`
     - `test_get_or_init_stdlib_cache_reuses_error_without_fallback_rebuild`
