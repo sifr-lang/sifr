@@ -1,57 +1,57 @@
 # Phase 20 Execution Checklist (HIR Decomposition and Maintainability Hardening)
 
-Status: in_progress (2026-03-05)
+Status: completed (2026-03-05)
 Owner: phase_20 execution loop
 Reference phase doc: `.cursor/plans/main/phases/20_hir_decomposition_and_maintainability_hardening.md`
 
 Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 
 ## Global Gates (apply to every part)
-- [ ] Scope remains constrained to the current part definition-of-done
-- [ ] Root cause addressed (no superficial workaround/fallback)
-- [ ] Milestone quality-contract checks include at least one positive-path and one negative-path validation
-- [ ] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
-- [ ] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] Scope remains constrained to the current part definition-of-done
+- [x] Root cause addressed (no superficial workaround/fallback)
+- [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
+- [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- [x] Milestone demo runs successfully before opening each part PR
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Full Phase 20 To-Do Plan
 
 ### Part 1: milestone_20_1 Split `lower.rs`
-- [ ] Decompose `crates/sifr_hir/src/lower.rs` into focused lowering modules:
-  - [ ] import handling
-  - [ ] diagnostics/error-type helpers
-  - [ ] class lowering
-  - [ ] typing hooks + function signature/body lowering
-  - [ ] statement lowering
-  - [ ] expression lowering
-- [ ] Keep public lowering API stable (`lower_module*`, `LoweringResult`, `ExternalDefs`, `LoweringError`)
-- [ ] Add/confirm targeted regression tests for lowered behavior parity
-- [ ] Add milestone 20.1 positive demo
-- [ ] Add milestone 20.1 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Decompose `crates/sifr_hir/src/lower.rs` into focused lowering modules:
+  - [x] import handling
+  - [x] diagnostics/error-type helpers
+  - [x] class lowering
+  - [x] typing hooks + function signature/body lowering
+  - [x] statement lowering
+  - [x] expression lowering
+- [x] Keep public lowering API stable (`lower_module*`, `LoweringResult`, `ExternalDefs`, `LoweringError`)
+- [x] Add/confirm targeted regression tests for lowered behavior parity
+- [x] Add milestone 20.1 positive demo
+- [x] Add milestone 20.1 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 2: milestone_20_2 Split `stdlib.rs`
-- [ ] Decompose intrinsic registry into focused modules:
-  - [ ] shared intrinsic helpers/types
-  - [ ] registry dispatch
-  - [ ] grouped intrinsic module definitions (io/json/math/test/collections/bytes/time/sys/fs/crypto/regex/uuid/platform/toml/datetime/html/calendar/compress/logging)
-- [ ] Preserve module names and type signatures exactly
-- [ ] Add milestone 20.2 positive demo for stdlib/intrinsic stability
-- [ ] Add milestone 20.2 negative regression case for unknown/unsupported intrinsic usage
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Decompose intrinsic registry into focused modules:
+  - [x] shared intrinsic helpers/types
+  - [x] registry dispatch
+  - [x] grouped intrinsic module definitions (io/json/math/test/collections/bytes/time/sys/fs/crypto/regex/uuid/platform/toml/datetime/html/calendar/compress/logging)
+- [x] Preserve module names and type signatures exactly
+- [x] Add milestone 20.2 positive demo for stdlib/intrinsic stability
+- [x] Add milestone 20.2 negative regression case for unknown/unsupported intrinsic usage
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 3: milestone_20_3 Anti-Regrowth Guardrails
-- [ ] Define and document max file-size/module-boundary conventions for HIR lowering and stdlib registry
-- [ ] Add enforceable local/CI guard script(s) for file-size boundaries
-- [ ] Add review checklist for adding new lowering logic and intrinsic definitions
-- [ ] Add positive-path guardrail test
-- [ ] Add negative-path guardrail test (intentional threshold violation fixture)
-- [ ] Add milestone 20.3 demo (guardrails in action)
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Define and document max file-size/module-boundary conventions for HIR lowering and stdlib registry
+- [x] Add enforceable local/CI guard script(s) for file-size boundaries
+- [x] Add review checklist for adding new lowering logic and intrinsic definitions
+- [x] Add positive-path guardrail test
+- [x] Add negative-path guardrail test (intentional threshold violation fixture)
+- [x] Add milestone 20.3 demo (guardrails in action)
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ## Part 1: milestone_20_1 Split `lower.rs`
 status: done (2026-03-05, PR #839)
@@ -89,7 +89,7 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_20_3 Anti-Regrowth Guardrails
-status: in_progress (2026-03-05, PR pending)
+status: done (2026-03-05, PR #841)
 
 - [x] Add file-size and module-boundary conventions
 - [x] Add review checklist items for new lowering additions
@@ -97,8 +97,8 @@ status: in_progress (2026-03-05, PR pending)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `python3 scripts/check_hir_maintainability_guardrails.py` -> `HIR maintainability guardrails: PASS`.
@@ -109,10 +109,13 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/839
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/840
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/841
 
 ## Reviewer Follow-up
-- External review pass 1 output: pending
+- External review pass 1 output: `reviews/phase20-review.md`
+- Pass-1 triage outcome:
+  - Reviewer confirmed Phase 20 implementation quality and contract adherence with no blocking defects.
+  - Verified CI/local enforcement path: `.github/workflows/local-first-validation.yml` runs `scripts/run_all_tests.sh`, which now executes `scripts/check_hir_maintainability_guardrails.py`.
 - Remediation PR (pass 1): pending
 - External review pass 2 output: pending
 - Remediation PR (pass 2): pending
