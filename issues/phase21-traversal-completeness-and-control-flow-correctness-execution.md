@@ -1,6 +1,6 @@
 # Phase 21 Execution Checklist (Traversal Completeness and Control-Flow Correctness)
 
-Status: in_progress (started 2026-03-05)
+Status: in_progress (started 2026-03-05, part_1 completed)
 Owner: phase_21 execution loop
 Reference phase doc: `.cursor/plans/main/phases/21_traversal_completeness_and_control_flow_correctness.md`
 
@@ -12,7 +12,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
 - [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - [x] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
+- [x] PR opened, reviewed, and merged before starting next part
 - [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Full Phase 21 To-Do Plan
@@ -24,7 +24,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add milestone 21.1 positive demo
 - [x] Add milestone 21.1 negative regression case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 2: milestone_21_2 `while ... else` End-to-End Support
 - [ ] Support `while ... else` in structured lowering paths (not only simple-path fast path)
@@ -43,15 +43,15 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_21_1 Canonical Walker Coverage
-status: in_review_prep
+status: done (2026-03-05, PR #849)
 
 - [x] Canonical traversal utilities added and reused for key analyses
 - [x] Positive-path validation recorded
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_codegen body_calls_function_detects_calls_in_for_else` -> pass.
@@ -61,7 +61,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m21_1_canonical_walker_coverage_demo/negative_cases/typo_in_for_else_recursive_call.sifr` -> exits `1` with `type error: undefined function: 'recc'`.
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/849
 - Part 2: pending
 - Part 3: pending
 
