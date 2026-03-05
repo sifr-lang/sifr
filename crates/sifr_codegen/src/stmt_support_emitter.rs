@@ -1,3 +1,4 @@
+use crate::helpers::body_contains_return_stmt;
 use crate::{RustEmitter, RustExpr, RustStmt};
 use sifr_hir::{HirExceptHandler, HirExpr, HirFStringPart, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
@@ -57,69 +58,6 @@ enum HandlerMatchCondition {
     Unsupported,
     Always,
     Expr(RustExpr),
-}
-
-fn body_contains_return_stmt(stmts: &[HirStmt]) -> bool {
-    stmts.iter().any(stmt_contains_return_stmt)
-}
-
-fn stmt_contains_return_stmt(stmt: &HirStmt) -> bool {
-    match stmt {
-        HirStmt::Return { .. } => true,
-        HirStmt::If {
-            then_body,
-            elif_clauses,
-            else_body,
-            ..
-        } => {
-            body_contains_return_stmt(then_body)
-                || elif_clauses
-                    .iter()
-                    .any(|(_, body)| body_contains_return_stmt(body))
-                || else_body
-                    .as_ref()
-                    .is_some_and(|body| body_contains_return_stmt(body))
-        }
-        HirStmt::While {
-            body, else_body, ..
-        }
-        | HirStmt::For {
-            body, else_body, ..
-        } => {
-            body_contains_return_stmt(body)
-                || else_body
-                    .as_ref()
-                    .is_some_and(|body| body_contains_return_stmt(body))
-        }
-        HirStmt::TryExcept { body, handlers, .. } => {
-            body_contains_return_stmt(body)
-                || handlers
-                    .iter()
-                    .any(|handler| body_contains_return_stmt(&handler.body))
-        }
-        HirStmt::With { body, .. } => body_contains_return_stmt(body),
-        HirStmt::Match { arms, .. } => arms.iter().any(|arm| body_contains_return_stmt(&arm.body)),
-        HirStmt::NestedFunction { .. }
-        | HirStmt::Let { .. }
-        | HirStmt::Assign { .. }
-        | HirStmt::AugAssign { .. }
-        | HirStmt::Expr { .. }
-        | HirStmt::Break
-        | HirStmt::Continue
-        | HirStmt::TupleUnpack { .. }
-        | HirStmt::StarUnpack { .. }
-        | HirStmt::Pass
-        | HirStmt::Assert { .. }
-        | HirStmt::Raise { .. }
-        | HirStmt::FieldAssign { .. }
-        | HirStmt::SubscriptAssign { .. }
-        | HirStmt::NestedSubscriptAssign { .. }
-        | HirStmt::SubscriptAugAssign { .. }
-        | HirStmt::AttributeAugAssign { .. }
-        | HirStmt::AttributeSubscriptAssign { .. }
-        | HirStmt::Delete { .. }
-        | HirStmt::Yield { .. } => false,
-    }
 }
 
 fn body_always_exits_stmt(stmts: &[HirStmt]) -> bool {
