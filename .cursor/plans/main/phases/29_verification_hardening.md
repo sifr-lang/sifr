@@ -1,35 +1,35 @@
-# Phase 26: Verification Hardening
+# Phase 29: Verification Hardening
 
 ## Objective
 Scale validation breadth and depth so reliability claims are continuously provable.
 
 ## Depends on
-- Phase 25
+- Phase 28
 
 ## Milestones
 
-### milestone_26_1: Regression Matrix Expansion
+### milestone_29_1: Regression Matrix Expansion
 - Scope:
   - Ensure each fixed bug has dedicated regression coverage.
   - Expand cross-phase regression suites.
 - Definition of done:
   - Regression matrix maps directly to resolved findings.
 
-### milestone_26_2: Fuzz and Property Scale-Out
+### milestone_29_2: Fuzz and Property Scale-Out
 - Scope:
   - Move from smoke fuzz/property checks to sustained coverage.
   - Track and triage fuzz findings systematically.
 - Definition of done:
   - Fuzz/property suite is part of standard hardening gates.
 
-### milestone_26_3: Real-World E2E Parallel Gate
+### milestone_29_3: Real-World E2E Parallel Gate
 - Scope:
   - Validate representative multi-module real-world projects end-to-end (`check/build/run/test`).
 - Definition of done:
   - E2E suites pass deterministically in local parallel mode.
 
 ## Quality Contract
-- Entry criteria: Phase 25 is completed and decimal numeric semantics contract is in place.
+- Entry criteria: Phase 28 is completed and decimal numeric semantics contract is in place.
 - Exit criteria: Reliability hardening is broad, deterministic, and locally enforceable.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
@@ -39,9 +39,9 @@ Scale validation breadth and depth so reliability claims are continuously provab
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_26_1` (Regression Matrix Expansion): validation goals cover: Ensure each fixed bug has dedicated regression coverage; Expand cross-phase regression suites. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_26_2` (Fuzz and Property Scale-Out): validation goals cover: Move from smoke fuzz/property checks to sustained coverage; Track and triage fuzz findings systematically. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_26_3` (Real-World E2E Parallel Gate): validation goals cover: Validate representative multi-module real-world projects end-to-end (`check/build/run/test`). Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_29_1` (Regression Matrix Expansion): validation goals cover: Ensure each fixed bug has dedicated regression coverage; Expand cross-phase regression suites. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_29_2` (Fuzz and Property Scale-Out): validation goals cover: Move from smoke fuzz/property checks to sustained coverage; Track and triage fuzz findings systematically. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_29_3` (Real-World E2E Parallel Gate): validation goals cover: Validate representative multi-module real-world projects end-to-end (`check/build/run/test`). Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Reliability hardening is broad, deterministic, and locally enforceable.
 
 ## Exit Gate

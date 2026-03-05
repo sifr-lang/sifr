@@ -1,22 +1,30 @@
-# Phase 33: Developer Tooling and Ecosystem Hooks
+# Phase 36: Developer Tooling and Ecosystem Hooks
 
 ## Objective
-Enable core developer tooling integration as a dedicated phase immediately after performance hardening.
+Prevent tooling/compiler split-brain by enforcing a single frontend API contract and parity matrix across compiler CLI and future tooling surfaces.
 
 ## Depends on
-- Phase 32
+- Phase 35
 
 ## Milestones
 
-### milestone_33_1: Developer Tooling and Ecosystem Hooks
+### milestone_36_1: Shared Frontend API Contract
 - Scope:
-  - LSP/formatter/linter/doc hooks aligned with new phase contracts.
+  - Define one canonical frontend API for parse/lower/type-check/diagnostics consumed by compiler and tooling.
+  - Disallow semantics reimplementation in tool-specific paths.
 - Definition of done:
-  - Tooling integrates with language/runtime capabilities added in prior phases.
+  - Tooling integration points consume the same frontend contracts as compiler modes.
+
+### milestone_36_2: Tooling/CLI Parity Matrix
+- Scope:
+  - Add parity test matrix comparing tooling-facing analysis results vs compiler CLI results for equivalent inputs.
+  - Cover diagnostics codes, spans, and type-check outcomes.
+- Definition of done:
+  - Divergence between tooling and compiler behavior is automatically detected before merge.
 
 ## Quality Contract
-- Entry criteria: Phase 32 is completed and compiler performance budgets are enforced.
-- Exit criteria: Tooling hooks are coherent, stable, and aligned with current phase contracts.
+- Entry criteria: Phase 35 is completed and compiler performance/query contracts are enforced.
+- Exit criteria: Tooling integration is split-brain-resistant and regression-covered against compiler behavior.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
   - No lazy or partial fixes are allowed; each milestone must resolve root causes completely, even when that requires significant rework.
@@ -25,8 +33,9 @@ Enable core developer tooling integration as a dedicated phase immediately after
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_33_1` (Developer Tooling and Ecosystem Hooks): validation goals cover: LSP/formatter/linter/doc hooks aligned with new phase contracts. Include negative-path goals that catch regressions against these guarantees.
-  - Exit-gate evidence explicitly demonstrates: Tooling hooks are coherent, stable, and aligned with current phase contracts.
+  - `milestone_36_1` (Shared Frontend API Contract): validation goals cover: Define one canonical frontend API for parse/lower/type-check/diagnostics consumed by compiler and tooling; Disallow semantics reimplementation in tool-specific paths. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_36_2` (Tooling/CLI Parity Matrix): validation goals cover: Add parity test matrix comparing tooling-facing analysis results vs compiler CLI results for equivalent inputs; Cover diagnostics codes, spans, and type-check outcomes. Include negative-path goals that catch regressions against these guarantees.
+  - Exit-gate evidence explicitly demonstrates: Tooling integration is split-brain-resistant and regression-covered against compiler behavior.
 
 ## Exit Gate
-- Tooling hooks are coherent, stable, and aligned with current phase contracts.
+- Tooling integration is split-brain-resistant and regression-covered against compiler behavior.
