@@ -979,6 +979,18 @@ pub(super) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
 }
 
 /// Check if a function body contains any yield statements (making it a generator).
+pub(super) fn body_contains_return_stmt(stmts: &[HirStmt]) -> bool {
+    let found = std::cell::Cell::new(false);
+    let mut on_stmt = |stmt: &HirStmt| {
+        if matches!(stmt, HirStmt::Return { .. }) {
+            found.set(true);
+        }
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    found.get()
+}
+
 /// Check if a try body contains a return statement with a non-unit value.
 /// Used to determine if the try closure needs to return T instead of ().
 pub(super) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
@@ -1517,6 +1529,53 @@ mod tests {
         }];
 
         assert!(body_contains_yield_inner(&stmts));
+    }
+
+    #[test]
+    fn body_contains_return_detects_try_handlers_and_loop_else_paths() {
+        let stmts = vec![HirStmt::TryExcept {
+            body: vec![HirStmt::For {
+                target: "i".to_string(),
+                target_ty: Type::Int,
+                iter: HirExpr::ListLiteral {
+                    elements: vec![],
+                    ty: Type::List(Box::new(Type::Int)),
+                },
+                body: vec![HirStmt::Pass],
+                else_body: Some(vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(1)),
+                }]),
+            }],
+            handlers: vec![HirExceptHandler {
+                error_type: Some("Error".to_string()),
+                error_resolved_type: None,
+                name: Some("e".to_string()),
+                body: vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(2)),
+                }],
+            }],
+            body_error_types: vec!["Error".to_string()],
+        }];
+
+        assert!(body_contains_return_stmt(&stmts));
+    }
+
+    #[test]
+    fn body_contains_return_ignores_nested_function_scope() {
+        let nested = HirFunction {
+            name: "inner".to_string(),
+            params: vec![],
+            return_type: Type::Int,
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            }],
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            type_params: vec![],
+        };
+        let stmts = vec![HirStmt::NestedFunction { func: nested }];
+
+        assert!(!body_contains_return_stmt(&stmts));
     }
 
     #[test]

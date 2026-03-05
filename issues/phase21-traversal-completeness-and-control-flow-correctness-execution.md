@@ -104,9 +104,10 @@ Validation evidence:
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/849
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/850
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/851
+- Review pass 1 remediation: https://github.com/yaseralnajjar/sifr/pull/852
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase21-review.md` (2026-03-05, approved; advisory notes only)
-- Remediation PR (pass 1): pending (documentation/traceability hardening)
-- External review pass 2 output: pending
+- Remediation PR (pass 1): PR #852 merged (documentation/traceability hardening)
+- External review pass 2 output: `reviews/phase21-production-grade-review.md` (2026-03-05, approved with maintainability note)
 - Remediation PR (pass 2): pending
