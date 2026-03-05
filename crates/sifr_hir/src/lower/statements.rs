@@ -812,11 +812,23 @@ pub(super) fn lower_pattern(pattern: &Pattern, subject_ty: &Type, ctx: &mut Lowe
             let elem_types: Vec<Type> = if let Type::Tuple(ref elems) = *subject_ty {
                 elems.clone()
             } else {
-                vec![Type::Any; seq_pat.patterns.len()]
+                ctx.error(format!(
+                    "tuple pattern requires subject of tuple type, got '{}'",
+                    subject_ty.display_name()
+                ));
+                return None;
             };
+            if elem_types.len() != seq_pat.patterns.len() {
+                ctx.error(format!(
+                    "tuple pattern expects {} element(s), subject has {}",
+                    seq_pat.patterns.len(),
+                    elem_types.len()
+                ));
+                return None;
+            }
             let mut elements = Vec::new();
             for (i, pat) in seq_pat.patterns.iter().enumerate() {
-                let elem_ty = elem_types.get(i).cloned().unwrap_or(Type::Any);
+                let elem_ty = elem_types[i].clone();
                 if let Some(lowered) = lower_pattern(pat, &elem_ty, ctx) {
                     elements.push(lowered);
                 } else {
