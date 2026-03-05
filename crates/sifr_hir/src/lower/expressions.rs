@@ -3432,4 +3432,28 @@ mod tests {
             .iter()
             .any(|e| e.message.contains("expects 1 type argument(s), got 2")));
     }
+
+    #[test]
+    fn test_match_tuple_pattern_requires_tuple_subject() {
+        let result = lower_source(
+            "def main():\n    x: int = 1\n    match x:\n        case (a, b):\n            print(a)\n",
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("tuple pattern requires subject of tuple type")));
+    }
+
+    #[test]
+    fn test_match_tuple_pattern_arity_mismatch_errors() {
+        let result = lower_source(
+            "def main():\n    x: tuple[int, int] = (1, 2)\n    match x:\n        case (a, b, c):\n            print(a)\n",
+        );
+        assert!(result.is_err());
+        let errors = result.unwrap_err();
+        assert!(errors
+            .iter()
+            .any(|e| e.message.contains("tuple pattern expects 3 element(s), subject has 2")));
+    }
 }
