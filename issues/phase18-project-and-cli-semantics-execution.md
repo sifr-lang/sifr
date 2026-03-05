@@ -137,3 +137,7 @@ Validation evidence:
 - Validation commands used during pass-4 remediation:
   - `cargo test -q -p sifr test_resolve_compilation_mode_`
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- External review pass 5 output: `reviews/phase18-review-3.md`
+- Remediation PR (pass 5): https://github.com/yaseralnajjar/sifr/pull/832
+- Pass-5 triage outcome:
+  - No new still-valid gaps; reviewer confirmed milestone `18_4` trigger-matrix coverage and phase-18 quality-contract coverage are complete.
