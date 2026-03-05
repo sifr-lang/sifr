@@ -14,9 +14,10 @@ use sifr_hir::{
     lower_module_stdlib_with_externals, lower_module_with_externals, ExternalDefs, HirModule,
     LoweringResult,
 };
+use sifr_python_ast::Stmt;
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -767,73 +768,213 @@ struct ProjectLowering {
     external_defs: ExternalDefs,
 }
 
-fn collect_project_hir_modules(
-    parsed_modules: &HashMap<String, Vec<sifr_python_ast::Stmt>>,
-    mut external_defs: ExternalDefs,
-) -> Result<ProjectLowering, Vec<CompileError>> {
-    let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
-    let mut pending_non_main: BTreeSet<String> = parsed_modules
-        .keys()
-        .filter(|module_name| module_name.as_str() != "main")
+struct ModuleDependencyGraph {
+    dependencies: BTreeMap<String, BTreeSet<String>>,
+    reverse_dependencies: BTreeMap<String, BTreeSet<String>>,
+}
+
+fn collect_local_module_dependencies(
+    stmts: &[Stmt],
+    local_modules: &BTreeSet<String>,
+) -> BTreeSet<String> {
+    let mut deps = BTreeSet::new();
+    for stmt in stmts {
+        let Stmt::ImportFrom(import_from) = stmt else {
+            continue;
+        };
+        if import_from.level > 1 {
+            continue;
+        }
+        let Some(module) = &import_from.module else {
+            continue;
+        };
+        let module_name = module.to_string();
+        if module_name == "typing"
+            || module_name == "enum"
+            || module_name.starts_with("sifr.")
+            || module_name.starts_with("_sifr.")
+        {
+            continue;
+        }
+        if local_modules.contains(&module_name) {
+            deps.insert(module_name);
+        }
+    }
+    deps
+}
+
+fn build_module_dependency_graph(
+    parsed_modules: &HashMap<String, Vec<Stmt>>,
+) -> ModuleDependencyGraph {
+    let local_modules: BTreeSet<String> = parsed_modules.keys().cloned().collect();
+    let mut dependencies: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for module_name in &local_modules {
+        let module_deps = parsed_modules
+            .get(module_name)
+            .map(|stmts| collect_local_module_dependencies(stmts, &local_modules))
+            .unwrap_or_default();
+        dependencies.insert(module_name.clone(), module_deps);
+    }
+
+    let mut reverse_dependencies: BTreeMap<String, BTreeSet<String>> = local_modules
+        .iter()
         .cloned()
+        .map(|name| (name, BTreeSet::new()))
         .collect();
+    for (module_name, deps) in &dependencies {
+        for dep in deps {
+            if let Some(reverse_deps) = reverse_dependencies.get_mut(dep) {
+                reverse_deps.insert(module_name.clone());
+            }
+        }
+    }
 
-    while !pending_non_main.is_empty() {
-        let mut lowered_this_pass = Vec::new();
+    ModuleDependencyGraph {
+        dependencies,
+        reverse_dependencies,
+    }
+}
 
-        for module_name in &pending_non_main {
-            let Some(stmts) = parsed_modules.get(module_name) else {
-                continue;
-            };
-            match lower_project_module(module_name, stmts, &external_defs) {
-                Ok(result) => {
-                    collect_module_exports(module_name, &result.module, &mut external_defs);
-                    hir_modules.insert(module_name.clone(), result.module);
-                    lowered_this_pass.push(module_name.clone());
+fn find_dependency_cycle_path(
+    dependencies: &BTreeMap<String, BTreeSet<String>>,
+) -> Option<Vec<String>> {
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum VisitState {
+        Unvisited,
+        Visiting,
+        Done,
+    }
+
+    fn dfs(
+        node: &str,
+        dependencies: &BTreeMap<String, BTreeSet<String>>,
+        states: &mut BTreeMap<String, VisitState>,
+        stack: &mut Vec<String>,
+    ) -> Option<Vec<String>> {
+        states.insert(node.to_string(), VisitState::Visiting);
+        stack.push(node.to_string());
+
+        if let Some(neighbors) = dependencies.get(node) {
+            for neighbor in neighbors {
+                match states
+                    .get(neighbor.as_str())
+                    .copied()
+                    .unwrap_or(VisitState::Unvisited)
+                {
+                    VisitState::Unvisited => {
+                        if let Some(cycle) = dfs(neighbor, dependencies, states, stack) {
+                            return Some(cycle);
+                        }
+                    }
+                    VisitState::Visiting => {
+                        if let Some(start_idx) = stack.iter().position(|entry| entry == neighbor) {
+                            let mut cycle = stack[start_idx..].to_vec();
+                            cycle.push(neighbor.clone());
+                            return Some(cycle);
+                        }
+                    }
+                    VisitState::Done => {}
                 }
-                Err(errors) => {
-                    let has_unknown_module = errors
-                        .iter()
-                        .any(|e| e.message.contains("unknown module '"));
-                    if !has_unknown_module {
-                        return Err(errors);
+            }
+        }
+
+        let _ = stack.pop();
+        states.insert(node.to_string(), VisitState::Done);
+        None
+    }
+
+    let mut states: BTreeMap<String, VisitState> = dependencies
+        .keys()
+        .cloned()
+        .map(|node| (node, VisitState::Unvisited))
+        .collect();
+    let mut stack = Vec::new();
+
+    for node in dependencies.keys() {
+        if states
+            .get(node.as_str())
+            .copied()
+            .unwrap_or(VisitState::Unvisited)
+            == VisitState::Unvisited
+        {
+            if let Some(cycle) = dfs(node, dependencies, &mut states, &mut stack) {
+                return Some(cycle);
+            }
+        }
+    }
+
+    None
+}
+
+fn compute_module_compile_order(
+    parsed_modules: &HashMap<String, Vec<Stmt>>,
+) -> Result<Vec<String>, Vec<CompileError>> {
+    let graph = build_module_dependency_graph(parsed_modules);
+    let mut indegree: BTreeMap<String, usize> = graph
+        .dependencies
+        .iter()
+        .map(|(module_name, deps)| (module_name.clone(), deps.len()))
+        .collect();
+    let mut ready: BTreeSet<String> = indegree
+        .iter()
+        .filter(|(_, degree)| **degree == 0)
+        .map(|(module_name, _)| module_name.clone())
+        .collect();
+    let mut compile_order = Vec::with_capacity(indegree.len());
+
+    while let Some(module_name) = ready.iter().next().cloned() {
+        ready.remove(&module_name);
+        compile_order.push(module_name.clone());
+        if let Some(dependents) = graph.reverse_dependencies.get(&module_name) {
+            for dependent in dependents {
+                if let Some(degree) = indegree.get_mut(dependent) {
+                    *degree = degree.saturating_sub(1);
+                    if *degree == 0 {
+                        ready.insert(dependent.clone());
                     }
                 }
             }
         }
-
-        if lowered_this_pass.is_empty() {
-            if let Some(module_name) = pending_non_main.iter().next() {
-                let Some(stmts) = parsed_modules.get(module_name) else {
-                    return Err(vec![CompileError {
-                        message: format!("[{module_name}] module was not parsed"),
-                        phase: CompilePhase::Build,
-                    }]);
-                };
-                let errors = lower_project_module(module_name, stmts, &external_defs)
-                    .err()
-                    .unwrap_or_else(|| {
-                        vec![CompileError {
-                            message: format!(
-                                "[{module_name}] module dependency resolution made no progress"
-                            ),
-                            phase: CompilePhase::TypeCheck,
-                        }]
-                    });
-                return Err(errors);
-            }
-            break;
-        }
-
-        for module_name in lowered_this_pass {
-            pending_non_main.remove(&module_name);
-        }
     }
 
-    // Lower main module with full external definitions from lowered dependencies.
-    if let Some(main_stmts) = parsed_modules.get("main") {
-        let result = lower_project_module("main", main_stmts, &external_defs)?;
-        hir_modules.insert("main".to_string(), result.module);
+    if compile_order.len() == indegree.len() {
+        return Ok(compile_order);
+    }
+
+    let cycle_path = find_dependency_cycle_path(&graph.dependencies)
+        .unwrap_or_else(|| vec!["<cycle>".to_string()]);
+    let cycle_render = cycle_path.join(" -> ");
+    let edge_render = cycle_path
+        .windows(2)
+        .map(|edge| format!("{} imports {}", edge[0], edge[1]))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let message = format!(
+        "module dependency cycle detected: {cycle_render}; import chain: {edge_render}. Break the cycle by moving shared declarations into a separate module."
+    );
+    Err(vec![CompileError {
+        message,
+        phase: CompilePhase::TypeCheck,
+    }])
+}
+
+fn collect_project_hir_modules(
+    parsed_modules: &HashMap<String, Vec<Stmt>>,
+    mut external_defs: ExternalDefs,
+) -> Result<ProjectLowering, Vec<CompileError>> {
+    let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
+    let compile_order = compute_module_compile_order(parsed_modules)?;
+
+    for module_name in compile_order {
+        let Some(stmts) = parsed_modules.get(module_name.as_str()) else {
+            return Err(vec![CompileError {
+                message: format!("[{module_name}] module was not parsed"),
+                phase: CompilePhase::Build,
+            }]);
+        };
+        let result = lower_project_module(&module_name, stmts, &external_defs)?;
+        collect_module_exports(&module_name, &result.module, &mut external_defs);
+        hir_modules.insert(module_name, result.module);
     }
 
     Ok(ProjectLowering {
@@ -1220,18 +1361,18 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         // Lower to HIR
         let lowering_result =
             match lower_project_module(&module_name, parsed.suite(), &project_externals) {
-            Ok(result) => result,
-            Err(errors) => {
-                let compile_errors: Vec<CompileError> = errors
-                    .into_iter()
-                    .map(|e| CompileError {
-                        message: format!("[{}] {}", test_file.display(), e.message),
-                        phase: CompilePhase::TypeCheck,
-                    })
-                    .collect();
-                return Err(compile_errors);
-            }
-        };
+                Ok(result) => result,
+                Err(errors) => {
+                    let compile_errors: Vec<CompileError> = errors
+                        .into_iter()
+                        .map(|e| CompileError {
+                            message: format!("[{}] {}", test_file.display(), e.message),
+                            phase: CompilePhase::TypeCheck,
+                        })
+                        .collect();
+                    return Err(compile_errors);
+                }
+            };
 
         // Generate Rust code in test mode
         let codegen_result = generate_rust_test(&lowering_result.module);
@@ -1473,9 +1614,9 @@ def main():
     print("ok")
 "#;
         let errors = check(source);
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("unsupported import statement 'import helper'")));
+        assert!(errors.iter().any(|e| e
+            .message
+            .contains("unsupported import statement 'import helper'")));
     }
 
     #[test]
@@ -1586,6 +1727,53 @@ def value() -> int:
     }
 
     #[test]
+    fn test_compute_module_compile_order_is_dependency_safe() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from consumer import value
+
+def main():
+    print(value())
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "consumer".to_string(),
+            parse_suite(
+                r#"
+from provider import value_provider
+
+def value() -> int:
+    return value_provider()
+"#,
+            ),
+        );
+        parsed_modules.insert(
+            "provider".to_string(),
+            parse_suite(
+                r#"
+def value_provider() -> int:
+    return 42
+"#,
+            ),
+        );
+
+        let order = compute_module_compile_order(&parsed_modules)
+            .expect("compile order should be computed for acyclic graph");
+        assert_eq!(
+            order,
+            vec![
+                "provider".to_string(),
+                "consumer".to_string(),
+                "main".to_string()
+            ]
+        );
+    }
+
+    #[test]
     fn test_collect_project_modules_reports_unknown_module_in_non_main() {
         let mut parsed_modules = HashMap::new();
         parsed_modules.insert(
@@ -1660,10 +1848,11 @@ def value_b() -> int:
         let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
         let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
             .err()
-            .expect("project lowering should fail when dependency graph makes no progress");
+            .expect("project lowering should fail when there is a dependency cycle");
         assert!(errors
             .iter()
-            .any(|e| e.message.contains("unknown module '")));
+            .any(|e| e.message.contains("module dependency cycle detected")));
+        assert!(errors.iter().any(|e| e.message.contains("a -> b -> a")));
     }
 
     #[test]

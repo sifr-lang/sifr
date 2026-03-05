@@ -3,17 +3,25 @@
 ## Objective
 Make multi-module compilation dependency-safe, deterministic, and efficient for repeated local loops.
 
+Status: in progress (milestone_19_1 done on 2026-03-05, PR #834)
+
 ## Depends on
 - Phase 18
 
 ## Milestones
 
 ### milestone_19_1: Dependency-Safe Module Ordering
+status: done (2026-03-05, PR #834)
 - Scope:
   - Introduce topological ordering for module compilation.
   - Add cycle diagnostics with actionable context.
 - Definition of done:
   - Module compile order is dependency-correct and cycle-safe.
+- Evidence:
+  - `collect_project_hir_modules` now lowers project modules using an explicit dependency graph and deterministic topological compile order.
+  - Cycles are detected before lowering and reported as actionable diagnostics with the import chain path (for example, `a -> b -> a`).
+  - Regression coverage added for dependency-safe ordering and cycle diagnostics in `crates/sifr_driver/src/lib.rs`.
+  - Milestone demo: `cargo run -q -p sifr -- run demos/m19_1_dependency_safe_module_ordering_demo/main.sifr`.
 
 ### milestone_19_2: Deterministic Assembly
 - Scope:
