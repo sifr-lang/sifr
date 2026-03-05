@@ -32,7 +32,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add milestone 21.2 positive demo
 - [x] Add milestone 21.2 negative regression case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 3: milestone_21_3 Yield and Exception-Path Coverage
 - [x] Fix yield/generator detection across nested constructs via canonical traversal
@@ -40,7 +40,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add milestone 21.3 positive demo
 - [x] Add milestone 21.3 negative regression case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ## Part 1: milestone_21_1 Canonical Walker Coverage
 status: done (2026-03-05, PR #849)
@@ -106,7 +106,7 @@ Validation evidence:
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/851
 
 ## Reviewer Follow-up
-- External review pass 1 output: pending
-- Remediation PR (pass 1): pending
+- External review pass 1 output: `reviews/phase21-review.md` (2026-03-05, approved; advisory notes only)
+- Remediation PR (pass 1): pending (documentation/traceability hardening)
 - External review pass 2 output: pending
 - Remediation PR (pass 2): pending
