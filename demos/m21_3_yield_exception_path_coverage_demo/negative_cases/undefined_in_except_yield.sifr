@@ -1,0 +1,12 @@
+# negative path: except branch yield should be typechecked and diagnosed
+
+def gen() -> list[int]:
+    try:
+        yield 1
+    except Error as e:
+        yield missing_value
+
+
+def main():
+    for v in gen():
+        print(v)

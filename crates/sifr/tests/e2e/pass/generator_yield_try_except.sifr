@@ -1,0 +1,12 @@
+# expect-stdout: 1
+
+def gen() -> list[int]:
+    try:
+        yield 1
+    except Error as e:
+        yield 2
+
+
+def main():
+    for v in gen():
+        print(v)

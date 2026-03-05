@@ -962,6 +962,75 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
 }
 
 #[test]
+fn test_generate_rust_generator_try_except_uses_buffered_yield_path() {
+    let module = HirModule {
+        functions: vec![
+            HirFunction {
+                name: "gen".to_string(),
+                params: vec![],
+                return_type: Type::List(Box::new(Type::Int)),
+                body: vec![HirStmt::TryExcept {
+                    body: vec![HirStmt::Yield {
+                        value: HirExpr::IntLiteral(1),
+                    }],
+                    handlers: vec![HirExceptHandler {
+                        error_type: Some("Error".to_string()),
+                        error_resolved_type: None,
+                        name: Some("e".to_string()),
+                        body: vec![HirStmt::Yield {
+                            value: HirExpr::IntLiteral(2),
+                        }],
+                    }],
+                    body_error_types: vec!["Error".to_string()],
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+            HirFunction {
+                name: "main".to_string(),
+                params: vec![],
+                return_type: Type::None,
+                body: vec![HirStmt::For {
+                    target: "v".to_string(),
+                    target_ty: Type::Int,
+                    iter: HirExpr::Call {
+                        func: "gen".to_string(),
+                        args: vec![],
+                        ty: Type::List(Box::new(Type::Int)),
+                    },
+                    body: vec![HirStmt::Expr {
+                        expr: HirExpr::Call {
+                            func: "print".to_string(),
+                            args: vec![HirExpr::Name {
+                                name: "v".to_string(),
+                                ty: Type::Int,
+                            }],
+                            ty: Type::None,
+                        },
+                    }],
+                    else_body: None,
+                }],
+                method_kind: MethodKind::Regular,
+                decorators: vec![],
+                type_params: vec![],
+            },
+        ],
+        classes: vec![],
+        imports: vec![],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let rust_code = generate_rust(&module);
+    assert!(rust_code.contains("fn gen() -> Vec<i64>"));
+    assert!(rust_code.contains("let mut _yields: Vec<i64> = Vec::new();"));
+    assert!(rust_code.contains("_yields.push(1 as i64);"));
+    assert!(rust_code.contains("_yields.push(2 as i64);"));
+}
+
+#[test]
 fn test_generate_rust_test_uses_explicit_test_mode_context() {
     let module = HirModule {
         functions: vec![
