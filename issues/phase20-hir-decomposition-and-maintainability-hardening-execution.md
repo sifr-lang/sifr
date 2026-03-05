@@ -121,4 +121,4 @@ Validation evidence:
 - Pass-2 triage outcome:
   - Reviewer confirmed phase-20 implementation is production-grade with no blocking defects.
   - No additional compiler-code changes were required after validating reviewer observations.
-- Remediation PR (pass 2): pending
+- Remediation PR (pass 2): https://github.com/yaseralnajjar/sifr/pull/843
