@@ -3043,22 +3043,57 @@ impl RustEmitter {
                 else_body,
             } = stmt
             {
-                if else_body.is_some() {
-                    return Ok(None);
-                }
+                let has_else = else_body.is_some();
                 let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
                     return Ok(None);
                 };
+                self.loop_else_stack.push(has_else);
                 let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                    let popped = self.loop_else_stack.pop();
+                    debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
                     return Ok(None);
                 };
-                (
-                    vec![RustStmt::While {
-                        cond: lowered_cond,
-                        body: lowered_body,
-                    }],
-                    true,
-                )
+                let popped = self.loop_else_stack.pop();
+                debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
+                if let Some(else_body) = else_body {
+                    let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)?
+                    else {
+                        return Ok(None);
+                    };
+                    (
+                        vec![RustStmt::Block(vec![
+                            RustStmt::Let {
+                                mutable: true,
+                                name: "_broke".to_string(),
+                                ty: Some(crate::RustType::Bool),
+                                value: crate::RustExpr::Literal(crate::RustLiteral::Bool(false)),
+                            },
+                            RustStmt::While {
+                                cond: lowered_cond,
+                                body: lowered_body,
+                            },
+                            RustStmt::If {
+                                cond: crate::RustExpr::UnaryOp {
+                                    op: "!".to_string(),
+                                    operand: Box::new(crate::RustExpr::Paren(Box::new(
+                                        crate::RustExpr::Ident("_broke".to_string()),
+                                    ))),
+                                },
+                                then_body: lowered_else_body,
+                                else_body: None,
+                            },
+                        ])],
+                        true,
+                    )
+                } else {
+                    (
+                        vec![RustStmt::While {
+                            cond: lowered_cond,
+                            body: lowered_body,
+                        }],
+                        true,
+                    )
+                }
             } else if let HirStmt::For {
                 target,
                 iter,
@@ -3768,9 +3803,9 @@ impl RustEmitter {
                         value.clone()
                     },
                 }),
-                RustStmt::Expr(lowered_expr) => self.push_captured_stmt(
-                    &crate::RustStmt::Expr(lowered_expr.clone()),
-                ),
+                RustStmt::Expr(lowered_expr) => {
+                    self.push_captured_stmt(&crate::RustStmt::Expr(lowered_expr.clone()))
+                }
                 _ => self.push_captured_stmt(lowered_stmt),
             }
         }
@@ -3796,16 +3831,14 @@ impl RustEmitter {
                 else {
                     return Ok(false);
                 };
-                self.push_captured_stmt(&RustStmt::Return(Some(
-                    crate::RustExpr::MacroCall {
-                        name: "write".to_string(),
-                        args: vec![
-                            crate::RustExpr::Ident("f".to_string()),
-                            crate::RustExpr::Literal(crate::RustLiteral::Str("{}".to_string())),
-                            display_expr,
-                        ],
-                    },
-                )));
+                self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::MacroCall {
+                    name: "write".to_string(),
+                    args: vec![
+                        crate::RustExpr::Ident("f".to_string()),
+                        crate::RustExpr::Literal(crate::RustLiteral::Str("{}".to_string())),
+                        display_expr,
+                    ],
+                })));
                 return Ok(true);
             }
             if self.try_closure_depth > 0 {
@@ -3854,12 +3887,10 @@ impl RustEmitter {
                 } else {
                     lowered_return_value
                 };
-                self.push_captured_stmt(&RustStmt::Return(Some(
-                    crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                        args: vec![try_payload],
-                    },
-                )));
+                self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                    args: vec![try_payload],
+                })));
                 return Ok(true);
             }
 
@@ -3879,15 +3910,13 @@ impl RustEmitter {
                 .copied()
                 .unwrap_or(false);
             if wrap_option {
-                self.push_captured_stmt(&RustStmt::Return(Some(
-                    crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                        args: vec![crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                        }],
-                    },
-                )));
+                self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                    args: vec![crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                    }],
+                })));
             } else {
                 let direct_result_none = return_ty_snapshot.as_ref().is_some_and(|ret_ty| {
                     match crate::resolve_alias_type_for_plain_call(ret_ty) {
@@ -3899,31 +3928,25 @@ impl RustEmitter {
                     }
                 });
                 if direct_result_none {
-                    self.push_captured_stmt(&RustStmt::Return(Some(
-                        crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                            args: vec![crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                            }],
-                        },
-                    )));
-                } else {
-                    self.push_captured_stmt(&RustStmt::Return(Some(
-                        crate::RustExpr::FnCall {
+                    self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                        args: vec![crate::RustExpr::FnCall {
                             func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                             args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                        },
-                    )));
+                        }],
+                    })));
+                } else {
+                    self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                    })));
                 }
             }
         } else if self.emission_ctx.in_display_impl {
-            self.push_captured_stmt(&RustStmt::Return(Some(
-                crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                },
-            )));
+            self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
+                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+            })));
         } else {
             self.push_captured_stmt(&RustStmt::Return(None));
         }
@@ -4211,20 +4234,47 @@ impl RustEmitter {
         else {
             return Ok(false);
         };
-        if else_body.is_some() {
-            return Ok(false);
-        }
-
+        let has_else = else_body.is_some();
         let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
             return Ok(false);
         };
-        self.loop_else_stack.push(false);
+        self.loop_else_stack.push(has_else);
         let lowered_body = self.try_lower_stmt_block_for_ir(body)?;
         let popped = self.loop_else_stack.pop();
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
         let Some(lowered_body) = lowered_body else {
             return Ok(false);
         };
+
+        if let Some(else_body) = else_body {
+            let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)? else {
+                return Ok(false);
+            };
+            self.push_captured_stmt(&RustStmt::Block(vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: "_broke".to_string(),
+                    ty: Some(crate::RustType::Bool),
+                    value: crate::RustExpr::Literal(crate::RustLiteral::Bool(false)),
+                },
+                RustStmt::While {
+                    cond: lowered_cond,
+                    body: lowered_body,
+                },
+                RustStmt::If {
+                    cond: crate::RustExpr::UnaryOp {
+                        op: "!".to_string(),
+                        operand: Box::new(crate::RustExpr::Paren(Box::new(
+                            crate::RustExpr::Ident("_broke".to_string()),
+                        ))),
+                    },
+                    then_body: lowered_else_body,
+                    else_body: None,
+                },
+            ]));
+            return Ok(true);
+        }
+
         self.push_captured_stmt(&RustStmt::While {
             cond: lowered_cond,
             body: lowered_body,
