@@ -6,7 +6,7 @@ status: planned
 Guarantee that emitted Rust is production-grade in safety, determinism, tooling compliance, and maintainability.
 
 ## Depends on
-- Phase 30 (`preview_distribution_and_release_automation`)
+- Phase 33 (`preview_distribution_and_release_automation`)
 
 ## Non-goals
 - New language feature development.
@@ -56,7 +56,7 @@ Guarantee that emitted Rust is production-grade in safety, determinism, tooling 
 ## Quality Contract
 
 ### Entry criteria
-- Phase 30 exit gate is satisfied.
+- Phase 33 exit gate is satisfied.
 - Initial generated-code corpus seed is defined.
 
 ### Milestone quality checks
