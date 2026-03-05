@@ -1,4 +1,4 @@
-# Phase 34: Package Management
+# Phase 37: Package Management
 
 > Note: Needs more planning before execution (scope boundaries, dependency model, and acceptance gates are still draft-level).
 
@@ -6,18 +6,18 @@
 Establish package management workflows as a dedicated post-hardening phase.
 
 ## Depends on
-- Phase 33
+- Phase 36
 
 ## Milestones
 
-### milestone_34_1: Package Management
+### milestone_37_1: Package Management
 - Scope:
   - Dependency declaration, lockfile semantics, resolution workflow.
 - Definition of done:
   - Package workflows are deterministic and reproducible.
 
 ## Quality Contract
-- Entry criteria: Phase 33 is completed and tooling contracts are stable.
+- Entry criteria: Phase 36 is completed and tooling contracts are stable.
 - Exit criteria: Package management workflows are stable enough for broader ecosystem usage.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
@@ -27,7 +27,7 @@ Establish package management workflows as a dedicated post-hardening phase.
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_34_1` (Package Management): validation goals cover: Dependency declaration, lockfile semantics, resolution workflow. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_37_1` (Package Management): validation goals cover: Dependency declaration, lockfile semantics, resolution workflow. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Package management workflows are stable enough for broader ecosystem usage.
 
 ## Exit Gate

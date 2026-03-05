@@ -1,4 +1,4 @@
-# Phase 25: Decimal Type and Exact Numeric Semantics
+# Phase 28: Decimal Type and Exact Numeric Semantics
 
 status: planned
 
@@ -6,10 +6,7 @@ status: planned
 Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic semantics for financial and precision-critical workloads.
 
 ## Depends on
-- Phase 24 (`diagnostics_error_recovery_and_stability_contract`)
-
-## Renumbering impact
-- Inserting this phase after Phase 24 shifts existing phases `25..38` to `26..39`.
+- Phase 27 (`diagnostics_error_recovery_and_stability_contract`)
 
 ## Non-goals
 - Replacing `float` semantics.
@@ -55,7 +52,7 @@ Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic se
 
 ## Milestones
 
-### milestone_25_1: Type-System, Parser, and HIR Integration
+### milestone_28_1: Type-System, Parser, and HIR Integration
 - Scope:
   - Add `Decimal` to core type enum and type rendering.
   - Add parsing/lowering for `Decimal("...")`, `Decimal(int)`, `Decimal(bigint)`.
@@ -64,7 +61,7 @@ Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic se
   - Decimal is first-class through parser -> HIR -> type checker -> codegen.
   - Invalid decimal construction or mixed float/decimal usage fails with stable diagnostics.
 
-### milestone_25_2: Deterministic Arithmetic and Context Semantics
+### milestone_28_2: Deterministic Arithmetic and Context Semantics
 - Scope:
   - Implement decimal arithmetic/comparison using `bigdecimal`.
   - Implement default context (precision=28, rounding=HALF_EVEN).
@@ -73,7 +70,7 @@ Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic se
   - Decimal arithmetic is deterministic across repeated runs.
   - No user-path data-dependent `unwrap`/`expect`/`panic!`.
 
-### milestone_25_3: Conversion and Boundary Contracts
+### milestone_28_3: Conversion and Boundary Contracts
 - Scope:
   - Implement explicit exact conversions:
     - `int <-> decimal`
@@ -86,7 +83,7 @@ Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic se
   - Conversions are explicit, exact, deterministic, and test-covered.
   - Any float-to-decimal attempt fails with clear diagnostics.
 
-### milestone_25_4: Decimal Diagnostics Contract
+### milestone_28_4: Decimal Diagnostics Contract
 - Scope:
   - Add decimal-specific diagnostics with stable codes and precise spans.
   - Reserve decimal diagnostic range `E2501-E2599`.
@@ -99,7 +96,7 @@ Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic se
 - Definition of done:
   - Decimal diagnostics are stable and regression-locked.
 
-### milestone_25_5: Verification Corpus and Determinism Gates
+### milestone_28_5: Verification Corpus and Determinism Gates
 - Scope:
   - Add decimal corpus covering:
     - exact string construction
@@ -115,7 +112,7 @@ Add a first-class `Decimal` type with deterministic, exact base-10 arithmetic se
 ## Quality Contract
 
 ### Entry criteria
-- Phase 24 exit gate is satisfied and recorded.
+- Phase 27 exit gate is satisfied and recorded.
 - Decimal policy (construction, mixing, conversions, defaults) is approved.
 
 ### Milestone quality checks

@@ -1,4 +1,4 @@
-# Phase 28: Algorithmic Compatibility and LeetCode Coverage
+# Phase 31: Algorithmic Compatibility and LeetCode Coverage
 
 status: draft
 
@@ -8,7 +8,7 @@ status: draft
 Run a representative LeetCode corpus end-to-end on Sifr, identify failures, classify root causes, and define the language/compiler fixes required to improve algorithmic compatibility.
 
 ## Depends on
-- Phase 27 (`reliability_parity_and_performance_budgets`) exit gate must be satisfied before Phase 28 execution begins.
+- Phase 30 (`reliability_parity_and_performance_budgets`) exit gate must be satisfied before Phase 31 execution begins.
 
 ## Non-goals
 - Solving all LeetCode problems manually as product work.
@@ -28,7 +28,7 @@ Run a representative LeetCode corpus end-to-end on Sifr, identify failures, clas
 
 ## Milestones
 
-### milestone_27_1: Corpus and Runner Baseline
+### milestone_31_1: Corpus and Runner Baseline
 status: pending
 
 - Scope:
@@ -47,7 +47,7 @@ status: pending
 
 ---
 
-### milestone_27_2: Failure Inventory and Root-Cause Taxonomy
+### milestone_31_2: Failure Inventory and Root-Cause Taxonomy
 status: pending
 
 - Scope:
@@ -62,7 +62,7 @@ status: pending
 
 ---
 
-### milestone_27_3: Compatibility Fix Plan (Language + Compiler)
+### milestone_31_3: Compatibility Fix Plan (Language + Compiler)
 status: pending
 
 - Scope:
@@ -79,7 +79,7 @@ status: pending
 
 ---
 
-### milestone_27_4: First Compatibility Remediation Wave
+### milestone_31_4: First Compatibility Remediation Wave
 status: pending
 
 - Scope:
@@ -97,7 +97,7 @@ status: pending
 
 ---
 
-### milestone_27_5: Compatibility Scorecard and Handoff
+### milestone_31_5: Compatibility Scorecard and Handoff
 status: pending
 
 - Scope:
@@ -116,7 +116,7 @@ status: pending
 ## Quality Contract
 
 ### Entry criteria
-- Phase 26 exit gate is satisfied.
+- Phase 30 exit gate is satisfied.
 - Corpus seed and runner contract are approved.
 
 ### Milestone quality checks
@@ -127,19 +127,19 @@ status: pending
 - Validation evidence must be recorded in the phase execution checklist issue before merge.
 
 ### Validation planning goals
-- milestone_27_1:
+- milestone_31_1:
   - Positive: corpus generation and full runner execution succeed on supported samples.
   - Negative: malformed inputs/timeouts are captured with expected diagnostics and status codes.
-- milestone_27_2:
+- milestone_31_2:
   - Positive: known seeded failures are classified into expected taxonomy buckets.
   - Negative: deliberately mis-tagged cases are detected by spot-audit checks.
-- milestone_27_3:
+- milestone_31_3:
   - Positive: prioritized backlog is dependency-sorted and approval-complete.
   - Negative: incomplete/ambiguous items are rejected by plan validation rules.
-- milestone_27_4:
+- milestone_31_4:
   - Positive: remediation batch improves pass rate versus baseline.
   - Negative: intentionally introduced regression is caught by corpus regression gates.
-- milestone_27_5:
+- milestone_31_5:
   - Positive: scorecard and roadmap handoff artifacts are complete and reproducible.
   - Negative: missing owner/phase mapping fails closure checklist.
 
@@ -148,7 +148,7 @@ status: pending
   - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - Milestone demos:
   - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
-- LeetCode corpus runner (to be created in milestone_27_1):
+- LeetCode corpus runner (to be created in milestone_31_1):
   - `cargo run -q -p sifr -- <leetcode-runner-command>`
 - Repeat determinism check:
   - run the corpus command twice with identical config and diff outputs.
