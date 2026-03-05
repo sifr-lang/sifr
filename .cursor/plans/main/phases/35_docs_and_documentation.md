@@ -1,4 +1,4 @@
-# Phase 34: Docs and Documentation
+# Phase 35: Docs and Documentation
 
 > Note: Needs more planning before execution (doc tooling, doc structure, scope boundaries, ownership model, and acceptance gates are still draft-level).
 
@@ -6,25 +6,25 @@
 Establish a production-grade documentation layer (developer, user, and operations) so packaging and release governance rest on clear, versioned contracts.
 
 ## Depends on
-- Phase 33
+- Phase 34
 
 ## Milestones
 
-### milestone_34_1: Documentation Information Architecture
+### milestone_35_1: Documentation Information Architecture
 - Scope:
   - Define canonical docs structure for language, compiler internals, stdlib, CLI, packaging, and operations.
   - Remove duplicated/contradictory guidance and centralize source-of-truth ownership.
 - Definition of done:
   - Documentation map is approved and all core sections have canonical owners.
 
-### milestone_34_2: Reference and Contract Documentation
+### milestone_35_2: Reference and Contract Documentation
 - Scope:
   - Publish versioned references for CLI behavior, diagnostics, package workflows, and phase contracts.
   - Document expected compatibility/stability guarantees for users and contributors.
 - Definition of done:
   - Contract docs are complete, versioned, and linked from roadmap/architecture entry points.
 
-### milestone_34_3: Documentation Quality Gates
+### milestone_35_3: Documentation Quality Gates
 - Scope:
   - Add local docs validation for link integrity, required sections, and drift checks against phase files.
   - Ensure docs checks are runnable in local `quick/full/stress` workflows.
@@ -32,7 +32,7 @@ Establish a production-grade documentation layer (developer, user, and operation
   - Documentation quality gates pass locally and are mirrored in CI.
 
 ## Quality Contract
-- Entry criteria: Phase 33 is completed and package workflows are deterministic.
+- Entry criteria: Phase 34 is completed and package workflows are deterministic.
 - Exit criteria: Core documentation is canonical, navigable, and quality-gated for ongoing phase execution and release usage.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
@@ -42,9 +42,9 @@ Establish a production-grade documentation layer (developer, user, and operation
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_34_1` (Documentation Information Architecture): validation goals cover: Define canonical docs structure for language, compiler internals, stdlib, CLI, packaging, and operations; Remove duplicated/contradictory guidance and centralize source-of-truth ownership. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_34_2` (Reference and Contract Documentation): validation goals cover: Publish versioned references for CLI behavior, diagnostics, package workflows, and phase contracts; Document expected compatibility/stability guarantees for users and contributors. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_34_3` (Documentation Quality Gates): validation goals cover: Add local docs validation for link integrity, required sections, and drift checks against phase files; Ensure docs checks are runnable in local `quick/full/stress` workflows. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_35_1` (Documentation Information Architecture): validation goals cover: Define canonical docs structure for language, compiler internals, stdlib, CLI, packaging, and operations; Remove duplicated/contradictory guidance and centralize source-of-truth ownership. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_35_2` (Reference and Contract Documentation): validation goals cover: Publish versioned references for CLI behavior, diagnostics, package workflows, and phase contracts; Document expected compatibility/stability guarantees for users and contributors. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_35_3` (Documentation Quality Gates): validation goals cover: Add local docs validation for link integrity, required sections, and drift checks against phase files; Ensure docs checks are runnable in local `quick/full/stress` workflows. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Core documentation is canonical, navigable, and quality-gated for ongoing phase execution and release usage.
 
 ## Exit Gate

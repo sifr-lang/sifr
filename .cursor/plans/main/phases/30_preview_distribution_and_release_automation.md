@@ -1,28 +1,28 @@
-# Phase 29: Preview Distribution and Release Automation (`alpha`/`beta`)
+# Phase 30: Preview Distribution and Release Automation (`alpha`/`beta`)
 
 ## Objective
 Ship preview channels early for adoption while keeping stable GA promotion gated for later phases.
 
 ## Depends on
-- Phase 28
+- Phase 29
 
 ## Milestones
 
-### milestone_29_1: Installer and Channel Resolution
+### milestone_30_1: Installer and Channel Resolution
 - Scope:
   - Implement install entrypoint (`curl -fsSL https://sifr.sh/install | bash`).
   - Support `SIFR_CHANNEL`/`--channel` and explicit `--version` pinning.
 - Definition of done:
   - Installer resolves `alpha`/`beta`/`stable` channel metadata correctly.
 
-### milestone_29_2: Artifact and Manifest Pipeline
+### milestone_30_2: Artifact and Manifest Pipeline
 - Scope:
   - Publish multi-platform artifacts with checksums/signatures.
   - Maintain channel manifest pointers.
 - Definition of done:
   - Installer validates checksums and installs matching artifacts.
 
-### milestone_29_3: Agentic Preview Release Command
+### milestone_30_3: Agentic Preview Release Command
 - Scope:
   - Add `/create-new-version` workflow for preview release automation.
   - Support dry-run and real-run paths.
@@ -30,7 +30,7 @@ Ship preview channels early for adoption while keeping stable GA promotion gated
   - Preview release flow is repeatable end-to-end for `alpha`/`beta`.
 
 ## Quality Contract
-- Entry criteria: Phase 28 is completed and async/runtime ecosystem primitives are stable.
+- Entry criteria: Phase 29 is completed and async/runtime ecosystem primitives are stable.
 - Exit criteria: Preview release lifecycle works reliably without enabling stable GA promotion.
 - Milestone quality checks:
   - No fallback, migration, or legacy compatibility code is allowed; implement the canonical architecture directly with clean code only.
@@ -40,9 +40,9 @@ Ship preview channels early for adoption while keeping stable GA promotion gated
   - Validation evidence must be recorded in the phase execution checklist issue before merge.
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
-  - `milestone_29_1` (Installer and Channel Resolution): validation goals cover: Implement install entrypoint (`curl -fsSL https://sifr.sh/install | bash`); Support `SIFR_CHANNEL`/`--channel` and explicit `--version` pinning. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_29_2` (Artifact and Manifest Pipeline): validation goals cover: Publish multi-platform artifacts with checksums/signatures; Maintain channel manifest pointers. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_29_3` (Agentic Preview Release Command): validation goals cover: Add `/create-new-version` workflow for preview release automation; Support dry-run and real-run paths. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_30_1` (Installer and Channel Resolution): validation goals cover: Implement install entrypoint (`curl -fsSL https://sifr.sh/install | bash`); Support `SIFR_CHANNEL`/`--channel` and explicit `--version` pinning. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_30_2` (Artifact and Manifest Pipeline): validation goals cover: Publish multi-platform artifacts with checksums/signatures; Maintain channel manifest pointers. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_30_3` (Agentic Preview Release Command): validation goals cover: Add `/create-new-version` workflow for preview release automation; Support dry-run and real-run paths. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Preview release lifecycle works reliably without enabling stable GA promotion.
 
 ## Exit Gate

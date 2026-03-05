@@ -1,0 +1,175 @@
+# Phase 28: Algorithmic Compatibility and LeetCode Coverage
+
+status: draft
+
+> Note: Needs more planning before execution (investigate first which ones are not running and add milestones accordingly)
+
+## Objective
+Run a representative LeetCode corpus end-to-end on Sifr, identify failures, classify root causes, and define the language/compiler fixes required to improve algorithmic compatibility.
+
+## Depends on
+- Phase 27 (`reliability_parity_and_performance_budgets`) exit gate must be satisfied before Phase 28 execution begins.
+
+## Non-goals
+- Solving all LeetCode problems manually as product work.
+- Adding unrelated new language features without failure-driven justification.
+- Optimizing leaderboard performance before correctness/compatibility is established.
+- Supporting problems that require external packages beyond current stdlib/runtime scope in this phase.
+
+## Corpus Policy
+- Start with a deterministic, version-controlled seed corpus.
+- Coverage targets must be topic-balanced (arrays, strings, hash maps, DP, graphs, trees, backtracking, math, heap/priority queue, two pointers, sliding window).
+- Include mixed difficulty (`easy`, `medium`, `hard`) with explicit counts.
+- Include an initial minimum corpus size of `>= 50` problems.
+- Mark each problem as one of:
+  - `in_scope` (expected to run in current language/runtime scope)
+  - `blocked_feature` (requires not-yet-implemented language/compiler feature)
+  - `out_of_scope_external_dep` (requires non-stdlib package/runtime dependency)
+
+## Milestones
+
+### milestone_27_1: Corpus and Runner Baseline
+status: pending
+
+- Scope:
+  - Define corpus size, selection criteria, and topic/difficulty distribution.
+  - Build deterministic runner harness for `check/build/run` result capture.
+  - Define timeout policy (per problem and global run budget) and deterministic retry rules.
+  - Define output oracle strategy:
+    - use problem-provided sample cases,
+    - plus locally defined regression inputs,
+    - plus reference output comparison baseline (Python implementation where available).
+- Definition of done:
+  - Corpus list is version-controlled and reproducible.
+  - Runner is deterministic and emits structured results.
+  - Timeout and oracle policy are documented and enforced.
+  - Baseline pass/fail/timeout metrics are generated.
+
+---
+
+### milestone_27_2: Failure Inventory and Root-Cause Taxonomy
+status: pending
+
+- Scope:
+  - Classify failures by layer: parser, type system, lowering, codegen, stdlib/runtime, performance timeout, unsupported feature.
+  - Require minimal reproducible case for each unique failure class.
+  - Add false-positive handling policy for misclassified failures.
+  - Add spot-audit workflow for classification accuracy.
+- Definition of done:
+  - Every failing case is tagged with root-cause category and reproducible evidence.
+  - Taxonomy report includes frequency and impact ranking.
+  - Classification spot-audit accuracy is `>= 90%`.
+
+---
+
+### milestone_27_3: Compatibility Fix Plan (Language + Compiler)
+status: pending
+
+- Scope:
+  - Convert ranked blockers into concrete milestones/issues with acceptance criteria.
+  - Tag each item as `bug`, `spec_gap`, or `intentional_divergence`.
+  - Add rough effort sizing and dependency tags for sequencing.
+  - Define approval process for roadmap insertion (owner + reviewer sign-off).
+  - Define escalation policy for stale blockers.
+- Definition of done:
+  - Prioritized remediation backlog exists with owners, dependencies, and acceptance criteria.
+  - Intentional divergences are explicitly documented.
+  - Plan is approved and linked into roadmap phases.
+  - Unresolved `P1` blockers older than 14 days are escalated with explicit owner reassignment or defer decision.
+
+---
+
+### milestone_27_4: First Compatibility Remediation Wave
+status: pending
+
+- Scope:
+  - Implement highest-leverage fixes using explicit selection criteria:
+    - unblock count across corpus,
+    - severity,
+    - risk,
+    - dependency readiness.
+  - Add regression tests per fixed blocker.
+  - Re-run corpus after each remediation batch.
+- Definition of done:
+  - First remediation batch lands with regression coverage.
+  - Pass-rate improvement is measurable against baseline.
+  - No regression in previously passing corpus slice.
+
+---
+
+### milestone_27_5: Compatibility Scorecard and Handoff
+status: pending
+
+- Scope:
+  - Publish scorecard with:
+    - total/pass/fail/timeout counts,
+    - category breakdown,
+    - `in_scope` vs `blocked_feature` vs `out_of_scope_external_dep`,
+    - before/after remediation delta.
+  - Record unresolved blockers with linked issues and target phases.
+  - Run review/sign-off for phase closure.
+- Definition of done:
+  - Scorecard is published in a stable, repeatable format.
+  - Open blockers are roadmap-mapped with owners.
+  - Phase closure is approved with explicit handoff targets.
+
+## Quality Contract
+
+### Entry criteria
+- Phase 26 exit gate is satisfied.
+- Corpus seed and runner contract are approved.
+
+### Milestone quality checks
+- Local validation gates must pass before merge.
+- Runner output must be deterministic and reproducible on repeated runs.
+- Every fixed blocker must include regression coverage.
+- No blocker may be closed without root-cause classification and reproducible evidence.
+- Validation evidence must be recorded in the phase execution checklist issue before merge.
+
+### Validation planning goals
+- milestone_27_1:
+  - Positive: corpus generation and full runner execution succeed on supported samples.
+  - Negative: malformed inputs/timeouts are captured with expected diagnostics and status codes.
+- milestone_27_2:
+  - Positive: known seeded failures are classified into expected taxonomy buckets.
+  - Negative: deliberately mis-tagged cases are detected by spot-audit checks.
+- milestone_27_3:
+  - Positive: prioritized backlog is dependency-sorted and approval-complete.
+  - Negative: incomplete/ambiguous items are rejected by plan validation rules.
+- milestone_27_4:
+  - Positive: remediation batch improves pass rate versus baseline.
+  - Negative: intentionally introduced regression is caught by corpus regression gates.
+- milestone_27_5:
+  - Positive: scorecard and roadmap handoff artifacts are complete and reproducible.
+  - Negative: missing owner/phase mapping fails closure checklist.
+
+### Local validation commands
+- Full local suite:
+  - `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
+- Milestone demos:
+  - `cargo run -q -p sifr -- run demos/<milestone_demo>.sifr`
+- LeetCode corpus runner (to be created in milestone_27_1):
+  - `cargo run -q -p sifr -- <leetcode-runner-command>`
+- Repeat determinism check:
+  - run the corpus command twice with identical config and diff outputs.
+
+### E2E test expectations
+- Add/maintain E2E tests for:
+  - runner determinism,
+  - timeout classification,
+  - root-cause classification integrity,
+  - regression coverage for each resolved blocker.
+- Each remediation PR must include:
+  - at least one positive-path test,
+  - at least one negative-path test,
+  - updated corpus metrics snapshot.
+
+### Exit criteria
+- Baseline corpus execution is reproducible.
+- Failure taxonomy and prioritized remediation backlog are complete and approved.
+- First remediation wave is complete with measurable pass-rate improvement.
+- Scorecard is published and unresolved blockers are mapped to future phases.
+- Any waiver is explicit, time-bounded, owner-assigned, and issue-linked.
+
+## Exit Gate
+LeetCode compatibility is measurable, root causes are classified, top blockers are partially remediated, and the remaining plan is fully roadmap-integrated with approved ownership and sequencing.
