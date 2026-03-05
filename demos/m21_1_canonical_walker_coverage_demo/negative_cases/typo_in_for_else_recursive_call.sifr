@@ -1,0 +1,13 @@
+# negative path: typo in recursive call inside for-else must be diagnosed
+
+def main():
+    def rec(n: int) -> int:
+        items: list[int] = [1]
+        for i in items:
+            pass
+        else:
+            if n > 0:
+                return recc(n - 1)
+        return 0
+
+    print(rec(3))
