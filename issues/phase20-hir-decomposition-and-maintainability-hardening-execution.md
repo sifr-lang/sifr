@@ -54,10 +54,27 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_20_1 Split `lower.rs`
-status: in_progress (2026-03-05, PR pending)
+status: done (2026-03-05, PR #839)
 
 - [x] Extract lowering concerns into coherent modules
 - [x] Preserve current semantics and test outcomes
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_hir` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m20_1_lower_decomposition_demo/main.sifr` -> prints `m20_1 lower decomposition demo:`, `21`, `3`.
+- Negative path: `cargo run -q -p sifr -- run demos/m20_1_lower_decomposition_demo/negative_cases/return_type_mismatch.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+
+## Part 2: milestone_20_2 Split `stdlib.rs`
+status: in_progress (2026-03-05, PR pending)
+
+- [x] Partition stdlib metadata/registration logic into focused modules
 - [x] Positive-path validation recorded
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
@@ -67,23 +84,9 @@ status: in_progress (2026-03-05, PR pending)
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_hir` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m20_1_lower_decomposition_demo/main.sifr` -> prints `m20_1 lower decomposition demo:`, `21`, `3`.
-- Negative path: `cargo run -q -p sifr -- run demos/m20_1_lower_decomposition_demo/negative_cases/return_type_mismatch.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+- Positive path: `cargo run -q -p sifr -- run demos/m20_2_stdlib_registry_split_demo/main.sifr` -> prints `m20_2 stdlib registry split demo:` and `\"ok\"`.
+- Negative path: `cargo run -q -p sifr -- run demos/m20_2_stdlib_registry_split_demo/negative_cases/forbidden_intrinsic_import.sifr` -> exits `1` with `_sifr.* modules are internal compiler intrinsics` and `undefined function: 'sqrt'`.
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
-
-## Part 2: milestone_20_2 Split `stdlib.rs`
-status: pending
-
-- [ ] Partition stdlib metadata/registration logic into focused modules
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
-
-Validation evidence:
-- Pending.
 
 ## Part 3: milestone_20_3 Anti-Regrowth Guardrails
 status: pending
@@ -101,7 +104,7 @@ Validation evidence:
 - Pending.
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/839
 - Part 2: pending
 - Part 3: pending
 
