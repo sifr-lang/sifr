@@ -304,6 +304,9 @@ fn walk_hir_stmt<FStmt, FExpr>(
             }
         }
         HirStmt::TryExcept { body, handlers, .. } => {
+            // HIR TryExcept currently has no dedicated `else_body` field.
+            // Any equivalent behavior is represented with explicit control flow
+            // inside `body`/handler blocks and is traversed through these walks.
             walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
             for handler in handlers {
                 walk_hir_stmts(&handler.body, descend_nested_functions, on_stmt, on_expr);

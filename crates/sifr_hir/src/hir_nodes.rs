@@ -176,6 +176,9 @@ pub enum HirStmt {
     /// Raise statement: raise expr -> Err(expr)
     Raise { value: HirExpr },
     /// Try/except: pattern matching on Result
+    /// Note: HIR intentionally has no dedicated `else_body` for try/except.
+    /// Python-style `try ... except ... else` can be represented using explicit
+    /// control-flow statements inside `body`/handlers during lowering.
     TryExcept {
         body: Vec<HirStmt>,
         handlers: Vec<HirExceptHandler>,
