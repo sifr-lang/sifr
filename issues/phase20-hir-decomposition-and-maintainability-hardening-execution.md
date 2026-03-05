@@ -72,15 +72,15 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 2: milestone_20_2 Split `stdlib.rs`
-status: in_progress (2026-03-05, PR pending)
+status: done (2026-03-05, PR #840)
 
 - [x] Partition stdlib metadata/registration logic into focused modules
 - [x] Positive-path validation recorded
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_hir` -> pass.
@@ -89,23 +89,26 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_20_3 Anti-Regrowth Guardrails
-status: pending
+status: in_progress (2026-03-05, PR pending)
 
-- [ ] Add file-size and module-boundary conventions
-- [ ] Add review checklist items for new lowering additions
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
+- [x] Add file-size and module-boundary conventions
+- [x] Add review checklist items for new lowering additions
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
 - [ ] Open PR, review, and merge
 - [ ] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Pending.
+- Positive path: `python3 scripts/check_hir_maintainability_guardrails.py` -> `HIR maintainability guardrails: PASS`.
+- Positive path: `cargo run -q -p sifr -- run demos/m20_3_guardrails_demo.sifr` -> prints `m20_3 guardrails demo:` and `20`.
+- Negative path: `SIFR_HIR_GUARD_MAX_OVERRIDE=100 python3 scripts/check_hir_maintainability_guardrails.py` -> exits `1` with file-size violations.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes guardrail gate execution).
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/839
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/840
 - Part 3: pending
 
 ## Reviewer Follow-up

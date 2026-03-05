@@ -1,0 +1,6 @@
+# milestone_20_3 demo
+# Confirms standard compilation flow remains stable while guardrails are enforced separately.
+
+def main():
+    print("m20_3 guardrails demo:")
+    print(20)

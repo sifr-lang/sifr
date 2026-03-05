@@ -57,6 +57,9 @@ cd "${SCRIPT_DIR}/.."
 
 echo "Running local-first validation"
 echo "  profile=${PROFILE}"
+echo "Running HIR maintainability guardrails"
+python3 "${SCRIPT_DIR}/check_hir_maintainability_guardrails.py"
+
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass
 
