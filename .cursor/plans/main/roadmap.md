@@ -7,7 +7,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - Per review alignment, **Phase 12, 13, and 14 are completed**.
 - Active sequencing is split into:
   - **Reliability Track:** Phase 15 through Phase 26
-  - **Feature Track:** Phase 27 through Phase 35
+  - **Feature Track:** Phase 27 through Phase 36
 
 ## Historical Status Clarifications
 
@@ -27,7 +27,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - No user-triggerable compiler panics.
 - No data-dependent emitted `.unwrap()`/`.expect()` in generated user runtime paths.
 - Scoped fix-back (`N+1` discovering defect in `N`) is allowed only if minimal, documented, regression-tested, and revalidated.
-- Phase entry/exit gates, milestone quality checks, and mandatory local validation commands are embedded in each phase file (`15`-`35`) under `## Quality Contract`.
+- Phase entry/exit gates, milestone quality checks, and mandatory local validation commands are embedded in each phase file (`15`-`36`) under `## Quality Contract`.
 
 ## Reliability Track (Phase 15-26)
 
@@ -46,19 +46,20 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 25 | Verification Hardening | planned | [25_verification_hardening.md](./phases/25_verification_hardening.md) | Broad reliability evidence via regressions/fuzz/E2E |
 | 26 | Reliability Parity (Stdlib) | planned | [26_reliability_parity_and_performance_budgets.md](./phases/26_reliability_parity_and_performance_budgets.md) | Stdlib parity evidence and governed parity waivers |
 
-## Feature Track (Phase 27-35)
+## Feature Track (Phase 27-36)
 
 | # | Phase | Status | Phase File | Unlocks |
 |---|---|---|---|---|
 | 27 | Async and Ecosystem Foundation | planned | [27_async_ecosystem.md](./phases/27_async_ecosystem.md) | Async runtime and ecosystem foundation |
 | 28 | Preview Distribution and Release Automation (`alpha`/`beta`) | planned | [28_preview_distribution_and_release_automation.md](./phases/28_preview_distribution_and_release_automation.md) | Early adopter distribution with controlled preview channels |
-| 29 | Performance Benchmarking and Budgets | planned | [29_performance_benchmarking_and_budgets.md](./phases/29_performance_benchmarking_and_budgets.md) | Compiler performance baselines, thresholds, and enforcement gates |
-| 30 | Developer Tooling and Ecosystem Hooks | planned | [30_developer_tooling_and_ecosystem_hooks.md](./phases/30_developer_tooling_and_ecosystem_hooks.md) | Tooling hooks aligned with phase contracts |
-| 31 | Package Management | draft | [31_package_management.md](./phases/31_package_management.md) | Deterministic dependency and lockfile workflows |
-| 32 | Docs and Documentation | draft | [32_docs_and_documentation.md](./phases/32_docs_and_documentation.md) | Canonical versioned docs and local docs quality gates |
-| 33 | Stable Channel GA Promotion and Release Governance | planned | [33_stable_channel_ga_promotion_and_release_governance.md](./phases/33_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
-| 34 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [34_typed_data_model_and_validation.md](./phases/34_typed_data_model_and_validation.md) | Dedicated typed model/validation layer |
-| 35 | Web Framework and Platform Expansion | planned | [35_web_framework_and_platform_expansion.md](./phases/35_web_framework_and_platform_expansion.md) | Web stack plus scoped data/ML and interoperability expansion |
+| 29 | Generated Code Quality and Production Readiness | planned | [29_generated_code_quality_and_production_readiness.md](./phases/29_generated_code_quality_and_production_readiness.md) | Production-grade emission safety, determinism, and tooling compliance |
+| 30 | Performance Benchmarking and Budgets | planned | [30_performance_benchmarking_and_budgets.md](./phases/30_performance_benchmarking_and_budgets.md) | Compiler performance baselines, thresholds, and enforcement gates |
+| 31 | Developer Tooling and Ecosystem Hooks | planned | [31_developer_tooling_and_ecosystem_hooks.md](./phases/31_developer_tooling_and_ecosystem_hooks.md) | Tooling hooks aligned with phase contracts |
+| 32 | Package Management | draft | [32_package_management.md](./phases/32_package_management.md) | Deterministic dependency and lockfile workflows |
+| 33 | Docs and Documentation | draft | [33_docs_and_documentation.md](./phases/33_docs_and_documentation.md) | Canonical versioned docs and local docs quality gates |
+| 34 | Stable Channel GA Promotion and Release Governance | planned | [34_stable_channel_ga_promotion_and_release_governance.md](./phases/34_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
+| 35 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [35_typed_data_model_and_validation.md](./phases/35_typed_data_model_and_validation.md) | Dedicated typed model/validation layer |
+| 36 | Web Framework and Platform Expansion | planned | [36_web_framework_and_platform_expansion.md](./phases/36_web_framework_and_platform_expansion.md) | Web stack plus scoped data/ML and interoperability expansion |
 
 ## Dependency Chain
 
@@ -77,13 +78,14 @@ flowchart LR
     p25 --> p26["Phase 26\nStdlib Parity Closeout"]
     p26 --> p27["Phase 27\nAsync and Ecosystem"]
     p27 --> p28["Phase 28\nPreview Distribution"]
-    p28 --> p29["Phase 29\nPerformance Budgets"]
-    p29 --> p30["Phase 30\nDeveloper Tooling"]
-    p30 --> p31["Phase 31\nPackage Management"]
-    p31 --> p32["Phase 32\nDocs and Documentation"]
-    p32 --> p33["Phase 33\nStable GA Governance"]
-    p33 --> p34["Phase 34\nTyped Data Model + Validation"]
-    p34 --> p35["Phase 35\nWeb + Platform Expansion"]
+    p28 --> p29["Phase 29\nGenerated Code Quality"]
+    p29 --> p30["Phase 30\nPerformance Budgets"]
+    p30 --> p31["Phase 31\nDeveloper Tooling"]
+    p31 --> p32["Phase 32\nPackage Management"]
+    p32 --> p33["Phase 33\nDocs and Documentation"]
+    p33 --> p34["Phase 34\nStable GA Governance"]
+    p34 --> p35["Phase 35\nTyped Data Model + Validation"]
+    p35 --> p36["Phase 36\nWeb + Platform Expansion"]
 ```
 
 ## Execution Discipline
@@ -92,6 +94,6 @@ flowchart LR
 - Merge decisions are based on local gate evidence first, CI second.
 
 ## Deferred Planning Drafts (Need Alignment)
-- Phase 37 is intentionally excluded from the main execution table until post-Phase-35 planning lock.
-- [36_data_science_ml.md](./phases/36_data_science_ml.md) (needs more planning)
-- [37_interoperability.md](./phases/37_interoperability.md) (needs more planning)
+- Phase 37 and Phase 38 are intentionally excluded from the main execution table until post-Phase-36 planning lock.
+- [37_data_science_ml.md](./phases/37_data_science_ml.md) (needs more planning)
+- [38_interoperability.md](./phases/38_interoperability.md) (needs more planning)
