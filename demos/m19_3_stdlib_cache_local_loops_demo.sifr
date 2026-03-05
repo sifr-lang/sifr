@@ -1,0 +1,5 @@
+from sifr.math import floor, pi
+
+def main():
+    print("m19_3 stdlib cache local loops demo:")
+    print(floor(pi))

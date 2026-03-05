@@ -21,6 +21,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::OnceLock;
 
 pub use sifr_codegen::LoweringStats;
 
@@ -147,12 +148,15 @@ const STDLIB_FILES: &[(&str, &str)] = &[
 ];
 
 /// Result of compiling all stdlib modules.
+#[derive(Clone)]
 struct StdlibCompiled {
     /// Type information for type checking user code
     defs: ExternalDefs,
     /// Compiled Rust code and intrinsic name tracking for codegen
     code: StdlibCode,
 }
+
+static STDLIB_COMPILED_CACHE: OnceLock<Result<StdlibCompiled, Vec<CompileError>>> = OnceLock::new();
 
 fn write_stderr_line(message: &str) {
     let mut stderr = std::io::stderr().lock();
@@ -179,6 +183,17 @@ fn intrinsic_constant_rust_expr(module: &str, name: &str) -> Option<&'static str
 /// along with compiled Rust code for pure Sifr modules.
 /// Stdlib files can import from `_sifr.*` intrinsics (resolved via the intrinsic registry).
 fn compile_stdlib() -> Result<StdlibCompiled, Vec<CompileError>> {
+    get_or_init_stdlib_cache(&STDLIB_COMPILED_CACHE, compile_stdlib_uncached)
+}
+
+fn get_or_init_stdlib_cache(
+    cache: &OnceLock<Result<StdlibCompiled, Vec<CompileError>>>,
+    build: impl FnOnce() -> Result<StdlibCompiled, Vec<CompileError>>,
+) -> Result<StdlibCompiled, Vec<CompileError>> {
+    cache.get_or_init(build).clone()
+}
+
+fn compile_stdlib_uncached() -> Result<StdlibCompiled, Vec<CompileError>> {
     let mut stdlib_defs = ExternalDefs::default();
     let mut stdlib_code = StdlibCode::default();
 
@@ -1513,6 +1528,7 @@ fn generate_test_runner_cargo_toml(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     fn parse_suite(source: &str) -> Vec<sifr_python_ast::Stmt> {
         let parsed = parse_module(source).unwrap_or_else(|e| panic!("parse failed: {e}"));
@@ -1640,6 +1656,59 @@ def main():
         assert!(errors.iter().any(|e| e
             .message
             .contains("unsupported import statement 'import helper'")));
+    }
+
+    #[test]
+    fn test_get_or_init_stdlib_cache_reuses_successful_compilation() {
+        let cache: OnceLock<Result<StdlibCompiled, Vec<CompileError>>> = OnceLock::new();
+        let build_calls = AtomicUsize::new(0);
+
+        let first = get_or_init_stdlib_cache(&cache, || {
+            build_calls.fetch_add(1, Ordering::SeqCst);
+            compile_stdlib_uncached()
+        })
+        .expect("initial stdlib compilation should succeed");
+        let second = get_or_init_stdlib_cache(&cache, || {
+            build_calls.fetch_add(1, Ordering::SeqCst);
+            panic!("stdlib cache should not rebuild on second lookup");
+        })
+        .expect("cached stdlib compilation should be reused");
+
+        assert_eq!(build_calls.load(Ordering::SeqCst), 1);
+        assert_eq!(first.defs.functions.len(), second.defs.functions.len());
+        assert_eq!(
+            first.code.module_rust_code.len(),
+            second.code.module_rust_code.len()
+        );
+    }
+
+    #[test]
+    fn test_get_or_init_stdlib_cache_reuses_error_without_fallback_rebuild() {
+        let cache: OnceLock<Result<StdlibCompiled, Vec<CompileError>>> = OnceLock::new();
+        let build_calls = AtomicUsize::new(0);
+
+        let first = match get_or_init_stdlib_cache(&cache, || {
+            build_calls.fetch_add(1, Ordering::SeqCst);
+            Err(vec![CompileError {
+                message: "sentinel stdlib cache error".to_string(),
+                phase: CompilePhase::Build,
+            }])
+        }) {
+            Ok(_) => panic!("sentinel error should be cached"),
+            Err(errors) => errors,
+        };
+        let second = match get_or_init_stdlib_cache(&cache, || {
+            build_calls.fetch_add(1, Ordering::SeqCst);
+            compile_stdlib_uncached()
+        }) {
+            Ok(_) => panic!("cached error should be reused"),
+            Err(errors) => errors,
+        };
+
+        assert_eq!(build_calls.load(Ordering::SeqCst), 1);
+        assert_eq!(first.len(), 1);
+        assert_eq!(second.len(), 1);
+        assert_eq!(second[0].message, "sentinel stdlib cache error");
     }
 
     #[test]
