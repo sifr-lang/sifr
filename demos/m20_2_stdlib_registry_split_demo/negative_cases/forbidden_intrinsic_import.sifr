@@ -1,0 +1,7 @@
+# milestone_20_2 negative-path demo
+# Direct _sifr imports must remain rejected for user code.
+
+from _sifr.math import sqrt
+
+def main():
+    print(sqrt(4.0))

@@ -1,0 +1,12 @@
+# milestone_20_2 demo
+# Validates stdlib intrinsic registry behavior after stdlib.rs decomposition.
+
+from sifr.math import floor, pi
+from sifr.json import json_dumps
+from sifr.test import assert_eq
+
+def main():
+    assert_eq(floor(pi), 3)
+    payload: str = json_dumps("ok")
+    print("m20_2 stdlib registry split demo:")
+    print(payload)
