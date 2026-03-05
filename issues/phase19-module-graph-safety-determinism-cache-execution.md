@@ -34,20 +34,21 @@ Validation evidence:
 - Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 2: milestone_19_2 Deterministic Assembly
-status: pending
+status: done (2026-03-05, PR #835)
 
-- [ ] Remove nondeterministic HashMap-order behavior from module assembly/output
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Remove nondeterministic HashMap-order behavior from module assembly/output
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: pending
-- Negative path: pending
-- Full suite: pending
+- Positive path: `cargo run -q -p sifr -- run demos/m19_2_deterministic_assembly_demo/main.sifr` -> prints `m19_2 deterministic assembly demo:` and `A-Z`.
+- Positive path: `cargo test -q -p sifr_driver` -> pass (includes deterministic assembly regression coverage).
+- Negative path: `cargo test -q -p sifr_driver test_assemble_project_main_rs_is_deterministic_against_hashmap_order` -> pass (guards against HashMap insertion-order drift).
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
 
 ## Part 3: milestone_19_3 Stdlib Cache for Local Loops
 status: pending
@@ -67,7 +68,7 @@ Validation evidence:
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/834
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/835
 - Part 3: pending
 
 ## Reviewer Follow-up
