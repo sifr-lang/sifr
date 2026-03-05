@@ -1,6 +1,6 @@
 # Phase 21 Execution Checklist (Traversal Completeness and Control-Flow Correctness)
 
-Status: in_progress (started 2026-03-05, part_1 completed)
+Status: in_progress (started 2026-03-05, part_1 and part_2 completed)
 Owner: phase_21 execution loop
 Reference phase doc: `.cursor/plans/main/phases/21_traversal_completeness_and_control_flow_correctness.md`
 
@@ -61,7 +61,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m21_1_canonical_walker_coverage_demo/negative_cases/typo_in_for_else_recursive_call.sifr` -> exits `1` with `type error: undefined function: 'recc'`.
 
 ## Part 2: milestone_21_2 `while ... else` End-to-End Support
-status: in_review_prep
+status: done (2026-03-05, PR #850)
 
 - [x] Structured lowering supports `while ... else` for borrowed-condition and other non-simple paths
 - [x] Break-marker semantics preserved for break/non-break behavior
@@ -69,8 +69,8 @@ status: in_review_prep
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_codegen test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker` -> pass.
@@ -81,7 +81,7 @@ Validation evidence:
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/849
-- Part 2: pending
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/850
 - Part 3: pending
 
 ## Reviewer Follow-up
