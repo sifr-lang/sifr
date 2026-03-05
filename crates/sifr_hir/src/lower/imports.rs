@@ -1,0 +1,94 @@
+use super::*;
+
+pub(super) fn resolve_imports_early(stmts: &[Stmt], externals: &ExternalDefs, ctx: &mut LowerCtx) {
+    for stmt in stmts {
+        if let Stmt::ImportFrom(import_from) = stmt {
+            if import_from.level > 1 {
+                continue;
+            }
+            let Some(ref module) = import_from.module else {
+                continue;
+            };
+            let module_name = module.to_string();
+            let is_absolute_import = import_from.level == 0;
+            if is_absolute_import && (module_name == "typing" || module_name == "enum") {
+                continue;
+            }
+                let names: Vec<String> = import_from
+                    .names
+                    .iter()
+                    .map(|alias| alias.name.to_string())
+                    .collect();
+                let aliases: Vec<(String, String)> = import_from
+                    .names
+                    .iter()
+                    .filter_map(|alias| {
+                        alias
+                            .asname
+                            .as_ref()
+                            .map(|asname| (alias.name.to_string(), asname.to_string()))
+                    })
+                    .collect();
+                let local_name_for = |original: &str| -> String {
+                    aliases
+                        .iter()
+                        .find(|(orig, _)| orig == original)
+                        .map(|(_, alias)| alias.clone())
+                        .unwrap_or_else(|| original.to_string())
+                };
+
+                // Only resolve from externals (stdlib and local modules)
+                let module_key = module_name.clone();
+                if let Some(module_classes) = externals.classes.get(&module_key) {
+                    for name in &names {
+                        let local = local_name_for(name);
+                        if let Some(class_ty) = module_classes.get(name) {
+                            if !ctx.class_types.contains_key(&local) {
+                                ctx.class_types.insert(local.clone(), class_ty.clone());
+                                // Register as error type if flagged
+                                if externals.error_types.contains(name) {
+                                    ctx.error_types.insert(local.clone());
+                                }
+                                // Register constructor
+                                if let Type::Class {
+                                    fields, methods, ..
+                                } = class_ty
+                                {
+                                    let ft = if let Some((_, new_ft)) =
+                                        methods.iter().find(|(n, _)| n == "new")
+                                    {
+                                        let params: Vec<(String, Type)> = new_ft
+                                            .params
+                                            .iter()
+                                            .map(|(n, t, _)| (n.clone(), t.clone()))
+                                            .collect();
+                                        FunctionType::new(params, class_ty.clone())
+                                    } else {
+                                        let params: Vec<(String, Type)> = fields.clone();
+                                        FunctionType::new(params, class_ty.clone())
+                                    };
+                                    ctx.functions.insert(local, ft);
+                                }
+                            }
+                        }
+                    }
+                }
+                if let Some(module_fns) = externals.functions.get(&module_key) {
+                    for name in &names {
+                        let local = local_name_for(name);
+                        if let Some(ft) = module_fns.get(name) {
+                            ctx.functions.entry(local).or_insert_with(|| ft.clone());
+                        }
+                    }
+                }
+                if let Some(module_consts) = externals.constants.get(&module_key) {
+                    for name in &names {
+                        let local = local_name_for(name);
+                        if let Some(const_ty) = module_consts.get(name) {
+                            ctx.scope.define(local, const_ty.clone());
+                        }
+                    }
+                }
+        }
+    }
+}

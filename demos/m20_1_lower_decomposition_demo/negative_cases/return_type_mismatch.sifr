@@ -1,0 +1,8 @@
+# milestone_20_1 negative-path demo
+# Must fail in lowering/type-checking with an explicit return-type mismatch diagnostic.
+
+def bad() -> int:
+    return "oops"
+
+def main():
+    print(bad())
