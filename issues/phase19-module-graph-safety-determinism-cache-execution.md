@@ -74,7 +74,7 @@ Validation evidence:
 
 ## Reviewer Follow-up
 - External review pass 1 output: `reviews/phase19-review.md`
-- Remediation PR (pass 1): pending
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/837
 - Pass-1 triage + actions:
   - Documented that module-graph local dependency extraction intentionally follows Phase 18 import-form semantics (including level-1 relative imports only, excluding unsupported deeper levels).
   - Documented that stdlib cache scope is process-local (`OnceLock`), clarifying deterministic behavior and lifetime.
