@@ -1,9 +1,11 @@
 //! Statement lowering scaffolds for the IR lowering.
 
 use crate::helpers::{
-    body_calls_function, codegen_body_always_exits, collect_locally_defined_vars,
-    collect_mutated_vars, collect_referenced_vars_with_types, detect_and_not_none_vars,
-    detect_is_none_var, detect_is_not_none_var,
+    codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var, detect_is_not_none_var,
+};
+use crate::hir_analysis::queries::{
+    body_calls_function, collect_locally_defined_vars, collect_mutated_vars,
+    collect_referenced_vars_with_types,
 };
 use crate::{
     try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustLiteral,
@@ -720,7 +722,7 @@ fn try_lower_simple_nested_function_stmt(
         return None;
     }
 
-    let nested_mutated_vars = collect_mutated_vars(&func.body);
+    let nested_mutated_vars = collect_mutated_vars(&func.body, None);
     let nested_borrowed_params: HashSet<String> = HashSet::new();
     let is_recursive = body_calls_function(&func.body, &func.name);
     let allowed_calls = if is_recursive {

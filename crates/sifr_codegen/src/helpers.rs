@@ -1,6 +1,9 @@
 use super::{IsNoneUnionMatch, IsinstanceUnionMatch, ModuleFuncSignatures};
-use crate::hir_analysis::traversal::{self, TraversalConfig};
-use sifr_hir::{HirExpr, HirFStringPart, HirFunction, HirModule, HirPattern, HirStmt};
+use crate::hir_analysis::{
+    queries,
+    traversal::{self, TraversalConfig},
+};
+use sifr_hir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
@@ -464,254 +467,27 @@ pub(super) fn recursive_field_rust_type(ty: &Type, class_name: &str) -> String {
 
 /// Check if a variable name is referenced anywhere in a list of statements.
 pub(super) fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Expr { expr } => {
-                if expr_references_var(expr, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::Return { value: Some(expr) } => {
-                if expr_references_var(expr, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::Return { value: None } => {}
-            HirStmt::Yield { value } => {
-                if expr_references_var(value, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::Let { value, .. } => {
-                if expr_references_var(value, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::Assign { value, .. } => {
-                if expr_references_var(value, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::FieldAssign { value, .. } => {
-                if expr_references_var(value, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::SubscriptAssign { index, value, .. } => {
-                if expr_references_var(index, var_name) {
-                    return true;
-                }
-                if expr_references_var(value, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::AttributeAugAssign { value, .. } => {
-                if expr_references_var(value, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::If {
-                condition,
-                then_body,
-                elif_clauses,
-                else_body,
-            } => {
-                if expr_references_var(condition, var_name) {
-                    return true;
-                }
-                if stmts_reference_var(then_body, var_name) {
-                    return true;
-                }
-                for (cond, body) in elif_clauses {
-                    if expr_references_var(cond, var_name) {
-                        return true;
-                    }
-                    if stmts_reference_var(body, var_name) {
-                        return true;
-                    }
-                }
-                if let Some(eb) = else_body {
-                    if stmts_reference_var(eb, var_name) {
-                        return true;
-                    }
-                }
-            }
-            HirStmt::While {
-                condition, body, ..
-            } => {
-                if expr_references_var(condition, var_name) {
-                    return true;
-                }
-                if stmts_reference_var(body, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::For { iter, body, .. } => {
-                if expr_references_var(iter, var_name) {
-                    return true;
-                }
-                if stmts_reference_var(body, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::With { items, body, .. } => {
-                for (_, value, _) in items {
-                    if expr_references_var(value, var_name) {
-                        return true;
-                    }
-                }
-                if stmts_reference_var(body, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::TryExcept { body, handlers, .. } => {
-                if stmts_reference_var(body, var_name) {
-                    return true;
-                }
-                for handler in handlers {
-                    if stmts_reference_var(&handler.body, var_name) {
-                        return true;
-                    }
-                }
-            }
-            HirStmt::Raise { value } => {
-                if expr_references_var(value, var_name) {
-                    return true;
-                }
-            }
-            HirStmt::AugAssign { value, .. } => {
-                if expr_references_var(value, var_name) {
-                    return true;
-                }
-            }
-            _ => {}
-        }
-    }
-    false
+    queries::stmts_reference_var(stmts, var_name)
 }
 
 /// Check if an expression references a variable name.
 pub(super) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
-    match expr {
-        HirExpr::Name { name, .. } => name == var_name,
-        HirExpr::BinOp { left, right, .. } => {
-            expr_references_var(left, var_name) || expr_references_var(right, var_name)
-        }
-        HirExpr::BoolOp { values, .. } => values.iter().any(|v| expr_references_var(v, var_name)),
-        HirExpr::UnaryOp { operand, .. } => expr_references_var(operand, var_name),
-        HirExpr::Call { args, .. } => args.iter().any(|a| expr_references_var(a, var_name)),
-        HirExpr::MethodCall { object, args, .. } => {
-            expr_references_var(object, var_name)
-                || args.iter().any(|a| expr_references_var(a, var_name))
-        }
-        HirExpr::FieldAccess { object, .. } => expr_references_var(object, var_name),
-        HirExpr::Index { object, index, .. } => {
-            expr_references_var(object, var_name) || expr_references_var(index, var_name)
-        }
-        HirExpr::ListLiteral { elements, .. } => {
-            elements.iter().any(|e| expr_references_var(e, var_name))
-        }
-        HirExpr::SetLiteral { elements, .. } => {
-            elements.iter().any(|e| expr_references_var(e, var_name))
-        }
-        HirExpr::TupleLiteral { elements, .. } => {
-            elements.iter().any(|e| expr_references_var(e, var_name))
-        }
-        HirExpr::Compare {
-            left, comparators, ..
-        } => {
-            expr_references_var(left, var_name)
-                || comparators.iter().any(|c| expr_references_var(c, var_name))
-        }
-        HirExpr::IfExpr {
-            condition,
-            then_expr,
-            else_expr,
-            ..
-        } => {
-            expr_references_var(condition, var_name)
-                || expr_references_var(then_expr, var_name)
-                || expr_references_var(else_expr, var_name)
-        }
-        HirExpr::Lambda { body, .. } => expr_references_var(body, var_name),
-        HirExpr::ListComp {
-            expr: e,
-            generators,
-            ..
-        } => {
-            expr_references_var(e, var_name)
-                || generators.iter().any(|(_, iter, filter)| {
-                    expr_references_var(iter, var_name)
-                        || filter
-                            .as_ref()
-                            .is_some_and(|f| expr_references_var(f, var_name))
-                })
-        }
-        HirExpr::QuestionMark { expr, .. } => expr_references_var(expr, var_name),
-        HirExpr::OkWrap { value, .. } => expr_references_var(value, var_name),
-        HirExpr::ErrWrap { value, .. } => expr_references_var(value, var_name),
-        HirExpr::DictLiteral { keys, values, .. } => keys
-            .iter()
-            .chain(values.iter())
-            .any(|e| expr_references_var(e, var_name)),
-        _ => false,
-    }
+    queries::expr_references_var(expr, var_name)
 }
 
 /// Check if a function body contains any yield statements (making it a generator).
 pub(super) fn body_contains_return_stmt(stmts: &[HirStmt]) -> bool {
-    let found = std::cell::Cell::new(false);
-    let mut on_stmt = |stmt: &HirStmt| {
-        if matches!(stmt, HirStmt::Return { .. }) {
-            found.set(true);
-        }
-    };
-    let mut on_expr = |_expr: &HirExpr| {};
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found.get()
+    queries::body_contains_return(stmts)
 }
 
 /// Check if a try body contains a return statement with a non-unit value.
 /// Used to determine if the try closure needs to return T instead of ().
 pub(super) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
-    let found = std::cell::Cell::new(false);
-    let mut on_stmt = |stmt: &HirStmt| {
-        if let HirStmt::Return { value: Some(val) } = stmt {
-            if !matches!(val, HirExpr::NoneLiteral) {
-                found.set(true);
-            }
-        }
-    };
-    let mut on_expr = |_expr: &HirExpr| {};
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found.get()
+    queries::try_body_has_value_return(stmts)
 }
 
 pub(super) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
-    let found = std::cell::Cell::new(false);
-    let mut on_stmt = |stmt: &HirStmt| {
-        if matches!(stmt, HirStmt::Yield { .. }) {
-            found.set(true);
-        }
-    };
-    let mut on_expr = |_expr: &HirExpr| {};
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found.get()
+    queries::body_contains_yield(stmts)
 }
 
 /// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
@@ -731,22 +507,7 @@ pub(super) fn needs_clone_for_type(ty: &Type) -> bool {
 }
 
 /// Mutating methods that require the receiver variable to be `mut`.
-pub(super) const MUTATING_METHODS: &[&str] = &[
-    "append",
-    "appendleft",
-    "extend",
-    "insert",
-    "clear",
-    "reverse",
-    "sort",
-    "pop",
-    "popleft",
-    "remove",
-    "push_str",
-    "update",
-    "add",
-    "discard",
-];
+pub(super) const MUTATING_METHODS: &[&str] = queries::MUTATING_METHODS;
 
 /// Collect the set of variable names that are mutated in a function body.
 /// A variable is mutated if it appears in:
@@ -755,348 +516,38 @@ pub(super) const MUTATING_METHODS: &[&str] = &[
 /// - `HirStmt::Expr` containing a `MethodCall` on the variable with a mutating method
 /// - `HirStmt::Delete` on the variable
 pub(super) fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
-    let mut mutated = HashSet::new();
-    collect_mutated_vars_inner(stmts, &mut mutated, None);
-    mutated
+    queries::collect_mutated_vars(stmts, None)
 }
 
 pub(super) fn collect_mutated_vars_with_sigs(
     stmts: &[HirStmt],
     func_signatures: &ModuleFuncSignatures,
 ) -> HashSet<String> {
-    let mut mutated = HashSet::new();
-    collect_mutated_vars_inner(stmts, &mut mutated, Some(func_signatures));
-    mutated
-}
-
-pub(super) fn collect_mutated_vars_inner(
-    stmts: &[HirStmt],
-    mutated: &mut HashSet<String>,
-    func_signatures: Option<&ModuleFuncSignatures>,
-) {
-    for stmt in stmts {
-        match stmt {
-            HirStmt::Assign { name, .. } => {
-                mutated.insert(name.clone());
-            }
-            HirStmt::AugAssign { name, .. } => {
-                mutated.insert(name.clone());
-            }
-            HirStmt::Expr { expr } => {
-                collect_mutated_vars_in_expr(expr, mutated, func_signatures);
-            }
-            HirStmt::Let { value, .. } => {
-                // Scan the value expression for mutating method calls
-                collect_mutated_vars_in_expr(value, mutated, func_signatures);
-            }
-            HirStmt::Return { value: Some(expr) } => {
-                collect_mutated_vars_in_expr(expr, mutated, func_signatures);
-            }
-            HirStmt::If {
-                condition,
-                then_body,
-                elif_clauses,
-                else_body,
-            } => {
-                collect_mutated_vars_in_expr(condition, mutated, func_signatures);
-                collect_mutated_vars_inner(then_body, mutated, func_signatures);
-                for (cond, body) in elif_clauses {
-                    collect_mutated_vars_in_expr(cond, mutated, func_signatures);
-                    collect_mutated_vars_inner(body, mutated, func_signatures);
-                }
-                if let Some(body) = else_body {
-                    collect_mutated_vars_inner(body, mutated, func_signatures);
-                }
-            }
-            HirStmt::While {
-                condition,
-                body,
-                else_body,
-            } => {
-                collect_mutated_vars_in_expr(condition, mutated, func_signatures);
-                collect_mutated_vars_inner(body, mutated, func_signatures);
-                if let Some(eb) = else_body {
-                    collect_mutated_vars_inner(eb, mutated, func_signatures);
-                }
-            }
-            HirStmt::For {
-                body, else_body, ..
-            } => {
-                collect_mutated_vars_inner(body, mutated, func_signatures);
-                if let Some(eb) = else_body {
-                    collect_mutated_vars_inner(eb, mutated, func_signatures);
-                }
-            }
-            HirStmt::TryExcept { body, handlers, .. } => {
-                collect_mutated_vars_inner(body, mutated, func_signatures);
-                for handler in handlers {
-                    collect_mutated_vars_inner(&handler.body, mutated, func_signatures);
-                }
-            }
-            HirStmt::SubscriptAssign { object, .. } => {
-                mutated.insert(object.clone());
-            }
-            HirStmt::NestedSubscriptAssign { object, .. } => {
-                mutated.insert(object.clone());
-            }
-            HirStmt::SubscriptAugAssign { object, .. } => {
-                mutated.insert(object.clone());
-            }
-            HirStmt::AttributeAugAssign { object, .. } => {
-                mutated.insert(object.clone());
-            }
-            HirStmt::Delete {
-                object: HirExpr::Name { name, .. },
-                ..
-            } => {
-                mutated.insert(name.clone());
-            }
-            HirStmt::Yield { value } => {
-                collect_mutated_vars_in_expr(value, mutated, func_signatures);
-            }
-            HirStmt::With { items, body, .. } => {
-                for (_, value, _) in items {
-                    collect_mutated_vars_in_expr(value, mutated, func_signatures);
-                }
-                collect_mutated_vars_inner(body, mutated, func_signatures);
-            }
-            _ => {}
-        }
-    }
-}
-
-pub(super) fn collect_mutated_vars_in_expr(
-    expr: &HirExpr,
-    mutated: &mut HashSet<String>,
-    func_signatures: Option<&ModuleFuncSignatures>,
-) {
-    match expr {
-        HirExpr::MethodCall {
-            object,
-            method,
-            args,
-            ..
-        } => {
-            if MUTATING_METHODS.contains(&method.as_str()) {
-                if let HirExpr::Name { name, .. } = object.as_ref() {
-                    mutated.insert(name.clone());
-                }
-            }
-            // Class method calls may mutate the object (conservative)
-            if matches!(object.ty(), Type::Class { .. }) {
-                if let HirExpr::Name { name, .. } = object.as_ref() {
-                    mutated.insert(name.clone());
-                }
-            }
-            // Recurse into sub-expressions
-            collect_mutated_vars_in_expr(object, mutated, func_signatures);
-            for arg in args {
-                collect_mutated_vars_in_expr(arg, mutated, func_signatures);
-            }
-        }
-        HirExpr::Call { func, args, .. } => {
-            // Mark variables passed to MutBorrow params as mutated (need `let mut` in Rust)
-            if let Some(sigs) = func_signatures {
-                if let Some((param_convs, _)) = sigs.get(func) {
-                    for (i, arg) in args.iter().enumerate() {
-                        if let Some((_, ParamConvention::MutBorrow)) = param_convs.get(i) {
-                            if let HirExpr::Name { name, .. } = arg {
-                                mutated.insert(name.clone());
-                            }
-                        }
-                    }
-                }
-            }
-            for arg in args {
-                collect_mutated_vars_in_expr(arg, mutated, func_signatures);
-            }
-        }
-        HirExpr::BinOp { left, right, .. } => {
-            collect_mutated_vars_in_expr(left, mutated, func_signatures);
-            collect_mutated_vars_in_expr(right, mutated, func_signatures);
-        }
-        HirExpr::UnaryOp { operand, .. } => {
-            collect_mutated_vars_in_expr(operand, mutated, func_signatures);
-        }
-        HirExpr::Compare {
-            left, comparators, ..
-        } => {
-            collect_mutated_vars_in_expr(left, mutated, func_signatures);
-            for c in comparators {
-                collect_mutated_vars_in_expr(c, mutated, func_signatures);
-            }
-        }
-        HirExpr::BoolOp { values, .. } => {
-            for v in values {
-                collect_mutated_vars_in_expr(v, mutated, func_signatures);
-            }
-        }
-        HirExpr::IfExpr {
-            condition,
-            then_expr,
-            else_expr,
-            ..
-        } => {
-            collect_mutated_vars_in_expr(condition, mutated, func_signatures);
-            collect_mutated_vars_in_expr(then_expr, mutated, func_signatures);
-            collect_mutated_vars_in_expr(else_expr, mutated, func_signatures);
-        }
-        HirExpr::Index { object, index, .. } => {
-            collect_mutated_vars_in_expr(object, mutated, func_signatures);
-            collect_mutated_vars_in_expr(index, mutated, func_signatures);
-        }
-        HirExpr::FString { parts, .. } => {
-            for part in parts {
-                if let HirFStringPart::Expr(e) = part {
-                    collect_mutated_vars_in_expr(e, mutated, func_signatures);
-                }
-            }
-        }
-        _ => {}
-    }
+    queries::collect_mutated_vars(stmts, Some(func_signatures))
 }
 
 /// Collect all variable names and their types referenced in a list of statements.
 pub(super) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(String, Type)> {
-    let mut refs: HashMap<String, Type> = HashMap::new();
-    collect_referenced_vars_with_types_inner(stmts, &mut refs);
-    refs.into_iter().collect()
-}
-
-pub(super) fn collect_referenced_vars_with_types_inner(
-    stmts: &[HirStmt],
-    refs: &mut HashMap<String, Type>,
-) {
-    let mut on_stmt = |_stmt: &HirStmt| {};
-    let mut on_expr = |expr: &HirExpr| {
-        if let HirExpr::Name { name, ty } = expr {
-            refs.entry(name.clone()).or_insert_with(|| ty.clone());
-        }
-    };
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
+    queries::collect_referenced_vars_with_types(stmts)
 }
 
 pub(super) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
-    traversal::walk_expr(expr, &mut |node| {
-        if let HirExpr::Name { name, ty } = node {
-            refs.entry(name.clone()).or_insert_with(|| ty.clone());
-        }
-    });
+    queries::collect_typed_refs_in_expr(expr, refs);
 }
 
 /// Collect all variable names defined (let-bound) in a list of statements.
 /// Does NOT recurse into nested functions.
 pub(super) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String> {
-    let mut defined = HashSet::new();
-    let mut on_stmt = |stmt: &HirStmt| match stmt {
-        HirStmt::Let { name, .. } => {
-            defined.insert(name.clone());
-        }
-        HirStmt::For { target, .. } => {
-            defined.insert(target.clone());
-        }
-        HirStmt::TupleUnpack { targets, .. } => {
-            for (name, _) in targets {
-                defined.insert(name.clone());
-            }
-        }
-        HirStmt::StarUnpack {
-            before,
-            star,
-            after,
-            ..
-        } => {
-            for (name, _) in before {
-                defined.insert(name.clone());
-            }
-            defined.insert(star.0.clone());
-            for (name, _) in after {
-                defined.insert(name.clone());
-            }
-        }
-        HirStmt::NestedFunction { func } => {
-            defined.insert(func.name.clone());
-        }
-        HirStmt::Match { arms, .. } => {
-            for arm in arms {
-                collect_capture_pattern_names(&arm.pattern, &mut defined);
-            }
-        }
-        _ => {}
-    };
-    let mut on_expr = |_expr: &HirExpr| {};
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    defined
-}
-
-fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<String>) {
-    match pattern {
-        HirPattern::Capture { name, .. } => {
-            defined.insert(name.clone());
-        }
-        HirPattern::Or { patterns } | HirPattern::Tuple { elements: patterns } => {
-            for pattern in patterns {
-                collect_capture_pattern_names(pattern, defined);
-            }
-        }
-        HirPattern::Class { fields, .. } => {
-            for (_, pattern) in fields {
-                collect_capture_pattern_names(pattern, defined);
-            }
-        }
-        HirPattern::Wildcard
-        | HirPattern::Literal { .. }
-        | HirPattern::None
-        | HirPattern::Value { .. } => {}
-    }
+    queries::collect_locally_defined_vars(stmts)
 }
 
 /// Check if a function body contains calls to a specific function name.
 pub(super) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
-    let mut found = false;
-    let mut on_stmt = |_stmt: &HirStmt| {};
-    let mut on_expr = |expr: &HirExpr| {
-        if found {
-            return;
-        }
-        if let HirExpr::Call { func, .. } = expr {
-            if func == func_name {
-                found = true;
-            }
-        }
-    };
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found
+    queries::body_calls_function(stmts, func_name)
 }
 
 pub(super) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
-    let mut found = false;
-    traversal::walk_expr(expr, &mut |node| {
-        if found {
-            return;
-        }
-        if let HirExpr::Call { func, .. } = node {
-            if func == func_name {
-                found = true;
-            }
-        }
-    });
-    found
+    queries::expr_calls_function(expr, func_name)
 }
 
 #[cfg(test)]

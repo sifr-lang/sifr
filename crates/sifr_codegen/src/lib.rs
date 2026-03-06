@@ -1018,15 +1018,16 @@ impl RustEmitter {
         };
 
         if let HirStmt::NestedFunction { func } = stmt {
-            if crate::helpers::body_calls_function(&func.body, &func.name) {
+            if crate::hir_analysis::queries::body_calls_function(&func.body, &func.name) {
                 let param_names = func
                     .params
                     .iter()
                     .map(|param| param.name.clone())
                     .collect::<HashSet<_>>();
                 let referenced_with_types =
-                    crate::helpers::collect_referenced_vars_with_types(&func.body);
-                let locally_defined = crate::helpers::collect_locally_defined_vars(&func.body);
+                    crate::hir_analysis::queries::collect_referenced_vars_with_types(&func.body);
+                let locally_defined =
+                    crate::hir_analysis::queries::collect_locally_defined_vars(&func.body);
                 let captures = referenced_with_types
                     .into_iter()
                     .filter(|(name, _)| {
@@ -1229,5 +1230,5 @@ impl RustEmitter {
 }
 
 pub fn body_contains_yield(stmts: &[HirStmt]) -> bool {
-    helpers::body_contains_yield_inner(stmts)
+    hir_analysis::queries::body_contains_yield(stmts)
 }
