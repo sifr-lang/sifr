@@ -1,0 +1,20 @@
+# m26_1 TypeVar constraint enforcement demo
+# Shows TypeVar constraints/bounds accepting valid concrete instantiations only.
+from typing import TypeVar
+
+T = TypeVar("T", int, str)
+U = TypeVar("U", bound=Comparable)
+
+def echo(x: T) -> T:
+    return x
+
+def smallest(a: U, b: U) -> U:
+    if a < b:
+        return a
+    return b
+
+def main():
+    print('m26_1 typevar constraint enforcement demo:')
+    print(echo(7))
+    print(echo("ok"))
+    print(smallest(10, 3))

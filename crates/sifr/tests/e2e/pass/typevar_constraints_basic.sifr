@@ -1,0 +1,21 @@
+# Test TypeVar constraints/bounds from TypeVar(...) declarations
+from typing import TypeVar
+
+T = TypeVar("T", int, str)
+U = TypeVar("U", bound=Comparable)
+
+def echo(x: T) -> T:
+    return x
+
+def smallest(a: U, b: U) -> U:
+    if a < b:
+        return a
+    return b
+
+def main():
+    a: int = echo(5)
+    b: str = echo("hello")
+    c: int = smallest(4, 9)
+    assert str(a) == '5'
+    assert str(b) == 'hello'
+    assert str(c) == '4'

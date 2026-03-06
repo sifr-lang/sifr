@@ -17,13 +17,14 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
                 ctx.type_vars.insert(tp_name.clone());
                 declared_params.push(tp_name.clone());
                 if let Some(ref bound) = tv.bound {
-                    if let Expr::Name(n) = bound.as_ref() {
+                    let specs = parse_typevar_bound_expr(bound, ctx);
+                    if !specs.is_empty() {
                         ctx.type_param_bounds
                             .entry(class_name.clone())
                             .or_default()
                             .entry(tp_name)
                             .or_default()
-                            .push(n.id.clone());
+                            .extend(specs);
                     }
                 }
             }
@@ -335,6 +336,14 @@ pub(super) fn collect_class_type(class_def: &StmtClassDef, ctx: &mut LowerCtx) {
         }
     }
 
+    // Generic class constructors are generic callables keyed by class name.
+    if let Some(type_params) = ctx.class_declared_type_params.get(&class_name).cloned() {
+        if !type_params.is_empty() {
+            ctx.generic_functions
+                .insert(class_name.clone(), type_params);
+        }
+    }
+
     if is_error {
         ctx.error_types.insert(class_name.clone());
     }
@@ -442,7 +451,9 @@ pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Optio
                     return_ty.clone(),
                 );
 
+                let previous_owner = ctx.current_owner.replace(class_name.clone());
                 let body = lower_stmts(&func.body, &method_ft, ctx);
+                ctx.current_owner = previous_owner;
                 ctx.scope.pop();
 
                 hir_methods.push(HirFunction {
@@ -515,7 +526,9 @@ pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Optio
                         .collect(),
                     return_ty.clone(),
                 );
+                let previous_owner = ctx.current_owner.replace(class_name.clone());
                 let body = lower_stmts(&func.body, &method_ft, ctx);
+                ctx.current_owner = previous_owner;
                 ctx.scope.pop();
                 ctx.current_class = None;
                 hir_methods.push(HirFunction {
@@ -648,7 +661,9 @@ pub(super) fn lower_class(class_def: &StmtClassDef, ctx: &mut LowerCtx) -> Optio
             );
 
             // Lower method body
+            let previous_owner = ctx.current_owner.replace(class_name.clone());
             let body = lower_stmts(&func.body, &method_ft, ctx);
+            ctx.current_owner = previous_owner;
 
             // Determine receiver mutability: if any statement assigns to self.field, it's &mut self
             let _is_mutating = method_name == "__init__" || body_contains_field_assign(&body);
@@ -818,4 +833,3 @@ pub(super) fn lower_expr_simple(expr: &Expr) -> Option<HirExpr> {
         _ => None,
     }
 }
-

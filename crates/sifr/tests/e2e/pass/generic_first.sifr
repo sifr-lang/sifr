@@ -4,11 +4,13 @@ from typing import TypeVar
 
 T = TypeVar("T")
 
-def first(items: list[T]) -> T:
+def first(items: list[T]) -> T | None:
     return items[0]
 
 def main():
     nums: list[int] = [10, 20, 30]
-    assert str(first(nums)) == '10'
+    first_num: int | None = first(nums)
+    assert str(first_num) == '10'
     words: list[str] = ["hello", "world"]
-    assert str(first(words)) == 'hello'
+    first_word: str | None = first(words)
+    assert str(first_word) == 'hello'

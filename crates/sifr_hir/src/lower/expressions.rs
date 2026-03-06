@@ -95,6 +95,62 @@ pub(super) fn op_to_dunder(op: &str) -> Option<&'static str> {
     }
 }
 
+/// Shape compatibility used when generic inference leaves unresolved TypeVars.
+/// TypeVars are treated as wildcards, but container/class structure must still match.
+fn is_compatible_with_unresolved_typevars(source: &Type, target: &Type) -> bool {
+    match target {
+        Type::TypeVar(_) => true,
+        Type::List(target_elem) => match source {
+            Type::List(source_elem) => {
+                is_compatible_with_unresolved_typevars(source_elem, target_elem)
+            }
+            _ => false,
+        },
+        Type::Set(target_elem) => match source {
+            Type::Set(source_elem) => {
+                is_compatible_with_unresolved_typevars(source_elem, target_elem)
+            }
+            _ => false,
+        },
+        Type::Dict(target_key, target_val) => match source {
+            Type::Dict(source_key, source_val) => {
+                is_compatible_with_unresolved_typevars(source_key, target_key)
+                    && is_compatible_with_unresolved_typevars(source_val, target_val)
+            }
+            _ => false,
+        },
+        Type::Tuple(target_elems) => match source {
+            Type::Tuple(source_elems) => {
+                source_elems.len() == target_elems.len()
+                    && source_elems
+                        .iter()
+                        .zip(target_elems.iter())
+                        .all(|(src, dst)| is_compatible_with_unresolved_typevars(src, dst))
+            }
+            _ => false,
+        },
+        Type::Result(target_ok, target_err) => match source {
+            Type::Result(source_ok, source_err) => {
+                is_compatible_with_unresolved_typevars(source_ok, target_ok)
+                    && is_compatible_with_unresolved_typevars(source_err, target_err)
+            }
+            _ => false,
+        },
+        Type::Class {
+            name: target_name, ..
+        } => match source {
+            Type::Class {
+                name: source_name, ..
+            } => source_name == target_name,
+            _ => false,
+        },
+        Type::Union(target_members) => target_members
+            .iter()
+            .any(|member| is_compatible_with_unresolved_typevars(source, member)),
+        _ => source.is_assignable_to(target),
+    }
+}
+
 pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let left = lower_expr(&binop.left, ctx)?;
     let right = lower_expr(&binop.right, ctx)?;
@@ -151,7 +207,12 @@ pub(super) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirEx
     }
 }
 
-pub(super) fn check_int_overflow_risk(op: &str, left: &HirExpr, right: &HirExpr, ctx: &mut LowerCtx) {
+pub(super) fn check_int_overflow_risk(
+    op: &str,
+    left: &HirExpr,
+    right: &HirExpr,
+    ctx: &mut LowerCtx,
+) {
     let is_left_const = matches!(left, HirExpr::IntLiteral(_));
     let is_right_const = matches!(right, HirExpr::IntLiteral(_));
 
@@ -1289,7 +1350,16 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
 
     // Check argument types (skip for print)
     if func_name != "print" {
+        let is_generic_function = ctx.generic_functions.contains_key(&func_name);
         for (i, (arg, (param_name, param_ty, _))) in args.iter().zip(ft.params.iter()).enumerate() {
+            if is_generic_function {
+                let mut type_vars = Vec::new();
+                collect_type_vars(param_ty, &mut type_vars);
+                if !type_vars.is_empty() {
+                    // Generic params are validated after binding/substitution.
+                    continue;
+                }
+            }
             if !arg.ty().is_assignable_to(param_ty) {
                 ctx.error(format!(
                     "argument {} ('{}') of function '{}': expected '{}', got '{}'",
@@ -1374,6 +1444,21 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
                 args.iter().zip(ft.params.iter()).enumerate()
             {
                 let concrete_param_ty = substitute_type_vars(param_ty, &bindings);
+                let mut unresolved_type_vars = Vec::new();
+                collect_type_vars(&concrete_param_ty, &mut unresolved_type_vars);
+                if !unresolved_type_vars.is_empty() {
+                    if !is_compatible_with_unresolved_typevars(arg.ty(), &concrete_param_ty) {
+                        ctx.error(format!(
+                            "argument {} ('{}') of function '{}': expected '{}', got '{}'",
+                            i + 1,
+                            param_name,
+                            func_name,
+                            concrete_param_ty.display_name(),
+                            arg.ty().display_name()
+                        ));
+                    }
+                    continue;
+                }
                 if !arg.ty().is_assignable_to(&concrete_param_ty) {
                     ctx.error(format!(
                         "argument {} ('{}') of function '{}': expected '{}', got '{}'",
@@ -1387,23 +1472,46 @@ pub(super) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr>
             }
         }
         // Check protocol bounds on type parameters (scoped to this function)
-        let func_bounds = ctx.type_param_bounds.get(&func_name);
-        let bound_errors: Vec<String> = bindings.iter().flat_map(|(tv_name, concrete_ty)| {
-            func_bounds.into_iter().flat_map(move |owner_bounds| {
-                owner_bounds.get(tv_name).into_iter().flat_map(move |bounds| {
-                    bounds.iter().filter_map(move |bound| {
-                        if type_satisfies_bound(concrete_ty, bound) {
-                            None
+        let mut bound_errors: Vec<String> = Vec::new();
+        if let Some(owner_bounds) = ctx.type_param_bounds.get(&func_name) {
+            for (tv_name, concrete_ty) in &bindings {
+                if let Some(specs) = owner_bounds.get(tv_name) {
+                    let mut required_bounds = Vec::new();
+                    let mut constraints = Vec::new();
+                    for spec in specs {
+                        if let Some(constraint_name) = decode_typevar_constraint(spec) {
+                            constraints.push(constraint_name.to_string());
                         } else {
-                            Some(format!(
-                                "type '{}' does not implement protocol '{}' required by type parameter '{}'",
-                                concrete_ty.display_name(), bound, tv_name
-                            ))
+                            required_bounds.push(spec.clone());
                         }
-                    })
-                })
-            })
-        }).collect();
+                    }
+
+                    for bound in required_bounds {
+                        if !type_satisfies_bound(concrete_ty, &bound, ctx) {
+                            bound_errors.push(format!(
+                                "type '{}' does not implement protocol '{}' required by type parameter '{}'",
+                                concrete_ty.display_name(),
+                                bound,
+                                tv_name
+                            ));
+                        }
+                    }
+
+                    if !constraints.is_empty()
+                        && !constraints.iter().any(|constraint| {
+                            type_satisfies_constraint(concrete_ty, constraint, ctx)
+                        })
+                    {
+                        bound_errors.push(format!(
+                            "type '{}' does not satisfy constraints ({}) required by type parameter '{}'",
+                            concrete_ty.display_name(),
+                            constraints.join(", "),
+                            tv_name
+                        ));
+                    }
+                }
+            }
+        }
         for err in bound_errors {
             ctx.error(err);
         }
@@ -1916,7 +2024,11 @@ pub(super) fn lower_attribute(attr: &ExprAttribute, ctx: &mut LowerCtx) -> Optio
     None
 }
 
-pub(super) fn lower_method_call(attr: &ExprAttribute, call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
+pub(super) fn lower_method_call(
+    attr: &ExprAttribute,
+    call: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<HirExpr> {
     // Handle super().__init__() and super().method() calls
     if let Expr::Call(super_call) = attr.value.as_ref() {
         if let Expr::Name(name) = super_call.func.as_ref() {
@@ -3440,9 +3552,9 @@ mod tests {
         );
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("tuple pattern requires subject of tuple type")));
+        assert!(errors.iter().any(|e| e
+            .message
+            .contains("tuple pattern requires subject of tuple type")));
     }
 
     #[test]
@@ -3452,8 +3564,8 @@ mod tests {
         );
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| e.message.contains("tuple pattern expects 3 element(s), subject has 2")));
+        assert!(errors.iter().any(|e| e
+            .message
+            .contains("tuple pattern expects 3 element(s), subject has 2")));
     }
 }

@@ -2,7 +2,7 @@
 from sifr.collections import deque
 
 def main():
-    d: deque = deque(0)
+    d: deque[int] = deque(0)
     d.append(1)
     d.append(2)
     d.append(3)
@@ -12,7 +12,7 @@ def main():
     assert str("len after = " + str(d.len())) == 'len after = 1'
 
     # Test maxlen
-    d2: deque = deque(3)
+    d2: deque[int] = deque(3)
     d2.append(1)
     d2.append(2)
     d2.append(3)
