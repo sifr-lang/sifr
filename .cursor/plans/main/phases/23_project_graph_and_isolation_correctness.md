@@ -52,6 +52,9 @@ Make project and test compilation graph-correct, deterministic, and isolated per
 - Definition of done:
   - Graph/discovery/isolation regressions are automatically caught before merge.
 
+## Execution Progress
+- 2026-03-06: `milestone_23_1` completed (PR [#863](https://github.com/yaseralnajjar/sifr/pull/863)).
+
 ## Quality Contract
 - Entry criteria: Phase 22 is completed and frontend mode parity contract is in place.
 - Exit criteria: Project graph discovery is import-closure based, deterministic, and invocation-isolated with full regression coverage.

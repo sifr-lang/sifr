@@ -12,8 +12,8 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Milestone quality-contract checks include at least one positive-path and one negative-path validation
 - [x] Full local suite passes: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh`
 - [x] Milestone demo runs successfully before opening each part PR
-- [ ] PR opened, reviewed, and merged before starting next part
-- [ ] Roadmap/phase/issues docs updated with latest status and merged PR links
+- [x] PR opened, reviewed, and merged before starting next part
+- [x] Roadmap/phase/issues docs updated with latest status and merged PR links
 
 ## Full Phase 23 To-Do Plan
 
@@ -24,7 +24,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Add milestone 23.1 positive demo
 - [x] Add milestone 23.1 negative regression case
 - [x] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 ### Part 2: milestone_23_2 Deterministic Module Graph and Cycle Diagnostics
 - [ ] Enforce deterministic module graph resolution independent of map iteration order
@@ -63,7 +63,7 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_23_1 Import-Closure Discovery
-status: validating (pending PR)
+status: done (2026-03-06, PR #863)
 
 - [x] Import-closure project discovery implemented
 - [x] Import-closure test discovery implemented
@@ -71,8 +71,8 @@ status: validating (pending PR)
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_driver test_check_project_ignores_unrelated_non_closure_parse_errors` -> pass.
@@ -95,7 +95,7 @@ status: pending
 status: pending
 
 ## PR Log
-- pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/863
 
 ## Reviewer Follow-up
 - pending
