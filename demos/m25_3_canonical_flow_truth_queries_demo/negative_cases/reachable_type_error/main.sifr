@@ -1,0 +1,10 @@
+# m25_3 negative case
+# Reachable return type mismatch should remain rejected.
+
+def classify(flag: bool) -> int:
+    if flag:
+        return 5
+    return 'bad'
+
+def main():
+    print(classify(False))

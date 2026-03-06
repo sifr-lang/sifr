@@ -81,10 +81,28 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m25_1_cfg_integration_contract_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'None | int'`.
 
 ## Part 2: milestone_25_2 CFG Validity Invariants
+status: done (2026-03-06, PR #884)
+
+- [x] CFG invariants implemented and fail-fast enforced
+- [x] Deterministic repeat-run coverage added
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_hir cfg::tests::control_flow_graph_` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m25_2_cfg_validity_invariants_demo/main.sifr` -> prints `m25_2 cfg validity invariants demo:` then `4`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m25_2_cfg_validity_invariants_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+
+## Part 3: milestone_25_3 Canonical Flow Truth Queries
 status: in_progress
 
-- [ ] CFG invariants implemented and fail-fast enforced
-- [ ] Deterministic repeat-run coverage added
+- [ ] Reachability and always-exits queries are CFG-backed and canonical
+- [ ] Tree-walk fallback logic removed for correctness-critical flow facts
 - [ ] Positive-path validation recorded
 - [ ] Negative-path validation recorded
 - [ ] Run milestone demo
@@ -93,10 +111,11 @@ status: in_progress
 - [ ] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: `cargo test -q -p sifr_hir cfg::tests::control_flow_graph_` -> pass.
-- Positive path: `cargo run -q -p sifr -- run demos/m25_2_cfg_validity_invariants_demo/main.sifr` -> prints `m25_2 cfg validity invariants demo:` then `4`.
+- Positive path: `cargo test -q -p sifr_codegen hir_analysis::queries::tests::` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m25_3_canonical_flow_truth_queries_demo/main.sifr` -> prints `m25_3 canonical flow truth queries demo:` then `5` and `77`.
 - Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
-- Negative path: `cargo run -q -p sifr -- run demos/m25_2_cfg_validity_invariants_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+- Negative path: `cargo run -q -p sifr -- run demos/m25_3_canonical_flow_truth_queries_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/883
+- Part 2: https://github.com/yaseralnajjar/sifr/pull/884
