@@ -27,12 +27,12 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 2: milestone_23_2 Deterministic Module Graph and Cycle Diagnostics
-- [ ] Enforce deterministic module graph resolution independent of map iteration order
-- [ ] Ensure cycle diagnostics are explicit, stable, and reproducible across runs
-- [ ] Add deterministic-order and cycle-diagnostic regression tests
-- [ ] Add milestone 23.2 positive demo
-- [ ] Add milestone 23.2 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
+- [x] Enforce deterministic module graph resolution independent of map iteration order
+- [x] Ensure cycle diagnostics are explicit, stable, and reproducible across runs
+- [x] Add deterministic-order and cycle-diagnostic regression tests
+- [x] Add milestone 23.2 positive demo
+- [x] Add milestone 23.2 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
 - [ ] Open PR, review, and merge
 
 ### Part 3: milestone_23_3 Project/Test Discovery Parity Contract
@@ -83,7 +83,23 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m23_1_import_closure_discovery_demo/negative_cases/reachable_dependency_parse_error/main.sifr` -> exits `1` with parse error for `[helper]`.
 
 ## Part 2: milestone_23_2 Deterministic Module Graph and Cycle Diagnostics
-status: pending
+status: validating (pending PR)
+
+- [x] Deterministic module order hardening implemented
+- [x] Canonical stable cycle diagnostics implemented
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [ ] Open PR, review, and merge
+- [ ] Mark part complete in phase doc and this checklist
+
+Validation evidence:
+- Positive path: `cargo test -q -p sifr_driver test_compute_module_compile_order_is_deterministic_across_hashmap_insertion_order` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m23_2_deterministic_module_graph_cycle_diagnostics_demo/main.sifr` -> prints `m23_2 deterministic module graph and cycle diagnostics demo:` and `42`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo test -q -p sifr_driver test_compute_module_compile_order_cycle_diagnostics_are_canonical_and_stable` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m23_2_deterministic_module_graph_cycle_diagnostics_demo/negative_cases/module_cycle/main.sifr` -> exits `1` with canonical cycle diagnostic `a -> b -> c -> a`.
 
 ## Part 3: milestone_23_3 Project/Test Discovery Parity Contract
 status: pending

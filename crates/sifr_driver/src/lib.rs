@@ -1007,8 +1007,10 @@ fn compute_module_compile_order(
         return Ok(compile_order);
     }
 
-    let cycle_path = find_dependency_cycle_path(&graph.dependencies)
-        .unwrap_or_else(|| vec!["<cycle>".to_string()]);
+    let cycle_path = canonicalize_cycle_path(
+        find_dependency_cycle_path(&graph.dependencies)
+            .unwrap_or_else(|| vec!["<cycle>".to_string()]),
+    );
     let cycle_render = cycle_path.join(" -> ");
     let edge_render = cycle_path
         .windows(2)
@@ -1022,6 +1024,35 @@ fn compute_module_compile_order(
         message,
         phase: CompilePhase::TypeCheck,
     }])
+}
+
+fn canonicalize_cycle_path(cycle_path: Vec<String>) -> Vec<String> {
+    if cycle_path.len() <= 2 {
+        return cycle_path;
+    }
+
+    let mut nodes = cycle_path;
+    if nodes.first() == nodes.last() {
+        let _ = nodes.pop();
+    }
+    if nodes.is_empty() {
+        return Vec::new();
+    }
+
+    let mut best_rotation = nodes.clone();
+    for start in 1..nodes.len() {
+        let candidate: Vec<String> = nodes[start..]
+            .iter()
+            .chain(nodes[..start].iter())
+            .cloned()
+            .collect();
+        if candidate < best_rotation {
+            best_rotation = candidate;
+        }
+    }
+
+    best_rotation.push(best_rotation[0].clone());
+    best_rotation
 }
 
 fn ordered_non_main_module_names(
@@ -2082,6 +2113,89 @@ def value_provider() -> int:
     }
 
     #[test]
+    fn test_compute_module_compile_order_is_deterministic_across_hashmap_insertion_order() {
+        let mut parsed_modules_a = HashMap::new();
+        parsed_modules_a.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from consumer import value
+
+def main():
+    print(value())
+"#,
+            ),
+        );
+        parsed_modules_a.insert(
+            "consumer".to_string(),
+            parse_suite(
+                r#"
+from provider import value_provider
+
+def value() -> int:
+    return value_provider()
+"#,
+            ),
+        );
+        parsed_modules_a.insert(
+            "provider".to_string(),
+            parse_suite(
+                r#"
+def value_provider() -> int:
+    return 42
+"#,
+            ),
+        );
+
+        let mut parsed_modules_b = HashMap::new();
+        parsed_modules_b.insert(
+            "provider".to_string(),
+            parse_suite(
+                r#"
+def value_provider() -> int:
+    return 42
+"#,
+            ),
+        );
+        parsed_modules_b.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from consumer import value
+
+def main():
+    print(value())
+"#,
+            ),
+        );
+        parsed_modules_b.insert(
+            "consumer".to_string(),
+            parse_suite(
+                r#"
+from provider import value_provider
+
+def value() -> int:
+    return value_provider()
+"#,
+            ),
+        );
+
+        let order_a = compute_module_compile_order(&parsed_modules_a)
+            .expect("compile order should be computed for acyclic graph");
+        let order_b = compute_module_compile_order(&parsed_modules_b)
+            .expect("compile order should be deterministic across map insertion order");
+        assert_eq!(order_a, order_b);
+        assert_eq!(
+            order_a,
+            vec![
+                "provider".to_string(),
+                "consumer".to_string(),
+                "main".to_string()
+            ]
+        );
+    }
+
+    #[test]
     fn test_assemble_project_main_rs_is_deterministic_against_hashmap_order() {
         let compile_order = vec![
             "provider".to_string(),
@@ -2185,6 +2299,114 @@ def value_b() -> int:
             .iter()
             .any(|e| e.message.contains("module dependency cycle detected")));
         assert!(errors.iter().any(|e| e.message.contains("a -> b -> a")));
+    }
+
+    #[test]
+    fn test_compute_module_compile_order_cycle_diagnostics_are_canonical_and_stable() {
+        let mut parsed_modules_a = HashMap::new();
+        parsed_modules_a.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from a import value_a
+
+def main():
+    print(value_a())
+"#,
+            ),
+        );
+        parsed_modules_a.insert(
+            "a".to_string(),
+            parse_suite(
+                r#"
+from b import value_b
+
+def value_a() -> int:
+    return value_b()
+"#,
+            ),
+        );
+        parsed_modules_a.insert(
+            "b".to_string(),
+            parse_suite(
+                r#"
+from c import value_c
+
+def value_b() -> int:
+    return value_c()
+"#,
+            ),
+        );
+        parsed_modules_a.insert(
+            "c".to_string(),
+            parse_suite(
+                r#"
+from a import value_a
+
+def value_c() -> int:
+    return value_a()
+"#,
+            ),
+        );
+
+        let mut parsed_modules_b = HashMap::new();
+        parsed_modules_b.insert(
+            "c".to_string(),
+            parse_suite(
+                r#"
+from a import value_a
+
+def value_c() -> int:
+    return value_a()
+"#,
+            ),
+        );
+        parsed_modules_b.insert(
+            "b".to_string(),
+            parse_suite(
+                r#"
+from c import value_c
+
+def value_b() -> int:
+    return value_c()
+"#,
+            ),
+        );
+        parsed_modules_b.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+from a import value_a
+
+def main():
+    print(value_a())
+"#,
+            ),
+        );
+        parsed_modules_b.insert(
+            "a".to_string(),
+            parse_suite(
+                r#"
+from b import value_b
+
+def value_a() -> int:
+    return value_b()
+"#,
+            ),
+        );
+
+        let error_a = compute_module_compile_order(&parsed_modules_a)
+            .err()
+            .expect("cycle graph should fail compile ordering");
+        let error_b = compute_module_compile_order(&parsed_modules_b)
+            .err()
+            .expect("cycle graph should fail compile ordering");
+
+        let message_a = &error_a[0].message;
+        let message_b = &error_b[0].message;
+        assert_eq!(message_a, message_b);
+        assert!(message_a.contains("module dependency cycle detected: a -> b -> c -> a"));
+        assert!(message_a.contains("import chain: a imports b, b imports c, c imports a"));
     }
 
     #[test]
