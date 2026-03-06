@@ -1,0 +1,7 @@
+def accepts_mixed(values: list[int | str]) -> int:
+    return len(values)
+
+def main():
+    ints: list[int] = [1, 2, 3]
+    size: int = accepts_mixed(ints)
+    print(size)

@@ -472,6 +472,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                         if let Type::Class {
                             ref fields,
                             ref methods,
+                            ref parent_class,
                             ..
                         } = class_ty
                         {
@@ -532,7 +533,7 @@ pub(super) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
                                     name: base_name.clone(),
                                     fields: subst_fields,
                                     methods: subst_methods,
-                                    parent_class: None,
+                                    parent_class: parent_class.clone(),
                                 };
                             }
                         }

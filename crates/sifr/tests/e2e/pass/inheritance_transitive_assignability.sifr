@@ -1,0 +1,26 @@
+# Test: multi-level inheritance assignability is transitive and sound
+
+class Entity:
+    id: int
+
+    def __init__(self, id: int):
+        self.id = id
+
+class Person(Entity):
+    name: str
+
+    def __init__(self, id: int, name: str):
+        super().__init__(id)
+        self.name = name
+
+class Employee(Person):
+    level: int
+
+    def __init__(self, id: int, name: str, level: int):
+        super().__init__(id, name)
+        self.level = level
+
+def main():
+    emp: Employee = Employee(7, "Ada", 3)
+    assert str(emp.name) == 'Ada'
+    assert str(emp.level) == '3'
