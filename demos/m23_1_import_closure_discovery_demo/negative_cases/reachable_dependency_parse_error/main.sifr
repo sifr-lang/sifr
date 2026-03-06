@@ -1,0 +1,6 @@
+# negative path: reachable dependency parse errors must fail compilation.
+
+from helper import compute
+
+def main():
+    print(compute(1))

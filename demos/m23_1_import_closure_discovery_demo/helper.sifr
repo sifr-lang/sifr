@@ -1,0 +1,4 @@
+# Reachable dependency module used by main.
+
+def compute(x: int) -> int:
+    return x * 7

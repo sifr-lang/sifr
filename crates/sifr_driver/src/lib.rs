@@ -1108,6 +1108,12 @@ fn collect_project_hir_modules(
     )
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DiscoveryDiagnosticStyle {
+    ModuleName,
+    FilePath,
+}
+
 fn discover_project_sifr_files(project_dir: &Path) -> Vec<PathBuf> {
     let mut sifr_files = Vec::new();
     if let Ok(entries) = std::fs::read_dir(project_dir) {
@@ -1122,35 +1128,76 @@ fn discover_project_sifr_files(project_dir: &Path) -> Vec<PathBuf> {
     sifr_files
 }
 
-fn read_project_sources(project_dir: &Path) -> Result<Vec<(String, String)>, Vec<CompileError>> {
-    let sifr_files = discover_project_sifr_files(project_dir);
-    let mut sources: Vec<(String, String)> = Vec::with_capacity(sifr_files.len());
-    for file in &sifr_files {
-        let module_name = file.file_stem().unwrap().to_string_lossy().to_string();
-        let source = std::fs::read_to_string(file).map_err(|e| {
+fn module_source_path(project_dir: &Path, module_name: &str) -> PathBuf {
+    project_dir.join(format!("{module_name}.sifr"))
+}
+
+fn discovery_label(
+    module_name: &str,
+    path: &Path,
+    diagnostic_style: DiscoveryDiagnosticStyle,
+) -> String {
+    match diagnostic_style {
+        DiscoveryDiagnosticStyle::ModuleName => module_name.to_string(),
+        DiscoveryDiagnosticStyle::FilePath => path.display().to_string(),
+    }
+}
+
+fn collect_import_closure_module_dependencies(stmts: &[Stmt]) -> BTreeSet<String> {
+    let mut deps = BTreeSet::new();
+    for stmt in stmts {
+        let Stmt::ImportFrom(import_from) = stmt else {
+            continue;
+        };
+        if import_from.level > 1 {
+            continue;
+        }
+        let Some(module) = &import_from.module else {
+            continue;
+        };
+        let module_name = module.to_string();
+        if module_name == "typing"
+            || module_name == "enum"
+            || module_name.starts_with("sifr.")
+            || module_name.starts_with("_sifr.")
+        {
+            continue;
+        }
+        deps.insert(module_name);
+    }
+    deps
+}
+
+fn parse_import_closure_modules(
+    project_dir: &Path,
+    root_modules: &BTreeSet<String>,
+    diagnostic_style: DiscoveryDiagnosticStyle,
+) -> Result<HashMap<String, Vec<Stmt>>, Vec<CompileError>> {
+    let mut parsed_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
+    let mut parsed_names: BTreeSet<String> = BTreeSet::new();
+    let mut pending = root_modules.clone();
+
+    while let Some(module_name) = pending.pop_first() {
+        if !parsed_names.insert(module_name.clone()) {
+            continue;
+        }
+
+        let path = module_source_path(project_dir, &module_name);
+        let source = std::fs::read_to_string(&path).map_err(|e| {
             vec![CompileError {
-                message: format!("failed to read '{}': {}", file.display(), e),
+                message: format!("failed to read '{}': {}", path.display(), e),
                 phase: CompilePhase::Build,
             }]
         })?;
-        sources.push((module_name, source));
-    }
-    Ok(sources)
-}
-
-fn parse_project_sources(
-    sources: &[(String, String)],
-) -> Result<HashMap<String, Vec<sifr_python_ast::Stmt>>, Vec<CompileError>> {
-    let mut parsed_modules: HashMap<String, Vec<sifr_python_ast::Stmt>> = HashMap::new();
-    for (module_name, source) in sources {
-        let parsed = match parse_module(source) {
+        let label = discovery_label(&module_name, &path, diagnostic_style);
+        let parsed = match parse_module(&source) {
             Ok(parsed) => {
                 if !parsed.is_valid() {
                     let errors: Vec<CompileError> = parsed
                         .errors()
                         .iter()
                         .map(|e| CompileError {
-                            message: format!("[{module_name}] {e}"),
+                            message: format!("[{label}] {e}"),
                             phase: CompilePhase::Parse,
                         })
                         .collect();
@@ -1160,20 +1207,43 @@ fn parse_project_sources(
             }
             Err(e) => {
                 return Err(vec![CompileError {
-                    message: format!("[{module_name}] failed to parse: {e}"),
+                    message: format!("[{label}] failed to parse: {e}"),
                     phase: CompilePhase::Parse,
                 }]);
             }
         };
-        parsed_modules.insert(module_name.clone(), parsed.into_suite());
+        let suite = parsed.into_suite();
+        for dependency in collect_import_closure_module_dependencies(&suite) {
+            if parsed_names.contains(dependency.as_str()) {
+                continue;
+            }
+            if module_source_path(project_dir, &dependency).is_file() {
+                pending.insert(dependency);
+            }
+        }
+        parsed_modules.insert(module_name, suite);
     }
+
     Ok(parsed_modules)
 }
 
 fn analyze_project_frontend(main_file: &Path) -> Result<ProjectLowering, Vec<CompileError>> {
     let project_dir = main_file.parent().unwrap_or(Path::new("."));
-    let sources = read_project_sources(project_dir)?;
-    let parsed_modules = parse_project_sources(&sources)?;
+    let Some(main_module_name) = main_file
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().to_string())
+    else {
+        return Err(vec![CompileError {
+            message: format!("invalid project entrypoint path '{}'", main_file.display()),
+            phase: CompilePhase::Build,
+        }]);
+    };
+    let root_modules = BTreeSet::from([main_module_name]);
+    let parsed_modules = parse_import_closure_modules(
+        project_dir,
+        &root_modules,
+        DiscoveryDiagnosticStyle::ModuleName,
+    )?;
     let stdlib_compiled = compile_stdlib()?;
     collect_project_hir_modules(&parsed_modules, stdlib_compiled.defs)
 }
@@ -1397,65 +1467,44 @@ pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<CompileErro
 /// Finds all `test_*.sifr` and `*_test.sifr` files, compiles them with
 /// `#[test]` attributes, and runs `cargo test`.
 pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
-    // Discover test files and support modules from the same directory.
-    let mut test_files: Vec<PathBuf> = Vec::new();
-    let mut support_modules: HashMap<String, Vec<sifr_python_ast::Stmt>> = HashMap::new();
+    // Discover test roots from the same directory.
+    let mut test_files_by_module: BTreeMap<String, PathBuf> = BTreeMap::new();
     for path in discover_project_sifr_files(test_dir) {
         let module_name = path.file_stem().unwrap().to_string_lossy().to_string();
-        let source = std::fs::read_to_string(&path).map_err(|e| {
-            vec![CompileError {
-                message: format!("failed to read '{}': {}", path.display(), e),
-                phase: CompilePhase::Build,
-            }]
-        })?;
-        let parsed = match parse_module(&source) {
-            Ok(parsed) => {
-                if !parsed.is_valid() {
-                    let errors: Vec<CompileError> = parsed
-                        .errors()
-                        .iter()
-                        .map(|e| CompileError {
-                            message: format!("[{}] {}", path.display(), e),
-                            phase: CompilePhase::Parse,
-                        })
-                        .collect();
-                    return Err(errors);
-                }
-                parsed
-            }
-            Err(e) => {
-                return Err(vec![CompileError {
-                    message: format!("[{}] failed to parse: {}", path.display(), e),
-                    phase: CompilePhase::Parse,
-                }]);
-            }
-        };
-
         if module_name.starts_with("test_") || module_name.ends_with("_test") {
-            test_files.push(path);
-        } else {
-            support_modules.insert(module_name, parsed.into_suite());
+            test_files_by_module.insert(module_name, path);
         }
     }
-    test_files.sort();
 
-    if test_files.is_empty() {
+    if test_files_by_module.is_empty() {
         write_stderr_line(&format!("No test files found in {}", test_dir.display()));
         return Ok(true);
     }
 
-    write_stderr_line(&format!("Found {} test file(s)", test_files.len()));
+    write_stderr_line(&format!(
+        "Found {} test file(s)",
+        test_files_by_module.len()
+    ));
+
+    let test_roots: BTreeSet<String> = test_files_by_module.keys().cloned().collect();
+    let parsed_modules =
+        parse_import_closure_modules(test_dir, &test_roots, DiscoveryDiagnosticStyle::FilePath)?;
+    let mut support_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
+    let mut test_modules: HashMap<String, Vec<Stmt>> = HashMap::new();
+    for (module_name, suite) in parsed_modules {
+        if test_roots.contains(module_name.as_str()) {
+            test_modules.insert(module_name, suite);
+        } else {
+            support_modules.insert(module_name, suite);
+        }
+    }
 
     // Build project externals from non-test modules so test imports resolve like regular builds.
     let stdlib_compiled = compile_stdlib()?;
     let project_lowering = collect_project_hir_modules(&support_modules, stdlib_compiled.defs)?;
     let project_externals = project_lowering.external_defs.clone();
-    let mut support_module_names: Vec<String> = project_lowering
-        .hir_modules
-        .keys()
-        .filter(|name| name.as_str() != "main")
-        .cloned()
-        .collect();
+    let mut support_module_names: Vec<String> =
+        project_lowering.hir_modules.keys().cloned().collect();
     support_module_names.sort();
     let support_module_refs: Vec<(&str, &HirModule)> = support_module_names
         .iter()
@@ -1481,36 +1530,22 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         }
     }
 
-    for test_file in &test_files {
-        let module_name = test_file.file_stem().unwrap().to_string_lossy().to_string();
-        let source = std::fs::read_to_string(test_file).map_err(|e| {
-            vec![CompileError {
-                message: format!("failed to read '{}': {}", test_file.display(), e),
+    for (module_name, test_file) in &test_files_by_module {
+        let Some(parsed) = test_modules.get(module_name.as_str()) else {
+            return Err(vec![CompileError {
+                message: format!(
+                    "missing parsed test module '{}' from '{}'",
+                    module_name,
+                    test_file.display()
+                ),
                 phase: CompilePhase::Build,
-            }]
-        })?;
-        let parsed = parse_module(&source).map_err(|e| {
-            vec![CompileError {
-                message: format!("[{}] failed to parse: {}", test_file.display(), e),
-                phase: CompilePhase::Parse,
-            }]
-        })?;
-        if !parsed.is_valid() {
-            let errors: Vec<CompileError> = parsed
-                .errors()
-                .iter()
-                .map(|e| CompileError {
-                    message: format!("[{}] {}", test_file.display(), e),
-                    phase: CompilePhase::Parse,
-                })
-                .collect();
-            return Err(errors);
-        }
+            }]);
+        };
 
         // Lower to HIR
         let lowering_result = match lower_frontend_module(
-            &module_name,
-            parsed.suite(),
+            module_name,
+            parsed,
             &project_externals,
             FrontendDiagnosticStyle::Bare,
         ) {
@@ -2238,6 +2273,39 @@ def test_import_parity():
     }
 
     #[test]
+    fn test_run_tests_ignores_unrelated_non_closure_parse_errors() {
+        let unique = format!(
+            "sifr_test_import_closure_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let test_dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+
+        std::fs::write(
+            test_dir.join("helper.sifr"),
+            "def value() -> int:\n    return 42\n",
+        )
+        .expect("helper should be written");
+        std::fs::write(
+            test_dir.join("test_import_closure.sifr"),
+            "from helper import value\n\ndef test_value():\n    assert value() == 42\n",
+        )
+        .expect("test module should be written");
+        std::fs::write(test_dir.join("unrelated_bad.sifr"), "def unrelated(:\n")
+            .expect("unrelated sibling should be written");
+
+        let result =
+            run_tests(&test_dir).expect("unrelated sibling parse errors should be ignored");
+        assert!(result, "sifr test run should succeed");
+
+        let _ = std::fs::remove_dir_all(&test_dir);
+    }
+
+    #[test]
     fn test_run_tests_reports_deterministic_parse_error_order() {
         let unique = format!(
             "sifr_test_parse_order_{}_{}",
@@ -2250,13 +2318,10 @@ def test_import_parity():
         let test_dir = std::env::temp_dir().join(unique);
         std::fs::create_dir_all(&test_dir).expect("test dir should be created");
 
-        std::fs::write(test_dir.join("z_bad.sifr"), "def z(:\n").expect("z_bad should be written");
-        std::fs::write(test_dir.join("a_bad.sifr"), "def a(:\n").expect("a_bad should be written");
-        std::fs::write(
-            test_dir.join("test_smoke.sifr"),
-            "def test_smoke():\n    assert True\n",
-        )
-        .expect("test file should be written");
+        std::fs::write(test_dir.join("test_z_bad.sifr"), "def z(:\n")
+            .expect("test_z_bad should be written");
+        std::fs::write(test_dir.join("test_a_bad.sifr"), "def a(:\n")
+            .expect("test_a_bad should be written");
 
         let first_messages: Vec<String> = run_tests(&test_dir)
             .err()
@@ -2275,7 +2340,7 @@ def test_import_parity():
         assert!(
             first_messages
                 .first()
-                .is_some_and(|m| m.contains("a_bad.sifr")),
+                .is_some_and(|m| m.contains("test_a_bad.sifr")),
             "first parse error should be from lexicographically first fixture: {first_messages:?}"
         );
 
@@ -2355,6 +2420,78 @@ def area(radius: float) -> float:
         assert!(
             errors.is_empty(),
             "check_project should succeed: {errors:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_check_project_ignores_unrelated_non_closure_parse_errors() {
+        let unique = format!(
+            "sifr_check_project_closure_ignore_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&dir).expect("project dir should be created");
+        std::fs::write(
+            dir.join("main.sifr"),
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main module should be written");
+        std::fs::write(
+            dir.join("helper.sifr"),
+            "def value() -> int:\n    return 42\n",
+        )
+        .expect("helper module should be written");
+        std::fs::write(dir.join("unrelated_bad.sifr"), "def unrelated(:\n")
+            .expect("unrelated sibling should be written");
+
+        let errors = check_project(&dir.join("main.sifr"));
+        assert!(
+            errors.is_empty(),
+            "unrelated sibling parse errors should not affect check_project: {errors:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_check_project_reports_reachable_parse_errors_in_import_closure() {
+        let unique = format!(
+            "sifr_check_project_closure_reachable_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&dir).expect("project dir should be created");
+        std::fs::write(
+            dir.join("main.sifr"),
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("main module should be written");
+        std::fs::write(dir.join("helper.sifr"), "def value(:\n")
+            .expect("helper module should be written");
+        std::fs::write(
+            dir.join("unrelated_ok.sifr"),
+            "def spare() -> int:\n    return 1\n",
+        )
+        .expect("unrelated module should be written");
+
+        let errors = check_project(&dir.join("main.sifr"));
+        assert!(
+            errors.iter().any(|e| {
+                e.message.contains("[helper]")
+                    && (e.message.contains("failed to parse")
+                        || e.message.contains("Expected a parameter"))
+            }),
+            "reachable parse errors must still fail check_project: {errors:?}"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
