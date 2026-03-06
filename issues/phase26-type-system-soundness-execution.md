@@ -18,13 +18,13 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 ## Full Phase 26 To-Do Plan
 
 ### Part 1: milestone_26_1 TypeVar Constraint Enforcement
-- [ ] Remove permissive TypeVar assignability shortcuts
-- [ ] Capture and enforce TypeVar bounds/constraints for generic calls (PEP 695 + `TypeVar(...)`)
-- [ ] Add strict negative diagnostics for unknown/unsatisfied bounds
-- [ ] Add part 26.1 positive demo
-- [ ] Add part 26.1 negative case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Remove permissive TypeVar assignability shortcuts
+- [x] Capture and enforce TypeVar bounds/constraints for generic calls (PEP 695 + `TypeVar(...)`)
+- [x] Add strict negative diagnostics for unknown/unsatisfied bounds
+- [x] Add part 26.1 positive demo
+- [x] Add part 26.1 negative case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 2: milestone_26_2 Inheritance and Variance Corrections
 - [ ] Implement transitive inheritance assignability (multi-level)
@@ -53,19 +53,25 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [ ] Open PR, review, and merge
 
 ## Part 1: milestone_26_1 TypeVar Constraint Enforcement
-status: pending
+status: done (2026-03-06, PR #891)
 
-- [ ] Canonical TypeVar bound/constraint validation implemented
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Canonical TypeVar bound/constraint validation implemented
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: pending
-- Negative path: pending
+- Positive path: `cargo test -q -p sifr_type_system` -> pass.
+- Positive path: `cargo test -q -p sifr_hir` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/typevar_constraints_basic.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m26_1_typevar_constraint_enforcement_demo/main.sifr` -> prints `m26_1 typevar constraint enforcement demo:` then `7`, `ok`, `3`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/typevar_constraints_violation.sifr` -> exits `1` with `type 'float' does not satisfy constraints (int, str) required by type parameter 'T'`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/typevar_unknown_bound_rejected.sifr` -> exits `1` with `type 'int' does not implement protocol 'MissingBound' required by type parameter 'T'`.
+- Negative path: `cargo run -q -p sifr -- run demos/m26_1_typevar_constraint_enforcement_demo/negative_cases/typevar_constraint_violation/main.sifr` -> exits `1` with `type 'float' does not satisfy constraints (int, str) required by type parameter 'T'`.
 
 ## Part 2: milestone_26_2 Inheritance and Variance Corrections
 status: pending
@@ -115,7 +121,7 @@ Validation evidence:
 - Negative path: pending
 
 ## PR Log
-- Part 1: pending
+- Part 1: https://github.com/yaseralnajjar/sifr/pull/891
 - Part 2: pending
 - Part 3: pending
 - Part 4: pending
