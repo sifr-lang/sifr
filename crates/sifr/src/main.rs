@@ -143,18 +143,31 @@ struct InvocationWorkspace {
 
 impl InvocationWorkspace {
     fn create(prefix: &str) -> io::Result<Self> {
-        let unique = format!(
-            "{}_{}_{}",
-            prefix,
-            process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_nanos()
-        );
-        let path = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&path)?;
-        Ok(Self { path })
+        let base_nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let root = std::env::temp_dir();
+        for attempt in 0..8u8 {
+            let unique = if attempt == 0 {
+                format!("{}_{}_{}", prefix, process::id(), base_nanos)
+            } else {
+                format!("{}_{}_{}_{}", prefix, process::id(), base_nanos, attempt)
+            };
+            let path = root.join(unique);
+            match std::fs::create_dir(&path) {
+                Ok(_) => return Ok(Self { path }),
+                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => continue,
+                Err(e) => return Err(e),
+            }
+        }
+        Err(io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            format!(
+                "failed to allocate unique workspace for prefix '{}'",
+                prefix
+            ),
+        ))
     }
 
     fn path(&self) -> &Path {

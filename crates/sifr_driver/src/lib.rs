@@ -1175,27 +1175,46 @@ fn discover_test_root_modules(test_dir: &Path) -> BTreeMap<String, PathBuf> {
 }
 
 fn create_invocation_workspace(prefix: &str) -> Result<PathBuf, Vec<CompileError>> {
-    let unique = format!(
-        "sifr_{}_{}_{}",
-        prefix,
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos()
-    );
-    let workspace = std::env::temp_dir().join(unique);
-    std::fs::create_dir_all(&workspace).map_err(|e| {
-        vec![CompileError {
-            message: format!(
-                "failed to create invocation workspace '{}': {}",
-                workspace.display(),
-                e
-            ),
-            phase: CompilePhase::Build,
-        }]
-    })?;
-    Ok(workspace)
+    let base_nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let root = std::env::temp_dir();
+    for attempt in 0..8u8 {
+        let unique = if attempt == 0 {
+            format!("sifr_{}_{}_{}", prefix, std::process::id(), base_nanos)
+        } else {
+            format!(
+                "sifr_{}_{}_{}_{}",
+                prefix,
+                std::process::id(),
+                base_nanos,
+                attempt
+            )
+        };
+        let workspace = root.join(unique);
+        match std::fs::create_dir(&workspace) {
+            Ok(_) => return Ok(workspace),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => {
+                return Err(vec![CompileError {
+                    message: format!(
+                        "failed to create invocation workspace '{}': {}",
+                        workspace.display(),
+                        e
+                    ),
+                    phase: CompilePhase::Build,
+                }]);
+            }
+        }
+    }
+    Err(vec![CompileError {
+        message: format!(
+            "failed to allocate unique invocation workspace for prefix '{}'",
+            prefix
+        ),
+        phase: CompilePhase::Build,
+    }])
 }
 
 struct InvocationWorkspaceGuard {
@@ -1235,6 +1254,8 @@ fn collect_import_closure_module_dependencies(stmts: &[Stmt]) -> BTreeSet<String
         let Stmt::ImportFrom(import_from) = stmt else {
             continue;
         };
+        // Multi-level relative imports are outside the local project-module contract.
+        // Skip them for closure expansion; frontend lowering reports the explicit error.
         if import_from.level > 1 {
             continue;
         }
