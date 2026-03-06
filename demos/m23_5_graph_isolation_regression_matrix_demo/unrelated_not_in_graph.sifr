@@ -1,0 +1,2 @@
+# Intentionally invalid and excluded from import closure.
+def ignored(:

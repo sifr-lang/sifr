@@ -66,5 +66,8 @@ cargo test -p sifr -- --skip test_e2e_pass
 echo "Running frontend mode parity matrix"
 bash "${SCRIPT_DIR}/run_frontend_mode_parity_matrix.sh"
 
+echo "Running phase 23 graph/isolation matrix"
+bash "${SCRIPT_DIR}/run_phase23_graph_isolation_matrix.sh"
+
 echo "Running e2e pass suite"
 bash "${SCRIPT_DIR}/run_e2e_pass.sh" --profile "${PROFILE}" "${FORWARD_ARGS[@]}"

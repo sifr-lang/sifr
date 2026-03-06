@@ -1,0 +1,4 @@
+from a import value_a
+
+def main():
+    print(value_a())
