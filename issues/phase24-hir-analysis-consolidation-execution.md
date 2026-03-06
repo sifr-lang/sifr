@@ -56,13 +56,13 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 5: milestone_24_5 Consolidation Regression Matrix
-- [ ] Add consolidation regression matrix for nested conditionals, loop exits, early returns/raises, and mixed blocks
-- [ ] Add parity checks proving consolidated query semantics remain correct
-- [ ] Wire matrix into local validation so regressions fail pre-merge
-- [ ] Add milestone 24.5 positive demo
-- [ ] Add milestone 24.5 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Add consolidation regression matrix for nested conditionals, loop exits, early returns/raises, and mixed blocks
+- [x] Add parity checks proving consolidated query semantics remain correct
+- [x] Wire matrix into local validation so regressions fail pre-merge
+- [x] Add milestone 24.5 positive demo
+- [x] Add milestone 24.5 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ## Part 1: milestone_24_1 Canonical Traversal Layer Contract
 status: done (2026-03-06, PR #875)
@@ -140,25 +140,31 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m24_4_analysis_emission_boundary_hardening_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int | str', got 'list[int]'`.
 
 ## Part 5: milestone_24_5 Consolidation Regression Matrix
-status: pending
+status: done (2026-03-06, PR #880)
 
-- [ ] Regression matrix added and wired into local validation
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Regression matrix added and wired into local validation
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Pending.
+- Positive path: `bash scripts/run_phase24_hir_analysis_consolidation_matrix.sh` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m24_5_analysis_consolidation_regression_matrix_demo/main.sifr` -> prints `m24_5 analysis consolidation regression matrix demo:` and values `20`, `45`.
+- Positive path: `cargo run -q -p sifr -- test demos/m24_5_analysis_consolidation_regression_matrix_demo` -> passes `test_evaluate_paths`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes phase-24 matrix gate).
+- Negative path: `cargo run -q -p sifr -- run demos/m24_5_analysis_consolidation_regression_matrix_demo/negative_cases/mixed_block_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
+- Negative path: matrix `negative_mixed_block_parity` row asserts `check/build/run` all fail with byte-identical diagnostics.
+- Negative path: matrix `negative_diagnostic_stability` row asserts repeated failure diagnostics are stable across runs.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/875
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/877
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/878
 - Part 4: https://github.com/yaseralnajjar/sifr/pull/879
-- Part 5: pending
+- Part 5: https://github.com/yaseralnajjar/sifr/pull/880
 
 ## Reviewer Follow-up
 - External review pass 1 output: pending
