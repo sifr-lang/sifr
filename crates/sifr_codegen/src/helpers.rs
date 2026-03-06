@@ -1,4 +1,5 @@
 use super::{IsNoneUnionMatch, IsinstanceUnionMatch, ModuleFuncSignatures};
+use crate::hir_analysis::traversal::{self, TraversalConfig};
 use sifr_hir::{HirExpr, HirFStringPart, HirFunction, HirModule, HirPattern, HirStmt};
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -37,337 +38,6 @@ pub(super) fn is_option_type(ty: &Type) -> bool {
         has_none && non_none.len() == 1
     } else {
         false
-    }
-}
-
-fn walk_hir_expr<F>(expr: &HirExpr, on_expr: &mut F)
-where
-    F: FnMut(&HirExpr),
-{
-    on_expr(expr);
-    match expr {
-        HirExpr::BinOp { left, right, .. } => {
-            walk_hir_expr(left, on_expr);
-            walk_hir_expr(right, on_expr);
-        }
-        HirExpr::UnaryOp { operand, .. }
-        | HirExpr::QuestionMark { expr: operand, .. }
-        | HirExpr::OkWrap { value: operand, .. }
-        | HirExpr::ErrWrap { value: operand, .. }
-        | HirExpr::WalrusExpr { value: operand, .. }
-        | HirExpr::FieldAccess {
-            object: operand, ..
-        } => {
-            walk_hir_expr(operand, on_expr);
-        }
-        HirExpr::Compare {
-            left, comparators, ..
-        } => {
-            walk_hir_expr(left, on_expr);
-            for comparator in comparators {
-                walk_hir_expr(comparator, on_expr);
-            }
-        }
-        HirExpr::BoolOp { values, .. }
-        | HirExpr::ListLiteral {
-            elements: values, ..
-        }
-        | HirExpr::SetLiteral {
-            elements: values, ..
-        }
-        | HirExpr::TupleLiteral {
-            elements: values, ..
-        } => {
-            for value in values {
-                walk_hir_expr(value, on_expr);
-            }
-        }
-        HirExpr::Call { args, .. }
-        | HirExpr::ConstructorCall { args, .. }
-        | HirExpr::SuperCall { args, .. } => {
-            for arg in args {
-                walk_hir_expr(arg, on_expr);
-            }
-        }
-        HirExpr::MethodCall { object, args, .. } => {
-            walk_hir_expr(object, on_expr);
-            for arg in args {
-                walk_hir_expr(arg, on_expr);
-            }
-        }
-        HirExpr::IfExpr {
-            condition,
-            then_expr,
-            else_expr,
-            ..
-        } => {
-            walk_hir_expr(condition, on_expr);
-            walk_hir_expr(then_expr, on_expr);
-            walk_hir_expr(else_expr, on_expr);
-        }
-        HirExpr::RangeLiteral {
-            start, end, step, ..
-        } => {
-            walk_hir_expr(start, on_expr);
-            walk_hir_expr(end, on_expr);
-            if let Some(step) = step {
-                walk_hir_expr(step, on_expr);
-            }
-        }
-        HirExpr::DictLiteral { keys, values, .. } => {
-            for key in keys {
-                walk_hir_expr(key, on_expr);
-            }
-            for value in values {
-                walk_hir_expr(value, on_expr);
-            }
-        }
-        HirExpr::Index { object, index, .. } => {
-            walk_hir_expr(object, on_expr);
-            walk_hir_expr(index, on_expr);
-        }
-        HirExpr::ContainsOp {
-            element,
-            collection,
-            ..
-        } => {
-            walk_hir_expr(element, on_expr);
-            walk_hir_expr(collection, on_expr);
-        }
-        HirExpr::FString { parts, .. } => {
-            for part in parts {
-                if let HirFStringPart::Expr(expr) = part {
-                    walk_hir_expr(expr, on_expr);
-                }
-            }
-        }
-        HirExpr::Slice {
-            object,
-            start,
-            stop,
-            step,
-            ..
-        } => {
-            walk_hir_expr(object, on_expr);
-            if let Some(start) = start {
-                walk_hir_expr(start, on_expr);
-            }
-            if let Some(stop) = stop {
-                walk_hir_expr(stop, on_expr);
-            }
-            if let Some(step) = step {
-                walk_hir_expr(step, on_expr);
-            }
-        }
-        HirExpr::Lambda { body, .. } => walk_hir_expr(body, on_expr),
-        HirExpr::ListComp {
-            expr, generators, ..
-        }
-        | HirExpr::SetComp {
-            expr, generators, ..
-        } => {
-            walk_hir_expr(expr, on_expr);
-            for (_, iter, filter) in generators {
-                walk_hir_expr(iter, on_expr);
-                if let Some(filter) = filter {
-                    walk_hir_expr(filter, on_expr);
-                }
-            }
-        }
-        HirExpr::DictComp {
-            key_expr,
-            val_expr,
-            generators,
-            ..
-        } => {
-            walk_hir_expr(key_expr, on_expr);
-            walk_hir_expr(val_expr, on_expr);
-            for (_, iter, filter) in generators {
-                walk_hir_expr(iter, on_expr);
-                if let Some(filter) = filter {
-                    walk_hir_expr(filter, on_expr);
-                }
-            }
-        }
-        HirExpr::GeneratorExpr {
-            expr, iter, filter, ..
-        } => {
-            walk_hir_expr(expr, on_expr);
-            walk_hir_expr(iter, on_expr);
-            if let Some(filter) = filter {
-                walk_hir_expr(filter, on_expr);
-            }
-        }
-        HirExpr::Name { .. }
-        | HirExpr::IntLiteral(_)
-        | HirExpr::FloatLiteral(_)
-        | HirExpr::StringLiteral(_)
-        | HirExpr::BoolLiteral(_)
-        | HirExpr::NoneLiteral
-        | HirExpr::EnumVariant { .. } => {}
-    }
-}
-
-fn walk_hir_pattern<F>(pattern: &HirPattern, on_expr: &mut F)
-where
-    F: FnMut(&HirExpr),
-{
-    match pattern {
-        HirPattern::Literal { value } => walk_hir_expr(value, on_expr),
-        HirPattern::Or { patterns } | HirPattern::Tuple { elements: patterns } => {
-            for pattern in patterns {
-                walk_hir_pattern(pattern, on_expr);
-            }
-        }
-        HirPattern::Class { fields, .. } => {
-            for (_, pattern) in fields {
-                walk_hir_pattern(pattern, on_expr);
-            }
-        }
-        HirPattern::Wildcard
-        | HirPattern::Capture { .. }
-        | HirPattern::None
-        | HirPattern::Value { .. } => {}
-    }
-}
-
-fn walk_hir_stmt<FStmt, FExpr>(
-    stmt: &HirStmt,
-    descend_nested_functions: bool,
-    on_stmt: &mut FStmt,
-    on_expr: &mut FExpr,
-) where
-    FStmt: FnMut(&HirStmt),
-    FExpr: FnMut(&HirExpr),
-{
-    on_stmt(stmt);
-    match stmt {
-        HirStmt::Let { value, .. }
-        | HirStmt::Assign { value, .. }
-        | HirStmt::AugAssign { value, .. }
-        | HirStmt::AttributeAugAssign { value, .. }
-        | HirStmt::FieldAssign { value, .. }
-        | HirStmt::Raise { value }
-        | HirStmt::Yield { value } => walk_hir_expr(value, on_expr),
-        HirStmt::Return { value } => {
-            if let Some(value) = value {
-                walk_hir_expr(value, on_expr);
-            }
-        }
-        HirStmt::Expr { expr } => walk_hir_expr(expr, on_expr),
-        HirStmt::If {
-            condition,
-            then_body,
-            elif_clauses,
-            else_body,
-        } => {
-            walk_hir_expr(condition, on_expr);
-            walk_hir_stmts(then_body, descend_nested_functions, on_stmt, on_expr);
-            for (cond, body) in elif_clauses {
-                walk_hir_expr(cond, on_expr);
-                walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
-            }
-            if let Some(else_body) = else_body {
-                walk_hir_stmts(else_body, descend_nested_functions, on_stmt, on_expr);
-            }
-        }
-        HirStmt::While {
-            condition,
-            body,
-            else_body,
-        } => {
-            walk_hir_expr(condition, on_expr);
-            walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
-            if let Some(else_body) = else_body {
-                walk_hir_stmts(else_body, descend_nested_functions, on_stmt, on_expr);
-            }
-        }
-        HirStmt::For {
-            iter,
-            body,
-            else_body,
-            ..
-        } => {
-            walk_hir_expr(iter, on_expr);
-            walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
-            if let Some(else_body) = else_body {
-                walk_hir_stmts(else_body, descend_nested_functions, on_stmt, on_expr);
-            }
-        }
-        HirStmt::TupleUnpack { value, .. } | HirStmt::StarUnpack { value, .. } => {
-            walk_hir_expr(value, on_expr);
-        }
-        HirStmt::Assert { test, msg } => {
-            walk_hir_expr(test, on_expr);
-            if let Some(msg) = msg {
-                walk_hir_expr(msg, on_expr);
-            }
-        }
-        HirStmt::TryExcept { body, handlers, .. } => {
-            // HIR TryExcept currently has no dedicated `else_body` field.
-            // Any equivalent behavior is represented with explicit control flow
-            // inside `body`/handler blocks and is traversed through these walks.
-            walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
-            for handler in handlers {
-                walk_hir_stmts(&handler.body, descend_nested_functions, on_stmt, on_expr);
-            }
-        }
-        HirStmt::SubscriptAssign { index, value, .. }
-        | HirStmt::SubscriptAugAssign { index, value, .. }
-        | HirStmt::AttributeSubscriptAssign { index, value, .. } => {
-            walk_hir_expr(index, on_expr);
-            walk_hir_expr(value, on_expr);
-        }
-        HirStmt::NestedSubscriptAssign {
-            outer_index,
-            inner_index,
-            value,
-            ..
-        } => {
-            walk_hir_expr(outer_index, on_expr);
-            walk_hir_expr(inner_index, on_expr);
-            walk_hir_expr(value, on_expr);
-        }
-        HirStmt::Delete { object, index } => {
-            walk_hir_expr(object, on_expr);
-            walk_hir_expr(index, on_expr);
-        }
-        HirStmt::With { items, body } => {
-            for (_, expr, _) in items {
-                walk_hir_expr(expr, on_expr);
-            }
-            walk_hir_stmts(body, descend_nested_functions, on_stmt, on_expr);
-        }
-        HirStmt::NestedFunction { func } => {
-            if descend_nested_functions {
-                walk_hir_stmts(&func.body, true, on_stmt, on_expr);
-            }
-        }
-        HirStmt::Match { subject, arms, .. } => {
-            walk_hir_expr(subject, on_expr);
-            for arm in arms {
-                walk_hir_pattern(&arm.pattern, on_expr);
-                if let Some(guard) = &arm.guard {
-                    walk_hir_expr(guard, on_expr);
-                }
-                walk_hir_stmts(&arm.body, descend_nested_functions, on_stmt, on_expr);
-            }
-        }
-        HirStmt::Pass | HirStmt::Break | HirStmt::Continue => {}
-    }
-}
-
-fn walk_hir_stmts<FStmt, FExpr>(
-    stmts: &[HirStmt],
-    descend_nested_functions: bool,
-    on_stmt: &mut FStmt,
-    on_expr: &mut FExpr,
-) where
-    FStmt: FnMut(&HirStmt),
-    FExpr: FnMut(&HirExpr),
-{
-    for stmt in stmts {
-        walk_hir_stmt(stmt, descend_nested_functions, on_stmt, on_expr);
     }
 }
 
@@ -620,7 +290,12 @@ pub(super) fn module_uses_bigint(module: &HirModule) -> bool {
                 found.set(true);
             }
         };
-        walk_hir_stmts(&func.body, true, &mut on_stmt, &mut on_expr);
+        traversal::walk_stmts(
+            &func.body,
+            TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+            &mut on_stmt,
+            &mut on_expr,
+        );
         found.get()
     }
     for func in &module.functions {
@@ -678,14 +353,19 @@ pub(super) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
             found.set(true);
         }
     };
-    walk_hir_stmts(stmts, true, &mut on_stmt, &mut on_expr);
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+        &mut on_stmt,
+        &mut on_expr,
+    );
     found.get()
 }
 
 /// Check if an expression contains a mutating method call on a self field (e.g., self.items.append(...)).
 pub(super) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
     let mut found = false;
-    walk_hir_expr(expr, &mut |candidate| {
+    traversal::walk_expr(expr, &mut |candidate| {
         if !found && is_self_field_mutating_method_call(candidate) {
             found = true;
         }
@@ -987,7 +667,12 @@ pub(super) fn body_contains_return_stmt(stmts: &[HirStmt]) -> bool {
         }
     };
     let mut on_expr = |_expr: &HirExpr| {};
-    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
     found.get()
 }
 
@@ -1003,7 +688,12 @@ pub(super) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
         }
     };
     let mut on_expr = |_expr: &HirExpr| {};
-    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
     found.get()
 }
 
@@ -1015,7 +705,12 @@ pub(super) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
         }
     };
     let mut on_expr = |_expr: &HirExpr| {};
-    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
     found.get()
 }
 
@@ -1278,11 +973,16 @@ pub(super) fn collect_referenced_vars_with_types_inner(
             refs.entry(name.clone()).or_insert_with(|| ty.clone());
         }
     };
-    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
 }
 
 pub(super) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
-    walk_hir_expr(expr, &mut |node| {
+    traversal::walk_expr(expr, &mut |node| {
         if let HirExpr::Name { name, ty } = node {
             refs.entry(name.clone()).or_insert_with(|| ty.clone());
         }
@@ -1330,7 +1030,12 @@ pub(super) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
         _ => {}
     };
     let mut on_expr = |_expr: &HirExpr| {};
-    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
     defined
 }
 
@@ -1370,13 +1075,18 @@ pub(super) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
             }
         }
     };
-    walk_hir_stmts(stmts, false, &mut on_stmt, &mut on_expr);
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
     found
 }
 
 pub(super) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
     let mut found = false;
-    walk_hir_expr(expr, &mut |node| {
+    traversal::walk_expr(expr, &mut |node| {
         if found {
             return;
         }
