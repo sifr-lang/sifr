@@ -1,0 +1,16 @@
+# m24_3 control-flow effect query unification demo
+# Exercises unified always-exit analysis across try/except and branch exits.
+
+def classify(n: int) -> int:
+    try:
+        if n > 0:
+            return n
+        else:
+            raise ValueError('non-positive')
+    except ValueError as e:
+        return 99
+
+def main():
+    print('m24_3 control-flow effect query unification demo:')
+    print(classify(7))
+    print(classify(0))

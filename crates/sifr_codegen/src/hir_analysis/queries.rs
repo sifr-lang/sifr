@@ -22,6 +22,95 @@ pub(crate) const MUTATING_METHODS: &[&str] = &[
     "discard",
 ];
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ControlFlowEffect {
+    FallsThrough,
+    AlwaysReturns,
+    AlwaysRaises,
+    AlwaysExits,
+}
+
+impl ControlFlowEffect {
+    pub(crate) fn always_exits(self) -> bool {
+        !matches!(self, Self::FallsThrough)
+    }
+}
+
+fn merge_branch_effects(effects: &[ControlFlowEffect]) -> ControlFlowEffect {
+    if effects.iter().any(|effect| !effect.always_exits()) {
+        return ControlFlowEffect::FallsThrough;
+    }
+    if effects
+        .iter()
+        .all(|effect| matches!(effect, ControlFlowEffect::AlwaysReturns))
+    {
+        return ControlFlowEffect::AlwaysReturns;
+    }
+    if effects
+        .iter()
+        .all(|effect| matches!(effect, ControlFlowEffect::AlwaysRaises))
+    {
+        return ControlFlowEffect::AlwaysRaises;
+    }
+    ControlFlowEffect::AlwaysExits
+}
+
+pub(crate) fn stmt_control_flow_effect(stmt: &HirStmt) -> ControlFlowEffect {
+    match stmt {
+        HirStmt::Return { .. } => ControlFlowEffect::AlwaysReturns,
+        HirStmt::Raise { .. } => ControlFlowEffect::AlwaysRaises,
+        HirStmt::If {
+            then_body,
+            elif_clauses,
+            else_body,
+            ..
+        } => {
+            let Some(else_body) = else_body else {
+                return ControlFlowEffect::FallsThrough;
+            };
+            let mut branch_effects = Vec::with_capacity(2 + elif_clauses.len());
+            branch_effects.push(block_control_flow_effect(then_body));
+            for (_, body) in elif_clauses {
+                branch_effects.push(block_control_flow_effect(body));
+            }
+            branch_effects.push(block_control_flow_effect(else_body));
+            merge_branch_effects(&branch_effects)
+        }
+        HirStmt::Match { arms, .. } => {
+            if arms.is_empty() {
+                return ControlFlowEffect::FallsThrough;
+            }
+            let mut arm_effects = Vec::with_capacity(arms.len());
+            for arm in arms {
+                arm_effects.push(block_control_flow_effect(&arm.body));
+            }
+            merge_branch_effects(&arm_effects)
+        }
+        HirStmt::TryExcept { body, handlers, .. } => {
+            if handlers.is_empty() {
+                return ControlFlowEffect::FallsThrough;
+            }
+            let mut branch_effects = Vec::with_capacity(1 + handlers.len());
+            branch_effects.push(block_control_flow_effect(body));
+            for handler in handlers {
+                branch_effects.push(block_control_flow_effect(&handler.body));
+            }
+            merge_branch_effects(&branch_effects)
+        }
+        _ => ControlFlowEffect::FallsThrough,
+    }
+}
+
+pub(crate) fn block_control_flow_effect(stmts: &[HirStmt]) -> ControlFlowEffect {
+    for stmt in stmts {
+        let effect = stmt_control_flow_effect(stmt);
+        if effect.always_exits() {
+            return effect;
+        }
+    }
+    ControlFlowEffect::FallsThrough
+}
+
 pub(crate) fn body_contains_return(stmts: &[HirStmt]) -> bool {
     let found = std::cell::Cell::new(false);
     let mut on_stmt = |stmt: &HirStmt| {
@@ -502,5 +591,62 @@ mod tests {
         collect_typed_refs_in_expr(&expr, &mut refs);
 
         assert_eq!(refs.get("n"), Some(&Type::Int));
+    }
+
+    #[test]
+    fn block_control_flow_effect_reports_always_returns_for_exhaustive_if() {
+        let effect = block_control_flow_effect(&[HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            }],
+            elif_clauses: vec![],
+            else_body: Some(vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(2)),
+            }]),
+        }]);
+
+        assert_eq!(effect, ControlFlowEffect::AlwaysReturns);
+        assert!(effect.always_exits());
+    }
+
+    #[test]
+    fn block_control_flow_effect_reports_fallthrough_for_non_exhaustive_if() {
+        let effect = block_control_flow_effect(&[HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            }],
+            elif_clauses: vec![],
+            else_body: None,
+        }]);
+
+        assert_eq!(effect, ControlFlowEffect::FallsThrough);
+        assert!(!effect.always_exits());
+    }
+
+    #[test]
+    fn block_control_flow_effect_reports_always_exits_for_mixed_return_raise() {
+        let effect = block_control_flow_effect(&[HirStmt::TryExcept {
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            }],
+            handlers: vec![sifr_hir::HirExceptHandler {
+                error_type: Some("Error".to_string()),
+                error_resolved_type: None,
+                name: Some("e".to_string()),
+                body: vec![HirStmt::Raise {
+                    value: HirExpr::Call {
+                        func: "ValueError".to_string(),
+                        args: vec![HirExpr::StringLiteral("bad".to_string())],
+                        ty: Type::Unknown,
+                    },
+                }],
+            }],
+            body_error_types: vec!["Error".to_string()],
+        }]);
+
+        assert_eq!(effect, ControlFlowEffect::AlwaysExits);
+        assert!(effect.always_exits());
     }
 }

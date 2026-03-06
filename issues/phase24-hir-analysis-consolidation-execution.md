@@ -37,14 +37,14 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 3: milestone_24_3 Control-Flow Effect Query Unification
-- [ ] Introduce canonical control-flow effect model/query API
-- [ ] Replace remaining ad-hoc `body_always_exits`-style logic with shared query API
-- [ ] Ensure all affected call sites consume the canonical effect query
-- [ ] Add control-flow effect regressions (positive + negative)
-- [ ] Add milestone 24.3 positive demo
-- [ ] Add milestone 24.3 negative regression case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Introduce canonical control-flow effect model/query API
+- [x] Replace remaining ad-hoc `body_always_exits`-style logic with shared query API
+- [x] Ensure all affected call sites consume the canonical effect query
+- [x] Add control-flow effect regressions (positive + negative)
+- [x] Add milestone 24.3 positive demo
+- [x] Add milestone 24.3 negative regression case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ### Part 4: milestone_24_4 Analysis/Emission Boundary Hardening
 - [ ] Enforce strict analysis/emission boundaries: analysis computes facts, emitters consume facts
@@ -102,19 +102,23 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m24_2_semantic_query_layer_standardization_demo/negative_cases/recursive_call_typo/main.sifr` -> exits `1` with `type error: undefined function: 'reccurse'`.
 
 ## Part 3: milestone_24_3 Control-Flow Effect Query Unification
-status: pending
+status: done (2026-03-06, PR #878)
 
-- [ ] Control-flow effect model/query implemented
-- [ ] Ad-hoc exit analysis removed from emitters/lowering
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Control-flow effect model/query implemented
+- [x] Ad-hoc exit analysis removed from emitters/lowering
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Pending.
+- Positive path: `cargo test -q -p sifr_codegen block_control_flow_effect_` -> pass.
+- Positive path: `cargo test -q -p sifr_codegen` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m24_3_control_flow_effect_query_unification_demo/main.sifr` -> prints `m24_3 control-flow effect query unification demo:` then `7` and `99`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run demos/m24_3_control_flow_effect_query_unification_demo/negative_cases/reachable_type_error/main.sifr` -> exits `1` with `type error: return type mismatch: expected 'int', got 'str'`.
 
 ## Part 4: milestone_24_4 Analysis/Emission Boundary Hardening
 status: pending
@@ -147,7 +151,7 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/875
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/877
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/878
 - Part 4: pending
 - Part 5: pending
 
