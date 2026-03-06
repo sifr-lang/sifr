@@ -1,0 +1,8 @@
+# m22_4 parity regression matrix demo
+# Primary positive fixture used by the parity matrix across check/build/run/test.
+
+from helper import value
+
+def main():
+    print('m22_4 parity regression matrix demo:')
+    print(value(1))

@@ -1,0 +1,6 @@
+# negative parity fixture: helper introduces a frontend type error.
+
+from helper import value
+
+def main():
+    print(value(1))

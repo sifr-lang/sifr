@@ -94,15 +94,15 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- check demos/m22_2_project_aware_check_parity_demo/negative_cases/helper_type_error/main.sifr` -> exits `1` with `type error: [helper] return type mismatch: expected 'float', got 'str'`.
 
 ## Part 3: milestone_22_3 Cross-Mode Diagnostic and Exit Contract
-status: in_progress
+status: done (2026-03-06, PR #858)
 
 - [x] Diagnostic/exit/ordering contract implemented and documented
 - [x] Positive-path validation recorded
 - [x] Negative-path validation recorded
 - [x] Run milestone demo
 - [x] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
 - Positive path: `cargo test -q -p sifr_driver test_run_tests_reports_deterministic_parse_error_order` -> pass.
@@ -115,23 +115,30 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- check demos/m22_3_cross_mode_diagnostic_exit_contract_demo/negative_cases/helper_type_error/main.sifr` -> exits `1` with `type error: [helper] return type mismatch: expected 'int', got 'str'`.
 
 ## Part 4: milestone_22_4 Parity Regression Matrix
-status: pending
+status: in_progress
 
-- [ ] Parity matrix implemented and wired into local validation
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
+- [x] Parity matrix implemented and wired into local validation
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
 - [ ] Open PR, review, and merge
 - [ ] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Pending.
+- Positive path: `bash scripts/run_frontend_mode_parity_matrix.sh` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m22_4_parity_regression_matrix_demo/main.sifr` -> prints `m22_4 parity regression matrix demo:` and `8`.
+- Positive path: matrix positive row asserts all frontend modes succeed on same representative corpus (`check`, `build`, `run`, `test`).
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (includes matrix gate).
+- Negative path: `cargo run -q -p sifr -- run demos/m22_4_parity_regression_matrix_demo/negative_cases/type_error_project/main.sifr` -> exits `1` with `type error: [helper] return type mismatch: expected 'int', got 'str'`.
+- Negative path: matrix negative row asserts:
+  - `check/build/run` all fail with exit `1` and byte-identical diagnostics for equivalent frontend failure.
+  - `test` fails with exit `1` and expected frontend type error message on the same fixture family.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/856
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/857
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/858
 - Part 4: pending
 
 ## Reviewer Follow-up

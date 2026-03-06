@@ -1,0 +1,2 @@
+def value(x: int) -> int:
+    return 'bad'

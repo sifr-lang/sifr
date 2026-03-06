@@ -63,5 +63,8 @@ python3 "${SCRIPT_DIR}/check_hir_maintainability_guardrails.py"
 echo "Running unit tests and non-pass e2e tests (cargo test -p sifr -- --skip test_e2e_pass)"
 cargo test -p sifr -- --skip test_e2e_pass
 
+echo "Running frontend mode parity matrix"
+bash "${SCRIPT_DIR}/run_frontend_mode_parity_matrix.sh"
+
 echo "Running e2e pass suite"
 bash "${SCRIPT_DIR}/run_e2e_pass.sh" --profile "${PROFILE}" "${FORWARD_ARGS[@]}"
