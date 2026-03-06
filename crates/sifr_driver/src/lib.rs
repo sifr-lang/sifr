@@ -589,6 +589,18 @@ struct FrontendCompiled {
     lowering_result: LoweringResult,
 }
 
+#[derive(Default)]
+struct FrontendModuleDiagnostics {
+    reveal_types: Vec<String>,
+    warnings: Vec<String>,
+}
+
+#[derive(Clone, Copy)]
+enum FrontendDiagnosticStyle {
+    Bare,
+    ModulePrefixed,
+}
+
 fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompileError>> {
     // Phase 0: Compile embedded stdlib .sifr files
     let stdlib_compiled = compile_stdlib()?;
@@ -617,19 +629,28 @@ fn compile_frontend(source: &str) -> Result<FrontendCompiled, Vec<CompileError>>
         }
     };
 
-    // Phase 2: Lower to HIR with stdlib externals (type checking + name resolution)
-    let lowering_result = match lower_module_with_externals(parsed.suite(), &stdlib_compiled.defs) {
-        Ok(result) => result,
-        Err(errors) => {
-            let compile_errors: Vec<CompileError> = errors
-                .into_iter()
-                .map(|e| CompileError {
-                    message: e.message,
-                    phase: CompilePhase::TypeCheck,
-                })
-                .collect();
-            return Err(compile_errors);
-        }
+    // Phase 2: Lower through the same module-orchestration path used by project/test modes.
+    let mut parsed_modules = HashMap::new();
+    parsed_modules.insert("main".to_string(), parsed.into_suite());
+    let mut project_lowering = compile_frontend_modules(
+        &parsed_modules,
+        stdlib_compiled.defs.clone(),
+        FrontendDiagnosticStyle::Bare,
+    )?;
+    let main_module = project_lowering.hir_modules.remove("main").ok_or_else(|| {
+        vec![CompileError {
+            message: "internal error: frontend lowering missing 'main' module".to_string(),
+            phase: CompilePhase::TypeCheck,
+        }]
+    })?;
+    let main_diag = project_lowering
+        .module_diagnostics
+        .remove("main")
+        .unwrap_or_default();
+    let lowering_result = LoweringResult {
+        module: main_module,
+        reveal_types: main_diag.reveal_types,
+        warnings: main_diag.warnings,
     };
 
     Ok(FrontendCompiled {
@@ -682,10 +703,11 @@ pub fn check(source: &str) -> Vec<CompileError> {
     }
 }
 
-fn lower_project_module(
+fn lower_frontend_module(
     module_name: &str,
     stmts: &[sifr_python_ast::Stmt],
     external_defs: &ExternalDefs,
+    diagnostic_style: FrontendDiagnosticStyle,
 ) -> Result<LoweringResult, Vec<CompileError>> {
     let result = match lower_module_with_externals(stmts, external_defs) {
         Ok(result) => result,
@@ -693,7 +715,12 @@ fn lower_project_module(
             let compile_errors: Vec<CompileError> = errors
                 .into_iter()
                 .map(|e| CompileError {
-                    message: format!("[{}] {}", module_name, e.message),
+                    message: match diagnostic_style {
+                        FrontendDiagnosticStyle::Bare => e.message,
+                        FrontendDiagnosticStyle::ModulePrefixed => {
+                            format!("[{}] {}", module_name, e.message)
+                        }
+                    },
                     phase: CompilePhase::TypeCheck,
                 })
                 .collect();
@@ -802,6 +829,7 @@ struct ProjectLowering {
     hir_modules: HashMap<String, HirModule>,
     external_defs: ExternalDefs,
     compile_order: Vec<String>,
+    module_diagnostics: HashMap<String, FrontendModuleDiagnostics>,
 }
 
 struct ModuleDependencyGraph {
@@ -1026,11 +1054,13 @@ fn assemble_project_main_rs(
     main_rs
 }
 
-fn collect_project_hir_modules(
+fn compile_frontend_modules(
     parsed_modules: &HashMap<String, Vec<Stmt>>,
     mut external_defs: ExternalDefs,
+    diagnostic_style: FrontendDiagnosticStyle,
 ) -> Result<ProjectLowering, Vec<CompileError>> {
     let mut hir_modules: HashMap<String, HirModule> = HashMap::new();
+    let mut module_diagnostics: HashMap<String, FrontendModuleDiagnostics> = HashMap::new();
     let compile_order = compute_module_compile_order(parsed_modules)?;
 
     for module_name in &compile_order {
@@ -1040,16 +1070,40 @@ fn collect_project_hir_modules(
                 phase: CompilePhase::Build,
             }]);
         };
-        let result = lower_project_module(module_name, stmts, &external_defs)?;
-        collect_module_exports(module_name, &result.module, &mut external_defs);
-        hir_modules.insert(module_name.clone(), result.module);
+        let result = lower_frontend_module(module_name, stmts, &external_defs, diagnostic_style)?;
+        let LoweringResult {
+            module,
+            reveal_types,
+            warnings,
+        } = result;
+        collect_module_exports(module_name, &module, &mut external_defs);
+        hir_modules.insert(module_name.clone(), module);
+        module_diagnostics.insert(
+            module_name.clone(),
+            FrontendModuleDiagnostics {
+                reveal_types,
+                warnings,
+            },
+        );
     }
 
     Ok(ProjectLowering {
         hir_modules,
         external_defs,
         compile_order,
+        module_diagnostics,
     })
+}
+
+fn collect_project_hir_modules(
+    parsed_modules: &HashMap<String, Vec<Stmt>>,
+    external_defs: ExternalDefs,
+) -> Result<ProjectLowering, Vec<CompileError>> {
+    compile_frontend_modules(
+        parsed_modules,
+        external_defs,
+        FrontendDiagnosticStyle::ModulePrefixed,
+    )
 }
 
 /// Compile a multi-file project and build a native binary.
@@ -1417,20 +1471,24 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
         }
 
         // Lower to HIR
-        let lowering_result =
-            match lower_project_module(&module_name, parsed.suite(), &project_externals) {
-                Ok(result) => result,
-                Err(errors) => {
-                    let compile_errors: Vec<CompileError> = errors
-                        .into_iter()
-                        .map(|e| CompileError {
-                            message: format!("[{}] {}", test_file.display(), e.message),
-                            phase: CompilePhase::TypeCheck,
-                        })
-                        .collect();
-                    return Err(compile_errors);
-                }
-            };
+        let lowering_result = match lower_frontend_module(
+            &module_name,
+            parsed.suite(),
+            &project_externals,
+            FrontendDiagnosticStyle::ModulePrefixed,
+        ) {
+            Ok(result) => result,
+            Err(errors) => {
+                let compile_errors: Vec<CompileError> = errors
+                    .into_iter()
+                    .map(|e| CompileError {
+                        message: format!("[{}] {}", test_file.display(), e.message),
+                        phase: CompilePhase::TypeCheck,
+                    })
+                    .collect();
+                return Err(compile_errors);
+            }
+        };
 
         // Generate Rust code in test mode
         let codegen_result = generate_rust_test(&lowering_result.module);
@@ -1676,6 +1734,72 @@ def main():
         assert!(errors.iter().any(|e| e
             .message
             .contains("unsupported import statement 'import helper'")));
+    }
+
+    #[test]
+    fn test_compile_frontend_modules_uses_explicit_diagnostic_style() {
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert(
+            "main".to_string(),
+            parse_suite(
+                r#"
+def main():
+    print(missing_name)
+"#,
+            ),
+        );
+
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let bare_errors = compile_frontend_modules(
+            &parsed_modules,
+            stdlib_defs.clone(),
+            FrontendDiagnosticStyle::Bare,
+        )
+        .err()
+        .expect("bare diagnostic style should still report type errors");
+        let prefixed_errors = compile_frontend_modules(
+            &parsed_modules,
+            stdlib_defs,
+            FrontendDiagnosticStyle::ModulePrefixed,
+        )
+        .err()
+        .expect("module-prefixed diagnostic style should report type errors");
+
+        assert!(bare_errors
+            .iter()
+            .any(|e| !e.message.starts_with("[main] ")));
+        assert!(prefixed_errors
+            .iter()
+            .all(|e| e.message.starts_with("[main] ")));
+    }
+
+    #[test]
+    fn test_check_and_project_lowering_share_typecheck_contract() {
+        let source = r#"
+def main():
+    print(unknown_symbol)
+"#;
+        let check_errors = check(source);
+        assert!(!check_errors.is_empty(), "check should report type errors");
+
+        let mut parsed_modules = HashMap::new();
+        parsed_modules.insert("main".to_string(), parse_suite(source));
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let project_errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+            .err()
+            .expect("project lowering should report same frontend type errors");
+
+        let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.message).collect();
+        let normalized_project_messages: Vec<String> = project_errors
+            .into_iter()
+            .map(|e| {
+                e.message
+                    .strip_prefix("[main] ")
+                    .unwrap_or(&e.message)
+                    .to_string()
+            })
+            .collect();
+        assert_eq!(check_messages, normalized_project_messages);
     }
 
     #[test]
