@@ -44,13 +44,13 @@ Loop per part: Work -> Validate -> PR -> Review -> Merge -> Mark Done
 - [x] Open PR, review, and merge
 
 ### Part 4: milestone_26_4 Protocol-Bound Strictness Closure
-- [ ] Remove protocol-bound default-allow shortcuts
-- [ ] Enforce explicit protocol conformance checks for all generic bound validations
-- [ ] Add strict regressions for unknown and non-conforming bounds
-- [ ] Add part 26.4 positive demo
-- [ ] Add part 26.4 negative case
-- [ ] Run milestone demo + targeted tests + full local suite
-- [ ] Open PR, review, and merge
+- [x] Remove protocol-bound default-allow shortcuts
+- [x] Enforce explicit protocol conformance checks for all generic bound validations
+- [x] Add strict regressions for unknown and non-conforming bounds
+- [x] Add part 26.4 positive demo
+- [x] Add part 26.4 negative case
+- [x] Run milestone demo + targeted tests + full local suite
+- [x] Open PR, review, and merge
 
 ## Part 1: milestone_26_1 TypeVar Constraint Enforcement
 status: done (2026-03-06, PR #891)
@@ -117,22 +117,28 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m26_3_optional_arithmetic_soundness_demo/negative_cases/optional_arithmetic_without_narrowing/main.sifr` -> exits `1` with `unsupported operand type(s) for +: 'None | int' and 'int'`.
 
 ## Part 4: milestone_26_4 Protocol-Bound Strictness Closure
-status: pending
+status: done (2026-03-07, PR #894)
 
-- [ ] Protocol-bound validation is strict and explicit
-- [ ] Positive-path validation recorded
-- [ ] Negative-path validation recorded
-- [ ] Run milestone demo
-- [ ] Run full local suite
-- [ ] Open PR, review, and merge
-- [ ] Mark part complete in phase doc and this checklist
+- [x] Protocol-bound validation is strict and explicit
+- [x] Positive-path validation recorded
+- [x] Negative-path validation recorded
+- [x] Run milestone demo
+- [x] Run full local suite
+- [x] Open PR, review, and merge
+- [x] Mark part complete in phase doc and this checklist
 
 Validation evidence:
-- Positive path: pending
-- Negative path: pending
+- Positive path: `cargo test -q -p sifr_hir` -> pass (includes protocol-bound forwarding unit coverage for conforming, unknown, and non-conforming TypeVar bounds).
+- Positive path: `cargo test -q -p sifr_type_system` -> pass.
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/protocol_bound_forwarding_conforming_typevar.sifr` -> pass.
+- Positive path: `cargo run -q -p sifr -- run demos/m26_4_protocol_bound_strictness_closure_demo/main.sifr` -> prints `m26_4 protocol bound strictness closure demo:` then `9`, `ok`.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/protocol_bound_unknown_forwarded_typevar.sifr` -> exits `1` with `type 'U' does not implement protocol 'MissingBound' required by type parameter 'T'`.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/protocol_bound_forwarding_non_conforming_typevar.sifr` -> exits `1` with `type 'U' does not implement protocol 'Readable' required by type parameter 'T'`.
+- Negative path: `cargo run -q -p sifr -- run demos/m26_4_protocol_bound_strictness_closure_demo/negative_cases/unknown_protocol_bound_forwarding/main.sifr` -> exits `1` with `type 'U' does not implement protocol 'MissingBound' required by type parameter 'T'`.
 
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/891
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/892
 - Part 3: https://github.com/yaseralnajjar/sifr/pull/893
-- Part 4: pending
+- Part 4: https://github.com/yaseralnajjar/sifr/pull/894

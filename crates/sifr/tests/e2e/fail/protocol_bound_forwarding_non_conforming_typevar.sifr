@@ -1,0 +1,20 @@
+# Test: forwarding TypeVars must preserve protocol conformance requirements
+
+class Readable(Protocol):
+    def read(self) -> str:
+        pass
+
+class Closable(Protocol):
+    def close(self) -> None:
+        pass
+
+def take_readable[T: Readable](x: T) -> T:
+    return x
+
+def relay_bad[U: Closable](x: U) -> U:
+    return take_readable(x)
+
+def main():
+    print(1)
+
+# expect-error: does not implement protocol 'Readable'

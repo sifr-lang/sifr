@@ -1,0 +1,129 @@
+use super::*;
+
+fn lookup_named_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
+    match name {
+        "int" => Some(Type::Int),
+        "float" => Some(Type::Float),
+        "bool" => Some(Type::Bool),
+        "str" => Some(Type::Str),
+        "None" => Some(Type::None),
+        "bigint" => Some(Type::BigInt),
+        _ => ctx
+            .scope
+            .lookup_type_alias(name)
+            .cloned()
+            .or_else(|| ctx.class_types.get(name).cloned()),
+    }
+}
+
+fn resolve_named_bound_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
+    lookup_named_type(name, ctx).filter(|ty| !matches!(ty, Type::Unknown))
+}
+
+fn is_builtin_bound(name: &str) -> bool {
+    matches!(name, "Comparable" | "Addable" | "Hashable")
+}
+
+fn is_known_bound_name(name: &str, ctx: &LowerCtx) -> bool {
+    is_builtin_bound(name) || resolve_named_bound_type(name, ctx).is_some()
+}
+
+fn current_owner_typevar_specs<'a>(ctx: &'a LowerCtx, tv_name: &str) -> Option<&'a [String]> {
+    let owner = ctx.current_owner.as_ref()?;
+    ctx.type_param_bounds
+        .get(owner)?
+        .get(tv_name)
+        .map(|specs| specs.as_slice())
+}
+
+fn typevar_satisfies_spec(tv_name: &str, target_spec: &str, ctx: &LowerCtx) -> bool {
+    let Some(specs) = current_owner_typevar_specs(ctx, tv_name) else {
+        return false;
+    };
+
+    // Constraint checks are exact membership checks, but only for resolvable types.
+    if let Some(target_constraint) = decode_typevar_constraint(target_spec) {
+        if resolve_named_bound_type(target_constraint, ctx).is_none() {
+            return false;
+        }
+        return specs.iter().any(|spec| spec == target_spec);
+    }
+
+    // Bound checks must target a known built-in bound or a resolvable named type/protocol.
+    if !is_known_bound_name(target_spec, ctx) {
+        return false;
+    }
+
+    let mut constraint_names: Vec<&str> = Vec::new();
+    for spec in specs {
+        if let Some(constraint_name) = decode_typevar_constraint(spec) {
+            constraint_names.push(constraint_name);
+            continue;
+        }
+
+        if !is_known_bound_name(spec, ctx) {
+            continue;
+        }
+        if spec == target_spec {
+            return true;
+        }
+
+        // Built-in bounds only imply themselves, which is handled by exact match above.
+        if is_builtin_bound(spec) {
+            continue;
+        }
+
+        if let Some(source_bound_ty) = resolve_named_bound_type(spec, ctx) {
+            if !matches!(source_bound_ty, Type::TypeVar(_))
+                && type_satisfies_bound(&source_bound_ty, target_spec, ctx)
+            {
+                return true;
+            }
+        }
+    }
+
+    // Constrained TypeVars satisfy a bound only if every possible constrained type does.
+    !constraint_names.is_empty()
+        && constraint_names.iter().all(|constraint_name| {
+            resolve_named_bound_type(constraint_name, ctx)
+                .is_some_and(|constraint_ty| type_satisfies_bound(&constraint_ty, target_spec, ctx))
+        })
+}
+
+/// Check if a type satisfies a named bound (hard requirement).
+pub(super) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bool {
+    if let Type::TypeVar(tv_name) = ty {
+        return typevar_satisfies_spec(tv_name, bound, ctx);
+    }
+    match bound {
+        "Comparable" => matches!(
+            ty,
+            Type::Int | Type::Float | Type::Str | Type::Bool | Type::BigInt
+        ),
+        "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
+        "Hashable" => matches!(
+            ty,
+            Type::Int
+                | Type::Str
+                | Type::Bool
+                | Type::BigInt
+                | Type::None
+                | Type::Enum { .. }
+                | Type::LiteralStr(_)
+                | Type::LiteralInt(_)
+                | Type::LiteralBool(_)
+        ),
+        _ => resolve_named_bound_type(bound, ctx)
+            .is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
+    }
+}
+
+/// Check if a type satisfies a TypeVar constraints entry (`TypeVar("T", A, B)` / `T: (A, B)`).
+pub(super) fn type_satisfies_constraint(ty: &Type, constraint_name: &str, ctx: &LowerCtx) -> bool {
+    let encoded = encode_typevar_constraint(constraint_name);
+    if let Type::TypeVar(tv_name) = ty {
+        return typevar_satisfies_spec(tv_name, &encoded, ctx);
+    }
+    resolve_named_bound_type(constraint_name, ctx)
+        .is_some_and(|target_ty| ty.is_assignable_to(&target_ty))
+}
