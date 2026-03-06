@@ -1398,46 +1398,41 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
     // Discover test files and support modules from the same directory.
     let mut test_files: Vec<PathBuf> = Vec::new();
     let mut support_modules: HashMap<String, Vec<sifr_python_ast::Stmt>> = HashMap::new();
-    if let Ok(entries) = std::fs::read_dir(test_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().is_some_and(|ext| ext == "sifr") {
-                let module_name = path.file_stem().unwrap().to_string_lossy().to_string();
-                let source = std::fs::read_to_string(&path).map_err(|e| {
-                    vec![CompileError {
-                        message: format!("failed to read '{}': {}", path.display(), e),
-                        phase: CompilePhase::Build,
-                    }]
-                })?;
-                let parsed = match parse_module(&source) {
-                    Ok(parsed) => {
-                        if !parsed.is_valid() {
-                            let errors: Vec<CompileError> = parsed
-                                .errors()
-                                .iter()
-                                .map(|e| CompileError {
-                                    message: format!("[{}] {}", path.display(), e),
-                                    phase: CompilePhase::Parse,
-                                })
-                                .collect();
-                            return Err(errors);
-                        }
-                        parsed
-                    }
-                    Err(e) => {
-                        return Err(vec![CompileError {
-                            message: format!("[{}] failed to parse: {}", path.display(), e),
+    for path in discover_project_sifr_files(test_dir) {
+        let module_name = path.file_stem().unwrap().to_string_lossy().to_string();
+        let source = std::fs::read_to_string(&path).map_err(|e| {
+            vec![CompileError {
+                message: format!("failed to read '{}': {}", path.display(), e),
+                phase: CompilePhase::Build,
+            }]
+        })?;
+        let parsed = match parse_module(&source) {
+            Ok(parsed) => {
+                if !parsed.is_valid() {
+                    let errors: Vec<CompileError> = parsed
+                        .errors()
+                        .iter()
+                        .map(|e| CompileError {
+                            message: format!("[{}] {}", path.display(), e),
                             phase: CompilePhase::Parse,
-                        }]);
-                    }
-                };
-
-                if module_name.starts_with("test_") || module_name.ends_with("_test") {
-                    test_files.push(path);
-                } else {
-                    support_modules.insert(module_name, parsed.into_suite());
+                        })
+                        .collect();
+                    return Err(errors);
                 }
+                parsed
             }
+            Err(e) => {
+                return Err(vec![CompileError {
+                    message: format!("[{}] failed to parse: {}", path.display(), e),
+                    phase: CompilePhase::Parse,
+                }]);
+            }
+        };
+
+        if module_name.starts_with("test_") || module_name.ends_with("_test") {
+            test_files.push(path);
+        } else {
+            support_modules.insert(module_name, parsed.into_suite());
         }
     }
     test_files.sort();
@@ -1515,7 +1510,7 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<CompileError>> {
             &module_name,
             parsed.suite(),
             &project_externals,
-            FrontendDiagnosticStyle::ModulePrefixed,
+            FrontendDiagnosticStyle::Bare,
         ) {
             Ok(result) => result,
             Err(errors) => {
@@ -2236,6 +2231,87 @@ def test_import_parity():
 
         let result = run_tests(&test_dir).expect("test runner should compile and execute");
         assert!(result, "sifr test run should succeed");
+
+        let _ = std::fs::remove_dir_all(&test_dir);
+    }
+
+    #[test]
+    fn test_run_tests_reports_deterministic_parse_error_order() {
+        let unique = format!(
+            "sifr_test_parse_order_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let test_dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+
+        std::fs::write(test_dir.join("z_bad.sifr"), "def z(:\n").expect("z_bad should be written");
+        std::fs::write(test_dir.join("a_bad.sifr"), "def a(:\n").expect("a_bad should be written");
+        std::fs::write(
+            test_dir.join("test_smoke.sifr"),
+            "def test_smoke():\n    assert True\n",
+        )
+        .expect("test file should be written");
+
+        let first_messages: Vec<String> = run_tests(&test_dir)
+            .err()
+            .expect("parse errors should be reported")
+            .into_iter()
+            .map(|e| e.message)
+            .collect();
+        let second_messages: Vec<String> = run_tests(&test_dir)
+            .err()
+            .expect("parse errors should be deterministic")
+            .into_iter()
+            .map(|e| e.message)
+            .collect();
+
+        assert_eq!(first_messages, second_messages);
+        assert!(
+            first_messages
+                .first()
+                .is_some_and(|m| m.contains("a_bad.sifr")),
+            "first parse error should be from lexicographically first fixture: {first_messages:?}"
+        );
+
+        let _ = std::fs::remove_dir_all(&test_dir);
+    }
+
+    #[test]
+    fn test_run_tests_frontend_type_errors_use_single_path_prefix() {
+        let unique = format!(
+            "sifr_test_type_error_prefix_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        );
+        let test_dir = std::env::temp_dir().join(unique);
+        std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+
+        std::fs::write(
+            test_dir.join("helper.sifr"),
+            "def value() -> int:\n    return 1\n",
+        )
+        .expect("helper should be written");
+        std::fs::write(
+            test_dir.join("test_bad.sifr"),
+            "from helper import value\n\ndef test_bad() -> int:\n    return \"bad\"\n",
+        )
+        .expect("bad test module should be written");
+
+        let errors = run_tests(&test_dir)
+            .err()
+            .expect("type errors in test module should fail frontend");
+        let messages: Vec<String> = errors.iter().map(|e| e.message.clone()).collect();
+        assert!(messages.iter().all(|m| m.contains("test_bad.sifr")));
+        assert!(messages
+            .iter()
+            .all(|m| !m.contains("] [test_bad] return type mismatch")));
 
         let _ = std::fs::remove_dir_all(&test_dir);
     }

@@ -1,0 +1,2 @@
+def doubled(x: int) -> int:
+    return 'bad'
