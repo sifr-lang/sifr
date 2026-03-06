@@ -11,6 +11,7 @@ pub enum CfgBlockLabel {
     Entry,
     Exit,
     Statement(&'static str),
+    /// Compiler-internal dispatcher/join block (for example: elif chain nodes).
     Synthetic,
 }
 
