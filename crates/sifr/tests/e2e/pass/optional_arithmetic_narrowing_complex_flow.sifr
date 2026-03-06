@@ -1,0 +1,15 @@
+# Test: optional arithmetic narrowing remains valid through complex control flow
+
+def safe_increment(x: int | None) -> int:
+    if x is None:
+        return 0
+
+    total: int = 0
+    for i in range(2):
+        total = total + i
+
+    return x + total
+
+def main():
+    assert str(safe_increment(5)) == '6'
+    assert str(safe_increment(None)) == '0'

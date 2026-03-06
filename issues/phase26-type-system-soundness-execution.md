@@ -137,6 +137,29 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/protocol_bound_forwarding_non_conforming_typevar.sifr` -> exits `1` with `type 'U' does not implement protocol 'Readable' required by type parameter 'T'`.
 - Negative path: `cargo run -q -p sifr -- run demos/m26_4_protocol_bound_strictness_closure_demo/negative_cases/unknown_protocol_bound_forwarding/main.sifr` -> exits `1` with `type 'U' does not implement protocol 'MissingBound' required by type parameter 'T'`.
 
+## External Review Pass 1
+status: in_progress (review file: `reviews/phase26-review.md`)
+
+- [x] Spawn external reviewer app for phase 26
+- [x] Wait for review output file
+- [x] Validate reviewer notes for in-scope applicability
+- [x] Implement accepted fixes
+- [x] Re-run full local validation suite
+- [ ] Open PR, review, and merge
+
+Validated reviewer notes and actions:
+- Accepted: additional regression coverage for optional arithmetic narrowing across more complex control-flow joins.
+- Not in-scope for this pass: feature-gap suggestions (multiple bounds, protocol inheritance, short-circuit narrowing semantics beyond current language support).
+
+Fixes implemented:
+- Added positive e2e coverage: `crates/sifr/tests/e2e/pass/optional_arithmetic_narrowing_complex_flow.sifr`.
+- Added negative e2e coverage: `crates/sifr/tests/e2e/fail/optional_arithmetic_reachable_after_partial_narrowing.sifr`.
+
+Validation evidence:
+- Positive path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/optional_arithmetic_narrowing_complex_flow.sifr` -> pass.
+- Negative path: `cargo run -q -p sifr -- run crates/sifr/tests/e2e/fail/optional_arithmetic_reachable_after_partial_narrowing.sifr` -> exits `1` with `unsupported operand type(s) for +: 'None | int' and 'int'`.
+- Full suite: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass (401 pass tests completed).
+
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/891
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/892
