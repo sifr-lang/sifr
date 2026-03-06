@@ -138,14 +138,14 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m26_4_protocol_bound_strictness_closure_demo/negative_cases/unknown_protocol_bound_forwarding/main.sifr` -> exits `1` with `type 'U' does not implement protocol 'MissingBound' required by type parameter 'T'`.
 
 ## External Review Pass 1
-status: in_progress (review file: `reviews/phase26-review.md`)
+status: done (2026-03-07, review file: `reviews/phase26-review.md`, PR #895)
 
 - [x] Spawn external reviewer app for phase 26
 - [x] Wait for review output file
 - [x] Validate reviewer notes for in-scope applicability
 - [x] Implement accepted fixes
 - [x] Re-run full local validation suite
-- [ ] Open PR, review, and merge
+- [x] Open PR, review, and merge
 
 Validated reviewer notes and actions:
 - Accepted: additional regression coverage for optional arithmetic narrowing across more complex control-flow joins.
