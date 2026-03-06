@@ -181,4 +181,4 @@ Validation evidence:
 - Pass-1 triage outcome:
   - Reviewer approved phase 23 implementation as complete across milestones 23.1-23.5.
   - No blocking defects were identified; no compiler-code remediation was required.
-- Remediation PR (pass 1): pending
+- Remediation PR (pass 1): https://github.com/yaseralnajjar/sifr/pull/873
