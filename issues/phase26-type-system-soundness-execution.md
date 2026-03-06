@@ -96,7 +96,7 @@ Validation evidence:
 - Negative path: `cargo run -q -p sifr -- run demos/m26_2_inheritance_and_variance_corrections_demo/negative_cases/list_variance_violation/main.sifr` -> exits `1` with `expected 'list[int | str]', got 'list[int]'`.
 
 ## Part 3: milestone_26_3 Optional Arithmetic Soundness
-status: done (2026-03-07, PR #TBD)
+status: done (2026-03-07, PR #893)
 
 - [x] Optional arithmetic no longer auto-accepted
 - [x] Positive-path validation recorded
@@ -134,5 +134,5 @@ Validation evidence:
 ## PR Log
 - Part 1: https://github.com/yaseralnajjar/sifr/pull/891
 - Part 2: https://github.com/yaseralnajjar/sifr/pull/892
-- Part 3: pending
+- Part 3: https://github.com/yaseralnajjar/sifr/pull/893
 - Part 4: pending
