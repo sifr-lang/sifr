@@ -1553,12 +1553,7 @@ pub(super) fn lower_if(if_stmt: &StmtIf, func_type: &FunctionType, ctx: &mut Low
 /// Check if a block of statements always exits (return, break, continue, raise).
 /// Used for early-return narrowing: `if x is None: return` narrows x after the if.
 pub(super) fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
-    if let Some(last) = stmts.last() {
-        matches!(last, HirStmt::Return { .. })
-            || matches!(last, HirStmt::Expr { expr: HirExpr::Call { func, .. } } if func == "raise")
-    } else {
-        false
-    }
+    crate::cfg::flow_facts(stmts).always_exits()
 }
 
 /// Collect all return types from a list of HIR statements (recursively).

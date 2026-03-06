@@ -1,142 +1,461 @@
-//! Control Flow Graph for type narrowing.
-//!
-//! Inspired by TypeScript's binder, this module builds a control flow graph
-//! during HIR lowering. Each statement/expression gets a `FlowNode` that
-//! tracks how variable types change through branches.
+//! Canonical control-flow graph and flow-truth queries for HIR statement blocks.
 
+use crate::{HirExpr, HirStmt};
 use sifr_type_system::Type;
 
-/// Unique identifier for a flow node.
-pub type FlowNodeId = usize;
+/// Identifier for a CFG block.
+pub type CfgBlockId = usize;
 
-/// A node in the control flow graph.
-#[derive(Debug, Clone)]
-pub enum FlowNode {
-    /// Entry point of a function.
-    Start,
-    /// A variable assignment that establishes or changes a type.
-    Assignment {
-        var: String,
-        ty: Type,
-        antecedent: FlowNodeId,
-    },
-    /// A conditional branch point (if/elif/while condition).
-    Condition {
-        /// The antecedent before the condition is evaluated.
-        antecedent: FlowNodeId,
-        /// Flow node for the true branch.
-        true_branch: FlowNodeId,
-        /// Flow node for the false branch.
-        false_branch: FlowNodeId,
-    },
-    /// A join point where multiple branches merge (after if/else, loop exit).
-    Label { antecedents: Vec<FlowNodeId> },
-    /// Unreachable code (after return, break, continue, or exhaustive narrowing).
-    Unreachable,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CfgBlockLabel {
+    Entry,
+    Exit,
+    Statement(&'static str),
+    Synthetic,
 }
 
-/// The control flow graph, built during HIR lowering.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum CfgTerminator {
+    Goto(CfgBlockId),
+    Branch(Vec<CfgBlockId>),
+    Return { ty: Type, has_value: bool },
+    Raise,
+    Exit,
+}
+
+impl CfgTerminator {
+    fn successors(&self) -> &[CfgBlockId] {
+        match self {
+            Self::Goto(target) => std::slice::from_ref(target),
+            Self::Branch(targets) => targets.as_slice(),
+            Self::Return { .. } | Self::Raise | Self::Exit => &[],
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CfgBlock {
+    pub id: CfgBlockId,
+    pub label: CfgBlockLabel,
+    pub top_level_stmt_index: Option<usize>,
+    pub terminator: CfgTerminator,
+}
+
+/// Canonical control-flow graph for a lowered HIR statement block.
+#[derive(Debug, Clone, PartialEq)]
 pub struct ControlFlowGraph {
-    /// Arena of flow nodes.
-    nodes: Vec<FlowNode>,
-    /// The current flow node (where we're "at" during lowering).
-    current: FlowNodeId,
+    blocks: Vec<CfgBlock>,
+    entry: CfgBlockId,
+    exit: CfgBlockId,
+    top_level_stmt_nodes: Vec<CfgBlockId>,
 }
 
 impl ControlFlowGraph {
-    /// Create a new CFG with a Start node.
-    pub fn new() -> Self {
-        let mut cfg = Self {
-            nodes: Vec::new(),
-            current: 0,
-        };
-        let start = cfg.add_node(FlowNode::Start);
-        cfg.current = start;
-        cfg
+    pub fn blocks(&self) -> &[CfgBlock] {
+        &self.blocks
     }
 
-    /// Add a node to the graph and return its ID.
-    pub fn add_node(&mut self, node: FlowNode) -> FlowNodeId {
-        let id = self.nodes.len();
-        self.nodes.push(node);
-        id
+    pub fn entry(&self) -> CfgBlockId {
+        self.entry
     }
 
-    /// Get the current flow node ID.
-    pub fn current(&self) -> FlowNodeId {
-        self.current
+    pub fn exit(&self) -> CfgBlockId {
+        self.exit
     }
 
-    /// Set the current flow node.
-    pub fn set_current(&mut self, id: FlowNodeId) {
-        self.current = id;
+    pub fn top_level_stmt_nodes(&self) -> &[CfgBlockId] {
+        &self.top_level_stmt_nodes
     }
 
-    /// Record a variable assignment at the current point.
-    pub fn record_assignment(&mut self, var: String, ty: Type) -> FlowNodeId {
-        let antecedent = self.current;
-        let id = self.add_node(FlowNode::Assignment {
-            var,
-            ty,
-            antecedent,
-        });
-        self.current = id;
-        id
-    }
-
-    /// Create a condition branch point. Returns (`true_branch_start`, `false_branch_start`).
-    pub fn branch(&mut self) -> (FlowNodeId, FlowNodeId) {
-        let antecedent = self.current;
-        let true_start = self.add_node(FlowNode::Label {
-            antecedents: vec![antecedent],
-        });
-        let false_start = self.add_node(FlowNode::Label {
-            antecedents: vec![antecedent],
-        });
-        let _cond = self.add_node(FlowNode::Condition {
-            antecedent,
-            true_branch: true_start,
-            false_branch: false_start,
-        });
-        (true_start, false_start)
-    }
-
-    /// Create a join point merging multiple branches.
-    pub fn join(&mut self, branches: Vec<FlowNodeId>) -> FlowNodeId {
-        let id = self.add_node(FlowNode::Label {
-            antecedents: branches,
-        });
-        self.current = id;
-        id
-    }
-
-    /// Mark the current point as unreachable.
-    pub fn mark_unreachable(&mut self) -> FlowNodeId {
-        let id = self.add_node(FlowNode::Unreachable);
-        self.current = id;
-        id
-    }
-
-    /// Get a reference to a flow node by ID.
-    pub fn get_node(&self, id: FlowNodeId) -> Option<&FlowNode> {
-        self.nodes.get(id)
-    }
-
-    /// Get the number of nodes in the graph.
-    pub fn len(&self) -> usize {
-        self.nodes.len()
-    }
-
-    /// Check if the graph is empty (shouldn't happen, always has Start).
-    pub fn is_empty(&self) -> bool {
-        self.nodes.is_empty()
+    pub fn reachable_blocks(&self) -> Vec<bool> {
+        let mut reachable = vec![false; self.blocks.len()];
+        let mut stack = vec![self.entry];
+        while let Some(block_id) = stack.pop() {
+            if reachable[block_id] {
+                continue;
+            }
+            reachable[block_id] = true;
+            for &next in self.blocks[block_id].terminator.successors().iter().rev() {
+                if !reachable[next] {
+                    stack.push(next);
+                }
+            }
+        }
+        reachable
     }
 }
 
-impl Default for ControlFlowGraph {
-    fn default() -> Self {
-        Self::new()
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FlowExitEffect {
+    FallsThrough,
+    AlwaysReturns,
+    AlwaysRaises,
+    AlwaysExits,
+}
+
+impl FlowExitEffect {
+    pub fn always_exits(self) -> bool {
+        !matches!(self, Self::FallsThrough)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FlowFacts {
+    exit_effect: FlowExitEffect,
+    reachable_top_level_stmt_indices: Vec<usize>,
+    unreachable_top_level_stmt_indices: Vec<usize>,
+    reachable_return_types: Vec<Type>,
+    has_reachable_return: bool,
+    has_reachable_value_return: bool,
+}
+
+impl FlowFacts {
+    pub fn exit_effect(&self) -> FlowExitEffect {
+        self.exit_effect
+    }
+
+    pub fn always_exits(&self) -> bool {
+        self.exit_effect.always_exits()
+    }
+
+    pub fn has_reachable_return(&self) -> bool {
+        self.has_reachable_return
+    }
+
+    pub fn has_reachable_value_return(&self) -> bool {
+        self.has_reachable_value_return
+    }
+
+    pub fn reachable_return_types(&self) -> &[Type] {
+        &self.reachable_return_types
+    }
+
+    pub fn reachable_top_level_stmt_indices(&self) -> &[usize] {
+        &self.reachable_top_level_stmt_indices
+    }
+
+    pub fn unreachable_top_level_stmt_indices(&self) -> &[usize] {
+        &self.unreachable_top_level_stmt_indices
+    }
+}
+
+#[derive(Clone, Copy)]
+struct LoopTargets {
+    break_target: CfgBlockId,
+    continue_target: CfgBlockId,
+}
+
+struct CfgBuilder {
+    blocks: Vec<CfgBlock>,
+    entry: CfgBlockId,
+    exit: CfgBlockId,
+    top_level_stmt_nodes: Vec<CfgBlockId>,
+}
+
+impl CfgBuilder {
+    fn new(top_level_stmt_count: usize) -> Self {
+        let mut builder = Self {
+            blocks: Vec::new(),
+            entry: 0,
+            exit: 0,
+            top_level_stmt_nodes: vec![0; top_level_stmt_count],
+        };
+        builder.exit = builder.new_block(CfgBlockLabel::Exit, None);
+        builder.entry = builder.new_block(CfgBlockLabel::Entry, None);
+        builder
+    }
+
+    fn new_block(&mut self, label: CfgBlockLabel, top_level_stmt_index: Option<usize>) -> CfgBlockId {
+        let id = self.blocks.len();
+        self.blocks.push(CfgBlock {
+            id,
+            label,
+            top_level_stmt_index,
+            terminator: CfgTerminator::Exit,
+        });
+        id
+    }
+
+    fn set_terminator(&mut self, block_id: CfgBlockId, mut terminator: CfgTerminator) {
+        if let CfgTerminator::Branch(targets) = &mut terminator {
+            let mut deduped = Vec::with_capacity(targets.len());
+            for target in targets.iter().copied() {
+                if !deduped.contains(&target) {
+                    deduped.push(target);
+                }
+            }
+            *targets = deduped;
+        }
+        self.blocks[block_id].terminator = terminator;
+    }
+
+    fn build_stmt_list(
+        &mut self,
+        stmts: &[HirStmt],
+        fallthrough: CfgBlockId,
+        loop_targets: Option<LoopTargets>,
+        top_level: bool,
+    ) -> CfgBlockId {
+        let mut next = fallthrough;
+        for (idx, stmt) in stmts.iter().enumerate().rev() {
+            let top_level_stmt_index = if top_level { Some(idx) } else { None };
+            let entry = self.build_stmt(stmt, next, loop_targets, top_level_stmt_index);
+            if top_level {
+                self.top_level_stmt_nodes[idx] = entry;
+            }
+            next = entry;
+        }
+        next
+    }
+
+    fn build_stmt(
+        &mut self,
+        stmt: &HirStmt,
+        next: CfgBlockId,
+        loop_targets: Option<LoopTargets>,
+        top_level_stmt_index: Option<usize>,
+    ) -> CfgBlockId {
+        match stmt {
+            HirStmt::Return { value } => {
+                let block = self.new_block(CfgBlockLabel::Statement("return"), top_level_stmt_index);
+                let (ty, has_value) = match value {
+                    Some(expr) => (expr.ty().clone(), !matches!(expr, HirExpr::NoneLiteral)),
+                    None => (Type::None, false),
+                };
+                self.set_terminator(block, CfgTerminator::Return { ty, has_value });
+                block
+            }
+            HirStmt::Raise { .. } => {
+                let block = self.new_block(CfgBlockLabel::Statement("raise"), top_level_stmt_index);
+                self.set_terminator(block, CfgTerminator::Raise);
+                block
+            }
+            HirStmt::Break => {
+                let target = loop_targets.map_or(next, |targets| targets.break_target);
+                let block = self.new_block(CfgBlockLabel::Statement("break"), top_level_stmt_index);
+                self.set_terminator(block, CfgTerminator::Goto(target));
+                block
+            }
+            HirStmt::Continue => {
+                let target = loop_targets.map_or(next, |targets| targets.continue_target);
+                let block =
+                    self.new_block(CfgBlockLabel::Statement("continue"), top_level_stmt_index);
+                self.set_terminator(block, CfgTerminator::Goto(target));
+                block
+            }
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
+                let mut else_entry = if let Some(else_body) = else_body {
+                    self.build_stmt_list(else_body, next, loop_targets, false)
+                } else {
+                    next
+                };
+
+                for (_, elif_body) in elif_clauses.iter().rev() {
+                    let elif_then = self.build_stmt_list(elif_body, next, loop_targets, false);
+                    let elif_cond = self.new_block(CfgBlockLabel::Synthetic, None);
+                    self.set_terminator(
+                        elif_cond,
+                        CfgTerminator::Branch(vec![elif_then, else_entry]),
+                    );
+                    else_entry = elif_cond;
+                }
+
+                let then_entry = self.build_stmt_list(then_body, next, loop_targets, false);
+                let if_block = self.new_block(CfgBlockLabel::Statement("if"), top_level_stmt_index);
+                self.set_terminator(if_block, CfgTerminator::Branch(vec![then_entry, else_entry]));
+                if_block
+            }
+            HirStmt::While {
+                body, else_body, ..
+            } => {
+                let while_block =
+                    self.new_block(CfgBlockLabel::Statement("while"), top_level_stmt_index);
+                let false_target = if let Some(else_body) = else_body {
+                    self.build_stmt_list(else_body, next, loop_targets, false)
+                } else {
+                    next
+                };
+                let loop_targets = LoopTargets {
+                    break_target: next,
+                    continue_target: while_block,
+                };
+                let body_entry = self.build_stmt_list(body, while_block, Some(loop_targets), false);
+                self.set_terminator(
+                    while_block,
+                    CfgTerminator::Branch(vec![body_entry, false_target]),
+                );
+                while_block
+            }
+            HirStmt::For {
+                body, else_body, ..
+            } => {
+                let for_block = self.new_block(CfgBlockLabel::Statement("for"), top_level_stmt_index);
+                let false_target = if let Some(else_body) = else_body {
+                    self.build_stmt_list(else_body, next, loop_targets, false)
+                } else {
+                    next
+                };
+                let loop_targets = LoopTargets {
+                    break_target: next,
+                    continue_target: for_block,
+                };
+                let body_entry = self.build_stmt_list(body, for_block, Some(loop_targets), false);
+                self.set_terminator(for_block, CfgTerminator::Branch(vec![body_entry, false_target]));
+                for_block
+            }
+            HirStmt::Match { arms, .. } => {
+                let block = self.new_block(CfgBlockLabel::Statement("match"), top_level_stmt_index);
+                if arms.is_empty() {
+                    self.set_terminator(block, CfgTerminator::Goto(next));
+                } else {
+                    let arm_entries: Vec<CfgBlockId> = arms
+                        .iter()
+                        .map(|arm| self.build_stmt_list(&arm.body, next, loop_targets, false))
+                        .collect();
+                    self.set_terminator(block, CfgTerminator::Branch(arm_entries));
+                }
+                block
+            }
+            HirStmt::TryExcept { body, handlers, .. } => {
+                let block =
+                    self.new_block(CfgBlockLabel::Statement("try_except"), top_level_stmt_index);
+                if handlers.is_empty() {
+                    self.set_terminator(block, CfgTerminator::Goto(next));
+                } else {
+                    let mut targets = Vec::with_capacity(1 + handlers.len());
+                    targets.push(self.build_stmt_list(body, next, loop_targets, false));
+                    for handler in handlers {
+                        targets.push(self.build_stmt_list(&handler.body, next, loop_targets, false));
+                    }
+                    self.set_terminator(block, CfgTerminator::Branch(targets));
+                }
+                block
+            }
+            HirStmt::With { body, .. } => {
+                let body_entry = self.build_stmt_list(body, next, loop_targets, false);
+                let block = self.new_block(CfgBlockLabel::Statement("with"), top_level_stmt_index);
+                self.set_terminator(block, CfgTerminator::Goto(body_entry));
+                block
+            }
+            _ => {
+                let block = self.new_block(
+                    CfgBlockLabel::Statement(stmt_label(stmt)),
+                    top_level_stmt_index,
+                );
+                self.set_terminator(block, CfgTerminator::Goto(next));
+                block
+            }
+        }
+    }
+
+    fn finish(mut self, root_entry: CfgBlockId) -> ControlFlowGraph {
+        self.set_terminator(self.entry, CfgTerminator::Goto(root_entry));
+        self.set_terminator(self.exit, CfgTerminator::Exit);
+        ControlFlowGraph {
+            blocks: self.blocks,
+            entry: self.entry,
+            exit: self.exit,
+            top_level_stmt_nodes: self.top_level_stmt_nodes,
+        }
+    }
+}
+
+fn stmt_label(stmt: &HirStmt) -> &'static str {
+    match stmt {
+        HirStmt::Let { .. } => "let",
+        HirStmt::Assign { .. } => "assign",
+        HirStmt::AugAssign { .. } => "aug_assign",
+        HirStmt::Return { .. } => "return",
+        HirStmt::Expr { .. } => "expr",
+        HirStmt::If { .. } => "if",
+        HirStmt::While { .. } => "while",
+        HirStmt::For { .. } => "for",
+        HirStmt::Break => "break",
+        HirStmt::Continue => "continue",
+        HirStmt::TupleUnpack { .. } => "tuple_unpack",
+        HirStmt::StarUnpack { .. } => "star_unpack",
+        HirStmt::Pass => "pass",
+        HirStmt::Assert { .. } => "assert",
+        HirStmt::Raise { .. } => "raise",
+        HirStmt::TryExcept { .. } => "try_except",
+        HirStmt::FieldAssign { .. } => "field_assign",
+        HirStmt::SubscriptAssign { .. } => "subscript_assign",
+        HirStmt::NestedSubscriptAssign { .. } => "nested_subscript_assign",
+        HirStmt::SubscriptAugAssign { .. } => "subscript_aug_assign",
+        HirStmt::AttributeAugAssign { .. } => "attribute_aug_assign",
+        HirStmt::AttributeSubscriptAssign { .. } => "attribute_subscript_assign",
+        HirStmt::Delete { .. } => "delete",
+        HirStmt::Yield { .. } => "yield",
+        HirStmt::With { .. } => "with",
+        HirStmt::NestedFunction { .. } => "nested_function",
+        HirStmt::Match { .. } => "match",
+    }
+}
+
+pub fn build_control_flow_graph(stmts: &[HirStmt]) -> ControlFlowGraph {
+    let mut builder = CfgBuilder::new(stmts.len());
+    let root_entry = builder.build_stmt_list(stmts, builder.exit, None, true);
+    builder.finish(root_entry)
+}
+
+pub fn flow_facts(stmts: &[HirStmt]) -> FlowFacts {
+    let cfg = build_control_flow_graph(stmts);
+    let reachable = cfg.reachable_blocks();
+
+    let mut reachable_top_level_stmt_indices = Vec::new();
+    let mut unreachable_top_level_stmt_indices = Vec::new();
+    for (idx, block_id) in cfg.top_level_stmt_nodes().iter().enumerate() {
+        if reachable[*block_id] {
+            reachable_top_level_stmt_indices.push(idx);
+        } else {
+            unreachable_top_level_stmt_indices.push(idx);
+        }
+    }
+
+    let mut reachable_return_types = Vec::new();
+    let mut has_reachable_return = false;
+    let mut has_reachable_value_return = false;
+    let mut has_reachable_raise = false;
+    for (id, block) in cfg.blocks().iter().enumerate() {
+        if !reachable[id] {
+            continue;
+        }
+        match &block.terminator {
+            CfgTerminator::Return { ty, has_value } => {
+                has_reachable_return = true;
+                has_reachable_value_return |= *has_value;
+                reachable_return_types.push(ty.clone());
+            }
+            CfgTerminator::Raise => {
+                has_reachable_raise = true;
+            }
+            CfgTerminator::Goto(_) | CfgTerminator::Branch(_) | CfgTerminator::Exit => {}
+        }
+    }
+
+    let falls_through = reachable[cfg.exit()];
+    let exit_effect = if falls_through {
+        FlowExitEffect::FallsThrough
+    } else if has_reachable_return && !has_reachable_raise {
+        FlowExitEffect::AlwaysReturns
+    } else if has_reachable_raise && !has_reachable_return {
+        FlowExitEffect::AlwaysRaises
+    } else {
+        FlowExitEffect::AlwaysExits
+    };
+
+    FlowFacts {
+        exit_effect,
+        reachable_top_level_stmt_indices,
+        unreachable_top_level_stmt_indices,
+        reachable_return_types,
+        has_reachable_return,
+        has_reachable_value_return,
     }
 }
 
@@ -145,57 +464,60 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_cfg_new_has_start() {
-        let cfg = ControlFlowGraph::new();
-        assert_eq!(cfg.len(), 1);
-        assert_eq!(cfg.current(), 0);
-        assert!(matches!(cfg.get_node(0), Some(FlowNode::Start)));
+    fn flow_facts_reports_always_raises_for_raise_only_branch() {
+        let stmts = vec![HirStmt::If {
+            condition: HirExpr::BoolLiteral(true),
+            then_body: vec![HirStmt::Raise {
+                value: HirExpr::Call {
+                    func: "ValueError".to_string(),
+                    args: vec![HirExpr::StringLiteral("bad".to_string())],
+                    ty: Type::Unknown,
+                },
+            }],
+            elif_clauses: vec![],
+            else_body: Some(vec![HirStmt::Raise {
+                value: HirExpr::Call {
+                    func: "ValueError".to_string(),
+                    args: vec![HirExpr::StringLiteral("also bad".to_string())],
+                    ty: Type::Unknown,
+                },
+            }]),
+        }];
+
+        let facts = flow_facts(&stmts);
+        assert_eq!(facts.exit_effect(), FlowExitEffect::AlwaysRaises);
+        assert!(facts.always_exits());
+        assert!(!facts.has_reachable_return());
     }
 
     #[test]
-    fn test_cfg_assignment() {
-        let mut cfg = ControlFlowGraph::new();
-        let id = cfg.record_assignment("x".to_string(), Type::Int);
-        assert_eq!(id, 1);
-        assert_eq!(cfg.current(), 1);
-        if let Some(FlowNode::Assignment {
-            var,
-            ty,
-            antecedent,
-        }) = cfg.get_node(1)
-        {
-            assert_eq!(var, "x");
-            assert_eq!(*ty, Type::Int);
-            assert_eq!(*antecedent, 0); // points to Start
-        } else {
-            panic!("Expected Assignment node");
-        }
+    fn flow_facts_marks_trailing_stmt_unreachable_after_return() {
+        let stmts = vec![
+            HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            },
+            HirStmt::Expr {
+                expr: HirExpr::IntLiteral(2),
+            },
+        ];
+
+        let facts = flow_facts(&stmts);
+        assert_eq!(facts.reachable_top_level_stmt_indices(), &[0]);
+        assert_eq!(facts.unreachable_top_level_stmt_indices(), &[1]);
     }
 
     #[test]
-    fn test_cfg_branch_and_join() {
-        let mut cfg = ControlFlowGraph::new();
-        let (true_start, false_start) = cfg.branch();
-        assert!(true_start > 0);
-        assert!(false_start > 0);
+    fn flow_facts_collects_reachable_return_types_only() {
+        let stmts = vec![
+            HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            },
+            HirStmt::Return {
+                value: Some(HirExpr::StringLiteral("never".to_string())),
+            },
+        ];
 
-        // Simulate work in true branch
-        cfg.set_current(true_start);
-        let true_end = cfg.record_assignment("x".to_string(), Type::Int);
-
-        // Simulate work in false branch
-        cfg.set_current(false_start);
-        let false_end = cfg.record_assignment("x".to_string(), Type::Str);
-
-        // Join
-        let join = cfg.join(vec![true_end, false_end]);
-        assert_eq!(cfg.current(), join);
-    }
-
-    #[test]
-    fn test_cfg_unreachable() {
-        let mut cfg = ControlFlowGraph::new();
-        let id = cfg.mark_unreachable();
-        assert!(matches!(cfg.get_node(id), Some(FlowNode::Unreachable)));
+        let facts = flow_facts(&stmts);
+        assert_eq!(facts.reachable_return_types(), &[Type::Int]);
     }
 }
